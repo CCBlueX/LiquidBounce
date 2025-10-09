@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
@@ -68,6 +68,11 @@ object ModuleEasyPearl :
     private val enderPearlSlot: HotbarItemSlot?
         get() = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)
 
+    override fun onDisabled() {
+        currentTargetRotation = null
+        super.onDisabled()
+    }
+
     /**
      * Handler throw pearl by player self.
      */
@@ -112,15 +117,15 @@ object ModuleEasyPearl :
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         /**
          * handler for tick event,and check if we are rotating to the target rotation correctly,if yes,throw the pearl
          */
-         currentTargetRotation = getTargetRotation(targetPosition ?: return@tickHandler) ?: return@tickHandler
+        currentTargetRotation = targetPosition?.let(::getTargetRotation) ?: return@handler
 
-        if (isRotationDone(targetPosition ?: return@tickHandler)) {
+        if (isRotationDone(targetPosition ?: return@handler)) {
             useHotbarSlotOrOffhand(
-                enderPearlSlot ?: return@tickHandler,
+                enderPearlSlot ?: return@handler,
                 0,
                 currentTargetRotation!!.yaw,
                 currentTargetRotation!!.pitch,

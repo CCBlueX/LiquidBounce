@@ -55,7 +55,7 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
     private val modes = choices("Mode", Stationary, arrayOf(Queue, Cancel, Stationary))
         .apply { tagBy(this) }
     private val disableOnFlag by boolean("DisableOnFlag", true)
-    private val notification by boolean("Notification",false)
+    private val notification by boolean("Notification", false)
     private val balance by boolean("BalanceWarp", false)
 
     // todo: use global balance system
