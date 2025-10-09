@@ -22,8 +22,9 @@ import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeConfigurable
+import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleConfigurable
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.option.Perspective
 
 /**
@@ -31,11 +32,14 @@ import net.minecraft.client.option.Perspective
  */
 object ModuleAutoF5 : ClientModule("AutoF5", Category.RENDER) {
 
+    private val checkScreenHandlerType = tree(CheckScreenHandlerTypeConfigurable(this))
+    private val checkScreenTitle = tree(CheckScreenTitleConfigurable(this))
+
     @Suppress("unused")
     private val perspectiveHandler = handler<PerspectiveEvent> { event ->
         val screen = mc.currentScreen
 
-        if (screen is GenericContainerScreen || screen is InventoryScreen) {
+        if (screen is HandledScreen<*> && checkScreenHandlerType.isValid(screen) && checkScreenTitle.isValid(screen)) {
             event.perspective = Perspective.THIRD_PERSON_BACK
         }
     }

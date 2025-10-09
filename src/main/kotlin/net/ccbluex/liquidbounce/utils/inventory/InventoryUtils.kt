@@ -24,15 +24,20 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.block.Block
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.component.type.DyedColorComponent
 import net.minecraft.item.ItemStack
@@ -41,6 +46,7 @@ import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.ItemTags
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.ScreenHandlerType
+import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import java.util.*
@@ -116,6 +122,68 @@ enum class InventoryRequirements(
         NO_MOVEMENT -> player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f && !player.jumping
         NO_ROTATION -> RotationManager.rotationMatchesPreviousRotation()
         OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
+    }
+}
+
+class CheckScreenHandlerTypeConfigurable(
+    parent: EventListener,
+) : ToggleableConfigurable(parent, "CheckScreenHandlerType", enabled = true) {
+    private val types by registryList(
+        "Types",
+        hashSetOf(
+            ScreenHandlerType.GENERIC_9X3, ScreenHandlerType.GENERIC_9X6, ScreenHandlerType.SHULKER_BOX,
+        ),
+        ValueType.SCREEN_HANDLER
+    )
+    private val filter by enumChoice("Filter", Filter.WHITELIST)
+
+    fun isValid(screen: HandledScreen<*>): Boolean {
+        return !enabled || filter(screen.screenHandler.typeOrNull, types)
+    }
+}
+
+class CheckScreenTitleConfigurable(
+    parent: EventListener,
+) : ToggleableConfigurable(parent, "CheckScreenTitle", enabled = true, aliases = listOf("CheckTitle")) {
+    private val titles by multiEnumChoice(
+        "Titles",
+        EnumSet.of(
+            ContainerTitle.CHEST, ContainerTitle.LARGE_CHEST,
+            ContainerTitle.SHULKER_BOX, ContainerTitle.BARREL,
+        ),
+    )
+    private val filter by enumChoice("Filter", Filter.WHITELIST)
+
+    fun isValid(screen: Screen): Boolean {
+        if (!enabled) return true
+
+        val titleString = screen.title.string
+
+        return when (filter) {
+            Filter.WHITELIST -> titles.any {
+                Text.translatable(it.translatableKey).string == titleString
+            }
+            Filter.BLACKLIST -> titles.none {
+                Text.translatable(it.translatableKey).string == titleString
+            }
+        }
+    }
+
+    @Suppress("unused")
+    private enum class ContainerTitle(override val choiceName: String, val translatableKey: String) : NamedChoice {
+        BARREL("Barrel", "container.barrel"),
+        BEACON("Beacon", "container.beacon"),
+        BLAST_FURNACE("BlastFurnace", "container.blast_furnace"),
+        BREWING_STAND("BrewingStand", "container.brewing"),
+        CHEST("Chest", "container.chest"),
+        LARGE_CHEST("LargeChest", "container.chestDouble"),
+        DISPENSER("Dispenser", "container.dispenser"),
+        DROPPER("Dropper", "container.dropper"),
+        ENDER_CHEST("EnderChest", "container.enderchest"),
+        FURNACE("Furnace", "container.furnace"),
+        HOPPER("Hopper", "container.hopper"),
+        SHULKER_BOX("ShulkerBox", "container.shulkerBox"),
+        SMOKER("Smoker", "container.smoker"),
     }
 }
 
