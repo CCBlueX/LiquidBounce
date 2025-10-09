@@ -195,8 +195,8 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
          * Bypasses Grim's BadPacketsR and Matrix7 Timer Check
          */
         private val cancelC0B by boolean("CancelC0B",true)
-        private var lastYawOffset = 0f
-        private var lastPitchOffset = 0f
+        private val yawOffset = FloatOffsetGenerator()
+        private val pitchOffset = FloatOffsetGenerator()
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
@@ -204,22 +204,24 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
         /**
          * Bypasses Grim's duplicate rotation check
          */
-        private fun randomOffset(last: Float): Float {
-            var offset: Float
-            do {
-                offset = Random.nextDouble(0.002, 0.01).toFloat()
-            } while (abs(offset - last) < 1.0E-6)
-            return offset
+        private class FloatOffsetGenerator : FloatIterator() {
+            private var prev = 0f
+            override fun hasNext() = true
+            override fun nextFloat(): Float {
+                var offset: Float
+                do {
+                    offset = Random.nextDouble(0.002, 0.01).toFloat()
+                } while (abs(offset - prev) < 1.0E-6F)
+                return offset.also { prev = it }
+            }
         }
 
         @Suppress("unused")
         private val packetEventHandler = handler<PacketEvent> { event ->
-            val yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw
-            val pitch: Float = RotationManager.currentRotation?.pitch ?: player.pitch
-            val yawOffset = randomOffset(lastYawOffset)
-            val pitchOffset = randomOffset(lastPitchOffset)
-            lastYawOffset = yawOffset
-            lastPitchOffset = pitchOffset
+            val yaw = RotationManager.currentRotation?.yaw ?: player.yaw
+            val pitch = RotationManager.currentRotation?.pitch ?: player.pitch
+            val yawOffset = yawOffset.nextFloat()
+            val pitchOffset = pitchOffset.nextFloat()
 
             when (val packet = event.packet) {
 
