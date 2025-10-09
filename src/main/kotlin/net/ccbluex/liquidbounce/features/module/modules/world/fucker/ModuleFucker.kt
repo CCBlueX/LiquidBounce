@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.fastutil.WeightedSortedList
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -39,8 +40,6 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
-import net.ccbluex.liquidbounce.utils.collection.MutableSortedList
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -255,7 +254,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
                 is BedBlock if isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
                 else -> true
             }
-        }.toCollection(MutableSortedList(upperBound = range.sq().toDouble()) { (pos, state) ->
+        }.toCollection(WeightedSortedList(upperBound = range.sq().toDouble()) { (pos, state) ->
             state.getCollisionShape(world, pos, ShapeContext.of(player))
                 .offset(pos)
                 .getClosestSquaredDistanceTo(player.eyePos)
@@ -296,7 +295,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
         val eyePos = player.eyePos
         val visited = LongOpenHashSet()
         val result = mutableListOf<BlockPos>()
-        val targetPoint = getNearestPoint(eyePos, target.collisionShape.boundingBox)
+        val targetPoint = target.collisionShape.getClosestPointTo(eyePos).getOrNull() ?: return emptyList()
 
         fun trace0(currBlock: Long) {
             val pos = BlockPos.Mutable()
