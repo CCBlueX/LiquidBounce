@@ -64,6 +64,7 @@ object ModuleEasyPearl :
     private var targetPosition: Vec3d? = null
 
     var currentTargetRotation : Rotation? = null
+        private set
     private val enderPearlSlot: HotbarItemSlot?
         get() = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)
 
@@ -72,7 +73,6 @@ object ModuleEasyPearl :
      */
     @Suppress("unused")
     private val interactItemHandler = handler<PlayerInteractItemEvent> { event ->
-
         if (!isHoldingPearl() || !mc.options.useKey.isPressed) {
             return@handler
         }

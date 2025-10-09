@@ -233,8 +233,8 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
                     event.cancelEvent()
                     sendPacketSilently(
                         PlayerMoveC2SPacket.LookAndOnGround(
-                            currentTargetRotation?.yaw ?:(player.yaw + yawOffset),
-                            currentTargetRotation?.pitch ?:(player.yaw+ pitchOffset),
+                            currentTargetRotation?.yaw ?: (player.yaw + yawOffset),
+                            currentTargetRotation?.pitch ?: (player.pitch + pitchOffset),
                             player.isOnGround,
                             player.horizontalCollision
                         )
