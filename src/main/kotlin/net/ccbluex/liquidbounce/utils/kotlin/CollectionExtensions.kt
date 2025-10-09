@@ -38,3 +38,6 @@ inline fun <reified K : Enum<K>, V> enumMap(): EnumMap<K, V> = EnumMap(K::class.
 inline fun <reified K : Enum<K>, V> enumMap(
     @BuilderInference block: EnumMap<K, V>.() -> Unit
 ): EnumMap<K, V> = EnumMap<K, V>(K::class.java).apply(block)
+
+inline fun <T> Comparator<in T>.max(a: T, b: T): T = if (compare(a, b) > 0) a else b
+inline fun <T> Comparator<in T>.min(a: T, b: T): T = if (compare(a, b) < 0) a else b

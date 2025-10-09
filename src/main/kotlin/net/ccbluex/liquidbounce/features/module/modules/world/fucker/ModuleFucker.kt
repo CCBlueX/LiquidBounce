@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -38,10 +39,12 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
+import net.ccbluex.liquidbounce.utils.collection.MutableSortedList
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.block.BedBlock
@@ -246,23 +249,17 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
     }
 
     private fun searchPossibleTargetPositions(): List<BlockPos> {
-        val eyesPos = player.eyePos
-
-        val rangeSq = range.sq()
-
-        val possibleBlocks = eyesPos.searchBlocksInCuboid(range + 1) { pos, state ->
+        return player.eyePos.searchBlocksInCuboid(range + 1) { pos, state ->
             when (val block = state.block) {
                 !in targets -> false
                 is BedBlock if isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
-                else -> state.getCollisionShape(world, pos, ShapeContext.of(player))
-                    .offset(pos)
-                    .getClosestSquaredDistanceTo(player.eyePos) <= rangeSq
+                else -> true
             }
-        }.mapTo(mutableListOf()) { it.first }
-
-        possibleBlocks.sortBy { it.getCenterDistanceSquaredEyes() }
-
-        return possibleBlocks
+        }.toCollection(MutableSortedList(upperBound = range.sq().toDouble()) { (pos, state) ->
+            state.getCollisionShape(world, pos, ShapeContext.of(player))
+                .offset(pos)
+                .getClosestSquaredDistanceTo(player.eyePos)
+        }).mapToArray { it.first }.unmodifiable()
     }
 
     private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {
