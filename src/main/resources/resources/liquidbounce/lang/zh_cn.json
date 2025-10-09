@@ -618,7 +618,7 @@
   "liquidbounce.module.smoothCamera.description": "让你的相机移动更加平滑。",
   "liquidbounce.module.freeLook.description": "允许你围绕角色自由移动视角。",
   "liquidbounce.module.freeze.description": "允许在服务器不知道的情况下将你冻结在你现在的位置。",
-  "liquidbounce.module.stuck.messages.disabledOnFlag": "检测到S08 Flag模块已自动关闭。",
+  "liquidbounce.module.freeze.messages.disabledOnFlag": "检测到S08 Flag模块已自动关闭。",
   "liquidbounce.module.middleClickAction.messages.addedFriend": "%s 已添加到好友列表。",
   "liquidbounce.module.middleClickAction.description": "允许你使用鼠标中键执行额外操作。",
   "liquidbounce.module.middleClickAction.messages.removedFriend": "%s 已移除自好友列表。",
