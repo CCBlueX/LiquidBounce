@@ -86,11 +86,13 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             @Suppress("unused")
             private val inventoryActionHandler = handler<ScheduleInventoryActionEvent> { event ->
                 val currentBestTool = currentBestTool ?: return@handler
+                val slotToSwap = Slots.Hotbar.findSlot { it.isEmpty } ?: Slots.Hotbar[SilentHotbar.serversideSlot]
+
                 event.schedule(
                     inventoryConstraints,
                     InventoryAction.Click.performSwap(
                         from = currentBestTool,
-                        to = Slots.Hotbar[SilentHotbar.serversideSlot],
+                        to = slotToSwap,
                     ).also { if (swapAction == null) swapAction = it }
                 )
                 this.currentBestTool = null
