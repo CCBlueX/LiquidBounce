@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -78,6 +79,9 @@ internal object NoFallMLG : NoFallMode("MLG") {
         tree(PickupWater)
     }
 
+    override val running: Boolean
+        get() = super.running && !ModuleFreeze.running
+
     @Suppress("unused")
     private val tickMovementHandler =
         handler<RotationUpdateEvent> {
@@ -98,34 +102,32 @@ internal object NoFallMLG : NoFallMode("MLG") {
         }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
-        if (ModuleFreeze.running) return@tickHandler
+    private val tickHandler = handler<GameTickEvent> {
+        val target = currentTarget ?: return@handler
 
-        val target = currentTarget ?: return@tickHandler
+        val rayTraceResult = raycast()
 
-            val rayTraceResult = raycast()
-
-            if (!target.doesCorrespondTo(rayTraceResult)) {
-                return@tickHandler
-            }
-
-            SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
-
-            val onSuccess: () -> Boolean = {
-                lastPlacements.add(target.targetPos to Chronometer(System.currentTimeMillis()))
-
-                true
-            }
-
-            doPlacement(
-                rayTraceResult,
-                hand = target.hotbarItemSlot.useHand,
-                onItemUseSuccess = onSuccess,
-                onPlacementSuccess = onSuccess,
-            )
-
-            currentTarget = null
+        if (!target.doesCorrespondTo(rayTraceResult)) {
+            return@handler
         }
+
+        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
+
+        val onSuccess: () -> Boolean = {
+            lastPlacements.add(target.targetPos to Chronometer(System.currentTimeMillis()))
+
+            true
+        }
+
+        doPlacement(
+            rayTraceResult,
+            hand = target.hotbarItemSlot.useHand,
+            onItemUseSuccess = onSuccess,
+            onPlacementSuccess = onSuccess,
+        )
+
+        currentTarget = null
+    }
 
     /**
      * Finds something to do, either
