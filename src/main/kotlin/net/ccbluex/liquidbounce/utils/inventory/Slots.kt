@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -91,8 +92,11 @@ object Slots {
 }
 
 class SlotGroup<T : ItemSlot>(val slots: List<T>) : List<T> by slots {
-    val items: List<Item>
-        get() = slots.map { it.itemStack.item }
+    val stacks: Array<ItemStack>
+        get() = slots.mapToArray { it.itemStack }
+
+    val items: Array<Item>
+        get() = slots.mapToArray { it.itemStack.item }
 
     fun findSlot(item: Item): T? {
         return findSlot { it.item === item }

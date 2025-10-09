@@ -77,7 +77,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
         private val ignoreDurability by boolean("IgnoreDurability", false)
 
-        private object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
+        object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
             private val inventoryConstraints = tree(InventoryConstraints())
 
             @JvmField var currentBestTool: ItemSlot? = null
@@ -181,6 +181,9 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
     init {
         tree(RequireNearBed)
     }
+
+    val isInventoryConsidered: Boolean
+        get() = DynamicSelectMode.ConsiderInventory.running
 
     @Suppress("unused")
     private val handleBlockBreakingProgress = handler<BlockBreakingProgressEvent> { event ->
