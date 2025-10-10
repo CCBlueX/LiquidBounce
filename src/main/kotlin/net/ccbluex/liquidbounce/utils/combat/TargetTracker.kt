@@ -149,6 +149,7 @@ open class TargetSelector(
 
     open fun validate(entity: LivingEntity) =
         entity != player
+        && entity != player.vehicle
         && !entity.isRemoved
         && entity.shouldBeAttacked()
         && fov >= RotationUtil.crosshairAngleToEntity(entity)

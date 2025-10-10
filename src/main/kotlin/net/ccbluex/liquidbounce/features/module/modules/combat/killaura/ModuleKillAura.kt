@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.failedHits
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.renderFailedHits
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
@@ -71,6 +72,7 @@ import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.vehicle.BoatEntity
 
 /**
  * KillAura module
@@ -158,8 +160,11 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen = isInventoryOpen || mc.currentScreen is GenericContainerScreen
         val shouldResetTarget = player.isSpectator || player.isDead || !requirementsMet
+        val shouldStopRotation = player.vehicle is BoatEntity &&
+            (player.vehicle as BoatEntity).velocity.horizontalLengthSquared() > 1.0e-6 &&
+            !ModuleMultiActions.mayAttackWhileRowing()
 
-        if (isInInventoryScreen && !ignoreOpenInventory || shouldResetTarget) {
+        if (isInInventoryScreen && !ignoreOpenInventory || shouldResetTarget || shouldStopRotation) {
             // Reset current target
             targetTracker.reset()
             return@handler

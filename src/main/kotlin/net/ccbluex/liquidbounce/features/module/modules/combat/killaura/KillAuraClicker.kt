@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.openInventorySilently
+import net.minecraft.entity.vehicle.BoatEntity
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import kotlin.math.round
@@ -136,6 +137,12 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
 
         @Suppress("CognitiveComplexMethod")
         suspend fun prepare(): Boolean {
+            if (player.vehicle is BoatEntity) {
+                val boat = player.vehicle as BoatEntity
+                if (boat.velocity.horizontalLengthSquared() > 1.0e-6 && !ModuleMultiActions.mayAttackWhileRowing()) {
+                    return true
+                }
+            }
             if (simulateInventoryClosing && isInInventoryScreen) {
                 network.sendPacket(CloseHandledScreenC2SPacket(0))
             }

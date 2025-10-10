@@ -25,7 +25,11 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.passive.HorseEntity
+import net.minecraft.entity.passive.PigEntity
+import net.minecraft.entity.passive.StriderEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Items
 
 object KillAuraTargetTracker : TargetTracker() {
 
@@ -35,8 +39,12 @@ object KillAuraTargetTracker : TargetTracker() {
      */
     private val ignoreShield by boolean("IgnoreShield", true)
 
+    private val ignoreVehicle by boolean("IgnoreVehicle", false)
+
     override fun validate(entity: LivingEntity): Boolean {
-        return super.validate(entity) && validateShield(entity)
+        return super.validate(entity)
+            && validateShield(entity)
+            && validateVehicle()
     }
 
     /**
@@ -52,6 +60,23 @@ object KillAuraTargetTracker : TargetTracker() {
         }
 
         return !entity.wouldBlockHit
+    }
+
+    /**
+     * Check whether the player is riding a mount and whether rotation is possible.
+     */
+    private fun validateVehicle(): Boolean {
+        if (!ignoreVehicle) return true
+
+        val vehicle = player.vehicle ?: return true
+        if (vehicle is HorseEntity && vehicle.isTame) return false
+        if (vehicle is StriderEntity && vehicle.isSaddled) return false
+        if (vehicle is PigEntity
+            && (player.mainHandStack.item == Items.CARROT_ON_A_STICK)
+            && vehicle.vehicle == null
+        ) return false
+
+        return true
     }
 
 }
