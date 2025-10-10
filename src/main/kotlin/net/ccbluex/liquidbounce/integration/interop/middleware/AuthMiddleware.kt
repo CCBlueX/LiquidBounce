@@ -60,7 +60,8 @@ class AuthMiddleware : Middleware.OnRequest, Middleware.OnResponse,
         val codeParam = context.params[AUTH_CODE_PARAM]
 
         // Check if the authentication code is valid or if the request is already authenticated.
-        if (codeParam != null && codeParam == AUTH_CODE || isAuthenticated(context.headers)) {
+        if (codeParam != null && codeParam == AUTH_CODE || isAuthenticated(context.headers) ||
+            ThemeManager.theme.origin.external) {
             // Allow the request to proceed.
             return null
         }
