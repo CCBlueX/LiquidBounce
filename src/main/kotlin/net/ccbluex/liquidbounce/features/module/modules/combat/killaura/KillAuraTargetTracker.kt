@@ -69,12 +69,21 @@ object KillAuraTargetTracker : TargetTracker() {
         if (!ignoreVehicle) return true
 
         val vehicle = player.vehicle ?: return true
-        if (vehicle is HorseEntity && vehicle.isTame) return false
-        if (vehicle is StriderEntity && vehicle.isSaddled) return false
+
+        if (vehicle is HorseEntity && vehicle.isTame) {
+            return false
+        }
+
+        if (vehicle is StriderEntity && vehicle.isSaddled) {
+            return false
+        }
+
         if (vehicle is PigEntity
             && (player.mainHandStack.item == Items.CARROT_ON_A_STICK)
             && vehicle.vehicle == null
-        ) return false
+        ) {
+            return false
+        }
 
         return true
     }
