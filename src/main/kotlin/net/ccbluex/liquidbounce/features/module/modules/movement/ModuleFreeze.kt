@@ -135,15 +135,18 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlayerPositionLookS2CPacket && disableOnFlag) {
-            if (notification) {
-                notification(
-                    this.name,
-                    message("disabledOnFlag"),
-                    NotificationEvent.Severity.INFO
-                )
+        if (event.packet is PlayerPositionLookS2CPacket) {
+            missedOutTick = 0
+            if (disableOnFlag) {
+                if (notification) {
+                    notification(
+                        this.name,
+                        message("disabledOnFlag"),
+                        NotificationEvent.Severity.INFO
+                    )
+                }
+                enabled = false
             }
-            enabled = false
         }
     }
 
