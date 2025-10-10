@@ -57,9 +57,7 @@ object CommandClientThemeSubcommand {
         .suspendHandler {
             val idOrUrl = args[0] as String
             val theme = try {
-                if (!idOrUrl.contains("://")) {
-                    throw IllegalArgumentException("Not a URL")
-                }
+                require(idOrUrl.contains("://")) { "Not a URL" }
 
                 val url = URI.create(idOrUrl).toURL()
 
