@@ -20,12 +20,14 @@ package net.ccbluex.liquidbounce.event
 
 import it.unimi.dsi.fastutil.objects.Object2ReferenceRBTreeMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
+import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.client.Nameable
 
 /**
  * A callable event
  */
 abstract class Event {
+    @ProtocolExclude
     var isCompleted: Boolean = false
         internal set
 }
