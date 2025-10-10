@@ -66,7 +66,7 @@ class AuthMiddleware : Middleware.OnRequest, Middleware.OnResponse,
         }
 
         logger.warn("[Interop] Unauthenticated request to ${context.httpMethod} ${context.path}")
-        return httpUnauthorized("The authentication code is invalid")
+        return httpUnauthorized("Authentication required")
     }
 
     /**
