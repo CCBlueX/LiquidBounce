@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
@@ -400,12 +400,10 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         val eyes = player.eyePos
         val point = pointTracker.findPoint(eyes, entity)
 
-        val pointPos = point.pos
-
         debugGeometry("Box") { ModuleDebug.DebuggedBox(point.box, Color4b.ORANGE.with(a = 90)) }
-        debugGeometry("Point") { ModuleDebug.DebuggedPoint(pointPos, Color4b.WHITE, size = 0.1) }
+        debugGeometry("Point") { ModuleDebug.DebuggedPoint(point.pos, Color4b.WHITE, size = 0.1) }
 
-        val rotationPreference = LeastDifferencePreference.leastDifferenceToLastPoint(eyes, pointPos)
+        val rotationPreference = LeastDifferencePreference.leastDifferenceToLastPoint(eyes, point.pos)
 
         // raytrace to the point
         val rotation = raytraceBox(
