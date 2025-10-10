@@ -32,12 +32,26 @@ fun <T> Array<out T>?.unmodifiable(): List<T> =
         else -> ObjectImmutableList(this)
     }
 
-inline fun <reified K : Enum<K>, V> enumMap(): EnumMap<K, V> = EnumMap(K::class.java)
-
-@OptIn(ExperimentalTypeInference::class)
-inline fun <reified K : Enum<K>, V> enumMap(
-    @BuilderInference block: EnumMap<K, V>.() -> Unit
-): EnumMap<K, V> = EnumMap<K, V>(K::class.java).apply(block)
-
 inline fun <T> Comparator<in T>.max(a: T, b: T): T = if (compare(a, b) > 0) a else b
 inline fun <T> Comparator<in T>.min(a: T, b: T): T = if (compare(a, b) < 0) a else b
+
+inline fun <reified K : Enum<K>, V> enumMapOf(): EnumMap<K, V> = EnumMap(K::class.java)
+
+@JvmName("enumMapOfBuilder")
+@OptIn(ExperimentalTypeInference::class)
+inline fun <reified K : Enum<K>, V> enumMapOf(
+    @BuilderInference block: EnumMap<K, V>.() -> Unit
+): EnumMap<K, V> = enumMapOf<K, V>().apply(block)
+
+@JvmName("enumMapOfMapper")
+inline fun <reified K : Enum<K>, V> enumMapOf(
+    mapper: (K) -> V
+): EnumMap<K, V> = enumMapOf<K, V> {
+    K::class.java.enumConstants.forEach {
+        put(it, mapper(it))
+    }
+}
+
+@JvmName("enumMapOfPairs")
+inline fun <reified K : Enum<K>, V> enumMapOf(vararg pairs: Pair<K, V>): EnumMap<K, V> =
+    enumMapOf<K, V>().apply { putAll(pairs) }

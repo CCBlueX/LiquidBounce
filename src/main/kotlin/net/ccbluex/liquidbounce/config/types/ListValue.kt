@@ -26,7 +26,7 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
-import net.ccbluex.liquidbounce.utils.kotlin.enumMap
+import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 
 open class ListValue<T : MutableCollection<E>, E>(
     name: String,
@@ -151,7 +151,7 @@ class RegistryListValue<T : MutableSet<E>, E>(
 
     companion object {
         @JvmField
-        internal val TYPE_TO_REGISTRY_NAME = enumMap<ValueType, String> {
+        internal val TYPE_TO_REGISTRY_NAME = enumMapOf<ValueType, String> {
             put(ValueType.BLOCK, "blocks")
             put(ValueType.ITEM, "items")
             put(ValueType.SOUND, "sounds")
