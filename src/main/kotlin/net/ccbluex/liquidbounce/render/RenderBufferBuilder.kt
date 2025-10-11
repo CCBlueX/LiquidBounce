@@ -26,8 +26,6 @@ import com.mojang.blaze3d.vertex.VertexFormat.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.minecraft.client.gl.ShaderProgramKey
-import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.*
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Position
@@ -255,27 +253,20 @@ fun RenderBufferBuilder<VertexInputType.PosColor>.drawLine(
 
 sealed interface VertexInputType {
     val vertexFormat: VertexFormat
-    val shaderProgram: ShaderProgramKey
 
     object Pos : VertexInputType {
         override val vertexFormat: VertexFormat
             get() = VertexFormats.POSITION
-        override val shaderProgram: ShaderProgramKey
-            get() = ShaderProgramKeys.POSITION
     }
 
     object PosColor : VertexInputType {
         override val vertexFormat: VertexFormat
             get() = VertexFormats.POSITION_COLOR
-        override val shaderProgram: ShaderProgramKey
-            get() = ShaderProgramKeys.POSITION_COLOR
     }
 
     object PosTexColor : VertexInputType {
         override val vertexFormat: VertexFormat
             get() = VertexFormats.POSITION_TEXTURE_COLOR
-        override val shaderProgram: ShaderProgramKey
-            get() = ShaderProgramKeys.POSITION_TEX_COLOR
     }
 
 }
