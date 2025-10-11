@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStuck
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldHeadHitterFeature
@@ -76,7 +76,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
 
-        val offsets = if (!ScaffoldTellyFeature.isTellyBridging || ModuleStuck.enabled) {
+        val offsets = if (!ScaffoldTellyFeature.isTellyBridging || ModuleFreeze.running) {
             FULL_INVESTIGATION_OFFSETS
         } else if (ScaffoldDownFeature.shouldGoDown) {
             INVESTIGATE_DOWN_OFFSETS

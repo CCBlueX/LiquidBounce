@@ -77,7 +77,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
 
         private val ignoreDurability by boolean("IgnoreDurability", false)
 
-        private object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
+        object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
             private val inventoryConstraints = tree(InventoryConstraints())
 
             @JvmField var currentBestTool: ItemSlot? = null
@@ -86,11 +86,13 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             @Suppress("unused")
             private val inventoryActionHandler = handler<ScheduleInventoryActionEvent> { event ->
                 val currentBestTool = currentBestTool ?: return@handler
+                val slotToSwap = Slots.Hotbar.findSlot { it.isEmpty } ?: Slots.Hotbar[SilentHotbar.serversideSlot]
+
                 event.schedule(
                     inventoryConstraints,
                     InventoryAction.Click.performSwap(
                         from = currentBestTool,
-                        to = Slots.Hotbar[SilentHotbar.serversideSlot],
+                        to = slotToSwap,
                     ).also { if (swapAction == null) swapAction = it }
                 )
                 this.currentBestTool = null
@@ -179,6 +181,9 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
     init {
         tree(RequireNearBed)
     }
+
+    val isInventoryConsidered: Boolean
+        get() = DynamicSelectMode.ConsiderInventory.running
 
     @Suppress("unused")
     private val handleBlockBreakingProgress = handler<BlockBreakingProgressEvent> { event ->

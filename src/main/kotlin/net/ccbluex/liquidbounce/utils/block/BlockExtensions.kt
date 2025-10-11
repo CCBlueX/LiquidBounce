@@ -98,6 +98,22 @@ val BlockPos.outlineBox: Box
 val BlockPos.collisionShape: VoxelShape
     get() = this.getState()!!.getCollisionShape(world, this)
 
+fun VoxelShape.offset(pos: Vec3i): VoxelShape = offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+
+fun VoxelShape.getClosestSquaredDistanceTo(position: Position): Double {
+    var minDistanceSq = Double.MAX_VALUE
+    forEachBox { minX, minY, minZ, maxX, maxY, maxZ ->
+        val nearestX = position.x.coerceIn(minX, maxX)
+        val nearestY = position.y.coerceIn(minY, maxY)
+        val nearestZ = position.z.coerceIn(minZ, maxZ)
+        val distanceSq = (position.x - nearestX).sq() + (position.y - nearestY).sq() + (position.z - nearestZ).sq()
+        if (distanceSq < minDistanceSq) {
+            minDistanceSq = distanceSq
+        }
+    }
+    return minDistanceSq
+}
+
 /**
  * Shrinks a VoxelShape by the specified amounts on selected axes.
  */
@@ -148,33 +164,6 @@ fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelS
 val Block.mustBePlacedOnUpperSide: Boolean
     get() {
         return this is SlabBlock || this is StairsBlock
-    }
-
-val BlockPos.hasEntrance: Boolean
-    get() {
-        val block = this.getBlock()
-        val cache = BlockPos.Mutable()
-        return DIRECTIONS_EXCLUDING_DOWN.any {
-            val neighbor = cache.set(this, it)
-            neighbor.collisionShape == VoxelShapes.empty() && neighbor.getBlock() !== block
-        }
-    }
-
-val BlockPos.weakestNeighbor: BlockPos?
-    get() {
-        val block = this.getBlock()
-        val cache = BlockPos.Mutable()
-        val neighbors = DIRECTIONS_EXCLUDING_DOWN.mapNotNullTo(mutableListOf()) {
-            val neighbor = cache.set(this, it)
-            val state = neighbor.getState() ?: return@mapNotNullTo null
-            if (state.block !== block && !state.isAir) neighbor.toImmutable() else null
-        }
-
-        if (neighbors.isEmpty()) return null
-
-        val comparator = compareBy<BlockPos> { it.getBlock()?.hardness ?: 0f }
-            .thenBy { it.getCenterDistanceSquaredEyes() }
-        return neighbors.minWith(comparator)
     }
 
 /**

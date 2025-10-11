@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.fastutil.WeightedSortedList
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -29,6 +31,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -37,13 +40,15 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.minecraft.block.BedBlock
+import net.minecraft.block.BlockState
+import net.minecraft.block.ShapeContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
@@ -52,7 +57,9 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
+import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.RaycastContext
+import java.util.function.ToDoubleFunction
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 
@@ -105,6 +112,9 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
             defaultColor = Color4b(255, 0, 0, 90)
         )
     )
+
+    private val availableToolSlots
+        get() = if (ModuleAutoTool.isInventoryConsidered) Slots.Hotbar + Slots.Inventory else Slots.Hotbar
 
     private var currentTarget: DestroyerTarget? = null
     private fun clearCurrentTarget() {
@@ -238,25 +248,17 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
     }
 
     private fun searchPossibleTargetPositions(): List<BlockPos> {
-        val eyesPos = player.eyePos
-
-        val rangeSq = range.sq()
-
-        val possibleBlocks = eyesPos.searchBlocksInCuboid(range + 1) { pos, state ->
-            val block = state.block
-            when {
-                block !in targets -> false
-                block is BedBlock && isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
-                else -> getNearestPoint(eyesPos, pos.collisionShape.boundingBox.offset(pos))
-                    .squaredDistanceTo(eyesPos) <= rangeSq
+        return player.eyePos.searchBlocksInCuboid(range + 1) { pos, state ->
+            when (val block = state.block) {
+                !in targets -> false
+                is BedBlock if isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
+                else -> true
             }
-        }.mapTo(mutableListOf()) { it.first }
-
-        if (possibleBlocks.isEmpty()) return emptyList()
-
-        possibleBlocks.sortBy { it.getCenterDistanceSquaredEyes() }
-
-        return possibleBlocks
+        }.toCollection(WeightedSortedList(upperBound = range.sq().toDouble()) { (pos, state) ->
+            state.getCollisionShape(world, pos, ShapeContext.of(player))
+                .offset(pos)
+                .getClosestSquaredDistanceTo(player.eyePos)
+        }).mapToArray { it.first }.unmodifiable()
     }
 
     private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {
@@ -292,21 +294,20 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
     ): List<BlockPos> {
         val eyePos = player.eyePos
         val visited = LongOpenHashSet()
-        val pos = BlockPos.Mutable()
         val result = mutableListOf<BlockPos>()
-        val targetPoint = getNearestPoint(eyePos, target.collisionShape.boundingBox)
+        val targetPoint = target.collisionShape.getClosestPointTo(eyePos).getOrNull() ?: return emptyList()
 
-        fun trace0(currBlock: BlockPos) {
+        fun trace0(currBlock: Long) {
+            val pos = BlockPos.Mutable()
             for (direction in Direction.entries) {
-                pos.set(currBlock, direction)
+                pos.set(currBlock).move(direction)
                 if (pos == target || pos.asLong() in visited) {
                     continue
                 }
 
                 // Any of boxes raycast the line is not null -> need to break
-                val collisionShape = pos.collisionShape
                 var rc: Vec3d? = null
-                collisionShape.forEachBox { minX, minY, minZ, maxX, maxY, maxZ ->
+                pos.collisionShape.forEachBox { minX, minY, minZ, maxX, maxY, maxZ ->
                     if (rc == null) {
                         rc = Box.raycast(minX, minY, minZ, maxX, maxY, maxZ, eyePos, targetPoint).getOrNull()
                     }
@@ -317,10 +318,10 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
                 result.add(pos.toImmutable())
                 visited.add(pos.asLong())
 
-                trace0(pos)
+                trace0(pos.asLong())
             }
         }
-        trace0(startPos)
+        trace0(startPos.asLong())
 
         return result
     }
@@ -389,14 +390,9 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
         val arr = traceWayToTarget(initialPosition, blockPos)
 
-        val hotbarItems = Slots.Hotbar.map { it.itemStack }
-
-        val resistance = arr.mapNotNull { it.getState()?.takeUnless { state -> state.isAir } }
-            .sumOf {
-                val bestMiningSpeed = hotbarItems.maxOfOrNull { item -> item.getMiningSpeedMultiplier(it) } ?: 1.0F
-
-                it.getHardness(world, BlockPos.ORIGIN).toDouble() / bestMiningSpeed.toDouble()
-            }
+        val resistance = arr.mapNotNull {
+            it to (it.getState()?.takeUnless { state -> state.isAir } ?: return@mapNotNull null)
+        }.sumOf(::miningDuration)
 
         considerAsTarget(
             DestroyerTarget(blockPos, DestroyAction.DESTROY, SurroundingInfo(initialPosition, resistance)),
@@ -420,8 +416,6 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
                 other.isTarget -> 1
                 currentSurrounding == null -> -1
                 otherSurrounding == null -> 1
-//                currentSurrounding.resistance == otherSurrounding.resistance ->
-//                    this.pos.getCenterDistanceSquaredEyes().compareTo(other.pos.getCenterDistanceSquaredEyes())
                 else -> currentSurrounding.resistance.compareTo(otherSurrounding.resistance)
             }
         }
@@ -438,6 +432,43 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
     private enum class DestroyAction(override val choiceName: String) : NamedChoice {
         DESTROY("Destroy"), USE("Use")
+    }
+
+    private val BlockPos.hasEntrance: Boolean
+        get() {
+            val block = this.getBlock()
+            val cache = BlockPos.Mutable()
+            return DIRECTIONS_EXCLUDING_DOWN.any {
+                val neighbor = cache.set(this, it)
+                neighbor.collisionShape == VoxelShapes.empty() && neighbor.getBlock() !== block
+            }
+        }
+
+    private val BlockPos.weakestNeighbor: BlockPos?
+        get() {
+            val block = this.getBlock()
+            val cache = BlockPos.Mutable()
+            val neighbors = DIRECTIONS_EXCLUDING_DOWN.mapNotNullTo(mutableListOf()) {
+                val neighbor = cache.set(this, it)
+                val state = neighbor.getState() ?: return@mapNotNullTo null
+                if (state.block !== block && !state.isAir) neighbor.toImmutable() to state else null
+            }
+
+            return neighbors.minWithOrNull(comparator)?.first
+        }
+
+    private val comparator = Comparator.comparingDouble(ToDoubleFunction(::miningDuration))
+        .thenComparingDouble(ToDoubleFunction { (pos, state) ->
+            state.getCollisionShape(world, pos, ShapeContext.of(player))
+                .offset(pos)
+                .getClosestSquaredDistanceTo(player.eyePos)
+        })
+
+    @JvmStatic
+    private fun miningDuration(pair: Pair<BlockPos, BlockState>): Double {
+        val (pos, state) = pair
+        val bestMiningSpeed = availableToolSlots.maxOfOrNull { it.itemStack.getMiningSpeedMultiplier(state) } ?: 1.0F
+        return state.getHardness(world, pos).toDouble() / bestMiningSpeed.toDouble()
     }
 
 }

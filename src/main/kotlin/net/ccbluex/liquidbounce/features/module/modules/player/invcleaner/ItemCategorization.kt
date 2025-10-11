@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.VirtualItemSlot
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.enumMap
+import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.fluid.LavaFluid
@@ -146,7 +146,7 @@ class ItemCategorization(
          * We expect to be full armor to be diamond armor.
          */
         @JvmStatic
-        private val diamondArmorPieces: Map<EquipmentSlot, ArmorPiece> = enumMap {
+        private val diamondArmorPieces: Map<EquipmentSlot, ArmorPiece> = enumMapOf {
             put(EquipmentSlot.HEAD, constructArmorPiece(Items.DIAMOND_HELMET, 0))
             put(EquipmentSlot.CHEST, constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1))
             put(EquipmentSlot.LEGS, constructArmorPiece(Items.DIAMOND_LEGGINGS, 2))

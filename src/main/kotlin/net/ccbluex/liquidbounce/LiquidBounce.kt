@@ -311,6 +311,7 @@ object LiquidBounce : EventListener {
         ThemeManager.init()
         // Preload marketplace items
         ConfigSystem.load(MarketplaceManager)
+        ConfigSystem.load(ThemeManager)
         ThemeManager.load()
         IntegrationListener
 

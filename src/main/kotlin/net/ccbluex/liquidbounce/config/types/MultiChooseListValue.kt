@@ -103,7 +103,7 @@ class MultiChooseListValue<T : NamedChoice>(
         }
 
         // Trigger listeners
-        set(current)
+        set(current) { }
 
         return !isActive
     }

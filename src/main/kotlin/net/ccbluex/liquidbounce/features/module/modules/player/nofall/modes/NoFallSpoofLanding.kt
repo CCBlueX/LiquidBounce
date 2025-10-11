@@ -23,7 +23,12 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
@@ -32,9 +37,9 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.math.Vec3d
 
 /**
- * Doesn't work on 1.8.x
+ * Does not work in server version 1.8 and below.
  *
- * @author Chasteful
+ * @author jiuxian_baka
  */
 internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
 
@@ -58,6 +63,11 @@ internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> {
+        if (isOlderThanOrEqual1_8) {
+            chat(markAsError(translation("liquidbounce.module.noFall.messages.spoofLanding")))
+            ModuleNoFall.enabled = false
+            return@handler
+        }
         val packet = it.packet
 
         if (packet is PlayerMoveC2SPacket) {

@@ -28,8 +28,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.TreeSet;
-
 @Mixin(PacketType.class)
 public class MixinPacketType {
 
@@ -41,7 +39,6 @@ public class MixinPacketType {
      */
     @Inject(method = "<init>", at = @At("RETURN"))
     private void hookPacketRegistry(NetworkSide networkSide, Identifier identifier, CallbackInfo ci) {
-        PacketRegistryKt.getPacketRegistry().computeIfAbsent(networkSide, k -> new TreeSet<>())
-                .add(identifier);
+        PacketRegistryKt.getPacketRegistry().get(networkSide).add(identifier);
     }
 }

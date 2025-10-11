@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 
 /**
  * InventoryCleaner module
@@ -96,7 +97,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
                     Pair(ItemSortChoice.THROWABLES.category!!, maxThrowables),
                     Pair(ItemCategory(ItemType.ARROW, 0), maxArrows),
                 ),
-                desiredValuePerFunction = hashMapOf(
+                desiredValuePerFunction = enumMapOf(
                     Pair(ItemFunction.FOOD, maxFoods),
                     Pair(ItemFunction.WEAPON_LIKE, 1),
                 )
@@ -189,8 +190,8 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
         val desiredItemsPerCategory: Map<ItemCategory, Int>,
         val desiredValuePerFunction: Map<ItemFunction, Int>,
     ) {
-        fun getConstraints(facet: ItemFacet): ArrayList<ItemConstraintInfo> {
-            val constraints = ArrayList<ItemConstraintInfo>()
+        fun getConstraints(facet: ItemFacet): MutableList<ItemConstraintInfo> {
+            val constraints = mutableListOf<ItemConstraintInfo>()
 
             if (facet.providedItemFunctions.isEmpty()) {
                 val defaultDesiredAmount = if (facet.category.type.oneIsSufficient) 1 else Integer.MAX_VALUE

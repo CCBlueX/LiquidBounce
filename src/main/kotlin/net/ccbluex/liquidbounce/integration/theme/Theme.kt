@@ -19,11 +19,13 @@
 
 package net.ccbluex.liquidbounce.integration.theme
 
+import io.netty.handler.codec.http.HttpHeaderNames
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
+import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.JsonComponentFactory
 import net.ccbluex.liquidbounce.render.FontManager
@@ -34,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Identifier
+import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
@@ -45,13 +48,22 @@ import java.util.*
  * Can be local from [ClientInteropServer] or remote from the internet.
  */
 @Suppress("TooManyFunctions")
-class Theme private constructor(val origin: Origin, url: String): BaseApi(url.removeSuffix("/")), Closeable {
+class Theme private constructor(val origin: Origin, url: String) :
+    BaseApi(
+        url.removeSuffix("/"),
+        defaultHeaders = Headers.Builder()
+            .add(
+                HttpHeaderNames.COOKIE.toString(),
+                "${AuthMiddleware.AUTH_COOKIE_NAME}=${AuthMiddleware.AUTH_CODE}"
+            )
+            .build()
+    ), Closeable {
 
-    enum class Origin(override val choiceName: String) : NamedChoice {
-        RESOURCE("resource"),
-        LOCAL("local"),
-        MARKETPLACE("marketplace"),
-        REMOTE("remote")
+    enum class Origin(override val choiceName: String, val external: Boolean) : NamedChoice {
+        RESOURCE("resource", false),
+        LOCAL("local", false),
+        MARKETPLACE("marketplace", false),
+        REMOTE("remote", true)
     }
 
     var metadata: ThemeMetadata
@@ -188,12 +200,15 @@ class Theme private constructor(val origin: Origin, url: String): BaseApi(url.re
     /**
      * Get the URL to the given page name in the theme.
      */
-    fun getUrl(name: String? = null, markAsStatic: Boolean = false) = "$baseUrl/#/${name.orEmpty()}".let {
-        if (markAsStatic) {
-            "$it?static"
-        } else {
-            it
-        }
+    fun getUrl(name: String? = null, markAsStatic: Boolean = false): String {
+        val baseUrlWithFragment = "$baseUrl/?${AuthMiddleware.AUTH_CODE_PARAM}=" +
+            "${AuthMiddleware.AUTH_CODE}#/${name.orEmpty()}"
+        val params = buildList {
+            if (origin.external) add("port=${ClientInteropServer.port}")
+            if (markAsStatic) add("static")
+        }.joinToString("&")
+
+        return if (params.isNotEmpty()) "$baseUrlWithFragment?$params" else baseUrlWithFragment
     }
 
     fun isSupported(name: String?) = isScreenSupported(name) || isOverlaySupported(name)
@@ -221,4 +236,3 @@ class Theme private constructor(val origin: Origin, url: String): BaseApi(url.re
     }
 
 }
-

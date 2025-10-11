@@ -24,12 +24,14 @@ import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
+import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import net.minecraft.util.Formatting
 import net.minecraft.util.Util
+import java.net.URI
 
 object CommandClientThemeSubcommand {
     fun themeCommand() = CommandBuilder.begin("theme")
@@ -52,13 +54,35 @@ object CommandClientThemeSubcommand {
                 .autocompletedFrom { ThemeManager.themeIds }
                 .build()
         )
-        .handler {
-            val id = args[0] as String
-            val theme = ThemeManager.themes.find { it.metadata.id.equals(id, true) } ?:
-                throw CommandException("No theme found with name \"$id\"!".asText())
+        .suspendHandler {
+            val idOrUrl = args[0] as String
+            val theme = try {
+                require(idOrUrl.contains("://")) { "Not a URL" }
+
+                val url = URI.create(idOrUrl).toURL()
+
+                // Disallow non-http(s) URLs
+                if (!url.protocol.equals("http", true) &&
+                    !url.protocol.equals("https", true)) {
+                    throw CommandException(("Invalid URL protocol \"${url.protocol}\", " +
+                        "only http(s) is allowed.").asText())
+                }
+
+                // Disallow non-localhost URLs
+                if (!url.host.equals("localhost", true) &&
+                    !url.host.equals("127.0.0.1", true)) {
+                    throw CommandException("For security reasons, only localhost URLs are allowed.".asText())
+                }
+
+                // Loads the theme from the URL (will throw an exception if the theme is invalid)
+                Theme.load(url.toString())
+            } catch (_: IllegalArgumentException) {
+                ThemeManager.themes.find { it.metadata.id.equals(idOrUrl, true) }
+                    ?: throw CommandException("No theme found with name \"$idOrUrl\"!".asText())
+            }
 
             runCatching {
-                ThemeManager.currentTheme = theme.metadata.id
+                ThemeManager.theme = theme
                 ConfigSystem.store(ThemeManager)
             }.onFailure {
                 chat(markAsError("Failed to switch theme: ${it.message}"))

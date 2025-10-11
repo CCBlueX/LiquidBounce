@@ -531,6 +531,7 @@
   "liquidbounce.module.freeCam.description": "允許你的視野離開身體。",
   "liquidbounce.module.freeLook.description": "允許你圍繞角色自由移動視角。",
   "liquidbounce.module.freeze.description": "允許在伺服器不知道的情況下將你凍結在你現在的位置。",
+  "liquidbounce.module.freeze.messages.disabledOnFlag": "檢測到 S08 拉返，已自動關閉模組。",
   "liquidbounce.module.middleClickAction.messages.addedFriend": "%s 已添加到好友列表。",
   "liquidbounce.module.middleClickAction.description": "允許你使用滑鼠中鍵執行額外操作。",
   "liquidbounce.module.middleClickAction.messages.removedFriend": "%s 已移除自好友列表。",

@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.utils.render.trajectory
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.drawSideBox
 import net.ccbluex.liquidbounce.render.drawSolidBox
@@ -96,8 +97,9 @@ class TrajectoryInfoRenderer(
                 cos(yawRadians) * cos(pitchRadians).toDouble()
             ).normalize().scale(trajectoryInfo.initialVelocity)
 
-            if (trajectoryInfo.copiesPlayerVelocity) {
-                velocity.move(
+            //In Freeze, this momentum is the residual value before freezing.
+            if (trajectoryInfo.copiesPlayerVelocity && !ModuleFreeze.running) {
+            velocity.move(
                     x = entity.velocity.x,
                     y = if (entity.isOnGround) 0.0 else entity.velocity.y,
                     z = entity.velocity.z
