@@ -24,9 +24,7 @@ import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.gl.SimpleFramebuffer
-import net.minecraft.client.gl.VertexBuffer
 import org.joml.Matrix4f
 import java.io.Closeable
 
