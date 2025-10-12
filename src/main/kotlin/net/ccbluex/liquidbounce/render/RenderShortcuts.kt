@@ -24,7 +24,6 @@ import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextAccessor
-import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
@@ -128,11 +127,16 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
+@OptIn(ExperimentalContracts::class)
 inline fun renderEnvironmentForGUI(
     event: OverlayRenderEvent,
     matrixStack: MatrixStack? = null,
     draw: GUIRenderEnvironment.() -> Unit
 ) {
+    contract {
+        callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
+    }
+
     RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR)
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
     RenderSystem.enableBlend()
