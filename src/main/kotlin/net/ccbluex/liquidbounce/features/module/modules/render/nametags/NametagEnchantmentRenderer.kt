@@ -46,7 +46,7 @@ import org.joml.component2
 import kotlin.math.hypot
 
 private object EnchantmentDisplayHelper {
-    private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(100)
+    private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(128)
 
     private val knownCurses = setOf(
         Enchantments.BINDING_CURSE,
