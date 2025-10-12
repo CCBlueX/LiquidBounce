@@ -45,6 +45,7 @@ import net.minecraft.util.math.Vec3i
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
 import org.joml.Vector3fc
+import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11C
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -127,8 +128,7 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
     val camera = mc.entityRenderDispatcher.camera ?: return
 
     GlStateManager._enableBlend()
-    // FIXME
-//    RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
+    GL11.glBlendFunc(GlConst.GL_SRC_ALPHA, GlConst.GL_ONE_MINUS_SRC_ALPHA)
     GlStateManager._disableDepthTest()
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
 
@@ -152,7 +152,6 @@ inline fun renderEnvironmentForGUI(
         callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
     }
 
-    RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR)
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
     GlStateManager._enableBlend()
 
