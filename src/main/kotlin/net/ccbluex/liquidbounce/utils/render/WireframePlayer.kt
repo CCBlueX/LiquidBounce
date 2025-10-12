@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.render.drawBoxes
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -50,19 +50,17 @@ data class WireframePlayer(private var pos: Vec3d, private var yaw: Float, priva
                 matrix.rotate(Quaternionf().rotationY(Math.toRadians(yRot).toFloat()))
                 matrix.scale(1.9f)
 
-                drawBoxes {
-                    drawBox(RENDER_LEFT_LEG, color, outlineColor)
-                    drawBox(RENDER_RIGHT_LEG, color, outlineColor)
-                    drawBox(RENDER_BODY, color, outlineColor)
-                    drawBox(RENDER_LEFT_ARM, color, outlineColor)
-                    drawBox(RENDER_RIGHT_ARM, color, outlineColor)
+                drawBox(RENDER_LEFT_LEG, color, outlineColor)
+                drawBox(RENDER_RIGHT_LEG, color, outlineColor)
+                drawBox(RENDER_BODY, color, outlineColor)
+                drawBox(RENDER_LEFT_ARM, color, outlineColor)
+                drawBox(RENDER_RIGHT_ARM, color, outlineColor)
 
-                    matrix.translate(0f, RENDER_HEAD.minY.toFloat(), 0f)
-                    matrix.rotate(Quaternionf().rotationX(Math.toRadians(pitch.toDouble()).toFloat()))
-                    matrix.translate(0f, -RENDER_HEAD.minY.toFloat(), 0f)
+                matrix.translate(0f, RENDER_HEAD.minY.toFloat(), 0f)
+                matrix.rotate(Quaternionf().rotationX(Math.toRadians(pitch.toDouble()).toFloat()))
+                matrix.translate(0f, -RENDER_HEAD.minY.toFloat(), 0f)
 
-                    drawBox(RENDER_HEAD, color, outlineColor)
-                }
+                drawBox(RENDER_HEAD, color, outlineColor)
             }
         }
     }

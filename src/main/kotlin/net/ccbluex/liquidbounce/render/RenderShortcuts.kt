@@ -395,6 +395,67 @@ fun VertexConsumer.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: V
     vertex(matrix, p3.x.toFloat(), p3.y.toFloat(), p3.z.toFloat()).color(color4b.toARGB())
 }
 
+
+/**
+ * Helper unction to draw a solid box using the specified [box].
+ *
+ * @param box The bounding box of the box.
+ */
+@Suppress("CognitiveComplexMethod")
+private fun RenderEnvironment.drawBox(
+    box: Box,
+    drawMode: DrawMode,
+    useOutlineVertices: Boolean = false,
+    color: Color4b? = null,
+    verticesToUse: Int = -1
+) = drawCustomMesh(drawMode, VertexInputType.PosColor) { matrix ->
+    val check = verticesToUse != -1
+
+    // Draw the vertices of the box
+    if (useOutlineVertices) {
+        box.forEachOutlineVertex { i, x, y, z ->
+            if (check && (verticesToUse and (1 shl i)) != 0) {
+                return@forEachOutlineVertex
+            }
+
+            val bb = vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
+
+            if (color != null) {
+                bb.color(color.toARGB())
+            }
+        }
+    } else {
+        box.forEachFaceVertex { i, x, y, z ->
+            if (check && (verticesToUse and (1 shl i)) != 0) {
+                return@forEachFaceVertex
+            }
+
+            val bb = vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
+
+            if (color != null) {
+                bb.color(color.toARGB())
+            }
+        }
+    }
+}
+
+/**
+ * Function to draw a colored [box].
+ */
+fun RenderEnvironment.drawBox(
+    box: Box,
+    faceColor: Color4b,
+    outlineColor: Color4b? = null,
+    vertices: Int = -1,
+    outlineVertices: Int = -1
+) {
+    drawBox(box, DrawMode.QUADS, color = faceColor, verticesToUse = vertices)
+
+    if (outlineColor != null) {
+        drawBox(box, DrawMode.DEBUG_LINES, useOutlineVertices = true, outlineColor, outlineVertices)
+    }
+}
+
 /**
  * Function to draw a side box using the specified [box] and [side].
  *

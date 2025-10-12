@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
-import net.ccbluex.liquidbounce.render.drawBoxes
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -187,34 +187,32 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
         val matrixStack = event.matrixStack
 
         renderEnvironmentForWorld(matrixStack) {
-            drawBoxes {
-                targetTracker.targets().forEach { entity ->
-                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
-                    val eyePos = pos.add(0.0, entity.standingEyeHeight.toDouble(), 0.0)
-                    val box = Box(
-                        0.0,
-                        entity.standingEyeHeight.toDouble(),
-                        0.0,
-                        0.0,
-                        entity.standingEyeHeight.toDouble(),
-                        0.0
-                    ).expand(0.1)
+            targetTracker.targets().forEach { entity ->
+                val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                val eyePos = pos.add(0.0, entity.standingEyeHeight.toDouble(), 0.0)
+                val box = Box(
+                    0.0,
+                    entity.standingEyeHeight.toDouble(),
+                    0.0,
+                    0.0,
+                    entity.standingEyeHeight.toDouble(),
+                    0.0
+                ).expand(0.1)
 
-                    val color = if (targetEntityId == entity.id) {
-                        Color4b.GREEN
-                    } else if (fightMap.contains(entity.id)) {
-                        Color4b.YELLOW
-                    } else {
-                        Color4b.RED
-                    }
+                val color = if (targetEntityId == entity.id) {
+                    Color4b.GREEN
+                } else if (fightMap.contains(entity.id)) {
+                    Color4b.YELLOW
+                } else {
+                    Color4b.RED
+                }
 
-                    withPositionRelativeToCamera(pos) {
-                        drawBox(
-                            box,
-                            color.with(a = 50),
-                            color.with(a = 150)
-                        )
-                    }
+                withPositionRelativeToCamera(pos) {
+                    drawBox(
+                        box,
+                        color.with(a = 50),
+                        color.with(a = 150)
+                    )
                 }
             }
         }
