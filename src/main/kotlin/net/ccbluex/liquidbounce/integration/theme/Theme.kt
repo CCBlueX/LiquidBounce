@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.integration.theme
 
 import io.netty.handler.codec.http.HttpHeaderNames
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
@@ -35,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.texture.NativeImageBackedTexture
-import net.minecraft.util.Identifier
 import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
@@ -189,8 +189,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             get<NativeImageBackedTexture>("/backgrounds/${background.name}.png")
         }.getOrNull() ?: return false
 
-        val id = Identifier.of("liquidbounce",
-            "theme-bg-${metadata.name.lowercase(Locale.US)}")
+        val id = LiquidBounce.identifier("theme-bg-${metadata.name.lowercase(Locale.US)}")
         themeBackgroundTexture = ThemeBackground.image(id)
         mc.textureManager.registerTexture(id, image)
         logger.info("Loaded background image for theme ${metadata.name}")

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.itemgroup
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
@@ -25,7 +26,6 @@ import net.minecraft.item.ItemGroup
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
-import net.minecraft.util.Identifier
 import java.util.function.Consumer
 import java.util.function.Supplier
 
@@ -54,7 +54,7 @@ open class ClientItemGroup(
             .build()
 
         // Add tab to creative inventory
-        Registry.register(Registries.ITEM_GROUP, Identifier.of("liquidbounce", plainName.lowercase()), itemGroup)
+        Registry.register(Registries.ITEM_GROUP, LiquidBounce.identifier(plainName.lowercase()), itemGroup)
 
         return itemGroup
     }
