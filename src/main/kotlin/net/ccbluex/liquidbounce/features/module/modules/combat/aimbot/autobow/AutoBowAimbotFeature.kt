@@ -70,7 +70,7 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
     private val renderHandler = handler<OverlayRenderEvent> { event ->
         val target = targetTracker.target ?: return@handler
 
-        renderEnvironmentForGUI {
+        renderEnvironmentForGUI(event) {
             targetRenderer.render(this, target, event.tickDelta)
         }
     }

@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextAccessor
-import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
-import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
@@ -43,6 +43,7 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
+import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11C
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -73,22 +74,13 @@ val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
  * @property matrixStack The matrix stack for rendering.
  */
 sealed class RenderEnvironment(val matrixStack: MatrixStack) {
-    val currentMvpMatrix: Matrix4f
-        get() = matrixStack.peek().positionMatrix
-
     abstract fun relativeToCamera(pos: Vec3d): Vec3d
-
-    inline fun FontRenderer.withBuffers(block: FontRenderer.(FontRendererBuffers) -> Unit) {
-        val fontBuffers = FontRendererBuffers()
-        try {
-            block(fontBuffers) // don't forget to `commit`!
-        } finally {
-            fontBuffers.draw()
-        }
-    }
 }
 
-class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixStack) {
+class GUIRenderEnvironment(
+    val context: DrawContext,
+    matrixStack: MatrixStack?,
+) : RenderEnvironment(matrixStack ?: context.matrices) {
     override fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos
     }
@@ -135,12 +127,21 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
-inline fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: GUIRenderEnvironment.() -> Unit) {
+@OptIn(ExperimentalContracts::class)
+inline fun renderEnvironmentForGUI(
+    event: OverlayRenderEvent,
+    matrixStack: MatrixStack? = null,
+    draw: GUIRenderEnvironment.() -> Unit
+) {
+    contract {
+        callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
+    }
+
     RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR)
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
     RenderSystem.enableBlend()
 
-    draw(GUIRenderEnvironment(matrixStack))
+    draw(GUIRenderEnvironment(event.context, matrixStack))
 
     RenderSystem.disableBlend()
 }
@@ -320,28 +321,29 @@ private fun RenderEnvironment.drawLines(lines: List<Vec3>, mode: DrawMode = Draw
     }
 }
 
-/**
- */
-fun RenderEnvironment.drawTextureQuad(pos1: Vec3d, pos2: Vec3d) {
+fun RenderEnvironment.drawTextureQuad(
+    pos1: Vector3fc,
+    uv1: UV2f = UV2f(0f, 0f),
+    pos2: Vector3fc,
+    uv2: UV2f = UV2f(1f, 1f),
+    argb: Int,
+) {
     drawCustomMesh(
         DrawMode.QUADS,
         VertexInputType.PosTexColor,
     ) { matrix ->
-        vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), 0.0F)
-            .texture(0f, 1.0F)
-            .color(255, 255, 255, 255)
-
-        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), 0.0F)
-            .texture(1.0F, 1.0F)
-            .color(255, 255, 255, 255)
-
-        vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), 0.0F)
-            .texture(1.0F, 0.0f)
-            .color(255, 255, 255, 255)
-
-        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), 0.0F)
-            .texture(0.0f, 0.0f)
-            .color(255, 255, 255, 255)
+        vertex(matrix, pos1.x(), pos2.y(), pos1.z())
+            .texture(uv1.u, uv2.v)
+            .color(argb)
+        vertex(matrix, pos2.x(), pos2.y(), pos2.z())
+            .texture(uv2.u, uv2.v)
+            .color(argb)
+        vertex(matrix, pos2.x(), pos1.y(), pos2.z())
+            .texture(uv2.u, uv1.v)
+            .color(argb)
+        vertex(matrix, pos1.x(), pos1.y(), pos1.z())
+            .texture(uv1.u, uv1.v)
+            .color(argb)
     }
 }
 

@@ -337,6 +337,11 @@ class ItemStackListRenderer private constructor(
 
         companion object : SingleItemStackRenderer {
 
+            @JvmField
+            val OnlyItem = SingleItemStackRenderer { _, _, stack, x, y ->
+                drawItem(stack, x, y)
+            }
+
             override fun DrawContext.drawItemStack(
                 textRenderer: TextRenderer,
                 index: Int,
@@ -354,6 +359,9 @@ class ItemStackListRenderer private constructor(
                 drawStackCount: Boolean = true,
                 drawCooldownProgress: Boolean = true,
             ): SingleItemStackRenderer {
+                if (!drawItemBar && !drawStackCount && !drawCooldownProgress) return OnlyItem
+                if (drawItemBar && drawStackCount && drawCooldownProgress) return this
+
                 return SingleItemStackRenderer { textRenderer, index, stack, x, y ->
                     drawItem(stack, x, y)
                     matrices.push()

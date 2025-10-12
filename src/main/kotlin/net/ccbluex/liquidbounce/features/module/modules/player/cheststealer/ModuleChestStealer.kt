@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.isMergeable
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ItemStack
 import kotlin.math.ceil
 
@@ -308,7 +309,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     }
 
     fun Screen.canBeStolen(): Boolean {
-        return running && this is HandledScreen<*> &&
+        return running && this is HandledScreen<*> && this !is InventoryScreen &&
             checkScreenHandlerType.isValid(this) && checkScreenTitle.isValid(this)
     }
 
