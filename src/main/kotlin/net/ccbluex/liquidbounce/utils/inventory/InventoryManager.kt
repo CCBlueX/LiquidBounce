@@ -92,6 +92,7 @@ object InventoryManager : EventListener {
 
         debugParameter("Inventory Open") { isInventoryOpen }
         debugParameter("Inventory Open Server Side") { isInventoryOpenServerSide }
+        debugParameter("Cursor Stack") { player.currentScreenHandler.cursorStack }
 
         var maximumCloseDelay = 0
 

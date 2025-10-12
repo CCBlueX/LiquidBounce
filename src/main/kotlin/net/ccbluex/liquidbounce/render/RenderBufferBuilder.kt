@@ -21,13 +21,12 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.VertexFormat
+import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
 import com.mojang.blaze3d.vertex.VertexFormat.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.minecraft.client.render.*
-import net.minecraft.util.math.Box
 import net.minecraft.util.math.Position
 
 
@@ -38,135 +37,35 @@ import net.minecraft.util.math.Position
  *
  * This should only be used on render thread.
  */
-class RenderBufferBuilder<I : VertexInputType>(
+class RenderBufferBuilder<I : VertexInputType> private constructor(
     private val drawMode: DrawMode,
     private val vertexFormat: I,
-    private val tesselator: Tessellator
+    private val tessellator: Tessellator,
+    internal val vertexConsumer: BufferBuilder,
 ) {
-    // Begin drawing lines with position format
-    val buffer: BufferBuilder = tesselator.begin(drawMode, vertexFormat.vertexFormat)
 
-    /**
-     * Function to draw a solid box using the specified [box].
-     *
-     * @param box The bounding box of the box.
-     */
-    @Suppress("CognitiveComplexMethod")
-    @JvmOverloads
-    fun drawBox(
-        env: RenderEnvironment,
-        box: Box,
-        useOutlineVertices: Boolean = false,
-        color: Color4b? = null,
-        verticesToUse: Int = -1
-    ) {
-        val matrix = env.currentMvpMatrix
-
-        val check = verticesToUse != -1
-
-        // Draw the vertices of the box
-        if (useOutlineVertices) {
-            box.forEachOutlineVertex { i, x, y, z ->
-                if (check && (verticesToUse and (1 shl i)) != 0) {
-                    return@forEachOutlineVertex
-                }
-
-                val bb = buffer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-
-                if (color != null) {
-                    bb.color(color.toARGB())
-                }
-            }
-        } else {
-            box.forEachFaceVertex { i, x, y, z ->
-                if (check && (verticesToUse and (1 shl i)) != 0) {
-                    return@forEachFaceVertex
-                }
-
-                val bb = buffer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-
-                if (color != null) {
-                    bb.color(color.toARGB())
-                }
-            }
-        }
-    }
+    constructor(
+        drawMode: DrawMode,
+        vertexFormat: I,
+        tessellator: Tessellator,
+    ) : this(
+        drawMode,
+        vertexFormat,
+        tessellator,
+        tessellator.begin(drawMode, vertexFormat.vertexFormat),
+    )
 
     fun draw() {
-        val built = buffer.endNullable() ?: return
+        val built = vertexConsumer.endNullable() ?: return
 
         RenderSystem.setShader(vertexFormat.shaderProgram)
 
         BufferRenderer.drawWithGlobalProgram(built)
-        tesselator.clear()
+        tessellator.clear()
     }
 
     fun reset() {
-        buffer.endNullable()
-    }
-
-    companion object {
-        @JvmField
-        val TESSELATOR_A: Tessellator = Tessellator(0x200000)
-        @JvmField
-        val TESSELATOR_B: Tessellator = Tessellator(0x200000)
-    }
-}
-
-/**
- * Draws colored boxes. Renders automatically
- */
-inline fun WorldRenderEnvironment.drawBoxes(fn: BoxRenderer.() -> Unit) {
-    val renderer = BoxRenderer(this)
-
-    try {
-        fn(renderer)
-    } finally {
-        renderer.draw()
-    }
-}
-
-class BoxRenderer(val env: WorldRenderEnvironment) {
-    private val faceRenderer = RenderBufferBuilder(
-        DrawMode.QUADS,
-        VertexInputType.PosColor,
-        RenderBufferBuilder.TESSELATOR_A
-    )
-    private val outlinesRenderer = RenderBufferBuilder(
-        DrawMode.DEBUG_LINES,
-        VertexInputType.PosColor,
-        RenderBufferBuilder.TESSELATOR_B
-    )
-
-    fun drawBox(
-        box: Box,
-        faceColor: Color4b,
-        outlineColor: Color4b? = null,
-        vertices: Int = -1,
-        outlineVertices: Int = -1
-    ) {
-        faceRenderer.drawBox(env, box, color = faceColor, verticesToUse = vertices)
-
-        if (outlineColor != null) {
-            outlinesRenderer.drawBox(env, box, true, outlineColor, outlineVertices)
-        }
-    }
-
-    fun draw() {
-        faceRenderer.draw()
-        outlinesRenderer.draw()
-    }
-
-}
-
-fun RenderEnvironment.drawSolidBox(consumer: VertexConsumer, box: Box, color: Color4b) {
-    val matrix = currentMvpMatrix
-    val argb = color.toARGB()
-
-    // Draw the vertices of the box
-    box.forEachFaceVertex { _, x, y, z ->
-        consumer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-            .color(argb)
+        vertexConsumer.endNullable()
     }
 }
 
@@ -181,7 +80,7 @@ fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawQuad(
     val matrix = env.currentMvpMatrix
 
     // Draw the vertices of the box
-    with(buffer) {
+    with(vertexConsumer) {
         vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), pos1.z.toFloat())
             .texture(uv1.u, uv2.v)
             .color(color.toARGB())
@@ -197,47 +96,8 @@ fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawQuad(
     }
 }
 
-fun RenderBufferBuilder<VertexInputType.Pos>.drawQuad(
-    env: RenderEnvironment,
-    pos1: Vec3,
-    pos2: Vec3,
-) {
-    val matrix = env.currentMvpMatrix
-
-    // Draw the vertices of the box
-    with(buffer) {
-        vertex(matrix, pos1.x, pos2.y, pos1.z)
-        vertex(matrix, pos2.x, pos2.y, pos2.z)
-        vertex(matrix, pos2.x, pos1.y, pos2.z)
-        vertex(matrix, pos1.x, pos1.y, pos1.z)
-    }
-}
-
-fun RenderBufferBuilder<VertexInputType.Pos>.drawQuadOutlines(
-    env: RenderEnvironment,
-    pos1: Vec3,
-    pos2: Vec3,
-) {
-    val matrix = env.currentMvpMatrix
-
-    // Draw the vertices of the box
-    with(buffer) {
-        vertex(matrix, pos1.x, pos1.y, pos1.z)
-        vertex(matrix, pos1.x, pos2.y, pos1.z)
-
-        vertex(matrix, pos1.x, pos2.y, pos1.z)
-        vertex(matrix, pos2.x, pos2.y, pos1.z)
-
-        vertex(matrix, pos2.x, pos1.y, pos1.z)
-        vertex(matrix, pos2.x, pos2.y, pos1.z)
-
-        vertex(matrix, pos1.x, pos1.y, pos1.z)
-        vertex(matrix, pos2.x, pos1.y, pos1.z)
-    }
-}
-
+context(env: RenderEnvironment)
 fun RenderBufferBuilder<VertexInputType.PosColor>.drawLine(
-    env: RenderEnvironment,
     pos1: Vec3,
     pos2: Vec3,
     color: Color4b
@@ -245,7 +105,7 @@ fun RenderBufferBuilder<VertexInputType.PosColor>.drawLine(
     val matrix = env.currentMvpMatrix
 
     // Draw the vertices of the box
-    with(buffer) {
+    with(vertexConsumer) {
         vertex(matrix, pos1.x, pos1.y, pos1.z).color(color.toARGB())
         vertex(matrix, pos2.x, pos2.y, pos2.z).color(color.toARGB())
     }

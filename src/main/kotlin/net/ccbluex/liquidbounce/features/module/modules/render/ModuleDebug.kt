@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import net.ccbluex.fastutil.forEachFloat
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -88,7 +89,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
             renderEnvironmentForWorld(event.matrixStack) {
                 withColor(Color4b.BLUE) {
-                    drawLineStrip(positions = cachedPositions.map { relativeToCamera(it.pos).toVec3() })
+                    drawLineStrip(positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() })
                 }
             }
         }
@@ -299,7 +300,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                         draw(
                             process(text),
                             120f,
-                            40 + ((fontRenderer.height * 0.17f) * index).toFloat(),
+                            40 + ((fontRenderer.height * 0.17f) * index),
                             shadow = true,
                             scale = 0.17f
                         )

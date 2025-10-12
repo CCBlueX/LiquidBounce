@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.drawBoxes
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -105,37 +105,35 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         ): Boolean {
             var dirty = false
 
-            drawBoxes {
-                for (blockPos in blocks) {
-                    val blockState = blockPos.getState() ?: continue
+            for (blockPos in blocks) {
+                val blockState = blockPos.getState() ?: continue
 
-                    if (blockState.isAir) {
-                        continue
-                    }
-
-                    val outlineShape = blockState.getOutlineShape(world, blockPos)
-                    val boundingBox = if (outlineShape.isEmpty) {
-                        FULL_BOX
-                    } else {
-                        outlineShape.boundingBox
-                    }
-
-                    var color = colorMode.getColor(Pair(blockPos, blockState))
-
-                    if (fullAlpha) {
-                        color = color.with(a = 255)
-                    }
-
-                    withPositionRelativeToCamera(blockPos.toVec3d()) {
-                        drawBox(
-                            boundingBox,
-                            faceColor = color,
-                            outlineColor = color.with(a = 150).takeIf { drawOutline }
-                        )
-                    }
-
-                    dirty = true
+                if (blockState.isAir) {
+                    continue
                 }
+
+                val outlineShape = blockState.getOutlineShape(world, blockPos)
+                val boundingBox = if (outlineShape.isEmpty) {
+                    FULL_BOX
+                } else {
+                    outlineShape.boundingBox
+                }
+
+                var color = colorMode.getColor(Pair(blockPos, blockState))
+
+                if (fullAlpha) {
+                    color = color.with(a = 255)
+                }
+
+                withPositionRelativeToCamera(blockPos.toVec3d()) {
+                    drawBox(
+                        boundingBox,
+                        faceColor = color,
+                        outlineColor = color.with(a = 150).takeIf { drawOutline }
+                    )
+                }
+
+                dirty = true
             }
 
             return dirty

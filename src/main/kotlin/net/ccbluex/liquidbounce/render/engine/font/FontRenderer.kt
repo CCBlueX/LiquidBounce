@@ -274,11 +274,9 @@ class FontRenderer(
 
     }
 
-    override fun commit(
-        env: RenderEnvironment,
-        buffers: FontRendererBuffers,
-    ) {
-        this.cache.renderedGlyphs.forEach { renderedGlyph ->
+    context(environment: RenderEnvironment)
+    override fun commit(buffers: FontRendererBuffers) {
+        cache.renderedGlyphs.forEach { renderedGlyph ->
             val glyphDescriptor = renderedGlyph.glyph
             val renderBuffer = buffers.getTextBufferForGlyphPage(glyphDescriptor.page)
 
@@ -286,7 +284,7 @@ class FontRenderer(
             val atlasLocation = glyphDescriptor.renderInfo.atlasLocation!!
 
             renderBuffer.drawQuad(
-                env,
+                environment,
                 mutableVec3d1.set(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
                 atlasLocation.uvCoordinatesOnTexture.min,
                 mutableVec3d2.set(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),
@@ -295,14 +293,14 @@ class FontRenderer(
             )
         }
 
-        if (this.cache.lines.isNotEmpty()) {
-            for (line in this.cache.lines) {
-                buffers.lineBufferBuilder.drawLine(env, line.p1, line.p2, line.color)
+        if (cache.lines.isNotEmpty()) {
+            for (line in cache.lines) {
+                buffers.lineBufferBuilder.drawLine(line.p1, line.p2, line.color)
             }
         }
 
-        this.cache.lines.clear()
-        this.cache.renderedGlyphs.clear()
+        cache.lines.clear()
+        cache.renderedGlyphs.clear()
     }
 
 }

@@ -22,7 +22,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.drawBoxes
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.toVec3d
@@ -66,66 +66,64 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
 
             renderEnvironmentForWorld(matrixStack) {
                 // Do not use destructuring declaration which returns boxed [Long] values
-                drawBoxes {
-                    fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: Box, colorFactor: Float) {
-                        withPositionRelativeToCamera(blockPos.toVec3d()) {
-                            drawBox(
-                                box,
-                                color.fade(colorFactor),
-                                outlineColor.fade(colorFactor),
-                                (cullData shr 32).toInt(),
-                                (cullData and 0xFFFFFFFF).toInt()
-                            )
-                        }
+                fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: Box, colorFactor: Float) {
+                    withPositionRelativeToCamera(blockPos.toVec3d()) {
+                        drawBox(
+                            box,
+                            color.fade(colorFactor),
+                            outlineColor.fade(colorFactor),
+                            (cullData shr 32).toInt(),
+                            (cullData and 0xFFFFFFFF).toInt()
+                        )
                     }
+                }
 
-                    inList.long2ObjectEntrySet().removeIf { entry ->
-                        // Do not use destructuring declaration which returns boxed [Long] values
-                        val pos = entry.longKey
-                        val value = entry.value
+                inList.long2ObjectEntrySet().removeIf { entry ->
+                    // Do not use destructuring declaration which returns boxed [Long] values
+                    val pos = entry.longKey
+                    val value = entry.value
 
-                        val sizeFactor = startSizeCurve.getFactor(value.startTime, time, inTime.toFloat())
-                        val expand = MathHelper.lerp(sizeFactor, startSize, 1f)
-                        val box = getBox(if (expand < 1f) 1f - expand else expand, value.box)
-                        val colorFactor = fadeInCurve.getFactor(value.startTime, time, inTime.toFloat())
+                    val sizeFactor = startSizeCurve.getFactor(value.startTime, time, inTime.toFloat())
+                    val expand = MathHelper.lerp(sizeFactor, startSize, 1f)
+                    val box = getBox(if (expand < 1f) 1f - expand else expand, value.box)
+                    val colorFactor = fadeInCurve.getFactor(value.startTime, time, inTime.toFloat())
 
-                        drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
+                    drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
 
-                        if (time - value.startTime >= outTime) {
-                            if (keep) {
-                                currentList.put(pos, value.toCurrent())
-                            } else {
-                                outList.put(pos, value.copy(startTime = time))
-                            }
-                            true
+                    if (time - value.startTime >= outTime) {
+                        if (keep) {
+                            currentList.put(pos, value.toCurrent())
                         } else {
-                            false
+                            outList.put(pos, value.copy(startTime = time))
                         }
+                        true
+                    } else {
+                        false
                     }
+                }
 
-                    currentList.fastIterator().forEach { entry ->
-                        val pos = entry.longKey
-                        val value = entry.value
-                        drawEntryBox(blockPosCache.set(pos), value.cullData, value.box, 1f)
-                    }
+                currentList.fastIterator().forEach { entry ->
+                    val pos = entry.longKey
+                    val value = entry.value
+                    drawEntryBox(blockPosCache.set(pos), value.cullData, value.box, 1f)
+                }
 
-                    outList.long2ObjectEntrySet().removeIf { entry ->
-                        val pos = entry.longKey
-                        val value = entry.value
+                outList.long2ObjectEntrySet().removeIf { entry ->
+                    val pos = entry.longKey
+                    val value = entry.value
 
-                        val sizeFactor = endSizeCurve.getFactor(value.startTime, time, outTime.toFloat())
-                        val expand = 1f - MathHelper.lerp(sizeFactor, 1f, endSize)
-                        val box = getBox(expand, value.box)
-                        val colorFactor = 1f - fadeOutCurve.getFactor(value.startTime, time, outTime.toFloat())
+                    val sizeFactor = endSizeCurve.getFactor(value.startTime, time, outTime.toFloat())
+                    val expand = 1f - MathHelper.lerp(sizeFactor, 1f, endSize)
+                    val box = getBox(expand, value.box)
+                    val colorFactor = 1f - fadeOutCurve.getFactor(value.startTime, time, outTime.toFloat())
 
-                        drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
+                    drawEntryBox(blockPosCache.set(pos), value.cullData, box, colorFactor)
 
-                        if (time - value.startTime >= outTime) {
-                            updateNeighbors(blockPosCache.set(pos))
-                            true
-                        } else {
-                            false
-                        }
+                    if (time - value.startTime >= outTime) {
+                        updateNeighbors(blockPosCache.set(pos))
+                        true
+                    } else {
+                        false
                     }
                 }
             }

@@ -55,10 +55,8 @@ abstract class AbstractFontRenderer<T> {
 
     /**
      */
-    abstract fun commit(
-        env: RenderEnvironment,
-        buffers: FontRendererBuffers
-    )
+    context(environment: RenderEnvironment)
+    abstract fun commit(buffers: FontRendererBuffers)
 
     /**
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting

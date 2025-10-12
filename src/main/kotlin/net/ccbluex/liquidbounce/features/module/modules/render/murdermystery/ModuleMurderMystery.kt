@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.drawBoxes
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -177,16 +177,14 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         val matrixStack = event.matrixStack
 
         renderEnvironmentForWorld(matrixStack) {
-            drawBoxes {
-                val box = Box(-0.6, 0.0, -0.6, 0.6, 2.5, 0.6)
-                val pos = armorStandEntity.interpolateCurrentPosition(event.partialTicks)
+            val box = Box(-0.6, 0.0, -0.6, 0.6, 2.5, 0.6)
+            val pos = armorStandEntity.interpolateCurrentPosition(event.partialTicks)
 
-                withPositionRelativeToCamera(pos) {
-                    drawBox(
-                        box,
-                        Color4b(127, 255, 212, 100), Color4b(0, 255, 255)
-                    )
-                }
+            withPositionRelativeToCamera(pos) {
+                drawBox(
+                    box,
+                    Color4b(127, 255, 212, 100), Color4b(0, 255, 255)
+                )
             }
         }
     }

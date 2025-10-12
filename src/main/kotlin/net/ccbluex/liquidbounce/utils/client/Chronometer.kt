@@ -25,8 +25,10 @@ class Chronometer @JvmOverloads constructor(private var lastUpdate: Long = 0) {
 
     fun elapsedUntil(time: Long) = time - lastUpdate
 
+    @JvmOverloads
     fun hasElapsed(ms: Long = 0) = lastUpdate + ms < System.currentTimeMillis()
 
+    @JvmOverloads
     fun hasAtLeastElapsed(ms: Long = 0) = lastUpdate + ms <= System.currentTimeMillis()
 
     @JvmOverloads

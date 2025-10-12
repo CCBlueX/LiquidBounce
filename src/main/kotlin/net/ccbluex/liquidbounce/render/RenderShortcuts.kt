@@ -42,6 +42,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
+import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11C
 import kotlin.contracts.ExperimentalContracts
@@ -57,10 +58,14 @@ import kotlin.contracts.contract
  * This has to be removed or limited to old driver versions when AMD actually fixes the bug in their drivers.
  * But as of now, 01.02.2025, they haven't.
  */
+@JvmField
 val HAS_AMD_VEGA_APU = GL11C.glGetString(GL11C.GL_RENDERER)?.startsWith("AMD Radeon(TM) RX Vega") ?: false &&
     GL11C.glGetString(GL11C.GL_VENDOR) == "ATI Technologies Inc."
 
+@JvmField
 val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
+@JvmField
 val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 // Copied from 1.21.4
@@ -95,8 +100,6 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
             fontBuffers.draw()
         }
     }
-
-    fun FontRenderer.commit(buffer: FontRendererBuffers) = commit(this@RenderEnvironment, buffer)
 }
 
 class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixStack) {
@@ -164,6 +167,15 @@ inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {
         block()
     } finally {
         pop()
+    }
+}
+
+inline fun Matrix3x2fStack.withPush(block: Matrix3x2fStack.() -> Unit) {
+    pushMatrix()
+    try {
+        block()
+    } finally {
+        popMatrix()
     }
 }
 
@@ -263,7 +275,7 @@ inline fun RenderEnvironment.withDisabledCull(draw: RenderEnvironment.() -> Unit
 inline fun RenderEnvironment.drawCustomMesh(
     drawMode: DrawMode,
     vertexInputType: VertexInputType,
-    drawer: BufferBuilder.(Matrix4f) -> Unit
+    drawer: VertexConsumer.(Matrix4f) -> Unit
 ) {
     val tessellator = Tessellator.getInstance()
     val buffer = tessellator.begin(drawMode, vertexInputType.vertexFormat)
@@ -302,10 +314,6 @@ fun RenderEnvironment.drawLines(vararg lines: Vec3) {
  */
 fun RenderEnvironment.drawLineStrip(vararg positions: Vec3) {
     drawLines(positions.unmodifiable(), mode = DrawMode.DEBUG_LINE_STRIP)
-}
-
-fun RenderEnvironment.drawLineStrip(positions: List<Vec3>) {
-    drawLines(positions, mode = DrawMode.DEBUG_LINE_STRIP)
 }
 
 /**
@@ -367,6 +375,18 @@ fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3) {
     }
 }
 
+fun RenderEnvironment.drawColoredQuad(pos1: Vec3, pos2: Vec3, argb: Int) {
+    drawCustomMesh(
+        DrawMode.QUADS,
+        VertexInputType.PosColor,
+    ) { matrix ->
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos2.z).color(argb)
+        vertex(matrix, pos2.x, pos1.y, pos2.z).color(argb)
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
+    }
+}
+
 fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3) {
     drawCustomMesh(
         DrawMode.DEBUG_LINES,
@@ -386,6 +406,25 @@ fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3) {
     }
 }
 
+fun RenderEnvironment.drawColoredQuadOutlines(pos1: Vec3, pos2: Vec3, argb: Int) {
+    drawCustomMesh(
+        DrawMode.DEBUG_LINES,
+        VertexInputType.PosColor,
+    ) { matrix ->
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
+
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
+
+        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
+
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
+    }
+}
+
 fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3) {
     drawCustomMesh(
         DrawMode.TRIANGLES,
@@ -397,10 +436,71 @@ fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3) {
     }
 }
 
-fun BufferBuilder.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: Vec3d, color4b: Color4b) {
+fun VertexConsumer.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: Vec3d, color4b: Color4b) {
     vertex(matrix, p1.x.toFloat(), p1.y.toFloat(), p1.z.toFloat()).color(color4b.toARGB())
     vertex(matrix, p2.x.toFloat(), p2.y.toFloat(), p2.z.toFloat()).color(color4b.toARGB())
     vertex(matrix, p3.x.toFloat(), p3.y.toFloat(), p3.z.toFloat()).color(color4b.toARGB())
+}
+
+
+/**
+ * Helper unction to draw a solid box using the specified [box].
+ *
+ * @param box The bounding box of the box.
+ */
+@Suppress("CognitiveComplexMethod")
+private fun RenderEnvironment.drawBox(
+    box: Box,
+    drawMode: DrawMode,
+    useOutlineVertices: Boolean = false,
+    color: Color4b? = null,
+    verticesToUse: Int = -1
+) = drawCustomMesh(drawMode, VertexInputType.PosColor) { matrix ->
+    val check = verticesToUse != -1
+
+    // Draw the vertices of the box
+    if (useOutlineVertices) {
+        box.forEachOutlineVertex { i, x, y, z ->
+            if (check && (verticesToUse and (1 shl i)) != 0) {
+                return@forEachOutlineVertex
+            }
+
+            val bb = vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
+
+            if (color != null) {
+                bb.color(color.toARGB())
+            }
+        }
+    } else {
+        box.forEachFaceVertex { i, x, y, z ->
+            if (check && (verticesToUse and (1 shl i)) != 0) {
+                return@forEachFaceVertex
+            }
+
+            val bb = vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
+
+            if (color != null) {
+                bb.color(color.toARGB())
+            }
+        }
+    }
+}
+
+/**
+ * Function to draw a colored [box].
+ */
+fun RenderEnvironment.drawBox(
+    box: Box,
+    faceColor: Color4b,
+    outlineColor: Color4b? = null,
+    vertices: Int = -1,
+    outlineVertices: Int = -1
+) {
+    drawBox(box, DrawMode.QUADS, color = faceColor, verticesToUse = vertices)
+
+    if (outlineColor != null) {
+        drawBox(box, DrawMode.DEBUG_LINES, useOutlineVertices = true, outlineColor, outlineVertices)
+    }
 }
 
 /**

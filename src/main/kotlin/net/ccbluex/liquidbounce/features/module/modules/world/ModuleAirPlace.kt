@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.drawBoxes
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.item.isConsumable
@@ -91,7 +91,7 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
         val outline = Preview.outlineColor
 
         renderEnvironmentForWorld(event.matrixStack) {
-            drawBoxes { drawBox(viewSpaceBox, fill, outline) }
+            drawBox(viewSpaceBox, fill, outline)
         }
     }
 

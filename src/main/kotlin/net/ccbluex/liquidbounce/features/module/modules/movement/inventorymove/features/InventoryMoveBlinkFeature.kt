@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.formatAsTime
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.network.packet.c2s.play.*
 
 object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "Blink", false) {
 
@@ -48,13 +47,8 @@ object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "
         val packet = event.packet
 
         if (mc.currentScreen is HandledScreen<*> && event.origin == TransferOrigin.OUTGOING) {
-            event.action = when (packet) {
-                is ClickSlotC2SPacket,
-                is ButtonClickC2SPacket,
-                is CreativeInventoryActionC2SPacket,
-                is SlotChangedStateC2SPacket,
-                is CloseHandledScreenC2SPacket -> PacketQueueManager.Action.PASS
-
+            event.action = when {
+                ModuleInventoryMove.isContainerPacket(packet) -> PacketQueueManager.Action.PASS
                 else -> PacketQueueManager.Action.QUEUE
             }
         }

@@ -35,19 +35,6 @@ private const val ITEM_SCALE: Float = 1.0F
 
 class NametagRenderer {
 
-    private val quadBuffers =
-        RenderBufferBuilder(
-            VertexFormat.DrawMode.QUADS,
-            VertexInputType.Pos,
-            RenderBufferBuilder.TESSELATOR_A,
-        )
-    private val lineBuffers =
-        RenderBufferBuilder(
-            VertexFormat.DrawMode.DEBUG_LINES,
-            VertexInputType.Pos,
-            RenderBufferBuilder.TESSELATOR_B,
-        )
-
     private val dc = newDrawContext()
 
     private val fontBuffers = FontRendererBuffers()
@@ -73,15 +60,29 @@ class NametagRenderer {
         // Make the model view matrix center the text when rendering
         matrixStack.translate(-x * 0.5f, -ModuleNametags.fontRenderer.height * 0.5f, 0f)
 
-        ModuleNametags.fontRenderer.commit(this@drawNametag, fontBuffers)
+        with(ModuleNametags.fontRenderer) {
+            commit(fontBuffers)
+        }
 
         val q1 = Vec3(-0.1f * fontSize, ModuleNametags.fontRenderer.height * -0.1f, 0f)
         val q2 = Vec3(x + 0.2f * fontSize, ModuleNametags.fontRenderer.height * 1.1f, 0f)
 
-        quadBuffers.drawQuad(this@drawNametag, q1, q2)
+        dc.matrices.withPush {
+            translate(pos.x, pos.y, pos.z)
+            scale(scale, scale, 1f)
+            translate(-x * 0.5f, -ModuleNametags.fontRenderer.height * 0.5f, 0f)
+
+            dc.fill(
+                x1 = q1.x, y1 = q1.y,
+                x2 = q2.x, y2 = q2.y,
+                z = 0f, color = Color4b.BLACK.copy(a = 120).toARGB()
+            )
+        }
 
         if (NametagShowOptions.BORDER.isShowing()) {
-            lineBuffers.drawQuadOutlines(this@drawNametag, q1, q2)
+            withColor(Color4b.BLACK) {
+                drawQuadOutlines(q1, q2)
+            }
         }
 
         if (NametagShowOptions.ITEMS.isShowing()) {
@@ -106,11 +107,10 @@ class NametagRenderer {
         matrixStack.pop()
     }
 
-    private fun drawItemList(pos: Vec3, itemsToRender: List<ItemStack>) {
-        dc.matrices.push()
-        dc.matrices.translate(pos.x, pos.y - NAMETAG_PADDING, pos.z)
-        dc.matrices.scale(ITEM_SCALE * ModuleNametags.scale, ITEM_SCALE * ModuleNametags.scale, 1.0F)
-        dc.matrices.translate(-itemsToRender.size * ITEM_SIZE / 2.0F, -ITEM_SIZE.toFloat(), 0.0F)
+    private fun drawItemList(pos: Vec3, itemsToRender: List<ItemStack>) = dc.matrices.withPush {
+        translate(pos.x, pos.y - NAMETAG_PADDING, pos.z)
+        scale(ITEM_SCALE * ModuleNametags.scale, ITEM_SCALE * ModuleNametags.scale, 1.0F)
+        translate(-itemsToRender.size * ITEM_SIZE / 2.0F, -ITEM_SIZE.toFloat(), 0.0F)
 
         dc.fill(
             0,
@@ -120,7 +120,7 @@ class NametagRenderer {
             Color4b.BLACK.with(a = 0).toARGB()
         )
 
-        dc.matrices.translate(0.0F, 0.0F, 100.0F)
+        translate(0.0F, 0.0F, 100.0F)
 
         val itemInfo = NametagShowOptions.ITEM_INFO.isShowing()
 
@@ -135,8 +135,6 @@ class NametagRenderer {
                 dc.drawStackOverlay(mc.textRenderer, itemStack, x, 0)
             }
         }
-
-        dc.matrices.pop()
     }
 
     fun commit(env: RenderEnvironment) {
@@ -151,12 +149,6 @@ class NametagRenderer {
             GL11.GL_ZERO
         )
 
-        env.withColor(Color4b(0, 0, 0, 120)) {
-            quadBuffers.draw()
-        }
-        env.withColor(Color4b(0, 0, 0, 255)) {
-            lineBuffers.draw()
-        }
         env.withColor(Color4b.WHITE) {
             fontBuffers.draw()
         }

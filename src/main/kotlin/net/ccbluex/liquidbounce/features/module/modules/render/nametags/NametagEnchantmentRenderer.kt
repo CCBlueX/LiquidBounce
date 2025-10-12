@@ -19,20 +19,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import com.mojang.blaze3d.opengl.GlStateManager
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.render.RenderEnvironment
+import net.ccbluex.liquidbounce.render.drawColoredQuad
+import net.ccbluex.liquidbounce.render.drawColoredQuadOutlines
 import net.ccbluex.liquidbounce.render.defaultBlendFunc
-import net.ccbluex.liquidbounce.render.VertexInputType
-import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Rect
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
@@ -49,7 +47,7 @@ import org.joml.component2
 import kotlin.math.hypot
 
 private object EnchantmentDisplayHelper {
-    private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(100)
+    private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(128)
 
     private val knownCurses = setOf(
         Enchantments.BINDING_CURSE,
@@ -140,37 +138,18 @@ object NametagEnchantmentRenderer {
         mc.world?.registryManager?.getOrThrow(RegistryKeys.ENCHANTMENT)?.keys?.toList() ?: emptyList()
     }
 
+    @JvmRecord
     private data class EnchantCell(
         val processedText: ProcessedText,
         val textWidth: Float,
         val isCurse: Boolean
     )
 
+    @JvmRecord
     private data class EnchantColumn(
         val cells: List<EnchantCell>,
         val width: Float
     )
-
-    fun drawEnchantments(
-        env: RenderEnvironment,
-        itemStack: ItemStack,
-        x: Float,
-        y: Float,
-        fontRenderer: FontRendererBuffers
-    ) {
-        if (itemStack.isEmpty || !NametagShowOptions.ENCHANTMENTS.isShowing() || itemStack.getEnchantmentCount() <= 0) {
-            return
-        }
-
-        val cells = processItemEnchantments(itemStack)
-        if (cells.isEmpty()) {
-            return
-        }
-
-        GlStateManager._enableBlend()
-        defaultBlendFunc()
-        renderEnchantmentColumn(env, cells, x, y, fontRenderer)
-    }
 
     fun drawEntityEnchantments(
         env: RenderEnvironment,
@@ -207,7 +186,7 @@ object NametagEnchantmentRenderer {
         if (columnData.isNotEmpty()) {
             // Add this position to the drawn areas list
             ModuleNametags.drawnEnchantmentAreas.add(Vector2f(worldX, worldY))
-            drawEnchantmentColumns(env, worldX, worldY, fontRenderer, columnData)
+            env.drawEnchantmentColumns(worldX, worldY, fontRenderer, columnData)
         }
     }
 
@@ -283,8 +262,7 @@ object NametagEnchantmentRenderer {
         )
     }
 
-    private fun renderEnchantmentColumn(
-        env: RenderEnvironment,
+    private fun RenderEnvironment.renderEnchantmentColumn(
         cells: List<EnchantCell>,
         x: Float,
         y: Float,
@@ -305,7 +283,7 @@ object NametagEnchantmentRenderer {
             )
             val bgColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL
 
-            drawCellBackground(env, rect, bgColor)
+            drawCellBackground(rect, bgColor)
 
             val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
             val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
@@ -320,28 +298,21 @@ object NametagEnchantmentRenderer {
             )
         }
 
-        ModuleNametags.fontRenderer.commit(env, fontRenderer)
-    }
-
-    private fun drawCellBackground(
-        env: RenderEnvironment,
-        rect: Rect,
-        color: Color4b
-    ) {
-        val argb = color.toARGB()
-        env.drawCustomMesh(
-            VertexFormat.DrawMode.QUADS,
-            VertexInputType.PosColor,
-        ) { matrix ->
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(argb)
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(argb)
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(argb)
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(argb)
+        with(ModuleNametags.fontRenderer) {
+            commit(fontRenderer)
         }
     }
 
-    private fun drawEnchantmentColumns(
-        env: RenderEnvironment,
+    private fun RenderEnvironment.drawCellBackground(
+        rect: Rect,
+        color: Color4b
+    ) {
+        val leftTop = Vec3(rect.x1, rect.y1, 0F)
+        val rightBottom = Vec3(rect.x2, rect.y2, 0F)
+        drawColoredQuad(leftTop, rightBottom, color.toARGB())
+    }
+
+    private fun RenderEnvironment.drawEnchantmentColumns(
         x: Float,
         y: Float,
         fontRenderer: FontRendererBuffers,
@@ -363,48 +334,28 @@ object NametagEnchantmentRenderer {
             y + maxColumnHeight + FRAME_MARGIN
         )
 
-        drawGroupBorder(env, groupRect)
+        drawGroupBorder(this, groupRect)
 
         var columnX = x - halfTotalWidth
         columnData.forEach { column ->
             val columnCenterX = columnX + column.width / 2
-            renderEnchantmentColumn(env, column.cells, columnCenterX, y, fontRenderer)
+            renderEnchantmentColumn(column.cells, columnCenterX, y, fontRenderer)
             columnX += column.width + COLUMN_SPACING
         }
     }
 
     private fun drawGroupBorder(env: RenderEnvironment, rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
-        env.drawCustomMesh(
-            VertexFormat.DrawMode.QUADS,
-            VertexInputType.PosColor,
-        ) { matrix ->
-            val bgColor = Color4b.BLACK.with(a = 120).toARGB()
+        val leftTop = Vec3(rect.x1, rect.y1, 0F)
+        val rightBottom = Vec3(rect.x2, rect.y2, 0F)
+        env.drawColoredQuad(
+            leftTop, rightBottom,
+            Color4b.BLACK.with(a = 120).toARGB(),
+        )
 
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(bgColor)
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(bgColor)
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(bgColor)
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(bgColor)
-        }
-
-        // Still drawing the border lines
-        env.drawCustomMesh(
-            VertexFormat.DrawMode.DEBUG_LINES,
-            VertexInputType.PosColor,
-        ) { matrix ->
-            val color = Color4b.RED.toARGB()
-
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(color)
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(color)
-
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(color)
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(color)
-
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(color)
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(color)
-
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(color)
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(color)
-        }
+        env.drawColoredQuadOutlines(
+            leftTop, rightBottom,
+            Color4b.RED.toARGB(),
+        )
     }
 }
