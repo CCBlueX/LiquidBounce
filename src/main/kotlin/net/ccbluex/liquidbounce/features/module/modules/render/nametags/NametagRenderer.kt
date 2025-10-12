@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import com.mojang.blaze3d.platform.GlStateManager
+import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
