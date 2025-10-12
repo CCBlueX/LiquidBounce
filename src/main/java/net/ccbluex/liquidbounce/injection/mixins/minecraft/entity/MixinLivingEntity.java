@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.component.DataComponentTypes;
@@ -40,7 +42,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -89,13 +90,23 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Shadow
     protected abstract boolean canGlide();
 
-  @Shadow
-  public abstract float getHealth();
+    @Shadow
+    public abstract float getHealth();
 
-  @Shadow
-  public abstract float getMaxHealth();
+    @Shadow
+    public abstract float getMaxHealth();
 
-  /**
+    @ModifyReturnValue(method = "getMainHandStack", at = @At("RETURN"))
+    private ItemStack applySilentHotbarForMainHand(ItemStack original) {
+        var player = MinecraftClient.getInstance().player;
+        if ((Object) this == player) {
+            return player.getInventory().getMainStacks().get(SilentHotbar.INSTANCE.getServersideSlot());
+        }
+
+        return original;
+    }
+
+    /**
      * Disable [StatusEffects.LEVITATION] effect when [ModuleAntiLevitation] is enabled
      */
     @ModifyExpressionValue(

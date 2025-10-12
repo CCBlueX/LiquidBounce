@@ -42,10 +42,9 @@ public class MixinPlayerInventory {
     /**
      * Override the original slot based on the server-side slot information.
      *
-     * FIXME: mc.player.inventory.getMainHandStack -> mc.player.getMainHandStack
      * FIXME: where is getBlockBreakingSpeed?
      */
-    @ModifyExpressionValue(method = {"dropSelectedItem", "getBlockBreakingSpeed", "getMainHandStack"}, at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I"))
+    @ModifyExpressionValue(method = {"dropSelectedItem", "getBlockBreakingSpeed"}, at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I"))
     private int hookOverrideOriginalSlot(int original) {
         return ((PlayerInventory) (Object) this).player == MinecraftClient.getInstance().player ? SilentHotbar.INSTANCE.getServersideSlot() : original;
     }
