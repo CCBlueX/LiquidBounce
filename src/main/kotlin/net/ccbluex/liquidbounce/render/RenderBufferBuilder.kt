@@ -39,13 +39,23 @@ import net.minecraft.util.math.Position
  *
  * This should only be used on render thread.
  */
-class RenderBufferBuilder<I : VertexInputType>(
+class RenderBufferBuilder<I : VertexInputType> private constructor(
     private val drawMode: DrawMode,
     private val vertexFormat: I,
-    private val tesselator: Tessellator
+    private val tessellator: Tessellator,
+    internal val vertexConsumer: BufferBuilder,
 ) {
-    // Begin drawing lines with position format
-    val buffer: BufferBuilder = tesselator.begin(drawMode, vertexFormat.vertexFormat)
+
+    constructor(
+        drawMode: DrawMode,
+        vertexFormat: I,
+        tessellator: Tessellator,
+    ) : this(
+        drawMode,
+        vertexFormat,
+        tessellator,
+        tessellator.begin(drawMode, vertexFormat.vertexFormat),
+    )
 
     /**
      * Function to draw a solid box using the specified [box].
@@ -72,7 +82,7 @@ class RenderBufferBuilder<I : VertexInputType>(
                     return@forEachOutlineVertex
                 }
 
-                val bb = buffer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
+                val bb = vertexConsumer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
 
                 if (color != null) {
                     bb.color(color.toARGB())
@@ -84,7 +94,7 @@ class RenderBufferBuilder<I : VertexInputType>(
                     return@forEachFaceVertex
                 }
 
-                val bb = buffer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
+                val bb = vertexConsumer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
 
                 if (color != null) {
                     bb.color(color.toARGB())
@@ -94,16 +104,16 @@ class RenderBufferBuilder<I : VertexInputType>(
     }
 
     fun draw() {
-        val built = buffer.endNullable() ?: return
+        val built = vertexConsumer.endNullable() ?: return
 
         RenderSystem.setShader(vertexFormat.shaderProgram)
 
         BufferRenderer.drawWithGlobalProgram(built)
-        tesselator.clear()
+        tessellator.clear()
     }
 
     fun reset() {
-        buffer.endNullable()
+        vertexConsumer.endNullable()
     }
 
     companion object {
@@ -182,7 +192,7 @@ fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawQuad(
     val matrix = env.currentMvpMatrix
 
     // Draw the vertices of the box
-    with(buffer) {
+    with(vertexConsumer) {
         vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), pos1.z.toFloat())
             .texture(uv1.u, uv2.v)
             .color(color.toARGB())
@@ -206,7 +216,7 @@ fun RenderBufferBuilder<VertexInputType.Pos>.drawQuad(
     val matrix = env.currentMvpMatrix
 
     // Draw the vertices of the box
-    with(buffer) {
+    with(vertexConsumer) {
         vertex(matrix, pos1.x, pos2.y, pos1.z)
         vertex(matrix, pos2.x, pos2.y, pos2.z)
         vertex(matrix, pos2.x, pos1.y, pos2.z)
@@ -222,7 +232,7 @@ fun RenderBufferBuilder<VertexInputType.Pos>.drawQuadOutlines(
     val matrix = env.currentMvpMatrix
 
     // Draw the vertices of the box
-    with(buffer) {
+    with(vertexConsumer) {
         vertex(matrix, pos1.x, pos1.y, pos1.z)
         vertex(matrix, pos1.x, pos2.y, pos1.z)
 
@@ -246,7 +256,7 @@ fun RenderBufferBuilder<VertexInputType.PosColor>.drawLine(
     val matrix = env.currentMvpMatrix
 
     // Draw the vertices of the box
-    with(buffer) {
+    with(vertexConsumer) {
         vertex(matrix, pos1.x, pos1.y, pos1.z).color(color.toARGB())
         vertex(matrix, pos2.x, pos2.y, pos2.z).color(color.toARGB())
     }

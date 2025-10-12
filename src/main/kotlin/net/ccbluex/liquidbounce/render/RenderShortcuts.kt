@@ -247,7 +247,7 @@ inline fun RenderEnvironment.withDisabledCull(draw: RenderEnvironment.() -> Unit
 inline fun RenderEnvironment.drawCustomMesh(
     drawMode: DrawMode,
     vertexInputType: VertexInputType,
-    drawer: BufferBuilder.(Matrix4f) -> Unit
+    drawer: VertexConsumer.(Matrix4f) -> Unit
 ) {
     val tessellator = Tessellator.getInstance()
     val buffer = tessellator.begin(drawMode, vertexInputType.vertexFormat)
@@ -379,7 +379,7 @@ fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3) {
     }
 }
 
-fun BufferBuilder.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: Vec3d, color4b: Color4b) {
+fun VertexConsumer.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: Vec3d, color4b: Color4b) {
     vertex(matrix, p1.x.toFloat(), p1.y.toFloat(), p1.z.toFloat()).color(color4b.toARGB())
     vertex(matrix, p2.x.toFloat(), p2.y.toFloat(), p2.z.toFloat()).color(color4b.toARGB())
     vertex(matrix, p3.x.toFloat(), p3.y.toFloat(), p3.z.toFloat()).color(color4b.toARGB())
