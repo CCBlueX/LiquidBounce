@@ -46,26 +46,39 @@ object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = 
     init {
         tree(MainHand)
         tree(OffHand)
+        tree(ArmHand)
         tree(EquipOffset)
     }
 
     object MainHand : ToggleableConfigurable(this, "MainHand", false) {
-        val mainHandItemScale by float("ItemScale", 0f, -5f..5f)
+        val mainHandItemScale by float("ItemScale", 1f, 0f..2f)
         val mainHandX by float("X", 0f, -5f..5f)
         val mainHandY by float("Y", 0f, -5f..5f)
+        val mainHandZ by float("Z", 0f, -5f..5f)
         val mainHandPositiveX by float("PositiveRotationX", 0f, -50f..50f)
         val mainHandPositiveY by float("PositiveRotationY", 0f, -50f..50f)
         val mainHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
     }
 
     object OffHand : ToggleableConfigurable(this, "OffHand", false) {
-        val offHandItemScale by float("ItemScale", 0f, -5f..5f)
+        val offHandItemScale by float("ItemScale", 1f, 0f..2f)
         val offHandX by float("X", 0f, -1f..1f)
         val offHandY by float("Y", 0f, -1f..1f)
+        val offHandZ by float("Z", 0f, -1f..1f)
         val OffHandPositiveX by float("PositiveRotationX", 0f, -50f..50f)
         val OffHandPositiveY by float("PositiveRotationY", 0f, -50f..50f)
         val OffHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
     }
+
+    object ArmHand : ToggleableConfigurable(this, "Arm", false) {
+        val armX by float("X", 0f, -5f..5f)
+        val armY by float("Y", 0f, -5f..5f)
+        val armZ by float("Z", 0f, -5f..5f)
+        val armPositiveX by float("PositiveRotationX", 0f, -50f..50f)
+        val armPositiveY by float("PositiveRotationY", 0f, -50f..50f)
+        val armPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
+    }
+
 
     val swingDuration by int("SwingDuration", 6, 1..20)
 
