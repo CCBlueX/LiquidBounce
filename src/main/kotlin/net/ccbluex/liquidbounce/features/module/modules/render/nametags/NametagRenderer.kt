@@ -35,19 +35,6 @@ private const val ITEM_SCALE: Float = 1.0F
 
 class NametagRenderer {
 
-    private val quadBuffers =
-        RenderBufferBuilder(
-            VertexFormat.DrawMode.QUADS,
-            VertexInputType.Pos,
-            RenderBufferBuilder.TESSELATOR_A,
-        )
-    private val lineBuffers =
-        RenderBufferBuilder(
-            VertexFormat.DrawMode.DEBUG_LINES,
-            VertexInputType.Pos,
-            RenderBufferBuilder.TESSELATOR_B,
-        )
-
     private val dc = newDrawContext()
 
     private val fontBuffers = FontRendererBuffers()
@@ -78,10 +65,14 @@ class NametagRenderer {
         val q1 = Vec3(-0.1f * fontSize, ModuleNametags.fontRenderer.height * -0.1f, 0f)
         val q2 = Vec3(x + 0.2f * fontSize, ModuleNametags.fontRenderer.height * 1.1f, 0f)
 
-        quadBuffers.drawQuad(this@drawNametag, q1, q2)
+        withColor(Color4b.BLACK.copy(a = 120)) {
+            drawQuad(q1, q2)
+        }
 
         if (NametagShowOptions.BORDER.isShowing()) {
-            lineBuffers.drawQuadOutlines(this@drawNametag, q1, q2)
+            withColor(Color4b.BLACK) {
+                drawQuadOutlines(q1, q2)
+            }
         }
 
         if (NametagShowOptions.ITEMS.isShowing()) {
@@ -151,12 +142,6 @@ class NametagRenderer {
             GL11.GL_ZERO
         )
 
-        env.withColor(Color4b(0, 0, 0, 120)) {
-            quadBuffers.draw()
-        }
-        env.withColor(Color4b(0, 0, 0, 255)) {
-            lineBuffers.draw()
-        }
         env.withColor(Color4b.WHITE) {
             fontBuffers.draw()
         }
