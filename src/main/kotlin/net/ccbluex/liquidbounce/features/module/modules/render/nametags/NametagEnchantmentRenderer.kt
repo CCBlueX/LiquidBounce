@@ -148,8 +148,7 @@ object NametagEnchantmentRenderer {
         val width: Float
     )
 
-    fun drawEnchantments(
-        env: RenderEnvironment,
+    fun RenderEnvironment.drawEnchantments(
         itemStack: ItemStack,
         x: Float,
         y: Float,
@@ -166,7 +165,7 @@ object NametagEnchantmentRenderer {
 
         RenderSystem.enableBlend()
         RenderSystem.defaultBlendFunc()
-        renderEnchantmentColumn(env, cells, x, y, fontRenderer)
+        renderEnchantmentColumn(cells, x, y, fontRenderer)
     }
 
     fun drawEntityEnchantments(
@@ -204,7 +203,7 @@ object NametagEnchantmentRenderer {
         if (columnData.isNotEmpty()) {
             // Add this position to the drawn areas list
             ModuleNametags.drawnEnchantmentAreas.add(Vector2f(worldX, worldY))
-            drawEnchantmentColumns(env, worldX, worldY, fontRenderer, columnData)
+            env.drawEnchantmentColumns(worldX, worldY, fontRenderer, columnData)
         }
     }
 
@@ -280,8 +279,7 @@ object NametagEnchantmentRenderer {
         )
     }
 
-    private fun renderEnchantmentColumn(
-        env: RenderEnvironment,
+    private fun RenderEnvironment.renderEnchantmentColumn(
         cells: List<EnchantCell>,
         x: Float,
         y: Float,
@@ -302,7 +300,7 @@ object NametagEnchantmentRenderer {
             )
             val bgColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL
 
-            drawCellBackground(env, rect, bgColor)
+            drawCellBackground(rect, bgColor)
 
             val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
             val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
@@ -317,16 +315,17 @@ object NametagEnchantmentRenderer {
             )
         }
 
-        ModuleNametags.fontRenderer.commit(env, fontRenderer)
+        with(ModuleNametags.fontRenderer) {
+            commit(fontRenderer)
+        }
     }
 
-    private fun drawCellBackground(
-        env: RenderEnvironment,
+    private fun RenderEnvironment.drawCellBackground(
         rect: Rect,
         color: Color4b
     ) {
         val argb = color.toARGB()
-        env.drawCustomMesh(
+        drawCustomMesh(
             DrawMode.QUADS,
             VertexInputType.PosColor,
         ) { matrix ->
@@ -337,8 +336,7 @@ object NametagEnchantmentRenderer {
         }
     }
 
-    private fun drawEnchantmentColumns(
-        env: RenderEnvironment,
+    private fun RenderEnvironment.drawEnchantmentColumns(
         x: Float,
         y: Float,
         fontRenderer: FontRendererBuffers,
@@ -360,12 +358,12 @@ object NametagEnchantmentRenderer {
             y + maxColumnHeight + FRAME_MARGIN
         )
 
-        drawGroupBorder(env, groupRect)
+        drawGroupBorder(this, groupRect)
 
         var columnX = x - halfTotalWidth
         columnData.forEach { column ->
             val columnCenterX = columnX + column.width / 2
-            renderEnchantmentColumn(env, column.cells, columnCenterX, y, fontRenderer)
+            renderEnchantmentColumn(column.cells, columnCenterX, y, fontRenderer)
             columnX += column.width + COLUMN_SPACING
         }
     }

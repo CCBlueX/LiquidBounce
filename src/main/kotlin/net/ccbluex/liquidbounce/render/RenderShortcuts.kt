@@ -82,8 +82,6 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
             fontBuffers.draw()
         }
     }
-
-    fun FontRenderer.commit(buffer: FontRendererBuffers) = commit(this@RenderEnvironment, buffer)
 }
 
 class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixStack) {

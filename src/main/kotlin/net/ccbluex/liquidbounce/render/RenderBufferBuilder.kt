@@ -28,7 +28,6 @@ import net.minecraft.client.gl.ShaderProgramKey
 import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.util.math.Box
 import net.minecraft.util.math.Position
 
 
@@ -57,52 +56,6 @@ class RenderBufferBuilder<I : VertexInputType> private constructor(
         tessellator.begin(drawMode, vertexFormat.vertexFormat),
     )
 
-    /**
-     * Function to draw a solid box using the specified [box].
-     *
-     * @param box The bounding box of the box.
-     */
-    @Suppress("CognitiveComplexMethod")
-    @JvmOverloads
-    fun drawBox(
-        env: RenderEnvironment,
-        box: Box,
-        useOutlineVertices: Boolean = false,
-        color: Color4b? = null,
-        verticesToUse: Int = -1
-    ) {
-        val matrix = env.currentMvpMatrix
-
-        val check = verticesToUse != -1
-
-        // Draw the vertices of the box
-        if (useOutlineVertices) {
-            box.forEachOutlineVertex { i, x, y, z ->
-                if (check && (verticesToUse and (1 shl i)) != 0) {
-                    return@forEachOutlineVertex
-                }
-
-                val bb = vertexConsumer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-
-                if (color != null) {
-                    bb.color(color.toARGB())
-                }
-            }
-        } else {
-            box.forEachFaceVertex { i, x, y, z ->
-                if (check && (verticesToUse and (1 shl i)) != 0) {
-                    return@forEachFaceVertex
-                }
-
-                val bb = vertexConsumer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-
-                if (color != null) {
-                    bb.color(color.toARGB())
-                }
-            }
-        }
-    }
-
     fun draw() {
         val built = vertexConsumer.endNullable() ?: return
 
@@ -114,24 +67,6 @@ class RenderBufferBuilder<I : VertexInputType> private constructor(
 
     fun reset() {
         vertexConsumer.endNullable()
-    }
-
-    companion object {
-        @JvmField
-        val TESSELATOR_A: Tessellator = Tessellator(0x200000)
-        @JvmField
-        val TESSELATOR_B: Tessellator = Tessellator(0x200000)
-    }
-}
-
-fun RenderEnvironment.drawSolidBox(consumer: VertexConsumer, box: Box, color: Color4b) {
-    val matrix = currentMvpMatrix
-    val argb = color.toARGB()
-
-    // Draw the vertices of the box
-    box.forEachFaceVertex { _, x, y, z ->
-        consumer.vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-            .color(argb)
     }
 }
 
@@ -162,8 +97,8 @@ fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawQuad(
     }
 }
 
+context(env: RenderEnvironment)
 fun RenderBufferBuilder<VertexInputType.PosColor>.drawLine(
-    env: RenderEnvironment,
     pos1: Vec3,
     pos2: Vec3,
     color: Color4b

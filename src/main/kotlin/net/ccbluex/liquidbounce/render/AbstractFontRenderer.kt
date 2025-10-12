@@ -55,8 +55,7 @@ abstract class AbstractFontRenderer<T> {
 
     /**
      */
-    abstract fun commit(
-        env: RenderEnvironment,
+    abstract fun RenderEnvironment.commit(
         buffers: FontRendererBuffers
     )
 

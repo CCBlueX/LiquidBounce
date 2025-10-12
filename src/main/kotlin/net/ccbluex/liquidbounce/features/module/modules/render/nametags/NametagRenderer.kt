@@ -60,7 +60,9 @@ class NametagRenderer {
         // Make the model view matrix center the text when rendering
         matrixStack.translate(-x * 0.5f, -ModuleNametags.fontRenderer.height * 0.5f, 0f)
 
-        ModuleNametags.fontRenderer.commit(this@drawNametag, fontBuffers)
+        with(ModuleNametags.fontRenderer) {
+            commit(fontBuffers)
+        }
 
         val q1 = Vec3(-0.1f * fontSize, ModuleNametags.fontRenderer.height * -0.1f, 0f)
         val q2 = Vec3(x + 0.2f * fontSize, ModuleNametags.fontRenderer.height * 1.1f, 0f)
