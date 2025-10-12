@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine.font
 
+import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.collection.Pool
+import net.minecraft.client.texture.GlTexture
 import net.minecraft.text.Text
 import org.joml.Vector3f
 import java.awt.Font
@@ -277,8 +279,9 @@ class FontRenderer(
             val color = renderedGlyph.color
             val atlasLocation = glyphDescriptor.renderInfo.atlasLocation!!
 
-            RenderSystem.bindTexture(glyphDescriptor.page.texture.glId)
-            RenderSystem.setShaderTexture(0, glyphDescriptor.page.texture.glId)
+            val gpuTexture = glyphDescriptor.page.texture.glTexture
+            GlStateManager._bindTexture((gpuTexture as GlTexture).glId)
+            RenderSystem.setShaderTexture(0, gpuTexture)
             environment.drawTextureQuad(
                 vec3f1.set(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
                 atlasLocation.uvCoordinatesOnTexture.min,

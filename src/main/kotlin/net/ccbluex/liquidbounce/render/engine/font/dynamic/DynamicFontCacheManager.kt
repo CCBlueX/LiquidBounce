@@ -53,8 +53,6 @@ class DynamicFontCacheManager(
         }
 
         val changes = this.glyphPageLock.withLock {
-            this.dynamicGlyphPage.texture.bindTexture()
-
             val requiredUpdateCount = this.glyphPageChanges.count { !it.removed }
 
             if (requiredUpdateCount > 15) {
@@ -79,14 +77,6 @@ class DynamicFontCacheManager(
                             0, 0,
                             width, height,
                             false, false
-                        )
-
-                        chunkImage.upload(
-                            0,
-                            bb.xMin.toInt(), bb.yMin.toInt(),
-                            0, 0,
-                            width, height,
-                            false
                         )
                     }
 

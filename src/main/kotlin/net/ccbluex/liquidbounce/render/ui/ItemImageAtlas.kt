@@ -1,18 +1,18 @@
 package net.ccbluex.liquidbounce.render.ui
 
+import com.mojang.blaze3d.buffers.BufferType
+import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.systems.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.TextureFormat
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.common.GlobalFramebuffer
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.math.Rect2i
@@ -22,8 +22,9 @@ import net.minecraft.registry.Registry
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
-import org.joml.Vector2i
 import java.awt.image.BufferedImage
+import java.lang.AutoCloseable
+import java.util.OptionalInt
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -58,9 +59,9 @@ object ItemImageAtlas : EventListener {
 
         val items = renderer.render(drawContext)
 
-        val image = renderer.getImage().toBufferedImage()
+        val image = renderer.toNativeImage().toBufferedImage()
 
-        renderer.deleteFramebuffer()
+        renderer.close()
 
         this.atlas = Atlas(items, image, findAliases())
     }
@@ -110,72 +111,75 @@ object ItemImageAtlas : EventListener {
 private class ItemFramebufferRenderer(
     val items: Registry<Item>,
     val scale: Int,
-) : MinecraftShortcuts {
+) : MinecraftShortcuts, AutoCloseable {
     private val itemsPerDimension = ceil(sqrt(items.size().toDouble())).toInt()
+    private val itemPixelSize = 16 * scale
 
-    private val framebuffer: Framebuffer = SimpleFramebuffer(
-        "ItemFramebufferRenderer",
-        NATIVE_ITEM_SIZE * scale * itemsPerDimension,
-        NATIVE_ITEM_SIZE * scale * itemsPerDimension,
-        true
-    ).apply {
-        setClearColor(0.0f, 0.0f, 0.0f, 0.0f)
-    }
+    private val gpuDevice = RenderSystem.getDevice()
+
+    val gpuTexture: GpuTexture = gpuDevice.createTexture(
+        "ItemAtlasTexture",
+        TextureFormat.RGBA8,
+        itemPixelSize * itemsPerDimension,
+        itemPixelSize * itemsPerDimension,
+        1
+    )
 
     private val itemPixelSizeOnFramebuffer = NATIVE_ITEM_SIZE * scale
 
     fun render(ctx: DrawContext): Map<Item, Rect2i> {
-        this.framebuffer.beginWrite(true)
-
-        ctx.matrices.push()
-
-        ctx.matrices.loadIdentity()
-
-        ctx.matrices.scale(scale.toFloat(), scale.toFloat(), 1.0f)
+        val encoder = gpuDevice.createCommandEncoder()
+        encoder.clearColorTexture(gpuTexture, 0) // Transparent
+        val pass = encoder.createRenderPass(gpuTexture, OptionalInt.empty())
 
         val projectionMatrix = RenderSystem.getProjectionMatrix()
-
-        val matrix4f = Matrix4f().setOrtho(
-            0.0f,
-            this.framebuffer.textureWidth.toFloat(),
-            this.framebuffer.textureHeight.toFloat(),
-            0.0f,
-            1000.0f,
-            21000.0f
+        val matrix = Matrix4f().setOrtho(
+            0f,
+            gpuTexture.getWidth(0).toFloat(),
+            gpuTexture.getHeight(0).toFloat(),
+            0f,
+            1000f,
+            21000f
         )
 
-        RenderSystem.setProjectionMatrix(matrix4f, ProjectionType.ORTHOGRAPHIC)
-        GlobalFramebuffer.push(framebuffer)
+        RenderSystem.setProjectionMatrix(matrix, ProjectionType.ORTHOGRAPHIC)
+        ctx.matrices.push()
+        ctx.matrices.loadIdentity()
+        ctx.matrices.scale(scale.toFloat(), scale.toFloat(), 1f)
 
-        val map = Reference2ObjectOpenHashMap<Item, Rect2i>(items.size())
-        this.items.forEachIndexed { idx, item ->
-            val fromX = (idx % this.itemsPerDimension) * NATIVE_ITEM_SIZE
-            val fromY = (idx / this.itemsPerDimension) * NATIVE_ITEM_SIZE
+        val itemMap = Reference2ObjectOpenHashMap<Item, Rect2i>(items.size())
 
-            ctx.drawItem(item.defaultStack, fromX, fromY)
-
-            map[item] = Rect2i(
-                fromX * this.scale,
-                fromY * this.scale,
-                this.itemPixelSizeOnFramebuffer,
-                this.itemPixelSizeOnFramebuffer
-            )
+        items.forEachIndexed { idx, item ->
+            val x = (idx % itemsPerDimension) * 16
+            val y = (idx / itemsPerDimension) * 16
+            ctx.drawItem(item.defaultStack, x, y)
+            itemMap[item] = Rect2i(x * scale, y * scale, itemPixelSize, itemPixelSize)
         }
 
         ctx.matrices.pop()
-
-        GlobalFramebuffer.pop()
-        mc.framebuffer.beginWrite(true)
-
+        pass.close()
         RenderSystem.setProjectionMatrix(projectionMatrix, ProjectionType.ORTHOGRAPHIC)
 
-        return map
+        return itemMap
     }
 
-    fun getImage(): NativeImage = framebuffer.toNativeImage()
 
-    fun deleteFramebuffer() {
-        this.framebuffer.delete()
+    fun toNativeImage(): NativeImage {
+        val encoder = gpuDevice.createCommandEncoder()
+        val buffer = gpuDevice.createBuffer(
+            { "ItemAtlasBuffer" },
+            BufferType.PIXEL_PACK,
+            BufferUsage.STATIC_READ,
+            gpuTexture.getWidth(0) * gpuTexture.getHeight(0) * 4,
+        )
+        encoder.copyTextureToBuffer(gpuTexture, buffer, 0, {}, 0)
+        return encoder.readBuffer(buffer).use { view ->
+            NativeImage.read(view.data())
+        }
+    }
+
+    override fun close() {
+        gpuTexture.close()
     }
 
 }

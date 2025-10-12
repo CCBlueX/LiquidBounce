@@ -144,8 +144,6 @@ class MinimapTextureAtlasManager {
                 return this.texture.glTexture
             }
 
-            this.texture.bindTexture()
-
             val dirtyChunks = this.dirtyAtlasPositions.size
 
             when {
@@ -180,14 +178,6 @@ class MinimapTextureAtlasManager {
                     0, 0,
                     16, 16,
                     false, false
-                )
-
-                chunkImage.upload(
-                    0,
-                    dirtyAtlasPosition.baseXOnAtlas, dirtyAtlasPosition.baseYOnAtlas,
-                    0, 0,
-                    16, 16,
-                    false
                 )
             }
         }
