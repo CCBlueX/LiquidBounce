@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 import org.lwjgl.opengl.GL11

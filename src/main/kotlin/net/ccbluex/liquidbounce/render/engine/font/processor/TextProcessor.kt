@@ -19,6 +19,7 @@ abstract class TextProcessor(obfuscationSeed: Long?) {
         /**
          * Contains the chars for the `§k` formatting
          */
+        @JvmField
         val RANDOM_CHARS = "1234567890abcdefghijklmnopqrstuvwxyz~!@#\$%^&*()-=_+{}[]".toCharArray()
 
         @JvmStatic
@@ -31,10 +32,14 @@ abstract class TextProcessor(obfuscationSeed: Long?) {
             Color4b(red, green, blue, 255)
         }
     }
+
+    @JvmRecord
     data class ProcessedTextCharacter(val char: Char, val font: Int, val obfuscated: Boolean, val color: Color4b)
+
+    @JvmRecord
     data class ProcessedText(
         val chars: List<ProcessedTextCharacter>,
         val underlines: List<IntRange>,
-        val strikeThroughs: List<IntRange>
+        val strikeThroughs: List<IntRange>,
     )
 }

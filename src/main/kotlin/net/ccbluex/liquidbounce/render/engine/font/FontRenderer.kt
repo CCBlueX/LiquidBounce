@@ -272,9 +272,8 @@ class FontRenderer(
 
     }
 
-    override fun RenderEnvironment.commit(
-        buffers: FontRendererBuffers,
-    ) {
+    context(environment: RenderEnvironment)
+    override fun commit(buffers: FontRendererBuffers) {
         cache.renderedGlyphs.forEach { renderedGlyph ->
             val glyphDescriptor = renderedGlyph.glyph
             val renderBuffer = buffers.getTextBufferForGlyphPage(glyphDescriptor.page)
@@ -283,7 +282,7 @@ class FontRenderer(
             val atlasLocation = glyphDescriptor.renderInfo.atlasLocation!!
 
             renderBuffer.drawQuad(
-                this,
+                environment,
                 mutableVec3d1.set(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
                 atlasLocation.uvCoordinatesOnTexture.min,
                 mutableVec3d2.set(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),

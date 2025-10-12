@@ -57,10 +57,14 @@ import kotlin.contracts.contract
  * This has to be removed or limited to old driver versions when AMD actually fixes the bug in their drivers.
  * But as of now, 01.02.2025, they haven't.
  */
+@JvmField
 val HAS_AMD_VEGA_APU = GL11C.glGetString(GL11C.GL_RENDERER)?.startsWith("AMD Radeon(TM) RX Vega") ?: false &&
     GL11C.glGetString(GL11C.GL_VENDOR) == "ATI Technologies Inc."
 
+@JvmField
 val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
+@JvmField
 val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
 /**
