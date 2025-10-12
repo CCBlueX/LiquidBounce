@@ -298,10 +298,6 @@ fun RenderEnvironment.drawLineStrip(vararg positions: Vec3) {
     drawLines(positions.unmodifiable(), mode = DrawMode.DEBUG_LINE_STRIP)
 }
 
-fun RenderEnvironment.drawLineStrip(positions: List<Vec3>) {
-    drawLines(positions, mode = DrawMode.DEBUG_LINE_STRIP)
-}
-
 /**
  * Helper function to draw lines using the specified [lines] vectors and draw mode.
  *

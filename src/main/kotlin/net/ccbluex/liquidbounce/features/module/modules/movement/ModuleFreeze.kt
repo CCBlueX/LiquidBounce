@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.*
@@ -128,7 +129,7 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
 
         renderEnvironmentForWorld(event.matrixStack) {
             withColor(Color4b(0x00, 0x80, 0xFF, 0xFF)) {
-                drawLineStrip(positions = cachedPositions.map { relativeToCamera(it.pos).toVec3() })
+                drawLineStrip(positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() })
             }
         }
     }

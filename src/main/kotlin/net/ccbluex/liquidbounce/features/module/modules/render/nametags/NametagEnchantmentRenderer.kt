@@ -137,36 +137,18 @@ object NametagEnchantmentRenderer {
         mc.world?.registryManager?.getOrThrow(RegistryKeys.ENCHANTMENT)?.keys?.toList() ?: emptyList()
     }
 
+    @JvmRecord
     private data class EnchantCell(
         val processedText: ProcessedText,
         val textWidth: Float,
         val isCurse: Boolean
     )
 
+    @JvmRecord
     private data class EnchantColumn(
         val cells: List<EnchantCell>,
         val width: Float
     )
-
-    fun RenderEnvironment.drawEnchantments(
-        itemStack: ItemStack,
-        x: Float,
-        y: Float,
-        fontRenderer: FontRendererBuffers
-    ) {
-        if (itemStack.isEmpty || !NametagShowOptions.ENCHANTMENTS.isShowing() || itemStack.getEnchantmentCount() <= 0) {
-            return
-        }
-
-        val cells = processItemEnchantments(itemStack)
-        if (cells.isEmpty()) {
-            return
-        }
-
-        RenderSystem.enableBlend()
-        RenderSystem.defaultBlendFunc()
-        renderEnchantmentColumn(cells, x, y, fontRenderer)
-    }
 
     fun drawEntityEnchantments(
         env: RenderEnvironment,
