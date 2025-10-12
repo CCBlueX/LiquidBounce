@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.collection
 
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.math.BlockPos
+import org.joml.Vector3f
 import java.util.ArrayDeque
 import java.util.Queue
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -86,6 +86,12 @@ class Pool<T : Any> @JvmOverloads constructor(
     }
 
     companion object {
+        @JvmField
+        val Vec3f: Pool<Vector3f> = Pool(
+            queue = ArrayDeque(), // Render thread only
+            initializer = ::Vector3f,
+        ) { it.set(0f, 0f, 0f) }
+
         @JvmField
         val MutableBlockPos: Pool<BlockPos.Mutable> = Pool(
             queue = ConcurrentLinkedQueue(),

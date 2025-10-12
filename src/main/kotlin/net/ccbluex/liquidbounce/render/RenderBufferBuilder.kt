@@ -97,21 +97,6 @@ fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawQuad(
     }
 }
 
-context(env: RenderEnvironment)
-fun RenderBufferBuilder<VertexInputType.PosColor>.drawLine(
-    pos1: Vec3,
-    pos2: Vec3,
-    color: Color4b
-) {
-    val matrix = env.currentMvpMatrix
-
-    // Draw the vertices of the box
-    with(vertexConsumer) {
-        vertex(matrix, pos1.x, pos1.y, pos1.z).color(color.toARGB())
-        vertex(matrix, pos2.x, pos2.y, pos2.z).color(color.toARGB())
-    }
-}
-
 sealed interface VertexInputType {
     val vertexFormat: VertexFormat
     val shaderProgram: ShaderProgramKey
