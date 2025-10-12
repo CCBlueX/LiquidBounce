@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
 import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -78,18 +79,14 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
             return@handler
         }
 
-        renderEnvironmentForGUI {
+        renderEnvironmentForGUI(event) {
             val nametagRenderer = NametagRenderer()
 
-            try {
-                drawNametags(nametagRenderer, event.tickDelta)
-            } finally {
-                nametagRenderer.commit(this)
-            }
+            drawNametags(nametagRenderer, event.tickDelta)
         }
     }
 
-    private fun RenderEnvironment.drawNametags(nametagRenderer: NametagRenderer, tickDelta: Float) {
+    private fun GUIRenderEnvironment.drawNametags(nametagRenderer: NametagRenderer, tickDelta: Float) {
         drawnEnchantmentAreas.clear()
         nametagsToRender.forEach { it.calculatePosition(tickDelta) }
 

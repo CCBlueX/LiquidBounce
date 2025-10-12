@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.math.set
-import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.text.Text
 import net.minecraft.util.math.Vec3d
@@ -272,22 +271,21 @@ class FontRenderer(
 
     }
 
-    context(environment: RenderEnvironment)
-    override fun commit(buffers: FontRendererBuffers) {
+    override fun commit(environment: RenderEnvironment) {
         cache.renderedGlyphs.forEach { renderedGlyph ->
             val glyphDescriptor = renderedGlyph.glyph
-            val renderBuffer = buffers.getTextBufferForGlyphPage(glyphDescriptor.page)
 
             val color = renderedGlyph.color
             val atlasLocation = glyphDescriptor.renderInfo.atlasLocation!!
 
-            renderBuffer.drawQuad(
-                environment,
+            RenderSystem.bindTexture(glyphDescriptor.page.texture.glId)
+            RenderSystem.setShaderTexture(0, glyphDescriptor.page.texture.glId)
+            environment.drawTextureQuad(
                 mutableVec3d1.set(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
                 atlasLocation.uvCoordinatesOnTexture.min,
                 mutableVec3d2.set(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),
                 atlasLocation.uvCoordinatesOnTexture.max,
-                color
+                color.toARGB(),
             )
         }
 
@@ -308,46 +306,3 @@ class FontRenderer(
     }
 
 }
-
-
-class FontRendererBuffers {
-    companion object {
-        private val TEXT_TESSELATORS = Array(5) { Tessellator(0xA00000) }
-        private var currentTessellatorIndex = 1
-
-        private val textTesselatorMap = HashMap<GlyphPage, Tessellator>()
-
-        fun getTesselatorForGlyphPage(glyphPage: GlyphPage): Tessellator {
-            return textTesselatorMap.computeIfAbsent(glyphPage) { TEXT_TESSELATORS[currentTessellatorIndex++] }
-        }
-    }
-
-    val textBuffers = HashMap<GlyphPage, RenderBufferBuilder<VertexInputType.PosTexColor>>()
-
-    fun getTextBufferForGlyphPage(glyphPage: GlyphPage): RenderBufferBuilder<VertexInputType.PosTexColor> {
-        return this.textBuffers.computeIfAbsent(glyphPage) { key ->
-            val tessellator = getTesselatorForGlyphPage(key)
-
-            RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.PosTexColor, tessellator)
-        }
-    }
-
-    fun draw() {
-        this.textBuffers.forEach { (glyphPage, bufferBuilder) ->
-            val tex = glyphPage.texture
-
-            RenderSystem.bindTexture(tex.glId)
-
-            RenderSystem.setShaderTexture(0, tex.glId)
-
-            bufferBuilder.draw()
-        }
-    }
-
-    fun reset() {
-        this.textBuffers.values.forEach { bufferBuilder ->
-            bufferBuilder.reset()
-        }
-    }
-}
-

@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.render
 
-import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.text.Text
@@ -55,8 +54,7 @@ abstract class AbstractFontRenderer<T> {
 
     /**
      */
-    context(environment: RenderEnvironment)
-    abstract fun commit(buffers: FontRendererBuffers)
+    abstract fun commit(environment: RenderEnvironment)
 
     /**
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting
