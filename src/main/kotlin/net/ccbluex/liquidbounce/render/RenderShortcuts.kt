@@ -20,12 +20,14 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.opengl.GlConst
 import com.mojang.blaze3d.opengl.GlStateManager
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import com.mojang.blaze3d.vertex.VertexFormat
 import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextAccessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
@@ -34,19 +36,17 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
 import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.util.math.*
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11C
+import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -88,20 +88,33 @@ fun defaultBlendFunc() {
  *
  * @property matrixStack The matrix stack for rendering.
  */
-sealed class RenderEnvironment(val matrixStack: MatrixStack) {
-    abstract fun relativeToCamera(pos: Vec3d): Vec3d
+sealed interface RenderEnvironment {
+    val matrixStack: MatrixStack
+
+    val renderPipeline: RenderPipeline
+
+    fun relativeToCamera(pos: Vec3d): Vec3d
 }
 
 class GUIRenderEnvironment(
     val context: DrawContext,
     matrixStack: MatrixStack?,
-) : RenderEnvironment(matrixStack ?: context.matrices) {
+) : RenderEnvironment {
+    override val matrixStack: MatrixStack = matrixStack ?: context.matrices
+
+    override val renderPipeline get() = ClientRenderPipelines.GUI_RENDER_ENV
+
     override fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos
     }
 }
 
-class WorldRenderEnvironment(matrixStack: MatrixStack, val camera: Camera) : RenderEnvironment(matrixStack) {
+class WorldRenderEnvironment(
+    override val matrixStack: MatrixStack,
+    val camera: Camera,
+) : RenderEnvironment {
+    override val renderPipeline get() = ClientRenderPipelines.WORLD_RENDER_ENV
+
     override fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos.subtract(camera.pos)
     }
@@ -277,22 +290,54 @@ inline fun RenderEnvironment.drawCustomMesh(
     drawer: VertexConsumer.(Matrix4f) -> Unit
 ) {
     val tessellator = Tessellator.getInstance()
-    val buffer = tessellator.begin(drawMode, vertexInputType.vertexFormat)
-
-    // FIXME
-//    RenderSystem.setShader(vertexInputType.shaderProgram)
+    val bufferBuilder = tessellator.begin(drawMode, vertexInputType.vertexFormat)
 
     val matrix = matrixStack.peek().positionMatrix
 
-    // Draw the vertices of the box
-    with(buffer) {
-        // Begin drawing lines with position format
-
+    with(bufferBuilder) {
         drawer(this, matrix)
 
-        // Draw the custom mesh
-        // FIXME
-//        BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
+        // copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
+        bufferBuilder.endNullable()?.use { buffer ->
+            val gpuBuffer = renderPipeline.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
+            val gpuBuffer2: GpuBuffer
+            val indexType: VertexFormat.IndexType
+            if (buffer.sortedBuffer == null) {
+                val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawParameters.mode())
+                gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount())
+                indexType = shapeIndexBuffer.indexType
+            } else {
+                gpuBuffer2 = renderPipeline.vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
+                indexType = buffer.drawParameters.indexType()
+            }
+
+            val framebuffer = mc.framebuffer
+
+            RenderSystem.getDevice()
+                .createCommandEncoder()
+                .createRenderPass(
+                    framebuffer.getColorAttachment(),
+                    OptionalInt.empty(),
+                    if (framebuffer.useDepthAttachment) framebuffer.getDepthAttachment() else null,
+                    OptionalDouble.empty()
+                ).use { renderPass ->
+                    renderPass.setPipeline(renderPipeline)
+                    renderPass.setVertexBuffer(0, gpuBuffer)
+                    if (RenderSystem.SCISSOR_STATE.isEnabled) {
+                        renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
+                    }
+
+                    for (i in 0..11) {
+                        val gpuTexture = RenderSystem.getShaderTexture(i)
+                        if (gpuTexture != null) {
+                            renderPass.bindSampler("Sampler$i", gpuTexture)
+                        }
+                    }
+
+                    renderPass.setIndexBuffer(gpuBuffer2, indexType)
+                    renderPass.drawIndexed(0, buffer.drawParameters.indexCount())
+                }
+        }
     }
 }
 

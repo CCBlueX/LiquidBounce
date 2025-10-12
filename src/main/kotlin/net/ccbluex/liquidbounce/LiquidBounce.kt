@@ -58,6 +58,7 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
@@ -78,6 +79,8 @@ import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
+import net.minecraft.util.Identifier
+import java.util.Locale
 import kotlin.time.measureTime
 
 /**
@@ -141,6 +144,12 @@ object LiquidBounce : EventListener {
 
     var isInitialized = false
         private set
+
+    /**
+     * Creates an [net.minecraft.util.Identifier] starts with [CLIENT_NAME].
+     */
+    @JvmStatic
+    fun identifier(path: String): Identifier = Identifier.of(CLIENT_NAME.lowercase(Locale.ROOT), path)
 
     /**
      * Initializes the client, called when
@@ -398,11 +407,13 @@ object LiquidBounce : EventListener {
             val clientInitializer = ClientInitializer()
             if (resourceManager is ReloadableResourceManagerImpl) {
                 resourceManager.registerReloader(clientInitializer)
+                resourceManager.registerReloader(ClientRenderPipelines)
             } else {
                 logger.warn("Failed to register resource reloader!")
 
                 // Run resource reloader directly as fallback
                 clientInitializer.reload(resourceManager)
+                ClientRenderPipelines.reload(resourceManager)
             }
         }.onFailure {
             ErrorHandler.fatal(it, additionalMessage = "Client start")
@@ -445,6 +456,5 @@ object LiquidBounce : EventListener {
     private val shutdownHandler = handler<ClientShutdownEvent> {
         shutdownClient()
     }
-
 
 }
