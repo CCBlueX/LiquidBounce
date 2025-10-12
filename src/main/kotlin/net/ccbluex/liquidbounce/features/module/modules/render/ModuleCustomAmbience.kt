@@ -18,24 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinBackgroundRenderer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.shader.shaders.BlendShader
-import net.ccbluex.liquidbounce.render.shader.shaders.BlendShaderData
 import net.minecraft.block.enums.CameraSubmersionType
-import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.Fog
 import net.minecraft.client.render.FogShape
 import net.minecraft.util.math.MathHelper
 import org.lwjgl.opengl.GL11
-import org.lwjgl.opengl.GL13
 
 /**
  * CustomAmbience module
@@ -102,34 +96,8 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
 
     }
 
-    object CustomLightColor :
-        ToggleableConfigurable(this, "CustomLightColor", true), AutoCloseable {
-
-        private val lightColor by color("LightColor", Color4b(70, 119, 255, 255)).onChanged {
-            update()
-        }
-
-        val framebuffer: Framebuffer = SimpleFramebuffer(16, 16, false)
-
-        init {
-            framebuffer.setTexFilter(9729)
-            framebuffer.setClearColor(1f, 1f, 1f, 1f)
-        }
-
-        fun update() {
-            framebuffer.clear()
-            framebuffer.beginWrite(true)
-            GlStateManager._activeTexture(GL13.GL_TEXTURE0)
-            GlStateManager._bindTexture(mc.gameRenderer.lightmapTextureManager.lightmapFramebuffer.colorAttachment)
-            BlendShaderData.color = lightColor
-            BlendShader.blit()
-            framebuffer.endWrite()
-        }
-
-        override fun close() {
-            framebuffer.delete()
-        }
-
+    object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
+        val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
     }
 
     init {
