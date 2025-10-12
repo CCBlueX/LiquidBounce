@@ -41,6 +41,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
+import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11C
 import kotlin.contracts.ExperimentalContracts
@@ -148,6 +149,15 @@ inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {
         block()
     } finally {
         pop()
+    }
+}
+
+inline fun Matrix3x2fStack.withPush(block: Matrix3x2fStack.() -> Unit) {
+    pushMatrix()
+    try {
+        block()
+    } finally {
+        popMatrix()
     }
 }
 
