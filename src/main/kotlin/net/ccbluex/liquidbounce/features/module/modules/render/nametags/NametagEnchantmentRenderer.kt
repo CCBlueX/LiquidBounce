@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.render.drawColoredQuad
 import net.ccbluex.liquidbounce.render.drawColoredQuadOutlines
 import net.ccbluex.liquidbounce.render.defaultBlendFunc
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
@@ -154,18 +153,13 @@ object NametagEnchantmentRenderer {
     fun drawEntityEnchantments(
         env: RenderEnvironment,
         entity: LivingEntity,
-        x: Float,
-        y: Float,
-        fontRenderer: FontRendererBuffers
+        worldX: Float,
+        worldY: Float,
     ) {
         if (!NametagShowOptions.ENCHANTMENTS.isShowing()) return
 
         val itemsWithEnchantments = getEntityItemsWithEnchantments(entity)
         if (itemsWithEnchantments.isEmpty()) return
-
-        val worldPos = entity.pos
-        val worldX = worldPos.x.toFloat()
-        val worldY = (worldPos.y + entity.height + 0.5f).toFloat()
 
         if (isPositionOccluded(worldX, worldY)) {
             return
@@ -186,7 +180,7 @@ object NametagEnchantmentRenderer {
         if (columnData.isNotEmpty()) {
             // Add this position to the drawn areas list
             ModuleNametags.drawnEnchantmentAreas.add(Vector2f(worldX, worldY))
-            env.drawEnchantmentColumns(worldX, worldY, fontRenderer, columnData)
+            env.drawEnchantmentColumns(worldX, worldY, columnData)
         }
     }
 
@@ -266,7 +260,6 @@ object NametagEnchantmentRenderer {
         cells: List<EnchantCell>,
         x: Float,
         y: Float,
-        fontRenderer: FontRendererBuffers
     ) {
         val maxWidth = cells.maxOfOrNull { it.textWidth } ?: 0f
         val cellWidth = maxWidth * FIXED_SCALE + PADDING * 2
@@ -298,9 +291,7 @@ object NametagEnchantmentRenderer {
             )
         }
 
-        with(ModuleNametags.fontRenderer) {
-            commit(fontRenderer)
-        }
+        ModuleNametags.fontRenderer.commit(this)
     }
 
     private fun RenderEnvironment.drawCellBackground(
@@ -315,7 +306,6 @@ object NametagEnchantmentRenderer {
     private fun RenderEnvironment.drawEnchantmentColumns(
         x: Float,
         y: Float,
-        fontRenderer: FontRendererBuffers,
         columnData: List<EnchantColumn>
     ) {
         val columnsWidth = columnData.sumOf { it.width.toDouble() }.toFloat()
@@ -339,7 +329,7 @@ object NametagEnchantmentRenderer {
         var columnX = x - halfTotalWidth
         columnData.forEach { column ->
             val columnCenterX = columnX + column.width / 2
-            renderEnchantmentColumn(column.cells, columnCenterX, y, fontRenderer)
+            renderEnchantmentColumn(column.cells, columnCenterX, y)
             columnX += column.width + COLUMN_SPACING
         }
     }

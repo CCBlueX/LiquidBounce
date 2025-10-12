@@ -85,7 +85,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             return@handler
         }
 
-        val matStack = MatrixStack()
+        val matStack = event.context.matrices
 
         val playerPos = player.interpolateCurrentPosition(event.tickDelta)
         val playerRotation = player.interpolateCurrentRotation(event.tickDelta)
@@ -121,7 +121,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         matStack.multiply(Quaternionf(AxisAngle4f(-(playerRotation.yaw + 180.0F).toRadians(), 0.0F, 0.0F, 1.0F)))
         matStack.translate(-playerOffX, -playerOffZ, 0.0)
 
-        renderEnvironmentForGUI(matStack) {
+        renderEnvironmentForGUI(event) {
             val glId = ChunkRenderer.prepareRendering()
 
             RenderSystem.bindTexture(glId)
@@ -155,7 +155,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         )
         GL11.glDisable(GL11.GL_SCISSOR_TEST)
 
-        renderEnvironmentForGUI(matStack) {
+        renderEnvironmentForGUI(event) {
 
             val from = Color4b(0, 0, 0, 100)
             val to = Color4b(0, 0, 0, 0)

@@ -79,13 +79,13 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
 
     @Suppress("unused")
     private val chunkLoadHandler = handler<ChunkLoadEvent>(READ_FINAL_STATE) { event ->
-        if (subscribers.isEmpty()) return@handler
-
         val chunk = world.getChunk(event.x, event.z).takeUnless { it.isEmpty } ?: return@handler
 
-        UpdateRequest.ChunkLoad(chunk).runAsync()
-
         loadedChunks.add(ChunkPos.toLong(event.x, event.z))
+
+        if (subscribers.isEmpty()) return@handler
+
+        UpdateRequest.ChunkLoad(chunk).runAsync()
     }
 
     @Suppress("unused")
@@ -110,8 +110,8 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent>(FIRST_PRIORITY) {
         cancelCurrentJobs()
-        subscribers.forEach(BlockChangeSubscriber::clearAllChunks)
         loadedChunks.clear()
+        subscribers.forEach(BlockChangeSubscriber::clearAllChunks)
     }
 
     /**

@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -130,6 +129,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
             @Suppress("unused")
             private val renderHandler = handler<OverlayRenderEvent> { event ->
                 // MC-Rendering code for off-hand
+
                 val currentFood = Estimator.findBestFood() ?: return@handler
                 val dc = event.context
                 val scaledWidth = dc.scaledWindowWidth

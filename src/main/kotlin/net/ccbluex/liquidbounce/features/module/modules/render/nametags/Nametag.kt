@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.Entity
@@ -42,7 +43,7 @@ class Nametag private constructor(
     var position: Vec3? = null
         private set
 
-    constructor(entity: Entity) : this(entity, NametagTextFormatter(entity).format(), createItemList(entity))
+    constructor(entity: LivingEntity) : this(entity, NametagTextFormatter(entity).format(), createItemList(entity))
 
     fun calculatePosition(tickDelta: Float) {
         val nametagPos = entity.interpolateCurrentPosition(tickDelta)
@@ -57,19 +58,18 @@ class Nametag private constructor(
          * Creates a list of items that should be rendered above the name tag. Currently, it is the item in main hand,
          * the item in off-hand (as long as it exists) and the armor items.
          */
-        private fun createItemList(entity: Entity): List<ItemStack> {
-            if (entity !is LivingEntity) {
-                return emptyList()
-            }
+        private fun createItemList(entity: LivingEntity): List<ItemStack> {
+            return buildList(6) {
+                this += entity.getEquippedStack(EquipmentSlot.MAINHAND)
+                this += entity.getEquippedStack(EquipmentSlot.HEAD)
+                this += entity.getEquippedStack(EquipmentSlot.CHEST)
+                this += entity.getEquippedStack(EquipmentSlot.LEGS)
+                this += entity.getEquippedStack(EquipmentSlot.FEET)
 
-            return listOf(
-                entity.getEquippedStack(EquipmentSlot.MAINHAND),
-                entity.getEquippedStack(EquipmentSlot.HEAD),
-                entity.getEquippedStack(EquipmentSlot.CHEST),
-                entity.getEquippedStack(EquipmentSlot.LEGS),
-                entity.getEquippedStack(EquipmentSlot.FEET),
-                entity.getEquippedStack(EquipmentSlot.OFFHAND),
-            )
+                if (!isOlderThanOrEqual1_8) {
+                    this += entity.getEquippedStack(EquipmentSlot.OFFHAND)
+                }
+            }
         }
 
     }
