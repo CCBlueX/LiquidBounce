@@ -34,6 +34,7 @@ import net.minecraft.client.render.Camera
 import net.minecraft.client.render.Fog
 import net.minecraft.client.render.FogShape
 import net.minecraft.util.math.MathHelper
+import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL13
 
 /**
@@ -84,7 +85,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
                 return false
             }
 
-            GlStateManager._clearColor(
+            GL11.glClearColor(
                 backgroundColor.r / 255f,
                 backgroundColor.g / 255f,
                 backgroundColor.b / 255f,
