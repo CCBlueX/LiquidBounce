@@ -361,6 +361,18 @@ fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3) {
     }
 }
 
+fun RenderEnvironment.drawColoredQuad(pos1: Vec3, pos2: Vec3, argb: Int) {
+    drawCustomMesh(
+        DrawMode.QUADS,
+        VertexInputType.PosColor,
+    ) { matrix ->
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos2.z).color(argb)
+        vertex(matrix, pos2.x, pos1.y, pos2.z).color(argb)
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
+    }
+}
+
 fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3) {
     drawCustomMesh(
         DrawMode.DEBUG_LINES,
@@ -377,6 +389,25 @@ fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3) {
 
         vertex(matrix, pos1.x, pos1.y, pos1.z)
         vertex(matrix, pos2.x, pos1.y, pos1.z)
+    }
+}
+
+fun RenderEnvironment.drawColoredQuadOutlines(pos1: Vec3, pos2: Vec3, argb: Int) {
+    drawCustomMesh(
+        DrawMode.DEBUG_LINES,
+        VertexInputType.PosColor,
+    ) { matrix ->
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
+
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
+
+        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
+
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
     }
 }
 

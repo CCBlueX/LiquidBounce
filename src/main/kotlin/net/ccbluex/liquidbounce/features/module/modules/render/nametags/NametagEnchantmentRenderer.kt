@@ -20,16 +20,16 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.VertexInputType
-import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.drawColoredQuad
+import net.ccbluex.liquidbounce.render.drawColoredQuadOutlines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Rect
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
-import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
@@ -324,16 +324,9 @@ object NametagEnchantmentRenderer {
         rect: Rect,
         color: Color4b
     ) {
-        val argb = color.toARGB()
-        drawCustomMesh(
-            DrawMode.QUADS,
-            VertexInputType.PosColor,
-        ) { matrix ->
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(argb)
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(argb)
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(argb)
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(argb)
-        }
+        val leftTop = Vec3(rect.x1, rect.y1, 0F)
+        val rightBottom = Vec3(rect.x2, rect.y2, 0F)
+        drawColoredQuad(leftTop, rightBottom, color.toARGB())
     }
 
     private fun RenderEnvironment.drawEnchantmentColumns(
@@ -370,36 +363,16 @@ object NametagEnchantmentRenderer {
 
     private fun drawGroupBorder(env: RenderEnvironment, rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
-        env.drawCustomMesh(
-            DrawMode.QUADS,
-            VertexInputType.PosColor,
-        ) { matrix ->
-            val bgColor = Color4b.BLACK.with(a = 120).toARGB()
+        val leftTop = Vec3(rect.x1, rect.y1, 0F)
+        val rightBottom = Vec3(rect.x2, rect.y2, 0F)
+        env.drawColoredQuad(
+            leftTop, rightBottom,
+            Color4b.BLACK.with(a = 120).toARGB(),
+        )
 
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(bgColor)
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(bgColor)
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(bgColor)
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(bgColor)
-        }
-
-        // Still drawing the border lines
-        env.drawCustomMesh(
-            DrawMode.DEBUG_LINES,
-            VertexInputType.PosColor,
-        ) { matrix ->
-            val color = Color4b.RED.toARGB()
-
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(color)
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(color)
-
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(color)
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(color)
-
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(color)
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(color)
-
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(color)
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(color)
-        }
+        env.drawColoredQuadOutlines(
+            leftTop, rightBottom,
+            Color4b.RED.toARGB(),
+        )
     }
 }
