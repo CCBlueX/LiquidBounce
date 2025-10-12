@@ -27,10 +27,9 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.math.set
+import net.ccbluex.liquidbounce.utils.collection.Pool
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.text.Text
-import net.minecraft.util.math.Vec3d
 import org.joml.Vector3f
 import java.awt.Font
 import kotlin.math.max
@@ -75,8 +74,6 @@ class FontRenderer(
 
     private val cache = FontRendererCache()
     private val positionCache = Vector3f()
-    private val mutableVec3d1 = Vec3d(0.0, 0.0, 0.0)
-    private val mutableVec3d2 = Vec3d(0.0, 0.0, 0.0)
     private val underlinesCache = ArrayDeque<IntRange>()
     private val strikethroughCache = ArrayDeque<IntRange>()
 
@@ -272,6 +269,8 @@ class FontRenderer(
     }
 
     override fun commit(environment: RenderEnvironment) {
+        val vec3f1 = Pool.Vec3f.take()
+        val vec3f2 = Pool.Vec3f.take()
         cache.renderedGlyphs.forEach { renderedGlyph ->
             val glyphDescriptor = renderedGlyph.glyph
 
@@ -281,13 +280,15 @@ class FontRenderer(
             RenderSystem.bindTexture(glyphDescriptor.page.texture.glId)
             RenderSystem.setShaderTexture(0, glyphDescriptor.page.texture.glId)
             environment.drawTextureQuad(
-                mutableVec3d1.set(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
+                vec3f1.set(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
                 atlasLocation.uvCoordinatesOnTexture.min,
-                mutableVec3d2.set(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),
+                vec3f2.set(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),
                 atlasLocation.uvCoordinatesOnTexture.max,
                 color.toARGB(),
             )
         }
+        Pool.Vec3f.offer(vec3f1)
+        Pool.Vec3f.offer(vec3f2)
 
         if (cache.lines.isNotEmpty()) {
             for (line in cache.lines) {

@@ -28,7 +28,11 @@ import net.minecraft.entity.LivingEntity
 private const val NAMETAG_PADDING: Int = 15
 
 private val currentItemStackRenderer
-    get() = if (NametagShowOptions.ITEM_INFO.isShowing()) ItemStackListRenderer.SingleItemStackRenderer else ItemStackListRenderer.SingleItemStackRenderer.OnlyItem
+    get() = if (NametagShowOptions.ITEM_INFO.isShowing()) {
+        ItemStackListRenderer.SingleItemStackRenderer
+    } else {
+        ItemStackListRenderer.SingleItemStackRenderer.OnlyItem
+    }
 
 internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     if (NametagShowOptions.ITEMS.isShowing()) {

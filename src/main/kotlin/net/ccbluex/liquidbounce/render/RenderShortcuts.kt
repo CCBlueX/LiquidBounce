@@ -39,11 +39,11 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Position
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
+import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11C
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -322,9 +322,9 @@ private fun RenderEnvironment.drawLines(lines: List<Vec3>, mode: DrawMode = Draw
 }
 
 fun RenderEnvironment.drawTextureQuad(
-    pos1: Position,
+    pos1: Vector3fc,
     uv1: UV2f = UV2f(0f, 0f),
-    pos2: Position,
+    pos2: Vector3fc,
     uv2: UV2f = UV2f(1f, 1f),
     argb: Int,
 ) {
@@ -332,16 +332,16 @@ fun RenderEnvironment.drawTextureQuad(
         DrawMode.QUADS,
         VertexInputType.PosTexColor,
     ) { matrix ->
-        vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), pos1.z.toFloat())
+        vertex(matrix, pos1.x(), pos2.y(), pos1.z())
             .texture(uv1.u, uv2.v)
             .color(argb)
-        vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), pos2.z.toFloat())
+        vertex(matrix, pos2.x(), pos2.y(), pos2.z())
             .texture(uv2.u, uv2.v)
             .color(argb)
-        vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), pos2.z.toFloat())
+        vertex(matrix, pos2.x(), pos1.y(), pos2.z())
             .texture(uv2.u, uv1.v)
             .color(argb)
-        vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), pos1.z.toFloat())
+        vertex(matrix, pos1.x(), pos1.y(), pos1.z())
             .texture(uv1.u, uv1.v)
             .color(argb)
     }
