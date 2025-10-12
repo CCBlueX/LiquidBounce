@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
 import com.mojang.blaze3d.textures.GpuTexture
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.*
@@ -30,7 +31,6 @@ import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.texture.AbstractTexture
-import net.minecraft.util.Identifier
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
@@ -107,7 +107,7 @@ class CefBrowser(
         }
     }
 
-    private val textureId = Identifier.of("liquidbounce", "browser/tab/${mcefBrowser.hashCode()}")
+    private val textureId = LiquidBounce.identifier("browser/tab/${mcefBrowser.hashCode()}")
 
     override var url: String
         get() = mcefBrowser.url
@@ -132,8 +132,7 @@ class CefBrowser(
 
     init {
         mc.textureManager.registerTexture(textureId, object : AbstractTexture() {
-            override fun getGlTexture(): GpuTexture = TODO()
-//            override fun getGlId() = mcefBrowser.renderer.textureID FIXME: ID int -> GpuTexture
+            override fun getGlTexture(): GpuTexture = mcefBrowser.renderer.texture!!
         })
     }
 

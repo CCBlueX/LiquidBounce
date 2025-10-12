@@ -23,15 +23,18 @@ import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.SynchronousResourceReloader
 import net.minecraft.util.Identifier
 import okio.buffer
 import okio.source
 
+// FIXME
 object ClientRenderPipelines : SynchronousResourceReloader {
 
     private val renderPipelines = Object2ObjectRBTreeMap<Identifier, RenderPipeline>()
@@ -50,11 +53,17 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     val WORLD_RENDER_ENV = create("world_render") {
         withBlend(BlendFunction.TRANSLUCENT)
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.DEBUG_LINES)
+        withFragmentShader("core/entity")
+        withVertexShader("core/entity")
     }
 
     @JvmField
     val GUI_RENDER_ENV = create("gui_render") {
 //        withBlend(BlendFunction.TRANSLUCENT)
+        withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.DEBUG_LINES)
+        withFragmentShader("core/entity")
+        withVertexShader("core/entity")
     }
 
     /**
