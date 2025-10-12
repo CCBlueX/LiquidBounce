@@ -44,6 +44,7 @@ import java.net.ServerSocket
 import java.util.function.Consumer
 import java.util.function.Function
 
+@Suppress("TooManyFunctions")
 class PolyglotScript(
     val language: String, val file: File,
     val debugOptions: ScriptDebugOptions = ScriptDebugOptions()

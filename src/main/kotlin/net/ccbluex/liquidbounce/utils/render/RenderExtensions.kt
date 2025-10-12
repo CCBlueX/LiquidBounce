@@ -19,24 +19,49 @@
 
 package net.ccbluex.liquidbounce.utils.render
 
+import com.mojang.blaze3d.buffers.BufferType
+import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.GpuTexture
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.ScreenshotRecorder
 import java.awt.image.BufferedImage
+import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 
 /**
  * @see ScreenshotRecorder.takeScreenshot
  */
 fun Framebuffer.toNativeImage(): NativeImage {
-    val nativeImage = NativeImage(textureWidth, textureHeight, false)
+    val future = CompletableFuture<NativeImage>()
+    val i: Int = textureWidth
+    val j: Int = textureHeight
+    val gpuTexture: GpuTexture? = getColorAttachment()
+    checkNotNull(gpuTexture != null) { "Tried to capture screenshot of an incomplete framebuffer" }
+    val gpuBuffer = RenderSystem.getDevice()
+        .createBuffer(
+            Supplier { "Screenshot buffer" },
+            BufferType.PIXEL_PACK,
+            BufferUsage.STATIC_READ,
+            i * j * gpuTexture!!.format.pixelSize()
+        )
+    val commandEncoder = RenderSystem.getDevice().createCommandEncoder()
+    RenderSystem.getDevice().createCommandEncoder().copyTextureToBuffer(gpuTexture, gpuBuffer, 0, Runnable {
+        commandEncoder.readBuffer(gpuBuffer).use { readView ->
+            val nativeImage = NativeImage(i, j, false)
+            for (k in 0..<j) {
+                for (l in 0..<i) {
+                    val m = readView.data().getInt((l + k * i) * gpuTexture.format.pixelSize())
+                    nativeImage.setColor(l, j - k - 1, m)
+                }
+            }
+            future.complete(nativeImage)
+        }
+        gpuBuffer.close()
+    }, 0)
 
-    RenderSystem.bindTexture(colorAttachment)
-
-    nativeImage.loadFromTextureImage(0, false)
-    nativeImage.mirrorVertically()
-
-    return nativeImage
+    return future.get()
 }
 
 fun NativeImage.toBufferedImage(): BufferedImage {
