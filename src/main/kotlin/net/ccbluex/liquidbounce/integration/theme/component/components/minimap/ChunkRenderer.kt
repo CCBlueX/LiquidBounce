@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
+import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -53,7 +54,7 @@ object ChunkRenderer {
         return textureAtlasManager.getOrNotLoadedTexture(chunkPos)
     }
 
-    fun prepareRendering(): Int {
+    fun prepareRendering(): GpuTexture {
         return textureAtlasManager.prepareRendering()
     }
 
