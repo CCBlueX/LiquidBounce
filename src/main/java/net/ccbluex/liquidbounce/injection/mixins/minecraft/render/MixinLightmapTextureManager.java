@@ -71,8 +71,9 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
 
     @Override
     public void liquid_bounce$restoreLightMap() {
-        RenderSystem.getDevice().createCommandEncoder()
-                .clearColorTexture(this.glTexture, -1); // see original class <init> method tail
+        // FIXME: make it correct
+//        RenderSystem.getDevice().createCommandEncoder()
+//                .clearColorTexture(this.glTexture, -1); // see original class <init> method tail
     }
 
     // Turns off blinking when the darkness effect is active.
