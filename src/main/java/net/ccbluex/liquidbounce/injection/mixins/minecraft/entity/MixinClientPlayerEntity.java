@@ -175,7 +175,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
     }
 
     /**
-     * Hook push out function tick at HEAD and call out push out event, which is able to stop the cancel the execution.
+     * Hook pushOutOfBlocks function at HEAD and call PlayerPushOutEvent, which is able to cancel the execution.
      */
     @Inject(method = "pushOutOfBlocks", at = @At("HEAD"), cancellable = true)
     private void hookPushOut(double x, double z, CallbackInfo ci) {

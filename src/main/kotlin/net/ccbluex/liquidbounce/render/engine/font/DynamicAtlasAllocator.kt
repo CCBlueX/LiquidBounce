@@ -44,7 +44,7 @@ class DynamicAtlasAllocator(
             } ?: return null
 
         assert(!usedSlice.isAllocated)
-        assert(usedSlice.childeren.isEmpty())
+        assert(usedSlice.children.isEmpty())
 
         // Mark the slice as used
         this.availableSlices.remove(usedSlice)
@@ -56,7 +56,7 @@ class DynamicAtlasAllocator(
         if (cutSlices == null) {
             return AtlasSliceHandle(usedSlice)
         } else {
-            usedSlice.childeren.addAll(cutSlices)
+            usedSlice.children.addAll(cutSlices)
 
             cutSlices.forEach { it.parent = usedSlice }
 
@@ -77,7 +77,7 @@ class DynamicAtlasAllocator(
         val slice = handle.internalSlice
 
         assert(slice.isAllocated)
-        assert(slice.childeren.isEmpty())
+        assert(slice.children.isEmpty())
 
         slice.isAllocated = false
 
@@ -93,7 +93,7 @@ class DynamicAtlasAllocator(
     }
 
     private fun removeChildrenRecursively(highestUnallocatedParent: AtlasSlice) {
-        highestUnallocatedParent.childeren.forEach {
+        highestUnallocatedParent.children.forEach {
             removeChildrenRecursively(it)
 
             it.parent = null
@@ -101,11 +101,11 @@ class DynamicAtlasAllocator(
             this.availableSlices.remove(it)
         }
 
-        highestUnallocatedParent.childeren.clear()
+        highestUnallocatedParent.children.clear()
     }
 
     fun updateParentAllocationStatusRecursively(parent: AtlasSlice): AtlasSlice? {
-        val allUnallocated = parent.childeren.none { it.isAllocated }
+        val allUnallocated = parent.children.none { it.isAllocated }
 
         if (allUnallocated) {
             parent.isAllocated = false
@@ -194,7 +194,7 @@ class AtlasSlice(
 
 ) {
     var parent: AtlasSlice? = null
-    val childeren = ArrayList<AtlasSlice>()
+    val children = ArrayList<AtlasSlice>()
 
     var isAllocated: Boolean = false
 }

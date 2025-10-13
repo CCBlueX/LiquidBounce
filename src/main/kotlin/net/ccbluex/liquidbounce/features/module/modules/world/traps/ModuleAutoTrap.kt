@@ -99,7 +99,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", Category.WORLD, aliases = listO
         SilentHotbar.selectSlotSilently(this, plan.slot, 1)
         doPlacement(raycast, hand = plan.slot.useHand)
         timeout = true
-        plan.onIntentFullfilled()
+        plan.onIntentFulfilled()
         waitTicks(delay)
         timeout = false
     }

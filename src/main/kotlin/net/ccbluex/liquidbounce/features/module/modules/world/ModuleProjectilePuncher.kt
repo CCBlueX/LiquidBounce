@@ -136,7 +136,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
 
         val fireballVelocity = entity.pos - entity.prevPos
 
-        // If the fireball is not moving the player can obviously not be hit. Additionally the code below only works if
+        // If the fireball is not moving the player can obviously not be hit. Additionally, the code below only works if
         // the fireball is moving.
         if (fireballVelocity.isLikelyZero) {
             return false
@@ -152,8 +152,8 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
 
         val extendedHitbox = player.box.expand(entity.box.lengthX / 2.0)
 
-        // If the fireball was already inside of the player's hitbox, but would be moving away from the player, this
-        // would unecessarily trigger the player to attack the fireball.
+        // If the fireball was already inside the player's hitbox, but would be moving away from the player, this
+        // would unnecessarily trigger the player to attack the fireball.
         val touchesHitbox = extendedHitbox.raycast(entity.pos, fireballVelocity * 20.0).isPresent
         val willHitPlayer = !extendedHitbox.contains(entity.pos) && touchesHitbox
 

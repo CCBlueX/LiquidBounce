@@ -122,8 +122,8 @@ internal object FlyCreative : Choice("Creative") {
         if (!bypassVanillaCheck) return false
         if (player.age % 40 != 0) return false
 
-        // check if the player is above a block or in mid-air
-        // if the player is right above a block, we don't need to fly down
+        /* check if the player is above a block or in mid-air
+           if the player is right above a block, we don't need to fly down */
         if (world.getStatesInBox(player.boundingBox.offset(0.0, -0.55, 0.0)).anyMatch { !it.isAir }) return false
 
         return true

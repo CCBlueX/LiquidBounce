@@ -99,7 +99,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             }
 
             // If the crosshair target does not meet the requirements,
-            // we need to prevent the player from falling off the ledge e.g by jumping or sneaking.
+            // we need to prevent the player from falling off the ledge e.g. by jumping or sneaking.
             when {
                 ModuleScaffold.blockCount < forceSneakBelowCount -> {
                     LedgeAction(sneakTime = sneakTime.random())

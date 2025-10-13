@@ -613,7 +613,7 @@ fun Entity.wouldFallIntoVoid(pos: Vec3d, voidLevel: Double = -64.0, safetyExpand
     val boundingBox = offsetBb
         // Set the minimum Y to the void threshold to check for collisions below the player
         .withMinY(voidLevel)
-        // Expand the bounding box to check if there might blocks to safely land on
+        // Expand the bounding box to check if there might be blocks to safely land on
         .expand(safetyExpand, 0.0, safetyExpand)
     return world.getBlockCollisions(this, boundingBox)
         .all(VoxelShapes.empty()::equals)

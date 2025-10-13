@@ -83,7 +83,7 @@ object TrapPlayerSimulation {
     }
 
     /**
-     * Searches for a position where a trap could be layed. Currently that is just the landing position of
+     * Searches for a position where a trap could be laid. Currently, that is just the landing position of
      * a jumping/falling player.
      *
      * @return position for the trap. `null` if the trap should not be placed.

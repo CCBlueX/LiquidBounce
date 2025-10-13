@@ -118,7 +118,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
         return plan.slot.itemStack.item in trapItems
     }
 
-    override fun onIntentFullfilled(intent: BlockChangeIntent<IgnitionIntentData>) {
+    override fun onIntentFulfilled(intent: BlockChangeIntent<IgnitionIntentData>) {
         targetTracker.target = intent.planningInfo.target
     }
 

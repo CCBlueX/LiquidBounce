@@ -166,7 +166,7 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
     )
 
     /**
-     * Converts this Color4b to a Java AWT Color
+     * Converts this [Color4b] to a Java AWT Color
      *
      * @return The Color object representation
      */

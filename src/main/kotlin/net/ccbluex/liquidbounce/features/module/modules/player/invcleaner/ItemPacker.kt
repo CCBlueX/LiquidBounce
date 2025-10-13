@@ -25,10 +25,10 @@ class ItemPacker {
     val usefulItems = HashSet<ItemSlot>()
 
     /**
-     * Takes items from the [itemsToFillIn] list until it collected [maxItemCount] items is and [requiredStackCount]
-     * stacks. The items are marked as useful and fills in hotbar slots if there are still slots to fill.
+     * Takes items from the [itemsToFillIn] list until it has collected [maxItemCount] items and [requiredStackCount]
+     * stacks. The items are marked as useful and fill in hotbar slots if there are still slots to fill.
      *
-     * @return returns the item moves ("swaps") that should to be executed.
+     * @return the item moves (aka "swaps") that should be executed.
      */
     fun packItems(
         itemsToFillIn: List<ItemFacet>,

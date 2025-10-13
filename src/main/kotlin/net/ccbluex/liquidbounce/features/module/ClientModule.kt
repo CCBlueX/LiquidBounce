@@ -60,7 +60,7 @@ open class ClientModule(
 ) : ToggleableConfigurable(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
 
     /**
-     * If a module is running or not is seperated from the enabled state. A module can be paused even when
+     * If a module is running or not is separated from the enabled state. A module can be paused even when
      * it is enabled, or it can be running when it is not enabled.
      *
      * Note: This overwrites [ToggleableConfigurable] declaration of [running].

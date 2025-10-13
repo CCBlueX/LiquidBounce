@@ -63,7 +63,7 @@ enum class ItemType(
      */
     val allocationPriority: Priority = Priority.NORMAL,
     /**
-     * The user maybe wants to filter the items by a specific type. But the we don't need all versions of the item.
+     * The user maybe wants to filter the items by a specific type. But they don't need all versions of the item.
      * To stop the invcleaner from keeping items of every type, we can specify what function a specific item serves.
      * If that function is already served, we can just ignore it.
      */

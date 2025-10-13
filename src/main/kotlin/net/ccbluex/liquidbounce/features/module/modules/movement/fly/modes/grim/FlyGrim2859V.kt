@@ -59,10 +59,10 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
     val tickHandler = handler<PlayerTickEvent> {
         when {
             ticks == 0 -> player.jump()
-            // For some reason, low timer makes the timer jump (2 tick start)
-            // A lot more stable.
+            /* For some reason, low timer makes the timer jump (2 tick start)
+             a lot more stable. */
             ticks <= 5 -> Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_2, ModuleFly, 1)
-            // If ticks goes over toggle limit and toggle isnt 0, disable.
+            // If ticks goes over toggle limit and toggle isn't 0, disable.
             ticks >= toggle && toggle != 0 -> ModuleFly.enabled = false
         }
 
@@ -76,15 +76,15 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
             if (event.state == EventState.PRE) {
 
                 /**
-                 * Main logic, offsets to unloaded chunks so grim wont flag
-                 * for simulation.
+                 * Main logic, offsets position to unloaded chunks so grim won't
+                 * flag for simulation.
                  *
-                 * This is done in NetworkMovementTick so packets wont be edited.
-                 * If this would be a packet event, grim would flag for BadPacketsN
-                 * since we are setting setback packet positions to be in unloaded.
-                 * By setting position far away, grim sets us back (relative to motion).
+                 * This is in NetworkMovementTick so packets won't be modified.
+                 * If this was done in a packet event, grim would flag for BadPacketsN
+                 * since we are modifying "flag packet" positions to be in unloaded chunks.
+                 * By setting our position far away, grim sets us back relative to motion.
                  * Before, this was used for a damage fly, but it was patched.
-                 * For some reason this still exists.
+                 * For some reason this still exists when jumping.
                  *
                  * Tested versions: 2.3.59
                  */
@@ -92,6 +92,8 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
                 pos = player.pos
                 player.setPosition(player.pos.x + 1152, player.pos.y, player.pos.z + 1152)
             } else if (pos != null) {
+                // Set position back POST, so that screen doesn't flash white
+                // due to position changes to unloaded chunks
                 player.setPosition(pos)
             }
         }

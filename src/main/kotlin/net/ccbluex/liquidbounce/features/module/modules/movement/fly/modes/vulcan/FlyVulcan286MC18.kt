@@ -75,13 +75,13 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
 
 
     /**
-     * When you flag (any PlayerPositionLookS2CPacket packet works),
-     * vanilla desyncs you. While desynced, you can timer
-     * and flagging ghost block check sets you back to
-     * the new position while in desync...
+     * When you flag (any [PlayerPositionLookS2CPacket] packet works),
+     * vanilla desyncs you. While desynced, you can use timer and
+     * fly freely. Flagging the ghost block check sets you back
+     * wherever you were while desynced...
      *
-     * 1.8 servers spam the flag, so when you flag for
-     * ghostblock fix, it switches the spammed flag to
+     * 1.8 servers spam [PlayerPositionLookS2CPacket], so when you flag for
+     * ghost blocks, it switches the spammed flag to
      * the new position.
      */
 
@@ -97,8 +97,8 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
                     ModuleFly.enabled = false
                     return@handler
                     /**
-                     * If we didn't return, we would have to wait 1 tick
-                     * for a new PlayerPositionLook
+                     * If we didn't return, we would have to wait 1 tick for a new
+                     * [PlayerPositionLookS2CPacket] (as this one would be cancelled)
                      */
                 }
             }

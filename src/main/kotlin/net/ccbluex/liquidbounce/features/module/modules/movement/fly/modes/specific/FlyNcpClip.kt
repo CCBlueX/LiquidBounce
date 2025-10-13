@@ -173,7 +173,7 @@ object FlyNcpClip : Choice("NcpClip") {
                 packet.y += 1
 
                 // Requires falldistance = 0 otherwise
-                // we would try to float..
+                // we would try to float...
                 player.fallDistance = 0.0f
             }
 
