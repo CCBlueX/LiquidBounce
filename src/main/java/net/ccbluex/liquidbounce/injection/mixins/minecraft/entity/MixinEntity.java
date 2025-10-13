@@ -211,9 +211,10 @@ public abstract class MixinEntity {
 
     @Inject(method = "setPose", at = @At("HEAD"), cancellable = true)
     private void setPose(EntityPose pose, CallbackInfo ci) {
-        if ((Object) this != MinecraftClient.getInstance().player && ModuleNoSwim.INSTANCE.shouldCancel(pose)) {
+        if ((Object) this != MinecraftClient.getInstance().player) return;
+
+        if (ModuleNoSwim.INSTANCE.shouldCancel(pose))
             ci.cancel();
-        }
     }
 
 }
