@@ -681,7 +681,7 @@
   "liquidbounce.module.noSlotSet.description": "Disallows forced slot changes by server.",
   "liquidbounce.module.noSlow.description": "Cancels slowness effects caused by blocks and using items.",
   "liquidbounce.module.noSlowBreak.description": "Automatically adjusts breaking speed when in negatively affecting situations.",
-  "liquidbounce.module.noSwim.description": "Prevents player pose change to swimming, for low version servers.",
+  "liquidbounce.module.noPose.description": "Prevents entity pose changes for low version servers.",
   "liquidbounce.module.noSwing.description": "Disables the hand swing animation.",
   "liquidbounce.module.noWeather.description": "Disables weather effects.",
   "liquidbounce.module.noWeb.description": "Disables slow down caused by webs.",

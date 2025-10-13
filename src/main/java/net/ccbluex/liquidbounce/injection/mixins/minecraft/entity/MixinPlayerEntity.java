@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint;
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
@@ -39,6 +40,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityDimensions;
+import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -270,4 +273,15 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
     }
 
+    /**
+     * Sneak height fix
+     * @see net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose
+     */
+    @Inject(method = "getBaseDimensions", at = @At("RETURN"), cancellable = true)
+    private void hookGetBaseDimensions(EntityPose pose, CallbackInfoReturnable<EntityDimensions> cir) {
+        if (pose == EntityPose.CROUCHING) {
+            EntityDimensions dimensions = ModuleNoPose.INSTANCE.modifySneakHeight();  /* If module/setting is not enabled, modifySneakHeight() returns null */
+            if (dimensions != null) cir.setReturnValue(dimensions);
+        }
+    }
 }
