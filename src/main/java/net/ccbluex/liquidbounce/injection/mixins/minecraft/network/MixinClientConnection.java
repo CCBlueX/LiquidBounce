@@ -40,8 +40,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinClientConnection {
 
     @Shadow
-    protected static <T extends PacketListener> void handlePacket(Packet<T> packet, PacketListener listener) {
-    }
+    private static <T extends PacketListener> void handlePacket(Packet<T> packet, PacketListener listener) {}
 
     /**
      * Handle sending packets

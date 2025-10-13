@@ -42,7 +42,7 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
 
     @Final
     @Shadow
-    private SimpleFramebuffer lightmapFramebuffer;
+    public SimpleFramebuffer lightmapFramebuffer;
 
     @Unique
     private boolean liquid_bounce$customLightMap = false;
