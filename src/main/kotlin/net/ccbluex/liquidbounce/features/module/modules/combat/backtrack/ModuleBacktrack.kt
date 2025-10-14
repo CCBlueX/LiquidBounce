@@ -148,12 +148,18 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         val positionPacket = packet is EntityPositionS2CPacket && packet.entityId == target?.id
         val syncPacket = packet is EntityPositionSyncS2CPacket && packet.id == target?.id
         if (entityPacket || positionPacket || syncPacket) {
-            val pos = if (packet is EntityS2CPacket) {
-                position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
-            } else if (packet is EntityPositionS2CPacket) {
-                Vec3d(packet.change.position.x, packet.change.position.y, packet.change.position.z)
-            } else {
-                (packet as EntityPositionSyncS2CPacket).values.position()
+            val pos = when (packet) {
+                is EntityS2CPacket -> {
+                    position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
+                }
+
+                is EntityPositionS2CPacket -> {
+                    Vec3d(packet.change.position.x, packet.change.position.y, packet.change.position.z)
+                }
+
+                else -> {
+                    (packet as EntityPositionSyncS2CPacket).values.position()
+                }
             }
 
             position?.setPos(pos)

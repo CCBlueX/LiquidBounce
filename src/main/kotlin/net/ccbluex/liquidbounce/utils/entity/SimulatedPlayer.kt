@@ -646,7 +646,7 @@ class SimulatedPlayer(
         return movement
     }
 
-    protected fun shouldClipAtLedge(): Boolean {
+    private fun shouldClipAtLedge(): Boolean {
         return !this.input.ignoreClippingAtLedge && (this.input.playerInput.sneak || this.input.forceSafeWalk)
     }
 

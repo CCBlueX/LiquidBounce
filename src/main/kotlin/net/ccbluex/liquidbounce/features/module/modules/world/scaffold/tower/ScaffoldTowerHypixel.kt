@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.util.math.BlockPos
+import kotlin.math.round
 
 object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
 
@@ -37,7 +38,7 @@ object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
         }
 
         if (player.x % 1.0 != 0.0 && !player.moving) {
-            player.velocity.x = (Math.round(player.x).toDouble() - player.x).coerceAtMost(0.281)
+            player.velocity.x = (round(player.x) - player.x).coerceAtMost(0.281)
         }
 
         if (player.airTicks > 14) {
