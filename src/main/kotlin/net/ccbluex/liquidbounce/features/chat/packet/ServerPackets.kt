@@ -34,7 +34,7 @@ import java.util.*
 /**
  * To log in via mojang, the client has to send a RequestMojangInfo packet.
  * The server will then send a MojangInfo to the client.
- * This packet has no body.
+ * This packet does not contain a body.
  */
 class ServerRequestMojangInfoPacket : Packet
 
@@ -134,6 +134,6 @@ data class ServerUnbanUserPacket(
  * This token can be retrieved by sending RequestJWT as an already authenticated client to the server.
  * The server will send a NewJWT packet to the client.
  *
- * This packet has no body.
+ * This packet does not contain a body.
  */
 class ServerRequestJWTPacket : Packet
