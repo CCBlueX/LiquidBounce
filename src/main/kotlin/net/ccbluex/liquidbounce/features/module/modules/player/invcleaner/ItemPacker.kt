@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.OVERSATURATED
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.SATISFIED
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.OVERSATURATED
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.SATISFIED
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.minecraft.item.ItemStack
@@ -35,7 +35,7 @@ class ItemPacker {
         hotbarSlotsToFill: List<ItemSlot>?,
         forbiddenSlots: Set<ItemSlot>,
         forbiddenSlotsToFill: Set<ItemSlot>,
-        contraintProvider: ItemAmountContraintProvider
+        constraintProvider: ItemAmountConstraintProvider
     ): List<InventorySwap> {
         val moves = ArrayList<InventorySwap>()
 
@@ -48,7 +48,7 @@ class ItemPacker {
         val leftHotbarSlotIterator = hotbarSlotsToFill?.iterator()
 
         for (filledInItem in itemsToFillIn) {
-            val constraintsSatisfied = contraintProvider.getSatisfactionStatus(filledInItem)
+            val constraintsSatisfied = constraintProvider.getSatisfactionStatus(filledInItem)
             val allStacksFilled = currentStackCount >= requriedStackCount
 
             if (allStacksFilled && constraintsSatisfied == SATISFIED || constraintsSatisfied == OVERSATURATED) {
@@ -64,7 +64,7 @@ class ItemPacker {
 
             usefulItems.add(filledInItemSlot)
 
-            contraintProvider.addItem(filledInItem)
+            constraintProvider.addItem(filledInItem)
 
             currentItemCount += filledInItem.itemStack.count
             currentStackCount++
@@ -140,7 +140,7 @@ class ItemPacker {
         return null
     }
 
-    interface ItemAmountContraintProvider {
+    interface ItemAmountConstraintProvider {
         fun getSatisfactionStatus(item: ItemFacet): SatisfactionStatus
         fun addItem(item: ItemFacet)
 

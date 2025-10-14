@@ -92,7 +92,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     private val targetRenderer = tree(WorldTargetRenderer(this))
 
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
-    private val tickUntilReset by int("TicksUntillSlotReset", 1, 0..20)
+    private val tickUntilReset by int("TicksUntilSlotReset", 1, 0..20)
     private val considerInventory by boolean("ConsiderInventory", true)
 
     private val requiresKillAura by boolean("RequiresKillAura", false)

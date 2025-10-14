@@ -40,7 +40,7 @@ object CommandHide : Command.Factory {
             .begin("hide")
             .hub()
             .subcommand(hideSubcommand())
-            .subcommand(unhideSubommand())
+            .subcommand(unhideSubcommand())
             .subcommand(listSubcommand())
             .subcommand(clearSubcommand())
             .build()
@@ -77,7 +77,7 @@ object CommandHide : Command.Factory {
             }
         )
 
-    private fun unhideSubommand() = CommandBuilder
+    private fun unhideSubcommand() = CommandBuilder
         .begin("unhide")
         .parameter(
             ParameterBuilder.modules { it.hidden }

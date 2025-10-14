@@ -190,7 +190,7 @@ class ItemCategorization(
         }
 
         return buildList {
-            // Everything could be a weapon (i.e. a stick with Knochback II should be considered a weapon)
+            // Everything could be a weapon (i.e. a stick with Knockback II should be considered a weapon)
             add(WeaponItemFacet(slot))
 
             when (val item = itemStack.item) {

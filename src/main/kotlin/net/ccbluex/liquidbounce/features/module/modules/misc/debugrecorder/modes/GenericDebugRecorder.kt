@@ -34,14 +34,14 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
 
     data class ScheduledEntityDebug(var ticksLeft: Int, val entityId: Int)
 
-    private val waitingEntites = CopyOnWriteArraySet<ScheduledEntityDebug>()
+    private val waitingEntities = CopyOnWriteArraySet<ScheduledEntityDebug>()
 
     fun debugEntityIn(entity: Entity, ticks: Int) {
-        waitingEntites.add(ScheduledEntityDebug(ticks, entity.id))
+        waitingEntities.add(ScheduledEntityDebug(ticks, entity.id))
     }
 
     val repeatable = tickHandler {
-        val due = waitingEntites.filter {
+        val due = waitingEntities.filter {
             it.ticksLeft--
             it.ticksLeft <= 0
         }
@@ -54,7 +54,7 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
             }
         }
 
-        waitingEntites.removeAll(due)
+        waitingEntities.removeAll(due)
     }
 
     fun recordDebugInfo(module: ClientModule, packetName: String, packet: JsonElement) {

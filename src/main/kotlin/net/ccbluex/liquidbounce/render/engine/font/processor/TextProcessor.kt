@@ -4,7 +4,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import kotlin.random.Random
 
 /**
- * @param obfuscationSeed The seed for the obfuscation. If null, obfusscated characters will be replaced with `_`
+ * @param obfuscationSeed The seed for the obfuscation. If null, obfuscated characters will be replaced with `_`
  */
 abstract class TextProcessor(obfuscationSeed: Long?) {
     private val obfuscationRng = obfuscationSeed?.let { Random(it) }

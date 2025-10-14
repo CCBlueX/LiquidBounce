@@ -41,7 +41,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asText()) {
     private var focusedEntity: EntityFocusData? = null
 
     private var dragStartPos: Vector2d? = null
-    private var dragStartRottion: Vec2f = Vec2f(0.0F, 0.0F)
+    private var dragStartRotation: Vec2f = Vec2f(0.0F, 0.0F)
 
     private var zoomSteps = 0.0
 
@@ -74,7 +74,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asText()) {
                 )
             ).toFloat().toDegrees()
 
-        this.cameraRotation = this.dragStartRottion.add(Vec2f(-yawDelta, -pitchDelta))
+        this.cameraRotation = this.dragStartRotation.add(Vec2f(-yawDelta, -pitchDelta))
 
         return true
     }
@@ -94,7 +94,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asText()) {
     override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
         if (button == DRAG_BUTTON) {
             this.dragStartPos = Vector2d(mouseX, mouseY)
-            this.dragStartRottion = this.cameraRotation
+            this.dragStartRotation = this.cameraRotation
         }
 
         return true

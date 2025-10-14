@@ -49,7 +49,7 @@ internal object NoFallRettungsplatform : NoFallMode("Rettungsplatform") {
     private val itemToPlatform
         get() = Slots.Hotbar.findClosestSlot(Items.BLAZE_ROD, Items.MAGMA_CREAM)
 
-    val repatable = tickHandler {
+    val repeatable = tickHandler {
         if (player.fallDistance > 2f) {
             val itemToPlatform = itemToPlatform ?: return@tickHandler
 

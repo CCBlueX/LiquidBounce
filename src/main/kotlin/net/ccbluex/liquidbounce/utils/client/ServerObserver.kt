@@ -225,7 +225,7 @@ object ServerObserver : EventListener {
 
             /**
              * Server version detection reading the version from the server resource pack which
-             * is not being spoofed by anything at the moment. Most realiable way to detect the version
+             * is not being spoofed by anything at the moment. Most reliable way to detect the version
              * of the server even when it spoofs the brand.
              *
              * @author nekosarekawaii
@@ -240,7 +240,7 @@ object ServerObserver : EventListener {
             }
 
             /**
-             * Server sents a hello packet with the server id and public key,
+             * Server sends a hello packet with the server id and public key,
              * as well as if the server is cracked or not.
              */
             is LoginHelloS2CPacket -> {

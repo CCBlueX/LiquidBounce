@@ -129,7 +129,7 @@ object MurderMysteryAssassinationMode : Choice("Assassination"), MurderMysteryMo
     }
 
     override fun shouldAttack(entity: AbstractClientPlayerEntity): Boolean {
-        // This person is either our assasin or our target. Attack them.
+        // This person is either our assassin or our target. Attack them.
         return this.getPlayerType(entity) == MurderMysteryMode.PlayerType.MURDERER
     }
 

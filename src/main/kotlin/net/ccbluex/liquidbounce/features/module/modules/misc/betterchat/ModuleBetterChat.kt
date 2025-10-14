@@ -77,7 +77,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
     private val autoTranslate by multiEnumChoice<ChatReceiveEvent.ChatType>("AutoTranslate")
 
     object Copy : ToggleableConfigurable(this, "Copy", true) {
-        private val notification by boolean("Notificate", true)
+        private val notification by boolean("Notify", true)
         val highlight by boolean("Highlight", true)
 
         @JvmStatic

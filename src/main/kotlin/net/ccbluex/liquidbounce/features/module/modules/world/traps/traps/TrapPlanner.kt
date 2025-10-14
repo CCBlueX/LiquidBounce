@@ -67,19 +67,19 @@ abstract class TrapPlanner<T>(
         val blockPos = pos.toBlockPos()
         val normalizedStartBB =
             dims.getBoxAt(pos).offset(-blockPos.x.toDouble(), -blockPos.y.toDouble(), -pos.z.toInt().toDouble())
-        val normalizedEnddBB = normalizedStartBB.offset(
+        val normalizedEndBB = normalizedStartBB.offset(
             velocity.x * ticksToLookAhead,
             0.0,
             velocity.z * ticksToLookAhead
         )
 
-        val searchBB = normalizedEnddBB
+        val searchBB = normalizedEndBB
 
         if (searchBB.size > 30) {
             return listOf(BlockPos.ORIGIN)
         }
 
-        return findOffsetsBetween(normalizedStartBB, normalizedEnddBB, blockPos, mustBeOnGround)
+        return findOffsetsBetween(normalizedStartBB, normalizedEndBB, blockPos, mustBeOnGround)
     }
 
     private fun findOffsetsBetween(

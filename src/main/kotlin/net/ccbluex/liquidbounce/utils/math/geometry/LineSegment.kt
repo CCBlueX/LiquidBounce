@@ -58,7 +58,7 @@ class LineSegment(position: Vec3d, direction: Vec3d, val phiRange: ClosedFloatin
         return super.getPosition(phi)
     }
 
-    override fun getPositionChcked(phi: Double): Vec3d? {
+    override fun getPositionChecked(phi: Double): Vec3d? {
         if (phi !in phiRange) {
             return null
         }

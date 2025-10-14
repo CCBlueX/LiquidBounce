@@ -25,12 +25,12 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 class CleanupPlanGenerator(
     private val template: CleanupPlanPlacementTemplate,
     private val availableItems: List<ItemSlot>,
-) : ItemPacker.ItemAmountContraintProvider {
+) : ItemPacker.ItemAmountConstraintProvider {
     private val hotbarSwaps: ArrayList<InventorySwap> = ArrayList()
 
     private val packer = ItemPacker()
 
-    private val currentLimit = Object2IntOpenHashMap<ItemNumberContraintGroup>()
+    private val currentLimit = Object2IntOpenHashMap<ItemNumberConstraintGroup>()
 
     // TODO Implement greedy check
     /**
@@ -87,7 +87,7 @@ class CleanupPlanGenerator(
             this.packer.packItems(
                 itemsToFillIn = prioritizedItemList,
                 hotbarSlotsToFill = hotbarSlotsToFill,
-                contraintProvider = this,
+                constraintProvider = this,
                 forbiddenSlots = this.template.forbiddenSlots,
                 forbiddenSlotsToFill = this.template.forbiddenSlotsToFill
             )
@@ -117,7 +117,7 @@ class CleanupPlanGenerator(
         return itemsByType
     }
 
-    override fun getSatisfactionStatus(item: ItemFacet): ItemPacker.ItemAmountContraintProvider.SatisfactionStatus {
+    override fun getSatisfactionStatus(item: ItemFacet): ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus {
         val constraints = this.template.itemAmountConstraintProvider(item)
 
         constraints.sortBy { it.group.priority }
@@ -126,13 +126,13 @@ class CleanupPlanGenerator(
             val currentCount = this.currentLimit.getOrDefault(constraintInfo.group, 0)
 
             if (currentCount > constraintInfo.group.acceptableRange.last) {
-                return ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.OVERSATURATED
+                return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.OVERSATURATED
             } else if (currentCount < constraintInfo.group.acceptableRange.first) {
-                return ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.NOT_SATISFIED
+                return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.NOT_SATISFIED
             }
         }
 
-        return ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.SATISFIED
+        return ItemPacker.ItemAmountConstraintProvider.SatisfactionStatus.SATISFIED
     }
 
     override fun addItem(item: ItemFacet) {
@@ -151,7 +151,7 @@ class CleanupPlanPlacementTemplate(
     val slotContentMap: Map<ItemSlot, ItemSortChoice>,
     /**
      * A function which provides constraint groups for each item category and the number which the item counts against
-     * the given constraint. More info on how constraints work at [ItemNumberContraintGroup].
+     * the given constraint. More info on how constraints work at [ItemNumberConstraintGroup].
      */
     val itemAmountConstraintProvider: (ItemFacet) -> MutableList<ItemConstraintInfo>,
     /**

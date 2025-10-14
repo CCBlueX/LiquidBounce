@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.RotationProcessor
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.ShortStopRotationProcessor
+import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.AngleSmooth
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -40,7 +41,7 @@ class RotationTarget(
     var entity: Entity? = null,
     /**
      * The rotation processors which are being used to calculate the next rotation.
-     * This list should start with [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.AngleSmooth]
+     * This list should start with [AngleSmooth]
      * and then continue with other processors like [ShortStopRotationProcessor] and [FailFocus].
      */
     val processors: List<RotationProcessor> = emptyList(),

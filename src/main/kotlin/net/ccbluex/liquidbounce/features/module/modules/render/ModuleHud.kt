@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
-import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
+import net.ccbluex.liquidbounce.event.events.SpaceSeparatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
@@ -63,8 +63,8 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     private val blur by boolean("Blur", true)
 
     @Suppress("unused")
-    private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange { state ->
-        EventManager.callEvent(SpaceSeperatedNamesChangeEvent(state))
+    private val spaceSeparatedNames by boolean("SpaceSeparatedNames", true).onChange { state ->
+        EventManager.callEvent(SpaceSeparatedNamesChangeEvent(state))
         state
     }
 

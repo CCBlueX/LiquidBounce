@@ -129,7 +129,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     OverlayMessageEvent::class.java,
     ScheduleInventoryActionEvent::class.java,
     SelectHotbarSlotSilentlyEvent::class.java,
-    SpaceSeperatedNamesChangeEvent::class.java,
+    SpaceSeparatedNamesChangeEvent::class.java,
     ClickGuiScaleChangeEvent::class.java,
     BrowserUrlChangeEvent::class.java,
     TagEntityEvent::class.java,

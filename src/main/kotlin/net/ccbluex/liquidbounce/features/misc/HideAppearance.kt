@@ -51,7 +51,7 @@ private val modMenuPresent = runCatching {
 /**
  * Hides client appearance
  *
- * using 2x CRTL + SHIFT to hide and unhide the client
+ * using 2x CTRL + SHIFT to hide and unhide the client
  */
 object HideAppearance : EventListener {
 
