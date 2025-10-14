@@ -30,7 +30,7 @@ import net.minecraft.entity.MovementType
 /**
  * Strafe module
  *
- * Strafe into different directions while you're midair.
+ * Strafe into different directions while you're mid-air.
  */
 object ModuleStrafe : ClientModule("Strafe", Category.MOVEMENT) {
 

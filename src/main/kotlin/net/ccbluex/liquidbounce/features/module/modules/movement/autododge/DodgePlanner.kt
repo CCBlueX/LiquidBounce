@@ -142,7 +142,7 @@ class DodgePlanner(
 
         // If we cannot evade with just sprinting, we need to jump
         val shouldJumpIfPossible = actualTimeToImpact < travelTimeWithRotation
-        // If the velocity is too low, we don't want to jump since we cannot get more momentum midair
+        // If the velocity is too low, we don't want to jump since we cannot get more momentum mid-air
         val isJumpEffective = effectiveVelocity > 0.11
 
         val rotation =
