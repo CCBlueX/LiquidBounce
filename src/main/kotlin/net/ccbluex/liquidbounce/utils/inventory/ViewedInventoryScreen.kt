@@ -105,7 +105,7 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
 
     private fun drawBackground(context: DrawContext, mouseX: Int, mouseY: Int) {
         context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x, y,
-            0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
+            0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256)
         player()?.let { player ->
             drawEntity(
                 context, x + 26, y + 8, x + 75, y + 78,
@@ -122,7 +122,7 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
         if (slot.stack.isEmpty && slot.isEnabled) {
             val identifier = slot.backgroundSprite
             if (identifier != null) {
-                context.drawGuiTexture(RenderLayer::getGuiTextured, identifier, slot.x, slot.y, 16, 16);
+                context.drawGuiTexture(RenderLayer::getGuiTextured, identifier, slot.x, slot.y, 16, 16)
                 spriteDrawn = true
             }
         }

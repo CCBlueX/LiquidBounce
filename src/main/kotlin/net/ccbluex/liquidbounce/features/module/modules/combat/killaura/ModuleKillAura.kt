@@ -252,9 +252,9 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
             range = range.toDouble(),
             wallsRange = wallRange.toDouble()) || ModuleElytraTarget.canIgnoreKillAuraRotations
 
-        ModuleDebug.debugParameter(ModuleKillAura, "Is Facing Enemy", isFacingEnemy)
-        ModuleDebug.debugParameter(ModuleKillAura, "Rotation", rotation)
-        ModuleDebug.debugParameter(ModuleKillAura, "Target", target.nameForScoreboard)
+        debugParameter(ModuleKillAura, "Is Facing Enemy", isFacingEnemy)
+        debugParameter(ModuleKillAura, "Rotation", rotation)
+        debugParameter(ModuleKillAura, "Target", target.nameForScoreboard)
 
         // Check if our target is in range, otherwise deal with auto block
         if (!isFacingEnemy) {
@@ -279,7 +279,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
             return
         }
 
-        ModuleDebug.debugParameter(ModuleKillAura, "Valid Rotation", rotation)
+        debugParameter(ModuleKillAura, "Valid Rotation", rotation)
 
         // Attack enemy, according to the attack scheduler
         if (clickScheduler.isClickTick && validateAttack(target)) {

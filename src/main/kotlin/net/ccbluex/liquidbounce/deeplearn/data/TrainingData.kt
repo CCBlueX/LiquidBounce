@@ -71,7 +71,7 @@ data class TrainingData(
             targetDiff.horizontalLength().toFloat() + playerDiff.horizontalLength().toFloat(),
 
             // Distance
-            distance.toFloat()
+            distance
         )
 
     val asOutput

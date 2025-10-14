@@ -338,7 +338,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
     fun removeAccount(id: Int): MinecraftAccount {
         val account = accounts.removeAt(id).apply { ConfigSystem.store(this@AccountManager) }
         EventManager.callEvent(AccountManagerRemovalResultEvent(account.profile?.username))
-        return account;
+        return account
     }
 
     fun newSessionAccount(token: String) {

@@ -41,10 +41,7 @@ import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
-import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
-import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
-import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.chat.packet.*
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc

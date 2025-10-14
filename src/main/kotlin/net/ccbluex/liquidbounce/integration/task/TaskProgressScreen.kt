@@ -88,7 +88,7 @@ class TaskProgressScreen(
             yOffset += textRenderer.fontHeight + 2
         }
 
-        var progressBarHeight = 14
+        val progressBarHeight = 14
 
         // Draw progress bar
         poseStack.push()
@@ -98,20 +98,20 @@ class TaskProgressScreen(
         // Bar border
         context.fill(
             0, 0,
-            progressBarWidth.toInt(), progressBarHeight.toInt(),
+            progressBarWidth.toInt(), progressBarHeight,
             -1
         )
 
         // Bar background
         context.fill(
             2, 2,
-            (progressBarWidth - 2).toInt(), (progressBarHeight - 2).toInt(),
+            (progressBarWidth - 2).toInt(), (progressBarHeight - 2),
             ColorHelper.getArgb(255, 24, 26, 27)
         )
 
         context.fill(
             4, 4,
-            ((progressBarWidth - 4) * progress).toInt(), (progressBarHeight - 4).toInt(),
+            ((progressBarWidth - 4) * progress).toInt(), (progressBarHeight - 4),
             -1
         )
         poseStack.pop()
