@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.render
 
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.minecraft.text.Text
 
 abstract class AbstractFontRenderer<T> {
@@ -48,9 +49,9 @@ abstract class AbstractFontRenderer<T> {
         scale: Float = 1.0f
     ): Float
 
-    abstract fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T
     abstract fun process(text: Text, defaultColor: Color4b = Color4b.WHITE): T
 
+    fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T = process(text.asPlainText(), defaultColor)
 
     /**
      */

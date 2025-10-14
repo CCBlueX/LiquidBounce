@@ -27,8 +27,6 @@ import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.collection.Pool
 import net.minecraft.client.texture.GlTexture
 import net.minecraft.text.Text
@@ -50,7 +48,7 @@ private data class RenderedGlyph(
 )
 
 @JvmRecord
-private data class RenderedLine(val p1: Vec3, val p2: Vec3, val color: Color4b)
+private data class RenderedLine(val p1: Vector3f, val p2: Vector3f, val color: Color4b)
 
 private class FontRendererCache {
     val renderedGlyphs: ArrayList<RenderedGlyph> = ArrayList(100)
@@ -81,20 +79,14 @@ class FontRenderer(
 
     override val height: Float = font.styles.firstNotNullOf { it?.height }
 
-    val ascent: Float = font.styles.firstNotNullOf { it?.ascent }
+    private val ascent: Float = font.styles.firstNotNullOf { it?.ascent }
 
     private val shadowColor = Color4b(0, 0, 0, 150)
 
     override fun begin() {
         if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty()) {
-//            this.commit()
-
             error("Can't begin a build a new batch when there are pending operations.")
         }
-    }
-
-    override fun process(text: String, defaultColor: Color4b): TextProcessor.ProcessedText {
-        return process(text.asPlainText(), defaultColor)
     }
 
     override fun process(text: Text, defaultColor: Color4b): TextProcessor.ProcessedText {
@@ -197,15 +189,16 @@ class FontRenderer(
             x += layoutInfo.advanceX * scale
             y += layoutInfo.advanceY * scale
 
-            if (underlineStack.firstOrNull()?.endInclusive == charIdx) {
+            if (underlineStack.isNotEmpty() && underlineStack.first().last == charIdx) {
                 underlineStack.removeFirst()
 
-                drawLine(underlineStartX!!, x, y, pos.z, color, false)
+                drawUnderline(underlineStartX!!, x, y, pos.z, color)
             }
-            if (strikethroughStack.firstOrNull()?.endInclusive == charIdx) {
+
+            if (strikethroughStack.isNotEmpty() && strikethroughStack.first().last == charIdx) {
                 strikethroughStack.removeFirst()
 
-                drawLine(strikeThroughStartX!!, x, y, pos.z, color, true)
+                drawStrikeThrough(strikeThroughStartX!!, x, y, pos.z, color)
             }
         }
 
@@ -242,32 +235,37 @@ class FontRenderer(
     }
 
     @Suppress("LongParameterList")
-    private fun drawLine(
+    private fun drawUnderline(
         x0: Float,
         x1: Float,
         y: Float,
         z: Float,
         color: Color4b,
-        through: Boolean
     ) {
-        if (through) {
-            this.cache.lines.add(
-                RenderedLine(
-                    Vec3(x0, y - this.height + this.ascent, z),
-                    Vec3(x1, y - this.height + this.ascent, z),
-                    color
-                )
+        this.cache.lines.add(
+            RenderedLine(
+                Pool.Vec3f.take().set(x0, y + 1.0f, z),
+                Pool.Vec3f.take().set(x1, y + 1.0f, z),
+                color
             )
-        } else {
-            this.cache.lines.add(
-                RenderedLine(
-                    Vec3(x0, y + 1.0f, z),
-                    Vec3(x1, y + 1.0f, z),
-                    color
-                )
-            )
-        }
+        )
+    }
 
+
+    private fun drawStrikeThrough(
+        x0: Float,
+        x1: Float,
+        y: Float,
+        z: Float,
+        color: Color4b,
+    ) {
+        this.cache.lines.add(
+            RenderedLine(
+                Pool.Vec3f.take().set(x0, y - this.height + this.ascent, z),
+                Pool.Vec3f.take().set(x1, y - this.height + this.ascent, z),
+                color
+            )
+        )
     }
 
     override fun commit(environment: RenderEnvironment) {
@@ -283,9 +281,9 @@ class FontRenderer(
             GlStateManager._bindTexture((gpuTexture as GlTexture).glId)
             RenderSystem.setShaderTexture(0, gpuTexture)
             environment.drawTextureQuad(
-                vec3f1.set(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
+                vec3f1.set(renderedGlyph.x1, renderedGlyph.y1, renderedGlyph.z),
                 atlasLocation.uvCoordinatesOnTexture.min,
-                vec3f2.set(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),
+                vec3f2.set(renderedGlyph.x2, renderedGlyph.y2, renderedGlyph.z),
                 atlasLocation.uvCoordinatesOnTexture.max,
                 color.toARGB(),
             )
@@ -293,16 +291,16 @@ class FontRenderer(
         Pool.Vec3f.offer(vec3f1)
         Pool.Vec3f.offer(vec3f2)
 
-        if (cache.lines.isNotEmpty()) {
-            for (line in cache.lines) {
-                environment.drawCustomMesh(
-                    VertexFormat.DrawMode.DEBUG_LINES,
-                    VertexInputType.PosColor,
-                ) { matrix ->
-                    vertex(matrix, line.p1.x, line.p1.y, line.p1.z).color(line.color.toARGB())
-                    vertex(matrix, line.p2.x, line.p2.y, line.p2.z).color(line.color.toARGB())
-                }
+        for (line in cache.lines) {
+            environment.drawCustomMesh(
+                VertexFormat.DrawMode.DEBUG_LINES,
+                VertexInputType.PosColor,
+            ) { matrix ->
+                vertex(matrix, line.p1.x, line.p1.y, line.p1.z).color(line.color.toARGB())
+                vertex(matrix, line.p2.x, line.p2.y, line.p2.z).color(line.color.toARGB())
             }
+            Pool.Vec3f.offer(line.p1)
+            Pool.Vec3f.offer(line.p2)
         }
 
         cache.lines.clear()
