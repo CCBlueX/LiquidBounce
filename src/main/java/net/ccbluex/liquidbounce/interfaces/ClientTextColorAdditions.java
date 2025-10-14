@@ -6,9 +6,9 @@ public interface ClientTextColorAdditions {
     boolean liquid_bounce$doesBypassingNameProtect();
     TextColor liquid_bounce$withNameProtectionBypass();
 
-    @Deprecated
     /**
      * Please don't use this method, it is only for internal use.
      */
+    @Deprecated
     void liquid_bounce$setBypassingNameProtection(boolean bypassesNameProtect);
 }

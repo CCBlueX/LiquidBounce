@@ -1,4 +1,4 @@
-/**
+/*
  * The MIT License (MIT)
  *
  * Copyright (c) 2023 JustAlittleWolf
@@ -76,14 +76,14 @@ public abstract class MixinDrawContext implements DrawContextAddition {
     }
 
     @Override
-    public void liquid_bounce$drawTexture(Function<Identifier, RenderLayer> renderLayers, Identifier texture, float x, float y, int width, int height) {
+    public void liquid_bounce$drawTexture(@NotNull Function<Identifier, RenderLayer> renderLayers, @NotNull Identifier texture, float x, float y, int width, int height) {
         Sprite sprite = guiAtlasManager.getSprite(texture);
         float o = 1 / 32768f;
         liquid_bounce$drawTexturedQuad(renderLayers, sprite.getAtlasId(), x, x + width, y, y + height, sprite.getMinU() + o, sprite.getMaxU() + o, sprite.getMinV() - o, sprite.getMaxV() - o, -1);
     }
 
     @Override
-    public void liquid_bounce$drawTexturedQuad(Function<Identifier, RenderLayer> renderLayers, Identifier texture, float x1, float x2, float y1, float y2, float u1, float u2, float v1, float v2, int color) {
+    public void liquid_bounce$drawTexturedQuad(Function<Identifier, RenderLayer> renderLayers, @NotNull Identifier texture, float x1, float x2, float y1, float y2, float u1, float u2, float v1, float v2, int color) {
         RenderLayer renderLayer = renderLayers.apply(texture);
         Matrix4f matrix4f = matrices.peek().getPositionMatrix();
         VertexConsumer bufferBuilder = vertexConsumers.getBuffer(renderLayer);

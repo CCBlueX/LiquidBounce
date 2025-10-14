@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import it.unimi.dsi.fastutil.floats.Float2FloatFunction;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
