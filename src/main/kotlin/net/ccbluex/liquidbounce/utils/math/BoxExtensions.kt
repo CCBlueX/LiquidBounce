@@ -40,7 +40,7 @@ fun Box.isHitByLine(start: Vec3d, p: Vec3d): Boolean {
         val p0 = axis.choose(start.x, start.y, start.z)
 
         // parallel and outside, no need to check anything else
-        if (d1 == 0.0 && (p0 < min || p0 > max)) {
+        if (d1 == 0.0 && p0 !in min..max) {
             return true
         }
 

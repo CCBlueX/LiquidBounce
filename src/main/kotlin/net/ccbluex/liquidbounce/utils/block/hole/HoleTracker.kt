@@ -53,7 +53,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
     val holes = ConcurrentSkipListSet<Hole>()
     private val mutable by ThreadLocal.withInitial(BlockPos::Mutable)
     private val BLAST_RESISTANT_BLOCKS: Set<Block> by lazy {
-        Registries.BLOCK.filterTo(hashSetOf()) { it.blastResistance >= 600 && it.blastResistance < 3_600_000 }
+        Registries.BLOCK.filterTo(hashSetOf()) { it.blastResistance in 600.0..<3600000.0 }
     }
 
     private val INDESTRUCTIBLE_BLOCKS: Set<Block> by lazy {
