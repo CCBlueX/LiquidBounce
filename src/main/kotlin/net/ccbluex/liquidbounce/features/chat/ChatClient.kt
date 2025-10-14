@@ -41,7 +41,10 @@ import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
 import net.ccbluex.liquidbounce.features.chat.packet.*
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -133,7 +136,7 @@ class ChatClient {
 
                 /**
                  * This method will be called once the [Channel] was registered. After the method returns this instance
-                 * will be removed from the [ChannelPipeline] of the [Channel].
+                 * will be removed from the [io.netty.channel.ChannelPipeline] of the [Channel].
                  *
                  * @param ch            the [Channel] which was registered.
                  * @throws Exception    is thrown if an error occurs. In that case the [Channel] will be closed.

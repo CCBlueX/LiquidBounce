@@ -35,7 +35,7 @@ private const val ZOOM_STEP_BASE = 1.25
 @Suppress("detekt.TooManyFunctions")
 class DroneControlScreen : Screen("BowAimbot Control Panel".asText()) {
 
-    var cameraPos = player.eyePos.add(0.0, 10.0, 0.0)
+    var cameraPos: Vec3d = player.eyePos.add(0.0, 10.0, 0.0)
     var cameraRotation = Vec2f(MathHelper.wrapDegrees(player.yaw), player.pitch.coerceIn(-90.0F, 90.0F))
 
     private var focusedEntity: EntityFocusData? = null

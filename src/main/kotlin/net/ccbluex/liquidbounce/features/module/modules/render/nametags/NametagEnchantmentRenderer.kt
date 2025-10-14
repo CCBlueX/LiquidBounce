@@ -22,23 +22,23 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.drawColoredQuad
 import net.ccbluex.liquidbounce.render.drawColoredQuadOutlines
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor.ProcessedText
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
+import net.minecraft.client.resource.language.I18n
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
-import net.minecraft.util.Formatting
-import net.minecraft.client.resource.language.I18n
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.util.Formatting
 import org.joml.Vector2f
 import org.joml.component1
 import org.joml.component2
@@ -183,10 +183,9 @@ object NametagEnchantmentRenderer {
         }
     }
 
+    private const val OCCLUSION_THRESHOLD = 2f
     // Check if a position would be occluded by another enchantment panel
     private fun isPositionOccluded(x: Float, y: Float): Boolean {
-        val OCCLUSION_THRESHOLD = 2f
-
         return ModuleNametags.drawnEnchantmentAreas.any { (existingX, existingY) ->
             hypot(existingX - x, existingY - y) < OCCLUSION_THRESHOLD
         }

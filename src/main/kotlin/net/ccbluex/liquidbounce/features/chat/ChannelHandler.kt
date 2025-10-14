@@ -48,7 +48,7 @@ class ChannelHandler(private val chatClient: ChatClient,
 
     /**
      * Calls [ChannelHandlerContext.fireChannelActive] to forward
-     * to the next [ChannelInboundHandler] in the [ChannelPipeline].
+     * to the next [io.netty.channel.ChannelInboundHandler] in the [io.netty.channel.ChannelPipeline].
      *
      * Subclasses may override this method to change behavior.
      */
@@ -58,7 +58,7 @@ class ChannelHandler(private val chatClient: ChatClient,
 
     /**
      * Calls [ChannelHandlerContext.fireChannelInactive] to forward
-     * to the next [ChannelInboundHandler] in the [ChannelPipeline].
+     * to the next [io.netty.channel.ChannelInboundHandler] in the [io.netty.channel.ChannelPipeline].
      *
      * Subclasses may override this method to change behavior.
      */
@@ -68,7 +68,7 @@ class ChannelHandler(private val chatClient: ChatClient,
 
     /**
      * Calls [ChannelHandlerContext.fireExceptionCaught] to forward
-     * to the next [ChannelHandler] in the [ChannelPipeline].
+     * to the next [ChannelHandler] in the [io.netty.channel.ChannelPipeline].
      *
      * Subclasses may override this method to change behavior.
      */

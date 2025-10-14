@@ -53,6 +53,7 @@ import net.minecraft.sound.SoundEvents
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
+import java.util.concurrent.ConcurrentLinkedQueue
 
 object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
@@ -85,8 +86,8 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         doNotIncludeAlways()
     }
 
-    val delayedPacketQueue = Queues.newConcurrentLinkedQueue<PacketSnapshot>()
-    val packetProcessQueue = Queues.newConcurrentLinkedQueue<Packet<*>>()
+    val delayedPacketQueue: ConcurrentLinkedQueue<PacketSnapshot> = Queues.newConcurrentLinkedQueue()
+    val packetProcessQueue: ConcurrentLinkedQueue<Packet<*>> = Queues.newConcurrentLinkedQueue()
 
     private val chronometer = Chronometer()
     private val trackingBufferChronometer = Chronometer()

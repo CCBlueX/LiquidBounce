@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.option.KeyBinding
 import java.util.*
 
