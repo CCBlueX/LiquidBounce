@@ -127,7 +127,7 @@ fun ClientPlayerInteractionManager.interactItem(
         val playerInteractItemC2SPacket = PlayerInteractItemC2SPacket(hand, sequence, yaw, pitch)
         val itemStack = player.getStackInHand(hand)
         if (player.itemCooldownManager.isCoolingDown(itemStack)) {
-            mutableObject.setValue(ActionResult.PASS)
+            mutableObject.value = ActionResult.PASS
             return@SequencedPacketCreator playerInteractItemC2SPacket
         }
 
@@ -144,7 +144,7 @@ fun ClientPlayerInteractionManager.interactItem(
             player.setStackInHand(hand, itemStack2)
         }
 
-        mutableObject.setValue(typedActionResult)
+        mutableObject.value = typedActionResult
         return@SequencedPacketCreator playerInteractItemC2SPacket
     })
 

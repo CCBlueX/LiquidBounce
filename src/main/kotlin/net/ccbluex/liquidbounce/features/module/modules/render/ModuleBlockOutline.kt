@@ -69,7 +69,7 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val target = mc.crosshairTarget
-        if (target !is BlockHitResult || target.getType() == HitResult.Type.MISS) {
+        if (target !is BlockHitResult || target.type == HitResult.Type.MISS) {
             resetPositions()
             return@handler
         }

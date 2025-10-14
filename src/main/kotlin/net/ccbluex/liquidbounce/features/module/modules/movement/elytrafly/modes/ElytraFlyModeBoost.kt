@@ -219,7 +219,7 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
     // ===================== Helper Methods =====================
 
     private fun calculateBoostVector(nearGround: Boolean, divePullUpBoost: Double): Vec3d {
-        val lookVec = player.getRotationVector()
+        val lookVec = player.rotationVector
         val boostFactor = currentAcceleration.toDouble() +
             if (player.pitch > 0) {
                 currentDiveSpeed.toDouble()

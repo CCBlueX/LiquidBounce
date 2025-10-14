@@ -54,7 +54,7 @@ object TrajectoryData {
         activeArrows: Boolean,
         activeOthers: Boolean,
     ): TrajectoryInfo? {
-        if (activeArrows && entity is ArrowEntity && !entity.isInGround()) {
+        if (activeArrows && entity is ArrowEntity && !entity.isInGround) {
             return TrajectoryInfo(0.05, 0.3)
         }
         if (!activeOthers) {
@@ -64,7 +64,7 @@ object TrajectoryData {
         return when (entity) {
             is PotionEntity -> TrajectoryInfo.POTION
             is TridentEntity -> {
-                if (!entity.isInGround()) {
+                if (!entity.isInGround) {
                     TrajectoryInfo.TRIDENT
                 } else {
                     null

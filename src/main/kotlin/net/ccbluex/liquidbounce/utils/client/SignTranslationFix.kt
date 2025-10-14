@@ -53,7 +53,7 @@ fun filterNonVanillaText(text: Text): Text {
         else -> MutableText.of(text.content)
     }
 
-    result.setStyle(text.style)
+    result.style = text.style
 
     for (sibling in text.siblings) {
         result.append(filterNonVanillaText(sibling))

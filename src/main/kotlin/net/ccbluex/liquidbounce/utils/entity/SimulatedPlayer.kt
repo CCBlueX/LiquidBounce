@@ -708,7 +708,7 @@ class SimulatedPlayer(
     private fun checkWaterState() {
         val var2 = player.vehicle
         if (var2 is BoatEntity) {
-            if (!var2.isSubmergedInWater()) {
+            if (!var2.isSubmergedInWater) {
                 this.touchingWater = false
                 return
             }
@@ -739,7 +739,7 @@ class SimulatedPlayer(
         val d: Double = this.getEyeY() - 0.1111111119389534
         val entity = this.player.vehicle
         if (entity is BoatEntity) {
-            if (!entity.isSubmergedInWater() && entity.getBoundingBox().maxY >= d && entity.getBoundingBox().minY <= d) {
+            if (!entity.isSubmergedInWater && entity.boundingBox.maxY >= d && entity.boundingBox.minY <= d) {
                 return
             }
         }
