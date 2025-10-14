@@ -16,8 +16,8 @@ internal fun Identifier.registerDynamicImageFromResources(path: String) {
     NativeImage.read(resourceStream).registerTexture(this@registerDynamicImageFromResources)
 }
 
-internal inline fun String.registerAsDynamicImageFromClientResources(): Identifier =
-    Identifier.of(LiquidBounce.CLIENT_NAME.lowercase(), "dynamic-texture-" + UUID.randomUUID()).apply {
+internal fun String.registerAsDynamicImageFromClientResources(): Identifier =
+    LiquidBounce.identifier("dynamic-texture-" + UUID.randomUUID()).apply {
         registerDynamicImageFromResources(this@registerAsDynamicImageFromClientResources)
     }
 
@@ -29,8 +29,7 @@ fun NativeImage.registerTexture(identifier: Identifier) {
  * Converts an [Identifier] to a human-readable name without localization.
  */
 inline fun Identifier.toName() = toString()
-    .split(':')
-    .last()
+    .substringAfterLast(':')
     .replace('.', ' ')
     .replace('_', ' ')
     .split(' ')

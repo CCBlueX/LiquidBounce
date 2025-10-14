@@ -29,7 +29,7 @@ private const val NAMETAG_PADDING: Int = 15
 
 private val currentItemStackRenderer
     get() = if (NametagShowOptions.ITEM_INFO.isShowing()) {
-        ItemStackListRenderer.SingleItemStackRenderer
+        ItemStackListRenderer.SingleItemStackRenderer.All
     } else {
         ItemStackListRenderer.SingleItemStackRenderer.OnlyItem
     }

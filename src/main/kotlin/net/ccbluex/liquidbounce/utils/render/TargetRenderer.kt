@@ -61,7 +61,7 @@ sealed class TargetRenderer<T: RenderEnvironment>(
 
     abstract val appearance: ChoiceConfigurable<out TargetRenderAppearance<in T>>
 
-    open fun render(env: T, entity: Entity, partialTicks: Float) {
+    fun render(env: T, entity: Entity, partialTicks: Float) {
         if (!enabled) {
             return
         }
@@ -97,9 +97,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             mc.gameRenderer.lightmapTextureManager.disable()
             defaultBlendFunc()
 
-            with(mc.gameRenderer.camera.pos) {
-                env.matrixStack.translate(-this.x, -this.y, -this.z)
-            }
+            env.matrixStack.translate(mc.gameRenderer.camera.pos.negate())
 
             val interpolated = entity.pos.interpolate(entity.lastRenderPos(), partialTicks.toDouble())
                 .add(0.0, 0.75, 0.0)
@@ -448,6 +446,5 @@ sealed class HeightMode(name: String) : Choice(name) {
 
 sealed class HeightWithGlow(name: String) : HeightMode(name) {
     open fun getGlowHeight(entity: Entity, partialTicks: Float): Double = 0.0
-
 }
 
