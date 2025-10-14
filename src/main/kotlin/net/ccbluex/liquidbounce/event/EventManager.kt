@@ -191,7 +191,7 @@ object EventManager {
     }
 
     fun unregisterEventHandler(eventListener: EventListener) {
-        registry.values.forEach { it ->
+        registry.values.forEach {
             it.removeIf { it.handlerClass == eventListener }
         }
     }
