@@ -12,7 +12,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
  * - If the BLOCKS constraint was processed first, the TNT would be kept since the BLOCKS constraint is not yet
  * satisfied.
  */
-abstract class ItemNumberConstraintGroup (
+abstract class ItemNumberConstraintGroup(
     /**
      * The range of desired item amounts (which might be raw item counts, food saturation, etc.):
      * - The lower limit defines the desired amount of items (=> any more items *might* be thrown out)

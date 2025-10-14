@@ -42,7 +42,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleLongJump.mode
 
-    private var receivedLogback = false
+    private var receivedLagback = false
     private var started = false
 
     private val jumpingSequence = listOf(
@@ -61,7 +61,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
     )
 
     override fun enable() {
-        receivedLogback = false
+        receivedLagback = false
         started = false
         ModuleLongJump.jumped = false
         ModuleLongJump.boosted = false
@@ -70,11 +70,11 @@ internal object VulcanLongJump : Choice("Vulcan289") {
     @Suppress("unused")
     private val repeatable = tickHandler {
         if (started) {
-            if (receivedLogback) {
+            if (receivedLagback) {
                 player.velocity.y = 1.0
                 player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
                 player.velocity = player.velocity.withStrafe(strength = 1.0, speed = 4.2)
-                receivedLogback = false
+                receivedLagback = false
             }
 
             when (player.hurtTime) {
@@ -99,7 +99,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
 
         val didLongJump = ModuleLongJump.autoDisable && ModuleLongJump.jumped
 
-        if (player.isOnGround && !receivedLogback && player.hurtTime == 0 && !didLongJump) {
+        if (player.isOnGround && !receivedLagback && player.hurtTime == 0 && !didLongJump) {
             repeat(3) {
                 for (position in jumpingSequence) {
                     network.sendPacket(
@@ -123,7 +123,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
         val packet = event.packet
 
         if (packet is PlayerPositionLookS2CPacket) {
-            receivedLogback = true
+            receivedLagback = true
         }
     }
 }
