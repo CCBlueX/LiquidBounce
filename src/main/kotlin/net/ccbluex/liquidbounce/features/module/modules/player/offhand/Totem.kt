@@ -223,7 +223,7 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
                     arrayOf(pos)
                 } else {
                     // a bed consists of two blocks
-                    arrayOf(pos, (block as BedBlock).getPotentialSecondBedBlock(state, pos))
+                    arrayOf(pos, block.getPotentialSecondBedBlock(state, pos))
                 }
 
                 maxDamage = maxDamage.coerceAtLeast(

@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 
-import kotlinx.coroutines.CoroutineScope
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.client.Chronometer

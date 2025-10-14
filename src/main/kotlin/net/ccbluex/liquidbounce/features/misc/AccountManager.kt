@@ -296,7 +296,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
     }
 
     fun restoreInitial() {
-        val initialSession = initialSession!!
+        val initialSession = initialSession
 
         mc.session = initialSession.session
         mc.sessionService = initialSession.sessionService
