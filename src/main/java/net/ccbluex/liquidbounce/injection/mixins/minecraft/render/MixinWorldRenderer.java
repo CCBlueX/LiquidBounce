@@ -91,14 +91,18 @@ public abstract class MixinWorldRenderer {
         }
     }
 
-   @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "render", at = @At("HEAD"))
     private void onRender(ObjectAllocator allocator, RenderTickCounter tickCounter, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, Matrix4f positionMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
         try {
             OutlineShader outlineShader = OutlineShader.INSTANCE;
             outlineShader.update();
             outlineShader.getHandle().get().beginWrite(false);
 
-            var event = new DrawOutlinesEvent(new MatrixStack(), camera, tickCounter.getTickDelta(false), DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
+            var matrixStack = new MatrixStack();
+            // Apply camera transformation to fix outline positioning
+            matrixStack.peek().getPositionMatrix().mul(positionMatrix);
+
+            var event = new DrawOutlinesEvent(matrixStack, camera, tickCounter.getTickDelta(false), DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
             EventManager.INSTANCE.callEvent(event);
 
             if (event.getDirtyFlag()) {
