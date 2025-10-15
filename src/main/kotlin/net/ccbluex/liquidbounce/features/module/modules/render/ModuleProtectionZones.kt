@@ -22,7 +22,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.google.common.collect.Ordering
-import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -41,7 +41,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
-
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -148,8 +147,8 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         return Ordering.from(compareBySquaredDist).leastOf(centers.iterator(), limit)
     }
 
-    private fun computeZones(centers: List<BlockPos>, world: World): ArrayList<Box> {
-        return centers.mapTo(ArrayList(centers.size)) { c ->
+    private fun computeZones(centers: List<BlockPos>, world: World): Array<Box> {
+        return centers.mapToArray { c ->
             val minY = max(c.y - Radius.y, world.bottomY)
             val maxY = min(c.y + Radius.y, world.topYInclusive)
             Box(
@@ -163,7 +162,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         }
     }
 
-    private fun findHighlightIndex(zones: List<Box>, playerPos: Vec3d): Int? {
+    private fun findHighlightIndex(zones: Array<Box>, playerPos: Vec3d): Int? {
         val r2 = (HIGHLIGHT_RADIUS * HIGHLIGHT_RADIUS).toDouble()
         for ((i, b) in zones.withIndex()) {
             if (b.contains(playerPos)) return null
@@ -173,7 +172,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
     }
 
     private fun WorldRenderEnvironment.drawZones(
-        zones: List<Box>, centers: List<BlockPos>, highlightIndex: Int?, camOffset: Vec3d
+        zones: Array<Box>, centers: List<BlockPos>, highlightIndex: Int?, camOffset: Vec3d
     ) {
         val colors = Renderer.ProtectionColors
         val viewZones = ArrayList<Box>(zones.size)
@@ -188,21 +187,12 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
 
         if (highlightIndex != null && highlightIndex in viewZones.indices) {
             val highlighted = viewZones[highlightIndex]
-            RenderSystem.enableDepthTest()
-            RenderSystem.depthMask(false)
-            RenderSystem.enablePolygonOffset()
-            RenderSystem.polygonOffset(1f, 1f)
-
             drawBox(highlighted, colors.zoneFill, Color4b.TRANSPARENT)
-
-            RenderSystem.disablePolygonOffset()
-            RenderSystem.depthMask(true)
-            RenderSystem.disableDepthTest()
         }
     }
 
     private fun WorldRenderEnvironment.drawIndicator(
-        centers: List<BlockPos>, zones: List<Box>, camOffset: Vec3d
+        centers: List<BlockPos>, zones: Array<Box>, camOffset: Vec3d
     ) {
         if (centers.isEmpty()) return
         val player = mc.player ?: return
