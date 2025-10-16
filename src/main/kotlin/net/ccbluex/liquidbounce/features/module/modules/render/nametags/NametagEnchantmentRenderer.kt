@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.render.drawColoredQuad
 import net.ccbluex.liquidbounce.render.drawColoredQuadOutlines
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
@@ -320,7 +319,7 @@ object NametagEnchantmentRenderer {
             y + maxColumnHeight + FRAME_MARGIN
         )
 
-        drawGroupBorder(this, groupRect)
+        drawGroupBorder(groupRect)
 
         var columnX = x - halfTotalWidth
         columnData.forEach { column ->
@@ -330,16 +329,16 @@ object NametagEnchantmentRenderer {
         }
     }
 
-    private fun drawGroupBorder(env: RenderEnvironment, rect: Rect) {
+    private fun RenderEnvironment.drawGroupBorder(rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
         val leftTop = Vec3(rect.x1, rect.y1, 0F)
         val rightBottom = Vec3(rect.x2, rect.y2, 0F)
-        env.drawColoredQuad(
+        drawColoredQuad(
             leftTop, rightBottom,
             Color4b.BLACK.with(a = 120).toARGB(),
         )
 
-        env.drawColoredQuadOutlines(
+        drawColoredQuadOutlines(
             leftTop, rightBottom,
             Color4b.RED.toARGB(),
         )
