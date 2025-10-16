@@ -285,8 +285,6 @@ object NametagEnchantmentRenderer {
                 scale = FIXED_SCALE
             )
         }
-
-        ModuleNametags.fontRenderer.commit(this)
     }
 
     private fun RenderEnvironment.drawCellBackground(
@@ -335,7 +333,7 @@ object NametagEnchantmentRenderer {
         val rightBottom = Vec3(rect.x2, rect.y2, 0F)
         drawColoredQuad(
             leftTop, rightBottom,
-            Color4b.BLACK.with(a = 120).toARGB(),
+            Color4b.BLACK.with(a = 100).toARGB(),
         )
 
         drawColoredQuadOutlines(

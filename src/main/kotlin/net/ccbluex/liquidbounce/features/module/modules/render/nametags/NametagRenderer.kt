@@ -52,6 +52,8 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     matrixStack.translate(pos.x, pos.y, pos.z)
     matrixStack.scale(scale, scale, 1f)
 
+    startBatch()
+
     GlStateManager._enableBlend()
 
     val x =
@@ -88,6 +90,8 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
             worldY,
         )
     }
+
+    commitBatch()
 
     ModuleNametags.fontRenderer.commit(this@drawNametag)
 
