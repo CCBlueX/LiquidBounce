@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.desyncPlayerPosition
@@ -47,6 +48,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
+        waitTicks(1)
         pathCache = withContext(pathContext) {
             val playerEyePos = player.eyePos
             val playerPosition = player.blockPos
@@ -73,8 +75,8 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
         val (_, path) = pathCache ?: return@tickHandler
 
-        if (!clicker.isClickTick) {
-            return@tickHandler
+        tickUntil {
+            clicker.isClickTick
         }
 
         travel(path)
