@@ -22,9 +22,6 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceArrayMap
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap
-import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextAccessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -84,22 +81,24 @@ val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
  * @property matrixStack The matrix stack for rendering.
  */
 sealed class RenderEnvironment(val matrixStack: MatrixStack) {
-    private var batchBuffer: EnumMap<VertexInputType, BufferBuilder>? = null
+    private var batchBuffer: EnumMap<VertexInputType, EnumMap<DrawMode, BufferBuilder>>? = null
 
     val isBatchMode: Boolean get() = batchBuffer != null
 
     fun getOrCreateBuffer(drawMode: DrawMode, vertexInputType: VertexInputType): BufferBuilder {
-        return batchBuffer?.getOrPut(vertexInputType) {
+        val batchBuffer = batchBuffer ?: return BufferBuilder(
+            bufferAllocator,
+            drawMode,
+            vertexInputType.vertexFormat
+        )
+
+        return batchBuffer.getOrPut(vertexInputType, ::enumMapOf).getOrPut(drawMode) {
             BufferBuilder(
                 bufferAllocator,
                 drawMode,
                 vertexInputType.vertexFormat
             )
-        } ?: BufferBuilder(
-            bufferAllocator,
-            drawMode,
-            vertexInputType.vertexFormat
-        )
+        }
     }
 
     fun startBatch() {
@@ -113,8 +112,10 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
         }
 
         this.batchBuffer = null
-        batchBuffer.forEach { (vertexInputType, bufferBuilder) ->
-            bufferBuilder.endNullable()?.draw(vertexInputType)
+        batchBuffer.forEach { (vertexInputType, map) ->
+            map.values.forEach { bufferBuilder ->
+                bufferBuilder.endNullable()?.draw(vertexInputType)
+            }
         }
         bufferPool.offer(batchBuffer)
     }
@@ -126,7 +127,7 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
         private val bufferAllocator = BufferAllocator(0xC00000)
 
         @JvmStatic
-        private val bufferPool = Pool<EnumMap<VertexInputType, BufferBuilder>>(
+        private val bufferPool = Pool<EnumMap<VertexInputType, EnumMap<DrawMode, BufferBuilder>>>(
             ArrayDeque(),
             ::enumMapOf,
             EnumMap<*, *>::clear
