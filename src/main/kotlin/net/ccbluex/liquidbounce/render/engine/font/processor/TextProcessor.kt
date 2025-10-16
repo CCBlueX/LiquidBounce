@@ -4,10 +4,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.text.Text
 import kotlin.random.Random
 
-/**
- * @param obfuscationRng The random for the obfuscation. If null, obfuscated characters will be replaced with `_`
- */
-abstract class TextProcessor<T : ProcessedText>(private val obfuscationRng: Random?) {
+abstract class TextProcessor<T : ProcessedText> {
 
     /**
      * @param defaultColor The color all chars are drawn when no style is specified from Minecraft formatting
@@ -17,11 +14,16 @@ abstract class TextProcessor<T : ProcessedText>(private val obfuscationRng: Rand
         defaultColor: Color4b,
     ): T
 
-    protected fun generateObfuscatedChar(): Char {
-        return obfuscationRng?.let { RANDOM_CHARS.random(it) } ?: '_'
-    }
-
     companion object {
+        /**
+         * @param obfuscationRng The random for the obfuscation.
+         *      If null, obfuscated characters will be replaced with `_`
+         */
+        @JvmStatic
+        protected fun generateObfuscatedChar(obfuscationRng: Random?): Char {
+            return obfuscationRng?.let { RANDOM_CHARS.random(it) } ?: '_'
+        }
+
         /**
          * Contains the chars for the `§k` formatting
          */

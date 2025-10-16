@@ -9,7 +9,9 @@ import java.util.ArrayDeque
 import java.util.Optional
 import kotlin.random.Random
 
-object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingProcessedText>(Random(Random.nextLong())) {
+object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingProcessedText>() {
+
+    private val defaultRng = Random(Random.nextLong())
 
     val TEXT_POOL = Pool(ArrayDeque(), {
         RecyclingProcessedText(ArrayList(), ArrayList(), ArrayList())
@@ -53,8 +55,14 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
         val obfuscated = style.isObfuscated
 
         result.chars.ensureCapacity(textAsString.length)
-        for (char in textAsString.toCharArray()) {
-            val actualChar = if (obfuscated) generateObfuscatedChar() else char
+        var rng: Random? = null
+        for (char in textAsString) {
+            val actualChar = if (obfuscated) {
+                if (rng == null) rng = Random(defaultRng.nextLong())
+                generateObfuscatedChar(rng)
+            } else {
+                char
+            }
 
             result.chars.add(ProcessedText.ProcessedChar(actualChar, font, obfuscated, color))
         }
