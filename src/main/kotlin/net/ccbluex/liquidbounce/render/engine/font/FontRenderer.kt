@@ -19,13 +19,14 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import com.mojang.blaze3d.systems.RenderSystem
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
+import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.collection.Pool
 import net.minecraft.client.render.VertexFormat
@@ -33,7 +34,6 @@ import net.minecraft.text.Text
 import org.joml.Vector3f
 import java.awt.Font
 import kotlin.math.max
-import kotlin.random.Random
 
 @JvmRecord
 private data class RenderedGlyph(
@@ -48,11 +48,17 @@ private data class RenderedGlyph(
 )
 
 @JvmRecord
-private data class RenderedLine(val p1: Vec3, val p2: Vec3, val color: Color4b)
+private data class RenderedLine(val p1: Vector3f, val p2: Vector3f, val color: Color4b)
 
 private class FontRendererCache {
-    val renderedGlyphs: ArrayList<RenderedGlyph> = ArrayList(100)
-    val lines: ArrayList<RenderedLine> = ArrayList()
+    val renderedGlyphs = ArrayList<RenderedGlyph>(100)
+    val commitGlyphs = Reference2ReferenceOpenHashMap<GlyphPage, ArrayList<RenderedGlyph>>()
+    val renderedGlyphListPool = Pool<ArrayList<RenderedGlyph>>(
+        java.util.ArrayDeque(),
+        ::ArrayList,
+        ArrayList<*>::clear,
+    )
+    val lines = ArrayList<RenderedLine>()
 }
 
 class FontRenderer(
@@ -96,7 +102,7 @@ class FontRenderer(
     }
 
     override fun process(text: Text, defaultColor: Color4b): TextProcessor.ProcessedText {
-        return MinecraftTextProcessor(text.sanitizeForeignInput(), defaultColor, Random.nextLong()).process()
+        return MinecraftTextProcessor.process(text.sanitizeForeignInput(), defaultColor)
     }
 
     override fun draw(
@@ -251,16 +257,16 @@ class FontRenderer(
         if (through) {
             this.cache.lines.add(
                 RenderedLine(
-                    Vec3(x0, y - this.height + this.ascent, z),
-                    Vec3(x1, y - this.height + this.ascent, z),
+                    Pool.Vec3f.take().set(x0, y - this.height + this.ascent, z),
+                    Pool.Vec3f.take().set(x1, y - this.height + this.ascent, z),
                     color
                 )
             )
         } else {
             this.cache.lines.add(
                 RenderedLine(
-                    Vec3(x0, y + 1.0f, z),
-                    Vec3(x1, y + 1.0f, z),
+                    Pool.Vec3f.take().set(x0, y + 1.0f, z),
+                    Pool.Vec3f.take().set(x1, y + 1.0f, z),
                     color
                 )
             )
@@ -269,41 +275,51 @@ class FontRenderer(
     }
 
     override fun commit(environment: RenderEnvironment) {
+        for (glyph in cache.renderedGlyphs) {
+            val glyphPage = glyph.glyph.page
+            cache.commitGlyphs.getOrPut(glyphPage) { cache.renderedGlyphListPool.take() }.add(glyph)
+        }
+        cache.renderedGlyphs.clear()
+
         val vec3f1 = Pool.Vec3f.take()
         val vec3f2 = Pool.Vec3f.take()
-        cache.renderedGlyphs.forEach { renderedGlyph ->
-            val glyphDescriptor = renderedGlyph.glyph
+        cache.commitGlyphs.fastIterator().forEach { (glyphPage, renderedGlyphs) ->
+            RenderSystem.bindTexture(glyphPage.texture.glId)
+            RenderSystem.setShaderTexture(0, glyphPage.texture.glId)
 
-            val color = renderedGlyph.color
-            val atlasLocation = glyphDescriptor.renderInfo.atlasLocation!!
+            for (renderedGlyph in renderedGlyphs) {
+                val glyphDescriptor = renderedGlyph.glyph
 
-            RenderSystem.bindTexture(glyphDescriptor.page.texture.glId)
-            RenderSystem.setShaderTexture(0, glyphDescriptor.page.texture.glId)
-            environment.drawTextureQuad(
-                vec3f1.set(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
-                atlasLocation.uvCoordinatesOnTexture.min,
-                vec3f2.set(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),
-                atlasLocation.uvCoordinatesOnTexture.max,
-                color.toARGB(),
-            )
+                val color = renderedGlyph.color
+                val atlasLocation = glyphDescriptor.renderInfo.atlasLocation!!
+
+                environment.drawTextureQuad(
+                    vec3f1.set(renderedGlyph.x1, renderedGlyph.y1, renderedGlyph.z),
+                    atlasLocation.uvCoordinatesOnTexture.min,
+                    vec3f2.set(renderedGlyph.x2, renderedGlyph.y2, renderedGlyph.z),
+                    atlasLocation.uvCoordinatesOnTexture.max,
+                    color.toARGB(),
+                )
+            }
+            cache.renderedGlyphListPool.offer(renderedGlyphs)
         }
         Pool.Vec3f.offer(vec3f1)
         Pool.Vec3f.offer(vec3f2)
+        cache.commitGlyphs.clear()
 
-        if (cache.lines.isNotEmpty()) {
-            for (line in cache.lines) {
-                environment.drawCustomMesh(
-                    VertexFormat.DrawMode.DEBUG_LINES,
-                    VertexInputType.PosColor,
-                ) { matrix ->
-                    vertex(matrix, line.p1.x, line.p1.y, line.p1.z).color(line.color.toARGB())
-                    vertex(matrix, line.p2.x, line.p2.y, line.p2.z).color(line.color.toARGB())
-                }
+        for (line in cache.lines) {
+            environment.drawCustomMesh(
+                VertexFormat.DrawMode.DEBUG_LINES,
+                VertexInputType.PosColor,
+            ) { matrix ->
+                vertex(matrix, line.p1.x, line.p1.y, line.p1.z).color(line.color.toARGB())
+                vertex(matrix, line.p2.x, line.p2.y, line.p2.z).color(line.color.toARGB())
             }
+            Pool.Vec3f.offer(line.p1)
+            Pool.Vec3f.offer(line.p2)
         }
 
         cache.lines.clear()
-        cache.renderedGlyphs.clear()
     }
 
 }

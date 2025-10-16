@@ -1,15 +1,18 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.text.Text
 import kotlin.random.Random
 
 /**
- * @param obfuscationSeed The seed for the obfuscation. If null, obfusscated characters will be replaced with `_`
+ * @param obfuscationRng The random for the obfuscation. If null, obfuscated characters will be replaced with `_`
  */
-abstract class TextProcessor(obfuscationSeed: Long?) {
-    private val obfuscationRng = obfuscationSeed?.let { Random(it) }
+abstract class TextProcessor(private val obfuscationRng: Random?) {
 
-    abstract fun process(): ProcessedText
+    abstract fun process(
+        text: Text,
+        defaultColor: Color4b,
+    ): ProcessedText
 
     protected fun generateObfuscatedChar(): Char {
         return obfuscationRng?.let { RANDOM_CHARS.random(it) } ?: '_'
@@ -36,10 +39,9 @@ abstract class TextProcessor(obfuscationSeed: Long?) {
     @JvmRecord
     data class ProcessedTextCharacter(val char: Char, val font: Int, val obfuscated: Boolean, val color: Color4b)
 
-    @JvmRecord
-    data class ProcessedText(
-        val chars: List<ProcessedTextCharacter>,
-        val underlines: List<IntRange>,
-        val strikeThroughs: List<IntRange>,
-    )
+    interface ProcessedText {
+        val chars: List<ProcessedTextCharacter>
+        val underlines: List<IntRange>
+        val strikeThroughs: List<IntRange>
+    }
 }
