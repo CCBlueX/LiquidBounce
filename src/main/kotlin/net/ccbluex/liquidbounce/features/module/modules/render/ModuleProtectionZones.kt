@@ -121,10 +121,8 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         val player = mc.player ?: return false
         val main = player.mainHandStack.getBlock()
         val off = player.offHandStack.getBlock()
-        for (block in protBlocks) {
-            if (block == main || block == off) return true
-        }
-        return false
+        return (main != null && main in protBlocks)
+            || (off != null && off in protBlocks)
     }
 
     private fun snapToGrid(value: Int, origin: Int, step: Int): Int {
