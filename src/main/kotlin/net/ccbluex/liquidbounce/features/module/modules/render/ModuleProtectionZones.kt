@@ -133,15 +133,15 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         centers: Sequence<BlockPos>, limit: Int, playerPos: Vec3d
     ): List<BlockPos> {
         if (limit <= 0) return emptyList()
-        val compareBySquaredDist = Comparator<BlockPos> { a, b ->
+
+        return Ordering.from<BlockPos> { a, b ->
             fun squaredDist(p: BlockPos): Double {
                 val dx = (p.x + 0.5) - playerPos.x
                 val dz = (p.z + 0.5) - playerPos.z
                 return dx * dx + dz * dz
             }
             squaredDist(a).compareTo(squaredDist(b))
-        }
-        return Ordering.from(compareBySquaredDist).leastOf(centers.iterator(), limit)
+        }.leastOf(centers.iterator(), limit)
     }
 
     private fun computeZones(centers: List<BlockPos>, world: World): Array<Box> {
@@ -209,15 +209,18 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         )
 
         val indicatorPos = BlockPos(snappedX, snappedY, snappedZ)
-        if (zones.any { it.contains(indicatorPos.toCenterPos()) }) return
+        val indicatorCenter = indicatorPos.toCenterPos()
+        if (zones.any { it.contains(indicatorCenter) }) return
         val indicatorBox = Box(indicatorPos).offset(camOffset)
 
         drawBox(
-            indicatorBox, Renderer.IndicatorColors.indicatorFill,
-            Renderer.IndicatorColors.indicatorOutline
+            indicatorBox,
+            faceColor = Renderer.IndicatorColors.indicatorFill,
+            outlineColor = Renderer.IndicatorColors.indicatorOutline,
         )
     }
 
+    @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { e ->
         if (BlockTracker.isEmpty()) return@handler
         val holdingProt = isHoldingProtBlock()

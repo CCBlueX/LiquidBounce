@@ -165,6 +165,9 @@ fun RegistryKey<Enchantment>.toRegistryEntry(): RegistryEntry<Enchantment> {
     return registry.getOptional(this).orElseThrow { IllegalArgumentException("Unknown enchantment key $this") }
 }
 
+/**
+ * Get [Block] of inner item if it is [BlockItem], or null if not
+ */
 fun ItemStack.getBlock(): Block? {
     val item = this.item
     if (item !is BlockItem) {
