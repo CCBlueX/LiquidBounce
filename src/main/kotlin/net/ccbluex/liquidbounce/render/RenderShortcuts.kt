@@ -91,8 +91,6 @@ fun defaultBlendFunc() {
 sealed interface RenderEnvironment {
     val matrixStack: MatrixStack
 
-    val renderPipeline: RenderPipeline
-
     fun relativeToCamera(pos: Vec3d): Vec3d
 }
 
@@ -101,8 +99,6 @@ class GUIRenderEnvironment(
     matrixStack: MatrixStack?,
 ) : RenderEnvironment {
     override val matrixStack: MatrixStack = matrixStack ?: context.matrices
-
-    override val renderPipeline get() = ClientRenderPipelines.GUI_RENDER_ENV
 
     override fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos
@@ -113,8 +109,6 @@ class WorldRenderEnvironment(
     override val matrixStack: MatrixStack,
     val camera: Camera,
 ) : RenderEnvironment {
-    override val renderPipeline get() = ClientRenderPipelines.WORLD_RENDER_ENV
-
     override fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos.subtract(camera.pos)
     }
