@@ -21,11 +21,13 @@ package net.ccbluex.liquidbounce.render.engine.font
 import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
+import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
-import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
+import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pool
 import net.minecraft.client.texture.GlTexture
@@ -33,7 +35,6 @@ import net.minecraft.text.Text
 import org.joml.Vector3f
 import java.awt.Font
 import kotlin.math.max
-import kotlin.random.Random
 
 @JvmRecord
 private data class RenderedGlyph(
@@ -51,8 +52,14 @@ private data class RenderedGlyph(
 private data class RenderedLine(val p1: Vector3f, val p2: Vector3f, val color: Color4b)
 
 private class FontRendererCache {
-    val renderedGlyphs: ArrayList<RenderedGlyph> = ArrayList(100)
-    val lines: ArrayList<RenderedLine> = ArrayList()
+    val renderedGlyphs = ArrayList<RenderedGlyph>(100)
+    val commitGlyphs = Reference2ReferenceOpenHashMap<GlyphPage, ArrayList<RenderedGlyph>>()
+    val renderedGlyphListPool = Pool<ArrayList<RenderedGlyph>>(
+        java.util.ArrayDeque(),
+        ::ArrayList,
+        ArrayList<*>::clear,
+    )
+    val lines = ArrayList<RenderedLine>()
 }
 
 class FontRenderer(
@@ -70,7 +77,7 @@ class FontRenderer(
     val font: FontManager.FontFace,
     val glyphManager: FontGlyphPageManager,
     override val size: Float = DEFAULT_FONT_SIZE
-) : AbstractFontRenderer<TextProcessor.ProcessedText>() {
+) : AbstractFontRenderer<MinecraftTextProcessor.RecyclingProcessedText>() {
 
     private val cache = FontRendererCache()
     private val positionCache = Vector3f()
@@ -89,12 +96,12 @@ class FontRenderer(
         }
     }
 
-    override fun process(text: Text, defaultColor: Color4b): TextProcessor.ProcessedText {
-        return MinecraftTextProcessor(text.sanitizeForeignInput(), defaultColor, Random.nextLong()).process()
+    override fun process(text: Text, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
+        return MinecraftTextProcessor.process(text.sanitizeForeignInput(), defaultColor)
     }
 
     override fun draw(
-        text: TextProcessor.ProcessedText,
+        text: MinecraftTextProcessor.RecyclingProcessedText,
         x0: Float,
         y0: Float,
         shadow: Boolean,
@@ -112,19 +119,20 @@ class FontRenderer(
             )
         }
 
-        return max(len, drawInternal(text, positionCache.set(x0, y0, z * 2.0F), scale))
+        len = max(len, drawInternal(text, positionCache.set(x0, y0, z * 2.0F), scale))
+
+        MinecraftTextProcessor.TEXT_POOL.offer(text)
+
+        return len
     }
 
     /**
      * Draws a string with minecraft font markup to this object.
      *
-     * @param defaultColor The color all chars are drawn when no style is specified from Minecraft formatting
-     * @param shadow Disables changing of colors, useful for shadows
-     * @param obfuscatedSeed Used to sync the obfuscated strings of text with and without shadow.
      * @return The resulting x value
      */
     private fun drawInternal(
-        text: TextProcessor.ProcessedText,
+        text: ProcessedText,
         pos: Vector3f,
         scale: Float,
         overrideColor: Color4b? = null
@@ -206,7 +214,7 @@ class FontRenderer(
     }
 
     override fun getStringWidth(
-        text: TextProcessor.ProcessedText,
+        text: ProcessedText,
         shadow: Boolean
     ): Float {
         if (text.chars.isEmpty()) {
@@ -269,27 +277,38 @@ class FontRenderer(
     }
 
     override fun commit(environment: RenderEnvironment) {
+        for (glyph in cache.renderedGlyphs) {
+            val glyphPage = glyph.glyph.page
+            cache.commitGlyphs.getOrPut(glyphPage) { cache.renderedGlyphListPool.take() }.add(glyph)
+        }
+        cache.renderedGlyphs.clear()
+
         val vec3f1 = Pool.Vec3f.take()
         val vec3f2 = Pool.Vec3f.take()
-        cache.renderedGlyphs.forEach { renderedGlyph ->
-            val glyphDescriptor = renderedGlyph.glyph
-
-            val color = renderedGlyph.color
-            val atlasLocation = glyphDescriptor.renderInfo.atlasLocation!!
-
-            val gpuTexture = glyphDescriptor.page.texture.glTexture
+        cache.commitGlyphs.fastIterator().forEach { (glyphPage, renderedGlyphs) ->
+            val gpuTexture = glyphPage.texture.glTexture
             GlStateManager._bindTexture((gpuTexture as GlTexture).glId)
             RenderSystem.setShaderTexture(0, gpuTexture)
-            environment.drawTextureQuad(
-                vec3f1.set(renderedGlyph.x1, renderedGlyph.y1, renderedGlyph.z),
-                atlasLocation.uvCoordinatesOnTexture.min,
-                vec3f2.set(renderedGlyph.x2, renderedGlyph.y2, renderedGlyph.z),
-                atlasLocation.uvCoordinatesOnTexture.max,
-                color.toARGB(),
-            )
+
+            for (renderedGlyph in renderedGlyphs) {
+                val glyphDescriptor = renderedGlyph.glyph
+
+                val color = renderedGlyph.color
+                val atlasLocation = glyphDescriptor.renderInfo.atlasLocation!!
+
+                environment.drawTextureQuad(
+                    vec3f1.set(renderedGlyph.x1, renderedGlyph.y1, renderedGlyph.z),
+                    atlasLocation.uvCoordinatesOnTexture.min,
+                    vec3f2.set(renderedGlyph.x2, renderedGlyph.y2, renderedGlyph.z),
+                    atlasLocation.uvCoordinatesOnTexture.max,
+                    color.toARGB(),
+                )
+            }
+            cache.renderedGlyphListPool.offer(renderedGlyphs)
         }
         Pool.Vec3f.offer(vec3f1)
         Pool.Vec3f.offer(vec3f2)
+        cache.commitGlyphs.clear()
 
         for (line in cache.lines) {
             environment.drawCustomMesh(
@@ -304,7 +323,6 @@ class FontRenderer(
         }
 
         cache.lines.clear()
-        cache.renderedGlyphs.clear()
     }
 
 }

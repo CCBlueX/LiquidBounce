@@ -101,6 +101,9 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
         a = if (hasAlpha) (hex shr 24) and 0xFF else 255
     )
 
+    val isTransparent: Boolean
+        get() = a == 0
+
     fun with(
         r: Int = this.r,
         g: Int = this.g,

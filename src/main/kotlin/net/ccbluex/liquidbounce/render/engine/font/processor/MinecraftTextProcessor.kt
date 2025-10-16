@@ -1,30 +1,50 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.text.StringVisitable.StyledVisitor
+import net.ccbluex.liquidbounce.utils.collection.Pool
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import java.awt.Font
-import java.util.*
+import java.util.ArrayDeque
+import java.util.Optional
+import kotlin.random.Random
 
-class MinecraftTextProcessor(
-    val text: Text,
-    val defaultColor: Color4b,
-    obfuscationSeed: Long?
-) : TextProcessor(obfuscationSeed), StyledVisitor<Nothing> {
-    private val chars = ArrayList<ProcessedTextCharacter>()
-    private val underlines = ArrayList<IntRange>()
-    private val strikethroughs = ArrayList<IntRange>()
+object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingProcessedText>() {
 
-    init {
-        text.visit(this, Style.EMPTY)
+    private val defaultRng = Random(Random.nextLong())
+
+    val TEXT_POOL = Pool(ArrayDeque(), {
+        RecyclingProcessedText(ArrayList(), ArrayList(), ArrayList())
+    }) {
+        it.chars.clear()
+        it.underlines.clear()
+        it.strikeThroughs.clear()
     }
 
-    override fun process(): ProcessedText {
-        return ProcessedText(chars, underlines, strikethroughs)
+    class RecyclingProcessedText(
+        override var chars: ArrayList<ProcessedText.ProcessedChar>,
+        override var underlines: ArrayList<IntRange>,
+        override var strikeThroughs: ArrayList<IntRange>,
+    ) : ProcessedText
+
+    override fun process(
+        text: Text,
+        defaultColor: Color4b,
+    ): RecyclingProcessedText {
+        val result = TEXT_POOL.take()
+        text.visit({ style, asString ->
+            visit(style, asString, defaultColor, result)
+        }, Style.EMPTY)
+
+        return result
     }
 
-    override fun accept(style: Style, text: String): Optional<Nothing> {
+    private fun visit(
+        style: Style,
+        textAsString: String,
+        defaultColor: Color4b,
+        result: RecyclingProcessedText,
+    ): Optional<Nothing> {
         val font = when {
             style.isBold && style.isItalic -> Font.BOLD or Font.ITALIC
             style.isBold -> Font.BOLD
@@ -34,24 +54,30 @@ class MinecraftTextProcessor(
         val color = style.color?.let { Color4b(it.rgb) } ?: defaultColor
         val obfuscated = style.isObfuscated
 
-        this.chars.ensureCapacity(text.length)
-        for (char in text.toCharArray()) {
-            val actualChar = if (obfuscated) generateObfuscatedChar() else char
+        result.chars.ensureCapacity(textAsString.length)
+        var rng: Random? = null
+        for (char in textAsString) {
+            val actualChar = if (obfuscated) {
+                if (rng == null) rng = Random(defaultRng.nextLong())
+                generateObfuscatedChar(rng)
+            } else {
+                char
+            }
 
-            this.chars.add(ProcessedTextCharacter(actualChar, font, obfuscated, color))
+            result.chars.add(ProcessedText.ProcessedChar(actualChar, font, obfuscated, color))
         }
 
-        val start = this.chars.size - text.length
-        val end = this.chars.size
+        val start = result.chars.size - textAsString.length
+        val end = result.chars.size
 
         val textRange = start until end
 
         if (style.isUnderlined) {
-            this.underlines.add(textRange)
+            result.underlines.add(textRange)
         }
 
         if (style.isStrikethrough) {
-            this.strikethroughs.add(textRange)
+            result.strikeThroughs.add(textRange)
         }
 
         return Optional.empty()

@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.render
 
-import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
+import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.minecraft.text.Text
 
-abstract class AbstractFontRenderer<T> {
+abstract class AbstractFontRenderer<T : ProcessedText> {
     abstract val size: Float
     abstract val height: Float
 
@@ -49,9 +49,8 @@ abstract class AbstractFontRenderer<T> {
         scale: Float = 1.0f
     ): Float
 
-    abstract fun process(text: Text, defaultColor: Color4b = Color4b.WHITE): T
-
     fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T = process(text.asPlainText(), defaultColor)
+    abstract fun process(text: Text, defaultColor: Color4b = Color4b.WHITE): T
 
     /**
      */
@@ -61,13 +60,13 @@ abstract class AbstractFontRenderer<T> {
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting
      */
     abstract fun getStringWidth(
-        text: TextProcessor.ProcessedText,
+        text: ProcessedText,
         shadow: Boolean = false
     ): Float
 
-    val TextProcessor.ProcessedText.width: Float
+    val ProcessedText.width: Float
         get() = getStringWidth(this, false)
 
-    val TextProcessor.ProcessedText.widthWithShadow: Float
+    val ProcessedText.widthWithShadow: Float
         get() = getStringWidth(this, true)
 }

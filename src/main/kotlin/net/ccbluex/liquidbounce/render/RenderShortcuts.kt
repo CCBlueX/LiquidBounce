@@ -530,14 +530,16 @@ private fun RenderEnvironment.drawBox(
  */
 fun RenderEnvironment.drawBox(
     box: Box,
-    faceColor: Color4b,
-    outlineColor: Color4b? = null,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
     vertices: Int = -1,
     outlineVertices: Int = -1
 ) {
-    drawBox(box, DrawMode.QUADS, color = faceColor, verticesToUse = vertices)
+    if (faceColor != null && !faceColor.isTransparent) {
+        drawBox(box, DrawMode.QUADS, color = faceColor, verticesToUse = vertices)
+    }
 
-    if (outlineColor != null) {
+    if (outlineColor != null && !outlineColor.isTransparent) {
         drawBox(box, DrawMode.DEBUG_LINES, useOutlineVertices = true, outlineColor, outlineVertices)
     }
 }
