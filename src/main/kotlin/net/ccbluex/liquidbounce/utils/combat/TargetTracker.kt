@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.mob.Angerable
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.player.PlayerEntity
 import java.util.function.Predicate
@@ -87,6 +88,7 @@ open class TargetSelector(
         this(defaultPriority, DummyRangedValueProvider(range))
 
     var closestSquaredEnemyDistance: Double = 0.0
+        private set
 
     private val range = rangeValue.register(this)
     private val fov by float("FOV", 180f, 0f..180f)
@@ -112,19 +114,20 @@ open class TargetSelector(
             }
         }
 
-        // Sort by distance (closest first) - in case of tie at priority level
-        entities.sortBy { it.squaredBoxedDistanceTo(player) }
-
         if (entities.isEmpty) {
             return entities
         }
+
+        // Sort by distance (closest first) - in case of tie at priority level
+        entities.sortBy { it.squaredBoxedDistanceTo(player) }
 
         // Sort by entity type
         entities.sortWith(Comparator.comparingInt { entity ->
             when (entity) {
                 is PlayerEntity -> 0
                 is HostileEntity -> 1
-                else -> 2
+                is Angerable if entity.angryAt == player.uuid -> 2
+                else -> Int.MAX_VALUE
             }
         })
 
