@@ -1,25 +1,35 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.collection.Pool
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import java.awt.Font
+import java.util.ArrayDeque
 import java.util.Optional
 import kotlin.random.Random
 
-object MinecraftTextProcessor : TextProcessor(Random(Random.nextLong())) {
+object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingProcessedText>(Random(Random.nextLong())) {
 
-    private class ProcessResult(
-        override val chars: ArrayList<ProcessedTextCharacter>,
-        override val underlines: ArrayList<IntRange>,
-        override val strikeThroughs: ArrayList<IntRange>,
+    val TEXT_POOL = Pool(ArrayDeque(), {
+        RecyclingProcessedText(ArrayList(), ArrayList(), ArrayList())
+    }) {
+        it.chars.clear()
+        it.underlines.clear()
+        it.strikeThroughs.clear()
+    }
+
+    class RecyclingProcessedText(
+        override var chars: ArrayList<ProcessedText.ProcessedChar>,
+        override var underlines: ArrayList<IntRange>,
+        override var strikeThroughs: ArrayList<IntRange>,
     ) : ProcessedText
 
     override fun process(
         text: Text,
         defaultColor: Color4b,
-    ): ProcessedText {
-        val result = ProcessResult(ArrayList(), ArrayList(), ArrayList())
+    ): RecyclingProcessedText {
+        val result = TEXT_POOL.take()
         text.visit({ style, asString ->
             visit(style, asString, defaultColor, result)
         }, Style.EMPTY)
@@ -31,7 +41,7 @@ object MinecraftTextProcessor : TextProcessor(Random(Random.nextLong())) {
         style: Style,
         textAsString: String,
         defaultColor: Color4b,
-        result: ProcessResult,
+        result: RecyclingProcessedText,
     ): Optional<Nothing> {
         val font = when {
             style.isBold && style.isItalic -> Font.BOLD or Font.ITALIC
@@ -46,7 +56,7 @@ object MinecraftTextProcessor : TextProcessor(Random(Random.nextLong())) {
         for (char in textAsString.toCharArray()) {
             val actualChar = if (obfuscated) generateObfuscatedChar() else char
 
-            result.chars.add(ProcessedTextCharacter(actualChar, font, obfuscated, color))
+            result.chars.add(ProcessedText.ProcessedChar(actualChar, font, obfuscated, color))
         }
 
         val start = result.chars.size - textAsString.length

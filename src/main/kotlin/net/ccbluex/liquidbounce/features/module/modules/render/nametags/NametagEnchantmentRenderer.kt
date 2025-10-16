@@ -19,11 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.drawColoredQuad
 import net.ccbluex.liquidbounce.render.drawColoredQuadOutlines
+import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor.ProcessedText
+import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
@@ -138,7 +140,7 @@ object NametagEnchantmentRenderer {
 
     @JvmRecord
     private data class EnchantCell(
-        val processedText: ProcessedText,
+        val processedText: MinecraftTextProcessor.RecyclingProcessedText,
         val textWidth: Float,
         val isCurse: Boolean
     )
@@ -209,14 +211,13 @@ object NametagEnchantmentRenderer {
 
         val cells = sortedEnchantments
             .take(MAX_ENCHANTMENTS_PER_ITEM)
-            .map { (info, level) -> createCell(info, level) }
-            .toMutableList()
+            .mapToArray { (info, level) -> createCell(info, level) }
 
         if (hasMoreEnchantments && cells.isNotEmpty()) {
             cells[cells.lastIndex] = createCell(null, 0, true)
         }
 
-        return cells
+        return cells.asList()
     }
 
     private fun getEntityItemsWithEnchantments(entity: LivingEntity): List<ItemStack> = listOf(

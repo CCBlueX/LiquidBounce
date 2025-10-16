@@ -7,12 +7,15 @@ import kotlin.random.Random
 /**
  * @param obfuscationRng The random for the obfuscation. If null, obfuscated characters will be replaced with `_`
  */
-abstract class TextProcessor(private val obfuscationRng: Random?) {
+abstract class TextProcessor<T : ProcessedText>(private val obfuscationRng: Random?) {
 
+    /**
+     * @param defaultColor The color all chars are drawn when no style is specified from Minecraft formatting
+     */
     abstract fun process(
         text: Text,
         defaultColor: Color4b,
-    ): ProcessedText
+    ): T
 
     protected fun generateObfuscatedChar(): Char {
         return obfuscationRng?.let { RANDOM_CHARS.random(it) } ?: '_'
@@ -36,12 +39,4 @@ abstract class TextProcessor(private val obfuscationRng: Random?) {
         }
     }
 
-    @JvmRecord
-    data class ProcessedTextCharacter(val char: Char, val font: Int, val obfuscated: Boolean, val color: Color4b)
-
-    interface ProcessedText {
-        val chars: List<ProcessedTextCharacter>
-        val underlines: List<IntRange>
-        val strikeThroughs: List<IntRange>
-    }
 }

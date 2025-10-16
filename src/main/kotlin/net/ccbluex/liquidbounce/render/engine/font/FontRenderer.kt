@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitiz
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
-import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
+import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.collection.Pool
@@ -76,7 +76,7 @@ class FontRenderer(
     val font: FontManager.FontFace,
     val glyphManager: FontGlyphPageManager,
     override val size: Float = DEFAULT_FONT_SIZE
-) : AbstractFontRenderer<TextProcessor.ProcessedText>() {
+) : AbstractFontRenderer<MinecraftTextProcessor.RecyclingProcessedText>() {
 
     private val cache = FontRendererCache()
     private val positionCache = Vector3f()
@@ -97,16 +97,16 @@ class FontRenderer(
         }
     }
 
-    override fun process(text: String, defaultColor: Color4b): TextProcessor.ProcessedText {
+    override fun process(text: String, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
         return process(text.asPlainText(), defaultColor)
     }
 
-    override fun process(text: Text, defaultColor: Color4b): TextProcessor.ProcessedText {
+    override fun process(text: Text, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
         return MinecraftTextProcessor.process(text.sanitizeForeignInput(), defaultColor)
     }
 
     override fun draw(
-        text: TextProcessor.ProcessedText,
+        text: MinecraftTextProcessor.RecyclingProcessedText,
         x0: Float,
         y0: Float,
         shadow: Boolean,
@@ -124,19 +124,20 @@ class FontRenderer(
             )
         }
 
-        return max(len, drawInternal(text, positionCache.set(x0, y0, z * 2.0F), scale))
+        len = max(len, drawInternal(text, positionCache.set(x0, y0, z * 2.0F), scale))
+
+        MinecraftTextProcessor.TEXT_POOL.offer(text)
+
+        return len
     }
 
     /**
      * Draws a string with minecraft font markup to this object.
      *
-     * @param defaultColor The color all chars are drawn when no style is specified from Minecraft formatting
-     * @param shadow Disables changing of colors, useful for shadows
-     * @param obfuscatedSeed Used to sync the obfuscated strings of text with and without shadow.
      * @return The resulting x value
      */
     private fun drawInternal(
-        text: TextProcessor.ProcessedText,
+        text: ProcessedText,
         pos: Vector3f,
         scale: Float,
         overrideColor: Color4b? = null
@@ -217,7 +218,7 @@ class FontRenderer(
     }
 
     override fun getStringWidth(
-        text: TextProcessor.ProcessedText,
+        text: ProcessedText,
         shadow: Boolean
     ): Float {
         if (text.chars.isEmpty()) {
