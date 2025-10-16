@@ -17,14 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-
-
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.google.common.collect.Ordering
+import com.google.common.collect.Sets
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -35,6 +33,8 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.item.getBlock
+import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.util.math.BlockPos
@@ -49,11 +49,8 @@ import kotlin.math.roundToInt
  * ProtectionZones module
  *
  * Allows you to see areas protected by protection blocks and suggests optimal placement spots.
- *
- *
  */
 object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) {
-
 
     private val DEFAULT_ZONE_FILL = Color4b(0, 255, 0, 51)
     private val DEFAULT_ZONE_OUTLINE = Color4b(0, 255, 0, 255)
@@ -62,9 +59,13 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
     private val DEFAULT_INDICATOR_FILL = Color4b(255, 240, 0, 51)
     private const val HIGHLIGHT_RADIUS: Float = 5.0f
 
-    private val protBlocks by blocks("ProtectionBlocks", mutableSetOf(Blocks.EMERALD_BLOCK)).onChange {
+    private val protBlocks by blocks(
+        "ProtectionBlocks",
+        Sets.newConcurrentHashSet<Block>().apply { add(Blocks.EMERALD_BLOCK) },
+    ).onChange {
         if (running) {
-            onDisabled(); onEnabled()
+            onDisabled()
+            onEnabled()
         }
         it
     }
@@ -78,7 +79,6 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
     private object Renderer : Configurable("Renderer") {
         val renderLimit by int("RenderLimit", 16, 3..50, "zones")
         val holdBlockToRender by boolean("HoldBlockToRender", false)
-
 
         object ProtectionColors : Configurable("ProtectionColors") {
             val zoneFill by color("ZoneFill", DEFAULT_ZONE_FILL)
@@ -104,27 +104,24 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         treeAll(Radius, Indicator, Renderer)
     }
 
-    private object Tracker : AbstractBlockLocationTracker.BlockPos2State<Unit>() {
-        override fun getStateFor(pos: BlockPos, state: BlockState): Unit? =
-            if (state.block in protBlocks) Unit else null
+    private object BlockTracker : AbstractBlockLocationTracker.State2BlockPos<Block>() {
+        override fun getStateFor(pos: BlockPos, state: BlockState): Block? =
+            state.block?.takeIf { it in protBlocks }
     }
 
     override fun onEnabled() {
-        ChunkScanner.subscribe(Tracker)
+        ChunkScanner.subscribe(BlockTracker)
     }
 
     override fun onDisabled() {
-        ChunkScanner.unsubscribe(Tracker)
+        ChunkScanner.unsubscribe(BlockTracker)
     }
 
     private fun isHoldingProtBlock(): Boolean {
         val player = mc.player ?: return false
-        val main = player.mainHandStack.item
-        val off = player.offHandStack.item
-        return protBlocks.any { blockItem ->
-            val item = blockItem.asItem()
-            item == main || item == off
-        }
+        val main = player.mainHandStack.getBlock()
+        val off = player.offHandStack.getBlock()
+        return main in protBlocks || off in protBlocks
     }
 
     private fun snapToGrid(value: Int, origin: Int, step: Int): Int {
@@ -221,9 +218,8 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         )
     }
 
-
     private val renderHandler = handler<WorldRenderEvent> { e ->
-        if (Tracker.isEmpty()) return@handler
+        if (BlockTracker.isEmpty()) return@handler
         val holdingProt = isHoldingProtBlock()
         if (Renderer.holdBlockToRender && !holdingProt) return@handler
 
@@ -231,7 +227,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         val player = mc.player ?: return@handler
 
         val centers = nearestCenters(
-            centers = Tracker.allPositions(),
+            centers = BlockTracker.allPositions(),
             limit = Renderer.renderLimit,
             playerPos = player.pos,
         )
@@ -246,13 +242,6 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
             if (holdingProt) {
                 drawIndicator(centers, zones, camOffset)
             }
-        }
-    }
-
-
-    private val worldChangeHandler = handler<WorldChangeEvent> {
-        if (running) {
-            onDisabled(); onEnabled()
         }
     }
 }
