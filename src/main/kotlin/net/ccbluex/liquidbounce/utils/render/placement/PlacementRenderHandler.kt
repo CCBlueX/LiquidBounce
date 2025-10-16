@@ -65,7 +65,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
             val outlineColor = getOutlineColor(id)
 
             renderEnvironmentForWorld(matrixStack) {
-                // Do not use destructuring declaration which returns boxed [Long] values
+                startBatch()
                 fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: Box, colorFactor: Float) {
                     withPositionRelativeToCamera(blockPos.toVec3d()) {
                         drawBox(
@@ -103,12 +103,14 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                 }
 
                 currentList.fastIterator().forEach { entry ->
+                    // Do not use destructuring declaration which returns boxed [Long] values
                     val pos = entry.longKey
                     val value = entry.value
                     drawEntryBox(blockPosCache.set(pos), value.cullData, value.box, 1f)
                 }
 
                 outList.long2ObjectEntrySet().removeIf { entry ->
+                    // Do not use destructuring declaration which returns boxed [Long] values
                     val pos = entry.longKey
                     val value = entry.value
 
@@ -126,6 +128,8 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                         false
                     }
                 }
+
+                commitBatch()
             }
         }
     }

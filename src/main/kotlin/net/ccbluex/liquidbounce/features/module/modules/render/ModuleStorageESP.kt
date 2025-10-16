@@ -110,16 +110,19 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             val matrixStack = event.matrixStack
 
             val queuedBoxes = collectBoxesToDraw(event)
+            if (queuedBoxes.isEmpty()) return@handler
 
             renderEnvironmentForWorld(matrixStack) {
+                startBatch()
                 for ((pos, box, color) in queuedBoxes) {
                     val baseColor = color.with(a = 50)
-                    val outlineColor = color.with(a = 100)
+                    val outlineColor = if (outline) color.with(a = 100) else null
 
                     withPositionRelativeToCamera(pos) {
-                        drawBox(box, baseColor, outlineColor.takeIf { outline })
+                        drawBox(box, baseColor, outlineColor)
                     }
                 }
+                commitBatch()
             }
         }
 
@@ -185,6 +188,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             renderEnvironmentForWorld(event.matrixStack) {
                 // non-model blocks are already processed by WorldRenderer where we injected code which renders
                 // their outline
+                startBatch()
                 for ((pos, type) in StorageScanner.iterate()) {
                     if (!type.enabled) continue
 
@@ -204,12 +208,13 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                         outlineShape.boundingBox
                     }
 
-                    withPosition(relativeToCamera(Vec3d.of(pos))) {
+                    withPositionRelativeToCamera(pos) {
                         drawBox(boundingBox, type.color)
                     }
 
                     event.markDirty()
                 }
+                commitBatch()
             }
         }
     }

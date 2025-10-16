@@ -44,6 +44,7 @@ object EspBoxMode : EspMode("Box") {
         }
 
         renderEnvironmentForWorld(matrixStack) {
+            startBatch()
             entitiesWithBoxes.forEach { (entity, box) ->
                 val pos = entity.interpolateCurrentPosition(event.partialTicks)
                 val color = getColor(entity)
@@ -59,6 +60,7 @@ object EspBoxMode : EspMode("Box") {
                     )
                 }
             }
+            commitBatch()
         }
     }
 
