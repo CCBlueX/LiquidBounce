@@ -73,20 +73,27 @@ val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
  *
  * @property matrixStack The matrix stack for rendering.
  */
-sealed class RenderEnvironment(val matrixStack: MatrixStack) {
-    abstract fun relativeToCamera(pos: Vec3d): Vec3d
+sealed interface RenderEnvironment {
+    val matrixStack: MatrixStack
+
+    fun relativeToCamera(pos: Vec3d): Vec3d
 }
 
 class GUIRenderEnvironment(
     val context: DrawContext,
     matrixStack: MatrixStack?,
-) : RenderEnvironment(matrixStack ?: context.matrices) {
+) : RenderEnvironment {
+    override val matrixStack: MatrixStack = matrixStack ?: context.matrices
+
     override fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos
     }
 }
 
-class WorldRenderEnvironment(matrixStack: MatrixStack, val camera: Camera) : RenderEnvironment(matrixStack) {
+class WorldRenderEnvironment(
+    override val matrixStack: MatrixStack,
+    val camera: Camera,
+) : RenderEnvironment {
     override fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos.subtract(camera.pos)
     }
@@ -137,7 +144,6 @@ inline fun renderEnvironmentForGUI(
         callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
     }
 
-    RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR)
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
     RenderSystem.enableBlend()
 
@@ -265,18 +271,14 @@ inline fun RenderEnvironment.drawCustomMesh(
     val tessellator = Tessellator.getInstance()
     val buffer = tessellator.begin(drawMode, vertexInputType.vertexFormat)
 
-    RenderSystem.setShader(vertexInputType.shaderProgram)
-
     val matrix = matrixStack.peek().positionMatrix
 
-    // Draw the vertices of the box
-    with(buffer) {
-        // Begin drawing lines with position format
+    drawer(buffer, matrix)
 
-        drawer(this, matrix)
-
-        // Draw the custom mesh
-        BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
+    // Draw the custom mesh
+    buffer.endNullable()?.use { builtBuffer ->
+        RenderSystem.setShader(vertexInputType.shaderProgram)
+        BufferRenderer.drawWithGlobalProgram(builtBuffer)
     }
 }
 
