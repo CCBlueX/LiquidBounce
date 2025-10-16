@@ -86,15 +86,11 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
     val isBatchMode: Boolean get() = batchBuffer != null
 
     fun getOrCreateBuffer(drawMode: DrawMode, vertexInputType: VertexInputType): BufferBuilder {
-        val batchBuffer = batchBuffer ?: return BufferBuilder(
-            bufferAllocator,
-            drawMode,
-            vertexInputType.vertexFormat
-        )
+        val batchBuffer = batchBuffer ?: return Tessellator.getInstance().begin(drawMode, vertexInputType.vertexFormat)
 
         return batchBuffer.getOrPut(vertexInputType, ::enumMapOf).getOrPut(drawMode) {
             BufferBuilder(
-                bufferAllocator,
+                bufferAllocators[vertexInputType]!![drawMode]!!,
                 drawMode,
                 vertexInputType.vertexFormat
             )
@@ -113,8 +109,11 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
 
         this.batchBuffer = null
         batchBuffer.forEach { (vertexInputType, map) ->
-            map.values.forEach { bufferBuilder ->
-                bufferBuilder.endNullable()?.draw(vertexInputType)
+            map.entries.forEach { (drawMode, bufferBuilder) ->
+                bufferBuilder.endNullable()?.let {
+                    it.draw(vertexInputType)
+                    bufferAllocators[vertexInputType]!![drawMode]!!.clear()
+                }
             }
         }
         bufferPool.offer(batchBuffer)
@@ -124,7 +123,11 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
 
     companion object {
         @JvmStatic
-        private val bufferAllocator = BufferAllocator(0xC00000)
+        private val bufferAllocators = enumMapOf<VertexInputType, EnumMap<DrawMode, BufferAllocator>> { _ ->
+            enumMapOf<DrawMode, BufferAllocator> { _ ->
+                BufferAllocator(0xC0000)
+            }
+        }
 
         @JvmStatic
         private val bufferPool = Pool<EnumMap<VertexInputType, EnumMap<DrawMode, BufferBuilder>>>(
