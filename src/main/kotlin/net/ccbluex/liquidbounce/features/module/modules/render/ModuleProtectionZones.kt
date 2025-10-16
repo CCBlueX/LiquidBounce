@@ -179,12 +179,12 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
             centerBoxes += Box(centers[i]).offset(camOffset)
         }
 
-        for (b in viewZones) drawBox(b, Color4b.TRANSPARENT, colors.zoneOutline)
-        for (c in centerBoxes) drawBox(c, Color4b.TRANSPARENT, colors.centerZoneOutline)
+        for (b in viewZones) drawBox(b, outlineColor = colors.zoneOutline)
+        for (c in centerBoxes) drawBox(c, outlineColor = colors.centerZoneOutline)
 
         if (highlightIndex != null && highlightIndex in viewZones.indices) {
             val highlighted = viewZones[highlightIndex]
-            drawBox(highlighted, colors.zoneFill, Color4b.TRANSPARENT)
+            drawBox(highlighted, faceColor = colors.zoneFill)
         }
     }
 
