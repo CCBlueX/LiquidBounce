@@ -30,13 +30,11 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.collection.Pool
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.client.util.BufferAllocator
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -47,7 +45,6 @@ import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11C
-import java.util.ArrayDeque
 import java.util.EnumMap
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -81,50 +78,47 @@ val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
  * @property matrixStack The matrix stack for rendering.
  */
 sealed class RenderEnvironment(val matrixStack: MatrixStack) {
-    private var batchBuffer: EnumMap<VertexInputType, EnumMap<DrawMode, BufferBuilder>>? = null
-
-    val isBatchMode: Boolean get() = batchBuffer != null
+    var isBatchMode: Boolean = false
+        private set
 
     fun getOrCreateBuffer(drawMode: DrawMode, vertexInputType: VertexInputType): BufferBuilder {
-        val batchBuffer = batchBuffer ?: return Tessellator.getInstance()
-            .begin(drawMode, vertexInputType.vertexFormat)
-
-        return batchBuffer.getOrPut(vertexInputType, ::enumMapOf).getOrPut(drawMode) {
-            ClientTessellator.begin(drawMode, vertexInputType)
+        return if (isBatchMode) {
+            batchBuffer[vertexInputType]!!.getOrPut(drawMode) {
+                ClientTessellator.begin(drawMode, vertexInputType)
+            }
+        } else {
+            Tessellator.getInstance().begin(drawMode, vertexInputType.vertexFormat)
         }
     }
 
     fun startBatch() {
         if (isBatchMode) commitBatch()
-        batchBuffer = bufferPool.take()
+        isBatchMode = true
     }
 
     fun commitBatch() {
-        val batchBuffer = requireNotNull(batchBuffer) {
+        require(isBatchMode) {
             "Current environment is not in batch mode!"
         }
 
-        this.batchBuffer = null
         batchBuffer.forEach { (vertexInputType, map) ->
-            map.entries.forEach { (drawMode, bufferBuilder) ->
+            map.forEach { (drawMode, bufferBuilder) ->
                 bufferBuilder.endNullable()?.let {
                     it.draw(vertexInputType)
                     ClientTessellator.allocator(drawMode, vertexInputType).clear()
                 }
             }
+            map.clear()
         }
-        bufferPool.offer(batchBuffer)
     }
 
     open fun relativeToCamera(pos: Vec3d): Vec3d = pos
 
     companion object {
         @JvmStatic
-        private val bufferPool = Pool<EnumMap<VertexInputType, EnumMap<DrawMode, BufferBuilder>>>(
-            ArrayDeque(),
-            ::enumMapOf,
-            EnumMap<*, *>::clear
-        )
+        private val batchBuffer = enumMapOf<VertexInputType, EnumMap<DrawMode, BufferBuilder>> { _ ->
+            enumMapOf()
+        }
     }
 }
 

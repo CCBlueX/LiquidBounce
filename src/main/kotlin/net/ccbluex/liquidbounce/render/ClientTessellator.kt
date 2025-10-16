@@ -30,7 +30,7 @@ object ClientTessellator {
     private const val BUFFER_SIZE = 0xC0000
 
     private val bufferAllocators = enumMapOf<DrawMode, EnumMap<VertexInputType, BufferAllocator>> { _ ->
-        enumMapOf<VertexInputType, BufferAllocator>()
+        enumMapOf()
     }
 
     @JvmStatic
