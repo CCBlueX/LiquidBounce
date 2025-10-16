@@ -23,29 +23,11 @@ import net.minecraft.client.gl.ShaderProgramKey
 import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.*
 
-sealed interface VertexInputType {
-    val vertexFormat: VertexFormat
-    val shaderProgram: ShaderProgramKey
-
-    object Pos : VertexInputType {
-        override val vertexFormat: VertexFormat
-            get() = VertexFormats.POSITION
-        override val shaderProgram: ShaderProgramKey
-            get() = ShaderProgramKeys.POSITION
-    }
-
-    object PosColor : VertexInputType {
-        override val vertexFormat: VertexFormat
-            get() = VertexFormats.POSITION_COLOR
-        override val shaderProgram: ShaderProgramKey
-            get() = ShaderProgramKeys.POSITION_COLOR
-    }
-
-    object PosTexColor : VertexInputType {
-        override val vertexFormat: VertexFormat
-            get() = VertexFormats.POSITION_TEXTURE_COLOR
-        override val shaderProgram: ShaderProgramKey
-            get() = ShaderProgramKeys.POSITION_TEX_COLOR
-    }
-
+enum class VertexInputType(
+    val vertexFormat: VertexFormat,
+    val shaderProgram: ShaderProgramKey,
+) {
+    Pos(VertexFormats.POSITION, ShaderProgramKeys.POSITION),
+    PosColor(VertexFormats.POSITION_COLOR, ShaderProgramKeys.POSITION_COLOR),
+    PosTexColor(VertexFormats.POSITION_TEXTURE_COLOR, ShaderProgramKeys.POSITION_TEX_COLOR),
 }

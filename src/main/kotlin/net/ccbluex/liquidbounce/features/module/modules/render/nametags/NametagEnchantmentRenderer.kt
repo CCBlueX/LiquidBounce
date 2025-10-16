@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.drawColoredQuad
@@ -165,9 +164,6 @@ object NametagEnchantmentRenderer {
         if (isPositionOccluded(worldX, worldY)) {
             return
         }
-
-        RenderSystem.enableBlend()
-        RenderSystem.defaultBlendFunc()
 
         val columnData = itemsWithEnchantments.mapNotNull { item ->
             val cells = processItemEnchantments(item)

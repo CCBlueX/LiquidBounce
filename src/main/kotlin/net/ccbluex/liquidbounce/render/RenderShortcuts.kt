@@ -22,6 +22,9 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceArrayMap
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap
+import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextAccessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -30,11 +33,13 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.collection.Pool
+import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
+import net.minecraft.client.util.BufferAllocator
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -45,8 +50,13 @@ import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11C
+import java.util.ArrayDeque
+import java.util.EnumMap
+import kotlin.collections.component1
+import kotlin.collections.component2
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.use
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -73,27 +83,66 @@ val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
  *
  * @property matrixStack The matrix stack for rendering.
  */
-sealed interface RenderEnvironment {
-    val matrixStack: MatrixStack
+sealed class RenderEnvironment(val matrixStack: MatrixStack) {
+    private var batchBuffer: EnumMap<VertexInputType, BufferBuilder>? = null
 
-    fun relativeToCamera(pos: Vec3d): Vec3d
+    val isBatchMode: Boolean get() = batchBuffer != null
+
+    fun getOrCreateBuffer(drawMode: DrawMode, vertexInputType: VertexInputType): BufferBuilder {
+        return batchBuffer?.getOrPut(vertexInputType) {
+            BufferBuilder(
+                bufferAllocator,
+                drawMode,
+                vertexInputType.vertexFormat
+            )
+        } ?: BufferBuilder(
+            bufferAllocator,
+            drawMode,
+            vertexInputType.vertexFormat
+        )
+    }
+
+    fun startBatch() {
+        if (isBatchMode) commitBatch()
+        batchBuffer = bufferPool.take()
+    }
+
+    fun commitBatch() {
+        val batchBuffer = requireNotNull(batchBuffer) {
+            "Current environment is not in batch mode!"
+        }
+
+        this.batchBuffer = null
+        batchBuffer.forEach { (vertexInputType, bufferBuilder) ->
+            bufferBuilder.endNullable()?.draw(vertexInputType)
+        }
+        bufferPool.offer(batchBuffer)
+    }
+
+    open fun relativeToCamera(pos: Vec3d): Vec3d = pos
+
+    companion object {
+        @JvmStatic
+        private val bufferAllocator = BufferAllocator(0xC00000)
+
+        @JvmStatic
+        private val bufferPool = Pool<EnumMap<VertexInputType, BufferBuilder>>(
+            ArrayDeque(),
+            ::enumMapOf,
+            EnumMap<*, *>::clear
+        )
+    }
 }
 
 class GUIRenderEnvironment(
     val context: DrawContext,
     matrixStack: MatrixStack?,
-) : RenderEnvironment {
-    override val matrixStack: MatrixStack = matrixStack ?: context.matrices
-
-    override fun relativeToCamera(pos: Vec3d): Vec3d {
-        return pos
-    }
-}
+) : RenderEnvironment(matrixStack ?: context.matrices)
 
 class WorldRenderEnvironment(
-    override val matrixStack: MatrixStack,
+    matrixStack: MatrixStack,
     val camera: Camera,
-) : RenderEnvironment {
+) : RenderEnvironment(matrixStack) {
     override fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos.subtract(camera.pos)
     }
@@ -102,8 +151,6 @@ class WorldRenderEnvironment(
         return Vec3d(pos.x.toDouble() - camera.pos.x, pos.y.toDouble() - camera.pos.y, pos.z.toDouble() - camera.pos.z)
     }
 }
-
-fun newDrawContext(): DrawContext = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
 
 /**
  * Helper function to render an environment with the specified [matrixStack] and [draw] block.
@@ -126,6 +173,7 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
 
     val environment = WorldRenderEnvironment(matrixStack, camera)
     draw(environment)
+    if (environment.isBatchMode) environment.commitBatch()
 
     RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
     RenderSystem.disableBlend()
@@ -147,7 +195,9 @@ inline fun renderEnvironmentForGUI(
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
     RenderSystem.enableBlend()
 
-    draw(GUIRenderEnvironment(event.context, matrixStack))
+    val environment = GUIRenderEnvironment(event.context, matrixStack)
+    draw(environment)
+    if (environment.isBatchMode) environment.commitBatch()
 
     RenderSystem.disableBlend()
 }
@@ -268,18 +318,20 @@ inline fun RenderEnvironment.drawCustomMesh(
     vertexInputType: VertexInputType,
     drawer: VertexConsumer.(Matrix4f) -> Unit
 ) {
-    val tessellator = Tessellator.getInstance()
-    val buffer = tessellator.begin(drawMode, vertexInputType.vertexFormat)
-
     val matrix = matrixStack.peek().positionMatrix
+
+    val buffer = getOrCreateBuffer(drawMode, vertexInputType)
 
     drawer(buffer, matrix)
 
-    // Draw the custom mesh
-    buffer.endNullable()?.use { builtBuffer ->
-        RenderSystem.setShader(vertexInputType.shaderProgram)
-        BufferRenderer.drawWithGlobalProgram(builtBuffer)
+    if (!isBatchMode) {
+        buffer.endNullable()?.draw(vertexInputType)
     }
+}
+
+fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { builtBuffer ->
+    RenderSystem.setShader(vertexInputType.shaderProgram)
+    BufferRenderer.drawWithGlobalProgram(builtBuffer)
 }
 
 /**
@@ -751,6 +803,8 @@ fun RenderEnvironment.drawGradientSides(
         vertexColors
     )
 }
+
+fun newDrawContext(): DrawContext = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
 
 /**
  * Float version of [DrawContext.fill]

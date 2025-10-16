@@ -288,6 +288,7 @@ class FontRenderer(
             RenderSystem.bindTexture(glyphPage.texture.glId)
             RenderSystem.setShaderTexture(0, glyphPage.texture.glId)
 
+            environment.startBatch()
             for (renderedGlyph in renderedGlyphs) {
                 val glyphDescriptor = renderedGlyph.glyph
 
@@ -302,22 +303,27 @@ class FontRenderer(
                     color.toARGB(),
                 )
             }
+            environment.commitBatch()
             cache.renderedGlyphListPool.offer(renderedGlyphs)
         }
         Pool.Vec3f.offer(vec3f1)
         Pool.Vec3f.offer(vec3f2)
         cache.commitGlyphs.clear()
 
-        for (line in cache.lines) {
-            environment.drawCustomMesh(
-                VertexFormat.DrawMode.DEBUG_LINES,
-                VertexInputType.PosColor,
-            ) { matrix ->
-                vertex(matrix, line.p1.x, line.p1.y, line.p1.z).color(line.color.toARGB())
-                vertex(matrix, line.p2.x, line.p2.y, line.p2.z).color(line.color.toARGB())
+        if (cache.lines.isNotEmpty()) {
+            environment.startBatch()
+            for (line in cache.lines) {
+                environment.drawCustomMesh(
+                    VertexFormat.DrawMode.DEBUG_LINES,
+                    VertexInputType.PosColor,
+                ) { matrix ->
+                    vertex(matrix, line.p1.x, line.p1.y, line.p1.z).color(line.color.toARGB())
+                    vertex(matrix, line.p2.x, line.p2.y, line.p2.z).color(line.color.toARGB())
+                }
+                Pool.Vec3f.offer(line.p1)
+                Pool.Vec3f.offer(line.p2)
             }
-            Pool.Vec3f.offer(line.p1)
-            Pool.Vec3f.offer(line.p2)
+            environment.commitBatch()
         }
 
         cache.lines.clear()
