@@ -43,49 +43,35 @@ import net.minecraft.util.math.RotationAxis
 @Suppress("MagicNumber")
 object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = listOf("ViewModel")) {
 
+    class HandConfigurable internal constructor(name: String) : ToggleableConfigurable(this, name, false) {
+        val itemScale by float("ItemScale", 1f, 0f..2f)
+        val x by float("X", 0f, -5f..5f)
+        val y by float("Y", 0f, -5f..5f)
+        val z by float("Z", 0f, -5f..5f)
+        val positiveX by float("PositiveRotationX", 0f, -50f..50f)
+        val positiveY by float("PositiveRotationY", 0f, -50f..50f)
+        val positiveZ by float("PositiveRotationZ", 0f, -50f..50f)
+    }
+
+    val mainHand = HandConfigurable("MainHand")
+    val offHand = HandConfigurable("OffHand")
+    val arm = HandConfigurable("Arm")
+
     init {
-        tree(MainHand)
-        tree(OffHand)
-        tree(ArmHand)
+        tree(mainHand)
+        tree(offHand)
+        tree(arm)
         tree(EquipOffset)
     }
 
-    object MainHand : ToggleableConfigurable(this, "MainHand", false) {
-        val mainHandItemScale by float("ItemScale", 1f, 0f..2f)
-        val mainHandX by float("X", 0f, -5f..5f)
-        val mainHandY by float("Y", 0f, -5f..5f)
-        val mainHandZ by float("Z", 0f, -5f..5f)
-        val mainHandPositiveX by float("PositiveRotationX", 0f, -50f..50f)
-        val mainHandPositiveY by float("PositiveRotationY", 0f, -50f..50f)
-        val mainHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
-    }
-
-    object OffHand : ToggleableConfigurable(this, "OffHand", false) {
-        val offHandItemScale by float("ItemScale", 1f, 0f..2f)
-        val offHandX by float("X", 0f, -1f..1f)
-        val offHandY by float("Y", 0f, -1f..1f)
-        val offHandZ by float("Z", 0f, -1f..1f)
-        val OffHandPositiveX by float("PositiveRotationX", 0f, -50f..50f)
-        val OffHandPositiveY by float("PositiveRotationY", 0f, -50f..50f)
-        val OffHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
-    }
-
-    object ArmHand : ToggleableConfigurable(this, "Arm", false) {
-        val armX by float("X", 0f, -5f..5f)
-        val armY by float("Y", 0f, -5f..5f)
-        val armZ by float("Z", 0f, -5f..5f)
-        val armPositiveX by float("PositiveRotationX", 0f, -50f..50f)
-        val armPositiveY by float("PositiveRotationY", 0f, -50f..50f)
-        val armPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
-    }
-
-
-    val swingDuration by int("SwingDuration", 6, 1..20)
+    val swingDuration by int("SwingDuration", 6, 1..20, "ticks")
 
     /**
      * A choice that allows the user to choose the animation that will be used during the blocking
      * of a sword.
-     * This choice is only used when the [ModuleSwordBlock] module is enabled.
+     *
+     * This choice is only used when
+     * [net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock] is enabled.
      */
     val blockAnimationChoice = choices(
         "BlockingAnimation", OneSevenAnimation, arrayOf(
@@ -128,16 +114,16 @@ object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = 
     /**
      * A choice that aims to transform the held item transformation during the swing progress.
      */
-    abstract class AnimationChoice(name: String) : Choice(name) {
+    sealed class AnimationChoice(name: String) : Choice(name) {
 
         override val parent: ChoiceConfigurable<*>
             get() = blockAnimationChoice
 
         protected fun applySwingOffset(matrices: MatrixStack, arm: Arm, swingProgress: Float) {
             val armSide = if (arm == Arm.RIGHT) 1 else -1
-            val f = MathHelper.sin(swingProgress * swingProgress * Math.PI.toFloat())
+            val f = MathHelper.sin(swingProgress * swingProgress * MathHelper.PI)
             matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(armSide.toFloat() * (45.0f + f * -20.0f)))
-            val g = MathHelper.sin(MathHelper.sqrt(swingProgress) * Math.PI.toFloat())
+            val g = MathHelper.sin(MathHelper.sqrt(swingProgress) * MathHelper.PI)
             matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(armSide.toFloat() * g * -20.0f))
             matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(g * -80.0f))
             matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(armSide.toFloat() * -45.0f))
@@ -186,7 +172,7 @@ object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = 
         override fun transform(matrices: MatrixStack, arm: Arm, equipProgress: Float, swingProgress: Float) {
             matrices.translate(if (arm == Arm.RIGHT) -0.1f else 0.1f, 0.1f, 0.0f)
 
-            val g = MathHelper.sin(MathHelper.sqrt(swingProgress) * Math.PI.toFloat())
+            val g = MathHelper.sin(MathHelper.sqrt(swingProgress) * MathHelper.PI)
             matrices.multiply(
                 RotationAxis.POSITIVE_Z.rotationDegrees(
                     (if (arm == Arm.RIGHT) 1 else -1) * g * 10.0f

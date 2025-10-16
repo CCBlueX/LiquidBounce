@@ -65,22 +65,21 @@ public abstract class MixinHeldItemRenderer {
         ItemStack item = args.get(1);
         ModelTransformationMode mode = args.get(2);
         MatrixStack matrices = args.get(4);
-        ModuleAnimations.MainHand mainHand = ModuleAnimations.MainHand.INSTANCE;
-        ModuleAnimations.OffHand offHand = ModuleAnimations.OffHand.INSTANCE;
+        ModuleAnimations.HandConfigurable mainHand = ModuleAnimations.INSTANCE.getMainHand();
+        ModuleAnimations.HandConfigurable offHand = ModuleAnimations.INSTANCE.getOffHand();
 
         // Current exceptions: Trident, crossbow
         if (item.isOf(Items.TRIDENT) || item.isOf(Items.CROSSBOW)) return;
 
-
         // Apply normal transformations
         if (mode == ModelTransformationMode.FIRST_PERSON_RIGHT_HAND && mainHand.getRunning()) {
-            liquid_bounce$applyTransformations(matrices, mainHand.getMainHandX(), mainHand.getMainHandY(), mainHand.getMainHandZ(),
-                    mainHand.getMainHandPositiveX(), mainHand.getMainHandPositiveY(), mainHand.getMainHandPositiveZ(),
-                    mainHand.getMainHandItemScale());
+            liquid_bounce$applyTransformations(matrices, mainHand.getX(), mainHand.getY(), mainHand.getZ(),
+                    mainHand.getPositiveX(), mainHand.getPositiveY(), mainHand.getPositiveZ(),
+                    mainHand.getItemScale());
         } else if (mode == ModelTransformationMode.FIRST_PERSON_LEFT_HAND && offHand.getRunning()) {
-            liquid_bounce$applyTransformations(matrices, offHand.getOffHandX(), offHand.getOffHandY(), offHand.getOffHandZ(),
-                    offHand.getOffHandPositiveX(), offHand.getOffHandPositiveY(), offHand.getOffHandPositiveZ(),
-                    offHand.getOffHandItemScale());
+            liquid_bounce$applyTransformations(matrices, offHand.getX(), offHand.getY(), offHand.getZ(),
+                    offHand.getPositiveX(), offHand.getPositiveY(), offHand.getPositiveZ(),
+                    offHand.getItemScale());
         }
     }
 
@@ -88,22 +87,22 @@ public abstract class MixinHeldItemRenderer {
     private void hookRenderFirstPersonArm(Args args) {
         if (!ModuleAnimations.INSTANCE.getRunning()) return;
         MatrixStack matrices = args.get(0);
-        ModuleAnimations.ArmHand armHand = ModuleAnimations.ArmHand.INSTANCE;
+        ModuleAnimations.HandConfigurable arm = ModuleAnimations.INSTANCE.getArm();
         /*
          * Arm scale does not properly work
          * so we are force-setting it as 1.
-         * You can still use armHand.getArmZ()
+         * You can still use arm.getZ()
          * to get a similar scaling result
          */
-        if (armHand.getRunning()) {
-            liquid_bounce$applyTransformations(matrices, armHand.getArmX(), armHand.getArmY(), armHand.getArmZ(),
-                    armHand.getArmPositiveX(), armHand.getArmPositiveY(), armHand.getArmPositiveZ(),
+        if (arm.getRunning()) {
+            liquid_bounce$applyTransformations(matrices, arm.getX(), arm.getY(), arm.getZ(),
+                    arm.getPositiveX(), arm.getPositiveY(), arm.getPositiveZ(),
                     1);
         }
     }
 
     @Unique
-    private void liquid_bounce$applyTransformations(MatrixStack matrices, float translateX, float translateY, float translateZ, float rotateX, float rotateY, float rotateZ, float scaleXYZ) {
+    private static void liquid_bounce$applyTransformations(MatrixStack matrices, float translateX, float translateY, float translateZ, float rotateX, float rotateY, float rotateZ, float scaleXYZ) {
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(rotateX));
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotateY));
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotateZ));
@@ -195,7 +194,7 @@ public abstract class MixinHeldItemRenderer {
     /**
      * This transformation was previously a VFP option but got now added to minecraft directly.
      * View the code that was used to disable the VFP option here:
-     * https://github.com/CCBlueX/LiquidBounce/blob/e5a0dbf5458b063d3028e69e04762b8b25b998b5/src/main/java/net/ccbluex/liquidbounce/utils/client/vfp/VfpCompatibility.java#L44
+     * <a href="https://github.com/CCBlueX/LiquidBounce/blob/e5a0dbf5458b063d3028e69e04762b8b25b998b5/src/main/java/net/ccbluex/liquidbounce/utils/client/vfp/VfpCompatibility.java#L44">...</a>
      */
     @ModifyExpressionValue(method = "renderFirstPersonItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
     private Item preventConflictingCode(Item item) {
