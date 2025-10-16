@@ -55,6 +55,11 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
         waitTicks(stickAt)
         travel(path.asReversed())
         desyncPlayerPosition = null
+    }
+
+    @Suppress("unused")
+    private val pathFinder = tickHandler {
+        waitTicks(1)
         pathCache = withContext(Dispatchers.Default + CoroutineName("${ModuleTpAura.name}-${name}")) {
             val playerPosition = player.pos
 
@@ -76,7 +81,6 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
                 }
             }
         }
-        waitTicks(1)
     }
 
     override fun disable() {
