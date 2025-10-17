@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.block.BlockRenderType
 import net.minecraft.entity.EntityDimensions
@@ -162,22 +161,22 @@ object ModuleEasyPearl :
                 val transparentColor = baseColor.with(a = 0)
                 val outlineColor = color.with(a = 200)
 
-                withPositionRelativeToCamera(pos.toBlockPos().toVec3d()) {
+                withPositionRelativeToCamera(blockPos) {
                     if (state.renderType != BlockRenderType.MODEL && state.isAir) {
-                        withColor(baseColor) {
-                            drawSideBox(FULL_BOX, Direction.DOWN)
-                        }
-                        withColor(outlineColor) {
-                            drawSideBox(FULL_BOX, Direction.DOWN, onlyOutline = true)
-                        }
+                        drawBoxSide(
+                            FULL_BOX,
+                            baseColor,
+                            outlineColor,
+                            Direction.DOWN,
+                            Direction.DOWN,
+                        )
                         drawGradientSides(0.7, baseColor, transparentColor, FULL_BOX)
                     } else {
-                        withColor(baseColor) {
-                            drawSolidBox(FULL_BOX)
-                        }
-                        withColor(outlineColor) {
-                            drawOutlinedBox(FULL_BOX)
-                        }
+                        drawBox(
+                            FULL_BOX,
+                            baseColor,
+                            outlineColor,
+                        )
                     }
                 }
             }

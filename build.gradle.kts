@@ -47,39 +47,6 @@ val includeModDependency: Configuration by configurations.creating
 /** Includes native-only dependency in the JAR file */
 val includeNative: Configuration by configurations.creating
 
-/**
- * Provided by:
- * - Minecraft
- * - Mod dependencies
- */
-fun Configuration.excludeProvidedLibs() = apply {
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
-
-    exclude(group = "com.google.code.gson", module = "gson")
-    exclude(group = "net.java.dev.jna", module = "jna")
-    exclude(group = "commons-codec", module = "commons-codec")
-    exclude(group = "commons-io", module = "commons-io")
-    exclude(group = "org.apache.commons", module = "commons-compress")
-    exclude(group = "org.apache.commons", module = "commons-lang3")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-core")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-api")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
-    exclude(group = "org.slf4j", module = "slf4j-api")
-    exclude(group = "com.mojang", module = "authlib")
-
-    // Note: from Netty HTTP Server, not all components are used
-    exclude(group = "io.netty", module = "netty-all")
-
-    exclude(group = "io.netty", module = "netty-buffer")
-    exclude(group = "io.netty", module = "netty-codec")
-    exclude(group = "io.netty", module = "netty-common")
-    exclude(group = "io.netty", module = "netty-handler")
-    exclude(group = "io.netty", module = "netty-resolver")
-    exclude(group = "io.netty", module = "netty-transport")
-    exclude(group = "io.netty", module = "netty-transport-native-unix-common")
-}
-
 includeDependency.excludeProvidedLibs()
 includeModDependency.excludeProvidedLibs()
 
@@ -202,8 +169,9 @@ dependencies {
     // Name Protect
     includeDependency("org.ahocorasick:ahocorasick:0.6.3")
 
-    // Kotlin add-on for Java library
-    includeDependency("net.ccbluex:fastutil-kt-ext:0.1.5")
+    // External utils
+    compileOnlyApi("net.ccbluex:fastutil4k-extensions-only:0.2.0")
+    includeDependency("net.ccbluex:fastutil4k-more-collections:0.2.0")
 
     // Test libraries
     testImplementation(kotlin("test"))

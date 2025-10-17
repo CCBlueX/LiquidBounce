@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations.smooth
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.drawSolidBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -130,10 +130,8 @@ object ModuleRotations : ClientModule("Rotations", Category.RENDER) {
 
             if (drawVectorDot) {
                 renderEnvironmentForWorld(matrixStack) {
-                    withColor(vectorDot) {
-                        val vector = eyeVector + Vec3(interpolatedRotationVec * 100.0)
-                        drawSolidBox(Box.of(vector.toVec3d(), 2.5, 2.5, 2.5))
-                    }
+                    val vector = eyeVector + Vec3(interpolatedRotationVec * 100.0)
+                    drawBox(Box.of(vector.toVec3d(), 2.5, 2.5, 2.5), vectorDot)
                 }
             }
         }

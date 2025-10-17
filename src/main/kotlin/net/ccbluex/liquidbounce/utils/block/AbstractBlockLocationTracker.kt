@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.utils.block
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import net.ccbluex.fastutil.Pool.Companion.use
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
@@ -183,7 +185,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
      * @see AbstractBlockLocationTracker
      */
     abstract class BlockPos2State<T : Any> : AbstractBlockLocationTracker<T>() {
-        private val positionAndState = ConcurrentHashMap<BlockPos, T>()
+        private val positionAndState = ConcurrentHashMap<BlockPos.Mutable, T>()
 
         final override fun allPositions() = positionAndState.keys.asSequence()
 
@@ -192,12 +194,13 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         final override fun isEmpty() = positionAndState.isEmpty()
 
         final override fun track(pos: BlockPos, state: T) {
-            positionAndState[pos.immutable] = state
+            val key = Pools.MutableBlockPos.borrow().set(pos)
+            positionAndState[key] = state
             onUpdated()
         }
 
-        final override fun untrack(pos: BlockPos): Boolean {
-            return if (positionAndState.remove(pos) != null) {
+        final override fun untrack(pos: BlockPos): Boolean = Pools.MutableBlockPos.use {
+            if (positionAndState.remove(it.set(pos)) != null) {
                 onUpdated()
                 true
             } else {
@@ -206,12 +209,20 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         }
 
         final override fun clearAllChunks() {
+            Pools.MutableBlockPos.recycleAll(positionAndState.keys)
             positionAndState.clear()
             onUpdated()
         }
 
         final override fun clearChunk(pos: ChunkPos) {
-            if (positionAndState.keys.removeIf { it.x shr 4 == pos.x && it.z shr 4 == pos.z }) {
+            if (positionAndState.keys.removeIf {
+                    if (it.x shr 4 == pos.x && it.z shr 4 == pos.z) {
+                        Pools.MutableBlockPos.recycle(it)
+                        true
+                    } else {
+                        false
+                    }
+                }) {
                 onUpdated()
             }
         }

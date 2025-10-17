@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.fastutil.Pool
+import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -33,13 +35,11 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
 import net.ccbluex.liquidbounce.utils.client.toText
 import net.ccbluex.liquidbounce.utils.collection.LfuCache
-import net.ccbluex.liquidbounce.utils.collection.Pool
-import net.ccbluex.liquidbounce.utils.collection.Pool.Companion.buildStringPooled
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.text.CharacterVisitor
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Style
 import net.minecraft.text.Text
-import java.util.concurrent.ConcurrentLinkedQueue
 
 private const val DEFAULT_CACHE_SIZE = 512
 
@@ -127,13 +127,12 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
 
     private val stringMappingCache = LfuCache<String, String>(DEFAULT_CACHE_SIZE)
     private val orderedTextMappingCache = LfuCache<OrderedText, WrappedOrderedText>(DEFAULT_CACHE_SIZE) { _, v ->
-        mappedCharListPool.offer(v.mappedCharacters)
+        mappedCharListPool.recycle(v.mappedCharacters)
     }
     private val mappedCharListPool = Pool(
-        queue = ConcurrentLinkedQueue(),
         initializer = ::ObjectArrayList,
         finalizer = ObjectArrayList<MappedCharacter>::clear,
-    )
+    ).synchronized()
 
     fun replace(original: String): String =
         when {
@@ -149,7 +148,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             return original
         }
 
-        return buildStringPooled {
+        return Pools.buildStringPooled {
             var currReplacementIndex = 0
             var currentIndex = 0
 
@@ -185,9 +184,9 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
      * Wraps an [OrderedText] to apply name protection.
      */
     private fun uncachedWrap(original: OrderedText): WrappedOrderedText {
-        val mappedCharacters = mappedCharListPool.take()
+        val mappedCharacters = mappedCharListPool.borrow()
 
-        val originalCharacters = mappedCharListPool.take()
+        val originalCharacters = mappedCharListPool.borrow()
 
         original.accept { _, style, codePoint ->
             originalCharacters += MappedCharacter(
@@ -199,7 +198,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             true
         }
 
-        val replacements = Pool.StringBuilder.use {
+        val replacements = Pools.StringBuilder.use {
             it.ensureCapacity(originalCharacters.size)
             originalCharacters.forEach { c -> it.appendCodePoint(c.codePoint) }
             replacementMappings.findReplacements(it)
@@ -242,7 +241,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             }
         }
 
-        mappedCharListPool.offer(originalCharacters)
+        mappedCharListPool.recycle(originalCharacters)
 
         return WrappedOrderedText(mappedCharacters)
     }

@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.utils.client
 import com.google.common.base.CaseFormat
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import net.ccbluex.fastutil.unmodifiable
-import net.ccbluex.liquidbounce.utils.collection.Pool
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.nbt.NbtString
 import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.*
@@ -58,7 +58,7 @@ fun OrderedText.toText(): Text {
     val text = Text.empty()
 
     var currentStyle = Style.EMPTY
-    val currentText = if (mc.isOnThread) Pool.StringBuilder.take() else StringBuilder()
+    val currentText = if (mc.isOnThread) Pools.StringBuilder.borrow() else StringBuilder()
 
     this.accept { index, style, codePoint ->
         if (style != currentStyle) {
@@ -80,7 +80,7 @@ fun OrderedText.toText(): Text {
         text.append(currentText.toString().asText().setStyle(currentStyle))
     }
 
-    if (mc.isOnThread) Pool.StringBuilder.offer(currentText)
+    if (mc.isOnThread) Pools.StringBuilder.recycle(currentText)
 
     return text
 }

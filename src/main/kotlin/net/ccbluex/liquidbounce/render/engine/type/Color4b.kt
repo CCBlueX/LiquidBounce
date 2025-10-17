@@ -102,7 +102,7 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
     )
 
     val isTransparent: Boolean
-        get() = a == 0
+        get() = a <= 0
 
     fun with(
         r: Int = this.r,
