@@ -731,37 +731,6 @@ fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
     }
 }
 
-private fun RenderEnvironment.drawBox(box: Box, mode: DrawMode) {
-    drawCustomMesh(
-        mode,
-        VertexInputType.Pos,
-    ) { matrix ->
-        box.forEachCornerVertex { _, x, y, z ->
-            vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-        }
-    }
-}
-
-/**
- * Function to draw an outlined box using the specified [box].
- *
- * @param box The bounding box of the box.
- */
-@Deprecated("use drawBox instead")
-fun RenderEnvironment.drawOutlinedBox(box: Box) {
-    drawBox(box, DrawMode.DEBUG_LINES)
-}
-
-/**
- * Function to draw a solid box using the specified [box].
- *
- * @param box The bounding box of the box.
- */
-@Deprecated("use drawBox instead")
-fun RenderEnvironment.drawSolidBox(box: Box) {
-    drawBox(box, DrawMode.QUADS)
-}
-
 fun RenderEnvironment.drawGradientSides(
     height: Double,
     baseColor: Color4b,

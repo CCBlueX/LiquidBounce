@@ -76,9 +76,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                 val target = ModuleAutoFarm.currentTarget ?: return
                 with(renderEnvironment) {
                     withPosition(Vec3(target)) {
-                        withColor((if (colorRainbow) rainbow() else color).with(a = 50)) {
-                            drawSolidBox(FULL_BOX)
-                        }
+                        drawBox(FULL_BOX, (if (colorRainbow) rainbow() else color).with(a = 50))
                     }
                 }
             }
