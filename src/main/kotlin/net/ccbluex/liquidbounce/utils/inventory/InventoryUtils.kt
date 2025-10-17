@@ -22,6 +22,7 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
+import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
@@ -150,22 +151,23 @@ class CheckScreenTitleConfigurable(
         EnumSet.of(
             ContainerTitle.CHEST, ContainerTitle.LARGE_CHEST,
             ContainerTitle.SHULKER_BOX, ContainerTitle.BARREL,
+            ContainerTitle.CHEST_MINECART,
         ),
     )
+    private val customTitles by textList("Custom", ObjectRBTreeSet())
     private val filter by enumChoice("Filter", Filter.WHITELIST)
 
     fun isValid(screen: Screen): Boolean {
         if (!enabled) return true
 
         val titleString = screen.title.string
+        val matches = titles.any {
+            Text.translatable(it.translatableKey).string == titleString
+        } || titleString in customTitles
 
         return when (filter) {
-            Filter.WHITELIST -> titles.any {
-                Text.translatable(it.translatableKey).string == titleString
-            }
-            Filter.BLACKLIST -> titles.none {
-                Text.translatable(it.translatableKey).string == titleString
-            }
+            Filter.WHITELIST -> matches
+            Filter.BLACKLIST -> !matches
         }
     }
 
@@ -184,6 +186,8 @@ class CheckScreenTitleConfigurable(
         HOPPER("Hopper", "container.hopper"),
         SHULKER_BOX("ShulkerBox", "container.shulkerBox"),
         SMOKER("Smoker", "container.smoker"),
+        CHEST_MINECART("ChestMinecart", "entity.minecraft.chest_minecart"),
+        HOPPER_MINECART("HopperMinecart", "entity.minecraft.hopper_minecart"),
     }
 }
 
