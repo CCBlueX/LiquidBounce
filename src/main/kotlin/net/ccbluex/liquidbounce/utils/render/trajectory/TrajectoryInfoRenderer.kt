@@ -126,9 +126,21 @@ class TrajectoryInfoRenderer(
     fun runSimulation(
         maxTicks: Int,
     ): SimulationResult {
-        val positions = mutableListOf<Vec3d>()
+ val positions = mutableListOf<Vec3d>()
+
+        // Apply first-tick physics to velocity only, mimicking server spawn reset
+        val blockState = world.getBlockState(mutableBlockPos.set(pos.x, pos.y, pos.z))
+        val drag = if (!blockState.fluidState.isEmpty) {
+            trajectoryInfo.dragInWater
+        } else {
+            trajectoryInfo.drag
+        }
+        velocity.scale(drag)
+            .move(y = -trajectoryInfo.gravity)
+
+        // Now start normal simulation, starting from currTicks = 1
         val prevPos = pos.copy()
-        var currTicks = 0
+        var currTicks = 1
 
         while (currTicks < maxTicks) {
             if (pos.y < world.bottomY) {
