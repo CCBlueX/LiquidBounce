@@ -3,12 +3,14 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.ccbluex.fastutil.WeightedSortedList
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.desyncPlayerPosition
@@ -22,7 +24,6 @@ import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.block.AStarPathBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.entity.blockVecPosition
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.*
 import net.minecraft.entity.LivingEntity
@@ -43,29 +44,24 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
     private var pathCache: PathCache? = null
 
+    private val pathContext = Dispatchers.Default + CoroutineName("${ModuleTpAura.name}-${name}")
+
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        val (_, path) = pathCache ?: return@tickHandler
+        waitTicks(1)
+        pathCache = withContext(pathContext) {
+            val playerEyePos = player.eyePos
+            val playerPosition = player.blockPos
 
-        if (!clicker.isClickTick) {
-            return@tickHandler
-        }
+            val maximumDistanceSq = maximumDistance.sq().toDouble()
 
-        travel(path)
-        waitTicks(stickAt)
-        travel(path.asReversed())
-        desyncPlayerPosition = null
-        pathCache = withContext(Dispatchers.Default + CoroutineName("${ModuleTpAura.name}-${name}")) {
-            val playerPosition = player.pos
-
-            val maximumDistanceSq = maximumDistance.sq()
-
-            targetSelector.targets().filter {
-                it.squaredDistanceTo(playerPosition) <= maximumDistanceSq
-            }.sortedBy {
-                it.squaredBoxedDistanceTo(playerPosition)
-            }.firstNotNullOfOrNull { enemy ->
-                val path = findPath(playerPosition.toVec3i(), enemy.blockVecPosition, maximumCost)
+            targetSelector.targets().toCollection(
+                WeightedSortedList(
+                    upperBound = maximumDistanceSq,
+                    weighter = { it.squaredBoxedDistanceTo(playerEyePos) }
+                )
+            ).firstNotNullOfOrNull { enemy ->
+                val path = findPath(playerPosition, enemy.blockPos, maximumCost)
 
                 // Skip if the path is empty
                 if (path.isNotEmpty()) {
@@ -76,7 +72,17 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
                 }
             }
         }
-        waitTicks(1)
+
+        val (_, path) = pathCache ?: return@tickHandler
+
+        tickUntil {
+            clicker.isClickTick
+        }
+
+        travel(path)
+        waitTicks(stickAt)
+        travel(path.asReversed())
+        desyncPlayerPosition = null
     }
 
     override fun disable() {
@@ -150,6 +156,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
         }
     }
 
-    data class PathCache(val enemy: LivingEntity, val path: List<Vec3i>)
+    @JvmRecord
+    private data class PathCache(val enemy: LivingEntity, val path: List<Vec3i>)
 
 }

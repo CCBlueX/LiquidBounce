@@ -44,6 +44,7 @@ data class WireframePlayer(private var pos: Vec3d, private var yaw: Float, priva
 
     fun render(event: WorldRenderEvent, color: Color4b, outlineColor: Color4b) {
         renderEnvironmentForWorld(event.matrixStack) {
+            startBatch()
             withPositionRelativeToCamera(pos) {
                 val matrix = matrixStack.peek().positionMatrix
                 val yRot = -MathHelper.wrapDegrees(yaw.toDouble())
@@ -62,6 +63,7 @@ data class WireframePlayer(private var pos: Vec3d, private var yaw: Float, priva
 
                 drawBox(RENDER_HEAD, color, outlineColor)
             }
+            commitBatch()
         }
     }
 

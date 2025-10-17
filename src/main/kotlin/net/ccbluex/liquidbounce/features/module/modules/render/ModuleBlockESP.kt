@@ -105,6 +105,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         ): Boolean {
             var dirty = false
 
+            startBatch()
             for (blockPos in blocks) {
                 val blockState = blockPos.getState() ?: continue
 
@@ -129,12 +130,13 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                     drawBox(
                         boundingBox,
                         faceColor = color,
-                        outlineColor = color.with(a = 150).takeIf { drawOutline }
+                        outlineColor = if (drawOutline) color.with(a = 150) else null,
                     )
                 }
 
                 dirty = true
             }
+            commitBatch()
 
             return dirty
         }

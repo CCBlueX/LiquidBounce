@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gui.DrawContext
@@ -46,9 +47,14 @@ import org.joml.Matrix4f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11C
-import java.util.*
+import java.util.EnumMap
+import java.util.OptionalDouble
+import java.util.OptionalInt
+import kotlin.collections.component1
+import kotlin.collections.component2
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.use
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -88,27 +94,60 @@ fun defaultBlendFunc() {
  *
  * @property matrixStack The matrix stack for rendering.
  */
-sealed interface RenderEnvironment {
-    val matrixStack: MatrixStack
+sealed class RenderEnvironment(val matrixStack: MatrixStack) {
+    var isBatchMode: Boolean = false
+        private set
 
-    fun relativeToCamera(pos: Vec3d): Vec3d
+    fun getOrCreateBuffer(drawMode: DrawMode, vertexInputType: VertexInputType): BufferBuilder {
+        return if (isBatchMode) {
+            batchBuffer[vertexInputType]!!.getOrPut(drawMode) {
+                ClientTessellator.begin(drawMode, vertexInputType)
+            }
+        } else {
+            Tessellator.getInstance().begin(drawMode, vertexInputType.vertexFormat)
+        }
+    }
+
+    fun startBatch() {
+        if (isBatchMode) commitBatch()
+        isBatchMode = true
+    }
+
+    fun commitBatch() {
+        require(isBatchMode) {
+            "Current environment is not in batch mode!"
+        }
+
+        batchBuffer.forEach { (vertexInputType, map) ->
+            map.forEach { (drawMode, bufferBuilder) ->
+                bufferBuilder.endNullable()?.let {
+                    it.draw(vertexInputType)
+                    ClientTessellator.allocator(drawMode, vertexInputType).clear()
+                }
+            }
+            map.clear()
+        }
+    }
+
+    open fun relativeToCamera(pos: Vec3d): Vec3d = pos
+
+    companion object {
+        @JvmStatic
+        private val batchBuffer = enumMapOf<VertexInputType, EnumMap<DrawMode, BufferBuilder>> { _ ->
+            enumMapOf()
+        }
+    }
 }
 
 class GUIRenderEnvironment(
     val context: DrawContext,
     matrixStack: MatrixStack?,
-) : RenderEnvironment {
-    override val matrixStack: MatrixStack = matrixStack ?: context.matrices
-
-    override fun relativeToCamera(pos: Vec3d): Vec3d {
-        return pos
-    }
-}
+) : RenderEnvironment(matrixStack ?: context.matrices)
 
 class WorldRenderEnvironment(
-    override val matrixStack: MatrixStack,
+    matrixStack: MatrixStack,
     val camera: Camera,
-) : RenderEnvironment {
+) : RenderEnvironment(matrixStack) {
     override fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos.subtract(camera.pos)
     }
@@ -117,8 +156,6 @@ class WorldRenderEnvironment(
         return Vec3d(pos.x.toDouble() - camera.pos.x, pos.y.toDouble() - camera.pos.y, pos.z.toDouble() - camera.pos.z)
     }
 }
-
-fun newDrawContext(): DrawContext = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
 
 /**
  * Helper function to render an environment with the specified [matrixStack] and [draw] block.
@@ -141,6 +178,7 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
 
     val environment = WorldRenderEnvironment(matrixStack, camera)
     draw(environment)
+    if (environment.isBatchMode) environment.commitBatch()
 
     RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
     GlStateManager._disableBlend()
@@ -162,7 +200,9 @@ inline fun renderEnvironmentForGUI(
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
     GlStateManager._enableBlend()
 
-    draw(GUIRenderEnvironment(event.context, matrixStack))
+    val environment = GUIRenderEnvironment(event.context, matrixStack)
+    draw(environment)
+    if (environment.isBatchMode) environment.commitBatch()
 
     GlStateManager._disableBlend()
 }
@@ -283,56 +323,57 @@ inline fun RenderEnvironment.drawCustomMesh(
     vertexInputType: VertexInputType,
     drawer: VertexConsumer.(Matrix4f) -> Unit
 ) {
-    val tessellator = Tessellator.getInstance()
-    val bufferBuilder = tessellator.begin(drawMode, vertexInputType.vertexFormat)
-
     val matrix = matrixStack.peek().positionMatrix
 
-    with(bufferBuilder) {
-        drawer(this, matrix)
+    val buffer = getOrCreateBuffer(drawMode, vertexInputType)
 
-        // copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
-        bufferBuilder.endNullable()?.use { buffer ->
-            val gpuBuffer = renderPipeline.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
-            val gpuBuffer2: GpuBuffer
-            val indexType: VertexFormat.IndexType
-            if (buffer.sortedBuffer == null) {
-                val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawParameters.mode())
-                gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount())
-                indexType = shapeIndexBuffer.indexType
-            } else {
-                gpuBuffer2 = renderPipeline.vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
-                indexType = buffer.drawParameters.indexType()
+    drawer(buffer, matrix)
+
+    if (!isBatchMode) {
+        buffer.endNullable()?.draw(vertexInputType)
+    }
+}
+
+// copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
+fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { buffer ->
+    val gpuBuffer = vertexInputType.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
+    val gpuBuffer2: GpuBuffer
+    val indexType: VertexFormat.IndexType
+    if (buffer.sortedBuffer == null) {
+        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawParameters.mode())
+        gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount())
+        indexType = shapeIndexBuffer.indexType
+    } else {
+        gpuBuffer2 = vertexInputType.vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
+        indexType = buffer.drawParameters.indexType()
+    }
+
+    val framebuffer = mc.framebuffer
+
+    RenderSystem.getDevice()
+        .createCommandEncoder()
+        .createRenderPass(
+            framebuffer.getColorAttachment(),
+            OptionalInt.empty(),
+            if (framebuffer.useDepthAttachment) framebuffer.getDepthAttachment() else null,
+            OptionalDouble.empty()
+        ).use { renderPass ->
+            renderPass.setPipeline(renderPipeline) // FIXME: pipeline
+            renderPass.setVertexBuffer(0, gpuBuffer)
+            if (RenderSystem.SCISSOR_STATE.isEnabled) {
+                renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
             }
 
-            val framebuffer = mc.framebuffer
-
-            RenderSystem.getDevice()
-                .createCommandEncoder()
-                .createRenderPass(
-                    framebuffer.getColorAttachment(),
-                    OptionalInt.empty(),
-                    if (framebuffer.useDepthAttachment) framebuffer.getDepthAttachment() else null,
-                    OptionalDouble.empty()
-                ).use { renderPass ->
-                    renderPass.setPipeline(renderPipeline)
-                    renderPass.setVertexBuffer(0, gpuBuffer)
-                    if (RenderSystem.SCISSOR_STATE.isEnabled) {
-                        renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
-                    }
-
-                    for (i in 0..11) {
-                        val gpuTexture = RenderSystem.getShaderTexture(i)
-                        if (gpuTexture != null) {
-                            renderPass.bindSampler("Sampler$i", gpuTexture)
-                        }
-                    }
-
-                    renderPass.setIndexBuffer(gpuBuffer2, indexType)
-                    renderPass.drawIndexed(0, buffer.drawParameters.indexCount())
+            for (i in 0..11) {
+                val gpuTexture = RenderSystem.getShaderTexture(i)
+                if (gpuTexture != null) {
+                    renderPass.bindSampler("Sampler$i", gpuTexture)
                 }
+            }
+
+            renderPass.setIndexBuffer(gpuBuffer2, indexType)
+            renderPass.drawIndexed(0, buffer.drawParameters.indexCount())
         }
-    }
 }
 
 /**
@@ -804,6 +845,8 @@ fun RenderEnvironment.drawGradientSides(
         vertexColors
     )
 }
+
+fun newDrawContext(): DrawContext = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
 
 /**
  * Float version of [DrawContext.fill]

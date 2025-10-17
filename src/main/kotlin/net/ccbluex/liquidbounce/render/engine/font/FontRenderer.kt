@@ -22,6 +22,7 @@ import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
+import net.ccbluex.fastutil.Pool
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.*
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pool
 import net.minecraft.client.texture.GlTexture
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.text.Text
 import org.joml.Vector3f
 import java.awt.Font
@@ -54,10 +56,9 @@ private data class RenderedLine(val p1: Vector3f, val p2: Vector3f, val color: C
 private class FontRendererCache {
     val renderedGlyphs = ArrayList<RenderedGlyph>(100)
     val commitGlyphs = Reference2ReferenceOpenHashMap<GlyphPage, ArrayList<RenderedGlyph>>()
-    val renderedGlyphListPool = Pool<ArrayList<RenderedGlyph>>(
-        java.util.ArrayDeque(),
+    val renderedGlyphListPool = Pool(
         ::ArrayList,
-        ArrayList<*>::clear,
+        ArrayList<RenderedGlyph>::clear,
     )
     val lines = ArrayList<RenderedLine>()
 }
@@ -121,7 +122,7 @@ class FontRenderer(
 
         len = max(len, drawInternal(text, positionCache.set(x0, y0, z * 2.0F), scale))
 
-        MinecraftTextProcessor.TEXT_POOL.offer(text)
+        MinecraftTextProcessor.TEXT_POOL.recycle(text)
 
         return len
     }
@@ -200,13 +201,13 @@ class FontRenderer(
             if (underlineStack.isNotEmpty() && underlineStack.first().last == charIdx) {
                 underlineStack.removeFirst()
 
-                drawUnderline(underlineStartX!!, x, y, pos.z, color)
+                drawLine(underlineStartX!!, x, y, pos.z, color, false)
             }
 
             if (strikethroughStack.isNotEmpty() && strikethroughStack.first().last == charIdx) {
                 strikethroughStack.removeFirst()
 
-                drawStrikeThrough(strikeThroughStartX!!, x, y, pos.z, color)
+                drawLine(strikeThroughStartX!!, x, y, pos.z, color, true)
             }
         }
 
@@ -243,53 +244,49 @@ class FontRenderer(
     }
 
     @Suppress("LongParameterList")
-    private fun drawUnderline(
+    private fun drawLine(
         x0: Float,
         x1: Float,
         y: Float,
         z: Float,
         color: Color4b,
+        through: Boolean
     ) {
-        this.cache.lines.add(
-            RenderedLine(
-                Pool.Vec3f.take().set(x0, y + 1.0f, z),
-                Pool.Vec3f.take().set(x1, y + 1.0f, z),
-                color
+        if (through) {
+            this.cache.lines.add(
+                RenderedLine(
+                    Pools.Vec3f.borrow().set(x0, y - this.height + this.ascent, z),
+                    Pools.Vec3f.borrow().set(x1, y - this.height + this.ascent, z),
+                    color
+                )
             )
-        )
-    }
-
-
-    private fun drawStrikeThrough(
-        x0: Float,
-        x1: Float,
-        y: Float,
-        z: Float,
-        color: Color4b,
-    ) {
-        this.cache.lines.add(
-            RenderedLine(
-                Pool.Vec3f.take().set(x0, y - this.height + this.ascent, z),
-                Pool.Vec3f.take().set(x1, y - this.height + this.ascent, z),
-                color
+        } else {
+            this.cache.lines.add(
+                RenderedLine(
+                    Pools.Vec3f.borrow().set(x0, y + 1.0f, z),
+                    Pools.Vec3f.borrow().set(x1, y + 1.0f, z),
+                    color
+                )
             )
-        )
+        }
+
     }
 
     override fun commit(environment: RenderEnvironment) {
         for (glyph in cache.renderedGlyphs) {
             val glyphPage = glyph.glyph.page
-            cache.commitGlyphs.getOrPut(glyphPage) { cache.renderedGlyphListPool.take() }.add(glyph)
+            cache.commitGlyphs.getOrPut(glyphPage) { cache.renderedGlyphListPool.borrow() }.add(glyph)
         }
         cache.renderedGlyphs.clear()
 
-        val vec3f1 = Pool.Vec3f.take()
-        val vec3f2 = Pool.Vec3f.take()
+        val vec3f1 = Pools.Vec3f.borrow()
+        val vec3f2 = Pools.Vec3f.borrow()
         cache.commitGlyphs.fastIterator().forEach { (glyphPage, renderedGlyphs) ->
             val gpuTexture = glyphPage.texture.glTexture
             GlStateManager._bindTexture((gpuTexture as GlTexture).glId)
             RenderSystem.setShaderTexture(0, gpuTexture)
 
+            environment.startBatch()
             for (renderedGlyph in renderedGlyphs) {
                 val glyphDescriptor = renderedGlyph.glyph
 
@@ -304,22 +301,27 @@ class FontRenderer(
                     color.toARGB(),
                 )
             }
-            cache.renderedGlyphListPool.offer(renderedGlyphs)
+            environment.commitBatch()
+            cache.renderedGlyphListPool.recycle(renderedGlyphs)
         }
-        Pool.Vec3f.offer(vec3f1)
-        Pool.Vec3f.offer(vec3f2)
+        Pools.Vec3f.recycle(vec3f1)
+        Pools.Vec3f.recycle(vec3f2)
         cache.commitGlyphs.clear()
 
-        for (line in cache.lines) {
-            environment.drawCustomMesh(
-                VertexFormat.DrawMode.DEBUG_LINES,
-                VertexInputType.PosColor,
-            ) { matrix ->
-                vertex(matrix, line.p1.x, line.p1.y, line.p1.z).color(line.color.toARGB())
-                vertex(matrix, line.p2.x, line.p2.y, line.p2.z).color(line.color.toARGB())
+        if (cache.lines.isNotEmpty()) {
+            environment.startBatch()
+            for (line in cache.lines) {
+                environment.drawCustomMesh(
+                    VertexFormat.DrawMode.DEBUG_LINES,
+                    VertexInputType.PosColor,
+                ) { matrix ->
+                    vertex(matrix, line.p1.x, line.p1.y, line.p1.z).color(line.color.toARGB())
+                    vertex(matrix, line.p2.x, line.p2.y, line.p2.z).color(line.color.toARGB())
+                }
+                Pools.Vec3f.recycle(line.p1)
+                Pools.Vec3f.recycle(line.p2)
             }
-            Pool.Vec3f.offer(line.p1)
-            Pool.Vec3f.offer(line.p2)
+            environment.commitBatch()
         }
 
         cache.lines.clear()

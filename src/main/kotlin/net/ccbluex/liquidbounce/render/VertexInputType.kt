@@ -22,38 +22,10 @@ package net.ccbluex.liquidbounce.render
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.render.VertexFormats
 
-sealed interface VertexInputType {
-    val debugName: String
-
-    val vertexFormat: VertexFormat
-
-
-//    fun createBuffer(vertexCount: Int): GpuBuffer = RenderSystem.getDevice().createBuffer(
-//        { this.debugName },
-//        BufferType.VERTICES,
-//        BufferUsage.DYNAMIC_WRITE,
-//        vertexCount * this.vertexFormat.vertexSize,
-//    )
-
-    object Pos : VertexInputType {
-        override val debugName get() = "VertexInputType.Pos"
-
-        override val vertexFormat: VertexFormat
-            get() = VertexFormats.POSITION
-    }
-
-    object PosColor : VertexInputType {
-        override val debugName get() = "VertexInputType.PosColor"
-
-        override val vertexFormat: VertexFormat
-            get() = VertexFormats.POSITION_COLOR
-    }
-
-    object PosTexColor : VertexInputType {
-        override val debugName get() = "VertexInputType.PosTexColor"
-
-        override val vertexFormat: VertexFormat
-            get() = VertexFormats.POSITION_TEXTURE_COLOR
-    }
-
+enum class VertexInputType(
+    val vertexFormat: VertexFormat,
+) {
+    Pos(VertexFormats.POSITION),
+    PosColor(VertexFormats.POSITION_COLOR),
+    PosTexColor(VertexFormats.POSITION_TEXTURE_COLOR),
 }

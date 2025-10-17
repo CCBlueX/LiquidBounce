@@ -126,9 +126,26 @@ class TrajectoryInfoRenderer(
     fun runSimulation(
         maxTicks: Int,
     ): SimulationResult {
+        fun tickVelocity() {
+            val blockState = world.getBlockState(mutableBlockPos.set(pos.x, pos.y, pos.z))
+            // Check is next position water
+            val drag = if (!blockState.fluidState.isEmpty) {
+                trajectoryInfo.dragInWater
+            } else {
+                trajectoryInfo.drag
+            }
+
+            velocity.scale(drag).move(y = -trajectoryInfo.gravity)
+        }
+
         val positions = mutableListOf<Vec3d>()
+
+        // Apply first-tick physics to velocity only, mimicking server spawn reset
+        tickVelocity()
+
+        // Now start normal simulation, starting from currTicks = 1
         val prevPos = pos.copy()
-        var currTicks = 0
+        var currTicks = 1
 
         while (currTicks < maxTicks) {
             if (pos.y < world.bottomY) {
@@ -145,17 +162,7 @@ class TrajectoryInfoRenderer(
                 return SimulationResult(hitResult.first, positions)
             }
 
-            val blockState = world.getBlockState(mutableBlockPos.set(pos.x, pos.y, pos.z))
-
-            // Check is next position water
-            val drag = if (!blockState.fluidState.isEmpty) {
-                trajectoryInfo.dragInWater
-            } else {
-                trajectoryInfo.drag
-            }
-
-            velocity.scale(drag)
-                .move(y = -trajectoryInfo.gravity)
+            tickVelocity()
 
             // Draw path
             positions += pos.copy()
@@ -166,6 +173,7 @@ class TrajectoryInfoRenderer(
         if (positions.isEmpty()) {
             positions += pos
         }
+
         return SimulationResult(null, positions)
     }
 
@@ -283,6 +291,7 @@ private fun drawHitEntities(
     partialTicks: Float
 ) {
     renderEnvironmentForWorld(matrixStack) {
+        startBatch()
         withColor(entityHitColor) {
             for (entity in entities) {
                 if (entity === player) {
@@ -300,7 +309,7 @@ private fun drawHitEntities(
                 }
             }
         }
-
+        commitBatch()
     }
 }
 

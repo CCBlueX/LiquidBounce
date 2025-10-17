@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -91,12 +92,15 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
             playBow = false
         }
 
-        world.entities.filterIsInstance<ArmorStandEntity>().forEach {
-            if (it.getEquippedStack(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
-                renderDroppedBowBox(event, it)
+        renderEnvironmentForWorld(event.matrixStack) {
+            startBatch()
+            world.entities.filterIsInstance<ArmorStandEntity>().forEach {
+                if (it.getEquippedStack(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
+                    renderDroppedBowBox(event.partialTicks, it)
+                }
             }
+            commitBatch()
         }
-
     }
 
     val packetHandler = handler<PacketEvent> { packetEvent ->
@@ -173,19 +177,15 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         }
     }
 
-    private fun renderDroppedBowBox(event: WorldRenderEvent, armorStandEntity: ArmorStandEntity) {
-        val matrixStack = event.matrixStack
+    private fun WorldRenderEnvironment.renderDroppedBowBox(partialTicks: Float, armorStandEntity: ArmorStandEntity) {
+        val box = Box(-0.6, 0.0, -0.6, 0.6, 2.5, 0.6)
+        val pos = armorStandEntity.interpolateCurrentPosition(partialTicks)
 
-        renderEnvironmentForWorld(matrixStack) {
-            val box = Box(-0.6, 0.0, -0.6, 0.6, 2.5, 0.6)
-            val pos = armorStandEntity.interpolateCurrentPosition(event.partialTicks)
-
-            withPositionRelativeToCamera(pos) {
-                drawBox(
-                    box,
-                    Color4b(127, 255, 212, 100), Color4b(0, 255, 255)
-                )
-            }
+        withPositionRelativeToCamera(pos) {
+            drawBox(
+                box,
+                Color4b(127, 255, 212, 100), Color4b(0, 255, 255)
+            )
         }
     }
 

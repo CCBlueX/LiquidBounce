@@ -60,7 +60,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         private val box = Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
 
         @Suppress("unused")
-        val renderHandler = handler<WorldRenderEvent> { event ->
+        private val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
             val base = getColor()
@@ -68,8 +68,10 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
             val outlineColor = base.with(a = 100)
 
             val filtered = world.entities.filter(::shouldRender)
+            if (filtered.isEmpty()) return@handler
 
             renderEnvironmentForWorld(matrixStack) {
+                startBatch()
                 for (entity in filtered) {
                     val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
@@ -77,6 +79,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
                         drawBox(box, baseColor, outlineColor)
                     }
                 }
+                commitBatch()
             }
         }
     }

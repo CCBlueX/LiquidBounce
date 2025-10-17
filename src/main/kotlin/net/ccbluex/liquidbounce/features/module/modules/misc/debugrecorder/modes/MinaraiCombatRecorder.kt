@@ -187,6 +187,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
         val matrixStack = event.matrixStack
 
         renderEnvironmentForWorld(matrixStack) {
+            startBatch()
             targetTracker.targets().forEach { entity ->
                 val pos = entity.interpolateCurrentPosition(event.partialTicks)
                 val eyePos = pos.add(0.0, entity.standingEyeHeight.toDouble(), 0.0)
@@ -215,6 +216,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
                     )
                 }
             }
+            commitBatch()
         }
     }
 
