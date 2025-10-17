@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.Parameter
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
@@ -41,14 +43,12 @@ object CommandTargets : Command.Factory {
         .subcommand(
             CommandBuilder
                 .begin("combat")
-                .hub()
                 .fromTargets(ModuleTargets.combatConfigurable)
                 .build()
         )
         .subcommand(
             CommandBuilder
                 .begin("visual")
-                .hub()
                 .fromTargets(ModuleTargets.visualConfigurable)
                 .build()
         )
@@ -56,28 +56,33 @@ object CommandTargets : Command.Factory {
         .build()
 
     private fun CommandBuilder.fromTargets(targets: MultiChooseListValue<Targets>): CommandBuilder {
-        // Create sub-command for each value entry
-        for (entry in targets.choices) {
-            subcommand(
-                CommandBuilder
-                    .begin(entry.choiceName.lowercase())
-                    .handler {
-                        val state = targets.toggle(entry)
+        this.parameter(
+            ParameterBuilder
+                .begin<Targets>("category")
+                .verifiedBy { sourceText -> Parameter.Verificator.Result.ofNullable(
+                    targets.choices.find { it.name.equals(sourceText, true) }
+                    ) { "Category '$sourceText' not found" }
+                }
+                .autocompletedFrom { targets.choices.map { it.name.lowercase().replaceFirstChar { it.uppercase() } } }
+                .required()
+                .build()
+        ).handler {
+            val entry = args[0] as Targets
 
-                        val localizedState = if (state) {
-                            "enabled"
-                        } else {
-                            "disabled"
-                        }
-                        chat(
-                            regular(command.result(localizedState)),
-                            metadata = MessageMetadata(id = "CTargets#info")
-                        )
-
-                        ModuleClickGui.reload()
-                    }
-                    .build()
+            val state = targets.toggle(entry)
+            val localizedState = if (state) {
+                "enabled"
+            } else {
+                "disabled"
+            }
+            chat(
+                regular(command.result(localizedState,
+                    entry.name.lowercase().replaceFirstChar { it.uppercase() })
+                ),
+                metadata = MessageMetadata(id = "CTargets#info")
             )
+
+            ModuleClickGui.reload()
         }
 
         return this
