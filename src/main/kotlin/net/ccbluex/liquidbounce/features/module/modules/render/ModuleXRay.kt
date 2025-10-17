@@ -19,11 +19,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.collection.Pool
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks.*
@@ -189,7 +190,7 @@ object ModuleXRay : ClientModule("XRay", Category.RENDER) {
     fun shouldRender(blockState: BlockState, blockPos: BlockPos) = when {
         blockState.block !in blocks -> false
 
-        exposedOnly -> Pool.MutableBlockPos.use { pos ->
+        exposedOnly -> Pools.MutableBlockPos.use { pos ->
             Direction.entries.any {
                 pos.set(blockPos).move(it.vector).getState()?.isSolidBlock(world, pos) == false
             }

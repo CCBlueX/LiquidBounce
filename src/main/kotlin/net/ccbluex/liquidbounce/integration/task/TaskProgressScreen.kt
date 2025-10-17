@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.collection.Pool.Companion.buildStringPooled
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
@@ -127,7 +127,7 @@ class TaskProgressScreen(
         textLines.add(Text.empty())
 
         activeTasks.take(3).forEach { task ->
-            textLines.add(buildStringPooled {
+            textLines.add(Pools.buildStringPooled {
                 append(task.name)
                 append(": ")
                 append(percentFormat.format(task.progress * 100))

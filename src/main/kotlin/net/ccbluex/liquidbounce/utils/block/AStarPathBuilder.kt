@@ -19,9 +19,10 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
+import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.collection.Pool
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3i
@@ -138,7 +139,7 @@ interface AStarPathBuilder {
     }
 
     private fun MutableList<Node>.getAdjacentNodesDirect(node: Node) {
-        Pool.MutableBlockPos.use { pos ->
+        Pools.MutableBlockPos.use { pos ->
             for (direction in directions) {
                 val adjacentPosition = pos.set(node.position, direction)
                 if (adjacentPosition.isPassable) {
@@ -149,12 +150,13 @@ interface AStarPathBuilder {
     }
 
     private fun MutableList<Node>.getAdjacentNodesDiagonal(node: Node) {
-        Pool.MutableBlockPos.use { pos ->
+        Pools.MutableBlockPos.use { pos ->
             for (direction in diagonalDirections) {
                 val adjacentPosition = pos.set(node.position, direction)
                 if (adjacentPosition.isPassable &&
-                        node.position.add(direction.x, 0, 0).isPassable &&
-                        node.position.add(0, 0, direction.z).isPassable) {
+                    node.position.add(direction.x, 0, 0).isPassable &&
+                    node.position.add(0, 0, direction.z).isPassable
+                ) {
                     add(Node(adjacentPosition.toImmutable(), node))
                 }
             }
