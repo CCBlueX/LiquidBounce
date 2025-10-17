@@ -1,11 +1,10 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
+import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.collection.Pool
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import java.awt.Font
-import java.util.ArrayDeque
 import java.util.Optional
 import kotlin.random.Random
 
@@ -13,9 +12,9 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
 
     private val defaultRng = Random(Random.nextLong())
 
-    val TEXT_POOL = Pool(ArrayDeque(), {
-        RecyclingProcessedText(ArrayList(), ArrayList(), ArrayList())
-    }) {
+    val TEXT_POOL = Pool(
+        initializer = { RecyclingProcessedText(ArrayList(), ArrayList(), ArrayList()) }
+    ) {
         it.chars.clear()
         it.underlines.clear()
         it.strikeThroughs.clear()
@@ -31,7 +30,7 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
         text: Text,
         defaultColor: Color4b,
     ): RecyclingProcessedText {
-        val result = TEXT_POOL.take()
+        val result = TEXT_POOL.borrow()
         text.visit({ style, asString ->
             visit(style, asString, defaultColor, result)
         }, Style.EMPTY)

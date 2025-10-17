@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.collection.Pool.Companion.buildStringPooled
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.client.gui.hud.ChatHudLine
 import net.minecraft.client.gui.screen.DeathScreen
 import net.minecraft.text.CharacterVisitor
@@ -82,7 +82,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
 
         @JvmStatic
         fun copyMessage(parts: List<ChatHudLine.Visible>, button: Int) {
-            val content = buildStringPooled {
+            val content = Pools.buildStringPooled {
                 val visitor = CharacterVisitor { _, _, codePoint ->
                     appendCodePoint(codePoint)
                     true

@@ -104,7 +104,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         treeAll(Radius, Indicator, Renderer)
     }
 
-    private object BlockTracker : AbstractBlockLocationTracker.State2BlockPos<Block>() {
+    private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<Block>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): Block? =
             state.block?.takeIf { it in protBlocks }
     }
@@ -121,7 +121,8 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         val player = mc.player ?: return false
         val main = player.mainHandStack.getBlock()
         val off = player.offHandStack.getBlock()
-        return main in protBlocks || off in protBlocks
+        return (main != null && main in protBlocks)
+            || (off != null && off in protBlocks)
     }
 
     private fun snapToGrid(value: Int, origin: Int, step: Int): Int {

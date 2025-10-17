@@ -3,9 +3,9 @@ package net.ccbluex.liquidbounce.utils.render.trajectory
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
+import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.drawSideBox
-import net.ccbluex.liquidbounce.render.drawSolidBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
@@ -292,21 +292,20 @@ private fun drawHitEntities(
 ) {
     renderEnvironmentForWorld(matrixStack) {
         startBatch()
-        withColor(entityHitColor) {
-            for (entity in entities) {
-                if (entity === player) {
-                    continue
-                }
+        for (entity in entities) {
+            if (entity === player) {
+                continue
+            }
 
-                val pos = entity.interpolateCurrentPosition(partialTicks)
+            val pos = entity.interpolateCurrentPosition(partialTicks)
 
-                withPositionRelativeToCamera(pos) {
-                    drawSolidBox(
-                        entity
-                            .getDimensions(entity.pose)!!
-                            .getBoxAt(Vec3d.ZERO)
-                    )
-                }
+            withPositionRelativeToCamera(pos) {
+                drawBox(
+                    entity
+                        .getDimensions(entity.pose)!!
+                        .getBoxAt(Vec3d.ZERO),
+                    entityHitColor,
+                )
             }
         }
         commitBatch()
@@ -324,9 +323,11 @@ private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHi
     if (bestBox != null) {
         renderEnvironmentForWorld(matrixStack) {
             withPositionRelativeToCamera(currPos) {
-                withColor(color) {
-                    drawSideBox(bestBox, blockHitResult.side)
-                }
+                drawBoxSide(
+                    bestBox,
+                    faceColor = color,
+                    faceSide = blockHitResult.side,
+                )
             }
         }
     }

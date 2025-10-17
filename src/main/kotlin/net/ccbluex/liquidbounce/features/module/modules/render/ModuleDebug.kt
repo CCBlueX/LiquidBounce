@@ -387,9 +387,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     open class DebuggedBox(val box: Box, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
-            env.withColor(color) {
-                this.drawSolidBox(box.offset(env.camera.pos.negate()))
-            }
+            env.drawBox(box.offset(env.camera.pos.negate()), color)
         }
     }
 

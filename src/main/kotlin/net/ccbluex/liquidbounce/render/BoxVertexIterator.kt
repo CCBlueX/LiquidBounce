@@ -20,34 +20,56 @@
 package net.ccbluex.liquidbounce.render
 
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 
-inline fun Box.forEachCornerVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
-    var i = 0
-    fn(i++, minX, minY, minZ)
-    fn(i++, maxX, minY, minZ)
-    fn(i++, maxX, minY, maxZ)
-    fn(i++, minX, minY, maxZ)
-    fn(i++, minX, maxY, minZ)
-    fn(i++, minX, maxY, maxZ)
-    fn(i++, maxX, maxY, maxZ)
-    fn(i++, maxX, maxY, minZ)
-    fn(i++, minX, minY, minZ)
-    fn(i++, minX, maxY, minZ)
-    fn(i++, maxX, maxY, minZ)
-    fn(i++, maxX, minY, minZ)
-    fn(i++, maxX, minY, minZ)
-    fn(i++, maxX, maxY, minZ)
-    fn(i++, maxX, maxY, maxZ)
-    fn(i++, maxX, minY, maxZ)
-    fn(i++, minX, minY, maxZ)
-    fn(i++, maxX, minY, maxZ)
-    fn(i++, maxX, maxY, maxZ)
-    fn(i++, minX, maxY, maxZ)
-    fn(i++, minX, minY, minZ)
-    fn(i++, minX, minY, maxZ)
-    fn(i++, minX, maxY, maxZ)
-    fn(i++, minX, maxY, minZ)
-    // i == 24
+enum class BoxVertexIterator {
+    FACE {
+        override fun forEachVertex(box: Box, consumer: Consumer) {
+            box.forEachFaceVertex(consumer::invoke)
+        }
+
+        override fun sideMask(side: Direction): Int = when (side) {
+            Direction.DOWN -> 0x00_000F.inv()
+            Direction.UP -> 0x00_00F0.inv()
+            Direction.NORTH -> 0x00_0F00.inv()
+            Direction.EAST -> 0x00_F000.inv()
+            Direction.SOUTH -> 0x0F_0000.inv()
+            Direction.WEST -> 0xF0_0000.inv()
+        }
+    },
+    OUTLINE {
+        override fun forEachVertex(box: Box, consumer: Consumer) {
+            box.forEachOutlineVertex(consumer::invoke)
+        }
+
+        override fun sideMask(side: Direction): Int = when (side) {
+            Direction.DOWN -> 0b0000_0000_0000_0000_1111_1111.inv()
+            Direction.UP -> 0b1111_1111_0000_0000_0000_0000.inv()
+            Direction.NORTH -> 0b0000_0011_0000_1111_0000_0011.inv()
+            Direction.EAST -> 0b0000_1100_0011_1100_0000_1100.inv()
+            Direction.SOUTH -> 0b0011_0000_1111_0000_0011_0000.inv()
+            Direction.WEST -> 0b1100_0000_1100_0011_1100_0000.inv()
+        }
+    };
+
+    abstract fun forEachVertex(box: Box, consumer: Consumer)
+
+    /**
+     * For [drawBox].
+     */
+    abstract fun sideMask(side: Direction): Int
+
+    fun sideMask(vararg sides: Direction): Int {
+        var result = 0
+        for (side in sides) {
+            result = result or sideMask(side)
+        }
+        return result
+    }
+
+    fun interface Consumer {
+        operator fun invoke(index: Int, x: Double, y: Double, z: Double)
+    }
 }
 
 inline fun Box.forEachFaceVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
