@@ -16,8 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 import groovy.json.JsonSlurper
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
+import org.gradle.kotlin.dsl.exclude
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -109,4 +112,37 @@ fun Task.getContributors(repoOwner: String, repoName: String): List<String> = tr
 } catch (e: Exception) {
     logger.error("Failed to fetch contributors of $repoOwner:$repoName", e)
     emptyList()
+}
+
+/**
+ * Provided by:
+ * - Minecraft
+ * - Mod dependencies
+ */
+fun Configuration.excludeProvidedLibs() = apply {
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+
+    exclude(group = "com.google.code.gson", module = "gson")
+    exclude(group = "net.java.dev.jna", module = "jna")
+    exclude(group = "commons-codec", module = "commons-codec")
+    exclude(group = "commons-io", module = "commons-io")
+    exclude(group = "org.apache.commons", module = "commons-compress")
+    exclude(group = "org.apache.commons", module = "commons-lang3")
+    exclude(group = "org.apache.logging.log4j", module = "log4j-core")
+    exclude(group = "org.apache.logging.log4j", module = "log4j-api")
+    exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
+    exclude(group = "org.slf4j", module = "slf4j-api")
+    exclude(group = "com.mojang", module = "authlib")
+
+    // Note: from Netty HTTP Server, not all components are used
+    exclude(group = "io.netty", module = "netty-all")
+
+    exclude(group = "io.netty", module = "netty-buffer")
+    exclude(group = "io.netty", module = "netty-codec")
+    exclude(group = "io.netty", module = "netty-common")
+    exclude(group = "io.netty", module = "netty-handler")
+    exclude(group = "io.netty", module = "netty-resolver")
+    exclude(group = "io.netty", module = "netty-transport")
+    exclude(group = "io.netty", module = "netty-transport-native-unix-common")
 }
