@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP.Sho
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
@@ -38,7 +40,6 @@ import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.entity.projectile.PersistentProjectileEntity.PickupPermission
 import net.minecraft.entity.projectile.SpectralArrowEntity
 import net.minecraft.entity.projectile.TridentEntity
-import net.minecraft.registry.Registries
 import net.minecraft.util.math.Box
 
 /**
@@ -52,7 +53,8 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
     override val baseKey: String
         get() = "liquidbounce.module.itemEsp"
 
-    private val items by items("Items", Registries.ITEM.toMutableSet())
+    private val filter by enumChoice("Filter", Filter.BLACKLIST)
+    private val items by items("Items", ReferenceOpenHashSet())
 
     object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {
         val showRegularArrows by boolean("RegularArrows", true)
@@ -115,10 +117,8 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
             get() = modes
     }
 
-
-
     fun shouldRender(it: Entity?) : Boolean {
-        if (it is ItemEntity && it.stack.item in items) return true
+        if (it is ItemEntity) return filter(it.stack.item, items)
         if (it is TridentEntity) return showTridents
 
         // arrow checks
