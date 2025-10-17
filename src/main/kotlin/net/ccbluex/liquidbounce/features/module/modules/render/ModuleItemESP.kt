@@ -59,6 +59,10 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         val showSpectralArrows by boolean("SpectralArrows", true)
         val showArrowsWithEffects by boolean("ArrowsWithEffects", true)
     }
+    init {
+        tree(ShowArrows)
+    }
+
     private val showTridents by boolean("ShowTridents", true)
 
     private val modes = choices("Mode", OutlineMode, arrayOf(GlowMode, OutlineMode, BoxMode))
@@ -111,9 +115,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
             get() = modes
     }
 
-    init {
-        tree(ShowArrows)
-    }
+
 
     fun shouldRender(it: Entity?) : Boolean {
         if (it is ItemEntity && it.stack.item in items) return true
