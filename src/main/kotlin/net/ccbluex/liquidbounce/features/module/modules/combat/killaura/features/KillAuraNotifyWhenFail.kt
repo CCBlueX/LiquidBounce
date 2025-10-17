@@ -109,9 +109,8 @@ internal object KillAuraNotifyWhenFail {
 
         val base = if (Box.colorRainbow) rainbow() else Box.color
 
-        val box = Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
-
         renderEnvironmentForWorld(matrixStack) {
+            startBatch()
             for ((pos, opacity) in markedBlocks) {
                 val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
 
@@ -119,16 +118,17 @@ internal object KillAuraNotifyWhenFail {
                 val outlineColor = base.with(a = fade)
 
                 withPositionRelativeToCamera(pos) {
-                    withColor(baseColor) {
-                        drawSolidBox(box)
-                    }
-
-                    withColor(outlineColor) {
-                        drawOutlinedBox(box)
-                    }
+                    drawBox(
+                        POINT_BOX,
+                        baseColor,
+                        outlineColor,
+                    )
                 }
             }
+            commitBatch()
         }
     }
+
+    private val POINT_BOX = Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
 
 }

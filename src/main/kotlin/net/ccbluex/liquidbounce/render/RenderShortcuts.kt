@@ -363,6 +363,30 @@ private fun RenderEnvironment.drawLines(lines: List<Vec3>, mode: DrawMode = Draw
     }
 }
 
+fun RenderEnvironment.drawSquareTexture(
+    size: Float,
+    argb: Int,
+) = drawCustomMesh(
+    DrawMode.QUADS,
+    VertexInputType.PosTexColor,
+) { matrix ->
+    vertex(matrix, 0.0f, -size, 0.0f)
+        .texture(0.0f, 0.0f)
+        .color(argb)
+
+    vertex(matrix, -size, -size, 0.0f)
+        .texture(0.0f, 1.0f)
+        .color(argb)
+
+    vertex(matrix, -size, 0.0f, 0.0f)
+        .texture(1.0f, 1.0f)
+        .color(argb)
+
+    vertex(matrix, 0.0f, 0.0f, 0.0f)
+        .texture(1.0f, 0.0f)
+        .color(argb)
+}
+
 fun RenderEnvironment.drawTextureQuad(
     pos1: Vector3fc,
     uv1: UV2f = UV2f(0f, 0f),
@@ -723,6 +747,7 @@ private fun RenderEnvironment.drawBox(box: Box, mode: DrawMode) {
  *
  * @param box The bounding box of the box.
  */
+@Deprecated("use drawBox instead")
 fun RenderEnvironment.drawOutlinedBox(box: Box) {
     drawBox(box, DrawMode.DEBUG_LINES)
 }
@@ -732,6 +757,7 @@ fun RenderEnvironment.drawOutlinedBox(box: Box) {
  *
  * @param box The bounding box of the box.
  */
+@Deprecated("use drawBox instead")
 fun RenderEnvironment.drawSolidBox(box: Box) {
     drawBox(box, DrawMode.QUADS)
 }

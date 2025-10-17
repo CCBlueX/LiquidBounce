@@ -96,10 +96,9 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
 
                     val fade = calculateFade(positions.from)
                     val baseColor = it.color().with(a = 50).fade(fade)
-                    val box = positions.box
                     withPositionRelativeToCamera(positions.from) {
                         drawBox(
-                            box,
+                            positions.box,
                             baseColor,
                             if (outline) baseColor.with(a = 100).fade(fade) else null,
                         )

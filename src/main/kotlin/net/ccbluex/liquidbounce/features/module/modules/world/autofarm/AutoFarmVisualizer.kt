@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.util.math.Direction
+import kotlin.math.hypot
 
 object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", true) {
     private object Path : ToggleableConfigurable(this, "Path", true) {
@@ -90,19 +90,20 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             val baseColor = if (colorRainbow) rainbow() else readyColor
 
             val fillColor = baseColor.with(a = 50)
-            val outlineColor = baseColor.with(a = 100)
 
             renderEnvironmentForWorld(matrixStack) {
                 CurrentTarget.render(this)
                 for ((pos, type) in AutoFarmBlockTracker.iterate()) {
-                    if ((pos.x - player.x).sq() + (pos.z - player.z).sq() > rangeSquared) continue
+                    if (hypot(pos.x - player.x, pos.z - player.z) > rangeSquared) continue
 
-                    withPositionRelativeToCamera(pos.toVec3d()) {
+                    withPositionRelativeToCamera(pos) {
                         when (type) {
                             AutoFarmTrackedState.SHOULD_BE_DESTROYED -> {
-                                withColor(fillColor) {
-                                    drawSolidBox(FULL_BOX)
-                                }
+                                drawBox(
+                                    FULL_BOX,
+                                    fillColor,
+                                    if (outline) baseColor.with(a = 100) else null,
+                                )
                             }
                             AutoFarmTrackedState.SOUL_SAND, AutoFarmTrackedState.FARMLAND -> {
                                 withColor(placeColor) {
@@ -111,12 +112,6 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                             }
                             AutoFarmTrackedState.CAN_USE_BONE_MEAL -> {
                                 // NOOP
-                            }
-                        }
-
-                        if (outline && type == AutoFarmTrackedState.SHOULD_BE_DESTROYED) {
-                            withColor(outlineColor) {
-                                drawOutlinedBox(FULL_BOX)
                             }
                         }
                     }

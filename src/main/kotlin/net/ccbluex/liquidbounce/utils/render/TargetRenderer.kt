@@ -170,26 +170,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 val alpha = MathHelper.clamp(color.a - (i * alphaFactor), 0, color.a)
                 val renderColor = color.alpha(alpha)
 
-                drawCustomMesh(
-                    VertexFormat.DrawMode.QUADS,
-                    VertexInputType.PosTexColor,
-                ) { matrix ->
-                    vertex(matrix, 0.0f, -size, 0.0f)
-                        .texture(0.0f, 0.0f)
-                        .color(renderColor.toARGB())
-
-                    vertex(matrix, -size, -size, 0.0f)
-                        .texture(0.0f, 1.0f)
-                        .color(renderColor.toARGB())
-
-                    vertex(matrix, -size, 0.0f, 0.0f)
-                        .texture(1.0f, 1.0f)
-                        .color(renderColor.toARGB())
-
-                    vertex(matrix, 0.0f, 0.0f, 0.0f)
-                        .texture(1.0f, 0.0f)
-                        .color(renderColor.toARGB())
-                }
+                drawSquareTexture(size, renderColor.toARGB())
 
                 with(matrixStack) {
                     translate(-size / 2.0, -size / 2.0, 0.0)
@@ -197,9 +178,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                     multiply(RotationAxis.POSITIVE_Y.rotationDegrees(mc.gameRenderer.camera.yaw))
                     translate(size / 2.0, size / 2.0, 0.0)
 
-                    with(translateAfter(sin, cos)) {
-                        translate(x, y, z)
-                    }
+                    translate(translateAfter(sin, cos))
                 }
             }
         }
@@ -217,22 +196,19 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         private val color by color("Color", Color4b(0x64007CFF, true))
 
         private val extraYOffset by float("ExtraYOffset", 0.1f, 0f..1f)
+
         override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
             val box = Box(
                 -size.toDouble(), 0.0, -size.toDouble(),
                 size.toDouble(), height.toDouble(), size.toDouble()
             )
 
-            val pos =
-                entity.interpolateCurrentPosition(partialTicks) +
-                    Vec3d(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
-
+            val pos = entity.interpolateCurrentPosition(partialTicks)
+                .add(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
 
             with(env) {
-                withColor(color) {
-                    withPosition(relativeToCamera(pos)) {
-                        drawSolidBox(box)
-                    }
+                withPosition(relativeToCamera(pos)) {
+                    drawBox(box, color)
                 }
             }
         }
