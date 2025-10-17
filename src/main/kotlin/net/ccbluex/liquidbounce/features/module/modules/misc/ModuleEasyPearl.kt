@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.block.BlockRenderType
 import net.minecraft.entity.EntityDimensions
@@ -164,12 +163,13 @@ object ModuleEasyPearl :
 
                 withPositionRelativeToCamera(blockPos) {
                     if (state.renderType != BlockRenderType.MODEL && state.isAir) {
-                        withColor(baseColor) {
-                            drawSideBox(FULL_BOX, Direction.DOWN)
-                        }
-                        withColor(outlineColor) {
-                            drawSideBox(FULL_BOX, Direction.DOWN, onlyOutline = true)
-                        }
+                        drawBox(
+                            FULL_BOX,
+                            baseColor,
+                            outlineColor,
+                            faceVertices = BoxVertexIterator.FACE.sideMask(Direction.DOWN),
+                            outlineVertices = BoxVertexIterator.OUTLINE.sideMask(Direction.DOWN),
+                        )
                         drawGradientSides(0.7, baseColor, transparentColor, FULL_BOX)
                     } else {
                         drawBox(

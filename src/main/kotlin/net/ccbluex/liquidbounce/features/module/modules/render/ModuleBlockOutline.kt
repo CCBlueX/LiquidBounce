@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinWorldRenderer
-import net.ccbluex.liquidbounce.render.drawBoxSide
+import net.ccbluex.liquidbounce.render.BoxVertexIterator
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -108,11 +108,13 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
 
         val translatedPosition = renderPosition.offset(mc.entityRenderDispatcher.camera.pos.negate())
         renderEnvironmentForWorld(event.matrixStack) {
-            if (sideOnly) {
-                drawBoxSide(translatedPosition, side, color, outlineColor)
-            } else {
-                drawBox(translatedPosition, color, outlineColor)
-            }
+            drawBox(
+                translatedPosition,
+                color,
+                outlineColor,
+                if (sideOnly) BoxVertexIterator.FACE.sideMask(side) else -1,
+                if (sideOnly) BoxVertexIterator.OUTLINE.sideMask(side) else -1,
+            )
         }
     }
 

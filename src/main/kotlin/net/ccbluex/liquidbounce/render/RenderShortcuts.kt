@@ -543,11 +543,11 @@ fun RenderEnvironment.drawBox(
     box: Box,
     faceColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
-    vertices: Int = -1,
+    faceVertices: Int = -1,
     outlineVertices: Int = -1
 ) {
     if (faceColor != null && !faceColor.isTransparent) {
-        drawBox(box, DrawMode.QUADS, color = faceColor, verticesToUse = vertices)
+        drawBox(box, DrawMode.QUADS, color = faceColor, verticesToUse = faceVertices)
     }
 
     if (outlineColor != null && !outlineColor.isTransparent) {
@@ -575,35 +575,6 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolea
 
         if (onlyOutline) {
             vertex(matrix, vertices[0].x, vertices[0].y, vertices[0].z)
-        }
-    }
-}
-
-fun RenderEnvironment.drawBoxSide(box: Box, side: Direction, face: Color4b, outline: Color4b) {
-    val vertices = box.getVerticesForSide(side)
-    drawCustomMesh(
-        DrawMode.QUADS,
-        VertexInputType.PosColor,
-    ) { matrix ->
-        vertices.forEach { (x, y, z) ->
-            vertex(matrix, x, y, z).color(face.r, face.g, face.b, face.a)
-        }
-    }
-
-    if (outline.a != 0) {
-        drawCustomMesh(
-            DrawMode.DEBUG_LINE_STRIP,
-            VertexInputType.PosColor,
-        ) { matrix ->
-            vertices.forEach { (x, y, z) ->
-                vertex(matrix, x, y, z)
-                    .color(outline.r, outline.g, outline.b, outline.a)
-            }
-
-            // close the loop
-            val firstVertex = vertices[0]
-            vertex(matrix, firstVertex.x, firstVertex.y, firstVertex.z)
-                .color(outline.r, outline.g, outline.b, outline.a)
         }
     }
 }
