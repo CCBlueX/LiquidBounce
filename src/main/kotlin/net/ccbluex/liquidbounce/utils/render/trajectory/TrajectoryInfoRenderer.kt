@@ -126,17 +126,22 @@ class TrajectoryInfoRenderer(
     fun runSimulation(
         maxTicks: Int,
     ): SimulationResult {
- val positions = mutableListOf<Vec3d>()
+        fun tickVelocity() {
+            val blockState = world.getBlockState(mutableBlockPos.set(pos.x, pos.y, pos.z))
+            // Check is next position water
+            val drag = if (!blockState.fluidState.isEmpty) {
+                trajectoryInfo.dragInWater
+            } else {
+                trajectoryInfo.drag
+            }
+
+            velocity.scale(drag).move(y = -trajectoryInfo.gravity)
+        }
+
+        val positions = mutableListOf<Vec3d>()
 
         // Apply first-tick physics to velocity only, mimicking server spawn reset
-        val blockState = world.getBlockState(mutableBlockPos.set(pos.x, pos.y, pos.z))
-        val drag = if (!blockState.fluidState.isEmpty) {
-            trajectoryInfo.dragInWater
-        } else {
-            trajectoryInfo.drag
-        }
-        velocity.scale(drag)
-            .move(y = -trajectoryInfo.gravity)
+        tickVelocity()
 
         // Now start normal simulation, starting from currTicks = 1
         val prevPos = pos.copy()
@@ -157,17 +162,7 @@ class TrajectoryInfoRenderer(
                 return SimulationResult(hitResult.first, positions)
             }
 
-            val blockState = world.getBlockState(mutableBlockPos.set(pos.x, pos.y, pos.z))
-
-            // Check is next position water
-            val drag = if (!blockState.fluidState.isEmpty) {
-                trajectoryInfo.dragInWater
-            } else {
-                trajectoryInfo.drag
-            }
-
-            velocity.scale(drag)
-                .move(y = -trajectoryInfo.gravity)
+            tickVelocity()
 
             // Draw path
             positions += pos.copy()
