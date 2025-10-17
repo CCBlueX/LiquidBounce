@@ -173,6 +173,7 @@ class TrajectoryInfoRenderer(
         if (positions.isEmpty()) {
             positions += pos
         }
+
         return SimulationResult(null, positions)
     }
 
@@ -290,6 +291,7 @@ private fun drawHitEntities(
     partialTicks: Float
 ) {
     renderEnvironmentForWorld(matrixStack) {
+        startBatch()
         withColor(entityHitColor) {
             for (entity in entities) {
                 if (entity === player) {
@@ -307,7 +309,7 @@ private fun drawHitEntities(
                 }
             }
         }
-
+        commitBatch()
     }
 }
 
