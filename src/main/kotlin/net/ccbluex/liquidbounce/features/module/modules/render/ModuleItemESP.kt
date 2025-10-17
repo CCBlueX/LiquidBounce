@@ -20,10 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP.ShowArrows.showArrowsWithEffects
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP.ShowArrows.showRegularArrows
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP.ShowArrows.showSpectralArrows
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -31,6 +35,10 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.projectile.ArrowEntity
+import net.minecraft.entity.projectile.PersistentProjectileEntity.PickupPermission
+import net.minecraft.entity.projectile.SpectralArrowEntity
+import net.minecraft.entity.projectile.TridentEntity
+import net.minecraft.registry.Registries
 import net.minecraft.util.math.Box
 
 /**
@@ -43,6 +51,15 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
 
     override val baseKey: String
         get() = "liquidbounce.module.itemEsp"
+
+    private val items by items("Items", Registries.ITEM.toMutableSet())
+
+    object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {
+        val showRegularArrows by boolean("RegularArrows", true)
+        val showSpectralArrows by boolean("SpectralArrows", true)
+        val showArrowsWithEffects by boolean("ArrowsWithEffects", true)
+    }
+    private val showTridents by boolean("ShowTridents", true)
 
     private val modes = choices("Mode", OutlineMode, arrayOf(GlowMode, OutlineMode, BoxMode))
     private val colorMode = choices("ColorMode", 0) {
@@ -94,7 +111,32 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
             get() = modes
     }
 
-    fun shouldRender(it: Entity?) = it is ItemEntity || it is ArrowEntity
+    init {
+        tree(ShowArrows)
+    }
+
+    fun shouldRender(it: Entity?) : Boolean {
+        if (it is ItemEntity && it.stack.item in items) return true
+        if (it is TridentEntity) return showTridents
+
+        // arrow checks
+        // The server never sends the actual pickupType of arrows fired
+        // from Infinity-enchanted bows to clients. :(
+        // Therefore, those arrows are still rendered as collectible, even though they shouldn't be.
+        // The same applies to tridents thrown and arrows fired by players in Creative mode.
+
+        // However, it's not completely useless — arrows shot by mobs such as skeletons and pillagers are not rendered.
+        val isArrow = it is ArrowEntity || it is SpectralArrowEntity
+        if (!isArrow || !ShowArrows.enabled || it.pickupType != PickupPermission.ALLOWED) {
+            return false
+        }
+
+        return when (it) {
+            is SpectralArrowEntity -> showSpectralArrows
+            is ArrowEntity -> if (it.color == -1) showRegularArrows else showArrowsWithEffects
+            else -> false
+        }
+    }
 
     fun getColor() = this.colorMode.activeChoice.getColor(null)
 }
