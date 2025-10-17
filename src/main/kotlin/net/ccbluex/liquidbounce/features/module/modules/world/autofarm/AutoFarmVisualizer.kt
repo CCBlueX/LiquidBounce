@@ -90,6 +90,8 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             val fillColor = baseColor.with(a = 50)
 
             renderEnvironmentForWorld(matrixStack) {
+                startBatch()
+
                 CurrentTarget.render(this)
                 for ((pos, type) in AutoFarmBlockTracker.iterate()) {
                     if (hypot(pos.x - player.x, pos.z - player.z) > rangeSquared) continue
@@ -104,9 +106,13 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                                 )
                             }
                             AutoFarmTrackedState.SOUL_SAND, AutoFarmTrackedState.FARMLAND -> {
-                                withColor(placeColor) {
-                                    drawSideBox(FULL_BOX, Direction.UP)
-                                }
+                                drawBoxSide(
+                                    FULL_BOX,
+                                    faceColor = placeColor,
+                                    outlineColor = if (outline) baseColor.with(a = 100) else null,
+                                    faceSide = Direction.UP,
+                                    outlineSide = Direction.UP,
+                                )
                             }
                             AutoFarmTrackedState.CAN_USE_BONE_MEAL -> {
                                 // NOOP
@@ -114,6 +120,8 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                         }
                     }
                 }
+
+                commitBatch()
             }
         }
     }

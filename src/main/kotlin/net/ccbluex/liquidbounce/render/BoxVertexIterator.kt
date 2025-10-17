@@ -28,7 +28,7 @@ enum class BoxVertexIterator {
             box.forEachFaceVertex(consumer::invoke)
         }
 
-        override fun sideMask(direction: Direction): Int = when (direction) {
+        override fun sideMask(side: Direction): Int = when (side) {
             Direction.DOWN -> 0x00_000F.inv()
             Direction.UP -> 0x00_00F0.inv()
             Direction.NORTH -> 0x00_0F00.inv()
@@ -42,7 +42,7 @@ enum class BoxVertexIterator {
             box.forEachOutlineVertex(consumer::invoke)
         }
 
-        override fun sideMask(direction: Direction): Int = when (direction) {
+        override fun sideMask(side: Direction): Int = when (side) {
             Direction.DOWN -> 0b0000_0000_0000_0000_1111_1111.inv()
             Direction.UP -> 0b1111_1111_0000_0000_0000_0000.inv()
             Direction.NORTH -> 0b0000_0011_0000_1111_0000_0011.inv()
@@ -57,12 +57,12 @@ enum class BoxVertexIterator {
     /**
      * For [drawBox].
      */
-    abstract fun sideMask(direction: Direction): Int
+    abstract fun sideMask(side: Direction): Int
 
-    fun sideMask(vararg direction: Direction): Int {
+    fun sideMask(vararg sides: Direction): Int {
         var result = 0
-        for (direction in direction) {
-            result = result or sideMask(direction)
+        for (side in sides) {
+            result = result or sideMask(side)
         }
         return result
     }

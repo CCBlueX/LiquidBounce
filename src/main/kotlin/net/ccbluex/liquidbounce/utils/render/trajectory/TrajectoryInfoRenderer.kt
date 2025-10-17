@@ -4,8 +4,8 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.drawSideBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
@@ -323,9 +323,11 @@ private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHi
     if (bestBox != null) {
         renderEnvironmentForWorld(matrixStack) {
             withPositionRelativeToCamera(currPos) {
-                withColor(color) {
-                    drawSideBox(bestBox, blockHitResult.side)
-                }
+                drawBoxSide(
+                    bestBox,
+                    faceColor = color,
+                    faceSide = blockHitResult.side,
+                )
             }
         }
     }

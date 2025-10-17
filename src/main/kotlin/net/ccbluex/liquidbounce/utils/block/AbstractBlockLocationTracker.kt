@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.block
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
@@ -193,13 +194,13 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         final override fun isEmpty() = positionAndState.isEmpty()
 
         final override fun track(pos: BlockPos, state: T) {
-            val key = Pools.MutableBlockPos.borrow()
-            positionAndState[key.set(pos)] = state
+            val key = Pools.MutableBlockPos.borrow().set(pos)
+            positionAndState[key] = state
             onUpdated()
         }
 
-        final override fun untrack(pos: BlockPos): Boolean {
-            return if (positionAndState.remove(pos) != null) {
+        final override fun untrack(pos: BlockPos): Boolean = Pools.MutableBlockPos.use {
+            if (positionAndState.remove(it.set(pos)) != null) {
                 onUpdated()
                 true
             } else {

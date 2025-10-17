@@ -544,84 +544,33 @@ fun RenderEnvironment.drawBox(
     faceColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
     faceVertices: Int = -1,
-    outlineVertices: Int = -1
+    outlineVertices: Int = -1,
 ) {
-    if (faceColor != null && !faceColor.isTransparent) {
+    if (faceColor != null && !faceColor.isTransparent && faceVertices != 0) {
         drawBox(box, DrawMode.QUADS, color = faceColor, verticesToUse = faceVertices)
     }
 
-    if (outlineColor != null && !outlineColor.isTransparent) {
+    if (outlineColor != null && !outlineColor.isTransparent && outlineVertices != 0) {
         drawBox(box, DrawMode.DEBUG_LINES, useOutlineVertices = true, outlineColor, outlineVertices)
     }
 }
 
 /**
- * Function to draw a side box using the specified [box] and [side].
- *
- * @param box The bounding box of the side.
- * @param side The direction of the side.
- * @param onlyOutline Determines if the function only should draw the outline of the [side] or only fill it in
+ * Function to draw a colored [box] with specified [Direction].
  */
-fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolean = false) {
-    drawCustomMesh(
-        if (onlyOutline) DrawMode.DEBUG_LINE_STRIP else DrawMode.QUADS,
-        VertexInputType.Pos,
-    ) { matrix ->
-        val vertices = box.getVerticesForSide(side)
-
-        vertices.forEach { (x, y, z) ->
-            vertex(matrix, x, y, z)
-        }
-
-        if (onlyOutline) {
-            vertex(matrix, vertices[0].x, vertices[0].y, vertices[0].z)
-        }
-    }
-}
-
-private fun Box.getVerticesForSide(side: Direction) = when (side) {
-    Direction.DOWN -> arrayOf(
-        Vec3(minX, minY, maxZ),
-        Vec3(minX, minY, minZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(maxX, minY, maxZ)
-    )
-
-    Direction.UP -> arrayOf(
-        Vec3(minX, maxY, minZ),
-        Vec3(minX, maxY, maxZ),
-        Vec3(maxX, maxY, maxZ),
-        Vec3(maxX, maxY, minZ)
-    )
-
-    Direction.NORTH -> arrayOf(
-        Vec3(maxX, maxY, minZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(minX, minY, minZ),
-        Vec3(minX, maxY, minZ)
-    )
-
-    Direction.SOUTH -> arrayOf(
-        Vec3(minX, maxY, maxZ),
-        Vec3(minX, minY, maxZ),
-        Vec3(maxX, minY, maxZ),
-        Vec3(maxX, maxY, maxZ)
-    )
-
-    Direction.WEST -> arrayOf(
-        Vec3(minX, maxY, minZ),
-        Vec3(minX, minY, minZ),
-        Vec3(minX, minY, maxZ),
-        Vec3(minX, maxY, maxZ)
-    )
-
-    Direction.EAST -> arrayOf(
-        Vec3(maxX, maxY, maxZ),
-        Vec3(maxX, minY, maxZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(maxX, maxY, minZ)
-    )
-}
+fun RenderEnvironment.drawBoxSide(
+    box: Box,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+    faceSide: Direction? = null,
+    outlineSide: Direction? = null,
+) = drawBox(
+    box,
+    faceColor,
+    outlineColor,
+    faceVertices = if (faceSide == null) 0 else BoxVertexIterator.FACE.sideMask(faceSide),
+    outlineVertices = if (outlineSide == null) 0 else BoxVertexIterator.OUTLINE.sideMask(outlineSide),
+)
 
 /**
  * Function to render a gradient quad using specified [vertices] and [colors]

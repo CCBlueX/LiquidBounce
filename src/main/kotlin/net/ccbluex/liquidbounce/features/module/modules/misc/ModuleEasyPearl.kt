@@ -163,12 +163,12 @@ object ModuleEasyPearl :
 
                 withPositionRelativeToCamera(blockPos) {
                     if (state.renderType != BlockRenderType.MODEL && state.isAir) {
-                        drawBox(
+                        drawBoxSide(
                             FULL_BOX,
                             baseColor,
                             outlineColor,
-                            faceVertices = BoxVertexIterator.FACE.sideMask(Direction.DOWN),
-                            outlineVertices = BoxVertexIterator.OUTLINE.sideMask(Direction.DOWN),
+                            Direction.DOWN,
+                            Direction.DOWN,
                         )
                         drawGradientSides(0.7, baseColor, transparentColor, FULL_BOX)
                     } else {
