@@ -83,6 +83,7 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
             val hDistance = horizontalDistance
 
             renderEnvironmentForWorld(event.matrixStack) {
+                startBatch()
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 
@@ -96,19 +97,15 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
                     val fade = calculateFade(positions.from)
                     val baseColor = it.color().with(a = 50).fade(fade)
                     val box = positions.box
-                    withPositionRelativeToCamera(positions.from.toVec3d()) {
-                        withColor(baseColor) {
-                            drawSolidBox(box)
-                        }
-
-                        if (outline) {
-                            val outlineColor = it.color().with(a = 100).fade(fade)
-                            withColor(outlineColor) {
-                                drawOutlinedBox(box)
-                            }
-                        }
+                    withPositionRelativeToCamera(positions.from) {
+                        drawBox(
+                            box,
+                            baseColor,
+                            if (outline) baseColor.with(a = 100).fade(fade) else null,
+                        )
                     }
                 }
+                commitBatch()
             }
         }
     }
