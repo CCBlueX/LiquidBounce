@@ -127,13 +127,16 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
             RenderSystem.setShaderTexture(0, glId)
 
+            startBatch()
             drawCustomMesh(
                 VertexFormat.DrawMode.QUADS,
                 VertexInputType.PosTexColor,
             ) { matrix ->
                 buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
             }
+            commitBatch()
 
+            startBatch()
             drawCustomMesh(
                 VertexFormat.DrawMode.TRIANGLES,
                 VertexInputType.PosColor,
@@ -144,6 +147,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                     )
                 }
             }
+            commitBatch()
         }
 
         matStack.pop()
@@ -155,9 +159,9 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         GL11.glDisable(GL11.GL_SCISSOR_TEST)
 
         renderEnvironmentForGUI(event) {
-
-            val from = Color4b(0, 0, 0, 100)
-            val to = Color4b(0, 0, 0, 0)
+            startBatch()
+            val from = Color4b.BLACK.copy(a = 100)
+            val to = Color4b.TRANSPARENT
 
             drawShadowForBB(boundingBox, from, to)
             drawLines(
@@ -177,6 +181,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                 Vec3(boundingBox.xMax, boundingBox.yMin, 0.0F),
                 Vec3(boundingBox.xMax, boundingBox.yMax, 0.0F),
             )
+            commitBatch()
         }
 
     }
