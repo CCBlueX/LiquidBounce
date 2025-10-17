@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -37,7 +38,6 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.*
@@ -48,7 +48,6 @@ import net.minecraft.entity.vehicle.HopperMinecartEntity
 import net.minecraft.entity.vehicle.StorageMinecartEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
 import java.awt.Color
 
 /**
@@ -105,37 +104,62 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         private val outline by boolean("Outline", true)
 
-        @Suppress("unused")
-        val renderHandler = handler<WorldRenderEvent> { event ->
-            val matrixStack = event.matrixStack
+        private val blockBoxes = mutableListOf<BlockBox>()
+        private val entityBoxes = mutableListOf<EntityBox>()
+        private val blockPos = BlockPos.Mutable()
 
-            val queuedBoxes = collectBoxesToDraw(event)
-            if (queuedBoxes.isEmpty()) return@handler
+        override fun disable() {
+            blockBoxes.clear()
+            entityBoxes.clear()
+            super.disable()
+        }
+
+        @Suppress("unused")
+        private val renderHandler = handler<WorldRenderEvent> { event ->
+            if (blockBoxes.isEmpty() && entityBoxes.isEmpty()) return@handler
+
+            val matrixStack = event.matrixStack
 
             renderEnvironmentForWorld(matrixStack) {
                 startBatch()
-                for ((pos, box, color) in queuedBoxes) {
+
+                for ((pos, box, color) in blockBoxes) {
                     val baseColor = color.with(a = 50)
                     val outlineColor = if (outline) color.with(a = 100) else null
 
+                    withPositionRelativeToCamera(blockPos.set(pos)) {
+                        drawBox(box, baseColor, outlineColor)
+                    }
+                }
+
+                for ((entity, box, color) in entityBoxes) {
+                    val baseColor = color.with(a = 50)
+                    val outlineColor = if (outline) color.with(a = 100) else null
+
+                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
                     withPositionRelativeToCamera(pos) {
                         drawBox(box, baseColor, outlineColor)
                     }
                 }
+
                 commitBatch()
             }
         }
 
         @JvmRecord
-        private data class BoxRecord(val pos: Vec3d, val box: Box, val color: Color4b)
+        private data class BlockBox(val pos: Long, val box: Box, val color: Color4b)
 
-        private fun collectBoxesToDraw(event: WorldRenderEvent): List<BoxRecord> {
-            val queuedBoxes = mutableListOf<BoxRecord>()
+        @JvmRecord
+        private data class EntityBox(val entity: Entity, val box: Box, val color: Color4b)
+
+        @Suppress("unused")
+        private val tickHandler = handler<GameTickEvent> {
+            blockBoxes.clear()
 
             for ((pos, type) in StorageScanner.iterate()) {
                 val color = type.color
 
-                if (!type.enabled || color.a <= 0 || !type.shouldRender(pos)) {
+                if (!type.enabled || color.isTransparent || !type.shouldRender(pos)) {
                     continue
                 }
 
@@ -152,23 +176,20 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     outlineShape.boundingBox
                 }
 
-                queuedBoxes.add(BoxRecord(pos.toVec3d(), boundingBox, color))
+                blockBoxes.add(BlockBox(pos.asLong(), boundingBox, color))
             }
 
-            for (entity in world.entities) {
-                val type = entity.categorize() ?: continue
+            entityBoxes.clear()
 
-                val pos = entity.interpolateCurrentPosition(event.partialTicks)
+            for (entity in world.entities) {
+                val type = entity.categorize()?.takeIf { it.enabled && !it.color.isTransparent } ?: continue
 
                 val dimensions = entity.getDimensions(entity.pose)
                 val d = dimensions.width.toDouble() / 2.0
                 val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
 
-                queuedBoxes.add(BoxRecord(pos, box, type.color))
+                entityBoxes.add(EntityBox(entity, box, type.color))
             }
-
-            return queuedBoxes
-
         }
 
     }
