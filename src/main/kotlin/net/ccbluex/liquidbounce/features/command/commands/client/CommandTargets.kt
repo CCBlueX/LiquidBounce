@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.Parameter
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.enumChoice
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
@@ -58,12 +58,7 @@ object CommandTargets : Command.Factory {
     private fun CommandBuilder.fromTargets(targets: MultiChooseListValue<Targets>): CommandBuilder {
         this.parameter(
             ParameterBuilder
-                .begin<Targets>("category")
-                .verifiedBy { sourceText -> Parameter.Verificator.Result.ofNullable(
-                    targets.choices.find { it.name.equals(sourceText, true) }
-                    ) { "Category '$sourceText' not found" }
-                }
-                .autocompletedFrom { targets.choices.map { it.name.lowercase().replaceFirstChar { it.uppercase() } } }
+                .enumChoice<Targets>("category") { it in targets.choices }
                 .required()
                 .build()
         ).handler {
