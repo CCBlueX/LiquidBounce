@@ -259,6 +259,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleHandDerp,
             ModuleTwerk,
             ModuleVomit,
+            ModuleGoldsrcMovement,
 
             // Misc
             ModuleGUICloser,
