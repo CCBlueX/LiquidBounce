@@ -143,10 +143,9 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
                         withPositionRelativeToCamera(positions.from) {
                             drawBoxSide(
                                 box,
+                                Direction.DOWN,
                                 baseColor,
                                 if (outline) baseColor.with(a = 100).fade(fade) else null,
-                                Direction.DOWN,
-                                Direction.DOWN,
                             )
                             drawGradientSides(glowHeight, baseColor, transparentColor, box)
                         }

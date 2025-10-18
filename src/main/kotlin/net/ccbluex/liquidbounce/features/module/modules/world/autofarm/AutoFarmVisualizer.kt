@@ -108,10 +108,9 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                             AutoFarmTrackedState.SOUL_SAND, AutoFarmTrackedState.FARMLAND -> {
                                 drawBoxSide(
                                     FULL_BOX,
+                                    side = Direction.UP,
                                     faceColor = placeColor,
                                     outlineColor = if (outline) baseColor.with(a = 100) else null,
-                                    faceSide = Direction.UP,
-                                    outlineSide = Direction.UP,
                                 )
                             }
                             AutoFarmTrackedState.CAN_USE_BONE_MEAL -> {

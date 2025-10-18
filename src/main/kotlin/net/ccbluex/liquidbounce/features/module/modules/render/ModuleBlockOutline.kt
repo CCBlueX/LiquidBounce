@@ -111,10 +111,9 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
             if (sideOnly) {
                 drawBoxSide(
                     translatedPosition,
+                    side,
                     color,
                     outlineColor,
-                    side,
-                    side,
                 )
             } else {
                 drawBox(

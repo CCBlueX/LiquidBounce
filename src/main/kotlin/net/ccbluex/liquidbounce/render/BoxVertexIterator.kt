@@ -52,20 +52,15 @@ enum class BoxVertexIterator {
         }
     };
 
+    /**
+     * For Java and JS usage.
+     */
     abstract fun forEachVertex(box: Box, consumer: Consumer)
 
     /**
      * For [drawBox].
      */
     abstract fun sideMask(side: Direction): Int
-
-    fun sideMask(vararg sides: Direction): Int {
-        var result = 0
-        for (side in sides) {
-            result = result or sideMask(side)
-        }
-        return result
-    }
 
     fun interface Consumer {
         operator fun invoke(index: Int, x: Double, y: Double, z: Double)

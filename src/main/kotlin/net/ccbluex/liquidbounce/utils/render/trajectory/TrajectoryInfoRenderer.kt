@@ -325,8 +325,8 @@ private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHi
             withPositionRelativeToCamera(currPos) {
                 drawBoxSide(
                     bestBox,
+                    side = blockHitResult.side,
                     faceColor = color,
-                    faceSide = blockHitResult.side,
                 )
             }
         }

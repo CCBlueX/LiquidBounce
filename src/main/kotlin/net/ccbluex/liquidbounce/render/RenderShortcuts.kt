@@ -556,20 +556,19 @@ fun RenderEnvironment.drawBox(
 }
 
 /**
- * Function to draw a colored [box] with specified [Direction].
+ * Function to draw a colored [box] with specified [side].
  */
 fun RenderEnvironment.drawBoxSide(
     box: Box,
+    side: Direction,
     faceColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
-    faceSide: Direction? = null,
-    outlineSide: Direction? = null,
 ) = drawBox(
     box,
     faceColor,
     outlineColor,
-    faceVertices = if (faceSide == null) 0 else BoxVertexIterator.FACE.sideMask(faceSide),
-    outlineVertices = if (outlineSide == null) 0 else BoxVertexIterator.OUTLINE.sideMask(outlineSide),
+    faceVertices = BoxVertexIterator.FACE.sideMask(side),
+    outlineVertices = BoxVertexIterator.OUTLINE.sideMask(side),
 )
 
 /**
@@ -613,7 +612,7 @@ fun RenderEnvironment.drawGradientCircle(
     innerRadius: Float,
     outerColor4b: Color4b,
     innerColor4b: Color4b,
-    innerOffset: Vec3 = Vec3(0f, 0f, 0f)
+    innerOffset: Vec3 = Vec3.ZERO,
 ) {
     drawCustomMesh(
         DrawMode.TRIANGLE_STRIP,

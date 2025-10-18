@@ -165,10 +165,9 @@ object ModuleEasyPearl :
                     if (state.renderType != BlockRenderType.MODEL && state.isAir) {
                         drawBoxSide(
                             FULL_BOX,
+                            Direction.DOWN,
                             baseColor,
                             outlineColor,
-                            Direction.DOWN,
-                            Direction.DOWN,
                         )
                         drawGradientSides(0.7, baseColor, transparentColor, FULL_BOX)
                     } else {
