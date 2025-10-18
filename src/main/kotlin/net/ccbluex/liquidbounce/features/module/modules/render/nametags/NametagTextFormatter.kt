@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.player
@@ -62,6 +63,14 @@ class NametagTextFormatter(private val entity: Entity) {
         }
 
         outputText.append(nameText)
+
+        if (ModuleCombineMobs.running) {
+            val count = ModuleCombineMobs.getCombinedCount(entity)
+            if (count > 1) {
+                val countText = ("x $count").asText().formatted(Formatting.AQUA).bold(true)
+                outputText.append(" ").append(countText)
+            }
+        }
 
         if (NametagShowOptions.HEALTH.isShowing()) {
             outputText.append(" ").append(this.healthText)
@@ -127,7 +136,6 @@ class NametagTextFormatter(private val entity: Entity) {
                 if (entity.hasHealthScoreboard()) 0f else entity.absorptionAmount).toInt()
 
             val healthColor = when {
-                // Perhaps you should modify the values here
                 actualHealth >= 14 -> Formatting.GREEN
                 actualHealth >= 8 -> Formatting.YELLOW
                 else -> Formatting.RED

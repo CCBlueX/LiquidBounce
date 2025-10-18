@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
@@ -61,8 +62,15 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
         }
 
         entities.clear()
+
+        val shouldCheckCombineMobs = ModuleCombineMobs.running
+
         for (entity in world.entities) {
             if (entity is LivingEntity && entity.shouldBeShown()) {
+                if (shouldCheckCombineMobs && ModuleCombineMobs.trackEntity(entity, true)) {
+                    continue
+                }
+
                 entities += entity
             }
         }
