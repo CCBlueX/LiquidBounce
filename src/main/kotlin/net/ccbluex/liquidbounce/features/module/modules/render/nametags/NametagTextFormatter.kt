@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
@@ -51,10 +52,13 @@ class NametagTextFormatter(private val entity: Entity) {
         val name = entity.displayName!!
         val nameColor = this.nameColor
 
+        val isBaby = (entity as? MobEntity)?.isBaby == true
+        val baseNameString = (if (isBaby) "Baby " else "") + name.string
+
         val nameText: Text = if (nameColor != null) {
-            name.string.asText().withColor(nameColor)
+            baseNameString.asText().withColor(nameColor)
         } else {
-            name
+            baseNameString.asText()
         }
 
         outputText.append(nameText)
