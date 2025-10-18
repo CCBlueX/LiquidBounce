@@ -22,17 +22,16 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fire
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.techniques.FlyFireballCustomTechnique
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.techniques.FlyFireballLegitTechnique
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballInstantTrigger
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballOnEdgeTrigger
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.inventory.interactItem
-import net.minecraft.item.FireChargeItem
-import net.minecraft.util.Hand
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.minecraft.item.Items
 
 internal object FlyFireball : Choice("Fireball") {
 
@@ -46,41 +45,17 @@ internal object FlyFireball : Choice("Fireball") {
         arrayOf(FlyFireballInstantTrigger, FlyFireballOnEdgeTrigger))
 
     // Silent fireball selection
-    object AutoFireball : ToggleableConfigurable(this, "AutoFireball", true) {
-        val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
-    }
+    val slotResetDelay by intRange("SlotResetDelay", 4..6, 0..40, "ticks")
 
     var wasTriggered = false
 
-    init {
-        tree(AutoFireball)
-    }
-
-    private fun findFireballSlot(): Int? {
-        return (0..8).firstOrNull {
-            val stack = player.inventory.getStack(it)
-            stack.item is FireChargeItem
-        }
-    }
-
-    fun holdsFireball() = player.inventory.mainHandStack.item is FireChargeItem
+    private fun findFireballSlot(): HotbarItemSlot? = Slots.OffhandWithHotbar.findSlot(Items.FIRE_CHARGE)
 
     fun throwFireball() {
-        interactItem(Hand.MAIN_HAND)
-    }
-
-    @Suppress("unused")
-    val handleSilentFireballSelection = tickHandler {
-        if (AutoFireball.enabled) {
-            val bestMainHandSlot = findFireballSlot()
-            if (bestMainHandSlot != null) {
-                SilentHotbar.selectSlotSilently(this, bestMainHandSlot, AutoFireball.slotResetDelay)
-            } else {
-                SilentHotbar.resetSlot(this)
-            }
-        } else {
-            SilentHotbar.resetSlot(this)
-        }
+        useHotbarSlotOrOffhand(
+            findFireballSlot() ?: return,
+            ticksUntilReset = slotResetDelay.random(),
+        )
     }
 
 }

@@ -18,15 +18,16 @@
  */
 package net.ccbluex.liquidbounce.render.engine.type
 
+import net.ccbluex.liquidbounce.utils.client.fastCos
+import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.minecraft.util.math.Position
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
-import kotlin.math.cos
-import kotlin.math.sin
 
 @JvmRecord
 data class Vec3(val x: Float, val y: Float, val z: Float) {
     constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())
-    constructor(vec: Vec3d) : this(vec.x, vec.y, vec.z)
+    constructor(vec: Position) : this(vec.x, vec.y, vec.z)
     constructor(vec: Vec3i) : this(vec.x.toFloat(), vec.y.toFloat(), vec.z.toFloat())
 
     fun add(other: Vec3): Vec3 {
@@ -42,8 +43,8 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
     operator fun times(scale: Float): Vec3 = Vec3(this.x * scale, this.y * scale, this.z * scale)
 
     fun rotatePitch(pitch: Float): Vec3 {
-        val f = cos(pitch)
-        val f1 = sin(pitch)
+        val f = pitch.fastCos()
+        val f1 = pitch.fastSin()
 
         val d0 = this.x
         val d1 = this.y * f + this.z * f1
@@ -53,8 +54,8 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
     }
 
     fun rotateYaw(yaw: Float): Vec3 {
-        val f = cos(yaw)
-        val f1 = sin(yaw)
+        val f = yaw.fastCos()
+        val f1 = yaw.fastSin()
 
         val d0 = this.x * f + this.z * f1
         val d1 = this.y

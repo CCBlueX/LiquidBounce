@@ -43,18 +43,18 @@ object FlyFireballLegitTechnique : Choice("Legit") {
     override val parent: ChoiceConfigurable<Choice>
         get() = FlyFireball.technique
 
-    object Jump : ToggleableConfigurable(this, "Jump", true) {
+    private object Jump : ToggleableConfigurable(this, "Jump", true) {
         val delay by int("Delay", 3, 0..20, "ticks")
     }
 
-    val sprint by boolean("Sprint", true)
+    private val sprint by boolean("Sprint", true)
 
     // Stop moving when module is active to avoid falling off, for example a bridge.
-    val stopMove by boolean("StopMove", true)
+    private val stopMove by boolean("StopMove", true)
 
-    var canMove = true
+    private var canMove = true
 
-    object Rotations : RotationsConfigurable(this) {
+    private object Rotations : RotationsConfigurable(this) {
         val pitch by float("Pitch", 90f, 0f..90f)
         val backwards by boolean("Backwards", true)
     }
@@ -86,12 +86,8 @@ object FlyFireballLegitTechnique : Choice("Legit") {
         if (FlyFireball.wasTriggered) {
             canMove = !stopMove
 
-            if (Jump.enabled && player.isOnGround) {
-                player.jump()
-            }
-
-
             if (Jump.enabled) {
+                if (player.isOnGround) player.jump()
                 waitTicks(Jump.delay)
             }
 
