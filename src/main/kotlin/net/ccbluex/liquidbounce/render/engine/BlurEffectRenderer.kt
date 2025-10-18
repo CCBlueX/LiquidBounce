@@ -31,11 +31,14 @@ import net.ccbluex.liquidbounce.render.shader.BlitShader
 import net.ccbluex.liquidbounce.render.shader.UniformProvider
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.render.RenderPhase
+import net.minecraft.client.texture.GlTexture
+import net.minecraft.util.math.MathHelper
 import org.lwjgl.opengl.GL13
 import org.lwjgl.opengl.GL20
 import kotlin.math.sin
@@ -48,13 +51,13 @@ object BlurEffectRenderer : MinecraftShortcuts {
         arrayOf(
             UniformProvider("texture0") { pointer ->
                 GlStateManager._activeTexture(GL13.GL_TEXTURE0)
-                GlStateManager._bindTexture(tmpFramebuffer.colorAttachment)
+                GlStateManager._bindTexture((tmpFramebuffer.colorAttachment as GlTexture).glId)
                 GL20.glUniform1i(pointer, 0)
             },
             UniformProvider("overlay") { pointer ->
                 val active = GlStateManager._getActiveTexture()
                 GlStateManager._activeTexture(GL13.GL_TEXTURE9)
-                GlStateManager._bindTexture(overlayFramebuffer.colorAttachment)
+                GlStateManager._bindTexture((overlayFramebuffer.colorAttachment as GlTexture).glId)
                 GL20.glUniform1i(pointer, 9)
                 GlStateManager._activeTexture(active)
             },
@@ -65,24 +68,28 @@ object BlurEffectRenderer : MinecraftShortcuts {
 
     private val overlayFramebuffer by lazy {
         val fb = SimpleFramebuffer(
+            "OverlayFramebuffer",
             mc.window.framebufferWidth,
             mc.window.framebufferHeight,
             true
         )
 
-        fb.setClearColor(0.0f, 0.0f, 0.0f, 0.0f)
+//        RenderSystem.getDevice().createCommandEncoder()
+//            .clearColorTexture(fb.colorAttachment, 0)
 
         fb
     }
 
     private val tmpFramebuffer by lazy {
         val fb = SimpleFramebuffer(
+            "TempFramebuffer",
             mc.window.framebufferWidth,
             mc.window.framebufferHeight,
             true
         )
 
-        fb.setClearColor(0.0f, 0.0f, 0.0f, 0.0f)
+//        RenderSystem.getDevice().createCommandEncoder()
+//            .clearColorTexture(fb.colorAttachment, 0)
 
         fb
     }
@@ -98,7 +105,7 @@ object BlurEffectRenderer : MinecraftShortcuts {
     private var wasScreenOpen = false
 
     private fun easeFunction(x: Float): Float {
-        return sin((x * Math.PI) / 2.0).toFloat()
+        return (x * MathHelper.HALF_PI).fastSin()
     }
 
     private fun getBlurRadiusFactor(): Float {
