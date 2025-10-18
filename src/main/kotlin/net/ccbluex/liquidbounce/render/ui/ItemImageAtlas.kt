@@ -6,7 +6,9 @@ import com.mojang.blaze3d.systems.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.TextureFormat
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -25,6 +27,7 @@ import org.joml.Matrix4f
 import java.awt.image.BufferedImage
 import java.lang.AutoCloseable
 import java.util.OptionalInt
+import javax.imageio.ImageIO
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -61,13 +64,16 @@ object ItemImageAtlas : EventListener {
 
         val image = renderer.toNativeImage().toBufferedImage()
 
+        // FIXME: to be removed. for testing only
+        ImageIO.write(image, "png", ConfigSystem.rootFolder.resolve("items.png"))
+
         renderer.close()
 
         this.atlas = Atlas(items, image, findAliases())
     }
 
     private fun findAliases(): Map<Identifier, Identifier> {
-        val map = hashMapOf<Identifier, Identifier>()
+        val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
 
         Registries.BLOCK.forEach {
             val pickUpState = it.getPickStack(mc.world!!, BlockPos.ORIGIN, it.defaultState, false)
@@ -113,7 +119,7 @@ private class ItemFramebufferRenderer(
     val scale: Int,
 ) : MinecraftShortcuts, AutoCloseable {
     private val itemsPerDimension = ceil(sqrt(items.size().toDouble())).toInt()
-    private val itemPixelSize = 16 * scale
+    private val itemPixelSize = NATIVE_ITEM_SIZE * scale
 
     private val gpuDevice = RenderSystem.getDevice()
 
@@ -124,8 +130,6 @@ private class ItemFramebufferRenderer(
         itemPixelSize * itemsPerDimension,
         1
     )
-
-    private val itemPixelSizeOnFramebuffer = NATIVE_ITEM_SIZE * scale
 
     fun render(ctx: DrawContext): Map<Item, Rect2i> {
         val encoder = gpuDevice.createCommandEncoder()

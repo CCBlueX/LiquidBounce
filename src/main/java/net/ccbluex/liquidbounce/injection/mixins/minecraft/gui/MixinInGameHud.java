@@ -222,8 +222,8 @@ public abstract class MixinInGameHud {
         var offset = 98;
         var bounds = component.getAlignment().getBounds(0, 0);
 
-        int center = (int) bounds.getXMin();
-        var y = bounds.getYMin() - 12;
+        int center = (int) bounds.xMin();
+        var y = bounds.yMin() - 12;
 
         int l = 1;
         for (int m = 0; m < 9; ++m) {

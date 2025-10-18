@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.gl.Framebuffer
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
 import net.minecraft.client.util.math.MatrixStack
@@ -358,7 +359,7 @@ fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { buffer ->
             if (framebuffer.useDepthAttachment) framebuffer.getDepthAttachment() else null,
             OptionalDouble.empty()
         ).use { renderPass ->
-            renderPass.setPipeline(renderPipeline) // FIXME: pipeline
+            renderPass.setPipeline(RenderPipelines.GUI) // FIXME: pipeline
             renderPass.setVertexBuffer(0, gpuBuffer)
             if (RenderSystem.SCISSOR_STATE.isEnabled) {
                 renderPass.enableScissor(RenderSystem.SCISSOR_STATE)

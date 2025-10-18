@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.collection.Pool
 import net.minecraft.client.texture.GlTexture
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.text.Text

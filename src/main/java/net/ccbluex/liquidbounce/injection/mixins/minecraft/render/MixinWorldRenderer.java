@@ -103,7 +103,7 @@ public abstract class MixinWorldRenderer {
             // Apply camera transformation to fix outline positioning
             matrixStack.peek().getPositionMatrix().mul(positionMatrix);
 
-            var event = new DrawOutlinesEvent(matrixStack, camera, tickCounter.getTickDelta(false), DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
+            var event = new DrawOutlinesEvent(matrixStack, camera, tickCounter.getTickProgress(false), DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
             EventManager.INSTANCE.callEvent(event);
 
             if (event.getDirtyFlag()) {
