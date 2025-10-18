@@ -193,18 +193,6 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
         }
     }
 
-    private fun getWishSpeedFromInput(): Pair<Double, Pair<Double, Double>> {
-        // Sync HL buffer from current vanilla velocity as baseline
-        hlVelX = player.velocity.x
-        hlVelZ = player.velocity.z
-
-        val sidemove = player.input.movementSideways.toDouble()
-        val forwardmove = player.input.movementForward.toDouble()
-        val wishdir = movementDirection(sidemove, forwardmove)
-        val wishspeed = if (sidemove != 0.0 || forwardmove != 0.0) getBaseSpeedCurrent() else 0.0
-        return wishspeed to wishdir
-    }
-
     // Clear base velocities each tick like goldsqource
     private val tickHandler = handler<GameTickEvent> {
         if (!inGame) return@handler
