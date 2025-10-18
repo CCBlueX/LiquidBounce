@@ -36,6 +36,9 @@
         cleanupFunctions.push(listen("moduleToggle", updateModulesWithBinds));
         cleanupFunctions.push(listen("clickGuiValueChange", updateModulesWithBinds));
 
+        const intervalId = setInterval(updateModulesWithBinds, 2000);
+        cleanupFunctions.push(() => clearInterval(intervalId));
+
         updateModulesWithBinds();
     });
 
@@ -78,8 +81,8 @@
     }
 
     .header {
-        background-color: rgba($keybinds-base-color, 0.78);
-        padding: 7px 10px;
+        background-color: rgba($keybinds-base-color, 0.8);
+        padding: 8px 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -91,23 +94,24 @@
         }
         
         .icon {
-            width: 14px;
-            height: 14px;
-            color: $keybinds-text-color;
-            opacity: 0.8;
+            width: 16px;
+            height: 16px;
+            filter: brightness(0) invert(1);
+            opacity: 0.95;
         }
     }
 
     .entries {
-        background-color: rgba($keybinds-base-color, 0.58);
-        padding: 8px 10px;
+        background-color: rgba($keybinds-base-color, 0.6);
+        padding: 6px 12px;
         
         .no-binds {
             color: $keybinds-text-dimmed-color;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 13px;
+            font-weight: 400;
             text-align: center;
             font-style: italic;
+            padding: 2px 0;
         }
     }
 
@@ -115,9 +119,9 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 4px;
+        margin-bottom: 5px;
         color: $keybinds-text-dimmed-color;
-        gap: 8px;
+        gap: 12px;
         min-width: 0;
         
         &:last-child {
@@ -133,7 +137,7 @@
 
         .module-name {
             color: $keybinds-text-dimmed-color;
-            font-size: 14px;
+            font-size: 13px;
             flex: 1;
             min-width: 0;
             overflow: hidden;
@@ -143,15 +147,15 @@
 
         .key-bind {
             font-family: monospace;
-            font-size: 12px;
+            font-size: 11px;
             color: $accent-color;
             font-weight: 600;
             flex-shrink: 0;
             min-width: max-content;
             
             &.muted {
-                color: rgba($keybinds-text-dimmed-color, 0.7);
-                font-weight: 400;
+                color: rgba($keybinds-text-dimmed-color, 0.65);
+                font-weight: 500;
             }
         }
     }
