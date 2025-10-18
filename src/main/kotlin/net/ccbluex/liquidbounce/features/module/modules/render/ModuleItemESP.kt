@@ -22,13 +22,11 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP.ShowArrows.showArrowsWithEffects
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP.ShowArrows.showRegularArrows
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP.ShowArrows.showSpectralArrows
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -56,11 +54,12 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val items by items("Items", ReferenceOpenHashSet())
 
-    object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {
-        val showRegularArrows by boolean("RegularArrows", true)
-        val showSpectralArrows by boolean("SpectralArrows", true)
-        val showArrowsWithEffects by boolean("ArrowsWithEffects", true)
+    private object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {
+        val regularArrows by boolean("RegularArrows", true)
+        val spectralArrows by boolean("SpectralArrows", true)
+        val arrowsWithEffects by boolean("ArrowsWithEffects", true)
     }
+
     init {
         tree(ShowArrows)
     }
@@ -82,20 +81,31 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
 
         private val box = Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
 
+        private val entities = mutableListOf<Entity>()
+
+        override fun disable() {
+            entities.clear()
+            super.disable()
+        }
+
+        @Suppress("unused")
+        private val tickHandler = handler<GameTickEvent> {
+            world.entities.filterTo(entities, ::shouldRender)
+        }
+
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
+            if (entities.isEmpty()) return@handler
+
             val matrixStack = event.matrixStack
 
             val base = getColor()
             val baseColor = base.with(a = 50)
             val outlineColor = base.with(a = 100)
 
-            val filtered = world.entities.filter(::shouldRender)
-            if (filtered.isEmpty()) return@handler
-
             renderEnvironmentForWorld(matrixStack) {
                 startBatch()
-                for (entity in filtered) {
+                for (entity in entities) {
                     val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
                     withPositionRelativeToCamera(pos) {
@@ -134,8 +144,8 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         }
 
         return when (it) {
-            is SpectralArrowEntity -> showSpectralArrows
-            is ArrowEntity -> if (it.color == -1) showRegularArrows else showArrowsWithEffects
+            is SpectralArrowEntity -> ShowArrows.spectralArrows
+            is ArrowEntity -> if (it.color == -1) ShowArrows.regularArrows else ShowArrows.arrowsWithEffects
             else -> false
         }
     }
