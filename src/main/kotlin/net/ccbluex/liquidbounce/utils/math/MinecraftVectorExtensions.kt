@@ -25,6 +25,8 @@ import net.minecraft.util.math.*
 
 inline operator fun BlockPos.rangeTo(other: BlockPos): BlockBox = BlockBox.create(this, other)
 
+inline fun BlockPos.Mutable.set(pos: Position): BlockPos.Mutable = set(pos.x, pos.y, pos.z)
+
 inline operator fun Vec3i.component1() = this.x
 inline operator fun Vec3i.component2() = this.y
 inline operator fun Vec3i.component3() = this.z
@@ -83,26 +85,6 @@ fun Iterable<Vec3d>.average(): Vec3d {
 }
 
 inline fun forEach3D(v0: Vec3d, v1: Vec3d, step: Double, fn: (Double, Double, Double) -> Unit) {
-    val (startX, startY, startZ) = v0
-    val (endX, endY, endZ) = v1
-
-    var x = startX
-    while (x <= endX) {
-        var y = startY
-        while (y <= endY) {
-            var z = startZ
-            while (z <= endZ) {
-                fn(x, y, z)
-
-                z += step
-            }
-            y += step
-        }
-        x += step
-    }
-}
-
-inline fun forEach3D(v0: Vec3i, v1: Vec3i, step: Int = 1, fn: (Int, Int, Int) -> Unit) {
     val (startX, startY, startZ) = v0
     val (endX, endY, endZ) = v1
 
