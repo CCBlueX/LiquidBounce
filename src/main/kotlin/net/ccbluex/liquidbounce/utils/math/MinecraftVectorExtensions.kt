@@ -66,6 +66,12 @@ inline operator fun Vec3d.component1(): Double = this.x
 inline operator fun Vec3d.component2(): Double = this.y
 inline operator fun Vec3d.component3(): Double = this.z
 
+fun ChunkPos.contains(blockPos: Long): Boolean =
+    BlockPos.unpackLongX(blockPos) in startX..endX && BlockPos.unpackLongZ(blockPos) in startZ..endZ
+
+fun ChunkPos.contains(blockPos: BlockPos): Boolean =
+    blockPos.x in startX..endX && blockPos.z in startZ..endZ
+
 fun Iterable<Vec3d>.average(): Vec3d {
     val result = Vec3d(0.0, 0.0, 0.0)
     var i = 0
@@ -123,8 +129,10 @@ inline fun Vec3i.toVec3d(
     zOffset: Double = 0.0,
 ): Vec3d = Vec3d(x + xOffset, y + yOffset, z + zOffset)
 
-inline fun Vec3d.toVec3() = Vec3(this.x, this.y, this.z)
-inline fun Vec3d.toVec3i() = Vec3i(this.x.toInt(), this.y.toInt(), this.z.toInt())
+inline fun Vec3d.toVec3(): Vec3 = Vec3(this.x, this.y, this.z)
+
+@Deprecated("use this.toBlockPos instead", replaceWith = ReplaceWith("this.toBlockPos"))
+inline fun Vec3d.toVec3i(): Vec3i = toBlockPos()
 
 inline fun Vec3d.toBlockPos(
     xOffset: Double = 0.0,
