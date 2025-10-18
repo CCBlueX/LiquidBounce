@@ -389,5 +389,6 @@
   "liquidbounce.module.autoBalls.description": "Automatically throws snowballs at your enemies.",
   "liquidbounce.module.betterTab.description": "Multiple enhancements to the tab list.",
   "liquidbounce.module.logoffSpot.description": "Allows you to see players who have left the server or are out of render distance.",
-  "liquidbounce.module.autoPearl.description": "Mira e lança uma pérola na trajetória da pérola inimiga."
+  "liquidbounce.module.autoPearl.description": "Mira e lança uma pérola na trajetória da pérola inimiga.",
+  "liquidbounce.module.goldSrcMovement.description": "Half-Life 1 (GoldSrc) movement: HL1 friction/accel, classic A/D bunnyhopping, HL ladders and water."
 }

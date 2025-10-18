@@ -576,5 +576,6 @@
     "liquidbounce.module.betterTab.description": "Diverse verbeteringen aan de tablijst.",
     "liquidbounce.module.autoPearl.description": "Richt en werpt een enderparel in de baan van de enderparel van de vijand.",
     "liquidbounce.module.replenish.description": "Vult automatisch je hotbar bij vanuit je inventaris als het aantal te laag wordt.",
-    "liquidbounce.module.anchor.description": "Trek jezelf in een veilig gat voor crystal-PvP."
+    "liquidbounce.module.anchor.description": "Trek jezelf in een veilig gat voor crystal-PvP.",
+    "liquidbounce.module.goldSrcMovement.description": "Half-Life 1 (GoldSrc) beweging: HL1 wrijving/acceleratie, klassieke A/D bunnyhop, HL-ladders en water."
 }

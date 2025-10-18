@@ -449,5 +449,6 @@
 	"modmenu.descriptionTranslation.liquidbounce": "無料でオープンソースのハッククライアント",
     "liquidbounce.module.betterTab.description": "タブリストに複数の改良を加えました。",
     "liquidbounce.module.logoffSpot.description": "サーバーから退出したプレイヤーや、描画範囲外のプレイヤーを表示できるようにします。",
-    "liquidbounce.module.autoPearl.description": "敵の真珠の軌道に向けて真珠を狙い投げる."
+    "liquidbounce.module.autoPearl.description": "敵の真珠の軌道に向けて真珠を狙い投げる.",
+    "liquidbounce.module.goldSrcMovement.description": "Half-Life 1（GoldSrc）の移動：HL1の摩擦/加速、クラシックなA/Dバニーホップ、HL式のはしごと水中移動。"
 }

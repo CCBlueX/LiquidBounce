@@ -457,5 +457,6 @@
   "liquidbounce.module.bookBot.description": "Escreve automaticamente em livros.",
   "liquidbounce.module.betterTab.description": "Diversas melhorias na lista de abas.",
   "liquidbounce.module.logoffSpot.description": "Permite ver jogadores que saíram do servidor ou estão fora do alcance de exibição.",
-  "liquidbounce.module.autoPearl.description": "Mira e lança uma pérola na trajetória da pérola inimiga."
+  "liquidbounce.module.autoPearl.description": "Mira e lança uma pérola na trajetória da pérola inimiga.",
+  "liquidbounce.module.goldSrcMovement.description": "Movimento de Half-Life 1 (GoldSrc): atrito/aceleração HL1, bunnyhop clássico com A/D, escadas e água ao estilo HL."
 }

@@ -461,5 +461,6 @@
   "liquidbounce.module.bookBot.description": "Автоматично пише в книгах.",
   "liquidbounce.module.logoffSpot.description": "Дозволяє бачити гравців, які вийшли з сервера або знаходяться поза межами відображення.",
   "liquidbounce.module.betterTab.description": "Різноманітні покращення списку вкладок.",
-  "liquidbounce.module.autoPearl.description": "Прицілюється та кидає перлину по траєкторії ворожої перлини."
+  "liquidbounce.module.autoPearl.description": "Прицілюється та кидає перлину по траєкторії ворожої перлини.",
+  "liquidbounce.module.goldSrcMovement.description": "Рух Half‑Life 1 (GoldSrc): тертя/прискорення HL1, класичний A/D банніхоп, драбини та вода як у HL."
 }

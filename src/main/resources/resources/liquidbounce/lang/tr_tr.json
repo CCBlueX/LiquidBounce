@@ -555,5 +555,6 @@
   "liquidbounce.module.betterTab.description": "Sekme listesine çeşitli iyileştirmeler yapar.",
   "liquidbounce.module.autoPearl.description": "Bir düşmanın inci yoluna nişan alır ve inci atar.",
   "liquidbounce.module.replenish.description": "Hızlı erişim çubuğunuzdaki eşya sayısı belirli bir seviyenin altına düştüğünde envanterinizden otomatik olarak doldurur.",
-  "liquidbounce.module.anchor.description": "Sizi kristal PvP için güvenli deliklere çeker."
+  "liquidbounce.module.anchor.description": "Sizi kristal PvP için güvenli deliklere çeker.",
+  "liquidbounce.module.goldSrcMovement.description": "Half-Life 1 (GoldSrc) hareketi: HL1 sürtünme/ivme, klasik A/D bunnyhop, HL merdivenleri ve su hareketi."
 }
