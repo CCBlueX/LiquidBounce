@@ -64,4 +64,9 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
     }
 
     fun toVec3d() = Vec3d(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
+
+    companion object {
+        @JvmField
+        val ZERO = Vec3(0f, 0f, 0f)
+    }
 }

@@ -417,6 +417,30 @@ private fun RenderEnvironment.drawLines(lines: List<Vec3>, mode: DrawMode = Draw
     }
 }
 
+fun RenderEnvironment.drawSquareTexture(
+    size: Float,
+    argb: Int,
+) = drawCustomMesh(
+    DrawMode.QUADS,
+    VertexInputType.PosTexColor,
+) { matrix ->
+    vertex(matrix, 0.0f, -size, 0.0f)
+        .texture(0.0f, 0.0f)
+        .color(argb)
+
+    vertex(matrix, -size, -size, 0.0f)
+        .texture(0.0f, 1.0f)
+        .color(argb)
+
+    vertex(matrix, -size, 0.0f, 0.0f)
+        .texture(1.0f, 1.0f)
+        .color(argb)
+
+    vertex(matrix, 0.0f, 0.0f, 0.0f)
+        .texture(1.0f, 0.0f)
+        .color(argb)
+}
+
 fun RenderEnvironment.drawTextureQuad(
     pos1: Vector3fc,
     uv1: UV2f = UV2f(0f, 0f),
@@ -573,114 +597,33 @@ fun RenderEnvironment.drawBox(
     box: Box,
     faceColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
-    vertices: Int = -1,
-    outlineVertices: Int = -1
+    faceVertices: Int = -1,
+    outlineVertices: Int = -1,
 ) {
-    if (faceColor != null && !faceColor.isTransparent) {
-        drawBox(box, DrawMode.QUADS, color = faceColor, verticesToUse = vertices)
+    if (faceColor != null && !faceColor.isTransparent && faceVertices != 0) {
+        drawBox(box, DrawMode.QUADS, color = faceColor, verticesToUse = faceVertices)
     }
 
-    if (outlineColor != null && !outlineColor.isTransparent) {
+    if (outlineColor != null && !outlineColor.isTransparent && outlineVertices != 0) {
         drawBox(box, DrawMode.DEBUG_LINES, useOutlineVertices = true, outlineColor, outlineVertices)
     }
 }
 
 /**
- * Function to draw a side box using the specified [box] and [side].
- *
- * @param box The bounding box of the side.
- * @param side The direction of the side.
- * @param onlyOutline Determines if the function only should draw the outline of the [side] or only fill it in
+ * Function to draw a colored [box] with specified [side].
  */
-fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolean = false) {
-    drawCustomMesh(
-        if (onlyOutline) DrawMode.DEBUG_LINE_STRIP else DrawMode.QUADS,
-        VertexInputType.Pos,
-    ) { matrix ->
-        val vertices = box.getVerticesForSide(side)
-
-        vertices.forEach { (x, y, z) ->
-            vertex(matrix, x, y, z)
-        }
-
-        if (onlyOutline) {
-            vertex(matrix, vertices[0].x, vertices[0].y, vertices[0].z)
-        }
-    }
-}
-
-fun RenderEnvironment.drawBoxSide(box: Box, side: Direction, face: Color4b, outline: Color4b) {
-    val vertices = box.getVerticesForSide(side)
-    drawCustomMesh(
-        DrawMode.QUADS,
-        VertexInputType.PosColor,
-    ) { matrix ->
-        vertices.forEach { (x, y, z) ->
-            vertex(matrix, x, y, z).color(face.r, face.g, face.b, face.a)
-        }
-    }
-
-    if (outline.a != 0) {
-        drawCustomMesh(
-            DrawMode.DEBUG_LINE_STRIP,
-            VertexInputType.PosColor,
-        ) { matrix ->
-            vertices.forEach { (x, y, z) ->
-                vertex(matrix, x, y, z)
-                    .color(outline.r, outline.g, outline.b, outline.a)
-            }
-
-            // close the loop
-            val firstVertex = vertices[0]
-            vertex(matrix, firstVertex.x, firstVertex.y, firstVertex.z)
-                .color(outline.r, outline.g, outline.b, outline.a)
-        }
-    }
-}
-
-private fun Box.getVerticesForSide(side: Direction) = when (side) {
-    Direction.DOWN -> arrayOf(
-        Vec3(minX, minY, maxZ),
-        Vec3(minX, minY, minZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(maxX, minY, maxZ)
-    )
-
-    Direction.UP -> arrayOf(
-        Vec3(minX, maxY, minZ),
-        Vec3(minX, maxY, maxZ),
-        Vec3(maxX, maxY, maxZ),
-        Vec3(maxX, maxY, minZ)
-    )
-
-    Direction.NORTH -> arrayOf(
-        Vec3(maxX, maxY, minZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(minX, minY, minZ),
-        Vec3(minX, maxY, minZ)
-    )
-
-    Direction.SOUTH -> arrayOf(
-        Vec3(minX, maxY, maxZ),
-        Vec3(minX, minY, maxZ),
-        Vec3(maxX, minY, maxZ),
-        Vec3(maxX, maxY, maxZ)
-    )
-
-    Direction.WEST -> arrayOf(
-        Vec3(minX, maxY, minZ),
-        Vec3(minX, minY, minZ),
-        Vec3(minX, minY, maxZ),
-        Vec3(minX, maxY, maxZ)
-    )
-
-    Direction.EAST -> arrayOf(
-        Vec3(maxX, maxY, maxZ),
-        Vec3(maxX, minY, maxZ),
-        Vec3(maxX, minY, minZ),
-        Vec3(maxX, maxY, minZ)
-    )
-}
+fun RenderEnvironment.drawBoxSide(
+    box: Box,
+    side: Direction,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) = drawBox(
+    box,
+    faceColor,
+    outlineColor,
+    faceVertices = BoxVertexIterator.FACE.sideMask(side),
+    outlineVertices = BoxVertexIterator.OUTLINE.sideMask(side),
+)
 
 /**
  * Function to render a gradient quad using specified [vertices] and [colors]
@@ -723,7 +666,7 @@ fun RenderEnvironment.drawGradientCircle(
     innerRadius: Float,
     outerColor4b: Color4b,
     innerColor4b: Color4b,
-    innerOffset: Vec3 = Vec3(0f, 0f, 0f)
+    innerOffset: Vec3 = Vec3.ZERO,
 ) {
     drawCustomMesh(
         DrawMode.TRIANGLE_STRIP,
@@ -759,35 +702,6 @@ fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
                 .color(color4b.toARGB())
         }
     }
-}
-
-private fun RenderEnvironment.drawBox(box: Box, mode: DrawMode) {
-    drawCustomMesh(
-        mode,
-        VertexInputType.Pos,
-    ) { matrix ->
-        box.forEachCornerVertex { _, x, y, z ->
-            vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-        }
-    }
-}
-
-/**
- * Function to draw an outlined box using the specified [box].
- *
- * @param box The bounding box of the box.
- */
-fun RenderEnvironment.drawOutlinedBox(box: Box) {
-    drawBox(box, DrawMode.DEBUG_LINES)
-}
-
-/**
- * Function to draw a solid box using the specified [box].
- *
- * @param box The bounding box of the box.
- */
-fun RenderEnvironment.drawSolidBox(box: Box) {
-    drawBox(box, DrawMode.QUADS)
 }
 
 fun RenderEnvironment.drawGradientSides(

@@ -122,8 +122,6 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
             list += Nametag(entity)
         }
-
-        list.sortByDescending { abs(it.entity.z - player.pos.z) }
     }
 
 }

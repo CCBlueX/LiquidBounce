@@ -30,10 +30,9 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.VertexInputType
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.defaultBlendFunc
-import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -253,26 +252,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
                     )
                 )
 
-                drawCustomMesh(
-                    VertexFormat.DrawMode.QUADS,
-                    VertexInputType.PosTexColor,
-                ) { matrix ->
-                    vertex(matrix, 0.0f, -size, 0.0f)
-                        .texture(0.0f, 0.0f)
-                        .color(renderColor.toARGB())
-
-                    vertex(matrix, -size, -size, 0.0f)
-                        .texture(0.0f, 1.0f)
-                        .color(renderColor.toARGB())
-
-                    vertex(matrix, -size, 0.0f, 0.0f)
-                        .texture(1.0f, 1.0f)
-                        .color(renderColor.toARGB())
-
-                    vertex(matrix, 0.0f, 0.0f, 0.0f)
-                        .texture(1.0f, 0.0f)
-                        .color(renderColor.toARGB())
-                }
+                drawSquareTexture(size, renderColor.toARGB())
             }
         }
     }
