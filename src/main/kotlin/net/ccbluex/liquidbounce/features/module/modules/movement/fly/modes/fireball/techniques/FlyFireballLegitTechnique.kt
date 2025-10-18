@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -74,10 +74,17 @@ object FlyFireballLegitTechnique : Choice("Legit") {
         )
     }
 
+    private var shouldJump = false
+
     @Suppress("unused")
-    private val movementInputHandler = sequenceHandler<MovementInputEvent> { event ->
+    private val movementInputHandler = handler<MovementInputEvent> { event ->
         if (stopMove && !canMove) {
             event.directionalInput = DirectionalInput.BACKWARDS // Cancel out movement.
+        }
+
+        if (shouldJump) {
+            event.jump = true
+            shouldJump = false
         }
     }
 
@@ -87,7 +94,10 @@ object FlyFireballLegitTechnique : Choice("Legit") {
             canMove = !stopMove
 
             if (Jump.enabled) {
-                if (player.isOnGround) player.jump()
+                if (player.isOnGround) {
+                    shouldJump = true
+                    tickUntil { !shouldJump }
+                }
                 waitTicks(Jump.delay)
             }
 
