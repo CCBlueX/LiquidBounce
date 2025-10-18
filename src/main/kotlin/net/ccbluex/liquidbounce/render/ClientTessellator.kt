@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.minecraft.client.render.BufferBuilder
-import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.util.BufferAllocator
 import java.util.EnumMap
 
