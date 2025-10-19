@@ -42,6 +42,8 @@ import net.minecraft.entity.mob.Angerable
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.mob.Monster
 import net.minecraft.entity.mob.WaterCreatureEntity
+import net.minecraft.entity.passive.AllayEntity
+import net.minecraft.entity.passive.BatEntity
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
@@ -138,9 +140,10 @@ private fun EnumSet<Targets>.isInteresting(suspect: Entity): Boolean {
             else -> Targets.PLAYERS in this
         }
         is WaterCreatureEntity -> Targets.WATER_CREATURE in this
-        is PassiveEntity -> Targets.PASSIVE in this
+        is PassiveEntity, is BatEntity, is AllayEntity -> Targets.PASSIVE in this
         is HostileEntity, is Monster -> Targets.HOSTILE in this
         is Angerable -> Targets.ANGERABLE in this
+
         else -> false
     }
 }

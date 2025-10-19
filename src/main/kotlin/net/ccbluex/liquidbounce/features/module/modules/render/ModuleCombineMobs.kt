@@ -31,7 +31,7 @@ import net.minecraft.entity.mob.MobEntity
  * Combine Mobs
  *
  * This module will disable rendering of entities of the same type that are crammed together
- * TODO: and show a single entity instead with a count of how many entities are crammed together.
+ * and show a single entity instead with a count of how many entities are crammed together.
  *
  * This is useful for example in 2b2t where there are a lot of entities in spawn.
  * The idea behind this module originates from the video
@@ -39,16 +39,15 @@ import net.minecraft.entity.mob.MobEntity
  */
 object ModuleCombineMobs : ClientModule("CombineMobs", Category.RENDER) {
 
-    /**
-     * Key: type Value: position->count
-     */
-    private val trackedEntitySinceRender = hashMapOf<EntityType<*>, Long2IntOpenHashMap>()
+    @JvmRecord
+    private data class CombineKey(val type: EntityType<*>, val babyGroup: Boolean)
 
-    /**
-     * As soon we disable the module, we want to clear the tracked entities
-     */
+    private val renderTracked = HashMap<CombineKey, Long2IntOpenHashMap>()
+    private val nametagTracked = HashMap<CombineKey, Long2IntOpenHashMap>()
+
     override fun onDisabled() {
-        trackedEntitySinceRender.clear()
+        renderTracked.clear()
+        nametagTracked.clear()
     }
 
     /**
@@ -56,23 +55,38 @@ object ModuleCombineMobs : ClientModule("CombineMobs", Category.RENDER) {
      */
     @Suppress("unused")
     val renderGameHandler = handler<GameRenderEvent> {
-        trackedEntitySinceRender.clear()
+        renderTracked.clear()
+        nametagTracked.clear()
     }
 
-    fun trackEntity(entity: Entity): Boolean {
-        if (entity !is MobEntity) {
-            return false
-        }
+    private fun keyFor(mob: MobEntity): CombineKey {
+        val babyGroup = mob.isBaby
+        return CombineKey(mob.type, babyGroup)
+    }
 
-        val entityType = entity.type
+    @JvmOverloads
+    fun trackEntity(entity: Entity, forNametag: Boolean = false): Boolean {
+        val mob = entity as? MobEntity ?: return false
+        val target = if (forNametag) nametagTracked else renderTracked
 
-        val pos = entity.blockPos.asLong()
+        val key = keyFor(mob)
+        val pos = mob.blockPos.asLong()
 
-        val trackedEntities = trackedEntitySinceRender.getOrPut(entityType, ::Long2IntOpenHashMap)
-        val count = trackedEntities.getOrDefault(pos, 0)
-        trackedEntities.put(pos, count + 1)
+        val posMap = target.getOrPut(key, ::Long2IntOpenHashMap)
+        val count = posMap.addTo(pos, 1)
 
         return count > 0
     }
 
+    fun getCombinedCount(entity: Entity): Int {
+        val mob = entity as? MobEntity ?: return 1
+
+        val key = keyFor(mob)
+        val pos = mob.blockPos.asLong()
+
+        val count = renderTracked[key]?.getOrDefault(pos, 0) ?: 0
+        if (count > 0) return count
+
+        return nametagTracked[key]?.getOrDefault(pos, 1) ?: 1
+    }
 }
