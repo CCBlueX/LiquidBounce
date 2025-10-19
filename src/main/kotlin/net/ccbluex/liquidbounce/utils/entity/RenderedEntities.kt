@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -30,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.minecraft.entity.LivingEntity
 
-private val entities = ArrayList<LivingEntity>()
+private val entities = ReferenceArrayList<LivingEntity>()
 
 /**
  * A readonly [Collection] containing all [LivingEntity] instances that meet the [shouldBeShown] condition.

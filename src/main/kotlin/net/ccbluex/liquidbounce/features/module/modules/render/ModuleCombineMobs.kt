@@ -39,10 +39,11 @@ import net.minecraft.entity.mob.MobEntity
  */
 object ModuleCombineMobs : ClientModule("CombineMobs", Category.RENDER) {
 
+    @JvmRecord
     private data class CombineKey(val type: EntityType<*>, val babyGroup: Boolean)
 
-    private val renderTracked: HashMap<CombineKey, Long2IntOpenHashMap> = hashMapOf()
-    private val nametagTracked: HashMap<CombineKey, Long2IntOpenHashMap> = hashMapOf()
+    private val renderTracked = HashMap<CombineKey, Long2IntOpenHashMap>()
+    private val nametagTracked = HashMap<CombineKey, Long2IntOpenHashMap>()
 
     override fun onDisabled() {
         renderTracked.clear()
@@ -72,11 +73,9 @@ object ModuleCombineMobs : ClientModule("CombineMobs", Category.RENDER) {
         val pos = mob.blockPos.asLong()
 
         val posMap = target.getOrPut(key, ::Long2IntOpenHashMap)
-        val count = posMap.getOrDefault(pos, 0) + 1
+        val count = posMap.addTo(pos, 1)
 
-        posMap.put(pos, count)
-
-        return count > 1
+        return count > 0
     }
 
     fun getCombinedCount(entity: Entity): Int {
