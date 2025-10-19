@@ -118,31 +118,13 @@ open class TargetSelector(
             return entities
         }
 
-        // Sort by distance (closest first) - in case of tie at priority level
-        entities.sortBy { it.squaredBoxedDistanceTo(player) }
-
-        // Sort by entity type
-        entities.sortWith(Comparator.comparingInt { entity ->
-            when (entity) {
-                is PlayerEntity -> 0
-                is HostileEntity -> 1
-                is Angerable if entity.angryAt == player.uuid -> 2
-                else -> Int.MAX_VALUE
+        entities.sortWith(
+            if (priority == TargetPriority.DISTANCE) {
+                COMPARATOR_BY_TYPE.thenComparing(TargetPriority.DISTANCE.comparator)
+            } else {
+                COMPARATOR_BY_TYPE.thenComparing(priority.comparator).thenComparing(TargetPriority.DISTANCE.comparator)
             }
-        })
-
-        when (priority) {
-            // Lowest health first
-            TargetPriority.HEALTH -> entities.sortBy { it.getActualHealth() }
-            // Closest to your crosshair first
-            TargetPriority.DIRECTION -> entities.sortBy { RotationUtil.crosshairAngleToEntity(it) }
-            // Oldest entity first
-            TargetPriority.AGE -> entities.sortByDescending { it.age }
-            // With the lowest hurt time first
-            TargetPriority.HURT_TIME -> entities.sortBy { it.hurtTime } // Sort by hurt time
-            // Closest to you first
-            else -> {} // Do nothing
-        }
+        )
 
         // Update max distance squared
         closestSquaredEnemyDistance = entities.minOf { it.squaredBoxedDistanceTo(player) }
@@ -194,10 +176,38 @@ open class TargetSelector(
 
 }
 
-enum class TargetPriority(override val choiceName: String) : NamedChoice {
-    HEALTH("Health"),
-    DISTANCE("Distance"),
-    DIRECTION("Direction"),
-    HURT_TIME("HurtTime"),
-    AGE("Age")
+private val COMPARATOR_BY_TYPE: Comparator<LivingEntity> = Comparator.comparingInt { entity ->
+    when (entity) {
+        is PlayerEntity -> 0
+        is HostileEntity -> 1
+        is Angerable if entity.angryAt == player.uuid -> 2
+        else -> Int.MAX_VALUE
+    }
+}
+
+enum class TargetPriority(override val choiceName: String, val comparator: Comparator<in LivingEntity>) : NamedChoice {
+    /**
+     * Lowest health first
+     */
+    HEALTH("Health", Comparator.comparingDouble { it.getActualHealth().toDouble() }),
+
+    /**
+     * Closest to you first
+     */
+    DISTANCE("Distance", Comparator.comparingDouble { it.squaredBoxedDistanceTo(player) }),
+
+    /**
+     * Closest to your crosshair first
+     */
+    DIRECTION("Direction", Comparator.comparingDouble { RotationUtil.crosshairAngleToEntity(it).toDouble() }),
+
+    /**
+     * With the lowest hurt time first
+     */
+    HURT_TIME("HurtTime", Comparator.comparingInt { it.hurtTime }),
+
+    /**
+     * Oldest entity first
+     */
+    AGE("Age", Comparator.comparingInt { -it.age }),
 }
