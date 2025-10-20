@@ -225,24 +225,21 @@ fun BlockPos.searchBlocksInCuboid(radius: Int): BlockBox =
 fun BlockPos.searchBedLayer(state: BlockState, layers: Int): Sequence<IntLongPair> {
     check(state.isBed) { "This function is only available for Beds" }
 
-    var bedDirection = state.get(BedBlock.FACING)
-    var opposite = bedDirection.opposite
+    val anotherPartDirection = state.anotherBedPartDirection()!!
+    val bedDirection = anotherPartDirection.opposite
 
-    if (BedBlock.getBedPart(state) != DoubleBlockProperties.Type.FIRST) {
-        opposite = bedDirection
-        bedDirection = bedDirection.opposite
-    }
-
-    var left = Direction.WEST
-    var right = Direction.EAST
-
+    val left: Direction
+    val right: Direction
     if (bedDirection.axis == Direction.Axis.X) {
         left = Direction.SOUTH
         right = Direction.NORTH
+    } else {
+        left = Direction.WEST
+        right = Direction.EAST
     }
 
     return searchLayer(layers, bedDirection, Direction.UP, left, right) +
-        offset(opposite).searchLayer(layers, opposite, Direction.UP, left, right)
+        offset(anotherPartDirection).searchLayer(layers, anotherPartDirection, Direction.UP, left, right)
 }
 
 /**
@@ -370,6 +367,19 @@ fun BlockState?.anotherChestPartDirection(): Direction? {
     }
 
     return ChestBlock.getFacing(this)
+}
+
+fun BlockState?.anotherBedPartDirection(): Direction? {
+    if (this?.block !is BedBlock) return null
+
+    // [body|head] -> (facing)
+    val bedFacing = this.get(BedBlock.FACING)
+
+    return if (BedBlock.getBedPart(this) == DoubleBlockProperties.Type.FIRST) {
+        bedFacing.opposite
+    } else {
+        bedFacing
+    }
 }
 
 /**

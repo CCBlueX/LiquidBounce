@@ -140,7 +140,7 @@ data class PlayerInventoryData(
             armor = player.inventory.armor.map(ItemStack::copy),
             main = player.inventory.main.map(ItemStack::copy),
             crafting = player.playerScreenHandler.craftingInput.heldStacks.map(ItemStack::copy),
-            enderChest = player.enderChestInventory.heldStacks.map(ItemStack::copy),
+            enderChest = player.enderChestInventory.getHeldStacks().map(ItemStack::copy),
         )
     }
 

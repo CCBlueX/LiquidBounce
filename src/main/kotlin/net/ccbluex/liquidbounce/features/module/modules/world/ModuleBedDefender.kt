@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.BedBlock
-import net.minecraft.block.DoubleBlockProperties
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.item.BlockItem
 import net.minecraft.util.math.BlockPos
@@ -124,7 +123,6 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
             val block = state.block
             when {
                 block !is BedBlock -> false
-                BedBlock.getBedPart(state) != DoubleBlockProperties.Type.FIRST -> false
                 else -> isSelfBedMode.activeChoice.shouldDefend(block, pos)
             }
         }
