@@ -49,7 +49,7 @@
     "minecraft.entity.MixinEnchantingTableBlockEntityRenderer",
     "minecraft.entity.MixinEntity",
     "minecraft.entity.MixinEntityRenderer",
-    "minecraft.entity.MixinExperienceOrbEntity",
+    "minecraft.entity.MixinExperienceOrbEntityAccessor",
     "minecraft.entity.MixinHeadFeatureRenderer",
     "minecraft.entity.MixinItemCooldownManager",
     "minecraft.entity.MixinLivingEntity",

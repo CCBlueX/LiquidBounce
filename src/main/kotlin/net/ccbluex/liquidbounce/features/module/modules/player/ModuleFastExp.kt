@@ -18,18 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.Fast.itemsPerTick
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.durabilityThreshold
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.Normal.ticksPerItem
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbEntity
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbEntityAccessor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -39,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.ExperienceOrbEntity
 import net.minecraft.item.Items
@@ -86,29 +82,19 @@ object ModuleFastExp : ClientModule(
         tree(NoWaste)
     }
 
-    private val throwMode = choices(this,
-        "ThrowMode",
-        Normal ,
-        arrayOf(Normal, Fast)
-    )
-
-    private object Normal : ThrowMode("Normal") {
-        val ticksPerItem by intRange("TicksPerItem", 2..3, 1..10, "ticks")
-    }
-
-    private object Fast : ThrowMode("Fast") {
-        val itemsPerTick by intRange("ItemsPerTick", 3..5, 1..32)
-    }
+    private val itemsPerTick by floatRange("ItemsPerTick", 0.5f..2f, 0.1f..32f)
 
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
 
     private var bottlesRequired = 0
     private var bottlesUsed = 0
+    private var itemsToThrow = 0f
 
     override fun onDisabled() {
         bottlesUsed = 0
         bottlesRequired = 0
+        itemsToThrow = 0f
         super.onDisabled()
     }
 
@@ -121,11 +107,6 @@ object ModuleFastExp : ClientModule(
 
         if (!NoWaste.enabled) {
             action(slot)
-            return@tickHandler
-        }
-
-        // doesn't start to repair items if the durability threshold hasn't been reached
-        if (bottlesUsed == 0 && !needRepair(slot)) {
             return@tickHandler
         }
 
@@ -143,27 +124,30 @@ object ModuleFastExp : ClientModule(
 
         // after all experience bottles have been thrown
         if (bottlesUsed > 0 && bottlesUsed >= bottlesRequired) {
-            // waits for experience orbs to appear
-            tickUntil {
-                world.entities
-                    .filterIsInstance<ExperienceOrbEntity>()
-                    .any { (it as MixinExperienceOrbEntity).target == player
-                        && it.velocity.length() > player.velocity.length() }
-
-                    // the orbs might get absorbed instantly if they come only from a very few bottles
-                    || it > 10
-            }
-
-            // waits for the orbs to get absorbed
-            tickUntil {
-                world.entities
-                    .filterIsInstance<ExperienceOrbEntity>()
-                    .none { (it as MixinExperienceOrbEntity).target == player
-                        && it.velocity.length() > player.velocity.length()}
-            }
-
+            waitForExperienceOrbs()
             bottlesUsed = 0
             bottlesRequired = 0
+        }
+    }
+
+    private suspend fun waitForExperienceOrbs() {
+        // waits for experience orbs to appear
+        tickUntil {
+            world.entities
+                .filterIsInstance<ExperienceOrbEntity>()
+                .any { (it as MixinExperienceOrbEntityAccessor).target == player
+                    && it.velocity.length() > player.velocity.length() }
+
+                // the orbs might get absorbed instantly if they come only from a very few bottles
+                || it > 10
+        }
+
+        // waits for the orbs to get absorbed
+        tickUntil {
+            world.entities
+                .filterIsInstance<ExperienceOrbEntity>()
+                .none { (it as MixinExperienceOrbEntityAccessor).target == player
+                    && it.velocity.length() > player.velocity.length()}
         }
     }
 
@@ -182,13 +166,9 @@ object ModuleFastExp : ClientModule(
             }
         }
 
-        val times = when (throwMode.activeChoice) {
-            Fast -> {
-                if (!NoWaste.enabled) { itemsPerTick.random() }
-                else { itemsPerTick.random().coerceAtMost(bottlesRequired - bottlesUsed) }
-            }
-            else -> 1
-        }
+        itemsToThrow += itemsPerTick.random()
+        val times = itemsToThrow.toInt()
+        itemsToThrow -= times
 
         val pitch = if (Rotate.enabled) RotationManager.serverRotation.pitch else 90f
         repeat(times) {
@@ -198,12 +178,6 @@ object ModuleFastExp : ClientModule(
                 pitch = pitch
             )
         }
-
-        val ticks = when (throwMode.activeChoice) {
-            Normal -> ticksPerItem.random()
-            else -> 1
-        }
-        waitTicks(ticks - 1)
 
         if (NoWaste.enabled) {
             bottlesUsed += times
@@ -230,29 +204,16 @@ object ModuleFastExp : ClientModule(
         val itemsToRepair = (player.inventory.armor + otherHandSlot)
             .filter { it.getEnchantment(Enchantments.MENDING) != 0 }
 
+        // doesn't let the module start repairing items if the durability threshold hasn't been reached
+        if (bottlesUsed == 0
+            && itemsToRepair.none { it.durability <= durabilityThreshold }) {
+            return 0
+        }
+
         val totalDamage = itemsToRepair.sumOf { it.damage }
         val experienceRequired = totalDamage / REPAIR_RATE
         val bottlesRequired = experienceRequired / EXPERIENCE_PER_BOTTLE
 
         return bottlesRequired
-    }
-
-    private fun needRepair(slot: HotbarItemSlot) : Boolean {
-        // an item in the other hand, not holding the exp bottle could also get repaired
-        val otherHandSlot = if (slot == OffHandSlot) {
-            player.mainHandStack
-        } else {
-            player.offHandStack
-        }
-
-        val itemsToRepair = (player.inventory.armor + otherHandSlot)
-            .filter { it.getEnchantment(Enchantments.MENDING) != 0 }
-
-        return itemsToRepair.any { it.durability <= durabilityThreshold }
-    }
-
-    private abstract class ThrowMode(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<ThrowMode>
-            get() = throwMode
     }
 }
