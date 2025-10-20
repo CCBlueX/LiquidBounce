@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.entity.Entity
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.*
@@ -289,9 +290,10 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
                     if (forwardmove != 0.0 || sidemove != 0.0) {
                         val viewYaw = player.yaw.toDouble()
                         val viewPitch = player.pitch.toDouble()
-                        val vecForwardLeft = anglesToVectors(viewPitch, viewYaw)
-                        var velocity = vecForwardLeft.first.multiply(forwardmove * speed)
-                        velocity = velocity.add(vecForwardLeft.second.multiply(sidemove * speed))
+                        val forward = Rotation(viewYaw.toFloat(), viewPitch.toFloat()).directionVector
+                        val left = Rotation((viewYaw - 90.0).toFloat(), 0f).directionVector
+                        var velocity = forward.multiply(forwardmove * speed)
+                        velocity = velocity.add(left.multiply(sidemove * speed))
 
                         var tmp = Vec3d(0.0, 1.0, 0.0)
                         var perp = tmp.crossProduct(ladderNormal).normalize()
@@ -385,17 +387,5 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
         }
     }
 
-
-    // View vectors
-    private fun anglesToVectors(pitch: Double, yaw: Double): Pair<Vec3d, Vec3d> {
-        val radPitch = Math.toRadians(pitch)
-        val radYaw = Math.toRadians(yaw)
-        val cosPitch = cos(radPitch)
-        val sinPitch = sin(radPitch)
-        val cosYaw = cos(radYaw)
-        val sinYaw = sin(radYaw)
-        val forwards = Vec3d(cosPitch * -sinYaw, -sinPitch, cosPitch * cosYaw)
-        val left = Vec3d(cosYaw, 0.0, sinYaw)
-        return forwards to left
-    }
+    
 }
