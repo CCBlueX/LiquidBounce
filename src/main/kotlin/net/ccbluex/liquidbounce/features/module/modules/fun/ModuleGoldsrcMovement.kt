@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.entity.Entity
+import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.*
 
@@ -351,7 +352,7 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
             if (d > 180f) savedYaw -= 360f else if (d < -180f) savedYaw += 360f
             for (i in 1..5) {
                 val t = i / 5.0
-                player.yaw = lerp(previousYaw.toDouble(), savedYaw.toDouble(), t).toFloat()
+                player.yaw = MathHelper.lerp(t, previousYaw.toDouble(), savedYaw.toDouble()).toFloat()
                 val wishdirAir = movementDirection(sidemove, forwardmove)
                 airAccelerate(wishspeed, wishdirAir.first, wishdirAir.second, airAcceleration.toDouble())
             }
@@ -384,7 +385,6 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
         }
     }
 
-    private fun lerp(a: Double, b: Double, t: Double): Double = (1.0 - t) * a + b * t
 
     // View vectors
     private fun anglesToVectors(pitch: Double, yaw: Double): Pair<Vec3d, Vec3d> {
