@@ -633,5 +633,5 @@
   "liquidbounce.scripts.debug.support": "Скрипт %s настроен на запуск с поддержкой отладчика на: ",
   "liquidbounce.tooltip.clickToCopy": "Кликни для копирования",
   "liquidbounce.unsupportedDeepLearning": "❌ Движок нейросети не инициализирован. Твоя система, возможно, не поддерживается.",
-  "liquidbounce.module.goldSrcMovement.description": "Движение Half‑Life 1 (GoldSrc): трение/ускорение HL1, классический A/D бхоп, лестницы и вода как в HL."
+  "liquidbounce.module.goldSrcMovement.description": "Движение как в Half‑Life 1 (GoldSrc): трение/ускорение HL1, классический A/D бхоп, лестницы и вода как в HL."
 }
