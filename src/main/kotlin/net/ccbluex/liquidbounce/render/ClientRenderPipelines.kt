@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.render
 import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
+import com.mojang.blaze3d.platform.DestFactor
+import com.mojang.blaze3d.platform.SourceFactor
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
@@ -39,6 +41,11 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     private val renderPipelines = Object2ObjectRBTreeMap<Identifier, RenderPipeline>()
 
+    /**
+     * Blend mode for JCEF compatible blending.
+     */
+    private val JCEF_COMPATIBLE_BLEND = BlendFunction(SourceFactor.ONE, DestFactor.ONE_MINUS_SRC_ALPHA)
+
     private inline fun create(name: String, builderAction: RenderPipeline.Builder.() -> Unit): RenderPipeline {
         val id = LiquidBounce.identifier("pipeline/$name")
         return RenderPipeline.builder()
@@ -48,6 +55,40 @@ object ClientRenderPipelines : SynchronousResourceReloader {
                 renderPipelines.put(id, r)?.let { error("Duplicated render pipeline: $it") }
             }
     }
+
+    // JCEF BEGIN
+
+    @JvmField
+    val SMOOTH_TEXTURE = create("smooth_texture") {
+//        withVertexShader() FIXME
+//        withFragmentShader(LiquidBounce.identifier())
+        withBlend(BlendFunction.TRANSLUCENT)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
+    }
+
+    @JvmField
+    val BLURRED_TEXTURE = create("blurred_texture") {
+        withBlend(JCEF_COMPATIBLE_BLEND)
+        withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
+    }
+
+    @JvmField
+    val BGRA_TEXTURE = create("bgra_texture") {
+        withBlend(JCEF_COMPATIBLE_BLEND)
+        withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
+    }
+
+    @JvmField
+    val BGRA_BLURRED_TEXTURE = create("bgra_blurred_texture") {
+        withBlend(JCEF_COMPATIBLE_BLEND)
+        withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
+    }
+
+    // JCEF END
 
     @JvmField
     val WORLD_RENDER_ENV = create("world_render") {

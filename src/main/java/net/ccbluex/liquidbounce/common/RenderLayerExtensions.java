@@ -19,18 +19,12 @@
 
 package net.ccbluex.liquidbounce.common;
 
-import com.mojang.blaze3d.pipeline.BlendFunction;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.DepthTestFunction;
-import com.mojang.blaze3d.platform.DestFactor;
-import com.mojang.blaze3d.platform.SourceFactor;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
 import net.ccbluex.liquidbounce.render.shader.CustomShaderProgramPhase;
 import net.ccbluex.liquidbounce.render.shader.shaders.BgraPositionTexColorShader;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
-import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.TriState;
 import net.minecraft.util.Util;
@@ -46,23 +40,11 @@ import static net.minecraft.client.render.RenderPhase.*;
  */
 public class RenderLayerExtensions {
 
-    /**
-     * Blend mode for JCEF compatible blending.
-     */
-    private static final BlendFunction JCEF_COMPATIBLE_BLEND = new BlendFunction(
-            SourceFactor.ONE, DestFactor.ONE_MINUS_SRC_ALPHA
-    );
-
 //    private static final RenderPhase.ShaderProgram BGRA_POSITION_TEXTURE_COLOR_PROGRAM = new CustomShaderProgramPhase(
 //            BgraPositionTexColorShader.INSTANCE,
 //            BgraPositionTexColorShader.INSTANCE.getUniforms(),
 //            BgraPositionTexColorShader.INSTANCE.getSamples()
 //    );
-
-    private static final RenderPipeline.Snippet SNIPPET_POS_TEX_COLOR_WITH_QUADS =
-            RenderPipeline.builder()
-                    .withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
-                    .buildSnippet();
 
     /**
      * Render Layer for smoother textures using bilinear filtering.
@@ -72,10 +54,7 @@ public class RenderLayerExtensions {
                     RenderLayer.of(
                             "smooth_textured",
                             786432,
-                            RenderPipeline.builder(SNIPPET_POS_TEX_COLOR_WITH_QUADS)
-                                    .withBlend(BlendFunction.TRANSLUCENT)
-                                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-                                    .build(),
+                            ClientRenderPipelines.SMOOTH_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new RenderPhase.Texture(textureId, TriState.DEFAULT, false))
 //                                    .program(RenderPhase.POSITION_TEXTURE_COLOR_PROGRAM)
@@ -90,10 +69,7 @@ public class RenderLayerExtensions {
                     RenderLayer.of(
                             "blurred_ui_layer",
                             786432,
-                            RenderPipeline.builder(SNIPPET_POS_TEX_COLOR_WITH_QUADS)
-                                    .withBlend(JCEF_COMPATIBLE_BLEND)
-                                    .withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
-                                    .build(),
+                            ClientRenderPipelines.BLURRED_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
 //                                    .program(RenderPhase.POSITION_TEXTURE_COLOR_PROGRAM)
@@ -109,10 +85,7 @@ public class RenderLayerExtensions {
                     RenderLayer.of(
                             "bgra_texture_layer",
                             786432,
-                            RenderPipeline.builder(SNIPPET_POS_TEX_COLOR_WITH_QUADS)
-                                    .withBlend(JCEF_COMPATIBLE_BLEND)
-                                    .withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
-                                    .build(),
+                            ClientRenderPipelines.BGRA_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
 //                                    .program(BGRA_POSITION_TEXTURE_COLOR_PROGRAM)
@@ -127,10 +100,7 @@ public class RenderLayerExtensions {
                     RenderLayer.of(
                             "bgra_blurred_texture_layer",
                             786432,
-                            RenderPipeline.builder(SNIPPET_POS_TEX_COLOR_WITH_QUADS)
-                                    .withBlend(JCEF_COMPATIBLE_BLEND)
-                                    .withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
-                                    .build(),
+                            ClientRenderPipelines.BGRA_BLURRED_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
 //                                    .program(BGRA_POSITION_TEXTURE_COLOR_PROGRAM)
