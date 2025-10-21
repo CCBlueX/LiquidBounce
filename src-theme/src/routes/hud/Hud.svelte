@@ -20,6 +20,7 @@
     import Text from "./elements/Text.svelte";
     import CraftingInput from "./elements/inventory/CraftingInput.svelte";
     import DraggableComponent from "./elements/DraggableComponent.svelte";
+    import BedPlatesView from "./elements/BedPlatesView.svelte";
 
     let zoom = 100;
     let metadata: Metadata;
@@ -65,6 +66,8 @@
                     <TargetHud/>
                 {:else if c.name === "BlockCounter"}
                     <BlockCounter/>
+                {:else if c.name === "BedPlatesView"}
+                    <BedPlatesView/>
                 {:else if c.name === "Hotbar"}
                     <HotBar/>
                 {:else if c.name === "Scoreboard"}

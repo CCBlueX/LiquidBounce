@@ -1,0 +1,11 @@
+{
+  "name": "BedPlatesView",
+  "enabled": false,
+  "singleton": true,
+  "alignment": {
+    "horizontalAlignment": "CenterTranslated",
+    "horizontalOffset": 0,
+    "verticalAlignment": "Top",
+    "verticalOffset": 100
+  }
+}
