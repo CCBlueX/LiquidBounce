@@ -40,6 +40,11 @@ import okio.source
 // FIXME
 object ClientRenderPipelines : SynchronousResourceReloader {
 
+    //    private static final RenderPhase.ShaderProgram BGRA_POSITION_TEXTURE_COLOR_PROGRAM = new CustomShaderProgramPhase(
+//            BgraPositionTexColorShader.INSTANCE,
+//            BgraPositionTexColorShader.INSTANCE.getUniforms(),
+//            BgraPositionTexColorShader.INSTANCE.getSamples()
+//    );
     private val renderPipelines = Object2ObjectRBTreeMap<Identifier, RenderPipeline>()
 
     /**

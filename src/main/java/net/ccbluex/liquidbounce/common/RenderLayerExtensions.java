@@ -21,8 +21,6 @@ package net.ccbluex.liquidbounce.common;
 
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
-import net.ccbluex.liquidbounce.render.shader.CustomShaderProgramPhase;
-import net.ccbluex.liquidbounce.render.shader.shaders.BgraPositionTexColorShader;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
 import net.minecraft.util.Identifier;
@@ -35,21 +33,13 @@ import static net.minecraft.client.render.RenderPhase.*;
 
 /**
  * Extensions to RenderLayer for custom render layers.
- *
- * FIXME: rewrite ShaderProgram
  */
 public class RenderLayerExtensions {
-
-//    private static final RenderPhase.ShaderProgram BGRA_POSITION_TEXTURE_COLOR_PROGRAM = new CustomShaderProgramPhase(
-//            BgraPositionTexColorShader.INSTANCE,
-//            BgraPositionTexColorShader.INSTANCE.getUniforms(),
-//            BgraPositionTexColorShader.INSTANCE.getSamples()
-//    );
 
     /**
      * Render Layer for smoother textures using bilinear filtering.
      */
-    private static final Function<Identifier, RenderLayer> SMOOTH_TEXTURE_LAYER = Util.memoize(
+    public static final Function<Identifier, RenderLayer> SMOOTH_TEXTURE_LAYER = Util.memoize(
             textureId ->
                     RenderLayer.of(
                             "smooth_textured",
@@ -63,7 +53,7 @@ public class RenderLayerExtensions {
     /**
      * Render Layer for elements that need to be rendered to the blur framebuffer.
      */
-    private static final Function<Identifier, RenderLayer> BLURRED_TEXTURE_LAYER = Util.memoize(
+    public static final Function<Identifier, RenderLayer> BLURRED_TEXTURE_LAYER = Util.memoize(
             textureId ->
                     RenderLayer.of(
                             "blurred_ui_layer",
@@ -78,7 +68,7 @@ public class RenderLayerExtensions {
     /**
      * Render Layer for BGRA textures.
      */
-    private static final Function<Identifier, RenderLayer> BGRA_TEXTURE_LAYER = Util.memoize(
+    public static final Function<Identifier, RenderLayer> BGRA_TEXTURE_LAYER = Util.memoize(
             textureId ->
                     RenderLayer.of(
                             "bgra_texture_layer",
@@ -92,7 +82,7 @@ public class RenderLayerExtensions {
     /**
      * Render Layer for BGRA textures that also need blur effect.
      */
-    private static final Function<Identifier, RenderLayer> BGRA_BLURRED_TEXTURE_LAYER = Util.memoize(
+    public static final Function<Identifier, RenderLayer> BGRA_BLURRED_TEXTURE_LAYER = Util.memoize(
             textureId ->
                     RenderLayer.of(
                             "bgra_blurred_texture_layer",
@@ -103,21 +93,5 @@ public class RenderLayerExtensions {
                                     .target(BlurEffectRenderer.getOutlineTarget())
                                     .build(false)
                     ));
-
-    public static RenderLayer getSmoothTextureLayer(Identifier textureId) {
-        return SMOOTH_TEXTURE_LAYER.apply(textureId);
-    }
-
-    public static RenderLayer getBlurredTextureLayer(Identifier textureId) {
-        return BLURRED_TEXTURE_LAYER.apply(textureId);
-    }
-
-    public static RenderLayer getBgraTextureLayer(Identifier textureId) {
-        return BGRA_TEXTURE_LAYER.apply(textureId);
-    }
-
-    public static RenderLayer getBgraBlurredTextureLayer(Identifier textureId) {
-        return BGRA_BLURRED_TEXTURE_LAYER.apply(textureId);
-    }
 
 }

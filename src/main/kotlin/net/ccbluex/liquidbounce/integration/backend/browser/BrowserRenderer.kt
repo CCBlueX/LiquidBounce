@@ -100,9 +100,9 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
         height: Float
     ) {
         val layer = if (texture.bgra) {
-            RenderLayerExtensions::getBgraBlurredTextureLayer
+            RenderLayerExtensions.BGRA_BLURRED_TEXTURE_LAYER
         } else {
-            RenderLayerExtensions::getBlurredTextureLayer
+            RenderLayerExtensions.BLURRED_TEXTURE_LAYER
         }
 
         context.drawTexture(

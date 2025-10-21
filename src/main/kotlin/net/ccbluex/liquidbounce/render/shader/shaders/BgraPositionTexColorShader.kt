@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.render.shader.shaders
 
 import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.io.resourceToString
-import net.minecraft.client.gl.PostEffectPipeline
-import net.minecraft.client.gl.ShaderProgramDefinition
 import net.minecraft.client.render.VertexFormats
 
 object BgraPositionTexColorShader : Shader(
@@ -31,15 +29,15 @@ object BgraPositionTexColorShader : Shader(
 ) {
 
     val uniforms = mutableListOf(
-        PostEffectPipeline.Uniform(
+        ShaderProgramDefinition.Uniform(
             "ModelViewMat", "matrix4x4", 16, listOf(
             1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f
         )),
-        PostEffectPipeline.Uniform(
+        ShaderProgramDefinition.Uniform(
             "ProjMat", "matrix4x4", 16, listOf(
             1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f
         )),
-        PostEffectPipeline.Uniform(
+        ShaderProgramDefinition.Uniform(
             "ColorModulator", "float", 4, listOf(
                 1.0f, 1.0f, 1.0f, 1.0f
             )
