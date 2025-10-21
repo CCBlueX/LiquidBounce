@@ -26,13 +26,17 @@ import net.fabricmc.mappings.model.V2MappingsProvider
 
 object EnvironmentRemapper {
 
-    private val mappings = runCatching {
+    val intermediaryToYarn = runCatching {
         resource("/mappings/mappings.tiny").bufferedReader().use {
             V2MappingsProvider.readTinyMappings(it)
         }
     }.onFailure {
         logger.error("Unable to load mappings. Ignore this if you are using a development environment.", it)
     }.getOrNull()
+
+    private val finalMappings = if (LabyFabricWrapper.loaded) {
+        GarbageCodeHolder.handleLabyMod()
+    } else { intermediaryToYarn }
 
     private val environment = runCatching {
         probeEnvironment()
@@ -41,7 +45,7 @@ object EnvironmentRemapper {
     }.getOrNull()
 
     private fun probeEnvironment(): String? {
-        val mappings = mappings ?: return null
+        val mappings = finalMappings ?: return null
 
         val minecraftClassEntry = mappings.classEntries?.find { entry ->
             entry?.get("named") == "net/minecraft/client/MinecraftClient"
@@ -52,12 +56,24 @@ object EnvironmentRemapper {
             return null
         }
 
+        logger.info(
+            "mc class entry -> $minecraftClassEntry (im =" +
+                "${minecraftClassEntry["intermediary"]}," +
+                "official = ${minecraftClassEntry["official"]})"
+        )
+
         logger.info("Probing environment...")
         return when {
             isClassPresent(minecraftClassEntry.get("intermediary")?.toDotNotation()) -> {
                 logger.info("Intermediary environment detected.")
                 "intermediary"
             }
+
+            LabyFabricWrapper.loaded -> {
+                logger.info("LabyFabric detected, assuming official namespace.")
+                "official"
+            }
+
             else -> {
                 logger.error("No matching environment detected. Please make sure you are using a valid environment.")
                 null
@@ -78,7 +94,7 @@ object EnvironmentRemapper {
         environment ?: return clazz
 
         val className = clazz.toSlashNotation()
-        return mappings?.classEntries?.find {
+        return finalMappings?.classEntries?.find {
             it?.get("named") == className
         }?.get(environment)?.toDotNotation() ?: clazz
     }
@@ -87,7 +103,7 @@ object EnvironmentRemapper {
         environment ?: return clazz.name
 
         val className = clazz.name.toSlashNotation()
-        return mappings?.classEntries?.find {
+        return finalMappings?.classEntries?.find {
             it?.get(environment) == className
         }?.get("named")?.toDotNotation() ?: clazz.name
     }
@@ -97,7 +113,7 @@ object EnvironmentRemapper {
 
         val clazzNames = getClassHierarchyNames(clazz)
 
-        return mappings?.fieldEntries?.find { entry ->
+        return finalMappings?.fieldEntries?.find { entry ->
             val intern = entry.get(environment)
             clazzNames.contains(intern.owner) && intern.name == name
         }?.get("named")?.name ?: name
@@ -107,7 +123,7 @@ object EnvironmentRemapper {
         environment ?: return name
 
         val className = clazz.toSlashNotation()
-        return mappings?.fieldEntries?.find { entry ->
+        return finalMappings?.fieldEntries?.find { entry ->
             val intern = entry.get(environment)
             className == intern.owner && intern.name == name
         }?.get("named")?.name ?: name
@@ -118,7 +134,7 @@ object EnvironmentRemapper {
 
         val clazzNames = getClassHierarchyNames(clazz)
 
-        return mappings?.methodEntries?.find { entry ->
+        return finalMappings?.methodEntries?.find { entry ->
             val intern = entry.get(environment)
             clazzNames.contains(intern.owner) && intern.name == name
         }?.get("named")?.name ?: name
