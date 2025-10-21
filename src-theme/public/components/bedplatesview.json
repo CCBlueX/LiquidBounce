@@ -7,5 +7,17 @@
     "horizontalOffset": 0,
     "verticalAlignment": "Top",
     "verticalOffset": 100
-  }
+  },
+  "values": [
+    {
+      "type": "BOOLEAN",
+      "name": "ShowDirection",
+      "value": true
+    },
+    {
+      "type": "BOOLEAN",
+      "name": "Compact",
+      "value": true
+    }
+  ]
 }

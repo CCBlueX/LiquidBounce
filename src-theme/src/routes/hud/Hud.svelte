@@ -67,7 +67,7 @@
                 {:else if c.name === "BlockCounter"}
                     <BlockCounter/>
                 {:else if c.name === "BedPlatesView"}
-                    <BedPlatesView/>
+                    <BedPlatesView settings={c.settings}/>
                 {:else if c.name === "Hotbar"}
                     <HotBar/>
                 {:else if c.name === "Scoreboard"}

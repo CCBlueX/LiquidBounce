@@ -19,9 +19,15 @@
 
 <script lang="ts">
     import {listen} from "../../../integration/ws";
-    import type {BedState, PlayerData} from "../../../integration/types";
+    import type {BedState, PlayerData, SurroundingBlock} from "../../../integration/types";
     import {REST_BASE} from "../../../integration/host";
     import {distance, distanceSq} from "../../../util/math_utils";
+
+    interface HudComponentProps {
+        settings: { [name: string]: any };
+    }
+
+    const {settings}: HudComponentProps = $props();
 
     let beds: BedState[] = $state([]);
     let playerData: PlayerData | null = $state(null);
@@ -60,7 +66,8 @@
         return angleDiff;
     }
 
-    const processSurroundingBlocks = (list: { block: string, count: number, layer: number }[]) => {
+    // compact = false
+    const processSurroundingBlocks = (list: SurroundingBlock[]) => {
         const result: { layer: number, blocks: { block: string, count: number }[], }[] = [];
 
         if (!list?.length) {
@@ -93,27 +100,38 @@
             <div class="row">
                 <code class="distance">{playerData ? `${Math.floor(distance(bed.pos, playerData.position))}m` : '---m'}</code>
                 <img class="bed" src={itemIconUrl(bed.block)} alt={bed.block}/>
-                <span class="direction">
-                    {#if playerData}
-                        <div style="transform: rotate({calculateRelativeDirection(playerData.position.x, playerData.position.z, playerData.yaw, bed.pos.x, bed.pos.z)}rad)">↑</div>
-                    {:else}
-                        -
-                    {/if}
-                </span>
+                {#if settings.showDirection}
+                    <span class="direction">
+                        {#if playerData}
+                            <div style="transform: rotate({calculateRelativeDirection(playerData.position.x, playerData.position.z, playerData.yaw, bed.pos.x, bed.pos.z)}rad)">↑</div>
+                        {:else}
+                            -
+                        {/if}
+                    </span>
+                {/if}
                 {#if bed.surroundingBlocks?.length}
                     <hr/>
                 {/if}
-                {#each processSurroundingBlocks(bed.surroundingBlocks) as {blocks, layer} (layer)}
-                    {#if layer}
-                        <code style="color: white">{ROMAN_NUMERALS[layer]}</code>
-                    {/if}
-                    {#each blocks as {block, count} (block)}
+                {#if settings.compact}
+                    {#each bed.compactSurroundingBlocks as {block, count} (block)}
                         <div class="block">
                             <img src={itemIconUrl(block)} alt={block}/>
                             <code class="count">{count}</code>
                         </div>
                     {/each}
-                {/each}
+                {:else}
+                    {#each processSurroundingBlocks(bed.surroundingBlocks) as {blocks, layer} (layer)}
+                        {#if layer}
+                            <code style="color: white">{ROMAN_NUMERALS[layer]}</code>
+                        {/if}
+                        {#each blocks as {block, count} (block)}
+                            <div class="block">
+                                <img src={itemIconUrl(block)} alt={block}/>
+                                <code class="count">{count}</code>
+                            </div>
+                        {/each}
+                    {/each}
+                {/if}
             </div>
         {/each}
     </div>
