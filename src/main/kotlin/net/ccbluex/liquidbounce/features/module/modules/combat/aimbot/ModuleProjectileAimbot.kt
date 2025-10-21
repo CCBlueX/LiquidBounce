@@ -53,8 +53,6 @@ object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", Category.COMBAT
                 true
             ) ?: return@firstNotNullOfOrNull null
 
-            if (!type.enabled) return@firstNotNullOfOrNull null
-
             SituationalProjectileAngleCalculator.calculateAngleForEntity(trajectoryInfo, target)
         } ?: return@tickHandler
 
