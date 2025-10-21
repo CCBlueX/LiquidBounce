@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.ExperienceOrbEntity
 import net.minecraft.item.Items
 
 /**
@@ -130,24 +129,23 @@ object ModuleFastExp : ClientModule(
         }
     }
 
+    private fun anyExpOrbMovingToPlayer(): Boolean =
+        world.entities.any {
+            (it is MixinExperienceOrbEntityAccessor) && it.target === player
+                && it.velocity.lengthSquared() > player.velocity.lengthSquared()
+        }
+
     private suspend fun waitForExperienceOrbs() {
         // waits for experience orbs to appear
         tickUntil {
-            world.entities
-                .filterIsInstance<ExperienceOrbEntity>()
-                .any { (it as MixinExperienceOrbEntityAccessor).target == player
-                    && it.velocity.length() > player.velocity.length() }
-
+            anyExpOrbMovingToPlayer()
                 // the orbs might get absorbed instantly if they come only from a very few bottles
                 || it > 10
         }
 
         // waits for the orbs to get absorbed
         tickUntil {
-            world.entities
-                .filterIsInstance<ExperienceOrbEntity>()
-                .none { (it as MixinExperienceOrbEntityAccessor).target == player
-                    && it.velocity.length() > player.velocity.length()}
+            !anyExpOrbMovingToPlayer()
         }
     }
 
