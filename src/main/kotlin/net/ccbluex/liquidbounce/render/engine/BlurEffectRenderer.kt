@@ -49,7 +49,7 @@ object BlurEffectRenderer : MinecraftShortcuts {
         arrayOf(
             UniformProvider("texture0") { pointer ->
                 GlStateManager._activeTexture(GL13.GL_TEXTURE0)
-                GlStateManager._bindTexture((tmpFramebuffer.colorAttachment as GlTexture).glId)
+                GlStateManager._bindTexture(tmpFramebuffer.colorAttachment)
                 GL20.glUniform1i(pointer, 0)
             },
             UniformProvider("overlay") { pointer ->
