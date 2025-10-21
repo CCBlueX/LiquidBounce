@@ -40,12 +40,16 @@ import okio.source
 // FIXME
 object ClientRenderPipelines : SynchronousResourceReloader {
 
-    //    private static final RenderPhase.ShaderProgram BGRA_POSITION_TEXTURE_COLOR_PROGRAM = new CustomShaderProgramPhase(
-//            BgraPositionTexColorShader.INSTANCE,
-//            BgraPositionTexColorShader.INSTANCE.getUniforms(),
-//            BgraPositionTexColorShader.INSTANCE.getSamples()
-//    );
     private val renderPipelines = Object2ObjectRBTreeMap<Identifier, RenderPipeline>()
+
+    // TODO: TEST THIS
+    private val BGRA_POSITION_TEX_COLOR_SNIPPET = RenderPipeline.builder(
+        RenderPipelines.MATRICES_SNIPPET,
+        RenderPipelines.MATRICES_COLOR_SNIPPET,
+    )
+        .withSampler("Sampler0")
+        .withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
+        .buildSnippet()
 
     /**
      * Blend mode for JCEF compatible blending.
@@ -83,18 +87,16 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     @JvmField
     val BGRA_TEXTURE = create("bgra_texture") {
-//        RenderPipelines.POSITION_TEX_COLOR_SNIPPET FIXME: BGRA_POS_TEX_COLOR
+        withSnippet(BGRA_POSITION_TEX_COLOR_SNIPPET)
         withBlend(JCEF_COMPATIBLE_BLEND)
         withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
     }
 
     @JvmField
     val BGRA_BLURRED_TEXTURE = create("bgra_blurred_texture") {
-//        RenderPipelines.POSITION_TEX_COLOR_SNIPPET FIXME: BGRA_POS_TEX_COLOR
+        withSnippet(BGRA_POSITION_TEX_COLOR_SNIPPET)
         withBlend(JCEF_COMPATIBLE_BLEND)
         withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
     }
 
     // JCEF END
