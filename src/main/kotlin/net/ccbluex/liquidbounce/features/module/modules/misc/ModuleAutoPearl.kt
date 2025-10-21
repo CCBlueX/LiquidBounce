@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -206,7 +207,8 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
         val simulatedDestination = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             entity = player,
             trajectoryInfo = TrajectoryInfo.GENERIC,
-            rotation = angles
+            rotation = angles,
+            projectileType = ModuleTrajectories.ProjectileType.EnderPearl,
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.pos ?: return false
 
         return !Limits.enabled || Limits.destDistance > destination.distanceTo(simulatedDestination)
@@ -225,7 +227,8 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
             pos = pos,
             trajectoryInfo = trajectoryInfo,
             type = TrajectoryInfoRenderer.Type.REAL,
-            renderOffset = renderOffset
+            renderOffset = renderOffset,
+            projectileType = ModuleTrajectories.ProjectileType.EnderPearl,
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult
 
     override fun onDisabled() {

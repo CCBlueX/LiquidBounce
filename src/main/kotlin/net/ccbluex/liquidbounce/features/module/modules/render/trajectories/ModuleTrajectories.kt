@@ -270,16 +270,15 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     override fun onDisabled() {
         simulationResults.clear()
     }
-
     val renderHandler = handler<WorldRenderEvent> { event ->
         simulationResults.clear()
 
         if (activeThrown || activeThrownInfo) {
             world.entities.forEach { entity ->
-                val trajectoryInfo = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(entity) ?: return@forEach
+                val (trajectoryInfo, projectileType) =
+                    TrajectoryData.getRenderTrajectoryInfoForOtherEntity(entity) ?: return@forEach
 
-                val type = entity.categorize() ?: return@forEach
-                if (!type.enabled) return@forEach
+                if (!projectileType.enabled) return@forEach
 
                 val pos = entity.interpolateCurrentPosition(event.partialTicks)
 
@@ -289,6 +288,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                     pos = pos,
                     trajectoryInfo = trajectoryInfo,
                     type = TrajectoryInfoRenderer.Type.REAL,
+                    projectileType = projectileType,
                     renderOffset = Vec3d.ZERO
                 )
 
@@ -297,7 +297,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
 
                 if (activeThrown) {
                     renderSimulationResult(
-                        renderer, simulationResult, type, trajectoryInfo, event
+                        renderer, simulationResult, projectileType, trajectoryInfo, event
                     )
                 }
             }

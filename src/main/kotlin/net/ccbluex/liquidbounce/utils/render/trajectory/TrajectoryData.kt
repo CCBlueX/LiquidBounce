@@ -32,113 +32,48 @@ import net.minecraft.util.math.Vec3d
 
 object TrajectoryData {
     @JvmStatic
-    fun getRenderedTrajectoryInfo(player: PlayerEntity, item: Item, alwaysShowBow: Boolean): TrajectoryInfo? {
+    fun getRenderedTrajectoryInfo(
+        player: PlayerEntity, item: Item, alwaysShowBow: Boolean
+    ): Pair<TrajectoryInfo, ProjectileType>? {
         return when (item) {
             is BowItem -> {
                 val useTime = if (alwaysShowBow && player.itemUseTime < 1) 40 else player.itemUseTime
-                TrajectoryInfo.bowWithUsageDuration(useTime)?.copy(
-                    projectileType = ProjectileType.Arrow
-                )
+                TrajectoryInfo.bowWithUsageDuration(useTime)?.let {
+                    it to ProjectileType.Arrow
+                }
             }
 
-            is CrossbowItem -> TrajectoryInfo.BOW_FULL_PULL.copy(
-                projectileType = ProjectileType.Arrow
-            )
-
-            is FishingRodItem -> TrajectoryInfo.FISHING_ROD.copy(
-                projectileType = ProjectileType.FishingBobber
-            )
-
-            is ThrowablePotionItem -> TrajectoryInfo.POTION.copy(
-                projectileType = ProjectileType.Potion
-            )
-
-            is TridentItem -> TrajectoryInfo.TRIDENT.copy(
-                projectileType = ProjectileType.Trident
-            )
-
-            is SnowballItem -> TrajectoryInfo.GENERIC.copy(
-                projectileType = ProjectileType.Snowball
-            )
-
-            is EnderPearlItem -> TrajectoryInfo.GENERIC.copy(
-                projectileType = ProjectileType.EnderPearl
-            )
-
-            is EggItem -> TrajectoryInfo.GENERIC.copy(
-                projectileType = ProjectileType.Egg
-            )
-
-            is ExperienceBottleItem -> TrajectoryInfo.EXP_BOTTLE.copy(
-                projectileType = ProjectileType.ExpBottle
-            )
-
-            is FireChargeItem -> TrajectoryInfo.FIREBALL.copy(
-                projectileType = ProjectileType.Fireball
-            )
-
-            is WindChargeItem -> TrajectoryInfo.WIND_CHARGE.copy(
-                projectileType = ProjectileType.WindCharge
-            )
-
+            is CrossbowItem -> TrajectoryInfo.BOW_FULL_PULL to ProjectileType.Arrow
+            is FishingRodItem -> TrajectoryInfo.FISHING_ROD to ProjectileType.FishingBobber
+            is ThrowablePotionItem -> TrajectoryInfo.POTION to ProjectileType.Potion
+            is TridentItem -> TrajectoryInfo.TRIDENT to ProjectileType.Trident
+            is SnowballItem -> TrajectoryInfo.GENERIC to ProjectileType.Snowball
+            is EnderPearlItem -> TrajectoryInfo.GENERIC to ProjectileType.EnderPearl
+            is EggItem -> TrajectoryInfo.GENERIC to ProjectileType.Egg
+            is ExperienceBottleItem -> TrajectoryInfo.EXP_BOTTLE to ProjectileType.ExpBottle
+            is FireChargeItem -> TrajectoryInfo.FIREBALL to ProjectileType.Fireball
+            is WindChargeItem -> TrajectoryInfo.WIND_CHARGE to ProjectileType.WindCharge
             else -> null
         }
     }
 
-
     @JvmStatic
-    fun getRenderTrajectoryInfoForOtherEntity(entity: Entity): TrajectoryInfo? {
+    fun getRenderTrajectoryInfoForOtherEntity(entity: Entity): Pair<TrajectoryInfo, ProjectileType>? {
         return when (entity) {
-            is ArrowEntity -> if (!entity.isInGround()) {
-                TrajectoryInfo(
-                    0.05, 0.3,
-                    projectileType = ProjectileType.Arrow)
-            } else {
-                null
-            }
+            is ArrowEntity -> if (!entity.isInGround())
+                TrajectoryInfo(0.05, 0.3) to ProjectileType.Arrow else null
 
-            is PotionEntity -> TrajectoryInfo.POTION.copy(
-                projectileType = ProjectileType.Potion
-            )
+            is PotionEntity -> TrajectoryInfo.POTION to ProjectileType.Potion
+            is TridentEntity -> if (!entity.isInGround())
+                TrajectoryInfo.TRIDENT to ProjectileType.Trident else null
 
-            is TridentEntity -> {
-                if (!entity.isInGround()) {
-                    TrajectoryInfo.TRIDENT.copy(
-                        projectileType = ProjectileType.Trident
-                    )
-                } else {
-                    null
-                }
-            }
-
-            is EnderPearlEntity -> TrajectoryInfo.GENERIC.copy(
-                projectileType = ProjectileType.EnderPearl
-            )
-
-            is SnowballEntity -> TrajectoryInfo.GENERIC.copy(
-                projectileType = ProjectileType.Snowball
-            )
-
-            is EggEntity -> TrajectoryInfo.GENERIC.copy(
-                projectileType = ProjectileType.Egg
-            )
-
-            is ExperienceBottleEntity -> TrajectoryInfo.EXP_BOTTLE.copy(
-                projectileType = ProjectileType.ExpBottle
-            )
-
-            is AbstractFireballEntity -> TrajectoryInfo.FIREBALL.copy(
-                projectileType = ProjectileType.Fireball
-            )
-
-            is FishingBobberEntity -> TrajectoryInfo.FISHING_ROD.copy(
-                projectileType = ProjectileType.FishingBobber
-            )
-
-            is WindChargeEntity -> TrajectoryInfo.WIND_CHARGE.copy(
-                projectileType = ProjectileType.WindCharge
-            )
-
+            is EnderPearlEntity -> TrajectoryInfo.GENERIC to ProjectileType.EnderPearl
+            is SnowballEntity -> TrajectoryInfo.GENERIC to ProjectileType.Snowball
+            is EggEntity -> TrajectoryInfo.GENERIC to ProjectileType.Egg
+            is ExperienceBottleEntity -> TrajectoryInfo.EXP_BOTTLE to ProjectileType.ExpBottle
+            is AbstractFireballEntity -> TrajectoryInfo.FIREBALL to ProjectileType.Fireball
+            is FishingBobberEntity -> TrajectoryInfo.FISHING_ROD to ProjectileType.FishingBobber
+            is WindChargeEntity -> TrajectoryInfo.WIND_CHARGE to ProjectileType.WindCharge
             else -> null
         }
     }
@@ -147,8 +82,8 @@ object TrajectoryData {
 fun TrajectoryInfo.categorize(): ProjectileType? = this.projectileType
 
 // Determine if first-tick position skip is needed
-fun TrajectoryInfo.requiresInitialTickCorrection(): Boolean =
-    projectileType in setOf(
+fun ProjectileType.requiresInitialTickCorrection(): Boolean =
+    this in setOf(
         ProjectileType.EnderPearl,
         ProjectileType.Snowball,
         ProjectileType.Egg

@@ -45,17 +45,17 @@ object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", Category.COMBAT
         val target = targetSelector.targets().firstOrNull() ?: return@tickHandler
 
         val rotation = player.handItems.firstNotNullOfOrNull {
-            if (it.item == null) {
-                return@firstNotNullOfOrNull null
-            }
+            if (it.item == null) return@firstNotNullOfOrNull null
 
-            val trajectory = TrajectoryData.getRenderedTrajectoryInfo(
+            val (trajectoryInfo, type) = TrajectoryData.getRenderedTrajectoryInfo(
                 player,
                 it.item,
                 true
             ) ?: return@firstNotNullOfOrNull null
 
-            SituationalProjectileAngleCalculator.calculateAngleForEntity(trajectory, target)
+            if (!type.enabled) return@firstNotNullOfOrNull null
+
+            SituationalProjectileAngleCalculator.calculateAngleForEntity(trajectoryInfo, target)
         } ?: return@tickHandler
 
         RotationManager.setRotationTarget(

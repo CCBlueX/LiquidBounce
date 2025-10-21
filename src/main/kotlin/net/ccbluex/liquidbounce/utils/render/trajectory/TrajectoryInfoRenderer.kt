@@ -1,21 +1,4 @@
 /*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
- *
- * Copyright (c) 2015 - 2025 CCBlueX
- *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.render.trajectory
@@ -73,6 +56,7 @@ class TrajectoryInfoRenderer(
      * The visualization should be what-you-see-is-what-you-get, so we use the actual current position of the player
      * for simulation. Since the trajectory line should follow the player smoothly, we offset it by some amount.
      */
+    val projectileType: ModuleTrajectories.ProjectileType,
     private val renderOffset: Vec3d
 ) {
     enum class Type {
@@ -95,6 +79,7 @@ class TrajectoryInfoRenderer(
         fun getHypotheticalTrajectory(
             entity: Entity,
             trajectoryInfo: TrajectoryInfo,
+            projectileType: ModuleTrajectories.ProjectileType,
             rotation: Rotation,
             partialTicks: Float = mc.renderTickCounter.getTickDelta(true)
         ): TrajectoryInfoRenderer {
@@ -115,7 +100,6 @@ class TrajectoryInfoRenderer(
                 cos(yawRadians) * cos(pitchRadians).toDouble()
             ).normalize().scale(trajectoryInfo.initialVelocity)
 
-            //In Freeze, this momentum is the residual value before freezing.
             if (trajectoryInfo.copiesPlayerVelocity && !ModuleFreeze.running) {
                 velocity.move(
                     x = entity.velocity.x,
@@ -130,6 +114,7 @@ class TrajectoryInfoRenderer(
                 pos = pos,
                 trajectoryInfo = trajectoryInfo,
                 type = Type.HYPOTHETICAL,
+                projectileType = projectileType,
                 renderOffset = interpolatedOffset.add(-cos(yawRadians) * 0.16, 0.0, -sin(yawRadians) * 0.16)
             )
         }
@@ -159,13 +144,13 @@ class TrajectoryInfoRenderer(
         val positions = mutableListOf<Vec3d>()
 
         // Apply first-tick physics to velocity only for affected projectiles
-        if (trajectoryInfo.requiresInitialTickCorrection()) {
+        if (projectileType.requiresInitialTickCorrection()) {
             tickVelocity()
         }
 
         val prevPos = pos.copy()
         // Now start normal simulation, starting from currTicks = 1
-        var currTicks = if (trajectoryInfo.requiresInitialTickCorrection()){
+        var currTicks = if (projectileType.requiresInitialTickCorrection()){
             1
         } else {
             0
@@ -362,11 +347,10 @@ fun drawHypotheticalTrajectoryWithSimulation(
     playerEntity: PlayerEntity,
     event: WorldRenderEvent,
     shouldRender: Boolean) {
-    val trajectoryInfo = playerEntity.handItems.firstNotNullOfOrNull {
+    val (trajectoryInfo, type) = playerEntity.handItems.firstNotNullOfOrNull {
         TrajectoryData.getRenderedTrajectoryInfo(playerEntity, it.item, alwaysShowBow)
     } ?: return
 
-    val type = trajectoryInfo.categorize() ?: return
     if (!type.enabled) return
 
     val rotation = if (playerEntity === player) {
@@ -384,6 +368,7 @@ fun drawHypotheticalTrajectoryWithSimulation(
     val renderer = getHypotheticalTrajectory(
         entity = playerEntity,
         trajectoryInfo = trajectoryInfo,
+        projectileType = type,
         rotation = rotation,
         partialTicks = event.partialTicks
     )
@@ -392,8 +377,6 @@ fun drawHypotheticalTrajectoryWithSimulation(
     simulationResults += renderer to simulationResult
 
     if (shouldRender) {
-        renderSimulationResult(
-            renderer, simulationResult, type, trajectoryInfo, event
-        )
+        renderSimulationResult(renderer, simulationResult, type, trajectoryInfo, event)
     }
 }
