@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
@@ -41,8 +42,10 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.*
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
+import net.minecraft.block.ShapeContext
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
@@ -306,83 +309,23 @@ private fun drawHitEntities(
     }
 }
 
-private var previousSide: Direction? = null
-private var currentSide: Direction = Direction.UP
-private var lastChange: Long = 0L
+private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHitResult, color: Color4b) {
+    val currPos = blockHitResult.blockPos
+    val currState = currPos.getState()!!
 
-private fun renderHitBlockFace(
-    matrixStack: MatrixStack, blockHitResult: BlockHitResult, color: Color4b, event: WorldRenderEvent) {
-    val side = blockHitResult.side
-    if (side != currentSide) {
-        previousSide = currentSide
-        currentSide = side
-        lastChange = System.currentTimeMillis()
-    }
-    val now = System.currentTimeMillis()
-    val factor = Easing.QUAD_OUT.getFactor(lastChange, now, 150F).toDouble()
-    if (factor >= 1.0) {
-        previousSide = null
-    }
+    val bestBox = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
+        .filter { blockHitResult.pos in it.expand(0.01, 0.01, 0.01).offset(currPos) }
+        .minByOrNull { it.squaredBoxedDistanceTo(blockHitResult.pos) }
 
-    val hitPos = blockHitResult.pos
-    val playerLastPos = Vec3d(player.prevX, player.prevY, player.prevZ)
-    val playerInterpolated = player.interpolateCurrentPosition(event.partialTicks)
-    val posOffset = playerInterpolated.subtract(playerLastPos)
-    val renderedHitPos = hitPos.add(posOffset)
-
-    val points = listOf(
-        Vec3(0.0, 0.001, -0.5),
-        Vec3(0.5, 0.001, 0.0),
-        Vec3(0.0, 0.001, 0.5),
-        Vec3(-0.5, 0.001, 0.0)
-    )
-    fun getQuaternionForSide(side: Direction): Quaternionf {
-        return when (side) {
-            Direction.UP -> Quaternionf().identity()
-            Direction.DOWN -> Quaternionf().rotationX(Math.PI.toFloat())
-            Direction.NORTH -> Quaternionf().rotationX(-Math.PI.toFloat() / 2)
-            Direction.SOUTH -> Quaternionf().rotationX(Math.PI.toFloat() / 2)
-            Direction.WEST -> Quaternionf().rotationZ(Math.PI.toFloat() / 2)
-            Direction.EAST -> Quaternionf().rotationZ(-Math.PI.toFloat() / 2)
-        }
-    }
-    renderEnvironmentForWorld(matrixStack) {
-        matrixStack.withPush {
-            val quat = if (previousSide != null && factor < 1.0) {
-                getQuaternionForSide(previousSide!!).slerp(getQuaternionForSide(currentSide), factor.toFloat())
-            } else {
-                getQuaternionForSide(currentSide)
+    if (bestBox != null) {
+        renderEnvironmentForWorld(matrixStack) {
+            withPositionRelativeToCamera(currPos) {
+                drawBoxSide(
+                    bestBox,
+                    side = blockHitResult.side,
+                    faceColor = color,
+                )
             }
-
-            val fillColor = color.alpha(70)
-            val outlineColor = color.alpha(150)
-
-            val drawQuad: (Matrix4f) -> Unit = { matrix ->
-                withColor(fillColor) {
-                    RenderSystem.disableCull()
-                    drawCustomMesh(VertexFormat.DrawMode.QUADS, VertexInputType.Pos) { m ->
-                        points.forEach { (x, y, z) ->
-                            vertex(m, x, y, z)
-                        }
-                    }
-                    RenderSystem.enableCull()
-                }
-
-                withColor(outlineColor) {
-                    drawCustomMesh(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexInputType.Pos) { m ->
-                        points.forEach { (x, y, z) ->
-                            vertex(m, x, y, z)
-                        }
-                        val first = points[0]
-                        vertex(m, first.x, first.y, first.z)
-                    }
-                }
-            }
-
-            val relHit = relativeToCamera(renderedHitPos)
-            translate(relHit.x, relHit.y, relHit.z)
-            multiply(quat)
-            drawQuad(matrixStack.peek().positionMatrix)
         }
     }
 }
@@ -402,7 +345,7 @@ fun renderSimulationResult(
         null -> {}
         is BlockHitResult -> if (type.blockHitESP) {
             renderHitBlockFace(
-                event.matrixStack, landingPosition, type.color, event
+                event.matrixStack, landingPosition, type.color
             )
         }
         is EntityHitResult -> if (type.entityHitESP) {
