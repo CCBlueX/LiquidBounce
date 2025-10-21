@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
@@ -31,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.Modu
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories.simulationResults
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -46,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.*
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
 import net.minecraft.block.ShapeContext
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -57,11 +54,8 @@ import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
-import org.joml.Matrix4f
-import org.joml.Quaternionf
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.cos
 import kotlin.math.sin
