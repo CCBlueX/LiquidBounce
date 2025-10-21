@@ -25,6 +25,8 @@ import net.minecraft.util.math.*
 
 inline operator fun BlockPos.rangeTo(other: BlockPos): BlockBox = BlockBox.create(this, other)
 
+inline fun BlockPos.Mutable.set(pos: Position): BlockPos.Mutable = set(pos.x, pos.y, pos.z)
+
 inline operator fun Vec3i.component1() = this.x
 inline operator fun Vec3i.component2() = this.y
 inline operator fun Vec3i.component3() = this.z
@@ -66,6 +68,12 @@ inline operator fun Vec3d.component1(): Double = this.x
 inline operator fun Vec3d.component2(): Double = this.y
 inline operator fun Vec3d.component3(): Double = this.z
 
+fun ChunkPos.contains(blockPos: Long): Boolean =
+    BlockPos.unpackLongX(blockPos) in startX..endX && BlockPos.unpackLongZ(blockPos) in startZ..endZ
+
+fun ChunkPos.contains(blockPos: BlockPos): Boolean =
+    blockPos.x in startX..endX && blockPos.z in startZ..endZ
+
 fun Iterable<Vec3d>.average(): Vec3d {
     val result = Vec3d(0.0, 0.0, 0.0)
     var i = 0
@@ -96,26 +104,6 @@ inline fun forEach3D(v0: Vec3d, v1: Vec3d, step: Double, fn: (Double, Double, Do
     }
 }
 
-inline fun forEach3D(v0: Vec3i, v1: Vec3i, step: Int = 1, fn: (Int, Int, Int) -> Unit) {
-    val (startX, startY, startZ) = v0
-    val (endX, endY, endZ) = v1
-
-    var x = startX
-    while (x <= endX) {
-        var y = startY
-        while (y <= endY) {
-            var z = startZ
-            while (z <= endZ) {
-                fn(x, y, z)
-
-                z += step
-            }
-            y += step
-        }
-        x += step
-    }
-}
-
 inline fun Vec3i.toVec3d(): Vec3d = Vec3d.of(this)
 inline fun Vec3i.toVec3d(
     xOffset: Double = 0.0,
@@ -123,8 +111,10 @@ inline fun Vec3i.toVec3d(
     zOffset: Double = 0.0,
 ): Vec3d = Vec3d(x + xOffset, y + yOffset, z + zOffset)
 
-inline fun Vec3d.toVec3() = Vec3(this.x, this.y, this.z)
-inline fun Vec3d.toVec3i() = Vec3i(this.x.toInt(), this.y.toInt(), this.z.toInt())
+inline fun Vec3d.toVec3(): Vec3 = Vec3(this.x, this.y, this.z)
+
+@Deprecated("use this.toBlockPos instead", replaceWith = ReplaceWith("this.toBlockPos"))
+inline fun Vec3d.toVec3i(): Vec3i = toBlockPos()
 
 inline fun Vec3d.toBlockPos(
     xOffset: Double = 0.0,

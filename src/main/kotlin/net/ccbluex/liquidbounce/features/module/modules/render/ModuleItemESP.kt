@@ -90,6 +90,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
 
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
+            entities.clear()
             world.entities.filterTo(entities, ::shouldRender)
         }
 

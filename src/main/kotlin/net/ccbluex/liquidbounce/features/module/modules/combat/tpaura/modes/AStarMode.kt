@@ -1,3 +1,23 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes
 
 import kotlinx.coroutines.CoroutineName
@@ -30,6 +50,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionAndOnGround
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3i
 
@@ -39,19 +60,21 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
     private val maximumCost by int("MaximumCost", 250, 50..500)
     private val tickDistance by int("TickDistance", 3, 1..7)
     override val allowDiagonal by boolean("AllowDiagonal", false)
+    private val tpBack by boolean("TpBack", true)
 
     private val stickAt by int("Stick", 5, 1..10, "ticks")
 
     private var pathCache: PathCache? = null
 
+    private val pathStart = BlockPos.Mutable()
+
     private val pathContext = Dispatchers.Default + CoroutineName("${ModuleTpAura.name}-${name}")
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        waitTicks(1)
         pathCache = withContext(pathContext) {
             val playerEyePos = player.eyePos
-            val playerPosition = player.blockPos
+            val playerPosition = pathStart.takeIf { it != BlockPos.ORIGIN } ?: player.blockPos
 
             val maximumDistanceSq = maximumDistance.sq().toDouble()
 
@@ -81,12 +104,20 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
         travel(path)
         waitTicks(stickAt)
-        travel(path.asReversed())
+        if (tpBack) {
+            travel(path.asReversed())
+            pathStart.set(BlockPos.ORIGIN)
+        } else {
+            desyncPlayerPosition?.let {
+                pathStart.set(it)
+            }
+        }
         desyncPlayerPosition = null
     }
 
     override fun disable() {
         desyncPlayerPosition = null
+        pathStart.set(BlockPos.ORIGIN)
         pathCache = null
         super.disable()
     }
@@ -145,7 +176,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
                             position.x + 0.5, position.y.toDouble(), position.z + 0.5, false, false
                         )
                     )
-                    desyncPlayerPosition = position.toVec3d()
+                    desyncPlayerPosition = position.toVec3d(xOffset = 0.5, zOffset = 0.5)
                 }
                 continue
             } else {
