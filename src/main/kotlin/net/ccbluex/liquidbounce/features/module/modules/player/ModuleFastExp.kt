@@ -18,12 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.durabilityThreshold
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.Fast.itemsPerTick
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.minDurabilityToStartRepair
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.Normal.ticksPerItem
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbEntityAccessor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -70,10 +75,22 @@ object ModuleFastExp : ClientModule(
 
     private object NoWaste : ToggleableConfigurable(this, "NoWaste", true) {
         /**
-         * If at least one of items that can be repaired has less durability than [durabilityThreshold],
+         * If at least one of the items to repair has durability lower than or equal to [minDurabilityToStartRepair],
          * the module will start throwing experience bottles.
-         * */
-        val durabilityThreshold by int("DurabilityThreshold", 256, 0..2048)
+         */
+        val minDurabilityToStartRepair by int("MinDurabilityToStartRepair", 64, 0..2048)
+
+        /**
+         * If some experience orbs have been destroyed by lava/fire,
+         * or the player has switched to items with greater total damage,
+         * or some experience orbs haven't reached the player due to movement, etc.,
+         *
+         * then the module can start throwing experience bottles again to complete the repair process,
+         * but only if there is still at least one item whose durability is lower than or equal to [maxDurabilityToContinueRepair]%.
+         *
+         * This should prevent the module from repairing armor after every 2 or 3 received hits.
+         */
+        val maxDurabilityToContinueRepair by int("MaxDurabilityToContinueRepair", 85, 1..100, "%")
     }
 
     init {
@@ -81,7 +98,19 @@ object ModuleFastExp : ClientModule(
         tree(NoWaste)
     }
 
-    private val itemsPerTick by floatRange("ItemsPerTick", 0.5f..2f, 0.1f..32f)
+    private val throwMode = choices(this,
+        "ThrowMode",
+        Normal ,
+        arrayOf(Normal, Fast)
+    )
+
+    private object Normal : ThrowMode("Normal") {
+        val ticksPerItem by floatRange("TicksPerItem", 2f..3f, 0.5f..10f, "ticks")
+    }
+
+    private object Fast : ThrowMode("Fast") {
+        val itemsPerTick by floatRange("ItemsPerTick", 3f..5f, 0.5f..16f)
+    }
 
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val slotResetDelay by intRange("SlotResetDelay", 0..0, 0..40, "ticks")
@@ -89,18 +118,30 @@ object ModuleFastExp : ClientModule(
     private var bottlesRequired = 0
     private var bottlesUsed = 0
     private var itemsToThrow = 0f
+    private var repairing = false
 
     override fun onDisabled() {
         bottlesUsed = 0
         bottlesRequired = 0
         itemsToThrow = 0f
+        repairing = false
         super.onDisabled()
     }
 
     @Suppress("unused")
     private val repeatable = tickHandler {
+        if (InventoryManager.isHandledScreenOpen) {
+            // doesn't throw exp bottles when an inventory is open
+            // yet doesn't stop the repairing process either
+            // allowing to refill the hotbar with exp bottles, if needed.
+            return@tickHandler
+        }
+
         val slot = Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE)
-        if (slot == null || player.isDead || InventoryManager.isInventoryOpen) {
+        if (slot == null || player.isDead) {
+            bottlesUsed = 0
+            bottlesRequired = 0
+            repairing = false
             return@tickHandler
         }
 
@@ -117,6 +158,12 @@ object ModuleFastExp : ClientModule(
             return@tickHandler
         }
 
+        // waits for the orbs, in case there are any, to get absorbed before repairing items
+        tickUntil {
+            repairing || !anyExpOrbMovingToPlayer()
+        }
+
+        repairing = true
         bottlesRequired = bottlesRequired.coerceAtLeast(bottlesRequiredCurrently)
 
         action(slot)
@@ -164,7 +211,13 @@ object ModuleFastExp : ClientModule(
             }
         }
 
-        itemsToThrow += itemsPerTick.random()
+        val items = when (throwMode.activeChoice) {
+            Normal -> { 1f / ticksPerItem.random() }
+            Fast -> { itemsPerTick.random() }
+            else -> 0f
+        }
+
+        itemsToThrow += items
         val times = itemsToThrow.toInt()
         itemsToThrow -= times
 
@@ -202,9 +255,17 @@ object ModuleFastExp : ClientModule(
         val itemsToRepair = (player.inventory.armor + otherHandSlot)
             .filter { it.getEnchantment(Enchantments.MENDING) != 0 }
 
+        // doesn't let the module start repairing the items again
+        // when the items have been repaired but not fully and are missing a just few more exp bottle
+        if (bottlesUsed == 0 && repairing
+            && itemsToRepair.none { 100f * it.durability / it.maxDamage <= maxDurabilityToContinueRepair } ) {
+            repairing = false
+            return 0
+        }
+
         // doesn't let the module start repairing items if the durability threshold hasn't been reached
-        if (bottlesUsed == 0
-            && itemsToRepair.none { it.durability <= durabilityThreshold }) {
+        if (bottlesUsed == 0 && !repairing
+            && itemsToRepair.none { it.durability <= minDurabilityToStartRepair }) {
             return 0
         }
 
@@ -212,6 +273,11 @@ object ModuleFastExp : ClientModule(
         val experienceRequired = totalDamage / REPAIR_RATE
         val bottlesRequired = experienceRequired / EXPERIENCE_PER_BOTTLE
 
-        return bottlesRequired
+        return bottlesRequired.coerceAtMost(slot.itemStack.count)
+    }
+
+    abstract class ThrowMode(name: String) : Choice(name) {
+        override val parent: ChoiceConfigurable<ThrowMode>
+            get() = throwMode
     }
 }
