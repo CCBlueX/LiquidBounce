@@ -48,7 +48,7 @@ import java.util.function.IntFunction
  */
 @Suppress("MagicNumber")
 object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
-    val maxSimulatedTicks by int("MaxSimulatedTicks", 120, 1..320, "ticks")
+    val maxSimulatedTicks by int("MaxSimulatedTicks", 240, 1..1000, "ticks")
     private val show by multiEnumChoice(
         "Show",
         Show.OTHER_PLAYERS,
@@ -72,7 +72,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         val color by color("Color", defaultColor)
         val blockHitESP by boolean("BlockHitESP", true)
         val entityHitESP by boolean("EntityHitESP", true)
-        val showDetailedInfo by boolean("ShowDetailedInfo", false)
+        val showDetailedInfo by boolean("ShowDetailedInfo", true)
 
         object Arrow : ProjectileType(
             "Arrow",
