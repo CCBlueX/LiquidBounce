@@ -455,14 +455,6 @@ public abstract class MixinMinecraftClient {
         return !IntegrationListener.isClientScreen(this.currentScreen);
     }
 
-    @Inject(method = "getFramebuffer", at = @At("HEAD"), cancellable = true)
-    private void hookSpoofFramebuffer(CallbackInfoReturnable<Framebuffer> cir) {
-        var framebuffer = GlobalFramebuffer.getSpoofedFramebuffer();
-        if (framebuffer != null) {
-            cir.setReturnValue(framebuffer);
-        }
-    }
-
     @Inject(method = "onDisconnected", at = @At("HEAD"))
     private void handleDisconnection(CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(DisconnectEvent.INSTANCE);

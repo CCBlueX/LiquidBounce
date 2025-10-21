@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.render.shader.UniformProvider
 import net.ccbluex.liquidbounce.utils.client.ImmutableHandle
 import net.ccbluex.liquidbounce.utils.io.resourceToString
-import net.minecraft.client.gl.Framebuffer
+import net.ccbluex.liquidbounce.render.buffer.Framebuffer
 import net.minecraft.client.render.OutlineVertexConsumerProvider
 import net.minecraft.client.util.Handle
 import org.lwjgl.opengl.GL20
@@ -40,22 +40,9 @@ object OutlineShader : FramebufferShader(Shader(
     var dirty = false
     var vertexConsumerProvider = OutlineVertexConsumerProvider(mc.bufferBuilders.entityVertexConsumers)
     val handle: Handle<Framebuffer> = ImmutableHandle(framebuffers[0])
-    private var outlineFbo: Handle<Framebuffer>? = null
-    private var outlineFbo2: Framebuffer? = null
 
-    fun update() {
-        val width = mc.window.framebufferWidth
-        val height = mc.window.framebufferHeight
-        framebuffers.forEach {
-            if (it.textureWidth != width || it.textureHeight != height) {
-                it.resize(width, height)
-            }
-        }
-
-        if (dirty) {
-            framebuffers[0].clear()
-        }
-
+    fun prepare() {
+        super.prepare(dirty)
         dirty = false
     }
 
@@ -64,13 +51,9 @@ object OutlineShader : FramebufferShader(Shader(
     }
 
     fun draw() {
-        outlineFbo2 = mc.worldRenderer.entityOutlineFramebuffer
-        outlineFbo = mc.worldRenderer.framebufferSet.entityOutlineFramebuffer
-        mc.worldRenderer.entityOutlineFramebuffer = framebuffers[0]
-        mc.worldRenderer.framebufferSet.entityOutlineFramebuffer = handle
+        draw()
         vertexConsumerProvider.draw()
-        mc.worldRenderer.entityOutlineFramebuffer = outlineFbo2
-        mc.worldRenderer.framebufferSet.entityOutlineFramebuffer = outlineFbo
+
     }
 
 }

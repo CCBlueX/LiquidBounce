@@ -20,10 +20,11 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.buffers.BufferType
+import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.opengl.GlConst
 import com.mojang.blaze3d.opengl.GlStateManager
-import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
@@ -37,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.client.gl.Framebuffer
+import net.minecraft.client.gl.GlGpuBuffer
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
@@ -83,12 +84,48 @@ fun defaultBlendFunc() {
     GlStateManager._blendFuncSeparate(
         GlConst.GL_SRC_ALPHA,
         GlConst.GL_ONE_MINUS_SRC_ALPHA,
-        1,
-        0,
+        GlConst.GL_ONE,
+        GlConst.GL_ZERO
     )
 }
 
 // Copied from 1.21.4 end
+
+fun BufferBuilder.upload(usage: BufferUsage, size: Int): GlGpuBuffer {
+    val buffer = RenderSystem.getDevice()
+        .createBuffer(
+            { "LB" },
+            BufferType.VERTICES,
+            usage,
+            size
+        ) as GlGpuBuffer
+
+    this.end().use { builtBuffer ->
+        val commandEncoder = RenderSystem.getDevice().createCommandEncoder()
+        commandEncoder.writeToBuffer(buffer, builtBuffer.buffer, 0)
+    }
+    GlStateManager._glBindVertexArray(0)
+
+    return buffer
+}
+
+fun GlGpuBuffer.bind() {
+    GlStateManager._glBindVertexArray(this.id)
+}
+
+@Suppress("UnusedReceiverParameter")
+fun GlGpuBuffer.unbind() {
+    GlStateManager._glBindVertexArray(0)
+}
+
+fun GlGpuBuffer.draw() {
+    GL11.glDrawElements(
+        GlConst.toGl(DrawMode.QUADS),
+        GlConst.toGl(this.type()),
+        this.size(),
+        0L
+    )
+}
 
 /**
  * Data class representing the rendering environment.

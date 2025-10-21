@@ -18,8 +18,13 @@
  */
 package net.ccbluex.liquidbounce.common;
 
+import com.mojang.blaze3d.opengl.GlConst;
+import com.mojang.blaze3d.opengl.GlStateManager;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
+import net.ccbluex.liquidbounce.render.buffer.Framebuffer;
+import org.lwjgl.opengl.GL30;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,34 +39,99 @@ public final class GlobalFramebuffer {
 
     private GlobalFramebuffer() {}
 
-    private static final List<Framebuffer> stack = new ArrayList<>(2);
+    private static final IntList readStack = new IntArrayList(2);
+    private static final IntList writeStack = new IntArrayList(2);
+    private static final List<Framebuffer> stack = new ArrayList<>(1);
 
-    private static Framebuffer spoofedFramebuffer;
+    private static boolean lock;
+    private static boolean minecraftChangesRead;
+    private static boolean minecraftChangesWrite;
 
-    public static Framebuffer getSpoofedFramebuffer() {
-        return spoofedFramebuffer;
+    // framebuffers minecraft sets
+    public static void updateRead(int id) {
+        if (!minecraftChangesRead || id == readStack.getFirst()) {
+            readStack.set(0, id);
+            minecraftChangesRead = false;
+        }
+
+        if (!lock || minecraftChangesRead) {
+            bindRead(id);
+        }
+    }
+
+    public static void updateWrite(int id) {
+        if (!minecraftChangesWrite || id == writeStack.getFirst()) {
+            writeStack.set(0, id);
+            minecraftChangesWrite = false;
+        }
+
+        if (!lock || minecraftChangesWrite) {
+            bindWrite(id);
+        }
+    }
+
+    // when mc changes stuff at the framebuffer, they need to cache the current fbo
+    public static int getRead() {
+        minecraftChangesRead = true;
+        return readStack.getFirst();
+    }
+
+    public static int getWrite() {
+        minecraftChangesWrite = true;
+        return writeStack.getFirst();
     }
 
     public static void push(Framebuffer spoofedFramebuffer) {
-        if (GlobalFramebuffer.spoofedFramebuffer != null) {
-            stack.addLast(GlobalFramebuffer.spoofedFramebuffer);
-        }
-
-        GlobalFramebuffer.spoofedFramebuffer = spoofedFramebuffer;
-    }
-
-    public static void pop() {
-        if (stack.isEmpty()) {
-            spoofedFramebuffer = null;
+        if (!stack.isEmpty() && stack.getLast() == spoofedFramebuffer) {
             return;
         }
 
-        spoofedFramebuffer = stack.getLast();
+        stack.addLast(spoofedFramebuffer);
+        readStack.addLast(spoofedFramebuffer.getId());
+        writeStack.addLast(spoofedFramebuffer.getId());
+        lock = true;
+
+        if (!minecraftChangesRead) {
+            bindRead(spoofedFramebuffer.getId());
+        }
+
+        if (!minecraftChangesWrite) {
+            bindWrite(spoofedFramebuffer.getId());
+        }
     }
 
-    public static void clear() {
-        stack.clear();
-        spoofedFramebuffer = null;
+    public static void pop() {
+        if (!readStack.isEmpty()) {
+            readStack.removeLast();
+            if (!minecraftChangesRead) {
+                bindRead(readStack.getLast());
+            }
+        }
+
+        if (!writeStack.isEmpty()) {
+            writeStack.removeLast();
+            if (!minecraftChangesWrite) {
+                bindWrite(writeStack.getLast());
+            }
+        }
+
+        if (!stack.isEmpty()) {
+            stack.removeLast();
+        }
+
+        if (stack.isEmpty()) {
+            lock = false;
+        }
+    }
+
+    private static void bindRead(int id) {
+        GlStateManager.readFbo = id;
+        GL30.glBindFramebuffer(GlConst.GL_READ_FRAMEBUFFER, id);
+    }
+
+    private static void bindWrite(int id) {
+        GlStateManager.writeFbo = id;
+        GL30.glBindFramebuffer(GlConst.GL_DRAW_FRAMEBUFFER, id);
     }
 
 }
