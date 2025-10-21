@@ -20,44 +20,45 @@
 
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
-import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.drawBoxSide
-import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
+import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
+import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories.alwaysShowBow
+import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories.maxSimulatedTicks
+import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories.simulationResults
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.math.copy
-import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.move
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.scale
-import net.ccbluex.liquidbounce.utils.math.set
-import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.block.ShapeContext
+import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.math.*
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
+import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.projectile.ProjectileUtil
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
+import org.joml.Matrix4f
+import org.joml.Quaternionf
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.cos
 import kotlin.math.sin
@@ -119,7 +120,7 @@ class TrajectoryInfoRenderer(
 
             //In Freeze, this momentum is the residual value before freezing.
             if (trajectoryInfo.copiesPlayerVelocity && !ModuleFreeze.running) {
-            velocity.move(
+                velocity.move(
                     x = entity.velocity.x,
                     y = if (entity.isOnGround) 0.0 else entity.velocity.y,
                     z = entity.velocity.z
@@ -160,12 +161,18 @@ class TrajectoryInfoRenderer(
 
         val positions = mutableListOf<Vec3d>()
 
-        // Apply first-tick physics to velocity only, mimicking server spawn reset
-        tickVelocity()
+        // Apply first-tick physics to velocity only for affected projectiles
+        if (trajectoryInfo.requiresInitialTickCorrection()) {
+            tickVelocity()
+        }
 
-        // Now start normal simulation, starting from currTicks = 1
         val prevPos = pos.copy()
-        var currTicks = 1
+        // Now start normal simulation, starting from currTicks = 1
+        var currTicks = if (trajectoryInfo.requiresInitialTickCorrection()){
+            1
+        } else {
+            0
+        }
 
         while (currTicks < maxTicks) {
             if (pos.y < world.bottomY) {
@@ -237,39 +244,6 @@ class TrajectoryInfoRenderer(
     }
 
     fun drawTrajectoryForProjectile(
-        maxTicks: Int,
-        event: WorldRenderEvent,
-        trajectoryColor: Color4b,
-        blockHitColor: Color4b?,
-        entityHitColor: Color4b?,
-    ): SimulationResult {
-        val simulationResult = runSimulation(maxTicks)
-
-        val (landingPosition, positions) = simulationResult
-
-        drawTrajectoryForProjectile(positions, trajectoryColor, event.matrixStack)
-
-        when (landingPosition) {
-            null -> return simulationResult
-            is BlockHitResult -> if (blockHitColor != null) {
-                renderHitBlockFace(event.matrixStack, landingPosition, blockHitColor)
-            }
-            is EntityHitResult -> if (entityHitColor != null) {
-                val entities = listOf(landingPosition.entity)
-
-                drawHitEntities(event.matrixStack, entityHitColor, entities, event.partialTicks)
-            }
-            else -> error("Unexpected HitResult type: ${landingPosition::class.java.name}")
-        }
-
-        if (trajectoryInfo == TrajectoryInfo.POTION && entityHitColor != null) {
-            drawSplashPotionTargets(landingPosition.pos, trajectoryInfo, event, entityHitColor)
-        }
-
-        return simulationResult
-    }
-
-    private fun drawTrajectoryForProjectile(
         positions: List<Vec3d>,
         color: Color4b,
         matrixStack: MatrixStack,
@@ -332,23 +306,157 @@ private fun drawHitEntities(
     }
 }
 
-private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHitResult, color: Color4b) {
-    val currPos = blockHitResult.blockPos
-    val currState = currPos.getState()!!
+private var previousSide: Direction? = null
+private var currentSide: Direction = Direction.UP
+private var lastChange: Long = 0L
 
-    val bestBox = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
-        .filter { blockHitResult.pos in it.expand(0.01, 0.01, 0.01).offset(currPos) }
-        .minByOrNull { it.squaredBoxedDistanceTo(blockHitResult.pos) }
+private fun renderHitBlockFace(
+    matrixStack: MatrixStack, blockHitResult: BlockHitResult, color: Color4b, event: WorldRenderEvent) {
+    val side = blockHitResult.side
+    if (side != currentSide) {
+        previousSide = currentSide
+        currentSide = side
+        lastChange = System.currentTimeMillis()
+    }
+    val now = System.currentTimeMillis()
+    val factor = Easing.QUAD_OUT.getFactor(lastChange, now, 150F).toDouble()
+    if (factor >= 1.0) {
+        previousSide = null
+    }
 
-    if (bestBox != null) {
-        renderEnvironmentForWorld(matrixStack) {
-            withPositionRelativeToCamera(currPos) {
-                drawBoxSide(
-                    bestBox,
-                    side = blockHitResult.side,
-                    faceColor = color,
-                )
-            }
+    val hitPos = blockHitResult.pos
+    val playerLastPos = Vec3d(player.prevX, player.prevY, player.prevZ)
+    val playerInterpolated = player.interpolateCurrentPosition(event.partialTicks)
+    val posOffset = playerInterpolated.subtract(playerLastPos)
+    val renderedHitPos = hitPos.add(posOffset)
+
+    val points = listOf(
+        Vec3(0.0, 0.001, -0.5),
+        Vec3(0.5, 0.001, 0.0),
+        Vec3(0.0, 0.001, 0.5),
+        Vec3(-0.5, 0.001, 0.0)
+    )
+    fun getQuaternionForSide(side: Direction): Quaternionf {
+        return when (side) {
+            Direction.UP -> Quaternionf().identity()
+            Direction.DOWN -> Quaternionf().rotationX(Math.PI.toFloat())
+            Direction.NORTH -> Quaternionf().rotationX(-Math.PI.toFloat() / 2)
+            Direction.SOUTH -> Quaternionf().rotationX(Math.PI.toFloat() / 2)
+            Direction.WEST -> Quaternionf().rotationZ(Math.PI.toFloat() / 2)
+            Direction.EAST -> Quaternionf().rotationZ(-Math.PI.toFloat() / 2)
         }
+    }
+    renderEnvironmentForWorld(matrixStack) {
+        matrixStack.withPush {
+            val quat = if (previousSide != null && factor < 1.0) {
+                getQuaternionForSide(previousSide!!).slerp(getQuaternionForSide(currentSide), factor.toFloat())
+            } else {
+                getQuaternionForSide(currentSide)
+            }
+
+            val fillColor = color.alpha(70)
+            val outlineColor = color.alpha(150)
+
+            val drawQuad: (Matrix4f) -> Unit = { matrix ->
+                withColor(fillColor) {
+                    RenderSystem.disableCull()
+                    drawCustomMesh(VertexFormat.DrawMode.QUADS, VertexInputType.Pos) { m ->
+                        points.forEach { (x, y, z) ->
+                            vertex(m, x, y, z)
+                        }
+                    }
+                    RenderSystem.enableCull()
+                }
+
+                withColor(outlineColor) {
+                    drawCustomMesh(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexInputType.Pos) { m ->
+                        points.forEach { (x, y, z) ->
+                            vertex(m, x, y, z)
+                        }
+                        val first = points[0]
+                        vertex(m, first.x, first.y, first.z)
+                    }
+                }
+            }
+
+            val relHit = relativeToCamera(renderedHitPos)
+            translate(relHit.x, relHit.y, relHit.z)
+            multiply(quat)
+            drawQuad(matrixStack.peek().positionMatrix)
+        }
+    }
+}
+
+fun renderSimulationResult(
+    renderer: TrajectoryInfoRenderer,
+    simulationResult: TrajectoryInfoRenderer.SimulationResult,
+    type: ModuleTrajectories.ProjectileType,
+    trajectoryInfo: TrajectoryInfo,
+    event: WorldRenderEvent
+) {
+    val (landingPosition, positions) = simulationResult
+
+    renderer.drawTrajectoryForProjectile(positions, type.color, event.matrixStack)
+
+    when (landingPosition) {
+        null -> {}
+        is BlockHitResult -> if (type.blockHitESP) {
+            renderHitBlockFace(
+                event.matrixStack, landingPosition, type.color, event
+            )
+        }
+        is EntityHitResult -> if (type.entityHitESP) {
+            val entities = listOf(landingPosition.entity)
+            drawHitEntities(
+                event.matrixStack, type.color, entities, event.partialTicks
+            )
+        }
+        else -> error("Unexpected HitResult type: ${landingPosition::class.java.name}")
+    }
+
+    if (trajectoryInfo == TrajectoryInfo.POTION && type.entityHitESP) {
+        landingPosition?.let { drawSplashPotionTargets(
+            it.pos, trajectoryInfo, event, type.color)
+        }
+    }
+}
+
+fun drawHypotheticalTrajectoryWithSimulation(
+    playerEntity: PlayerEntity,
+    event: WorldRenderEvent,
+    shouldRender: Boolean) {
+    val trajectoryInfo = playerEntity.handItems.firstNotNullOfOrNull {
+        TrajectoryData.getRenderedTrajectoryInfo(playerEntity, it.item, alwaysShowBow)
+    } ?: return
+
+    val type = trajectoryInfo.categorize() ?: return
+    if (!type.enabled) return
+
+    val rotation = if (playerEntity === player) {
+        if (ModuleFreeCam.running) {
+            RotationManager.serverRotation
+        } else {
+            RotationManager.activeRotationTarget?.rotation
+                ?: RotationManager.currentRotation
+                ?: playerEntity.rotation
+        }
+    } else {
+        playerEntity.rotation
+    }
+
+    val renderer = getHypotheticalTrajectory(
+        entity = playerEntity,
+        trajectoryInfo = trajectoryInfo,
+        rotation = rotation,
+        partialTicks = event.partialTicks
+    )
+
+    val simulationResult = renderer.runSimulation(maxSimulatedTicks)
+    simulationResults += renderer to simulationResult
+
+    if (shouldRender) {
+        renderSimulationResult(
+            renderer, simulationResult, type, trajectoryInfo, event
+        )
     }
 }
