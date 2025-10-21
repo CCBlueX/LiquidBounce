@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper.intermediaryToYarn
 import net.ccbluex.liquidbounce.utils.mappings.LabyFabricWrapper.obfToIntermediary
 import net.fabricmc.mappings.ClassEntry
+import net.fabricmc.mappings.EntryTriple
 import net.fabricmc.mappings.FieldEntry
 import net.fabricmc.mappings.Mappings
 import net.fabricmc.mappings.MethodEntry
@@ -48,6 +49,22 @@ object GarbageCodeHolder {
         override fun getMethodEntries(): Collection<MethodEntry> = methodEntries
     }
 
+    interface EntryLike<T> {
+        fun get(namespace: String): T
+    }
+
+    fun FieldEntry.asEntryLike() = object : EntryLike<EntryTriple> {
+        override fun get(namespace: String): EntryTriple = this@asEntryLike.get(namespace)
+    }
+
+    fun ClassEntry.asEntryLike() = object : EntryLike<String> {
+        override fun get(namespace: String): String = this@asEntryLike.get(namespace)
+    }
+
+    fun MethodEntry.asEntryLike() = object : EntryLike<EntryTriple> {
+        override fun get(namespace: String): EntryTriple = this@asEntryLike.get(namespace)
+    }
+
     fun mapClassEntries(o2i: ACE, i2y: ACE): List<ClassEntry> {
         val combinedCE = mutableListOf<ClassEntry>().apply {
             addAll(o2i)
@@ -63,17 +80,24 @@ object GarbageCodeHolder {
 
         return pairedCE.map {
             val (o2i, i2y) = it
-            ClassEntry { ns ->
-                val intermediary = i2y.get("intermediary")
-                val obfuscated = o2i.get("official")
-                when (ns) {
-                    "named" -> i2y.get("named") ?: intermediary
-                    "intermediary" -> intermediary
-                    "official" -> obfuscated
-                    else -> {
-                        logger.warn("Unhandled namespace in class entry: $ns")
-                        null
-                    }
+            ClassEntry(getEntryHandler(i2y.asEntryLike(), o2i.asEntryLike()))
+        }
+    }
+
+    fun <T> getEntryHandler(
+        i2y: EntryLike<T>,
+        o2i: EntryLike<T>,
+    ): (String) -> T? {
+        val intermediary = i2y.get("intermediary")
+        val obfuscated = o2i.get("official")
+        return {
+            when (it) {
+                "named" -> i2y.get("named") ?: intermediary
+                "intermediary" -> intermediary
+                "official" -> obfuscated
+                else -> {
+                    logger.warn("Unhandled namespace in entry: $it")
+                    null
                 }
             }
         }
@@ -94,19 +118,7 @@ object GarbageCodeHolder {
 
         return paired.map {
             val (o2i, i2y) = it
-            FieldEntry { ns ->
-                val intermediary = i2y.get("intermediary")
-                val obfuscated = o2i.get("official")
-                when (ns) {
-                    "named" -> i2y.get("named") ?: intermediary
-                    "intermediary" -> intermediary
-                    "official" -> obfuscated
-                    else -> {
-                        logger.warn("Unhandled namespace in field entry: $ns")
-                        null
-                    }
-                }
-            }
+            FieldEntry(getEntryHandler(i2y.asEntryLike(), o2i.asEntryLike()))
         }
     }
 
@@ -125,18 +137,13 @@ object GarbageCodeHolder {
 
         return paired.map {
             val (o2i, i2y) = it
+            val eh = getEntryHandler(i2y.asEntryLike(), o2i.asEntryLike())
             MethodEntry { ns ->
-                val intermediary = i2y.get("intermediary")
-                val obfuscated = o2i.get("official")
-                when (ns) {
-                    "named" -> i2y.get("named") ?: intermediary
-                    "intermediary" -> intermediary
-                    "official" -> obfuscated
-                    else -> {
-                        logger.warn("Unhandled namespace in method entry: $ns")
-                        null
-                    }
+                val t = eh(ns)
+                if (ns == "official" && t?.name == "a" && t.desc == "(I)Lbum;" && t.owner == "gga") {
+                    logger.info("why won't it find the funny????")
                 }
+                t
             }
         }
     }

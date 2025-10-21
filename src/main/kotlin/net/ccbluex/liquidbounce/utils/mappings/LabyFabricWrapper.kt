@@ -48,7 +48,7 @@ object LabyFabricWrapper {
     }
 
     val obfToIntermediaryMappingsPath by lazy {
-        val p: Path? = fcCls?.runStatic("versionedPath", String::class.java, mpFmt)
+        val p: Path? = fcCls?.runStatic("versionedPath", mpFmt)
         return@lazy p
     }
     val obfToIntermediary by lazy {
@@ -75,24 +75,17 @@ private fun <T, X> Class<X>.getFieldOrNull(obj: X?, name: String) = runCatching 
 private fun <T, S> Class<S>.getStaticFieldOrNull(name: String)
     = getFieldOrNull<T, S>(null, name)
 
-private fun <R, S> Class<S>.run(
-    name: String, self: S?, parameterTypes: Array<Class<*>>, arg: Any?): R? {
+private fun <A, R, S> Class<S>.run(
+    name: String, self: S?, arg: A?): R? {
     return runCatching {
-        // TODO: fix detekt here
-        this.getMethod(name, *parameterTypes).invoke(self, arg) as R?
+        this.getMethod(
+            name, arg?.javaClass
+        ).invoke(self, arg) as R?
     }.onFailure {
         logger.error("Failed to invoke $name", it)
     }.getOrNull()
 }
 
-private fun <R, S> Class<S>.runStatic(
-    name: String, parameterTypes: Array<Class<*>>, arg: Any?
-) = run<R, S>(name, null, parameterTypes, arg)
-
-private fun <R, S> Class<S>.run(
-    name: String, self: S?, p: Class<*>, arg: Any?): R?
-    = run(name, self, arrayOf(p), arg)
-
-private fun <R, S> Class<S>.runStatic(
-    name: String, p: Class<*>, arg: Any?
-) = runStatic<R, S>(name, arrayOf(p), arg)
+private fun <A, R, S> Class<S>.runStatic(name: String, arg: A?): R? {
+    return this.run(name, null, arg)
+}
