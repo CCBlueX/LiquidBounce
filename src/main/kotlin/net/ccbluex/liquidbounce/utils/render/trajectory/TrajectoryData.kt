@@ -60,13 +60,17 @@ object TrajectoryData {
     @JvmStatic
     fun getRenderTrajectoryInfoForOtherEntity(entity: Entity): Pair<TrajectoryInfo, ProjectileType>? {
         return when (entity) {
-            is ArrowEntity -> if (!entity.isInGround())
-                TrajectoryInfo(0.05, 0.3) to ProjectileType.Arrow else null
-
+            is ArrowEntity -> if (!entity.isInGround()) {
+                TrajectoryInfo(0.05, 0.3) to ProjectileType.Arrow
+            } else {
+                null
+            }
             is PotionEntity -> TrajectoryInfo.POTION to ProjectileType.Potion
-            is TridentEntity -> if (!entity.isInGround())
-                TrajectoryInfo.TRIDENT to ProjectileType.Trident else null
-
+            is TridentEntity -> if (!entity.isInGround()) {
+                TrajectoryInfo.TRIDENT to ProjectileType.Trident
+            } else {
+                null
+            }
             is EnderPearlEntity -> TrajectoryInfo.GENERIC to ProjectileType.EnderPearl
             is SnowballEntity -> TrajectoryInfo.GENERIC to ProjectileType.Snowball
             is EggEntity -> TrajectoryInfo.GENERIC to ProjectileType.Egg

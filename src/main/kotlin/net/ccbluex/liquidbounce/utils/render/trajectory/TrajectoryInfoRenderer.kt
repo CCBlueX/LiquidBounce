@@ -43,6 +43,7 @@ import kotlin.jvm.optionals.getOrNull
 import kotlin.math.cos
 import kotlin.math.sin
 
+@Suppress("LongParameterList")
 class TrajectoryInfoRenderer(
     val owner: Entity,
     velocity: Vec3d,
