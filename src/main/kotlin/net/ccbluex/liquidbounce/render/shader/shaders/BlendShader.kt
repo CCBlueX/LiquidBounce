@@ -24,15 +24,15 @@ import net.ccbluex.liquidbounce.render.shader.UniformProvider
 import net.ccbluex.liquidbounce.utils.io.resourceToString
 import org.lwjgl.opengl.GL20
 
-object BlendShaderData {
-    var color = Color4b.WHITE
-}
+//object BlendShaderData {
+//    var color = Color4b.WHITE
+//}
 
-object BlendShader : BlitShader(
-    resourceToString("/resources/liquidbounce/shaders/position_tex.vert"),
-    resourceToString("/resources/liquidbounce/shaders/blend.frag"),
-    arrayOf(
-        UniformProvider("texture0") { pointer -> GL20.glUniform1i(pointer, 0) },
-        UniformProvider("mixColor") { pointer -> BlendShaderData.color.putToUniform(pointer) }
-    )
-)
+//object BlendShader : BlitShader(
+//    resourceToString("/resources/liquidbounce/shaders/position_tex.vert"),
+//    resourceToString("/resources/liquidbounce/shaders/blend.frag"),
+//    arrayOf(
+//        UniformProvider("texture0") { pointer -> GL20.glUniform1i(pointer, 0) },
+//        UniformProvider("mixColor") { pointer -> BlendShaderData.color.putToUniform(pointer) }
+//    )
+//)
