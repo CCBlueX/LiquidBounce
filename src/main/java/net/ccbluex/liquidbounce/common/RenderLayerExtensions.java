@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.common;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
@@ -46,19 +47,24 @@ public class RenderLayerExtensions {
     /**
      * Blend mode for JCEF compatible blending.
      */
-    private static final RenderPhase.Transparency JCEF_COMPATIBLE_BLEND = new RenderPhase.Transparency("jcef_compatible_blend", () -> {
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
-    }, () -> {
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
-    });
+//    private static final RenderPhase.Transparency JCEF_COMPATIBLE_BLEND = new RenderPhase.Transparency("jcef_compatible_blend", () -> {
+//        RenderSystem.enableBlend();
+//        RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
+//    }, () -> {
+//        RenderSystem.defaultBlendFunc();
+//        RenderSystem.disableBlend();
+//    });
+//
+//    private static final RenderPhase.ShaderProgram BGRA_POSITION_TEXTURE_COLOR_PROGRAM = new CustomShaderProgramPhase(
+//            BgraPositionTexColorShader.INSTANCE,
+//            BgraPositionTexColorShader.INSTANCE.getUniforms(),
+//            BgraPositionTexColorShader.INSTANCE.getSamples()
+//    );
 
-    private static final RenderPhase.ShaderProgram BGRA_POSITION_TEXTURE_COLOR_PROGRAM = new CustomShaderProgramPhase(
-            BgraPositionTexColorShader.INSTANCE,
-            BgraPositionTexColorShader.INSTANCE.getUniforms(),
-            BgraPositionTexColorShader.INSTANCE.getSamples()
-    );
+    private static final RenderPipeline PIPELINE_POS_TEX_COLOR_WITH_QUADS =
+            RenderPipeline.builder()
+                    .withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
+                    .build();
 
     /**
      * Render Layer for smoother textures using bilinear filtering.
@@ -67,9 +73,8 @@ public class RenderLayerExtensions {
             textureId ->
                     RenderLayer.of(
                             "smooth_textured",
-                            VertexFormats.POSITION_TEXTURE_COLOR,
-                            VertexFormat.DrawMode.QUADS,
                             786432,
+                            PIPELINE_POS_TEX_COLOR_WITH_QUADS,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new RenderPhase.Texture(textureId, TriState.DEFAULT, false))
                                     .program(POSITION_TEXTURE_COLOR_PROGRAM)
@@ -85,9 +90,8 @@ public class RenderLayerExtensions {
             textureId ->
                     RenderLayer.of(
                             "blurred_ui_layer",
-                            VertexFormats.POSITION_TEXTURE_COLOR,
-                            VertexFormat.DrawMode.QUADS,
                             786432,
+                            PIPELINE_POS_TEX_COLOR_WITH_QUADS,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
                                     .program(RenderPhase.POSITION_TEXTURE_COLOR_PROGRAM)
@@ -104,9 +108,8 @@ public class RenderLayerExtensions {
             textureId ->
                     RenderLayer.of(
                             "bgra_texture_layer",
-                            VertexFormats.POSITION_TEXTURE_COLOR,
-                            VertexFormat.DrawMode.QUADS,
                             786432,
+                            PIPELINE_POS_TEX_COLOR_WITH_QUADS,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
                                     .program(BGRA_POSITION_TEXTURE_COLOR_PROGRAM)
@@ -122,9 +125,8 @@ public class RenderLayerExtensions {
             textureId ->
                     RenderLayer.of(
                             "bgra_blurred_texture_layer",
-                            VertexFormats.POSITION_TEXTURE_COLOR,
-                            VertexFormat.DrawMode.QUADS,
                             786432,
+                            PIPELINE_POS_TEX_COLOR_WITH_QUADS,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
                                     .program(BGRA_POSITION_TEXTURE_COLOR_PROGRAM)
