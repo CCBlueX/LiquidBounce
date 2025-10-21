@@ -29,6 +29,7 @@ import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.SynchronousResourceReloader
@@ -46,9 +47,12 @@ object ClientRenderPipelines : SynchronousResourceReloader {
      */
     private val JCEF_COMPATIBLE_BLEND = BlendFunction(SourceFactor.ONE, DestFactor.ONE_MINUS_SRC_ALPHA)
 
-    private inline fun create(name: String, builderAction: RenderPipeline.Builder.() -> Unit): RenderPipeline {
+    private inline fun create(
+        name: String,
+        builderAction: RenderPipeline.Builder.() -> Unit,
+    ): RenderPipeline {
         val id = LiquidBounce.identifier("pipeline/$name")
-        return RenderPipeline.builder()
+        return RenderPipeline.Builder()
             .withLocation(id)
             .apply(builderAction)
             .build().also { r ->
@@ -60,22 +64,21 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     @JvmField
     val SMOOTH_TEXTURE = create("smooth_texture") {
-//        withVertexShader() FIXME
-//        withFragmentShader(LiquidBounce.identifier())
+        withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
         withBlend(BlendFunction.TRANSLUCENT)
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
     }
 
     @JvmField
     val BLURRED_TEXTURE = create("blurred_texture") {
+        withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
         withBlend(JCEF_COMPATIBLE_BLEND)
         withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
     }
 
     @JvmField
     val BGRA_TEXTURE = create("bgra_texture") {
+//        RenderPipelines.POSITION_TEX_COLOR_SNIPPET FIXME: BGRA_POS_TEX_COLOR
         withBlend(JCEF_COMPATIBLE_BLEND)
         withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
         withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
@@ -83,6 +86,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     @JvmField
     val BGRA_BLURRED_TEXTURE = create("bgra_blurred_texture") {
+//        RenderPipelines.POSITION_TEX_COLOR_SNIPPET FIXME: BGRA_POS_TEX_COLOR
         withBlend(JCEF_COMPATIBLE_BLEND)
         withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
         withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)

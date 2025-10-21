@@ -57,7 +57,6 @@ public class RenderLayerExtensions {
                             ClientRenderPipelines.SMOOTH_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new RenderPhase.Texture(textureId, TriState.DEFAULT, false))
-//                                    .program(RenderPhase.POSITION_TEXTURE_COLOR_PROGRAM)
                                     .build(false)
                     ));
 
@@ -72,7 +71,6 @@ public class RenderLayerExtensions {
                             ClientRenderPipelines.BLURRED_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
-//                                    .program(RenderPhase.POSITION_TEXTURE_COLOR_PROGRAM)
                                     .target(BlurEffectRenderer.getOutlineTarget())
                                     .build(false)
                     ));
@@ -88,7 +86,6 @@ public class RenderLayerExtensions {
                             ClientRenderPipelines.BGRA_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
-//                                    .program(BGRA_POSITION_TEXTURE_COLOR_PROGRAM)
                                     .build(false)
                     ));
 
@@ -103,7 +100,6 @@ public class RenderLayerExtensions {
                             ClientRenderPipelines.BGRA_BLURRED_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
-//                                    .program(BGRA_POSITION_TEXTURE_COLOR_PROGRAM)
                                     .target(BlurEffectRenderer.getOutlineTarget())
                                     .build(false)
                     ));
