@@ -86,7 +86,8 @@ object ModuleFastExp : ClientModule(
          * or some experience orbs haven't reached the player due to movement, etc.,
          *
          * then the module can start throwing experience bottles again to complete the repair process,
-         * but only if there is still at least one item whose durability is lower than or equal to [maxDurabilityToContinueRepair]%.
+         * but only if there is still at least one item
+         * whose durability is lower than or equal to [maxDurabilityToContinueRepair]%.
          *
          * This should prevent the module from repairing armor after every 2 or 3 received hits.
          */
