@@ -204,6 +204,8 @@ export interface PlayerData {
     actualHealth: number;
     maxHealth: number;
     absorption: number;
+    yaw: number;
+    pitch: number;
     armor: number;
     food: number;
     air: number;
