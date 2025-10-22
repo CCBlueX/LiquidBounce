@@ -117,7 +117,7 @@ class CefBrowser(
 
     override val texture: BrowserTexture?
         get() {
-            if (mcefBrowser.renderer.isUnpainted) {
+            if (!mcefBrowser.renderer.isTextureReady) {
                 return null
             }
 
