@@ -122,7 +122,7 @@ class CefBrowser(
             }
 
             return BrowserTexture(
-                mcefBrowser.renderer.textureID,
+                mcefBrowser.renderer.texture!!,
                 textureId,
                 viewport.height,
                 viewport.width,
@@ -132,7 +132,7 @@ class CefBrowser(
 
     init {
         mc.textureManager.registerTexture(textureId, object : AbstractTexture() {
-            override fun getGlTexture(): GpuTexture = mcefBrowser.renderer.texture!!
+            override fun getGlTexture(): GpuTexture? = mcefBrowser.renderer.texture
         })
     }
 
