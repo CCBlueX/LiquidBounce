@@ -44,6 +44,7 @@ import net.minecraft.block.entity.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.passive.AbstractDonkeyEntity
 import net.minecraft.entity.vehicle.ChestBoatEntity
+import net.minecraft.entity.vehicle.ChestRaftEntity
 import net.minecraft.entity.vehicle.HopperMinecartEntity
 import net.minecraft.entity.vehicle.StorageMinecartEntity
 import net.minecraft.util.math.BlockPos
@@ -271,6 +272,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             is HopperMinecartEntity -> ChestType.Hopper
             is StorageMinecartEntity -> ChestType.Chest
             is ChestBoatEntity -> ChestType.Chest
+            is ChestRaftEntity -> ChestType.Chest
             is AbstractDonkeyEntity -> ChestType.Chest.takeIf { hasChest() }
             else -> null
         }
@@ -284,6 +286,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             is AbstractFurnaceBlockEntity -> ChestType.Furnace
             is BrewingStandBlockEntity -> ChestType.BrewingStand
             is DispenserBlockEntity -> ChestType.Dispenser
+            is CrafterBlockEntity -> ChestType.Dispenser
             is HopperBlockEntity -> ChestType.Hopper
             is ShulkerBoxBlockEntity -> ChestType.ShulkerBox
             is DecoratedPotBlockEntity -> ChestType.Pot
