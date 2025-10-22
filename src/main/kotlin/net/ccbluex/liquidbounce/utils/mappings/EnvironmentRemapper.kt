@@ -56,12 +56,6 @@ object EnvironmentRemapper {
             return null
         }
 
-        logger.info(
-            "mc class entry -> $minecraftClassEntry (im =" +
-                "${minecraftClassEntry["intermediary"]}," +
-                "official = ${minecraftClassEntry["official"]})"
-        )
-
         logger.info("Probing environment...")
         return when {
             isClassPresent(minecraftClassEntry.get("intermediary")?.toDotNotation()) -> {
