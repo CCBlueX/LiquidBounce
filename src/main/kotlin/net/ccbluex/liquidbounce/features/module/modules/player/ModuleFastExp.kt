@@ -21,14 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.Fast.itemsPerTick
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.minDurabilityToStartRepair
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.Normal.ticksPerItem
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbEntityAccessor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -41,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.enchantment.Enchantments
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.Items
 
 /**
@@ -105,12 +105,21 @@ object ModuleFastExp : ClientModule(
         arrayOf(Normal, Fast)
     )
 
+    private sealed class ThrowMode(name: String) : Choice(name) {
+        final override val parent: ChoiceConfigurable<ThrowMode>
+            get() = throwMode
+
+        abstract fun nextTickItems(): Float
+    }
+
     private object Normal : ThrowMode("Normal") {
-        val ticksPerItem by floatRange("TicksPerItem", 2f..3f, 0.5f..10f, "ticks")
+        private val ticksPerItem by floatRange("TicksPerItem", 2f..3f, 0.5f..10f, "ticks")
+        override fun nextTickItems(): Float = 1f / ticksPerItem.random()
     }
 
     private object Fast : ThrowMode("Fast") {
-        val itemsPerTick by floatRange("ItemsPerTick", 3f..5f, 0.5f..16f)
+        private val itemsPerTick by floatRange("ItemsPerTick", 3f..5f, 0.5f..16f)
+        override fun nextTickItems(): Float = itemsPerTick.random()
     }
 
     private val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
@@ -185,11 +194,8 @@ object ModuleFastExp : ClientModule(
 
     private suspend fun waitForExperienceOrbs() {
         // waits for experience orbs to appear
-        tickUntil {
-            anyExpOrbMovingToPlayer()
-                // the orbs might get absorbed instantly if they come only from a very few bottles
-                || it > 10
-        }
+        // waits up to 10 ticks because the orbs might get absorbed instantly if they come only from a very few bottles
+        tickConditional(10, ::anyExpOrbMovingToPlayer)
 
         // waits for the orbs to get absorbed
         tickUntil {
@@ -212,13 +218,7 @@ object ModuleFastExp : ClientModule(
             }
         }
 
-        val items = when (throwMode.activeChoice) {
-            Normal -> { 1f / ticksPerItem.random() }
-            Fast -> { itemsPerTick.random() }
-            else -> 0f
-        }
-
-        itemsToThrow += items
+        itemsToThrow += throwMode.activeChoice.nextTickItems()
         val times = itemsToThrow.toInt()
         itemsToThrow -= times
 
@@ -246,15 +246,18 @@ object ModuleFastExp : ClientModule(
             return Int.MAX_VALUE
         }
 
-        // an item in the other hand, not holding the exp bottle could also get repaired
-        val otherHandSlot = if (slot == OffHandSlot) {
-            player.mainHandStack
-        } else {
-            player.offHandStack
-        }
-
-        val itemsToRepair = (player.inventory.armor + otherHandSlot)
-            .filter { it.getEnchantment(Enchantments.MENDING) != 0 }
+        val itemsToRepair = arrayOf(
+            player.getEquippedStack(EquipmentSlot.HEAD),
+            player.getEquippedStack(EquipmentSlot.CHEST),
+            player.getEquippedStack(EquipmentSlot.LEGS),
+            player.getEquippedStack(EquipmentSlot.FEET),
+            // an item in the other hand, not holding the exp bottle could also get repaired
+            if (slot == OffHandSlot) {
+                player.getEquippedStack(EquipmentSlot.MAINHAND)
+            } else {
+                player.getEquippedStack(EquipmentSlot.OFFHAND)
+            },
+        ).filter { it.getEnchantment(Enchantments.MENDING) != 0 }
 
         // doesn't let the module start repairing the items again
         // when the items have been repaired but not fully and are missing a just few more exp bottle
@@ -275,10 +278,5 @@ object ModuleFastExp : ClientModule(
         val bottlesRequired = experienceRequired / EXPERIENCE_PER_BOTTLE
 
         return bottlesRequired.coerceAtMost(slot.itemStack.count)
-    }
-
-    abstract class ThrowMode(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<ThrowMode>
-            get() = throwMode
     }
 }
