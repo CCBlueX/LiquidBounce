@@ -29,8 +29,10 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputListener
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
+import net.ccbluex.liquidbounce.mcef.cef.MCEFRenderer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.texture.AbstractTexture
+import net.minecraft.util.TriState
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
@@ -117,7 +119,7 @@ class CefBrowser(
 
     override val texture: BrowserTexture?
         get() {
-            if (!mcefBrowser.renderer.isTextureReady) {
+            if (!mcefBrowser.renderer.isTextureReady || mcefBrowser.renderer.isUnpainted) {
                 return null
             }
 
@@ -131,9 +133,7 @@ class CefBrowser(
         }
 
     init {
-        mc.textureManager.registerTexture(textureId, object : AbstractTexture() {
-            override fun getGlTexture(): GpuTexture? = mcefBrowser.renderer.texture
-        })
+        mc.textureManager.registerTexture(textureId, CefBrowserTexture(mcefBrowser.renderer))
     }
 
     override fun forceReload() {
@@ -218,6 +218,26 @@ class CefBrowser(
             logger.warn("Browser $this viewport size mismatch: " +
                 "expected $scaledWidth x $scaledHeight, but got $width x $height. ")
             invalidate()
+        }
+    }
+
+    class CefBrowserTexture(val mcefBrowserRenderer: MCEFRenderer): AbstractTexture() {
+        override fun getGlTexture(): GpuTexture? {
+            this.glTexture = mcefBrowserRenderer.texture
+
+            return super.getGlTexture()
+        }
+
+        override fun setClamp(clamp: Boolean) {
+            this.getGlTexture()
+
+            super.setClamp(clamp)
+        }
+
+        override fun setFilter(bilinear: TriState?, mipmap: Boolean) {
+            this.getGlTexture()
+
+            super.setFilter(bilinear, mipmap)
         }
     }
 
