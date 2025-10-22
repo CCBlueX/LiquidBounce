@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import net.ccbluex.liquidbounce.interfaces.PlayerInventoryAdditions;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
@@ -30,8 +31,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(PlayerInventory.class)
-public class MixinPlayerInventory {
+public class MixinPlayerInventory implements PlayerInventoryAdditions {
 
+    @Shadow
+    private int selectedSlot;
     @Shadow
     @Final
     public PlayerEntity player;
@@ -47,4 +50,8 @@ public class MixinPlayerInventory {
         return ((PlayerInventory) (Object) this).player == MinecraftClient.getInstance().player ? SilentHotbar.INSTANCE.getServersideSlot() : original;
     }
 
+    @Override
+    public int liquid_bounce_getRealSelectedSlot() {
+        return this.selectedSlot;
+    }
 }

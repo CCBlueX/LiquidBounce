@@ -23,8 +23,11 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.interfaces.PlayerInventoryAdditions
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
+import net.ccbluex.liquidbounce.utils.kotlin.mixinInterfaceCast
+import net.ccbluex.liquidbounce.utils.kotlin.mixinInterfaceCastNullable
 import net.minecraft.util.Hand
 
 /**
@@ -38,11 +41,15 @@ object SilentHotbar : EventListener {
     /**
      * Returns the slot that interactions would take place with
      */
-    val serversideSlot: Int
-        get() = hotbarState?.enforcedHotbarSlot ?: mc.player?.inventory?.selectedSlot ?: 0
+    /**
+     * Returns the slot that interactions would take place with
+     */
+    val serversideSlot: Int = hotbarState?.enforcedHotbarSlot
+        ?: mixinInterfaceCastNullable<PlayerInventoryAdditions>(mc.player?.inventory)?.liquid_bounce_getRealSelectedSlot()
+        ?: 0
 
     val clientsideSlot: Int
-        get() = hotbarState?.clientsideSlot ?: mc.player?.inventory?.selectedSlot ?: 0
+        get() = hotbarState?.clientsideSlot ?: mixinInterfaceCastNullable<PlayerInventoryAdditions>(mc.player?.inventory)?.liquid_bounce_getRealSelectedSlot() ?: 0
 
     /**
      * If [slot] is not [OffHandSlot], select it silently for duration of [ticksUntilReset].
