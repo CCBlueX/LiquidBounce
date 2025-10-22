@@ -161,6 +161,7 @@ accessible method net/minecraft/client/gui/hud/ChatHud addMessage (Lnet/minecraf
 accessible method net/minecraft/text/TextColor <init> (ILjava/lang/String;)V
 
 accessible field net/minecraft/client/MinecraftClient renderTaskQueue Ljava/util/Queue;
+accessible field net/minecraft/client/MinecraftClient startTime J
 
 accessible field net/minecraft/util/math/Direction HORIZONTAL [Lnet/minecraft/util/math/Direction;
 
@@ -193,3 +194,10 @@ accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen setS
 
 accessible method net/minecraft/client/network/PlayerListEntry texturesSupplier (Lcom/mojang/authlib/GameProfile;)Ljava/util/function/Supplier;
 accessible method net/minecraft/client/network/AbstractClientPlayerEntity getPlayerListEntry ()Lnet/minecraft/client/network/PlayerListEntry;
+
+accessible field net/minecraft/client/gl/GlGpuBuffer id I
+
+accessible field com/mojang/blaze3d/opengl/GlStateManager readFbo I
+accessible field com/mojang/blaze3d/opengl/GlStateManager writeFbo I
+
+accessible method net/minecraft/client/gl/GlResourceManager getBackend ()Lnet/minecraft/client/gl/GlBackend;

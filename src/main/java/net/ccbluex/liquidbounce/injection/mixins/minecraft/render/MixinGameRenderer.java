@@ -152,7 +152,7 @@ public abstract class MixinGameRenderer {
     public void prepareItemCharms(Camera camera, float tickDelta, Matrix4f matrix4f, CallbackInfo ci) {
         if (ModuleItemChams.INSTANCE.getRunning()) {
             ModuleItemChams.INSTANCE.setData();
-            OutlineEffectShader.INSTANCE.prepare();
+            OutlineEffectShader.INSTANCE.prepare(true);
         }
     }
 

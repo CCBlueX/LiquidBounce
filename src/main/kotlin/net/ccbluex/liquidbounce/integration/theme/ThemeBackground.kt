@@ -19,7 +19,8 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
-import net.ccbluex.liquidbounce.render.shader.CanvasShader
+import net.ccbluex.liquidbounce.render.shader.BlitShader
+import net.ccbluex.liquidbounce.render.shader.FramebufferShader
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
@@ -30,7 +31,7 @@ sealed interface ThemeBackground : Closeable {
 
     companion object {
         @JvmStatic
-        fun shader(shader: CanvasShader) = ShaderThemeBackground(shader)
+        fun shader(shader: BlitShader) = ShaderThemeBackground(shader)
         @JvmStatic
         fun image(imageId: Identifier) = ImageThemeBackground(imageId)
         @JvmStatic
@@ -88,7 +89,7 @@ sealed interface ThemeBackground : Closeable {
      * Background implementation that renders using a custom shader.
      * @param shader The canvas shader to use for rendering
      */
-    class ShaderThemeBackground(private val shader: CanvasShader) : ThemeBackground {
+    class ShaderThemeBackground(private val shader: BlitShader) : ThemeBackground {
 
         override fun draw(
             context: DrawContext,
@@ -98,7 +99,7 @@ sealed interface ThemeBackground : Closeable {
             mouseY: Int,
             delta: Float
         ): Boolean {
-            shader.draw(mouseX, mouseY, delta)
+            shader.blit()
             return true
         }
 

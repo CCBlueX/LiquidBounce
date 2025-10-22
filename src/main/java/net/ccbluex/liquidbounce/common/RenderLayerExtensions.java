@@ -61,7 +61,6 @@ public class RenderLayerExtensions {
                             ClientRenderPipelines.BLURRED_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
-                                    .target(BlurEffectRenderer.getOutlineTarget())
                                     .build(false)
                     ));
 
@@ -90,7 +89,6 @@ public class RenderLayerExtensions {
                             ClientRenderPipelines.BGRA_BLURRED_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
-                                    .target(BlurEffectRenderer.getOutlineTarget())
                                     .build(false)
                     ));
 

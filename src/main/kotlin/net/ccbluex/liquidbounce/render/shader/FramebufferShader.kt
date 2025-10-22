@@ -18,15 +18,19 @@
  */
 package net.ccbluex.liquidbounce.render.shader
 
-import com.mojang.blaze3d.opengl.GlConst
+import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.common.GlobalFramebuffer
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.minecraft.client.gl.GlUsage
-import net.minecraft.client.gl.SimpleFramebuffer
-import net.minecraft.client.gl.VertexBuffer
+import net.ccbluex.liquidbounce.render.bind
+import net.ccbluex.liquidbounce.render.buffer.Framebuffer
+import net.ccbluex.liquidbounce.render.defaultBlendFunc
+import net.ccbluex.liquidbounce.render.draw
+import net.ccbluex.liquidbounce.render.unbind
+import net.ccbluex.liquidbounce.render.upload
+import net.minecraft.client.gl.GlGpuBuffer
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormats
 import org.lwjgl.opengl.GL13
@@ -37,14 +41,14 @@ import java.io.Closeable
  */
 open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, Closeable {
 
-    protected val framebuffers = mutableListOf<SimpleFramebuffer>()
-    protected var buffer = VertexBuffer(GlUsage.DYNAMIC_WRITE)
+    protected val framebuffers = mutableListOf<Framebuffer>()
+    protected var buffer: GlGpuBuffer
 
     init {
         val width = mc.window.framebufferWidth
         val height = mc.window.framebufferHeight
-        shaders.forEach {
-            val framebuffer = SimpleFramebuffer(it.toString(), width, height, false)
+        shaders.forEach { _ ->
+            val framebuffer = Framebuffer(width, height, false)
             framebuffer.setClearColor(0f, 0f, 0f, 0f)
             framebuffers.add(framebuffer)
         }
@@ -55,29 +59,32 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
         bufferBuilder.vertex(1f, -1f, 0f).texture(1f, 0f)
         bufferBuilder.vertex(1f, 1f, 0f).texture(1f, 1f)
         bufferBuilder.vertex(-1f, 1f, 0f).texture(0f, 1f)
-        buffer.bind()
-        buffer.upload(bufferBuilder.end())
-        VertexBuffer.unbind()
+        buffer = bufferBuilder.upload(BufferUsage.DYNAMIC_WRITE, 4 * VertexFormats.POSITION_TEXTURE.vertexSize)
     }
 
-    fun prepare() {
+    open fun prepare(clearFramebuffer: Boolean = true) {
+        var doClearFramebuffer = clearFramebuffer
+
         val width = mc.window.framebufferWidth
         val height = mc.window.framebufferHeight
-        framebuffers.forEach {
-            if (it.textureWidth != width || it.textureHeight != height) {
-                it.resize(width, height)
+        framebuffers.forEachIndexed { index, framebuffer ->
+            if (framebuffer.width != width || framebuffer.height != height) {
+                if (index == 0) {
+                    doClearFramebuffer = true
+                }
+
+                framebuffer.resize(width, height)
             }
         }
 
-        framebuffers[0].clear()
-        framebuffers[0].beginWrite(true)
+        framebuffers[0].beginWrite(true, doClearFramebuffer)
 
         GlobalFramebuffer.push(framebuffers[0])
     }
 
     open fun apply(popFramebufferStack: Boolean = true) {
         if (popFramebufferStack) {
-            GlobalFramebuffer.pop()
+            framebuffers[0].end()
         }
 
         val active = GlStateManager._getActiveTexture()
@@ -93,8 +100,7 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
             val inputFramebuffer = framebuffers.getOrNull(i) ?: framebuffers.first()
             val outputFramebuffer = framebuffers.getOrNull(i + 1)
 
-            outputFramebuffer?.clear()
-            outputFramebuffer?.beginWrite(true) ?: mc.framebuffer.beginWrite(false)
+            outputFramebuffer?.beginWrite(true) ?: GlobalFramebuffer.pop()
 
             GlStateManager._activeTexture(GL13.GL_TEXTURE0 + i)
             GlStateManager._bindTexture(inputFramebuffer.colorAttachment)
@@ -104,7 +110,7 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
             shader.stop()
         }
 
-        VertexBuffer.unbind()
+        buffer.unbind()
 
         endBlend()
         GlStateManager._enableDepthTest()
@@ -113,7 +119,7 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
 
     protected open fun enableBlend() {
         GlStateManager._enableBlend()
-        GlStateManager._blendFunc(GlConst.GL_SRC_ALPHA, GlConst.GL_ONE_MINUS_SRC_ALPHA)
+        defaultBlendFunc()
     }
 
     protected open fun endBlend() {
@@ -128,7 +134,7 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
     override fun close() {
         shaders.forEach { it.close() }
         buffer.close()
-        framebuffers.forEach { it.delete() }
+        framebuffers.forEach { it.close() }
     }
 
 }
