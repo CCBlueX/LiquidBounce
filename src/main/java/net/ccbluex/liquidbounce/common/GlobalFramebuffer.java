@@ -43,6 +43,11 @@ public final class GlobalFramebuffer {
     private static final IntList writeStack = new IntArrayList(2);
     private static final List<Framebuffer> stack = new ArrayList<>(1);
 
+    static {
+        readStack.add(0);
+        writeStack.add(0);
+    }
+
     private static boolean lock;
     private static boolean minecraftChangesRead;
     private static boolean minecraftChangesWrite;
