@@ -28,6 +28,7 @@ import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextAccessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -94,7 +95,7 @@ fun defaultBlendFunc() {
 fun BufferBuilder.upload(usage: BufferUsage, size: Int): GlGpuBuffer {
     val buffer = RenderSystem.getDevice()
         .createBuffer(
-            { "LB" },
+            { LiquidBounce.CLIENT_NAME },
             BufferType.VERTICES,
             usage,
             size
@@ -375,44 +376,44 @@ inline fun RenderEnvironment.drawCustomMesh(
 @Suppress("detekt:all")
 // copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
 fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { buffer ->
-    val gpuBuffer = vertexInputType.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
-    val gpuBuffer2: GpuBuffer
-    val indexType: VertexFormat.IndexType
-    if (buffer.sortedBuffer == null) {
-        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawParameters.mode())
-        gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount())
-        indexType = shapeIndexBuffer.indexType
-    } else {
-        gpuBuffer2 = vertexInputType.vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
-        indexType = buffer.drawParameters.indexType()
-    }
-
-    val framebuffer = mc.framebuffer
-
-    RenderSystem.getDevice()
-        .createCommandEncoder()
-        .createRenderPass(
-            framebuffer.getColorAttachment(),
-            OptionalInt.empty(),
-            if (framebuffer.useDepthAttachment) framebuffer.getDepthAttachment() else null,
-            OptionalDouble.empty()
-        ).use { renderPass ->
-            renderPass.setPipeline(RenderPipelines.GUI) // FIXME: pipeline
-            renderPass.setVertexBuffer(0, gpuBuffer)
-            if (RenderSystem.SCISSOR_STATE.isEnabled) {
-                renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
-            }
-
-            for (i in 0..11) {
-                val gpuTexture = RenderSystem.getShaderTexture(i)
-                if (gpuTexture != null) {
-                    renderPass.bindSampler("Sampler$i", gpuTexture)
-                }
-            }
-
-            renderPass.setIndexBuffer(gpuBuffer2, indexType)
-            renderPass.drawIndexed(0, buffer.drawParameters.indexCount())
-        }
+//    val gpuBuffer = vertexInputType.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
+//    val gpuBuffer2: GpuBuffer
+//    val indexType: VertexFormat.IndexType
+//    if (buffer.sortedBuffer == null) {
+//        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawParameters.mode())
+//        gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount())
+//        indexType = shapeIndexBuffer.indexType
+//    } else {
+//        gpuBuffer2 = vertexInputType.vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
+//        indexType = buffer.drawParameters.indexType()
+//    }
+//
+//    val framebuffer = mc.framebuffer
+//
+//    RenderSystem.getDevice()
+//        .createCommandEncoder()
+//        .createRenderPass(
+//            framebuffer.getColorAttachment(),
+//            OptionalInt.empty(),
+//            if (framebuffer.useDepthAttachment) framebuffer.getDepthAttachment() else null,
+//            OptionalDouble.empty()
+//        ).use { renderPass ->
+//            renderPass.setPipeline(RenderPipelines.GUI) // FIXME: pipeline
+//            renderPass.setVertexBuffer(0, gpuBuffer)
+//            if (RenderSystem.SCISSOR_STATE.isEnabled) {
+//                renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
+//            }
+//
+//            for (i in 0..11) {
+//                val gpuTexture = RenderSystem.getShaderTexture(i)
+//                if (gpuTexture != null) {
+//                    renderPass.bindSampler("Sampler$i", gpuTexture)
+//                }
+//            }
+//
+//            renderPass.setIndexBuffer(gpuBuffer2, indexType)
+//            renderPass.drawIndexed(0, buffer.drawParameters.indexCount())
+//        }
 }
 
 /**
