@@ -21,13 +21,10 @@ package net.ccbluex.liquidbounce.common;
 import com.mojang.blaze3d.opengl.GlConst;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.MinecraftClient;
 import net.ccbluex.liquidbounce.render.buffer.Framebuffer;
 import org.lwjgl.opengl.GL30;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Modifies {@link MinecraftClient#getFramebuffer()} to return an own framebuffer so that minecraft writes results
@@ -39,9 +36,9 @@ public final class GlobalFramebuffer {
 
     private GlobalFramebuffer() {}
 
-    private static final IntList readStack = new IntArrayList(2);
-    private static final IntList writeStack = new IntArrayList(2);
-    private static final List<Framebuffer> stack = new ArrayList<>(1);
+    private static final IntArrayList readStack = new IntArrayList(2);
+    private static final IntArrayList writeStack = new IntArrayList(2);
+    private static final ObjectArrayList<Framebuffer> stack = new ObjectArrayList<>(1);
 
     static {
         readStack.add(0);
@@ -54,7 +51,7 @@ public final class GlobalFramebuffer {
 
     // framebuffers minecraft sets
     public static void updateRead(int id) {
-        if (!minecraftChangesRead || id == readStack.getFirst()) {
+        if (!minecraftChangesRead || id == readStack.getInt(0)) {
             readStack.set(0, id);
             minecraftChangesRead = false;
         }
@@ -65,7 +62,7 @@ public final class GlobalFramebuffer {
     }
 
     public static void updateWrite(int id) {
-        if (!minecraftChangesWrite || id == writeStack.getFirst()) {
+        if (!minecraftChangesWrite || id == writeStack.getInt(0)) {
             writeStack.set(0, id);
             minecraftChangesWrite = false;
         }
@@ -78,22 +75,22 @@ public final class GlobalFramebuffer {
     // when mc changes stuff at the framebuffer, they need to cache the current fbo
     public static int getRead() {
         minecraftChangesRead = true;
-        return readStack.getFirst();
+        return readStack.getInt(0);
     }
 
     public static int getWrite() {
         minecraftChangesWrite = true;
-        return writeStack.getFirst();
+        return writeStack.getInt(0);
     }
 
     public static void push(Framebuffer spoofedFramebuffer) {
-        if (!stack.isEmpty() && stack.getLast() == spoofedFramebuffer) {
+        if (!stack.isEmpty() && stack.top() == spoofedFramebuffer) {
             return;
         }
 
-        stack.addLast(spoofedFramebuffer);
-        readStack.addLast(spoofedFramebuffer.getId());
-        writeStack.addLast(spoofedFramebuffer.getId());
+        stack.push(spoofedFramebuffer);
+        readStack.push(spoofedFramebuffer.getId());
+        writeStack.push(spoofedFramebuffer.getId());
         lock = true;
 
         if (!minecraftChangesRead) {
@@ -107,21 +104,21 @@ public final class GlobalFramebuffer {
 
     public static void pop() {
         if (!readStack.isEmpty()) {
-            readStack.removeLast();
+            readStack.popInt();
             if (!minecraftChangesRead) {
-                bindRead(readStack.getLast());
+                bindRead(readStack.topInt());
             }
         }
 
         if (!writeStack.isEmpty()) {
-            writeStack.removeLast();
+            writeStack.popInt();
             if (!minecraftChangesWrite) {
-                bindWrite(writeStack.getLast());
+                bindWrite(writeStack.topInt());
             }
         }
 
         if (!stack.isEmpty()) {
-            stack.removeLast();
+            stack.pop();
         }
 
         if (stack.isEmpty()) {
