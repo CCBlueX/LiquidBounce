@@ -43,7 +43,7 @@ open class Framebuffer(var width: Int, var height: Int, val useDepth: Boolean) :
 
         GlStateManager._bindTexture(colorAttachment)
         GlStateManager._bindTexture(colorAttachment)
-        GlStateManager._texImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, null as IntBuffer?)
+        GlStateManager._texImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, null)
         GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         GlStateManager._glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorAttachment, 0)
@@ -55,8 +55,8 @@ open class Framebuffer(var width: Int, var height: Int, val useDepth: Boolean) :
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthAttachment)
         }
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            throw RuntimeException("Framebuffer is not complete!")
+        check(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+            "Framebuffer is not complete! Status: ${glCheckFramebufferStatus(GL_FRAMEBUFFER)}"
         }
 
         GlobalFramebuffer.pop()

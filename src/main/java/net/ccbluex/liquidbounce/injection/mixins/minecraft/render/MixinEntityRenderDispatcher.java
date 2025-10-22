@@ -38,17 +38,17 @@ public abstract class MixinEntityRenderDispatcher {
     private static Entity entity;
 
     // FIXME: param `entity` is gone
-    @Inject(method = "renderHitbox", at = @At(value = "HEAD"))
-    private static void getEntity(MatrixStack matrices, VertexConsumer vertices, Entity entity, float tickDelta, float red, float green, float blue, CallbackInfo ci) {
-        MixinEntityRenderDispatcher.entity = entity;
-    }
-
-    @ModifyArg(method = "renderHitbox", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/VertexRendering;drawBox(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;Lnet/minecraft/util/math/Box;FFFF)V", ordinal = 0), index = 2, require = 1, allow = 1)
-    private static Box updateBoundingBox(Box box) {
-        var moduleHitBox = ModuleHitbox.INSTANCE;
-        if (moduleHitBox.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity)) {
-            return box.expand(moduleHitBox.getSize());
-        }
-        return box;
-    }
+//    @Inject(method = "renderHitbox", at = @At(value = "HEAD"))
+//    private static void getEntity(MatrixStack matrices, VertexConsumer vertices, Entity entity, float tickDelta, float red, float green, float blue, CallbackInfo ci) {
+//        MixinEntityRenderDispatcher.entity = entity;
+//    }
+//
+//    @ModifyArg(method = "renderHitbox", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/VertexRendering;drawBox(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;Lnet/minecraft/util/math/Box;FFFF)V", ordinal = 0), index = 2, require = 1, allow = 1)
+//    private static Box updateBoundingBox(Box box) {
+//        var moduleHitBox = ModuleHitbox.INSTANCE;
+//        if (moduleHitBox.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity)) {
+//            return box.expand(moduleHitBox.getSize());
+//        }
+//        return box;
+//    }
 }

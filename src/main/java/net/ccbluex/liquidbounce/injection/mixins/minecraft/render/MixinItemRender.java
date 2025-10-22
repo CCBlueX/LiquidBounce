@@ -39,15 +39,15 @@ import static net.minecraft.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
 public class MixinItemRender {
 
     // FIXME: determine leftHanded
-    @Inject(
-            method = "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemDisplayContext;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/world/World;III)V",
-            at = @At("HEAD"),
-            cancellable = true
-    )
-    private void hookRenderItem(LivingEntity entity, ItemStack stack, ItemDisplayContext displayContext, MatrixStack matrices, VertexConsumerProvider vertexConsumers, World world, int light, int overlay, int seed, CallbackInfo ci) {
-        if (displayContext == (leftHanded ? THIRD_PERSON_LEFT_HAND : THIRD_PERSON_RIGHT_HAND) && entity instanceof PlayerEntity player && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player, item)) {
-            ci.cancel();
-        }
-    }
+//    @Inject(
+//            method = "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemDisplayContext;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/world/World;III)V",
+//            at = @At("HEAD"),
+//            cancellable = true
+//    )
+//    private void hookRenderItem(LivingEntity entity, ItemStack stack, ItemDisplayContext displayContext, MatrixStack matrices, VertexConsumerProvider vertexConsumers, World world, int light, int overlay, int seed, CallbackInfo ci) {
+//        if (displayContext == (leftHanded ? THIRD_PERSON_LEFT_HAND : THIRD_PERSON_RIGHT_HAND) && entity instanceof PlayerEntity player && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player, item)) {
+//            ci.cancel();
+//        }
+//    }
 
 }

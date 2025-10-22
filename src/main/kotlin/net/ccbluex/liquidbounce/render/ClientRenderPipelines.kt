@@ -47,6 +47,8 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         RenderPipelines.MATRICES_SNIPPET,
         RenderPipelines.MATRICES_COLOR_SNIPPET,
     )
+		.withVertexShader("core/position_tex_color") // TODO: use client resource
+		.withFragmentShader("core/position_tex_color")
         .withSampler("Sampler0")
         .withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
         .buildSnippet()
@@ -122,14 +124,14 @@ object ClientRenderPipelines : SynchronousResourceReloader {
      * Precompile
      */
     override fun reload(manager: ResourceManager) {
-        val device = RenderSystem.getDevice()
-
-        renderPipelines.fastIterator().forEach { (_, pipeline) ->
-            device.precompilePipeline(pipeline) { identifier, _ ->
-                val resource = manager.getResource(identifier).get()
-                resource.inputStream.source().buffer().use { it.readUtf8() }
-            }
-        }
+//        val device = RenderSystem.getDevice()
+//
+//        renderPipelines.fastIterator().forEach { (_, pipeline) ->
+//            device.precompilePipeline(pipeline) { identifier, _ ->
+//                val resource = manager.getResource(identifier).get()
+//                resource.inputStream.source().buffer().use { it.readUtf8() }
+//            }
+//        }
     }
 
 }

@@ -372,6 +372,7 @@ inline fun RenderEnvironment.drawCustomMesh(
     }
 }
 
+@Suppress("detekt:all")
 // copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
 fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { buffer ->
     val gpuBuffer = vertexInputType.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)

@@ -34,6 +34,7 @@ import net.minecraft.client.texture.GlTexture
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.text.Text
 import org.joml.Vector3f
+import org.joml.Vector3fc
 import java.awt.Font
 import kotlin.math.max
 
@@ -131,14 +132,15 @@ class FontRenderer(
      *
      * @return The resulting x value
      */
+    @Suppress("CognitiveComplexMethod")
     private fun drawInternal(
         text: ProcessedText,
-        pos: Vector3f,
+        pos: Vector3fc,
         scale: Float,
         overrideColor: Color4b? = null
     ): Float {
         if (text.chars.isEmpty()) {
-            return pos.x
+            return pos.x()
         }
 
         // remove from last
@@ -151,8 +153,8 @@ class FontRenderer(
             addAll(text.strikeThroughs)
         }
 
-        var x = pos.x
-        var y = pos.y + this.ascent * scale
+        var x = pos.x()
+        var y = pos.y() + this.ascent * scale
 
         var strikeThroughStartX: Float? = null
         var underlineStartX: Float? = null
@@ -184,7 +186,7 @@ class FontRenderer(
                     y + renderInfo.glyphBounds.yMin * scale,
                     x + (renderInfo.glyphBounds.xMin + atlasLocation.atlasWidth) * scale,
                     y + (renderInfo.glyphBounds.yMin + atlasLocation.atlasHeight) * scale,
-                    pos.z,
+                    pos.z(),
                     color
                 )
 
@@ -200,13 +202,13 @@ class FontRenderer(
             if (underlineStack.isNotEmpty() && underlineStack.first().last == charIdx) {
                 underlineStack.removeFirst()
 
-                drawLine(underlineStartX!!, x, y, pos.z, color, false)
+                drawLine(underlineStartX!!, x, y, pos.z(), color, false)
             }
 
             if (strikethroughStack.isNotEmpty() && strikethroughStack.first().last == charIdx) {
                 strikethroughStack.removeFirst()
 
-                drawLine(strikeThroughStartX!!, x, y, pos.z, color, true)
+                drawLine(strikeThroughStartX!!, x, y, pos.z(), color, true)
             }
         }
 
