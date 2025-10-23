@@ -19,10 +19,12 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.util.Identifier
 
+// TODO: replace with RenderPipeline.Snippet
 enum class VertexInputType(
     val vertexFormat: VertexFormat,
     val vertexShader: Identifier,
@@ -42,5 +44,12 @@ enum class VertexInputType(
         VertexFormats.POSITION_TEXTURE_COLOR,
         Identifier.ofVanilla("core/position_tex_color"),
         Identifier.ofVanilla("core/position_tex_color"),
-    ),
+    );
+
+    context(builder: RenderPipeline.Builder)
+    fun apply(drawMode: VertexFormat.DrawMode): RenderPipeline.Builder =
+        builder
+            .withFragmentShader(fragmentShader)
+            .withVertexShader(vertexShader)
+            .withVertexFormat(vertexFormat, drawMode)
 }

@@ -103,22 +103,20 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     // JCEF END
 
-//    @JvmField
-//    val WORLD_RENDER_ENV = create("world_render") {
-//        withBlend(BlendFunction.TRANSLUCENT)
-//        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-//        withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.DEBUG_LINES)
-//        withFragmentShader("core/entity")
-//        withVertexShader("core/entity")
-//    }
-//
-//    @JvmField
-//    val GUI_RENDER_ENV = create("gui_render") {
-////        withBlend(BlendFunction.TRANSLUCENT)
-//        withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.DEBUG_LINES)
-//        withFragmentShader("core/entity")
-//        withVertexShader("core/entity")
-//    }
+    @JvmField
+    val Lines = create("lines") {
+        VertexInputType.PosColor.apply(VertexFormat.DrawMode.DEBUG_LINES)
+    }
+
+    @JvmField
+    val LineStrip = create("line_strip") {
+        VertexInputType.PosColor.apply(VertexFormat.DrawMode.DEBUG_LINE_STRIP)
+    }
+
+    @JvmField
+    val Quad = create("quad") {
+        VertexInputType.PosColor.apply(VertexFormat.DrawMode.QUADS)
+    }
 
     /**
      * Precompile

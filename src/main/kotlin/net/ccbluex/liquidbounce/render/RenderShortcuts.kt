@@ -376,7 +376,14 @@ inline fun RenderEnvironment.drawCustomMesh(
 @Suppress("detekt:all")
 // copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
 fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { buffer ->
-    val gpuBuffer = vertexInputType.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
+    val pipeline = RenderPipeline.Builder() // fixme: pipeline
+        .withLocation(LiquidBounce.identifier(UUID.randomUUID().toString().lowercase()))
+        .withVertexShader(vertexInputType.vertexShader)
+        .withFragmentShader(vertexInputType.fragmentShader)
+        .withVertexFormat(vertexInputType.vertexFormat, buffer.drawParameters.mode)
+        .build()
+
+    val gpuBuffer = pipeline.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
     val gpuBuffer2: GpuBuffer
     val indexType: VertexFormat.IndexType
     if (buffer.sortedBuffer == null) {
@@ -384,7 +391,7 @@ fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { buffer ->
         gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount())
         indexType = shapeIndexBuffer.indexType
     } else {
-        gpuBuffer2 = vertexInputType.vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
+        gpuBuffer2 = pipeline.vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
         indexType = buffer.drawParameters.indexType()
     }
 
@@ -398,13 +405,6 @@ fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { buffer ->
             framebuffer.depthAttachment.takeIf { framebuffer.useDepthAttachment },
             OptionalDouble.empty()
         ).use { renderPass ->
-            val pipeline = RenderPipeline.Builder() // fixme: pipeline
-                .withLocation(LiquidBounce.identifier(UUID.randomUUID().toString().lowercase()))
-                .withVertexShader(vertexInputType.vertexShader)
-                .withFragmentShader(vertexInputType.fragmentShader)
-                .withVertexFormat(vertexInputType.vertexFormat, buffer.drawParameters.mode)
-                .build()
-
             renderPass.setPipeline(pipeline)
             renderPass.setVertexBuffer(0, gpuBuffer)
             if (RenderSystem.SCISSOR_STATE.isEnabled) {
