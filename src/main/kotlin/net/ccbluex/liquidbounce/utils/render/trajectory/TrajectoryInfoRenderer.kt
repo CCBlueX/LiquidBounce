@@ -20,21 +20,18 @@
 
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
-import net.ccbluex.fastutil.mapToArray
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
-import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories.alwaysShowBow
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories.maxSimulatedTicks
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories.simulationResults
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
@@ -42,10 +39,9 @@ import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.*
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
-import net.minecraft.block.ShapeContext
+import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -56,8 +52,11 @@ import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
+import org.joml.Matrix4f
+import org.joml.Quaternionf
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.cos
 import kotlin.math.sin
@@ -165,9 +164,10 @@ class TrajectoryInfoRenderer(
             tickVelocity()
         }
 
+        positions += pos.copy()
         val prevPos = pos.copy()
         // Now start normal simulation, starting from currTicks = 1
-        var currTicks = if (trajectoryInfo.requiresInitialTickCorrection()){
+        var currTicks = if (trajectoryInfo.requiresInitialTickCorrection()) {
             1
         } else {
             0
@@ -247,13 +247,43 @@ class TrajectoryInfoRenderer(
         color: Color4b,
         matrixStack: MatrixStack,
     ) {
-        renderEnvironmentForWorld(matrixStack) {
-            drawLineStrip(
-                color.toARGB(),
-                positions = positions.mapToArray { relativeToCamera(it + renderOffset).toVec3() })
-        }
-    }
+        if (positions.size < 2) return
 
+        RenderSystem.depthMask(false)
+        renderEnvironmentForWorld(matrixStack) {
+            startBatch()
+
+            val endAlpha = color.a.toFloat() / 255f
+            val startAlpha = 0f
+            val transitionSegments = 3
+
+            drawCustomMesh(VertexFormat.DrawMode.DEBUG_LINES, VertexInputType.PosColor) { matrix ->
+                for (i in 0 until positions.size - 1) {
+                    val pos1 = relativeToCamera(positions[i] + renderOffset).toVec3()
+                    val pos2 = relativeToCamera(positions[i + 1] + renderOffset).toVec3()
+
+                    val alpha1 = if (i < transitionSegments) {
+                        startAlpha + (endAlpha - startAlpha) * (i / transitionSegments.toFloat())
+                    } else endAlpha
+                    val alpha2 = if (i + 1 < transitionSegments) {
+                        startAlpha + (endAlpha - startAlpha) * ((i + 1) / transitionSegments.toFloat())
+                    } else endAlpha
+
+                    val r = color.r / 255f
+                    val g = color.g / 255f
+                    val b = color.b / 255f
+
+                    vertex(matrix, pos1.x, pos1.y, pos1.z).color(
+                        r, g, b, alpha1)
+                    vertex(matrix, pos2.x, pos2.y, pos2.z).color(
+                        r, g, b, alpha2)
+                }
+            }
+
+            commitBatch()
+        }
+        RenderSystem.depthMask(true)
+    }
     @JvmRecord
     data class SimulationResult(
         val hitResult: HitResult?,
@@ -305,26 +335,69 @@ private fun drawHitEntities(
     }
 }
 
-private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHitResult, color: Color4b) {
-    val currPos = blockHitResult.blockPos
-    val currState = currPos.getState()!!
+private fun renderHitBlockFace(
+    matrixStack: MatrixStack,
+    blockHitResult: BlockHitResult,
+    color: Color4b,
+    event: WorldRenderEvent,
+    renderer: TrajectoryInfoRenderer
+) {
+    val points = listOf(
+        Vec3(0.0, 0.001, -0.5),
+        Vec3(0.5, 0.001, 0.0),
+        Vec3(0.0, 0.001, 0.5),
+        Vec3(-0.5, 0.001, 0.0)
+    )
+    val side = blockHitResult.side
+    val hitPos = blockHitResult.pos
+    val partialTicks = event.partialTicks
+    var interpolatedHitPos = hitPos
+    if (renderer.type == TrajectoryInfoRenderer.Type.HYPOTHETICAL && renderer.owner === player) {
+        val playerPrevPos = Vec3d(player.prevX, player.prevY, player.prevZ)
+        val playerInterpolated = player.interpolateCurrentPosition(partialTicks)
+        val posOffset = playerInterpolated.subtract(playerPrevPos)
+        interpolatedHitPos = hitPos.add(posOffset)
+    }
 
-    val bestBox = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
-        .filter { blockHitResult.pos in it.expand(0.01, 0.01, 0.01).offset(currPos) }
-        .minByOrNull { it.squaredBoxedDistanceTo(blockHitResult.pos) }
+    fun getQuaternionForSide(side: Direction): Quaternionf = when (side) {
+        Direction.UP -> Quaternionf().identity()
+        Direction.DOWN -> Quaternionf().rotationX(Math.PI.toFloat())
+        Direction.NORTH -> Quaternionf().rotationX(-Math.PI.toFloat() / 2)
+        Direction.SOUTH -> Quaternionf().rotationX(Math.PI.toFloat() / 2)
+        Direction.WEST -> Quaternionf().rotationZ(Math.PI.toFloat() / 2)
+        Direction.EAST -> Quaternionf().rotationZ(-Math.PI.toFloat() / 2)
+    }
 
-    if (bestBox != null) {
-        renderEnvironmentForWorld(matrixStack) {
-            withPositionRelativeToCamera(currPos) {
-                drawBoxSide(
-                    bestBox,
-                    side = blockHitResult.side,
-                    faceColor = color,
-                )
+    renderEnvironmentForWorld(matrixStack) {
+        matrixStack.withPush {
+            val quat = getQuaternionForSide(side)
+            val fillColor = color.alpha(70)
+            val outlineColor = color.alpha(150)
+
+            val drawQuad: (Matrix4f) -> Unit = { matrix ->
+                RenderSystem.disableCull()
+                drawCustomMesh(VertexFormat.DrawMode.QUADS, VertexInputType.PosColor) { m ->
+                    points.forEach { (x, y, z) -> vertex(m, x, y, z).color(fillColor.toARGB()) }
+                }
+                RenderSystem.enableCull()
+
+                drawCustomMesh(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexInputType.PosColor) { m ->
+                    points.forEach { (x, y, z) -> vertex(m, x, y, z).color(outlineColor.toARGB()) }
+                    val first = points[0]
+                    vertex(m, first.x, first.y, first.z).color(outlineColor.toARGB())
+                }
+
             }
+
+            val relHit = relativeToCamera(interpolatedHitPos)
+
+            translate(relHit.x, relHit.y, relHit.z)
+            multiply(quat)
+            drawQuad(matrixStack.peek().positionMatrix)
         }
     }
 }
+
 
 fun renderSimulationResult(
     renderer: TrajectoryInfoRenderer,
@@ -341,21 +414,25 @@ fun renderSimulationResult(
         null -> {}
         is BlockHitResult -> if (type.blockHitESP) {
             renderHitBlockFace(
-                event.matrixStack, landingPosition, type.color
+                event.matrixStack, landingPosition, type.color, event, renderer
             )
         }
+
         is EntityHitResult -> if (type.entityHitESP) {
             val entities = listOf(landingPosition.entity)
             drawHitEntities(
                 event.matrixStack, type.color, entities, event.partialTicks
             )
         }
+
         else -> error("Unexpected HitResult type: ${landingPosition::class.java.name}")
     }
 
     if (trajectoryInfo == TrajectoryInfo.POTION && type.entityHitESP) {
-        landingPosition?.let { drawSplashPotionTargets(
-            it.pos, trajectoryInfo, event, type.color)
+        landingPosition?.let {
+            drawSplashPotionTargets(
+                it.pos, trajectoryInfo, event, type.color
+            )
         }
     }
 }
@@ -363,7 +440,9 @@ fun renderSimulationResult(
 fun drawHypotheticalTrajectoryWithSimulation(
     playerEntity: PlayerEntity,
     event: WorldRenderEvent,
-    shouldRender: Boolean) {
+    shouldRender: Boolean,
+    alwaysShowBow: Boolean
+) {
     val trajectoryInfo = playerEntity.handItems.firstNotNullOfOrNull {
         TrajectoryData.getRenderedTrajectoryInfo(playerEntity, it.item, alwaysShowBow)
     } ?: return
