@@ -327,9 +327,12 @@ fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { builtBuffer ->
  *
  * @param lines The vectors representing the lines.
  */
-
 fun RenderEnvironment.drawLines(vararg lines: Vec3) {
-    drawLines(lines.unmodifiable(), mode = DrawMode.DEBUG_LINES)
+    drawLines(
+        lines.unmodifiable(),
+        mode = DrawMode.DEBUG_LINES,
+        argb = TODO()
+    )
 }
 
 /**
@@ -338,7 +341,11 @@ fun RenderEnvironment.drawLines(vararg lines: Vec3) {
  * @param positions The vectors representing the line strip.
  */
 fun RenderEnvironment.drawLineStrip(vararg positions: Vec3) {
-    drawLines(positions.unmodifiable(), mode = DrawMode.DEBUG_LINE_STRIP)
+    drawLines(
+        positions.unmodifiable(),
+        mode = DrawMode.DEBUG_LINE_STRIP,
+        argb = TODO()
+    )
 }
 
 /**
@@ -347,7 +354,11 @@ fun RenderEnvironment.drawLineStrip(vararg positions: Vec3) {
  * @param lines The vectors representing the lines.
  * @param mode The draw mode for the lines.
  */
-private fun RenderEnvironment.drawLines(lines: List<Vec3>, mode: DrawMode = DrawMode.DEBUG_LINES) {
+private fun RenderEnvironment.drawLines(
+    lines: List<Vec3>,
+    mode: DrawMode,
+    argb: Int,
+) {
     // If the array of lines is empty, we don't need to draw anything
     if (lines.isEmpty()) {
         return
@@ -355,10 +366,10 @@ private fun RenderEnvironment.drawLines(lines: List<Vec3>, mode: DrawMode = Draw
 
     drawCustomMesh(
         mode,
-        VertexInputType.Pos,
+        VertexInputType.PosColor,
     ) { matrix ->
         lines.forEach { (x, y, z) ->
-            vertex(matrix, x, y, z)
+            vertex(matrix, x, y, z).color(argb)
         }
     }
 }
@@ -413,15 +424,15 @@ fun RenderEnvironment.drawTextureQuad(
     }
 }
 
-fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3) {
+fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3, argb: Int) {
     drawCustomMesh(
         DrawMode.QUADS,
-        VertexInputType.Pos,
+        VertexInputType.PosColor,
     ) { matrix ->
-        vertex(matrix, pos1.x, pos2.y, pos1.z)
-        vertex(matrix, pos2.x, pos2.y, pos2.z)
-        vertex(matrix, pos2.x, pos1.y, pos2.z)
-        vertex(matrix, pos1.x, pos1.y, pos1.z)
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos2.z).color(argb)
+        vertex(matrix, pos2.x, pos1.y, pos2.z).color(argb)
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
     }
 }
 
@@ -437,22 +448,22 @@ fun RenderEnvironment.drawColoredQuad(pos1: Vec3, pos2: Vec3, argb: Int) {
     }
 }
 
-fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3) {
+fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3, argb: Int) {
     drawCustomMesh(
         DrawMode.DEBUG_LINES,
-        VertexInputType.Pos,
+        VertexInputType.PosColor,
     ) { matrix ->
-        vertex(matrix, pos1.x, pos1.y, pos1.z)
-        vertex(matrix, pos1.x, pos2.y, pos1.z)
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
 
-        vertex(matrix, pos1.x, pos2.y, pos1.z)
-        vertex(matrix, pos2.x, pos2.y, pos1.z)
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
 
-        vertex(matrix, pos2.x, pos1.y, pos1.z)
-        vertex(matrix, pos2.x, pos2.y, pos1.z)
+        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
 
-        vertex(matrix, pos1.x, pos1.y, pos1.z)
-        vertex(matrix, pos2.x, pos1.y, pos1.z)
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
     }
 }
 
@@ -475,14 +486,14 @@ fun RenderEnvironment.drawColoredQuadOutlines(pos1: Vec3, pos2: Vec3, argb: Int)
     }
 }
 
-fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3) {
+fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3, argb: Int) {
     drawCustomMesh(
         DrawMode.TRIANGLES,
-        VertexInputType.Pos,
+        VertexInputType.PosColor,
     ) { matrix ->
-        vertex(matrix, p1.x, p1.y, p1.z)
-        vertex(matrix, p2.x, p2.y, p2.z)
-        vertex(matrix, p3.x, p3.y, p3.z)
+        vertex(matrix, p1.x, p1.y, p1.z).color(argb)
+        vertex(matrix, p2.x, p2.y, p2.z).color(argb)
+        vertex(matrix, p3.x, p3.y, p3.z).color(argb)
     }
 }
 

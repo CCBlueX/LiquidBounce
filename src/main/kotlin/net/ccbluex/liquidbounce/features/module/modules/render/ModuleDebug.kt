@@ -371,9 +371,11 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     class DebuggedQuad(val p1: Vec3d, val p2: Vec3d, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
-            env.withColor(color) {
-                this.drawQuad(relativeToCamera(p1).toVec3(), relativeToCamera(p2).toVec3())
-            }
+            env.drawQuad(
+                pos1 = relativeToCamera(p1).toVec3(),
+                pos2 = relativeToCamera(p2).toVec3(),
+                color = color.toARGB(),
+            )
         }
     }
 
