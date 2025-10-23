@@ -264,10 +264,15 @@ class TrajectoryInfoRenderer(
 
                     val alpha1 = if (i < transitionSegments) {
                         startAlpha + (endAlpha - startAlpha) * (i / transitionSegments.toFloat())
-                    } else endAlpha
+                    } else {
+                        endAlpha
+                    }
+                    
                     val alpha2 = if (i + 1 < transitionSegments) {
                         startAlpha + (endAlpha - startAlpha) * ((i + 1) / transitionSegments.toFloat())
-                    } else endAlpha
+                    } else {
+                        endAlpha
+                    }
 
                     val r = color.r / 255f
                     val g = color.g / 255f
@@ -284,6 +289,7 @@ class TrajectoryInfoRenderer(
         }
         RenderSystem.depthMask(true)
     }
+    
     @JvmRecord
     data class SimulationResult(
         val hitResult: HitResult?,
