@@ -22,6 +22,7 @@ import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.drawQuad
+import net.ccbluex.liquidbounce.render.drawQuadOutlines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.minecraft.entity.LivingEntity
@@ -75,7 +76,7 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     drawQuad(q1, q2, Int.MIN_VALUE)
 
     if (NametagShowOptions.BORDER.isShowing()) {
-        drawColoredQuadOutlines(q1, q2, Color4b.BLACK.toARGB())
+        drawQuadOutlines(q1, q2, Color4b.BLACK.toARGB())
     }
 
     // Draw enchantments directly for the entity (regardless of whether items are shown)

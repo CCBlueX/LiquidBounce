@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.drawColoredQuadOutlines
 import net.ccbluex.liquidbounce.render.drawQuad
+import net.ccbluex.liquidbounce.render.drawQuadOutlines
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Rect
@@ -336,9 +336,9 @@ object NametagEnchantmentRenderer {
             Color4b.BLACK.with(a = 100).toARGB()
         )
 
-        drawColoredQuadOutlines(
+        drawQuadOutlines(
             leftTop, rightBottom,
-            Color4b.RED.toARGB(),
+            Color4b.RED.toARGB()
         )
     }
 }

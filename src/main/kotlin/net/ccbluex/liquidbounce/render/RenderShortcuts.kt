@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.gl.GlGpuBuffer
 import net.minecraft.client.gui.DrawContext
@@ -52,14 +51,12 @@ import org.joml.Matrix4f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11C
-import java.util.EnumMap
 import java.util.OptionalDouble
 import java.util.OptionalInt
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
-import kotlin.random.Random
 import kotlin.use
 
 /**
@@ -504,22 +501,6 @@ fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3, argb: Int) {
 }
 
 fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3, argb: Int) {
-    drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
-        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
-        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
-
-        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
-        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
-
-        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
-        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
-
-        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
-        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
-    }
-}
-
-fun RenderEnvironment.drawColoredQuadOutlines(pos1: Vec3, pos2: Vec3, argb: Int) {
     drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
         vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
         vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
