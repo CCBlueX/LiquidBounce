@@ -58,6 +58,7 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.random.Random
 import kotlin.use
 
 /**
@@ -362,7 +363,7 @@ inline fun RenderEnvironment.drawCustomMesh(
 // copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
 fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { buffer ->
     val pipeline = RenderPipeline.Builder() // fixme: pipeline
-        .withLocation(LiquidBounce.identifier(UUID.randomUUID().toString().lowercase()))
+        .withLocation(LiquidBounce.identifier(Random.nextLong().toString()))
         .withVertexShader(vertexInputType.vertexShader)
         .withFragmentShader(vertexInputType.fragmentShader)
         .withVertexFormat(vertexInputType.vertexFormat, buffer.drawParameters.mode)
