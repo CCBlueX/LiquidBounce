@@ -54,6 +54,8 @@ object ClientRenderPipelines : SynchronousResourceReloader {
      */
     private val JCEF_COMPATIBLE_BLEND = BlendFunction(SourceFactor.ONE, DestFactor.ONE_MINUS_SRC_ALPHA)
 
+    private val COVERING_BLEND = BlendFunction(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA)
+
     private inline fun create(
         name: String,
         builderAction: RenderPipeline.Builder.() -> Unit,
@@ -104,6 +106,8 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINES)
         withCull(false)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withBlend(COVERING_BLEND)
     }
 
     @JvmField
@@ -111,30 +115,44 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINE_STRIP)
         withCull(false)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withBlend(COVERING_BLEND)
     }
 
     @JvmField
     val Triangles = create("triangles") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINE_STRIP)
+        withCull(false)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withBlend(COVERING_BLEND)
     }
 
     @JvmField
     val TriangleStrip = create("triangle_strip") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLE_STRIP)
+        withCull(false)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withBlend(COVERING_BLEND)
     }
 
     @JvmField
-    val Quads = create("quad") {
+    val Quads = create("quads") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withCull(false)
+        withBlend(COVERING_BLEND)
     }
 
     @JvmField
     val TexQuads = create("quad") {
         withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
+        withCull(false)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withBlend(COVERING_BLEND)
     }
 
     /**

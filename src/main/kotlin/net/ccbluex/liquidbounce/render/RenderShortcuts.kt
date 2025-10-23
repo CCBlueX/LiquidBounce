@@ -82,6 +82,7 @@ val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 // Copied from 1.21.4
 
 fun defaultBlendFunc() {
+    // BlendFunction.PANORAMA
     GlStateManager._blendFuncSeparate(
         GlConst.GL_SRC_ALPHA,
         GlConst.GL_ONE_MINUS_SRC_ALPHA,
@@ -207,19 +208,17 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
 
     val camera = mc.entityRenderDispatcher.camera ?: return
 
-    GlStateManager._enableBlend()
-    GL11.glBlendFunc(GlConst.GL_SRC_ALPHA, GlConst.GL_ONE_MINUS_SRC_ALPHA)
-    GlStateManager._disableDepthTest()
+    val (r, g, b, a) = RenderSystem.getShaderColor()
+    RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
+
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
 
     val environment = WorldRenderEnvironment(matrixStack, camera)
     draw(environment)
     if (environment.isBatchMode) environment.commitBatch()
 
-    RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
-    GlStateManager._disableBlend()
-    GlStateManager._enableDepthTest()
-    GlStateManager._enableCull()
+    RenderSystem.setShaderColor(r, g, b, a)
+
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
@@ -233,13 +232,14 @@ inline fun renderEnvironmentForGUI(
         callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
     }
 
+    val (r, g, b, a) = RenderSystem.getShaderColor()
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
 
     val environment = GUIRenderEnvironment(event.context, matrixStack)
     draw(environment)
     if (environment.isBatchMode) environment.commitBatch()
 
-    RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
+    RenderSystem.setShaderColor(r, g, b, a)
 }
 
 inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {
@@ -320,21 +320,6 @@ inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) 
         draw()
     } finally {
         GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
-    }
-}
-
-/**
- * Extension function to disable cull
- * Good for rendering faces that should be visible from both sides
- *
- * @param draw The block of code to be executed with cull disabled.
- */
-inline fun RenderEnvironment.withDisabledCull(draw: RenderEnvironment.() -> Unit) {
-    GlStateManager._disableCull()
-    try {
-        draw()
-    } finally {
-        GlStateManager._enableCull()
     }
 }
 

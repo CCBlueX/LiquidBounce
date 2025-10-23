@@ -229,13 +229,9 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             val pos = entity.interpolateCurrentPosition(partialTicks) + Vec3d(0.0, height, 0.0)
 
             with(env) {
-                withPosition(this.relativeToCamera(pos)) {
-                    withDisabledCull {
-                        drawGradientCircle(radius, innerRadius, outerColor, innerColor)
-                    }
-                    if (outline.enabled) {
-                        drawCircleOutline(radius, outline.color)
-                    }
+                drawGradientCircle(radius, innerRadius, outerColor, innerColor)
+                if (outline.enabled) {
+                    drawCircleOutline(radius, outline.color)
                 }
             }
         }
@@ -273,22 +269,20 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
             with(env) {
                 withPosition(this.relativeToCamera(pos)) {
-                    withDisabledCull {
-                        drawGradientCircle(
-                            radius,
-                            radius,
-                            color,
-                            glowColor,
-                            Vec3(0.0, glowHeight, 0.0)
-                        )
+                    drawGradientCircle(
+                        radius,
+                        radius,
+                        color,
+                        glowColor,
+                        Vec3(0.0, glowHeight, 0.0)
+                    )
 
-                        drawGradientCircle(
-                            radius,
-                            0f,
-                            color,
-                            color
-                        )
-                    }
+                    drawGradientCircle(
+                        radius,
+                        0f,
+                        color,
+                        color
+                    )
                     if (outline.enabled) {
                         drawCircleOutline(radius, outline.color)
                     }
