@@ -21,11 +21,26 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.minecraft.client.render.VertexFormats
+import net.minecraft.util.Identifier
 
 enum class VertexInputType(
     val vertexFormat: VertexFormat,
+    val vertexShader: Identifier,
+    val fragmentShader: Identifier,
 ) {
-    Pos(VertexFormats.POSITION),
-    PosColor(VertexFormats.POSITION_COLOR),
-    PosTexColor(VertexFormats.POSITION_TEXTURE_COLOR),
+    Pos(
+        VertexFormats.POSITION,
+        Identifier.ofVanilla("core/position"),
+        Identifier.ofVanilla("core/position"),
+    ),
+    PosColor(
+        VertexFormats.POSITION_COLOR,
+        Identifier.ofVanilla("core/position_color"),
+        Identifier.ofVanilla("core/position_color"),
+    ),
+    PosTexColor(
+        VertexFormats.POSITION_TEXTURE_COLOR,
+        Identifier.ofVanilla("core/position_tex_color"),
+        Identifier.ofVanilla("core/position_tex_color"),
+    ),
 }

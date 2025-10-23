@@ -25,6 +25,7 @@ import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.opengl.GlConst
 import com.mojang.blaze3d.opengl.GlStateManager
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
@@ -40,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.gl.GlGpuBuffer
-import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
 import net.minecraft.client.util.math.MatrixStack
@@ -53,6 +53,7 @@ import org.lwjgl.opengl.GL11C
 import java.util.EnumMap
 import java.util.OptionalDouble
 import java.util.OptionalInt
+import java.util.UUID
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.contracts.ExperimentalContracts
@@ -397,7 +398,14 @@ fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { buffer ->
             framebuffer.depthAttachment.takeIf { framebuffer.useDepthAttachment },
             OptionalDouble.empty()
         ).use { renderPass ->
-            renderPass.setPipeline(RenderPipelines.GUI) // FIXME: pipeline
+            val pipeline = RenderPipeline.Builder() // fixme: pipeline
+                .withLocation(LiquidBounce.identifier(UUID.randomUUID().toString().lowercase()))
+                .withVertexShader(vertexInputType.vertexShader)
+                .withFragmentShader(vertexInputType.fragmentShader)
+                .withVertexFormat(vertexInputType.vertexFormat, buffer.drawParameters.mode)
+                .build()
+
+            renderPass.setPipeline(pipeline)
             renderPass.setVertexBuffer(0, gpuBuffer)
             if (RenderSystem.SCISSOR_STATE.isEnabled) {
                 renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
