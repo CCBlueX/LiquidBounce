@@ -31,12 +31,10 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -230,11 +228,12 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         }
 
         renderEnvironmentForWorld(event.matrixStack) {
-            withColor(lineColor) {
-                drawLineStrip(positions = tickBuffer.mapToArray { tick ->
+            drawLineStrip(
+                argb = lineColor.toARGB(),
+                positions = tickBuffer.mapToArray { tick ->
                     relativeToCamera(tick.position).toVec3()
-                })
-            }
+                }
+            )
         }
     }
 

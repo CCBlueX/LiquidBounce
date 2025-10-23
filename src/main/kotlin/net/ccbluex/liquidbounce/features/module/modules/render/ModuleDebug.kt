@@ -88,9 +88,10 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                 .getSnapshotsBetween(0 until this.ticksToPredict)
 
             renderEnvironmentForWorld(event.matrixStack) {
-                withColor(Color4b.BLUE) {
-                    drawLineStrip(positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() })
-                }
+                drawLineStrip(
+                    Color4b.BLUE.toARGB(),
+                    positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() },
+                )
             }
         }
 
@@ -363,25 +364,31 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
 
         override fun render(env: WorldRenderEnvironment) {
-            env.withColor(color) {
-                this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
-            }
+            env.drawLineStrip(
+                color.toARGB(),
+                env.relativeToCamera(from).toVec3(),
+                env.relativeToCamera(to).toVec3()
+            )
         }
     }
 
     class DebuggedQuad(val p1: Vec3d, val p2: Vec3d, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
-            env.withColor(color) {
-                this.drawQuad(relativeToCamera(p1).toVec3(), relativeToCamera(p2).toVec3())
-            }
+            env.drawQuad(
+                pos1 = env.relativeToCamera(p1).toVec3(),
+                pos2 = env.relativeToCamera(p2).toVec3(),
+                argb = color.toARGB(),
+            )
         }
     }
 
     class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
-            env.withColor(color) {
-                this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
-            }
+            env.drawLineStrip(
+                color.toARGB(),
+                env.relativeToCamera(from).toVec3(),
+                env.relativeToCamera(to).toVec3(),
+            )
         }
     }
 

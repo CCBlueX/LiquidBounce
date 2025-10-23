@@ -30,11 +30,6 @@ enum class VertexInputType(
     val vertexShader: Identifier,
     val fragmentShader: Identifier,
 ) {
-    Pos(
-        VertexFormats.POSITION,
-        Identifier.ofVanilla("core/position"),
-        Identifier.ofVanilla("core/position"),
-    ),
     PosColor(
         VertexFormats.POSITION_COLOR,
         Identifier.ofVanilla("core/position_color"),

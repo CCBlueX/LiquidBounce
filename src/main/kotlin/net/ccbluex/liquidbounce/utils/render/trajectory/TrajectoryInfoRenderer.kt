@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -275,9 +274,9 @@ class TrajectoryInfoRenderer(
         matrixStack: MatrixStack,
     ) {
         renderEnvironmentForWorld(matrixStack) {
-            withColor(color) {
-                drawLineStrip(positions = positions.mapToArray { relativeToCamera(it + renderOffset).toVec3() })
-            }
+            drawLineStrip(
+                color.toARGB(),
+                positions = positions.mapToArray { relativeToCamera(it + renderOffset).toVec3() })
         }
     }
 
