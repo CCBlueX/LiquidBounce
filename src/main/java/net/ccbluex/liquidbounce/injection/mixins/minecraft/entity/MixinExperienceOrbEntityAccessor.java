@@ -17,16 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import net.minecraft.client.gl.ShaderProgramKey
-import net.minecraft.client.gl.ShaderProgramKeys
-import net.minecraft.client.render.*
+import net.minecraft.entity.ExperienceOrbEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
-enum class VertexInputType(
-    val vertexFormat: VertexFormat,
-    val shaderProgram: ShaderProgramKey,
-) {
-    PosColor(VertexFormats.POSITION_COLOR, ShaderProgramKeys.POSITION_COLOR),
-    PosTexColor(VertexFormats.POSITION_TEXTURE_COLOR, ShaderProgramKeys.POSITION_TEX_COLOR),
+@Mixin(ExperienceOrbEntity.class)
+public interface MixinExperienceOrbEntityAccessor {
+    @Accessor("target")
+    PlayerEntity getTarget();
 }

@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
@@ -122,9 +121,10 @@ object ModuleRotations : ClientModule("Rotations", Category.RENDER) {
 
             if (drawVectorLine) {
                 renderEnvironmentForWorld(matrixStack) {
-                    withColor(vectorLine) {
-                        drawLineStrip(eyeVector, eyeVector + Vec3(interpolatedRotationVec * 100.0))
-                    }
+                    drawLineStrip(
+                        vectorLine.toARGB(),
+                        eyeVector, eyeVector + Vec3(interpolatedRotationVec * 100.0)
+                    )
                 }
             }
 
