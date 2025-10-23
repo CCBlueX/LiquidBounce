@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.math.Rect2i
@@ -75,21 +76,21 @@ object ItemImageAtlas : EventListener {
             return
         }
 
-        val renderer = ItemFramebufferRenderer(
-            Registries.ITEM,
-            4
-        )
-
-        val items = renderer.render(drawContext)
-
-        val image = renderer.toNativeImage().toBufferedImage()
-
-        // FIXME: to be removed. for testing only
-        ImageIO.write(image, "png", ConfigSystem.rootFolder.resolve("items.png"))
-
-        renderer.close()
-
-        this.atlas = Atlas(items, image, findAliases())
+//        val renderer = ItemFramebufferRenderer(
+//            Registries.ITEM,
+//            4
+//        )
+//
+//        val items = renderer.render(drawContext)
+//
+//        val image = renderer.toNativeImage().toBufferedImage()
+//
+//        // FIXME: to be removed. for testing only
+//        ImageIO.write(image, "png", ConfigSystem.rootFolder.resolve("items.png"))
+//
+//        renderer.close()
+//
+//        this.atlas = Atlas(items, image, findAliases())
     }
 
     private fun findAliases(): Map<Identifier, Identifier> {
@@ -142,8 +143,7 @@ private class ItemFramebufferRenderer(
     private val itemPixelSize = NATIVE_ITEM_SIZE * scale
 
     private val gpuDevice = RenderSystem.getDevice()
-
-    val gpuTexture: GpuTexture = gpuDevice.createTexture(
+    private val gpuTexture: GpuTexture = gpuDevice.createTexture(
         "ItemAtlasTexture",
         TextureFormat.RGBA8,
         itemPixelSize * itemsPerDimension,
@@ -154,7 +154,9 @@ private class ItemFramebufferRenderer(
     fun render(ctx: DrawContext): Map<Item, Rect2i> {
         val encoder = gpuDevice.createCommandEncoder()
         encoder.clearColorTexture(gpuTexture, 0) // Transparent
-        val pass = encoder.createRenderPass(gpuTexture, OptionalInt.empty())
+        // FIXME
+//        val pass = encoder.createRenderPass(gpuTexture, OptionalInt.empty())
+//        pass.setPipeline(RenderPipelines.GUI)
 
         val projectionMatrix = RenderSystem.getProjectionMatrix()
         val matrix = Matrix4f().setOrtho(
@@ -174,19 +176,19 @@ private class ItemFramebufferRenderer(
         val itemMap = Reference2ObjectOpenHashMap<Item, Rect2i>(items.size())
 
         items.forEachIndexed { idx, item ->
-            val x = (idx % itemsPerDimension) * 16
-            val y = (idx / itemsPerDimension) * 16
+            val x = (idx % itemsPerDimension) * NATIVE_ITEM_SIZE
+            val y = (idx / itemsPerDimension) * NATIVE_ITEM_SIZE
             ctx.drawItem(item.defaultStack, x, y)
             itemMap[item] = Rect2i(x * scale, y * scale, itemPixelSize, itemPixelSize)
         }
 
         ctx.matrices.pop()
-        pass.close()
+//        pass.draw(0, items.size())
+//        pass.close()
         RenderSystem.setProjectionMatrix(projectionMatrix, ProjectionType.ORTHOGRAPHIC)
 
         return itemMap
     }
-
 
     fun toNativeImage(): NativeImage {
         val encoder = gpuDevice.createCommandEncoder()
