@@ -257,9 +257,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     if (!type.enabled || !type.tracers || type.color.a <= 0) continue
                     val pos = relativeToCamera(blockPos.toCenterPos()).toVec3()
 
-                    withColor(type.color) {
-                        drawLines(eyeVector, pos, pos)
-                    }
+                    drawLines(type.color.toARGB(), eyeVector, pos, pos)
                 }
             }
         }

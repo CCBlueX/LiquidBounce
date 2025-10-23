@@ -272,21 +272,6 @@ inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) 
 }
 
 /**
- * Extension function to apply a color transformation to the current rendering environment.
- *
- * @param color4b The color transformation.
- * @param draw The block of code to be executed in the transformed environment.
- */
-inline fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> Unit) {
-    RenderSystem.setShaderColor(color4b.r / 255f, color4b.g / 255f, color4b.b / 255f, color4b.a / 255f)
-    try {
-        draw()
-    } finally {
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
-    }
-}
-
-/**
  * Extension function to disable cull
  * Good for rendering faces that should be visible from both sides
  *
@@ -327,11 +312,11 @@ fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { builtBuffer ->
  *
  * @param lines The vectors representing the lines.
  */
-fun RenderEnvironment.drawLines(vararg lines: Vec3) {
+fun RenderEnvironment.drawLines(argb: Int, vararg lines: Vec3) {
     drawLines(
         lines.unmodifiable(),
         mode = DrawMode.DEBUG_LINES,
-        argb = TODO()
+        argb = argb,
     )
 }
 
@@ -340,11 +325,11 @@ fun RenderEnvironment.drawLines(vararg lines: Vec3) {
  *
  * @param positions The vectors representing the line strip.
  */
-fun RenderEnvironment.drawLineStrip(vararg positions: Vec3) {
+fun RenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3) {
     drawLines(
         positions.unmodifiable(),
         mode = DrawMode.DEBUG_LINE_STRIP,
-        argb = TODO()
+        argb = argb,
     )
 }
 
