@@ -212,7 +212,7 @@ object ModuleEasyPearl :
     private fun getTargetRotation(targetPosition: Vec3d): Rotation? =
         SituationalProjectileAngleCalculator.calculateAngleFor(
             TrajectoryInfo.GENERIC,
-            sourcePos = player.pos,
+            sourcePos = player.eyePos.add(player.getRotationVec(0f).multiply(0.16)),
             targetPosFunction = ConstantPositionExtrapolation(targetPosition),
             targetShape = EntityDimensions.fixed(1.0F, 0.0F),
         )
