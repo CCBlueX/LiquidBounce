@@ -24,9 +24,12 @@ import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.platform.DestFactor
 import com.mojang.blaze3d.platform.SourceFactor
+import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
+import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.resource.ResourceManager
@@ -37,17 +40,6 @@ import net.minecraft.util.Identifier
 object ClientRenderPipelines : SynchronousResourceReloader {
 
     private val renderPipelines = Object2ObjectRBTreeMap<Identifier, RenderPipeline>()
-
-    // TODO: TEST THIS
-    private val BGRA_POSITION_TEX_COLOR_SNIPPET = RenderPipeline.builder(
-        RenderPipelines.MATRICES_SNIPPET,
-        RenderPipelines.MATRICES_COLOR_SNIPPET,
-    )
-		.withVertexShader("core/position_tex_color") // TODO: use client resource
-		.withFragmentShader("core/position_tex_color")
-        .withSampler("Sampler0")
-        .withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
-        .buildSnippet()
 
     /**
      * Blend mode for JCEF compatible blending.
@@ -69,90 +61,94 @@ object ClientRenderPipelines : SynchronousResourceReloader {
             }
     }
 
-    // JCEF BEGIN
+    // TODO: TEST THIS
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() = apply {
+        withVertexShader("core/position_tex_color") // TODO: use client resource shader
+        withFragmentShader("core/position_tex_color")
+        withSampler("Sampler0")
+        withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
+        withSnippet(RenderPipelines.MATRICES_SNIPPET)
+        withSnippet(RenderPipelines.MATRICES_COLOR_SNIPPET)
+    }
 
-    @JvmField
-    val SMOOTH_TEXTURE = create("smooth_texture") {
-        withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
-        withBlend(BlendFunction.TRANSLUCENT)
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun RenderPipeline.Builder.forWorldRender() = apply {
+        withCull(false)
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withBlend(COVERING_BLEND)
     }
 
-    @JvmField
-    val BLURRED_TEXTURE = create("blurred_texture") {
-        withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
-        withBlend(JCEF_COMPATIBLE_BLEND)
-        withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
-    }
+    object JCEF {
+        @JvmField
+        val SMOOTH_TEXTURE = create("jcef/smooth_texture") {
+            withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
+            withBlend(BlendFunction.TRANSLUCENT)
+            withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        }
 
-    @JvmField
-    val BGRA_TEXTURE = create("bgra_texture") {
-        withSnippet(BGRA_POSITION_TEX_COLOR_SNIPPET)
-        withBlend(JCEF_COMPATIBLE_BLEND)
-        withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
-    }
+        @JvmField
+        val BLURRED_TEXTURE = create("jcef/blurred_texture") {
+            withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
+            withBlend(JCEF_COMPATIBLE_BLEND)
+            withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+        }
 
-    @JvmField
-    val BGRA_BLURRED_TEXTURE = create("bgra_blurred_texture") {
-        withSnippet(BGRA_POSITION_TEX_COLOR_SNIPPET)
-        withBlend(JCEF_COMPATIBLE_BLEND)
-        withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
-    }
+        @JvmField
+        val BGRA_TEXTURE = create("jcef/bgra_texture") {
+            bgraPosTexColorQuads()
+            withBlend(JCEF_COMPATIBLE_BLEND)
+            withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+        }
 
-    // JCEF END
+        @JvmField
+        val BGRA_BLURRED_TEXTURE = create("jcef/bgra_blurred_texture") {
+            bgraPosTexColorQuads()
+            withBlend(JCEF_COMPATIBLE_BLEND)
+            withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+        }
+    }
 
     @JvmField
     val Lines = create("lines") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINES)
-        withCull(false)
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withBlend(COVERING_BLEND)
+        forWorldRender()
     }
 
     @JvmField
     val LineStrip = create("line_strip") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINE_STRIP)
-        withCull(false)
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withBlend(COVERING_BLEND)
+        forWorldRender()
     }
 
     @JvmField
     val Triangles = create("triangles") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINE_STRIP)
-        withCull(false)
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withBlend(COVERING_BLEND)
+        forWorldRender()
     }
 
     @JvmField
     val TriangleStrip = create("triangle_strip") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLE_STRIP)
-        withCull(false)
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withBlend(COVERING_BLEND)
+        forWorldRender()
     }
 
     @JvmField
     val Quads = create("quads") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS)
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withCull(false)
-        withBlend(COVERING_BLEND)
+        forWorldRender()
     }
 
     @JvmField
-    val TexQuads = create("quad") {
+    val TexQuads = create("tex_quads") {
         withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
-        withCull(false)
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withBlend(COVERING_BLEND)
+        forWorldRender()
     }
 
     /**
@@ -163,8 +159,11 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 //
 //        renderPipelines.fastIterator().forEach { (_, pipeline) ->
 //            device.precompilePipeline(pipeline) { identifier, _ ->
-//                val resource = manager.getResource(identifier).get()
-//                resource.inputStream.source().buffer().use { it.readUtf8() }
+//                if (identifier.namespace == LiquidBounce.CLIENT_NAME.lowercase()) {
+//                    resourceToString("")
+//                    val resource = manager.getResource(identifier).get()
+//                    resource.inputStream.bufferedReader().readText()
+//                }
 //            }
 //        }
     }

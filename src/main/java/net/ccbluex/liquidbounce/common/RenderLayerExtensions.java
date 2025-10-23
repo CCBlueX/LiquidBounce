@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.common;
 
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
-import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
 import net.minecraft.util.Identifier;
@@ -44,7 +43,7 @@ public class RenderLayerExtensions {
                     RenderLayer.of(
                             "smooth_textured",
                             786432,
-                            ClientRenderPipelines.SMOOTH_TEXTURE,
+                            ClientRenderPipelines.JCEF.SMOOTH_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new RenderPhase.Texture(textureId, TriState.DEFAULT, false))
                                     .build(false)
@@ -58,7 +57,7 @@ public class RenderLayerExtensions {
                     RenderLayer.of(
                             "blurred_ui_layer",
                             786432,
-                            ClientRenderPipelines.BLURRED_TEXTURE,
+                            ClientRenderPipelines.JCEF.BLURRED_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
                                     .build(false)
@@ -72,7 +71,7 @@ public class RenderLayerExtensions {
                     RenderLayer.of(
                             "bgra_texture_layer",
                             786432,
-                            ClientRenderPipelines.BGRA_TEXTURE,
+                            ClientRenderPipelines.JCEF.BGRA_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
                                     .build(false)
@@ -86,7 +85,7 @@ public class RenderLayerExtensions {
                     RenderLayer.of(
                             "bgra_blurred_texture_layer",
                             786432,
-                            ClientRenderPipelines.BGRA_BLURRED_TEXTURE,
+                            ClientRenderPipelines.JCEF.BGRA_BLURRED_TEXTURE,
                             RenderLayer.MultiPhaseParameters.builder()
                                     .texture(new Texture(textureId, TriState.FALSE, false))
                                     .build(false)
