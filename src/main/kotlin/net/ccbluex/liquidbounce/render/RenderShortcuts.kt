@@ -524,12 +524,14 @@ fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3, argb: Int) {
     }
 }
 
-fun VertexConsumer.coloredTriangle(matrix: Matrix4f, p1: Vec3d, p2: Vec3d, p3: Vec3d, color4b: Color4b) {
-    vertex(matrix, p1.x.toFloat(), p1.y.toFloat(), p1.z.toFloat()).color(color4b.toARGB())
-    vertex(matrix, p2.x.toFloat(), p2.y.toFloat(), p2.z.toFloat()).color(color4b.toARGB())
-    vertex(matrix, p3.x.toFloat(), p3.y.toFloat(), p3.z.toFloat()).color(color4b.toARGB())
+fun VertexConsumer.coloredTriangle(matrix: Matrix4f, p1: Vector3fc, p2: Vector3fc, p3: Vector3fc, color4b: Color4b) {
+    vertex(matrix, p1.x(), p1.y(), p1.z()).color(color4b)
+    vertex(matrix, p2.x(), p2.y(), p2.z()).color(color4b)
+    vertex(matrix, p3.x(), p3.y(), p3.z()).color(color4b)
 }
 
+@Suppress("NOTHING_TO_INLINE")
+inline fun VertexConsumer.color(color: Color4b): VertexConsumer = color(color.toARGB())
 
 /**
  * Helper unction to draw a solid box using the specified [box].

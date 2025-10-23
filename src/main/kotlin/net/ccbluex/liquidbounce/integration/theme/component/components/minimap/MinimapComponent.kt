@@ -23,7 +23,6 @@ package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -39,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.texture.GlTexture
@@ -47,11 +47,12 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec2f
-import net.minecraft.util.math.Vec3d
 import org.joml.AxisAngle4f
 import org.joml.Matrix4f
 import org.joml.Quaternionf
 import org.joml.Vector2i
+import org.joml.Vector2ic
+import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 
@@ -243,18 +244,18 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
     private fun VertexConsumer.buildMinimapMesh(
         matrix: Matrix4f,
-        centerPos: Vector2i,
+        centerPos: Vector2ic,
         chunksToRenderAround: Int,
         viewDistance: Float,
     ) {
         for (x in -chunksToRenderAround..chunksToRenderAround) {
             for (y in -chunksToRenderAround..chunksToRenderAround) {
                 // Don't render too much
-                if (x * x + y * y > (viewDistance + 3) * (viewDistance + 3)) {
+                if (x * x + y * y > (viewDistance + 3).sq()) {
                     continue
                 }
 
-                val chunkPos = ChunkPos(centerPos.x + x, centerPos.y + y)
+                val chunkPos = ChunkPos(centerPos.x() + x, centerPos.y() + y)
 
                 val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                 val from = Vec2f(x.toFloat(), y.toFloat())
@@ -287,12 +288,12 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         matStack.translate(pos.x / 16.0 - basePos.x, pos.z / 16.0 - basePos.y, 0.0)
         val rotation = Quaternionf(AxisAngle4f((rot.yaw).toRadians(), 0.0F, 0.0F, 1.0F))
 
-        val w = 2.0
-        val h = w * 1.618
+        val w = 2.0f
+        val h = w * 1.618f
 
-        val p1 = Vec3d(-w * 0.5 / 16.0, -h * 0.5 / 16.0, 0.0)
-        val p2 = Vec3d(0.0, h * 0.5 / 16.0, 0.0)
-        val p3 = Vec3d(w * 0.5 / 16.0, -h * 0.5 / 16.0, 0.0)
+        val p1 = Vector3f(-w * 0.5f / 16.0f, -h * 0.5f / 16.0f, 0.0f)
+        val p2 = Vector3f(0.0f, h * 0.5f / 16.0f, 0.0f)
+        val p3 = Vector3f(w * 0.5f / 16.0f, -h * 0.5f / 16.0f, 0.0f)
 
         matStack.multiply(rotation)
 
