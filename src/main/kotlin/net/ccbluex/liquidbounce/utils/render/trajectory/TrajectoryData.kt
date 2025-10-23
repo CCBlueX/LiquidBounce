@@ -35,12 +35,8 @@ object TrajectoryData {
     fun getRenderedTrajectoryInfo(player: PlayerEntity, item: Item, alwaysShowBow: Boolean): TrajectoryInfo? {
         return when (item) {
             is BowItem -> {
-                val useTime = if (alwaysShowBow && player.itemUseTime < 1) {
-                    40
-                } else {
-                    player.itemUseTime
-                }
-                    TrajectoryInfo.bowWithUsageDuration(useTime)?.copy(
+                val useTime = if (alwaysShowBow && player.itemUseTime < 1) 40 else player.itemUseTime
+                TrajectoryInfo.bowWithUsageDuration(useTime)?.copy(
                     projectileType = ProjectileType.Arrow
                 )
             }
@@ -155,7 +151,10 @@ fun TrajectoryInfo.requiresInitialTickCorrection(): Boolean =
     projectileType in setOf(
         ProjectileType.EnderPearl,
         ProjectileType.Snowball,
-        ProjectileType.Egg
+        ProjectileType.Egg,
+        ProjectileType.Potion,
+        ProjectileType.ExpBottle,
+        ProjectileType.FishingBobber,
     )
 
 @JvmRecord
@@ -193,7 +192,7 @@ data class TrajectoryInfo(
         val POTION = GENERIC.copy(gravity = 0.05, initialVelocity = 0.5, roll = -20.0F)
 
         @JvmField
-        val EXP_BOTTLE = POTION.copy(initialVelocity = 0.7)
+        val EXP_BOTTLE = POTION.copy(gravity = 0.07, initialVelocity = 0.7)
 
         @JvmField
         val FISHING_ROD = GENERIC.copy(gravity = 0.04, drag = 0.92)
@@ -225,5 +224,6 @@ data class TrajectoryInfo(
 
             return BOW_FULL_PULL.copy(initialVelocity = v0)
         }
+
     }
 }
