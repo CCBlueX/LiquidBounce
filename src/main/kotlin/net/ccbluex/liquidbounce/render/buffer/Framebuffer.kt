@@ -42,7 +42,6 @@ open class Framebuffer(var width: Int, var height: Int, val useDepth: Boolean) :
         GlobalFramebuffer.push(this)
 
         GlStateManager._bindTexture(colorAttachment)
-        GlStateManager._bindTexture(colorAttachment)
         GlStateManager._texImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, null)
         GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         GlStateManager._texParameter(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)

@@ -122,8 +122,8 @@ fun GlGpuBuffer.unbind() {
 fun GlGpuBuffer.draw() {
     GL11.glDrawElements(
         GlConst.toGl(DrawMode.QUADS),
-        GlConst.toGl(this.type()),
         this.size(),
+        GlConst.toGl(this.type()),
         0L
     )
 }
@@ -237,13 +237,12 @@ inline fun renderEnvironmentForGUI(
     }
 
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
-    GlStateManager._enableBlend()
 
     val environment = GUIRenderEnvironment(event.context, matrixStack)
     draw(environment)
     if (environment.isBatchMode) environment.commitBatch()
 
-    GlStateManager._disableBlend()
+    RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
 }
 
 inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {
@@ -376,44 +375,44 @@ inline fun RenderEnvironment.drawCustomMesh(
 @Suppress("detekt:all")
 // copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
 fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { buffer ->
-//    val gpuBuffer = vertexInputType.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
-//    val gpuBuffer2: GpuBuffer
-//    val indexType: VertexFormat.IndexType
-//    if (buffer.sortedBuffer == null) {
-//        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawParameters.mode())
-//        gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount())
-//        indexType = shapeIndexBuffer.indexType
-//    } else {
-//        gpuBuffer2 = vertexInputType.vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
-//        indexType = buffer.drawParameters.indexType()
-//    }
-//
-//    val framebuffer = mc.framebuffer
-//
-//    RenderSystem.getDevice()
-//        .createCommandEncoder()
-//        .createRenderPass(
-//            framebuffer.getColorAttachment(),
-//            OptionalInt.empty(),
-//            if (framebuffer.useDepthAttachment) framebuffer.getDepthAttachment() else null,
-//            OptionalDouble.empty()
-//        ).use { renderPass ->
-//            renderPass.setPipeline(RenderPipelines.GUI) // FIXME: pipeline
-//            renderPass.setVertexBuffer(0, gpuBuffer)
-//            if (RenderSystem.SCISSOR_STATE.isEnabled) {
-//                renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
-//            }
-//
-//            for (i in 0..11) {
-//                val gpuTexture = RenderSystem.getShaderTexture(i)
-//                if (gpuTexture != null) {
-//                    renderPass.bindSampler("Sampler$i", gpuTexture)
-//                }
-//            }
-//
-//            renderPass.setIndexBuffer(gpuBuffer2, indexType)
-//            renderPass.drawIndexed(0, buffer.drawParameters.indexCount())
-//        }
+    val gpuBuffer = vertexInputType.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
+    val gpuBuffer2: GpuBuffer
+    val indexType: VertexFormat.IndexType
+    if (buffer.sortedBuffer == null) {
+        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawParameters.mode())
+        gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount())
+        indexType = shapeIndexBuffer.indexType
+    } else {
+        gpuBuffer2 = vertexInputType.vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
+        indexType = buffer.drawParameters.indexType()
+    }
+
+    val framebuffer = mc.framebuffer
+
+    RenderSystem.getDevice()
+        .createCommandEncoder()
+        .createRenderPass(
+            framebuffer.colorAttachment,
+            OptionalInt.empty(),
+            framebuffer.depthAttachment.takeIf { framebuffer.useDepthAttachment },
+            OptionalDouble.empty()
+        ).use { renderPass ->
+            renderPass.setPipeline(RenderPipelines.GUI) // FIXME: pipeline
+            renderPass.setVertexBuffer(0, gpuBuffer)
+            if (RenderSystem.SCISSOR_STATE.isEnabled) {
+                renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
+            }
+
+            for (i in 0..11) {
+                val gpuTexture = RenderSystem.getShaderTexture(i)
+                if (gpuTexture != null) {
+                    renderPass.bindSampler("Sampler$i", gpuTexture)
+                }
+            }
+
+            renderPass.setIndexBuffer(gpuBuffer2, indexType)
+            renderPass.drawIndexed(0, buffer.drawParameters.indexCount())
+        }
 }
 
 /**

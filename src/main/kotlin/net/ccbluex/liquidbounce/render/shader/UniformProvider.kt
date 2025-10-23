@@ -23,6 +23,7 @@ import net.minecraft.client.gl.GlUniform
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL20
 import org.lwjgl.system.MemoryUtil
+import java.util.function.IntConsumer
 
 private val BUFFER = MemoryUtil.memAllocFloat(16)
 var currentProjectionMatrix: Matrix4f? = null
@@ -44,12 +45,16 @@ val ModelViewMatUniform = UniformProvider("ModelViewMat") { pointer ->
     currentModelViewMatrix = null
 }
 
-class UniformProvider(val name: String, val set: (pointer: Int) -> Unit) {
+class UniformProvider(val name: String, val set: IntConsumer) {
 
     var pointer = -1
 
     fun init(program: Int) {
         pointer = GlUniform.getUniformLocation(program, name)
+    }
+
+    fun set(pointer: Int) {
+        set.accept(pointer)
     }
 
 }
