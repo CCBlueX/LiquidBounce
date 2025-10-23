@@ -52,14 +52,14 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val show by multiEnumChoice(
         "Show",
         Show.OTHER_PLAYERS,
+        Show.ALWAYS_SHOW_BOW,
         Show.ACTIVE_HOLDING,
         Show.ACTIVE_THROWN_INFO,
         Show.ACTIVE_HOLDING,
         Show.ACTIVE_THROWN_INFO
     )
 
-    val alwaysShowBow get() = Show.ALWAYS_SHOW_BOW in show
-
+    private val alwaysShowBow get() = Show.ALWAYS_SHOW_BOW in show
     private val otherPlayers get() = Show.OTHER_PLAYERS in show
     private val activeThrown get() = Show.ACTIVE_THROWN in show
     private val activeHolding get() = Show.ACTIVE_HOLDING in show
@@ -72,7 +72,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         val color by color("Color", defaultColor)
         val blockHitESP by boolean("BlockHitESP", true)
         val entityHitESP by boolean("EntityHitESP", true)
-        val showDetailedInfo by boolean("ShowDetailedInfo", true)
+        val showDetailedInfo by boolean("ShowDetailedInfo", false)
 
         object Arrow : ProjectileType(
             "Arrow",
@@ -133,6 +133,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         private val TICK_FORMATTER = DecimalFormat("0.#s")
         private val scale by float("Scale", 1F, 0.25F..4F)
         private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+
 
         private enum class ShowAt(
             override val choiceName: String,
@@ -305,14 +306,17 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
 
         if (activeHolding || activeHoldingInfo) {
             if (otherPlayers) {
-                world.players.forEach { drawHypotheticalTrajectoryWithSimulation(it, event, activeHolding) }
+                world.players.forEach { drawHypotheticalTrajectoryWithSimulation(
+                    it, event, activeHolding, alwaysShowBow)
+                }
             } else {
-                drawHypotheticalTrajectoryWithSimulation(player, event, activeHolding)
+                drawHypotheticalTrajectoryWithSimulation(
+                    player, event, activeHolding, alwaysShowBow
+                )
             }
         }
     }
-
-
+    
     private enum class Show(override val choiceName: String) : NamedChoice {
         ALWAYS_SHOW_BOW("AlwaysShowBow"),
         OTHER_PLAYERS("OtherPlayers"),
@@ -322,7 +326,6 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         ACTIVE_HOLDING_INFO("HoldingInfo"),
     }
 
-    // ---------------- Categorize ----------------
     @JvmStatic
     fun Entity.categorize(): ProjectileType? = when (type) {
         EntityType.ARROW -> ProjectileType.Arrow
@@ -337,5 +340,4 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         EntityType.WIND_CHARGE -> ProjectileType.WindCharge
         else -> null
     }
-
 }
