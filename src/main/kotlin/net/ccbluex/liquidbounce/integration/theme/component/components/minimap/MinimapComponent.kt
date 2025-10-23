@@ -130,19 +130,13 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             RenderSystem.setShaderTexture(0, gpuTexture)
 
             startBatch()
-            drawCustomMesh(
-                VertexFormat.DrawMode.QUADS,
-                VertexInputType.PosTexColor,
-            ) { matrix ->
+            drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
                 buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
             }
             commitBatch()
 
             startBatch()
-            drawCustomMesh(
-                VertexFormat.DrawMode.TRIANGLES,
-                VertexInputType.PosColor,
-            ) {
+            drawCustomMesh(ClientRenderPipelines.Triangles) {
                 for (renderedEntity in RenderedEntities) {
                     drawEntityOnMinimap(
                         matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())

@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.drawColoredQuad
 import net.ccbluex.liquidbounce.render.drawColoredQuadOutlines
+import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Rect
@@ -293,7 +293,7 @@ object NametagEnchantmentRenderer {
     ) {
         val leftTop = Vec3(rect.x1, rect.y1, 0F)
         val rightBottom = Vec3(rect.x2, rect.y2, 0F)
-        drawColoredQuad(leftTop, rightBottom, color.toARGB())
+        drawQuad(leftTop, rightBottom, color.toARGB())
     }
 
     private fun RenderEnvironment.drawEnchantmentColumns(
@@ -331,9 +331,9 @@ object NametagEnchantmentRenderer {
         // Drawing a semi-transparent background instead of just lines for better visibility
         val leftTop = Vec3(rect.x1, rect.y1, 0F)
         val rightBottom = Vec3(rect.x2, rect.y2, 0F)
-        drawColoredQuad(
+        drawQuad(
             leftTop, rightBottom,
-            Color4b.BLACK.with(a = 100).toARGB(),
+            Color4b.BLACK.with(a = 100).toARGB()
         )
 
         drawColoredQuadOutlines(

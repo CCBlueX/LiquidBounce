@@ -312,10 +312,7 @@ class FontRenderer(
         if (cache.lines.isNotEmpty()) {
             environment.startBatch()
             for (line in cache.lines) {
-                environment.drawCustomMesh(
-                    VertexFormat.DrawMode.DEBUG_LINES,
-                    VertexInputType.PosColor,
-                ) { matrix ->
+                environment.drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
                     vertex(matrix, line.p1.x, line.p1.y, line.p1.z).color(line.color.toARGB())
                     vertex(matrix, line.p2.x, line.p2.y, line.p2.z).color(line.color.toARGB())
                 }

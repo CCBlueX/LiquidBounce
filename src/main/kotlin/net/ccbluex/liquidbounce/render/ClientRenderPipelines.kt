@@ -24,18 +24,14 @@ import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.platform.DestFactor
 import com.mojang.blaze3d.platform.SourceFactor
-import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
-import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.SynchronousResourceReloader
 import net.minecraft.util.Identifier
-import okio.buffer
-import okio.source
 
 // FIXME
 object ClientRenderPipelines : SynchronousResourceReloader {
@@ -105,17 +101,40 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     @JvmField
     val Lines = create("lines") {
-        VertexInputType.PosColor.apply(VertexFormat.DrawMode.DEBUG_LINES)
+        withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
+        withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINES)
+        withCull(false)
     }
 
     @JvmField
     val LineStrip = create("line_strip") {
-        VertexInputType.PosColor.apply(VertexFormat.DrawMode.DEBUG_LINE_STRIP)
+        withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
+        withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINE_STRIP)
+        withCull(false)
     }
 
     @JvmField
-    val Quad = create("quad") {
-        VertexInputType.PosColor.apply(VertexFormat.DrawMode.QUADS)
+    val Triangles = create("triangles") {
+        withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
+        withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINE_STRIP)
+    }
+
+    @JvmField
+    val TriangleStrip = create("triangle_strip") {
+        withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
+        withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLE_STRIP)
+    }
+
+    @JvmField
+    val Quads = create("quad") {
+        withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
+        withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS)
+    }
+
+    @JvmField
+    val TexQuads = create("quad") {
+        withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
     }
 
     /**

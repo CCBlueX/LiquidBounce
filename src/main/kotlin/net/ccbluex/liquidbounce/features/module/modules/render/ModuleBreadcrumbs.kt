@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.opengl.GlStateManager
-import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
 import it.unimi.dsi.fastutil.objects.ObjectFloatMutablePair
 import it.unimi.dsi.fastutil.objects.ObjectFloatPair
 import net.ccbluex.fastutil.component1
@@ -32,7 +31,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.VertexInputType
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -92,8 +91,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
             val lines = height == 0f
             drawCustomMesh(
-                if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS,
-                VertexInputType.PosColor,
+                if (lines) ClientRenderPipelines.Lines else ClientRenderPipelines.Quads
             ) { matrix ->
                 val renderData = RenderData(matrix, this, colorF, lines)
                 trails.forEach { (entity, trail) ->

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.minecraft.entity.LivingEntity
@@ -71,7 +72,7 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     val q1 = Vec3(-0.1f * fontSize, ModuleNametags.fontRenderer.height * -0.1f, 0f)
     val q2 = Vec3(x + 0.2f * fontSize, ModuleNametags.fontRenderer.height * 1.1f, 0f)
 
-    drawColoredQuad(q1, q2, Int.MIN_VALUE)
+    drawQuad(q1, q2, Int.MIN_VALUE)
 
     if (NametagShowOptions.BORDER.isShowing()) {
         drawColoredQuadOutlines(q1, q2, Color4b.BLACK.toARGB())
