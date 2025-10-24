@@ -104,13 +104,16 @@ object BlurEffectRenderer : MinecraftShortcuts {
     }
 
     fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
-        ItemImageAtlas.updateAtlas(context)
-
-        if (isBlurEffectActive) {
-            this.isDrawingHudFramebuffer = true
-
-            this.overlayFramebuffer.beginWrite(true)
-        }
+        // FIXME: 1. BlurEffectRenderer is broken
+        // FIXME: 2. ItemImageAtlas is broken too
+        // FIXME: 3. BlockESP box color incorrect
+//        ItemImageAtlas.updateAtlas(context)
+//
+//        if (isBlurEffectActive) {
+//            this.isDrawingHudFramebuffer = true
+//
+//            this.overlayFramebuffer.beginWrite(true)
+//        }
 
         callEvent(OverlayRenderEvent(context, tickDelta))
     }
