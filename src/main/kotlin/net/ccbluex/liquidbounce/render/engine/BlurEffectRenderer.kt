@@ -106,8 +106,7 @@ object BlurEffectRenderer : MinecraftShortcuts {
     fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
         // FIXME: 1. BlurEffectRenderer is broken
         // FIXME: 2. ItemImageAtlas is broken too
-        // FIXME: 3. BlockESP box color incorrect
-//        ItemImageAtlas.updateAtlas(context)
+        ItemImageAtlas.updateAtlas(context)
 //
 //        if (isBlurEffectActive) {
 //            this.isDrawingHudFramebuffer = true

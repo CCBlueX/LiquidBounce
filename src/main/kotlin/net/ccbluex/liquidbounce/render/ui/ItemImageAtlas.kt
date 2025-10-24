@@ -20,8 +20,6 @@
 
 package net.ccbluex.liquidbounce.render.ui
 
-import com.mojang.blaze3d.buffers.BufferType
-import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.systems.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
@@ -33,9 +31,11 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.utils.client.ceilToInt
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
-import net.minecraft.client.gl.RenderPipelines
+import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.math.Rect2i
@@ -47,9 +47,8 @@ import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
 import java.awt.image.BufferedImage
 import java.lang.AutoCloseable
-import java.util.OptionalInt
+import java.util.concurrent.CompletableFuture
 import javax.imageio.ImageIO
-import kotlin.math.ceil
 import kotlin.math.sqrt
 
 private const val NATIVE_ITEM_SIZE: Int = 16
@@ -70,27 +69,33 @@ private class Atlas(
 object ItemImageAtlas : EventListener {
 
     private var atlas: Atlas? = null
+    private var updateFuture: CompletableFuture<Unit>? = null
 
     fun updateAtlas(drawContext: DrawContext) {
-        if (this.atlas != null) {
+        if (this.atlas != null || this.updateFuture != null) {
             return
         }
 
-//        val renderer = ItemFramebufferRenderer(
-//            Registries.ITEM,
-//            4
-//        )
-//
-//        val items = renderer.render(drawContext)
-//
-//        val image = renderer.toNativeImage().toBufferedImage()
-//
-//        // FIXME: to be removed. for testing only
-//        ImageIO.write(image, "png", ConfigSystem.rootFolder.resolve("items.png"))
-//
-//        renderer.close()
-//
-//        this.atlas = Atlas(items, image, findAliases())
+        val renderer = ItemTextureRenderer(
+            Registries.ITEM,
+            4
+        )
+
+        val items = renderer.render(drawContext)
+
+        updateFuture = renderer.toNativeImage()
+            .thenApply(NativeImage::toBufferedImage)
+            .thenApply { image ->
+                logger.info("Loaded ${image.width} x ${image.height} item atlas")
+                // FIXME: to be removed. for testing only
+                ImageIO.write(image, "png", ConfigSystem.rootFolder.resolve("items.png"))
+
+                renderer.close()
+
+                this.atlas = Atlas(items, image, findAliases())
+
+                updateFuture = null
+            }
     }
 
     private fun findAliases(): Map<Identifier, Identifier> {
@@ -135,11 +140,11 @@ object ItemImageAtlas : EventListener {
     }
 }
 
-private class ItemFramebufferRenderer(
+private class ItemTextureRenderer(
     val items: Registry<Item>,
     val scale: Int,
 ) : MinecraftShortcuts, AutoCloseable {
-    private val itemsPerDimension = ceil(sqrt(items.size().toDouble())).toInt()
+    private val itemsPerDimension = sqrt(items.size().toDouble()).ceilToInt()
     private val itemPixelSize = NATIVE_ITEM_SIZE * scale
 
     private val gpuDevice = RenderSystem.getDevice()
@@ -154,9 +159,7 @@ private class ItemFramebufferRenderer(
     fun render(ctx: DrawContext): Map<Item, Rect2i> {
         val encoder = gpuDevice.createCommandEncoder()
         encoder.clearColorTexture(gpuTexture, 0) // Transparent
-        // FIXME
-//        val pass = encoder.createRenderPass(gpuTexture, OptionalInt.empty())
-//        pass.setPipeline(RenderPipelines.GUI)
+        encoder.presentTexture(gpuTexture)
 
         val projectionMatrix = RenderSystem.getProjectionMatrix()
         val matrix = Matrix4f().setOrtho(
@@ -183,26 +186,14 @@ private class ItemFramebufferRenderer(
         }
 
         ctx.matrices.pop()
-//        pass.draw(0, items.size())
-//        pass.close()
+
+        mc.framebuffer.blitToScreen()
         RenderSystem.setProjectionMatrix(projectionMatrix, ProjectionType.ORTHOGRAPHIC)
 
         return itemMap
     }
 
-    fun toNativeImage(): NativeImage {
-        val encoder = gpuDevice.createCommandEncoder()
-        val buffer = gpuDevice.createBuffer(
-            { "ItemAtlasBuffer" },
-            BufferType.PIXEL_PACK,
-            BufferUsage.STATIC_READ,
-            gpuTexture.getWidth(0) * gpuTexture.getHeight(0) * 4,
-        )
-        encoder.copyTextureToBuffer(gpuTexture, buffer, 0, {}, 0)
-        return encoder.readBuffer(buffer).use { view ->
-            NativeImage.read(view.data())
-        }
-    }
+    fun toNativeImage(): CompletableFuture<NativeImage> = gpuTexture.toNativeImage()
 
     override fun close() {
         gpuTexture.close()

@@ -23,36 +23,32 @@ import com.mojang.blaze3d.buffers.BufferType
 import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
-import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.ScreenshotRecorder
 import java.awt.image.BufferedImage
 import java.util.concurrent.CompletableFuture
-import java.util.function.Supplier
 
 /**
  * @see ScreenshotRecorder.takeScreenshot
  */
-fun Framebuffer.toNativeImage(): NativeImage {
+fun GpuTexture.toNativeImage(): CompletableFuture<NativeImage> {
     val future = CompletableFuture<NativeImage>()
-    val i: Int = textureWidth
-    val j: Int = textureHeight
-    val gpuTexture: GpuTexture? = getColorAttachment()
-    checkNotNull(gpuTexture != null) { "Tried to capture screenshot of an incomplete framebuffer" }
+    val i = this.getWidth(0)
+    val j = this.getHeight(0)
+    val pixelSize = this.format.pixelSize()
     val gpuBuffer = RenderSystem.getDevice()
         .createBuffer(
-            Supplier { "Screenshot buffer" },
+            { "Screenshot buffer" },
             BufferType.PIXEL_PACK,
             BufferUsage.STATIC_READ,
-            i * j * gpuTexture!!.format.pixelSize()
+            i * j * pixelSize
         )
-    val commandEncoder = RenderSystem.getDevice().createCommandEncoder()
-    RenderSystem.getDevice().createCommandEncoder().copyTextureToBuffer(gpuTexture, gpuBuffer, 0, Runnable {
-        commandEncoder.readBuffer(gpuBuffer).use { readView ->
+    RenderSystem.getDevice().createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, Runnable {
+        RenderSystem.getDevice().createCommandEncoder().readBuffer(gpuBuffer).use { readView ->
             val nativeImage = NativeImage(i, j, false)
             for (k in 0..<j) {
                 for (l in 0..<i) {
-                    val m = readView.data().getInt((l + k * i) * gpuTexture.format.pixelSize())
+                    val m = readView.data().getInt((l + k * i) * pixelSize)
                     nativeImage.setColor(l, j - k - 1, m)
                 }
             }
@@ -61,7 +57,7 @@ fun Framebuffer.toNativeImage(): NativeImage {
         gpuBuffer.close()
     }, 0)
 
-    return future.get()
+    return future
 }
 
 fun NativeImage.toBufferedImage(): BufferedImage {
