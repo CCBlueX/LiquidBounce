@@ -26,6 +26,7 @@ import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.opengl.GlConst
 import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.systems.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
@@ -41,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.GlGpuBuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
@@ -340,6 +342,18 @@ inline fun RenderEnvironment.drawCustomMesh(
     }
 }
 
+@JvmOverloads
+internal fun newRenderPass(framebuffer: Framebuffer = mc.framebuffer): RenderPass {
+    return RenderSystem.getDevice()
+        .createCommandEncoder()
+        .createRenderPass(
+            framebuffer.colorAttachment,
+            OptionalInt.empty(),
+            framebuffer.depthAttachment.takeIf { framebuffer.useDepthAttachment },
+            OptionalDouble.empty()
+        )
+}
+
 @Suppress("detekt:all")
 // copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
 fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
@@ -355,32 +369,23 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         indexType = buffer.drawParameters.indexType()
     }
 
-    val framebuffer = mc.framebuffer
-
-    RenderSystem.getDevice()
-        .createCommandEncoder()
-        .createRenderPass(
-            framebuffer.colorAttachment,
-            OptionalInt.empty(),
-            framebuffer.depthAttachment.takeIf { framebuffer.useDepthAttachment },
-            OptionalDouble.empty()
-        ).use { renderPass ->
-            renderPass.setPipeline(this)
-            renderPass.setVertexBuffer(0, gpuBuffer)
-            if (RenderSystem.SCISSOR_STATE.isEnabled) {
-                renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
-            }
-
-            for (i in 0..11) {
-                val gpuTexture = RenderSystem.getShaderTexture(i)
-                if (gpuTexture != null) {
-                    renderPass.bindSampler("Sampler$i", gpuTexture)
-                }
-            }
-
-            renderPass.setIndexBuffer(gpuBuffer2, indexType)
-            renderPass.drawIndexed(0, buffer.drawParameters.indexCount())
+    newRenderPass().use { renderPass ->
+        renderPass.setPipeline(this)
+        renderPass.setVertexBuffer(0, gpuBuffer)
+        if (RenderSystem.SCISSOR_STATE.isEnabled) {
+            renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
         }
+
+        for (i in 0..11) {
+            val gpuTexture = RenderSystem.getShaderTexture(i)
+            if (gpuTexture != null) {
+                renderPass.bindSampler("Sampler$i", gpuTexture)
+            }
+        }
+
+        renderPass.setIndexBuffer(gpuBuffer2, indexType)
+        renderPass.drawIndexed(0, buffer.drawParameters.indexCount())
+    }
 }
 
 /**

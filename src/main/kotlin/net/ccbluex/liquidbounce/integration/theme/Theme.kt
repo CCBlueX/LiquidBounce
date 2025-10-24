@@ -30,17 +30,12 @@ import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.JsonComponentFactory
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.liquidbounce.render.shader.BlitShader
-import net.ccbluex.liquidbounce.render.shader.FramebufferShader
-import net.ccbluex.liquidbounce.render.shader.Shader
-import net.ccbluex.liquidbounce.render.shader.UniformProvider
 import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.texture.NativeImageBackedTexture
 import okhttp3.Headers
-import org.lwjgl.opengl.GL30
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
@@ -164,37 +159,16 @@ class Theme private constructor(val origin: Origin, url: String) :
             return false
         }
 
-        val vertexShader = resourceToString("/resources/liquidbounce/shaders/vertex.vert")
+        val vertexShader = resourceToString("/resources/liquidbounce/shaders/theme_vertex.vert")
         val fragmentShader = runCatching {
             get<String>("/backgrounds/${background.name.lowercase(Locale.US)}.frag")
         }.getOrNull() ?: return false
 
-        themeBackgroundShader = ThemeBackground.shader(
-            BlitShader(
-                vertexShader,
-                fragmentShader,
-                arrayOf(
-                    UniformProvider("time") { pointer ->
-                        if (pointer != -1) {
-                            GL30.glUniform1f(pointer, (System.currentTimeMillis() - mc.startTime).toFloat())
-                        }
-                    },
-                    UniformProvider("mouse") { pointer ->
-                        if (pointer != -1) {
-                            GL30.glUniform2f(pointer, 1f, 2f) // FIXME: actual mouse x and y
-                        }
-                    },
-                    UniformProvider("resolution") { pointer ->
-                        if (pointer != -1) {
-                            GL30.glUniform2f(
-                                pointer,
-                                mc.window.framebufferWidth.toFloat(),
-                                mc.window.framebufferHeight.toFloat()
-                            )
-                        }
-                    },
-                )
-            )
+        themeBackgroundShader = ThemeBackground.Shader.build(
+            metadata,
+            background,
+            vertexShader,
+            fragmentShader,
         )
 
         logger.info("Compiled shader background for theme ${metadata.name}")
@@ -218,7 +192,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         }.getOrNull() ?: return false
 
         val id = LiquidBounce.identifier("theme-bg-${metadata.name.lowercase(Locale.US)}")
-        themeBackgroundTexture = ThemeBackground.image(id)
+        themeBackgroundTexture = ThemeBackground.Image(id)
         mc.textureManager.registerTexture(id, image)
         logger.info("Loaded background image for theme ${metadata.name}")
         return true

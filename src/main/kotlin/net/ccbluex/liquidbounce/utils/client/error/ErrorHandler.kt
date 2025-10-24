@@ -32,8 +32,6 @@ import kotlin.io.path.div
 import kotlin.math.min
 import kotlin.system.exitProcess
 
-private typealias CurrentStringBuilder = StringBuilder
-
 private val MAX_STACKTRACE_LINES = when (Util.getOperatingSystem()) {
     WINDOWS -> 3
     else -> 1
@@ -78,13 +76,13 @@ class ErrorHandler private constructor(
 
     private inline val title get() = "${LiquidBounce.CLIENT_NAME} Nextgen"
 
-    private val builder = CurrentStringBuilder()
+    private val builder = java.lang.StringBuilder()
 
-    private inline fun header(): CurrentStringBuilder = builder.append(
+    private inline fun header(): StringBuilder = builder.append(
         "$title has encountered an error!"
     )
 
-    private inline fun quickFix(): CurrentStringBuilder = builder.apply {
+    private inline fun quickFix(): StringBuilder = builder.apply {
         requireNotNull(quickFix)
 
         append(quickFix.description)
@@ -113,7 +111,7 @@ class ErrorHandler private constructor(
         }
     }
 
-    private inline fun reportMessage(): CurrentStringBuilder = builder.apply {
+    private inline fun reportMessage(): StringBuilder = builder.apply {
         append(
             """
                 Try restarting the client.
@@ -137,7 +135,7 @@ class ErrorHandler private constructor(
         append("Open new GitHub issue?")
     }
 
-    private inline fun systemSpecs(): CurrentStringBuilder = builder.append(
+    private inline fun systemSpecs(): StringBuilder = builder.append(
         """
             OS: ${System.getProperty("os.name")} (${System.getProperty("os.arch")})
             Java: ${System.getProperty("java.version")}
@@ -145,7 +143,7 @@ class ErrorHandler private constructor(
         """.trimIndent()
     )
 
-    private inline fun error(): CurrentStringBuilder = builder.apply {
+    private inline fun error(): StringBuilder = builder.apply {
         append("Error: ${error.message} (${error.javaClass.name})")
         appendLine()
         stacktrace()
@@ -157,16 +155,16 @@ class ErrorHandler private constructor(
     }
 
     @Suppress("UnusedPrivateProperty")
-    private inline fun stacktrace(): CurrentStringBuilder = builder.apply {
-        val elements = error.stackTrace.toList()
+    private inline fun stacktrace(): StringBuilder = builder.apply {
+        val elements = error.stackTrace.asList()
 
         val displayed = min(elements.size, MAX_STACKTRACE_LINES)
         val displayedItems = elements.take(displayed)
 
-        displayedItems.withIndex().forEach { (idx, item) ->
+        displayedItems.forEachIndexed { idx, item ->
             append("  at $item")
 
-            if (idx < displayedItems.size-1) {
+            if (idx < displayedItems.size - 1) {
                 appendLine()
             }
         }

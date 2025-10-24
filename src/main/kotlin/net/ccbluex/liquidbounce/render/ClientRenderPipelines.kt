@@ -48,6 +48,9 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     private val COVERING_BLEND = BlendFunction(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA)
 
+    private val BGRA_FSH_ID = LiquidBounce.identifier("fsh/bgra_pos_tex_color")
+    private val BGRA_FSH_CODE = resourceToString("/resources/liquidbounce/shaders/bgra_position_tex_color.frag")
+
     private inline fun create(
         name: String,
         builderAction: RenderPipeline.Builder.() -> Unit,
@@ -64,8 +67,8 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     // TODO: TEST THIS
     @Suppress("NOTHING_TO_INLINE")
     private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() = apply {
-        withVertexShader("core/position_tex_color") // TODO: use client resource shader
-        withFragmentShader("core/position_tex_color")
+        withVertexShader("core/position_tex_color")
+        withFragmentShader(BGRA_FSH_ID)
         withSampler("Sampler0")
         withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
         withSnippet(RenderPipelines.MATRICES_SNIPPET)
@@ -155,17 +158,16 @@ object ClientRenderPipelines : SynchronousResourceReloader {
      * Precompile
      */
     override fun reload(manager: ResourceManager) {
-//        val device = RenderSystem.getDevice()
-//
-//        renderPipelines.fastIterator().forEach { (_, pipeline) ->
-//            device.precompilePipeline(pipeline) { identifier, _ ->
-//                if (identifier.namespace == LiquidBounce.CLIENT_NAME.lowercase()) {
-//                    resourceToString("")
-//                    val resource = manager.getResource(identifier).get()
-//                    resource.inputStream.bufferedReader().readText()
-//                }
-//            }
-//        }
+        val device = RenderSystem.getDevice()
+
+        renderPipelines.fastIterator().forEach { (_, pipeline) ->
+            device.precompilePipeline(pipeline) { identifier, _ ->
+                when (identifier) {
+                    BGRA_FSH_ID -> BGRA_FSH_CODE
+                    else -> error("Unknown identifier: $identifier")
+                }
+            }
+        }
     }
 
 }
