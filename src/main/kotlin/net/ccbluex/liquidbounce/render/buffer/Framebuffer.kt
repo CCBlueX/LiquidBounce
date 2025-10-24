@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.render.buffer
 import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.common.GlobalFramebuffer
 import net.ccbluex.liquidbounce.render.shader.shaders.BlitToScreenShader
+import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL30.*
 import java.io.Closeable
@@ -65,13 +66,17 @@ open class Framebuffer(var width: Int, var height: Int, val useDepth: Boolean) :
     }
 
     fun resize(width: Int, height: Int) {
-        glBindTexture(GL_TEXTURE_2D, colorAttachment)
+        GlStateManager._bindTexture(colorAttachment)
+        GL11.glBindTexture(GL_TEXTURE_2D, id)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, null as ByteBuffer?)
 
         if (useDepth) {
             glBindRenderbuffer(GL_RENDERBUFFER, depthAttachment!!)
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height)
         }
+
+        this.width = width
+        this.height = height
     }
 
     fun beginWrite(viewport: Boolean, clear: Boolean = true) {

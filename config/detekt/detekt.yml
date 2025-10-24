@@ -64,6 +64,8 @@ style:
     allowedNames: '_|ignored|expected|serialVersionUID|.+Handler\d*|repeatable'
   ForbiddenMethodCall:
     active: true
+    methods: ['kotlin.io.print', 'kotlin.io.println', 'java.math.BigDecimal.<init>(kotlin.Double)', 'java.math.BigDecimal.<init>(kotlin.String)', 'kotlin.system.measureTimeMillis', 'org.lwjgl.opengl.GL11.glBindTexture']
+    # glBindTexture: replace with GlStateManager._bindTexture(), because everything else will mess up the internal state handling.
   BracesOnIfStatements:
     active: true
     singleLine: 'never'
