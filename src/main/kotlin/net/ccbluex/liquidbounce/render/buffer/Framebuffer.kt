@@ -31,7 +31,7 @@ import java.nio.IntBuffer
 open class Framebuffer(var width: Int, var height: Int, val useDepth: Boolean) : Closeable {
 
     val colorAttachment = GlStateManager._genTexture()
-    private var depthAttachment = 0
+    private var depthAttachment: Int? = null
     open val id = GlStateManager.glGenFramebuffers()
     private var clearR = 0f
     private var clearG = 0f
@@ -48,10 +48,13 @@ open class Framebuffer(var width: Int, var height: Int, val useDepth: Boolean) :
         GlStateManager._glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorAttachment, 0)
 
         if (useDepth) {
-            depthAttachment = glGenRenderbuffers()
+            val depthAttachment = glGenRenderbuffers()
+
             glBindRenderbuffer(GL_RENDERBUFFER, depthAttachment)
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height)
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthAttachment)
+
+            this.depthAttachment = depthAttachment
         }
 
         check(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
@@ -65,8 +68,10 @@ open class Framebuffer(var width: Int, var height: Int, val useDepth: Boolean) :
         glBindTexture(GL_TEXTURE_2D, colorAttachment)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, null as ByteBuffer?)
 
-        glBindRenderbuffer(GL_RENDERBUFFER, depthAttachment)
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height)
+        if (useDepth) {
+            glBindRenderbuffer(GL_RENDERBUFFER, depthAttachment!!)
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height)
+        }
     }
 
     fun beginWrite(viewport: Boolean, clear: Boolean = true) {
