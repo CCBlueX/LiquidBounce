@@ -354,6 +354,18 @@ internal fun newRenderPass(framebuffer: Framebuffer = mc.framebuffer): RenderPas
         )
 }
 
+inline fun withScissor(
+    x: Int, y: Int, width: Int, height: Int,
+    action: () -> Unit,
+) {
+    try {
+        RenderSystem.enableScissor(x, y, width, height)
+        action()
+    } finally {
+        RenderSystem.disableScissor()
+    }
+}
+
 @Suppress("detekt:all")
 // copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
 fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
