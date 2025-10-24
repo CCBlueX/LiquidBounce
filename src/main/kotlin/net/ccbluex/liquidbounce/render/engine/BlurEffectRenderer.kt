@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.render.ClientShaders
 import net.ccbluex.liquidbounce.render.buffer.Framebuffer
 import net.ccbluex.liquidbounce.render.defaultBlendFunc
 import net.ccbluex.liquidbounce.render.shader.BlitShader
@@ -33,7 +34,6 @@ import net.ccbluex.liquidbounce.render.shader.shaders.BlitToScreenShader
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.fastSin
-import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.texture.GlTexture
@@ -44,8 +44,8 @@ import org.lwjgl.opengl.GL20
 object BlurEffectRenderer : MinecraftShortcuts {
 
     private object BlurShader : BlitShader(
-        resourceToString("/resources/liquidbounce/shaders/sobel.vert"),
-        resourceToString("/resources/liquidbounce/shaders/blur/ui_blur.frag"),
+        ClientShaders[ClientShaders.SOBEL_VSH_ID]!!,
+        ClientShaders[ClientShaders.BLUR_FSH_ID]!!,
         arrayOf(
             UniformProvider("texture0") { pointer ->
                 GlStateManager._activeTexture(GL13.GL_TEXTURE0)

@@ -1,0 +1,90 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package net.ccbluex.liquidbounce.render
+
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.io.resourceToString
+import net.minecraft.util.Identifier
+
+object ClientShaders {
+
+    private val shaders = Object2ObjectRBTreeMap<Identifier, String>()
+
+    @JvmField
+    val BGRA_FSH_ID = newShader(
+        "fsh/bgra_pos_tex_color",
+        path = "/resources/liquidbounce/shaders/bgra_position_tex_color.frag",
+    )
+
+    @JvmField
+    val PLAIN_POSITION_TEX_VSH_ID = newShader(
+        "vsh/plain_pos_tex",
+        path = "/resources/liquidbounce/shaders/position_tex.vert",
+    )
+
+    @JvmField
+    val BLIT_FSH_ID = newShader(
+        "fsh/blit",
+        path = "/resources/liquidbounce/shaders/blit.frag",
+    )
+
+    @JvmField
+    val SOBEL_VSH_ID = newShader(
+        "vsh/sobel",
+        path = "/resources/liquidbounce/shaders/sobel.vert",
+    )
+
+    @JvmField
+    val BLUR_FSH_ID = newShader(
+        "fsh/blur",
+        path = "/resources/liquidbounce/shaders/blur/ui_blur.frag",
+    )
+
+    @JvmField
+    val PLANE_PROJECTION_VSH_ID = newShader(
+        "vsh/plane_projection",
+        path = "/resources/liquidbounce/shaders/plane_projection.vert",
+    )
+
+    @JvmField
+    val GLOW_FSH_ID = newShader(
+        "fsh/glow",
+        path = "/resources/liquidbounce/shaders/glow/glow.frag",
+    )
+
+    @JvmField
+    val OUTLINE_FSH_ID = newShader(
+        "fsh/outline",
+        path = "/resources/liquidbounce/shaders/outline/entity_outline.frag",
+    )
+
+    private fun newShader(id: String, path: String): Identifier {
+        val k = LiquidBounce.identifier(id)
+        shaders.put(
+            k,
+            resourceToString(path),
+        )?.let { error("Duplicated shader: $k") }
+        return k
+    }
+
+    operator fun get(id: Identifier): String? = shaders[id]
+
+}

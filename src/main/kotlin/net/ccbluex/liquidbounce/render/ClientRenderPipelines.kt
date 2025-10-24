@@ -29,14 +29,13 @@ import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.gl.RenderPipelines
+import net.minecraft.client.gl.UniformType
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.SynchronousResourceReloader
 import net.minecraft.util.Identifier
 
-// FIXME
 object ClientRenderPipelines : SynchronousResourceReloader {
 
     private val renderPipelines = Object2ObjectRBTreeMap<Identifier, RenderPipeline>()
@@ -48,10 +47,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     private val COVERING_BLEND = BlendFunction(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA)
 
-    private val BGRA_FSH_ID = LiquidBounce.identifier("fsh/bgra_pos_tex_color")
-    private val BGRA_FSH_CODE = resourceToString("/resources/liquidbounce/shaders/bgra_position_tex_color.frag")
-
-    private inline fun create(
+    private inline fun newPipeline(
         name: String,
         builderAction: RenderPipeline.Builder.() -> Unit,
     ): RenderPipeline {
@@ -60,15 +56,14 @@ object ClientRenderPipelines : SynchronousResourceReloader {
             .withLocation(id)
             .apply(builderAction)
             .build().also { r ->
-                renderPipelines.put(id, r)?.let { error("Duplicated render pipeline: $it") }
+                renderPipelines.put(id, r)?.let { error("Duplicated render pipeline: $id") }
             }
     }
 
-    // TODO: TEST THIS
     @Suppress("NOTHING_TO_INLINE")
     private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() = apply {
         withVertexShader("core/position_tex_color")
-        withFragmentShader(BGRA_FSH_ID)
+        withFragmentShader(ClientShaders.BGRA_FSH_ID)
         withSampler("Sampler0")
         withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
         withSnippet(RenderPipelines.MATRICES_SNIPPET)
@@ -84,28 +79,28 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     object JCEF {
         @JvmField
-        val SMOOTH_TEXTURE = create("jcef/smooth_texture") {
+        val SMOOTH_TEXTURE = newPipeline("jcef/smooth_texture") {
             withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
             withBlend(BlendFunction.TRANSLUCENT)
             withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
         }
 
         @JvmField
-        val BLURRED_TEXTURE = create("jcef/blurred_texture") {
+        val BLURRED_TEXTURE = newPipeline("jcef/blurred_texture") {
             withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
             withBlend(JCEF_COMPATIBLE_BLEND)
             withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
         }
 
         @JvmField
-        val BGRA_TEXTURE = create("jcef/bgra_texture") {
+        val BGRA_TEXTURE = newPipeline("jcef/bgra_texture") {
             bgraPosTexColorQuads()
             withBlend(JCEF_COMPATIBLE_BLEND)
             withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
         }
 
         @JvmField
-        val BGRA_BLURRED_TEXTURE = create("jcef/bgra_blurred_texture") {
+        val BGRA_BLURRED_TEXTURE = newPipeline("jcef/bgra_blurred_texture") {
             bgraPosTexColorQuads()
             withBlend(JCEF_COMPATIBLE_BLEND)
             withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
@@ -113,46 +108,95 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     }
 
     @JvmField
-    val Lines = create("lines") {
+    val Lines = newPipeline("lines") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINES)
         forWorldRender()
     }
 
     @JvmField
-    val LineStrip = create("line_strip") {
+    val LineStrip = newPipeline("line_strip") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINE_STRIP)
         forWorldRender()
     }
 
     @JvmField
-    val Triangles = create("triangles") {
+    val Triangles = newPipeline("triangles") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES)
         forWorldRender()
     }
 
     @JvmField
-    val TriangleStrip = create("triangle_strip") {
+    val TriangleStrip = newPipeline("triangle_strip") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLE_STRIP)
         forWorldRender()
     }
 
     @JvmField
-    val Quads = create("quads") {
+    val Quads = newPipeline("quads") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.QUADS)
         forWorldRender()
     }
 
     @JvmField
-    val TexQuads = create("tex_quads") {
+    val TexQuads = newPipeline("tex_quads") {
         withSnippet(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
         withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
         forWorldRender()
     }
+
+    // Special
+
+    @JvmField
+    val Outline = newPipeline("outline") {
+        withVertexShader(ClientShaders.SOBEL_VSH_ID)
+        withFragmentShader(ClientShaders.OUTLINE_FSH_ID)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.QUADS)
+        withSampler("texture0")
+//        forWorldRender()
+    }
+
+    @JvmField
+    val Glow = newPipeline("glow") {
+        withVertexShader(ClientShaders.PLANE_PROJECTION_VSH_ID)
+        withFragmentShader(ClientShaders.GLOW_FSH_ID)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.QUADS)
+        withSampler("texture0")
+        withSampler("image")
+        withUniform("useImage", UniformType.INT)
+        withUniform("blendColor", UniformType.VEC4)
+        withUniform("alpha", UniformType.FLOAT)
+        withUniform("sampleMul", UniformType.FLOAT)
+        withUniform("glowColor", UniformType.VEC4)
+        withUniform("falloff", UniformType.FLOAT)
+        withUniform("layerCount", UniformType.INT)
+//        forWorldRender()
+    }
+
+    @JvmField
+    val Blur = newPipeline("blur") {
+        withVertexShader(ClientShaders.SOBEL_VSH_ID)
+        withFragmentShader(ClientShaders.BLUR_FSH_ID)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.QUADS)
+        withSampler("texture0")
+        withSampler("overlay")
+        withUniform("radius", UniformType.FLOAT)
+//        forWorldRender()
+    }
+
+    @JvmField
+    val Blit = newPipeline("blit") {
+        withVertexShader(ClientShaders.PLAIN_POSITION_TEX_VSH_ID)
+        withFragmentShader(ClientShaders.BLIT_FSH_ID)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.QUADS)
+        withSampler("texture0")
+        forWorldRender()
+    }
+
 
     /**
      * Precompile
@@ -162,10 +206,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
         renderPipelines.fastIterator().forEach { (_, pipeline) ->
             device.precompilePipeline(pipeline) { identifier, _ ->
-                when (identifier) {
-                    BGRA_FSH_ID -> BGRA_FSH_CODE
-                    else -> error("Unknown identifier: $identifier")
-                }
+                ClientShaders[identifier] ?: error("Unknown identifier: $identifier")
             }
         }
     }

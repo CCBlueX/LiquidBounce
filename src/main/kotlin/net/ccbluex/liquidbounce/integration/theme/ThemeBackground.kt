@@ -153,7 +153,7 @@ sealed interface ThemeBackground : Closeable {
                 vertexShader: String,
                 fragmentShader: String,
             ): Shader {
-                val vshId = LiquidBounce.identifier("vsh/theme-vertex")
+                val vshId = LiquidBounce.identifier("vsh/${background.name.lowercase(Locale.US)}")
                 val fshId = LiquidBounce.identifier("fsh/${background.name.lowercase(Locale.US)}")
 
                 val pipeline = RenderPipeline.Builder()

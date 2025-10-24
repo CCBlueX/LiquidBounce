@@ -159,7 +159,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             return false
         }
 
-        val vertexShader = resourceToString("/resources/liquidbounce/shaders/theme_vertex.vert")
+        val vertexShader = resourceToString("/resources/liquidbounce/shaders/position_tex.vert")
         val fragmentShader = runCatching {
             get<String>("/backgrounds/${background.name.lowercase(Locale.US)}.frag")
         }.getOrNull() ?: return false

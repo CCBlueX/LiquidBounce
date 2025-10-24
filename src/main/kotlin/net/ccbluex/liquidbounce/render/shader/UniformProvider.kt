@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.render.shader
 
+import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
-import net.minecraft.client.gl.GlUniform
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL20
 import org.lwjgl.system.MemoryUtil
@@ -50,7 +50,7 @@ class UniformProvider(val name: String, val set: IntConsumer) {
     var pointer = -1
 
     fun init(program: Int) {
-        pointer = GlUniform.getUniformLocation(program, name)
+        pointer = GlStateManager._glGetUniformLocation(program, name)
     }
 
     fun set(pointer: Int) {

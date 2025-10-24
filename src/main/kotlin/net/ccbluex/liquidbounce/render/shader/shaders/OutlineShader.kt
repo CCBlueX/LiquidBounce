@@ -18,20 +18,20 @@
  */
 package net.ccbluex.liquidbounce.render.shader.shaders
 
+import net.ccbluex.liquidbounce.render.ClientShaders
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.shader.FramebufferShader
 import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.render.shader.UniformProvider
 import net.ccbluex.liquidbounce.utils.client.ImmutableHandle
-import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.ccbluex.liquidbounce.render.buffer.Framebuffer
 import net.minecraft.client.render.OutlineVertexConsumerProvider
 import net.minecraft.client.util.Handle
 import org.lwjgl.opengl.GL20
 
 object OutlineShader : FramebufferShader(Shader(
-    resourceToString("/resources/liquidbounce/shaders/sobel.vert"),
-    resourceToString("/resources/liquidbounce/shaders/outline/entity_outline.frag"),
+    ClientShaders[ClientShaders.SOBEL_VSH_ID]!!,
+    ClientShaders[ClientShaders.OUTLINE_FSH_ID]!!,
     arrayOf(
         UniformProvider("texture0") { pointer -> GL20.glUniform1i(pointer, 0) }
     )
@@ -51,9 +51,7 @@ object OutlineShader : FramebufferShader(Shader(
     }
 
     fun draw() {
-        draw()
         vertexConsumerProvider.draw()
-
     }
 
 }

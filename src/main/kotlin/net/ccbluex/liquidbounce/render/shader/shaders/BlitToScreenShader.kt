@@ -20,14 +20,14 @@
 package net.ccbluex.liquidbounce.render.shader.shaders
 
 import com.mojang.blaze3d.opengl.GlStateManager
+import net.ccbluex.liquidbounce.render.ClientShaders
 import net.ccbluex.liquidbounce.render.shader.BlitShader
 import net.ccbluex.liquidbounce.render.shader.UniformProvider
-import net.ccbluex.liquidbounce.utils.io.resourceToString
 import org.lwjgl.opengl.GL20
 
 object BlitToScreenShader : BlitShader(
-    resourceToString("/resources/liquidbounce/shaders/position_tex.vert"),
-    resourceToString("/resources/liquidbounce/shaders/blit.frag"),
+    ClientShaders[ClientShaders.PLAIN_POSITION_TEX_VSH_ID]!!,
+    ClientShaders[ClientShaders.BLIT_FSH_ID]!!,
     arrayOf(
         UniformProvider("texture0") { pointer -> GL20.glUniform1i(pointer, 0) },
     )

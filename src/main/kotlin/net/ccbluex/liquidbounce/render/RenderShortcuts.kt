@@ -366,6 +366,11 @@ inline fun withScissor(
     }
 }
 
+@Suppress("NOTHING_TO_INLINE")
+inline fun RenderPass.setUniform(name: String, color: Color4b) {
+    setUniform(name, color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
+}
+
 @Suppress("detekt:all")
 // copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
 fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
