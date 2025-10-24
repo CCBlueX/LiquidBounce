@@ -45,6 +45,8 @@ exceptions:
 style:
 #  UnusedImports:
 #    active: true
+  DestructuringDeclarationWithTooManyEntries:
+    maxDestructuringEntries: 4
   MagicNumber:
     active: false
   ReturnCount:

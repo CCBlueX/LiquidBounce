@@ -98,7 +98,8 @@ sealed interface ThemeBackground : Closeable {
 
         init {
             // Vertex Buffer
-            val bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE)
+            val bufferBuilder = Tessellator.getInstance()
+                .begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE)
             bufferBuilder.vertex(-1f, -1f, 0f).texture(0f, 0f)
             bufferBuilder.vertex(3f, -1f, 0f).texture(2f, 0f)
             bufferBuilder.vertex(-1f, 3f, 0f).texture(0f, 2f)
