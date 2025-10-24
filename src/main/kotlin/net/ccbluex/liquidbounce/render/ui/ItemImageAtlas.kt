@@ -22,20 +22,19 @@ package net.ccbluex.liquidbounce.render.ui
 
 import com.mojang.blaze3d.systems.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.TextureFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.math.Rect2i
@@ -43,12 +42,11 @@ import net.minecraft.item.Item
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
 import net.minecraft.util.Identifier
+import net.minecraft.util.Util
 import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
 import java.awt.image.BufferedImage
-import java.lang.AutoCloseable
 import java.util.concurrent.CompletableFuture
-import javax.imageio.ImageIO
 import kotlin.math.sqrt
 
 private const val NATIVE_ITEM_SIZE: Int = 16
@@ -69,50 +67,15 @@ private class Atlas(
 object ItemImageAtlas : EventListener {
 
     private var atlas: Atlas? = null
-    private var updateFuture: CompletableFuture<Unit>? = null
+    private var updateFuture: CompletableFuture<*>? = null
 
     fun updateAtlas(drawContext: DrawContext) {
         if (this.atlas != null || this.updateFuture != null) {
             return
         }
 
-        val renderer = ItemTextureRenderer(
-            Registries.ITEM,
-            4
-        )
-
-        val items = renderer.render(drawContext)
-
-        updateFuture = renderer.toNativeImage()
-            .thenApply(NativeImage::toBufferedImage)
-            .thenApply { image ->
-                logger.info("Loaded ${image.width} x ${image.height} item atlas")
-                // FIXME: to be removed. for testing only
-                ImageIO.write(image, "png", ConfigSystem.rootFolder.resolve("items.png"))
-
-                renderer.close()
-
-                this.atlas = Atlas(items, image, findAliases())
-
-                updateFuture = null
-            }
-    }
-
-    private fun findAliases(): Map<Identifier, Identifier> {
-        val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
-
-        Registries.BLOCK.forEach {
-            val pickUpState = it.getPickStack(mc.world!!, BlockPos.ORIGIN, it.defaultState, false)
-
-            if (pickUpState.item != it) {
-                val blockId = Registries.BLOCK.getId(it)
-                val itemId = Registries.ITEM.getId(pickUpState.item)
-
-                map[blockId] = itemId
-            }
-        }
-
-        return map
+        updateFuture = ItemTextureRenderer(items = Registries.ITEM, scale = 4)
+            .render(drawContext).thenAcceptAsync({ atlas = it }, mc)
     }
 
     @Suppress("unused")
@@ -143,29 +106,20 @@ object ItemImageAtlas : EventListener {
 private class ItemTextureRenderer(
     val items: Registry<Item>,
     val scale: Int,
-) : MinecraftShortcuts, AutoCloseable {
+) : MinecraftShortcuts {
     private val itemsPerDimension = sqrt(items.size().toDouble()).ceilToInt()
     private val itemPixelSize = NATIVE_ITEM_SIZE * scale
+    private val textureSize = itemPixelSize * itemsPerDimension
 
-    private val gpuDevice = RenderSystem.getDevice()
-    private val gpuTexture: GpuTexture = gpuDevice.createTexture(
-        "ItemAtlasTexture",
-        TextureFormat.RGBA8,
-        itemPixelSize * itemsPerDimension,
-        itemPixelSize * itemsPerDimension,
-        1
-    )
-
-    fun render(ctx: DrawContext): Map<Item, Rect2i> {
-        val encoder = gpuDevice.createCommandEncoder()
-        encoder.clearColorTexture(gpuTexture, 0) // Transparent
-        encoder.presentTexture(gpuTexture)
+    fun render(ctx: DrawContext): CompletableFuture<Atlas> {
+        mc.framebuffer.resize(textureSize, textureSize)
+        clear(mc.framebuffer)
 
         val projectionMatrix = RenderSystem.getProjectionMatrix()
         val matrix = Matrix4f().setOrtho(
             0f,
-            gpuTexture.getWidth(0).toFloat(),
-            gpuTexture.getHeight(0).toFloat(),
+            textureSize.toFloat(),
+            textureSize.toFloat(),
             0f,
             1000f,
             21000f
@@ -187,16 +141,48 @@ private class ItemTextureRenderer(
 
         ctx.matrices.pop()
 
-        mc.framebuffer.blitToScreen()
         RenderSystem.setProjectionMatrix(projectionMatrix, ProjectionType.ORTHOGRAPHIC)
 
-        return itemMap
+        return mc.framebuffer.colorAttachment!!.toNativeImage()
+            .thenApply {
+                mc.framebuffer.resize(mc.window.framebufferWidth, mc.window.framebufferHeight)
+                clear(mc.framebuffer)
+                it
+            }.thenApplyAsync(NativeImage::toBufferedImage, Util.getIoWorkerExecutor())
+            .thenApply { image ->
+                logger.info("Loaded ${image.width} x ${image.height} item atlas")
+
+                Atlas(itemMap, image, findAliases())
+            }
     }
 
-    fun toNativeImage(): CompletableFuture<NativeImage> = gpuTexture.toNativeImage()
+    private fun findAliases(): Map<Identifier, Identifier> {
+        val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
 
-    override fun close() {
-        gpuTexture.close()
+        Registries.BLOCK.forEach {
+            val pickUpState = it.getPickStack(
+                net.ccbluex.liquidbounce.utils.client.mc.world!!,
+                BlockPos.ORIGIN,
+                it.defaultState,
+                false
+            )
+
+            if (pickUpState.item != it) {
+                val blockId = Registries.BLOCK.getId(it)
+                val itemId = Registries.ITEM.getId(pickUpState.item)
+
+                map[blockId] = itemId
+            }
+        }
+
+        return map
+    }
+
+    private fun clear(framebuffer: Framebuffer) {
+        RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(
+            framebuffer.colorAttachment, Color4b.TRANSPARENT.toARGB(),
+            framebuffer.depthAttachment, 1.0,
+        )
     }
 
 }
