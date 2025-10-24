@@ -43,6 +43,7 @@ import java.net.BindException
 import java.net.ServerSocket
 import java.util.function.Consumer
 import java.util.function.Function
+import kotlin.time.measureTime
 
 @Suppress("TooManyFunctions")
 class PolyglotScript(
@@ -158,17 +159,18 @@ class PolyglotScript(
     fun initScript() {
         try {
             // Evaluate script
-            context.eval(Source.newBuilder(language, file).build())
+            val duration = measureTime {
+                context.eval(Source.newBuilder(language, file).build())
 
-            // Call load event
-            callGlobalEvent("load")
+                // Call load event
+                callGlobalEvent("load")
 
-            if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
-                logger.error("[ScriptAPI] Script '${file.name}' is missing required information!")
-                error("Script '${file.name}' is missing required information!")
+                if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
+                    logger.error("[ScriptAPI] Script '${file.name}' is missing required information!")
+                    error("Script '${file.name}' is missing required information!")
+                }
             }
-
-            logger.info("[ScriptAPI] Successfully loaded script '${file.name}'.")
+            logger.info("[ScriptAPI] Successfully loaded script '${file.name}' in ${duration.inWholeMilliseconds}ms.")
         } catch (e: Exception) {
             logger.error("[ScriptAPI] Failed to load script '${file.name}'.", e)
             context.close()
