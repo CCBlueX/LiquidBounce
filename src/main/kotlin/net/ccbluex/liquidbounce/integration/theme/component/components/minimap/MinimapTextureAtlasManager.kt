@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
+import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
@@ -51,7 +52,9 @@ class MinimapTextureAtlasManager {
     private val texture = NativeImageBackedTexture(
         { "$CLIENT_NAME MinimapTexture" },
         ATLAS_SIZE * 16, ATLAS_SIZE * 16, false
-    )
+    ).apply {
+        glTexture.setTextureFilter(FilterMode.NEAREST, true)
+    }
     private val availableAtlasPositions: ArrayBlockingQueue<AtlasPosition>
     private val dirtyAtlasPositions = hashSetOf<AtlasPosition>()
     private val chunkPosAtlasPosMap = hashMapOf<ChunkPos, AtlasPosition>()

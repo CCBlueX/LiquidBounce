@@ -67,7 +67,6 @@ open class Framebuffer(var width: Int, var height: Int, val useDepth: Boolean) :
 
     fun resize(width: Int, height: Int) {
         GlStateManager._bindTexture(colorAttachment)
-        GL11.glBindTexture(GL_TEXTURE_2D, id)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, null as ByteBuffer?)
 
         if (useDepth) {
