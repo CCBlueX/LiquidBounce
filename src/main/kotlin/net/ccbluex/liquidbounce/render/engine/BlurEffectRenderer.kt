@@ -24,7 +24,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.isBlurEffectActive
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.buffer.Framebuffer
 import net.ccbluex.liquidbounce.render.defaultBlendFunc
 import net.ccbluex.liquidbounce.render.shader.BlitShader
@@ -105,10 +105,9 @@ object BlurEffectRenderer : MinecraftShortcuts {
 
     fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
         // FIXME: 1. BlurEffectRenderer is broken
-        // FIXME: 2. ItemImageAtlas is broken too
         ItemImageAtlas.updateAtlas(context)
-//
-//        if (isBlurEffectActive) {
+
+//        if (ModuleHud.isBlurEffectActive) {
 //            this.isDrawingHudFramebuffer = true
 //
 //            this.overlayFramebuffer.beginWrite(true)
