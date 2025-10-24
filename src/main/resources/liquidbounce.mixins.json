@@ -39,6 +39,7 @@
     "minecraft.client.MixinWorld",
     "minecraft.client.MixinWorldBorderRendering",
     "minecraft.client.gl.MixinShaderProgram",
+    "minecraft.client.gl.MixinGlDebug",
     "minecraft.client.network.MixinCommonNetworkHandler",
     "minecraft.client.network.message.MixinMessageHandler",
     "minecraft.client.option.MixinServerListAccessor",

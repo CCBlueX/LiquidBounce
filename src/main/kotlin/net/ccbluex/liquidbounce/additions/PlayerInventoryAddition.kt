@@ -28,7 +28,6 @@ interface PlayerInventoryAddition {
      * @return the actual selected slot without any modification by [net.ccbluex.liquidbounce.utils.client.SilentHotbar]
      */
     fun `liquid_bounce$getRealSelectedSlot`(): Int
-
 }
 
 inline val PlayerInventory.realSelectedSlot: Int
