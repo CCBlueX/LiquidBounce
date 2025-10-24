@@ -129,7 +129,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     @JvmField
     val Triangles = create("triangles") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)
-        withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINE_STRIP)
+        withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES)
         forWorldRender()
     }
 

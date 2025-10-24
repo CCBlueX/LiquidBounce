@@ -123,7 +123,7 @@ sealed interface ThemeBackground : Closeable {
         ): Boolean {
             newRenderPass().use { pass ->
                 pass.setPipeline(pipeline)
-                pass.setUniform(UNIFORM_TIME, (System.currentTimeMillis() - mc.startTime).toFloat())
+                pass.setUniform(UNIFORM_TIME, (System.currentTimeMillis() - mc.startTime) / 1000F)
                 pass.setUniform(UNIFORM_MOUSE, mouseX.toFloat(), mouseY.toFloat())
                 pass.setUniform(
                     UNIFORM_RESOLUTION,
