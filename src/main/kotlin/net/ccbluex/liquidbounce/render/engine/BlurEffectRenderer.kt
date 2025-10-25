@@ -25,9 +25,11 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientShaders
 import net.ccbluex.liquidbounce.render.buffer.Framebuffer
 import net.ccbluex.liquidbounce.render.defaultBlendFunc
+import net.ccbluex.liquidbounce.render.newRenderPass
 import net.ccbluex.liquidbounce.render.shader.BlitShader
 import net.ccbluex.liquidbounce.render.shader.UniformProvider
 import net.ccbluex.liquidbounce.render.shader.shaders.BlitToScreenShader
@@ -107,11 +109,19 @@ object BlurEffectRenderer : MinecraftShortcuts {
         // FIXME: 1. BlurEffectRenderer is broken
         ItemImageAtlas.updateAtlas(context)
 
-//        if (ModuleHud.isBlurEffectActive) {
+        if (ModuleHud.isBlurEffectActive) {
 //            this.isDrawingHudFramebuffer = true
-//
+
 //            this.overlayFramebuffer.beginWrite(true)
-//        }
+//            newRenderPass().use { pass ->
+//                pass.setPipeline(ClientRenderPipelines.Blur)
+////                pass.bindSampler("texture0", tmpFramebuffer.colorAttachment)
+////                pass.bindSampler("overlay", overlayFramebuffer.colorAttachment)
+//                pass.setUniform("radius", getBlurRadiusFactor())
+//
+//                pass.draw(0, 4)
+//            }
+        }
 
         callEvent(OverlayRenderEvent(context, tickDelta))
     }
