@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
+    import {onMount} from "svelte";
     import { fly } from "svelte/transition";
     import { flip } from "svelte/animate";
     import type { Unsubscriber } from "svelte/store";
@@ -8,15 +8,13 @@
     import { convertToSpacedString, spaceSeperatedNames } from "../../../theme/theme_config";
     import { hasValidKeyBind, createModuleWithKeyBind, type ModuleWithKeyBind } from "../../../integration/key_utils";
 
-    let modulesWithBinds: ModuleWithKeyBind[] = [];
-
-    const cleanupFunctions: Array<() => void> = [];
+    let modulesWithBinds: ModuleWithKeyBind[] = $state([]);
 
     function getDisplayName(moduleName: string): string {
         return $spaceSeperatedNames ? convertToSpacedString(moduleName) : moduleName;
     }
 
-    async function updateModulesWithBinds(): Promise<void> {
+    async function updateModulesWithBinds() {
         try {
             const modules = await getModules();
             const filtered = modules.filter(hasValidKeyBind);
@@ -31,19 +29,21 @@
 
     onMount(() => {
         const unsubscribe: Unsubscriber = spaceSeperatedNames.subscribe(updateModulesWithBinds);
+
+        const cleanupFunctions: Array<() => void> = [];
+
         cleanupFunctions.push(unsubscribe);
 
         cleanupFunctions.push(listen("moduleToggle", updateModulesWithBinds));
-        cleanupFunctions.push(listen("clickGuiValueChange", updateModulesWithBinds));
-
-        const intervalId = setInterval(updateModulesWithBinds, 2000);
-        cleanupFunctions.push(() => clearInterval(intervalId));
+        cleanupFunctions.push(listen("valueChanged", async (e) => {
+            if (e.value.name === "Bind") {
+                await updateModulesWithBinds();
+            }
+        }));
 
         updateModulesWithBinds();
-    });
 
-    onDestroy(() => {
-        cleanupFunctions.forEach(cleanup => cleanup());
+        return () => cleanupFunctions.forEach(cleanup => cleanup());
     });
 </script>
 
