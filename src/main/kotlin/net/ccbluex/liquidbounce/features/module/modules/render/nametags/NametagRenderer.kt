@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.drawQuad
@@ -55,8 +54,6 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     matrixStack.scale(scale, scale, 1f)
 
     startBatch()
-
-    GlStateManager._enableBlend()
 
     val x =
         ModuleNametags.fontRenderer.draw(
@@ -96,8 +93,6 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     commitBatch()
 
     ModuleNametags.fontRenderer.commit(this@drawNametag)
-
-    GlStateManager._disableBlend()
 
     matrixStack.pop()
 }
