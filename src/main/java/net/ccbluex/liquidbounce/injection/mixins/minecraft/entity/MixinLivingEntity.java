@@ -55,7 +55,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -151,14 +150,6 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
 
         return original;
-    }
-
-    @Inject(method = "hasStatusEffect", at = @At("HEAD"), cancellable = true)
-    private void hookAntiNausea(RegistryEntry<StatusEffect> effect, CallbackInfoReturnable<Boolean> cir) {
-        if (effect == StatusEffects.NAUSEA && !ModuleAntiBlind.canRender(DoRender.NAUSEA)) {
-            cir.setReturnValue(false);
-            cir.cancel();
-        }
     }
 
     @Unique

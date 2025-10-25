@@ -254,8 +254,8 @@ public abstract class MixinGameRenderer {
         return result;
     }
 
-    @ModifyExpressionValue(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F"))
-    private float hookNausea(float original) {
+    @ModifyExpressionValue(method = "renderWorld", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F", ordinal = 0, remap = false))
+    private float hookAntiNausea(float original) {
         if (!ModuleAntiBlind.canRender(DoRender.NAUSEA)) {
             return 0f;
         }
