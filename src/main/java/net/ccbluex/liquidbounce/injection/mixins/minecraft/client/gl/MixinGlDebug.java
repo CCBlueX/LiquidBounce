@@ -32,15 +32,12 @@ public class MixinGlDebug {
             }
         }
 
-        StringBuilder locationText = new StringBuilder();
-        locationText.append('?');
+        String locationText;
 
         if (finalElement != null) {
-            locationText.append(finalElement.getClassName())
-                    .append('.')
-                    .append(finalElement.getMethodName())
-                    .append(':')
-                    .append(finalElement.getLineNumber());
+            locationText = finalElement.getClassName() + '.' + finalElement.getMethodName() + ':' + finalElement.getLineNumber();
+        } else {
+            locationText = "?";
         }
 
         logger.info("OpenGL debug message: {} (at {})", arg, locationText);
