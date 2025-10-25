@@ -23,8 +23,6 @@ import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -58,7 +56,7 @@ open class ClientModule(
     @Exclude val disableActivation: Boolean = notActivatable, // disable activation
     hide: Boolean = false, // default hide
     @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
-    aliases: Array<out String> = emptyArray() // additional names under which the module is known
+    aliases: List<String> = emptyList() // additional names under which the module is known
 ) : ToggleableConfigurable(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
 
     /**
@@ -94,8 +92,7 @@ open class ClientModule(
      */
     private var locked: Value<Boolean>? = null
 
-    override val baseKey: String
-        get() = "liquidbounce.module.${name.toLowerCamelCase()}"
+    override val baseKey: String = "liquidbounce.module.${name.toLowerCamelCase()}"
 
     // Tag to be displayed on the HUD
     open val tag: String?
@@ -121,14 +118,13 @@ open class ClientModule(
      */
     open fun onRegistration() {}
 
-    override fun onEnabledValueRegistration(value: Value<Boolean>) =
+    final override fun onEnabledValueRegistration(value: Value<Boolean>) =
         super.onEnabledValueRegistration(value).also { value ->
             // Might not include the enabled state of the module depending on the category
             if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
                 if (this is ModuleAntiBot) {
                     return@also
                 }
-
                 value.doNotIncludeAlways()
             }
         }.notAnOption().onChanged { newState ->
@@ -212,15 +208,6 @@ open class ClientModule(
             logger.warn("$name is missing fallback description key $descriptionKey")
         }
     }
-
-    protected fun <T : Choice> choices(name: String, active: T, choices: Array<T>) =
-        choices(this, name, active, choices)
-
-    protected fun <T : Choice> choices(
-        name: String,
-        activeIndex: Int = 0,
-        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
-    ) = choices(this, name, activeIndex, choicesCallback)
 
     fun message(key: String, vararg args: Any) = translation("$baseKey.messages.$key", args = args)
 

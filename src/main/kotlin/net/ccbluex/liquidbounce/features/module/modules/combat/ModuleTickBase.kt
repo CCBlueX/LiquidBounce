@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
@@ -29,14 +31,12 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -73,12 +73,17 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
     private val requiresKillAura by boolean("RequiresKillAura", true)
 
     private var ticksToSkip = 0
+
+    @Volatile
     private var tickBalance = 0f
     private var reachedTheLimit = false
 
-    private val tickBuffer = mutableListOf<TickData>()
+    private val tickBuffer = ArrayList<TickData>()
 
     override fun onDisabled() {
+        ticksToSkip = 0
+        tickBalance = 0f
+        reachedTheLimit = false
         tickBuffer.clear()
     }
 
@@ -148,7 +153,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
                     tickBalance -= 1
                 }
 
-                ModuleDebug.debugParameter(this, "Recommended Skip", bestTick)
+                debugParameter("Recommended Skip") { bestTick }
                 ticksToSkip = 0
             }
 
@@ -165,8 +170,8 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
                     }
                 }
 
-                ModuleDebug.debugParameter(this, "Total Skipped", totalSkipped)
-                ModuleDebug.debugParameter(this, "Recommended Skip", bestTick)
+                debugParameter("Total Skipped") { totalSkipped }
+                debugParameter("Recommended Skip") { bestTick }
 
                 ticksToSkip = totalSkipped + pause
                 waitTicks(ticksToSkip)
@@ -191,7 +196,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         if (tickBalance <= 0) {
             reachedTheLimit = true
         }
-        if (tickBalance > balanceMaxValue / 2) {
+        if (tickBalance * 2 > balanceMaxValue) {
             reachedTheLimit = false
         }
         if (tickBalance <= balanceMaxValue) {
@@ -205,6 +210,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         val tickRange = 0 until min(tickBalance.toInt(), maxTicksAtATime)
         val snapshots = simulatedPlayer.getSnapshotsBetween(tickRange)
 
+        tickBuffer.ensureCapacity(snapshots.size)
         snapshots.mapTo(tickBuffer) { snapshot ->
             TickData(
                 snapshot.pos,
@@ -222,11 +228,12 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         }
 
         renderEnvironmentForWorld(event.matrixStack) {
-            withColor(lineColor) {
-                drawLineStrip(positions = tickBuffer.mapArray { tick ->
+            drawLineStrip(
+                argb = lineColor.toARGB(),
+                positions = tickBuffer.mapToArray { tick ->
                     relativeToCamera(tick.position).toVec3()
-                })
-            }
+                }
+            )
         }
     }
 
@@ -254,7 +261,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
     @Suppress("unused")
     private enum class TickBaseCall(
         override val choiceName: String,
-        val tick: () -> Unit
+        private val tick: Runnable
     ) : NamedChoice {
 
         /**
@@ -273,7 +280,9 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
          * This was the previous default behavior of the TickBase,
          * so it is kept for compatibility reasons.
          */
-        PLAYER("Player", { player.tick() })
+        PLAYER("Player", { player.tick() });
+
+        fun tick() = tick.run()
     }
 
 }

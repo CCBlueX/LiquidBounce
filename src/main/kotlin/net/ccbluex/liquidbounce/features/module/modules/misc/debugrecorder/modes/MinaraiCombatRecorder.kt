@@ -29,9 +29,10 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.render.BoxRenderer
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -149,28 +150,28 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
         // Wait until entity is not in combat
         var inactivity = 0
         var buffer: MutableList<TrainingData>? = null
-        waitUntil {
+        tickUntil {
             if (entity.isDead || entity.isRemoved || doNotTrack) {
-                return@waitUntil true
+                return@tickUntil true
             }
 
             val rotation = RotationManager.currentRotation ?: player.rotation
             val distance = player.eyePos.distanceTo(entity.eyePos) + 1.0
-            ModuleDebug.debugParameter(this, "Distance", distance)
+            debugParameter("Distance") { distance }
             val raytraceTarget = raytraceEntity(distance, rotation) { e ->
                 e == entity
             }
 
             if (raytraceTarget?.entity == null) {
                 inactivity++
-                ModuleDebug.debugParameter(this, "Inactivity", inactivity)
-                return@waitUntil inactivity > 20
+                debugParameter("Inactivity") { inactivity }
+                return@tickUntil inactivity > 20
             } else {
                 buffer = trainingCollection[entityId]
                 inactivity = 0
             }
 
-            return@waitUntil false
+            return@tickUntil false
         }
 
         targetEntityId = null
@@ -186,36 +187,36 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
         val matrixStack = event.matrixStack
 
         renderEnvironmentForWorld(matrixStack) {
-            BoxRenderer.drawWith(this) {
-                targetTracker.targets().forEach { entity ->
-                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
-                    val eyePos = pos.add(0.0, entity.standingEyeHeight.toDouble(), 0.0)
-                    val box = Box(
-                        0.0,
-                        entity.standingEyeHeight.toDouble(),
-                        0.0,
-                        0.0,
-                        entity.standingEyeHeight.toDouble(),
-                        0.0
-                    ).expand(0.1)
+            startBatch()
+            targetTracker.targets().forEach { entity ->
+                val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                val eyePos = pos.add(0.0, entity.standingEyeHeight.toDouble(), 0.0)
+                val box = Box(
+                    0.0,
+                    entity.standingEyeHeight.toDouble(),
+                    0.0,
+                    0.0,
+                    entity.standingEyeHeight.toDouble(),
+                    0.0
+                ).expand(0.1)
 
-                    val color = if (targetEntityId == entity.id) {
-                        Color4b.GREEN
-                    } else if (fightMap.contains(entity.id)) {
-                        Color4b.YELLOW
-                    } else {
-                        Color4b.RED
-                    }
+                val color = if (targetEntityId == entity.id) {
+                    Color4b.GREEN
+                } else if (fightMap.contains(entity.id)) {
+                    Color4b.YELLOW
+                } else {
+                    Color4b.RED
+                }
 
-                    withPositionRelativeToCamera(pos) {
-                        drawBox(
-                            box,
-                            color.with(a = 50),
-                            color.with(a = 150)
-                        )
-                    }
+                withPositionRelativeToCamera(pos) {
+                    drawBox(
+                        box,
+                        color.with(a = 50),
+                        color.with(a = 150)
+                    )
                 }
             }
+            commitBatch()
         }
     }
 

@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
+import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
@@ -27,44 +29,52 @@ import net.minecraft.text.HoverEvent
 import net.minecraft.text.MutableText
 import java.util.*
 
-fun interface CommandHandler {
-    operator fun invoke(command: Command, args: Array<Any>)
-}
-
 @Suppress("LongParameterList")
 class Command(
     val name: String,
-    val aliases: Array<out String>,
-    val parameters: Array<Parameter<*>>,
-    val subcommands: Array<Command>,
+    val aliases: List<String>,
+    val parameters: List<Parameter<*>>,
+    val subcommands: List<Command>,
     val executable: Boolean,
-    val handler: CommandHandler?,
+    val handler: Handler?,
     val requiresIngame: Boolean,
-) : MinecraftShortcuts {
+) : MinecraftShortcuts, DebuggedOwner {
     var parentCommand: Command? = null
         private set
+    var index: Int = -1
+        internal set
 
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
     val description: String
-        get() = translation("$translationBaseKey.description").convertToString()
+        get() = translation("$translationBaseKey.description").string
+
+    /**
+     * For navigation purposes.
+     * Key: name or alias
+     * Value: corresponding subcommand
+     */
+    internal val subcommandMap = Object2ObjectRBTreeMap<String, Command>(String.CASE_INSENSITIVE_ORDER)
 
     init {
-        subcommands.forEach {
-            check(it.parentCommand == null) {
+        subcommands.forEachIndexed { i, command ->
+            check(command.parentCommand == null) {
                 "Subcommand already has parent command"
             }
+            subcommandMap.putCommand(command)
 
-            it.parentCommand = this
+            command.index = i
+            command.parentCommand = this
         }
 
-        parameters.forEach {
-            check(it.command == null) {
+        parameters.forEachIndexed { i, param ->
+            check(param.command == null) {
                 "Parameter already has a command"
             }
 
-            it.command = this
+            param.index = i
+            param.command = this
         }
     }
 
@@ -122,7 +132,7 @@ class Command(
         hover: HoverEvent? = HoverEvent(HoverEvent.Action.SHOW_TEXT, translation("liquidbounce.tooltip.clickToCopy"))
     ) {
         val displayComponent = textComponent ?: markAsError("N/A")
-        val content = copyContent ?: displayComponent.convertToString()
+        val content = copyContent ?: displayComponent.string
 
         chat(formatting(result(key, displayComponent)).copyable(copyContent = content, hover = hover))
     }
@@ -250,4 +260,26 @@ class Command(
 
         suggestions.forEach(builder::suggest)
     }
+
+    fun interface Handler {
+        operator fun Context.invoke()
+
+        class Context(@JvmField val command: Command, @JvmField val args: Array<out Any>)
+
+        fun interface Suspend {
+            suspend operator fun Context.invoke()
+        }
+    }
+
+    /**
+     * Provides a [Command] to the [CommandManager].
+     */
+    fun interface Factory {
+
+        /**
+         * Creates the [Command] and is run only once by the [CommandManager].
+         */
+        fun createCommand(): Command
+    }
+
 }

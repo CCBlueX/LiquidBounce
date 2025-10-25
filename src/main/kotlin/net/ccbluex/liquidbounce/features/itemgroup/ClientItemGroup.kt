@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.itemgroup
 
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
 import net.minecraft.item.ItemGroup
@@ -26,6 +26,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
 import net.minecraft.util.Identifier
+import java.util.function.Consumer
 import java.util.function.Supplier
 
 /**
@@ -34,18 +35,18 @@ import java.util.function.Supplier
 open class ClientItemGroup(
     val plainName: String,
     val icon: Supplier<ItemStack>,
-    val items: (items: ItemGroup.Entries) -> Unit
+    val items: Consumer<ItemGroup.Entries>,
 ) {
 
     // Create item group and assign to minecraft groups
     fun setup(): ItemGroup {
         // Expand array
         val itemGroup = FabricItemGroup.builder()
-            .displayName(plainName.asText())
+            .displayName(plainName.asPlainText())
             .icon(icon)
             .entries { displayContext, entries ->
                 runCatching {
-                    items(entries)
+                    items.accept(entries)
                 }.onFailure {
                     logger.error("Unable to create item group $plainName", it)
                 }

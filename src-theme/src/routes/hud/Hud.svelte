@@ -7,9 +7,9 @@
     import HotBar from "./elements/hotbar/HotBar.svelte";
     import Scoreboard from "./elements/Scoreboard.svelte";
     import {onMount} from "svelte";
-    import {getComponents, getGameWindow} from "../../integration/rest";
+    import {getComponents, getGameWindow, getMetadata} from "../../integration/rest";
     import {listen} from "../../integration/ws";
-    import type {Component} from "../../integration/types";
+    import type {Component, Metadata} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
     import type {ComponentsUpdateEvent, ScaleFactorChangeEvent} from "../../integration/events";
     import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
@@ -23,13 +23,15 @@
     import KeyBinds from "./elements/KeyBinds.svelte";
 
     let zoom = 100;
+    let metadata: Metadata;
     let components: Component[] = [];
 
     onMount(async () => {
         const gameWindow = await getGameWindow();
         zoom = gameWindow.scaleFactor * 50;
 
-        components = await getComponents();
+        metadata = await getMetadata();
+        components = await getComponents(metadata.id);
     });
 
     listen("scaleFactorChange", (data: ScaleFactorChangeEvent) => {
@@ -37,6 +39,11 @@
     });
 
     listen("componentsUpdate", (data: ComponentsUpdateEvent) => {
+        if (data.id != metadata.id) {
+            // reject
+            return;
+        }
+
         // force update to re-render
         components = [];
         components = data.components;

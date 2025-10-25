@@ -23,13 +23,12 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.client.logger
-import kotlin.reflect.KClass
 
 class ScriptChoice(choiceObject: Map<String, Any>, override val parent: ChoiceConfigurable<Choice>) : Choice(
     name = choiceObject["name"] as String,
 ) {
 
-    private val events = hashMapOf<String, (Any?) -> Unit>()
+    private val events = hashMapOf<String, org.graalvm.polyglot.Value>()
     private val _values = linkedMapOf<String, Value<*>>()
 
     /**
@@ -52,7 +51,12 @@ class ScriptChoice(choiceObject: Map<String, Any>, override val parent: ChoiceCo
      * @param eventName Name of the event.
      * @param handler JavaScript function used to handle the event.
      */
-    fun on(eventName: String, handler: (Any?) -> Unit) {
+    fun on(eventName: String, handler: org.graalvm.polyglot.Value) {
+        if (!handler.canExecute()) {
+            logger.error("Invalid event handler for $eventName")
+            return
+        }
+
         events[eventName] = handler
         hookHandler(eventName)
     }
@@ -66,7 +70,7 @@ class ScriptChoice(choiceObject: Map<String, Any>, override val parent: ChoiceCo
      */
     private fun callEvent(event: String, payload: Event? = null) {
         try {
-            events[event]?.invoke(payload)
+            events[event]?.executeVoid(payload)
         } catch (throwable: Throwable) {
             logger.error("Script caused exception in module $name on $event event!", throwable)
         }
@@ -77,10 +81,10 @@ class ScriptChoice(choiceObject: Map<String, Any>, override val parent: ChoiceCo
      */
     private fun hookHandler(eventName: String) {
         // Get event case-insensitive
-        val clazz = LOWERCASE_NAME_EVENT_MAP[eventName.lowercase()] ?: return
+        val clazz = EVENT_NAME_TO_CLASS[eventName] ?: return
 
         EventManager.registerEventHook(
-            clazz.java,
+            clazz,
             EventHook(
                 this,
                 {
@@ -88,13 +92,5 @@ class ScriptChoice(choiceObject: Map<String, Any>, override val parent: ChoiceCo
                 }
             )
         )
-    }
-
-    companion object {
-        /**
-         * Maps the lowercase name of the event to the event's kotlin class
-         */
-        private val LOWERCASE_NAME_EVENT_MAP: Map<String, KClass<out Event>> =
-            ALL_EVENT_CLASSES.associateBy { it.eventName.lowercase() }
     }
 }

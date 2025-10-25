@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
@@ -63,8 +64,12 @@ internal object VelocityGrim2344 : VelocityMode("Grim2344-117") {
             event.cancelEvent()
             waitTicks(1)
             repeat(if (alternativeBypass) 4 else 1) {
-                network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround,
-                    player.horizontalCollision))
+                network.sendPacket(
+                    Full(
+                        player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround,
+                        player.horizontalCollision
+                    )
+                )
             }
             network.sendPacket(
                 PlayerActionC2SPacket(

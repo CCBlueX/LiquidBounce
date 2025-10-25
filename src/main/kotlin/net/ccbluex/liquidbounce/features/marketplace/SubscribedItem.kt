@@ -1,13 +1,37 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package net.ccbluex.liquidbounce.features.marketplace
 
+import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.api.core.HttpClient.download
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemStatus
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.io.extractZip
+import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
 import java.io.File
 
 data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceItemType, var installedRevisionId: Int?) {
@@ -106,6 +130,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
         }
 
         val revisionDir = itemDir.resolve(revisionId.toString())
+        val previousRevisionDir = installedRevisionId?.let { itemDir.resolve(it.toString()) }
 
         try {
             val taskProgressUpdater = subTask?.let { subTask ->
@@ -119,6 +144,7 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             extractZip(revisionArchiveFile, revisionDir)
 
             installedRevisionId = revisionId
+            ConfigSystem.store(MarketplaceManager)
         } catch (exception: Exception) {
             if (revisionDir.exists()) {
                 revisionDir.deleteRecursively()
@@ -129,8 +155,16 @@ data class SubscribedItem(val name: String, val id: Int, val type: MarketplaceIt
             revisionArchiveFile.delete()
         }
 
-        // Reload the item type's manager.
-        type.reload()
+        try {
+            previousRevisionDir?.deleteRecursively()
+        } catch (exception: Exception) {
+            logger.warn("Failed to delete previous revision directory", exception)
+        }
+
+        // Reload the item type's manager on the render thread.
+        withContext(MinecraftDispatcher) {
+            type.reload()
+        }
     }
 
 

@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.module.teleport
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
@@ -44,7 +43,7 @@ import kotlin.math.abs
  *
  * Module: [ModuleTeleport]
  */
-object CommandVClip : CommandFactory {
+object CommandVClip : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -59,7 +58,7 @@ object CommandVClip : CommandFactory {
                             .required()
                             .build()
                     )
-                    .handler { command, args ->
+                    .handler {
                         val dy = (args[0] as String).toDoubleOrNull()
                             ?: run {
                                 chat(
@@ -91,13 +90,13 @@ object CommandVClip : CommandFactory {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 performAutomaticClip(args, command, direction)
             }
             .build()
     }
 
-    private fun performAutomaticClip(args: Array<Any>, command: Command, direction: Direction) {
+    private fun performAutomaticClip(args: Array<out Any>, command: Command, direction: Direction) {
         val max = if (args.isNotEmpty()) {
             abs((args[0] as String).toIntOrNull() ?: run {
                 chat(markAsError(translation("liquidbounce.command.vclip.result.invalidDistance")), command)

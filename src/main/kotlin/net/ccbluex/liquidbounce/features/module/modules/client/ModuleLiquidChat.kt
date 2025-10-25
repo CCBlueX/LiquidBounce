@@ -21,12 +21,13 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CANCEL_PREVIOUS
-import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.DISCARD_LATEST
+import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CancelPrevious
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.chat.ChatClient
 import net.ccbluex.liquidbounce.features.chat.packet.ServerRequestJWTPacket
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -43,7 +44,8 @@ import net.minecraft.util.Formatting
 import kotlin.time.Duration.Companion.seconds
 
 object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = true, state = true,
-    aliases = arrayOf("GlobalChat", "IRC")) {
+    aliases = listOf("GlobalChat", "IRC")
+) {
 
     private var jwtToken by text("JwtToken", "")
 
@@ -68,7 +70,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
                 .vararg()
                 .build()
         )
-        .handler { _, args ->
+        .handler {
             if (!chatClient.connected) {
                 chat(
                     prefix, translation("liquidbounce.liquidchat.notConnected").formatted(Formatting.GRAY),
@@ -91,7 +93,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
 
     private fun createChatJwtCommand() = CommandBuilder
         .begin("chatjwt")
-        .handler { _, _ ->
+        .handler {
             if (!chatClient.connected) {
                 chat(
                     prefix, translation("liquidbounce.liquidchat.notConnected").formatted(Formatting.GRAY),
@@ -122,12 +124,12 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    val shutdownHandler = handler<ClientShutdownEvent> {
+    private val shutdownHandler = handler<ClientShutdownEvent> {
         chatClient.disconnect()
     }
 
     @Suppress("unused")
-    val repeatable = suspendHandler<GameTickEvent>(behavior = DISCARD_LATEST) {
+    private val repeatable = tickHandler(Dispatchers.IO) {
         if (!chatClient.connected) {
             chatClient.connect()
         } else {
@@ -137,12 +139,12 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    val sessionChange = suspendHandler<SessionEvent>(behavior = CANCEL_PREVIOUS) {
+    private val sessionChange = suspendHandler<SessionEvent>(behavior = CancelPrevious) {
         chatClient.reconnect()
     }
 
     @Suppress("unused")
-    val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
+    private val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
         fun prefix(): MutableText = when (event.chatGroup) {
             ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT ->
                 event.user.name.asText().formatted(Formatting.GRAY).copyable(copyContent = event.user.name)
@@ -168,13 +170,13 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    val handleIncomingJwtToken = suspendHandler<ClientChatJwtTokenEvent>(behavior = CANCEL_PREVIOUS) { event ->
+    private val handleIncomingJwtToken = suspendHandler<ClientChatJwtTokenEvent>(behavior = CancelPrevious) { event ->
         jwtToken = event.jwt
         chatClient.reconnect()
     }
 
     @Suppress("unused")
-    val handleStateChange = handler<ClientChatStateChange> {
+    private val handleStateChange = handler<ClientChatStateChange> {
         when (it.state) {
             ClientChatStateChange.State.CONNECTED -> {
                 notification(

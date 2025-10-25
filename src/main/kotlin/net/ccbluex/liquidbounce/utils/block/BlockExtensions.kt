@@ -49,6 +49,7 @@ import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
 import net.minecraft.world.RaycastContext
+import java.util.function.Consumer
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -96,6 +97,22 @@ val BlockPos.outlineBox: Box
 
 val BlockPos.collisionShape: VoxelShape
     get() = this.getState()!!.getCollisionShape(world, this)
+
+fun VoxelShape.offset(pos: Vec3i): VoxelShape = offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+
+fun VoxelShape.getClosestSquaredDistanceTo(position: Position): Double {
+    var minDistanceSq = Double.MAX_VALUE
+    forEachBox { minX, minY, minZ, maxX, maxY, maxZ ->
+        val nearestX = position.x.coerceIn(minX, maxX)
+        val nearestY = position.y.coerceIn(minY, maxY)
+        val nearestZ = position.z.coerceIn(minZ, maxZ)
+        val distanceSq = (position.x - nearestX).sq() + (position.y - nearestY).sq() + (position.z - nearestZ).sq()
+        if (distanceSq < minDistanceSq) {
+            minDistanceSq = distanceSq
+        }
+    }
+    return minDistanceSq
+}
 
 /**
  * Shrinks a VoxelShape by the specified amounts on selected axes.
@@ -147,33 +164,6 @@ fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelS
 val Block.mustBePlacedOnUpperSide: Boolean
     get() {
         return this is SlabBlock || this is StairsBlock
-    }
-
-val BlockPos.hasEntrance: Boolean
-    get() {
-        val block = this.getBlock()
-        val cache = BlockPos.Mutable()
-        return DIRECTIONS_EXCLUDING_DOWN.any {
-            val neighbor = cache.set(this, it)
-            neighbor.collisionShape == VoxelShapes.empty() && neighbor.getBlock() !== block
-        }
-    }
-
-val BlockPos.weakestNeighbor: BlockPos?
-    get() {
-        val block = this.getBlock()
-        val cache = BlockPos.Mutable()
-        val neighbors = DIRECTIONS_EXCLUDING_DOWN.mapNotNullTo(mutableListOf()) {
-            val neighbor = cache.set(this, it)
-            val state = neighbor.getState() ?: return@mapNotNullTo null
-            if (state.block !== block && !state.isAir) neighbor.toImmutable() else null
-        }
-
-        if (neighbors.isEmpty()) return null
-
-        val comparator = compareBy<BlockPos> { it.getBlock()?.hardness ?: 0f }
-            .thenBy { it.getCenterDistanceSquaredEyes() }
-        return neighbors.minWith(comparator)
     }
 
 /**
@@ -235,24 +225,21 @@ fun BlockPos.searchBlocksInCuboid(radius: Int): BlockBox =
 fun BlockPos.searchBedLayer(state: BlockState, layers: Int): Sequence<IntLongPair> {
     check(state.isBed) { "This function is only available for Beds" }
 
-    var bedDirection = state.get(BedBlock.FACING)
-    var opposite = bedDirection.opposite
+    val anotherPartDirection = state.anotherBedPartDirection()!!
+    val bedDirection = anotherPartDirection.opposite
 
-    if (BedBlock.getBedPart(state) != DoubleBlockProperties.Type.FIRST) {
-        opposite = bedDirection
-        bedDirection = bedDirection.opposite
-    }
-
-    var left = Direction.WEST
-    var right = Direction.EAST
-
+    val left: Direction
+    val right: Direction
     if (bedDirection.axis == Direction.Axis.X) {
         left = Direction.SOUTH
         right = Direction.NORTH
+    } else {
+        left = Direction.WEST
+        right = Direction.EAST
     }
 
     return searchLayer(layers, bedDirection, Direction.UP, left, right) +
-        offset(opposite).searchLayer(layers, opposite, Direction.UP, left, right)
+        offset(anotherPartDirection).searchLayer(layers, anotherPartDirection, Direction.UP, left, right)
 }
 
 /**
@@ -382,6 +369,19 @@ fun BlockState?.anotherChestPartDirection(): Direction? {
     return ChestBlock.getFacing(this)
 }
 
+fun BlockState?.anotherBedPartDirection(): Direction? {
+    if (this?.block !is BedBlock) return null
+
+    // [body|head] -> (facing)
+    val bedFacing = this.get(BedBlock.FACING)
+
+    return if (BedBlock.getBedPart(this) == DoubleBlockProperties.Type.FIRST) {
+        bedFacing.opposite
+    } else {
+        bedFacing
+    }
+}
+
 /**
  * Check if box is reaching of specified blocks
  */
@@ -463,14 +463,23 @@ fun BlockState.canBeReplacedWith(
 enum class SwingMode(
     override val choiceName: String,
     val serverSwing: Boolean,
-    val swing: (Hand) -> Unit = { }
-) : NamedChoice {
+) : NamedChoice, Consumer<Hand> {
 
-    DO_NOT_HIDE("DoNotHide", true, { player.swingHand(it) }),
+    DO_NOT_HIDE("DoNotHide", true),
     HIDE_BOTH("HideForBoth", false),
-    HIDE_CLIENT("HideForClient", true, { network.sendPacket(HandSwingC2SPacket(it)) }),
-    HIDE_SERVER("HideForServer", false, { player.swingHand(it, false) });
+    HIDE_CLIENT("HideForClient", true),
+    HIDE_SERVER("HideForServer", false);
 
+    fun swing(hand: Hand) = accept(hand)
+
+    override fun accept(hand: Hand) {
+        when (this) {
+            DO_NOT_HIDE -> player.swingHand(hand)
+            HIDE_BOTH -> {}
+            HIDE_CLIENT -> network.sendPacket(HandSwingC2SPacket(hand))
+            HIDE_SERVER -> player.swingHand(hand, false)
+        }
+    }
 }
 
 fun doPlacement(
@@ -577,17 +586,17 @@ fun doBreak(
     if (immediate) {
         EventManager.callEvent(BlockBreakingProgressEvent(blockPos))
 
-        network.sendPacket(
+        interaction.sendSequencedPacket(world) { sequence ->
             PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction
+                PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction, sequence
             )
-        )
+        }
         swingMode.swing(Hand.MAIN_HAND)
-        network.sendPacket(
+        interaction.sendSequencedPacket(world) { sequence ->
             PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction
+                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction, sequence
             )
-        )
+        }
         return
     }
 
@@ -665,6 +674,8 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
         || this is ShulkerBoxBlock || this is StonecutterBlock
         || this is SweetBerryBushBlock && (blockState?.get(SweetBerryBushBlock.AGE) ?: 2) > 1 || this is TrapdoorBlock
 }
+
+val BlockState?.isInteractable: Boolean get() = this?.block?.isInteractable(this) ?: false
 
 fun BlockPos.isBlockedByEntities(): Boolean {
     val posBox = FULL_BOX.offset(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())

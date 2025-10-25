@@ -18,11 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.systems.RenderSystem
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks.*
 import net.minecraft.util.math.BlockPos
@@ -44,7 +47,7 @@ object ModuleXRay : ClientModule("XRay", Category.RENDER) {
     private val exposedOnly by boolean("ExposedOnly", false)
         .onChanged(::valueChangedReload)
 
-    private val defaultBlocks = setOf(
+    private val defaultBlocks = arrayOf(
         // Overworld ores
         COAL_ORE,
         COPPER_ORE,
@@ -174,9 +177,9 @@ object ModuleXRay : ClientModule("XRay", Category.RENDER) {
     )
 
     // Set of blocks that will not be excluded
-    val blocks by blocks(
+    val blocks: MutableSet<Block> by blocks(
         "Blocks",
-        defaultBlocks.toMutableSet()
+        ReferenceOpenHashSet(defaultBlocks)
     ).onChanged(::valueChangedReload)
 
     /**
@@ -187,8 +190,10 @@ object ModuleXRay : ClientModule("XRay", Category.RENDER) {
     fun shouldRender(blockState: BlockState, blockPos: BlockPos) = when {
         blockState.block !in blocks -> false
 
-        exposedOnly -> Direction.entries.any {
-            blockPos.add(it.vector)?.let { pos -> pos.getState()?.isSolidBlock(world, pos) } == false
+        exposedOnly -> Pools.MutableBlockPos.use { pos ->
+            Direction.entries.any {
+                pos.set(blockPos).move(it.vector).getState()?.isSolidBlock(world, pos) == false
+            }
         }
 
         else -> true
@@ -220,7 +225,7 @@ object ModuleXRay : ClientModule("XRay", Category.RENDER) {
 
     @Suppress("UNUSED_PARAMETER")
     fun valueChangedReload(it: Any) {
-        RenderSystem.recordRenderCall {
+        mc.execute {
             // Reload world renderer on block list change
             mc.worldRenderer.reload()
         }

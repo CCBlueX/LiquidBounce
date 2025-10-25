@@ -41,7 +41,7 @@ import net.minecraft.util.math.RotationAxis
  * If they are not willing to contribute, please do not add the animation to this module.
  */
 @Suppress("MagicNumber")
-object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = arrayOf("ViewModel")) {
+object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = listOf("ViewModel")) {
 
     init {
         tree(MainHand)

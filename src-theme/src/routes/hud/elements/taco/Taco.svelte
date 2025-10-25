@@ -18,7 +18,7 @@
   .taco {
     position: relative;
     height: 60px;
-    background-color: red;
+    background-color: transparent;
 
     img {
       position: absolute;

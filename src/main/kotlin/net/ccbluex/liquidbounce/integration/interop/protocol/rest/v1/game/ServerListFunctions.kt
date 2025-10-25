@@ -22,7 +22,6 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
-import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.ResourcePolicy
@@ -90,7 +89,7 @@ fun postConnect(requestObject: RequestObject): FullHttpResponse {
 
     val serverAddress = ServerAddress.parse(serverInfo.address)
 
-    RenderSystem.recordRenderCall {
+    mc.execute {
         ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
     }
     return httpNoContent()

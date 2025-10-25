@@ -22,12 +22,11 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.network
 
-object CommandSay : CommandFactory {
+object CommandSay : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -41,7 +40,7 @@ object CommandSay : CommandFactory {
                     .vararg()
                     .build()
             )
-            .handler { _, args ->
+            .handler {
                 val message = (args[0] as Array<*>).joinToString(" ") { it as String }
 
                 network.sendChatMessage(message)

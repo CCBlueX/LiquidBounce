@@ -41,7 +41,7 @@ object CommandClientDestructSubcommand {
                 .optional()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val confirm = args.getOrNull(0) as Boolean? == true
             if (!confirm) {
                 chat(

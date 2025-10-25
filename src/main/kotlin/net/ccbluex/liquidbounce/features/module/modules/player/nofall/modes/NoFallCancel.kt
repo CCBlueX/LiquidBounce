@@ -22,12 +22,10 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
-internal object NoFallCancel : Choice("Cancel") {
+internal object NoFallCancel : NoFallMode("Cancel") {
 
     private val fallDistance = choices("FallDistance", Smart,
         arrayOf(Smart, Constant))
@@ -35,9 +33,6 @@ internal object NoFallCancel : Choice("Cancel") {
     private val cancelSetback by boolean("CancelSetbackPacket", false)
 
     private var isFalling = false
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
@@ -90,7 +85,7 @@ internal object NoFallCancel : Choice("Cancel") {
 
     private object Smart : DistanceMode("Smart") {
         override val value: Float
-            get() = player.getAttributeValue(EntityAttributes.SAFE_FALL_DISTANCE).toFloat()
+            get() = playerSafeFallDistance.toFloat()
     }
 
     private object Constant : DistanceMode("Constant") {

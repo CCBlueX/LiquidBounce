@@ -20,7 +20,6 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import com.mojang.blaze3d.systems.RenderSystem
 import com.viaversion.viafabricplus.ViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility1_8
@@ -34,7 +33,7 @@ val usesViaFabricPlus = runCatching {
     // Register ViaFabricPlus protocol version change callback
     ViaFabricPlus.getImpl().registerOnChangeProtocolVersionCallback { _, _ ->
         // Update the window title
-        RenderSystem.recordRenderCall {
+        mc.execute {
             mc.updateWindowTitle()
         }
     }

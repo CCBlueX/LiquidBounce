@@ -37,7 +37,7 @@ object CommandClientAccountSubcommand {
         .build()
 
     private fun infoSubcommand() = CommandBuilder.begin("info")
-        .suspendHandler { _, _ ->
+        .suspendHandler {
             if (ClientAccountManager.clientAccount == EMPTY_ACCOUNT) {
                 chat(regular("You are not logged in."))
                 return@suspendHandler
@@ -59,7 +59,7 @@ object CommandClientAccountSubcommand {
         }.build()
 
     private fun logoutSubcommand() = CommandBuilder.begin("logout")
-        .suspendHandler { _, _ ->
+        .suspendHandler {
             if (ClientAccountManager.clientAccount == EMPTY_ACCOUNT) {
                 chat(regular("You are not logged in."))
                 return@suspendHandler
@@ -74,7 +74,7 @@ object CommandClientAccountSubcommand {
         }.build()
 
     private fun loginSubcommand() = CommandBuilder.begin("login")
-        .suspendHandler { _, _ ->
+        .suspendHandler {
             if (ClientAccountManager.clientAccount != EMPTY_ACCOUNT) {
                 chat(regular("You are already logged in."))
                 return@suspendHandler

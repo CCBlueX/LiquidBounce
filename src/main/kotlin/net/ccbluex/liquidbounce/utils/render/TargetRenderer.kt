@@ -34,9 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
 import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
-import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.client.render.VertexFormat
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -172,27 +170,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 val alpha = MathHelper.clamp(color.a - (i * alphaFactor), 0, color.a)
                 val renderColor = color.alpha(alpha)
 
-                drawCustomMesh(
-                    VertexFormat.DrawMode.QUADS,
-                    VertexFormats.POSITION_TEXTURE_COLOR,
-                    ShaderProgramKeys.POSITION_TEX_COLOR
-                ) { matrix ->
-                    vertex(matrix, 0.0f, -size, 0.0f)
-                        .texture(0.0f, 0.0f)
-                        .color(renderColor.toARGB())
-
-                    vertex(matrix, -size, -size, 0.0f)
-                        .texture(0.0f, 1.0f)
-                        .color(renderColor.toARGB())
-
-                    vertex(matrix, -size, 0.0f, 0.0f)
-                        .texture(1.0f, 1.0f)
-                        .color(renderColor.toARGB())
-
-                    vertex(matrix, 0.0f, 0.0f, 0.0f)
-                        .texture(1.0f, 0.0f)
-                        .color(renderColor.toARGB())
-                }
+                drawSquareTexture(size, renderColor.toARGB())
 
                 with(matrixStack) {
                     translate(-size / 2.0, -size / 2.0, 0.0)
@@ -200,9 +178,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                     multiply(RotationAxis.POSITIVE_Y.rotationDegrees(mc.gameRenderer.camera.yaw))
                     translate(size / 2.0, size / 2.0, 0.0)
 
-                    with(translateAfter(sin, cos)) {
-                        translate(x, y, z)
-                    }
+                    translate(translateAfter(sin, cos))
                 }
             }
         }
@@ -220,22 +196,19 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         private val color by color("Color", Color4b(0x64007CFF, true))
 
         private val extraYOffset by float("ExtraYOffset", 0.1f, 0f..1f)
+
         override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
             val box = Box(
                 -size.toDouble(), 0.0, -size.toDouble(),
                 size.toDouble(), height.toDouble(), size.toDouble()
             )
 
-            val pos =
-                entity.interpolateCurrentPosition(partialTicks) +
-                    Vec3d(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
-
+            val pos = entity.interpolateCurrentPosition(partialTicks)
+                .add(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
 
             with(env) {
-                withColor(color) {
-                    withPosition(relativeToCamera(pos)) {
-                        drawSolidBox(box)
-                    }
+                withPosition(relativeToCamera(pos)) {
+                    drawBox(box, color)
                 }
             }
         }
@@ -426,19 +399,14 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvi
                     Vec3d(0.0, entity.height.toDouble(), 0.0)
 
             val screenPos = calculateScreenPos(pos) ?: return
-
-            with(env) {
-                withColor(color) {
-                    drawCustomMesh(
-                        VertexFormat.DrawMode.TRIANGLE_STRIP,
-                        VertexFormats.POSITION,
-                        ShaderProgramKeys.POSITION
-                    ) {
-                        vertex(it, screenPos.x - 5 * size, screenPos.y - 10 * size, 1f)
-                        vertex(it, screenPos.x, screenPos.y, 1f)
-                        vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f)
-                    }
-                }
+            val argb = color.toARGB()
+            env.drawCustomMesh(
+                VertexFormat.DrawMode.TRIANGLE_STRIP,
+                VertexInputType.PosColor,
+            ) {
+                vertex(it, screenPos.x - 5 * size, screenPos.y - 10 * size, 1f).color(argb)
+                vertex(it, screenPos.x, screenPos.y, 1f).color(argb)
+                vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f).color(argb)
             }
         }
     }

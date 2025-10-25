@@ -68,7 +68,7 @@ class SimulatedPlayer(
     var input: SimulatedPlayerInput,
     override var pos: Vec3d,
     var velocity: Vec3d,
-    private var boundingBox: Box,
+    var boundingBox: Box,
     var yaw: Float,
     var pitch: Float,
     private var sprinting: Boolean,
@@ -364,7 +364,9 @@ class SimulatedPlayer(
     private fun applyMovementInput(movementInput: Vec3d?, slipperiness: Float): Vec3d {
         this.updateVelocity(this.getMovementSpeed(slipperiness), movementInput)
         this.velocity = applyClimbingSpeed(this.velocity)
+        this.velocity = applyWebSpeed(this.velocity)
         this.move(this.velocity)
+
 
         var vec3d = this.velocity
         if ((horizontalCollision || this.isJumping) && (
@@ -543,6 +545,18 @@ class SimulatedPlayer(
 
         return Vec3d(d, g, e)
     }
+    private fun applyWebSpeed(motion: Vec3d): Vec3d {
+        val blockState = world.getBlockState(pos.toBlockPos())
+        if (blockState.block != Blocks.COBWEB) {
+            return motion
+        }
+        val multiplier = if (hasStatusEffect(StatusEffects.WEAVING)) {
+            Vec3d(0.5, 0.25, 0.5)
+        } else {
+            Vec3d(0.25, 0.05, 0.25)
+        }
+        return motion.multiply(multiplier.x, multiplier.y, multiplier.z)
+    }
 
     private fun isClimbing(): Boolean {
         val blockPos = pos.toBlockPos()
@@ -633,7 +647,7 @@ class SimulatedPlayer(
     }
 
     protected fun shouldClipAtLedge(): Boolean {
-        return this.input.playerInput.sneak || this.input.forceSafeWalk
+        return !this.input.ignoreClippingAtLedge && (this.input.playerInput.sneak || this.input.forceSafeWalk)
     }
 
     private fun method_30263(): Boolean {
@@ -671,8 +685,12 @@ class SimulatedPlayer(
         return this.player.world.isSpaceEmpty(this.player, box) && !this.player.world.containsFluid(box)
     }
 
-    private fun swimUpward(water: TagKey<Fluid>?) {
-        velocity += Vec3d(0.0, 0.03999999910593033, 0.0)
+    private fun swimUpward(fluid: TagKey<Fluid>) {
+        velocity += Vec3d(
+            0.0,
+            if (fluid === FluidTags.WATER) 0.03999999910593033 else 0.005999999865889549,
+            0.0
+        )
     }
 
     private fun getVelocityAffectingPos() =
@@ -879,7 +897,8 @@ class SimulatedPlayer(
         val directionalInput: DirectionalInput,
         jumping: Boolean,
         var sprinting: Boolean,
-        sneaking: Boolean
+        sneaking: Boolean,
+        var ignoreClippingAtLedge: Boolean = false
     ) : Input() {
         var forceSafeWalk: Boolean = false
 

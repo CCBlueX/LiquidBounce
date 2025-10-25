@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.render.BoxRenderer
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -44,26 +44,26 @@ data class WireframePlayer(private var pos: Vec3d, private var yaw: Float, priva
 
     fun render(event: WorldRenderEvent, color: Color4b, outlineColor: Color4b) {
         renderEnvironmentForWorld(event.matrixStack) {
+            startBatch()
             withPositionRelativeToCamera(pos) {
                 val matrix = matrixStack.peek().positionMatrix
                 val yRot = -MathHelper.wrapDegrees(yaw.toDouble())
                 matrix.rotate(Quaternionf().rotationY(Math.toRadians(yRot).toFloat()))
                 matrix.scale(1.9f)
 
-                BoxRenderer.drawWith(this) {
-                    drawBox(RENDER_LEFT_LEG, color, outlineColor)
-                    drawBox(RENDER_RIGHT_LEG, color, outlineColor)
-                    drawBox(RENDER_BODY, color, outlineColor)
-                    drawBox(RENDER_LEFT_ARM, color, outlineColor)
-                    drawBox(RENDER_RIGHT_ARM, color, outlineColor)
+                drawBox(RENDER_LEFT_LEG, color, outlineColor)
+                drawBox(RENDER_RIGHT_LEG, color, outlineColor)
+                drawBox(RENDER_BODY, color, outlineColor)
+                drawBox(RENDER_LEFT_ARM, color, outlineColor)
+                drawBox(RENDER_RIGHT_ARM, color, outlineColor)
 
-                    matrix.translate(0f, RENDER_HEAD.minY.toFloat(), 0f)
-                    matrix.rotate(Quaternionf().rotationX(Math.toRadians(pitch.toDouble()).toFloat()))
-                    matrix.translate(0f, -RENDER_HEAD.minY.toFloat(), 0f)
+                matrix.translate(0f, RENDER_HEAD.minY.toFloat(), 0f)
+                matrix.rotate(Quaternionf().rotationX(Math.toRadians(pitch.toDouble()).toFloat()))
+                matrix.translate(0f, -RENDER_HEAD.minY.toFloat(), 0f)
 
-                    drawBox(RENDER_HEAD, color, outlineColor)
-                }
+                drawBox(RENDER_HEAD, color, outlineColor)
             }
+            commitBatch()
         }
     }
 

@@ -18,9 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
+import net.ccbluex.fastutil.synchronized
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.minecraft.entity.Entity
@@ -40,7 +39,7 @@ object SubmoduleSetDead : ToggleableConfigurable(ModuleCrystalAura, "SetDead", t
 
     object CrystalTracker : CrystalPostAttackTracker() {
 
-        val entities: Int2ObjectMap<EndCrystalEntity> = Int2ObjectMaps.synchronize(Int2ObjectOpenHashMap())
+        private val entities = Int2ObjectOpenHashMap<EndCrystalEntity>().synchronized()
 
         override fun attacked(id: Int) {
             if (!running) {

@@ -37,13 +37,13 @@ object CommandClientCosmeticsSubcommand {
         .build()
 
     private fun manageSubcommand() = CommandBuilder.begin("manage")
-        .handler { _, _ ->
+        .handler {
             browseUrl("https://user.liquidbounce.net/cosmetics")
         }
         .build()
 
     private fun refreshSubcommand() = CommandBuilder.begin("refresh")
-        .suspendHandler { _, _ ->
+        .suspendHandler {
             chat(
                 regular(
                     "Refreshing cosmetics..."

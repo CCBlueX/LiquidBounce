@@ -1,6 +1,6 @@
 name: 🐞 Bug report
 description: Create a report to help us improve
-title: "[BUG]"
+title: "[BUG] Description"
 
 body:
   - type: markdown
@@ -27,7 +27,7 @@ body:
     attributes:
       label: LiquidBounce Build/Version
       description: Which version of LiquidBounce does this bug affect?
-      placeholder: e.g. b61
+      placeholder: e.g. 0.33.0
     validations:
       required: true
 
@@ -50,8 +50,8 @@ body:
   - type: input
     attributes:
       label: Minecraft Version
-      description: Which Minecraft-Version does this bug affect?
-      placeholder: e.g. 1.16.5
+      description: Which Minecraft-Version and protocol version does this bug affect?
+      placeholder: e.g. 1.21.4 + 1.8.9 protocol
     validations:
       required: true
 

@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.module.teleport
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -35,7 +34,7 @@ import java.awt.datatransfer.StringSelection
  *
  * Module: [ModuleTeleport]
  */
-object CommandPlayerTeleport : CommandFactory, MinecraftShortcuts {
+object CommandPlayerTeleport : Command.Factory, MinecraftShortcuts {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -54,7 +53,7 @@ object CommandPlayerTeleport : CommandFactory, MinecraftShortcuts {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val player = world.players.find { it.gameProfile.name.equals(args[0] as String, true) }
                     ?: throw CommandException(command.result("playerNotFound"))
 

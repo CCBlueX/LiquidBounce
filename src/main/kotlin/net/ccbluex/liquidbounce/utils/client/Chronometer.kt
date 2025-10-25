@@ -18,15 +18,17 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-class Chronometer(private var lastUpdate: Long = 0) {
+class Chronometer @JvmOverloads constructor(private var lastUpdate: Long = 0) {
 
     val elapsed: Long
         get() = System.currentTimeMillis() - lastUpdate
 
     fun elapsedUntil(time: Long) = time - lastUpdate
 
+    @JvmOverloads
     fun hasElapsed(ms: Long = 0) = lastUpdate + ms < System.currentTimeMillis()
 
+    @JvmOverloads
     fun hasAtLeastElapsed(ms: Long = 0) = lastUpdate + ms <= System.currentTimeMillis()
 
     @JvmOverloads
@@ -36,6 +38,10 @@ class Chronometer(private var lastUpdate: Long = 0) {
 
     fun waitForAtLeast(ms: Long) {
         this.lastUpdate = this.lastUpdate.coerceAtLeast(System.currentTimeMillis() + ms)
+    }
+
+    override fun toString(): String {
+        return "Chronometer(lastUpdate=$lastUpdate)"
     }
 
 }

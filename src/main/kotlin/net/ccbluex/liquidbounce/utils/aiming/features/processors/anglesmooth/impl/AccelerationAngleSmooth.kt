@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl
 
 import it.unimi.dsi.fastutil.floats.FloatFloatPair
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -30,8 +32,6 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
-import net.ccbluex.liquidbounce.utils.kotlin.component1
-import net.ccbluex.liquidbounce.utils.kotlin.component2
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.util.math.MathHelper
 import kotlin.math.abs
@@ -42,7 +42,9 @@ import kotlin.math.max
 class AccelerationAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Acceleration", parent) {
 
     private val yawAcceleration by floatRange("YawAcceleration", 20f..25f, 1f..180f)
-    private val pitchAcceleration by floatRange("PitchAccelelation", 20f..25f, 1f..180f)
+    private val pitchAcceleration by floatRange(
+        "PitchAcceleration", 20f..25f, 1f..180f, aliases = listOf("PitchAccelelation")
+    )
 
     private inner class DynamicAccel : ToggleableConfigurable(this, "DynamicAccel", false) {
         val coefDistance by float("CoefDistance", -1.393f, -2f..2f)

@@ -48,7 +48,7 @@ object ModuleVomit : ClientModule("Vomit", Category.FUN) {
 
             if (emptySlots.isEmpty()) {
                 // Throw only - this will rate limit after a few stacks
-                event.schedule(inventoryConstraints, CreativeInventoryAction.performThrow(randomStack))
+                event.schedule(inventoryConstraints, InventoryAction.Creative.performThrow(randomStack))
                 return@handler
             }
 
@@ -56,14 +56,14 @@ object ModuleVomit : ClientModule("Vomit", Category.FUN) {
             event.schedule(inventoryConstraints, if (inventoryConstraints.clickDelay.last <= 0) {
                 // Depending on how many empty slots we have, this might kick in the packet rate limit
                 // of ViaVersion or Minecraft/Paper itself
-                emptySlots.map { slot -> CreativeInventoryAction.performFillSlot(randomStack, slot) } +
-                    emptySlots.map { slot -> ClickInventoryAction.performThrow(null, slot) }
+                emptySlots.map { slot -> InventoryAction.Creative.performFillSlot(randomStack, slot) } +
+                    emptySlots.map { slot -> InventoryAction.Click.performThrow(null, slot) }
             } else {
                 val slot = emptySlots.random()
 
                 listOf(
-                    CreativeInventoryAction.performFillSlot(randomStack, slot),
-                    ClickInventoryAction.performThrow(null, slot)
+                    InventoryAction.Creative.performFillSlot(randomStack, slot),
+                    InventoryAction.Click.performThrow(null, slot)
                 )
             })
         } else {
@@ -74,7 +74,7 @@ object ModuleVomit : ClientModule("Vomit", Category.FUN) {
 
             val randomSlot = if (playerSlot.isEmpty()) {
                 // Attempt to drop from the container
-                val slots = findItemsInContainer(container ?: return@handler)
+                val slots = (container ?: return@handler).findItemsInContainer()
                 if (slots.isEmpty()) return@handler
 
                 slots.random()
@@ -82,7 +82,7 @@ object ModuleVomit : ClientModule("Vomit", Category.FUN) {
                 playerSlot.random()
             }
 
-            event.schedule(inventoryConstraints, ClickInventoryAction.performThrow(container, randomSlot))
+            event.schedule(inventoryConstraints, InventoryAction.Click.performThrow(container, randomSlot))
         }
     }
 

@@ -22,10 +22,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff.AutoSwap
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
@@ -43,7 +42,7 @@ abstract class Buff(
     /**
      * Try to run feature if possible, otherwise return false
      */
-    internal suspend fun runIfPossible(sequence: Sequence): Boolean {
+    internal suspend fun runIfPossible(): Boolean {
         if (!enabled || !passesRequirements) {
             return false
         }
@@ -53,17 +52,17 @@ abstract class Buff(
 
         CombatManager.pauseCombatForAtLeast(ModuleAutoBuff.combatPauseTime)
 
-        if (slot.isSelected || slot is OffHandSlot) {
+        if (slot.isSelected) {
             // Check main hand and offhand
-            execute(sequence, slot)
+            execute(slot)
             return true
         } else if (AutoSwap.enabled) {
             // Check if we should auto swap
             // todo: do not hardcode ticksUntilReset
             SilentHotbar.selectSlotSilently(ModuleAutoBuff, slot, 300)
-            sequence.waitTicks(AutoSwap.delayIn.random())
-            execute(sequence, slot)
-            sequence.waitTicks(AutoSwap.delayOut.random())
+            waitTicks(AutoSwap.delayIn.random())
+            execute(slot)
+            waitTicks(AutoSwap.delayOut.random())
             SilentHotbar.resetSlot(ModuleAutoBuff)
             return true
         } else {
@@ -73,7 +72,7 @@ abstract class Buff(
 
     abstract fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean
 
-    abstract suspend fun execute(sequence: Sequence, slot: HotbarItemSlot)
+    abstract suspend fun execute(slot: HotbarItemSlot)
 
 }
 

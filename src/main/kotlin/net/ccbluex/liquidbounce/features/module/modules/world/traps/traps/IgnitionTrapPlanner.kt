@@ -18,22 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
-import it.unimi.dsi.fastutil.doubles.DoubleLongPair
+import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.*
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
-import net.ccbluex.liquidbounce.utils.block.collidingRegion
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
-import net.ccbluex.liquidbounce.utils.math.iterate
-import net.ccbluex.liquidbounce.utils.math.size
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.entity.*
+import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
@@ -45,11 +42,11 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
     true
 ) {
 
-    private val trapItems = arrayOf(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL)
-    private val trapWorthyBlocks = arrayOf(Blocks.LAVA, Blocks.FIRE)
+    override val trapItems: Set<Item> = ReferenceSet.of(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL)
+    override val trapWorthyBlocks: Set<Block> = ReferenceSet.of(Blocks.LAVA, Blocks.FIRE)
 
     override fun plan(enemies: List<LivingEntity>): BlockChangeIntent<IgnitionIntentData>? {
-        val slot = findItemToIgnite() ?: return null
+        val slot = findSlotForTrap() ?: return null
 
         for (target in enemies) {
             if (target.isOnFire) {
@@ -107,69 +104,6 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
         return findBestBlockPlacementTarget(blockPos, options)
     }
 
-    private fun findOffsetsForTarget(
-        pos: Vec3d,
-        dims: EntityDimensions,
-        velocity: Vec3d,
-        mustBeOnGround: Boolean
-    ): List<BlockPos> {
-        val ticksToLookAhead = 5
-        val blockPos = pos.toBlockPos()
-        val normalizedStartBB =
-            dims.getBoxAt(pos).offset(-blockPos.x.toDouble(), -blockPos.y.toDouble(), -pos.z.toInt().toDouble())
-        val normalizedEnddBB = normalizedStartBB.offset(
-            velocity.x * ticksToLookAhead,
-            0.0,
-            velocity.z * ticksToLookAhead
-        )
-
-        val searchBB = normalizedEnddBB
-
-        if (searchBB.size > 30) {
-            return listOf(BlockPos.ORIGIN)
-        }
-
-        return findOffsetsBetween(normalizedStartBB, normalizedEnddBB, blockPos, mustBeOnGround)
-    }
-
-    private fun findOffsetsBetween(
-        startBox: Box,
-        endBox: Box,
-        offsetPos: BlockPos,
-        mustBeOnGround: Boolean
-    ): List<BlockPos> {
-        val offsets = mutableListOf<DoubleLongPair>()
-
-        startBox.collidingRegion.iterate().forEach { offset ->
-            val bp = offsetPos.add(offset)
-
-            val bb = Box(offset)
-
-            if (!startBox.intersects(bb) && !endBox.intersects(bb)) {
-                return@forEach
-            }
-
-            val currentState = bp.getState()?.block
-
-            if (currentState in trapWorthyBlocks || currentState != Blocks.AIR) {
-                return@forEach
-            }
-
-            // !(x == true)? I need it for null checking purposes
-            if (mustBeOnGround && (bp.down().getState()?.isAir != false)) {
-                return@forEach
-            }
-
-            val intersect = startBox.intersection(bb).size + endBox.intersection(bb).size * 0.5
-
-            offsets.add(DoubleLongPair.of(intersect, offset.asLong()))
-        }
-
-        offsets.sortByDescending { it.leftDouble() }
-
-        return offsets.map { BlockPos.fromLong(it.rightLong()) }
-    }
-
     override fun validate(plan: BlockChangeIntent<IgnitionIntentData>, raycast: BlockHitResult): Boolean {
         if (raycast.type != HitResult.Type.BLOCK) {
             return false
@@ -186,10 +120,6 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
 
     override fun onIntentFullfilled(intent: BlockChangeIntent<IgnitionIntentData>) {
         targetTracker.target = intent.planningInfo.target
-    }
-
-    private fun findItemToIgnite(): HotbarItemSlot? {
-        return Slots.OffhandWithHotbar.findClosestSlot(items = trapItems)
     }
 
     class IgnitionIntentData(

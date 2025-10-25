@@ -26,11 +26,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.liquidbounce.render.RenderEnvironment
+import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.sq
+import org.joml.Vector2fc
 import kotlin.math.abs
 
 /**
@@ -44,7 +45,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     val scale by float("Scale", 2F, 0.25F..4F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
 
-    internal val drawnEnchantmentAreas = mutableListOf<Pair<Float, Float>>()
+    internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
 
     val fontRenderer
         get() = FontManager.FONT_RENDERER
@@ -77,18 +78,12 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
             return@handler
         }
 
-        renderEnvironmentForGUI {
-            val nametagRenderer = NametagRenderer()
-
-            try {
-                drawNametags(nametagRenderer, event.tickDelta)
-            } finally {
-                nametagRenderer.commit(this)
-            }
+        renderEnvironmentForGUI(event) {
+            drawNametags(event.tickDelta)
         }
     }
 
-    private fun RenderEnvironment.drawNametags(nametagRenderer: NametagRenderer, tickDelta: Float) {
+    private fun GUIRenderEnvironment.drawNametags(tickDelta: Float) {
         drawnEnchantmentAreas.clear()
         nametagsToRender.forEach { it.calculatePosition(tickDelta) }
 
@@ -107,11 +102,9 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
             val pos = nametagInfo.position!!
 
             // We want nametags that are closer to the player to be rendered above nametags that are further away.
-            val renderZ = index / nametagsCount * 1000.0F
+            val renderZ = 0.01f + index / nametagsCount * 1000.0F
 
-            with(nametagRenderer) {
-                drawNametag(nametagInfo, pos.copy(z = renderZ))
-            }
+            drawNametag(nametagInfo, pos.copy(z = renderZ))
         }
     }
 
@@ -129,8 +122,6 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
             list += Nametag(entity)
         }
-
-        list.sortByDescending { abs(it.entity.z - player.pos.z) }
     }
 
 }

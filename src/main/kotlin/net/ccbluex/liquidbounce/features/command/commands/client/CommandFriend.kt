@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.playerName
@@ -39,7 +38,7 @@ private const val MESSAGE_ID = "CFriend#info"
  *
  * Provides subcommands related to managing friends, such as adding, removing, aliasing, listing, and clearing friends.
  */
-object CommandFriend : CommandFactory {
+object CommandFriend : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -56,7 +55,7 @@ object CommandFriend : CommandFactory {
     private fun createClearSubcommand(): Command {
         return CommandBuilder
             .begin("clear")
-            .handler { command, _ ->
+            .handler {
                 if (FriendManager.friends.isEmpty()) {
                     throw CommandException(command.result(MSG_NO_FRIENDS))
                 } else {
@@ -74,7 +73,7 @@ object CommandFriend : CommandFactory {
     private fun createListSubcommand(): Command {
         return CommandBuilder
             .begin("list")
-            .handler { command, _ ->
+            .handler {
                 if (FriendManager.friends.isEmpty()) {
                     chat(
                         command.result(MSG_NO_FRIENDS),
@@ -134,7 +133,7 @@ object CommandFriend : CommandFactory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val name = args[0] as String
                 val friend = FriendManager.friends.firstOrNull { it.name == name }
 
@@ -162,7 +161,7 @@ object CommandFriend : CommandFactory {
                     .required()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val friend = FriendManager.Friend(args[0] as String, null)
 
                 if (FriendManager.friends.remove(friend)) {
@@ -192,7 +191,7 @@ object CommandFriend : CommandFactory {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 val friend = FriendManager.Friend(args[0] as String, args.getOrNull(1) as String?)
 
                 if (FriendManager.friends.add(friend)) {

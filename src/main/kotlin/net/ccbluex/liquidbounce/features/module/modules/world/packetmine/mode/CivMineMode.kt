@@ -42,11 +42,14 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
 
     override fun onCannotLookAtTarget(mineTarget: MineTarget) {
         // send always a packet to keep the target
-        network.sendPacket(PlayerActionC2SPacket(
-            PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
-            mineTarget.targetPos,
-            Direction.DOWN
-        ))
+        interaction.sendSequencedPacket(world) { sequence ->
+            PlayerActionC2SPacket(
+                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+                mineTarget.targetPos,
+                Direction.DOWN,
+                sequence
+            )
+        }
     }
 
     override fun shouldTarget(blockPos: BlockPos, state: BlockState): Boolean {
@@ -58,13 +61,14 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
     }
 
     override fun finish(mineTarget: MineTarget) {
-        network.sendPacket(
+        interaction.sendSequencedPacket(world) { sequence ->
             PlayerActionC2SPacket(
                 PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
                 mineTarget.targetPos,
-                mineTarget.direction
+                mineTarget.direction,
+                sequence,
             )
-        )
+        }
 
         ModulePacketMine.swingMode.swing(Hand.MAIN_HAND)
 
@@ -94,13 +98,14 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
 
         // Alright, for some reason when we spam STOP_DESTROY_BLOCK
         // server accepts us to destroy the same block instantly over and over.
-        network.sendPacket(
+        interaction.sendSequencedPacket(world) { sequence ->
             PlayerActionC2SPacket(
                 PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
                 mineTarget.targetPos,
-                mineTarget.direction
+                mineTarget.direction,
+                sequence,
             )
-        )
+        }
 
         if (shouldSwitch) {
             network.sendPacket(UpdateSelectedSlotC2SPacket(oldSlot))

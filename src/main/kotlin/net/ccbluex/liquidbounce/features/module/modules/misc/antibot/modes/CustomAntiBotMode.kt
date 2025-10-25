@@ -30,18 +30,17 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
-import net.ccbluex.liquidbounce.utils.item.material
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.block.AbstractSkullBlock
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.*
-import net.minecraft.item.equipment.ArmorMaterial
 import net.minecraft.item.equipment.ArmorMaterials
 import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityAnimationS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityAttributesS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityS2CPacket
+import net.minecraft.registry.tag.ItemTags
+import net.minecraft.registry.tag.TagKey
 import java.util.*
 import java.util.function.Predicate
 import kotlin.math.abs
@@ -73,6 +72,10 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
     }
 
     private object Armor : ToggleableConfigurable(ModuleAntiBot, "Armor", false) {
+
+        /**
+         * @see ArmorMaterials
+         */
         @Suppress("UNUSED")
         private enum class ArmorPredicate(
             override val choiceName: String,
@@ -80,27 +83,30 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         ) : NamedChoice {
             // General
             NOTHING("Nothing", ItemStack::isEmpty),
-            LEATHER("Leather", ArmorMaterials.LEATHER),
-            CHAIN("Chain", ArmorMaterials.CHAIN),
-            IRON("Iron", ArmorMaterials.IRON),
-            GOLD("Gold", ArmorMaterials.GOLD),
-            DIAMOND("Diamond", ArmorMaterials.DIAMOND),
-            NETHERITE("Netherite", ArmorMaterials.NETHERITE),
+            LEATHER("Leather", ItemTags.REPAIRS_LEATHER_ARMOR),
+            CHAIN("Chain", ItemTags.REPAIRS_CHAIN_ARMOR),
+            IRON("Iron", ItemTags.REPAIRS_IRON_ARMOR),
+            GOLD("Gold", ItemTags.REPAIRS_GOLD_ARMOR),
+            DIAMOND("Diamond", ItemTags.REPAIRS_DIAMOND_ARMOR),
+            NETHERITE("Netherite", ItemTags.REPAIRS_NETHERITE_ARMOR),
 
             // Chestplate only
             ELYTRA("Elytra", Items.ELYTRA),
 
             // Helmet only
-            TURTLE_SCUTE("TurtleScute", ArmorMaterials.TURTLE_SCUTE),
+            TURTLE_SCUTE("TurtleScute", ItemTags.REPAIRS_TURTLE_HELMET),
             PUMPKIN("Pumpkin", Items.CARVED_PUMPKIN),
-            SKULL("Skull", { (it.item as? BlockItem)?.block is AbstractSkullBlock });
+            SKULL("Skull", ItemTags.SKULLS);
 
-            constructor(choiceName: String, material: ArmorMaterial) : this(
+            constructor(choiceName: String, tag: TagKey<Item>) : this(
                 choiceName,
-                { (it.item as? ArmorItem)?.material() == material }
+                Predicate { it.isIn(tag) }
             )
 
-            constructor(choiceName: String, item: Item) : this(choiceName, { it.item === item })
+            constructor(choiceName: String, item: Item) : this(
+                choiceName,
+                Predicate { it.isOf(item) }
+            )
         }
 
         private val BASE = EnumSet.of(

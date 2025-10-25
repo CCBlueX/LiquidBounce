@@ -31,6 +31,7 @@ import kotlin.math.abs
 open class Line(val position: Vec3d, val direction: Vec3d) {
 
     companion object {
+        @JvmStatic
         fun fromPoints(p1: Vec3d, p2: Vec3d, normalized: Boolean = false): Line {
             val direction = p2.subtract(p1)
             val finalDirection = if (normalized) direction.normalize() else direction

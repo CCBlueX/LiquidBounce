@@ -22,11 +22,13 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
@@ -44,7 +46,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  * Increases knockback dealt to other entities.
  */
 @Suppress("MagicNumber")
-object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, aliases = arrayOf("WTap")) {
+object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, aliases = listOf("WTap")) {
 
     val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap)).apply(::tagBy)
     val hurtTime by int("HurtTime", 10, 0..10)
@@ -114,19 +116,19 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
         private var cancelSprint = false
 
         @Suppress("unused", "ComplexCondition")
-        private val attackHandler = sequenceHandler<AttackEntityEvent> { event ->
+        private val attackHandler = sequenceHandler<AttackEntityEvent>(
+            onCancellation = {
+                cancelSprint = false
+                this@SprintTap.debugParameter("State") { "Allowing Sprint (Cancellation)" }
+            }
+        ) { event ->
             if (!shouldOperate(event.entity) || !shouldStopSprinting(event) || cancelSprint) {
                 return@sequenceHandler
             }
 
-            onCancellation {
-                cancelSprint = false
-                this@SprintTap.debugParameter("State") { "Allowing Sprint (Cancellation)" }
-            }
-
             this@SprintTap.debugParameter("State") { "Disallowing Sprint" }
             cancelSprint = true
-            waitUntil { !player.isSprinting && !player.lastSprinting }
+            tickUntil { !player.isSprinting && !player.lastSprinting }
             this@SprintTap.debugParameter("State") { "Waiting for ReSprint" }
             waitTicks(reSprintTicks.random())
             this@SprintTap.debugParameter("State") { "Allowing Sprint" }
@@ -163,15 +165,15 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
         private var cancelMovement = false
 
         @Suppress("unused", "ComplexCondition")
-        private val attackHandler = sequenceHandler<AttackEntityEvent> { event ->
-            if (!shouldOperate(event.entity) || !shouldStopSprinting(event) || inSequence) {
-                return@sequenceHandler
-            }
-
-            onCancellation {
+        private val attackHandler = sequenceHandler<AttackEntityEvent>(
+            onCancellation = {
                 cancelMovement = false
                 inSequence = false
                 this@WTap.debugParameter("State") { "Allowing Movement (Cancellation)" }
+            }
+        ) { event ->
+            if (!shouldOperate(event.entity) || !shouldStopSprinting(event) || inSequence) {
+                return@sequenceHandler
             }
 
             inSequence = true
@@ -179,7 +181,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
             waitTicks(ticksUntilMovementBlock.random())
             this@WTap.debugParameter("State") { "Disallowing Movement" }
             cancelMovement = true
-            waitUntil { !player.input.hasForwardMovement() }
+            tickUntil { !player.input.hasForwardMovement() }
             this@WTap.debugParameter("State") { "Waiting for Allowed Movement" }
             waitTicks(ticksUntilAllowedMovement.random())
             this@WTap.debugParameter("State") { "Allowing Movement" }

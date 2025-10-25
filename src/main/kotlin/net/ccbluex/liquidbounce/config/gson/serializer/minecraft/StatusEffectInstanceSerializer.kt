@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.registry.Registries
 import java.lang.reflect.Type
@@ -33,7 +32,7 @@ object StatusEffectInstanceSerializer : JsonSerializer<StatusEffectInstance> {
     ) = src?.let {
         JsonObject().apply {
             addProperty("effect", Registries.STATUS_EFFECT.getId(it.effectType.value()).toString())
-            addProperty("localizedName", it.effectType.value().name.convertToString())
+            addProperty("localizedName", it.effectType.value().name.string)
             addProperty("duration", it.duration)
             addProperty("amplifier", it.amplifier)
             addProperty("ambient", it.isAmbient)

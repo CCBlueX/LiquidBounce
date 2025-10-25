@@ -39,12 +39,13 @@ import java.util.concurrent.CompletableFuture;
 public abstract class MixinChatInputSuggestor {
     @Shadow
     @Final
-    private TextFieldWidget textField;
+    TextFieldWidget textField;
     @Shadow
     private CompletableFuture<Suggestions> pendingSuggestions;
     @Shadow
     private ParseResults<CommandSource> parse;
-    @Shadow public abstract void show(boolean narrateFirstSuggestion);
+    @Shadow
+    public abstract void show(boolean narrateFirstSuggestion);
 
     @Shadow @Nullable private ChatInputSuggestor.@Nullable SuggestionWindow window;
 
@@ -53,7 +54,7 @@ public abstract class MixinChatInputSuggestor {
         if (this.textField.getText().startsWith(CommandManager.Options.INSTANCE.getPrefix())) {
             this.pendingSuggestions = CommandManager.INSTANCE.autoComplete(this.textField.getText(), this.textField.getCursor());
             this.pendingSuggestions.thenRun(() -> {
-                if(this.pendingSuggestions.isDone() && window == null) {
+                if (window == null) {
                     this.show(false);
                 }
             });

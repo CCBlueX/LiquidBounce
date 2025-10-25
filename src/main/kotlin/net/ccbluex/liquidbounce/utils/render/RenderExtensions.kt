@@ -54,3 +54,16 @@ fun NativeImage.toBufferedImage(): BufferedImage {
 
     return bufferedImage
 }
+
+fun BufferedImage.toNativeImage(): NativeImage {
+    val nativeImage = NativeImage(NativeImage.Format.RGBA, this.width, this.height, false)
+
+    // Fuck Minecraft native image
+    for (x in 0 until this.width) {
+        for (y in 0 until this.height) {
+            nativeImage.setColorArgb(x, y, this.getRGB(x, y))
+        }
+    }
+
+    return nativeImage
+}

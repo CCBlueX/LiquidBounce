@@ -33,10 +33,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
  */
 object PostRotationExecutor : EventListener {
 
-    private class ModuleAction(val module: ClientModule, val action: () -> Unit) {
+    private class ModuleAction(val module: ClientModule, val action: Runnable) {
         fun executeIfRunning() {
             if (module.running) {
-                action.invoke()
+                action.run()
             }
         }
     }
@@ -59,7 +59,7 @@ object PostRotationExecutor : EventListener {
     private val normalTasks = ArrayDeque<ModuleAction>()
 
     @Suppress("unused")
-    val worldChangeHandler = handler<WorldChangeEvent> {
+    private val worldChangeHandler = handler<WorldChangeEvent> {
         postMoveTasks.clear()
         normalTasks.clear()
     }
@@ -70,7 +70,7 @@ object PostRotationExecutor : EventListener {
      * Has [EventPriorityConvention.FIRST_PRIORITY] to run before any other module can send packets.
      */
     @Suppress("unused")
-    val networkMoveHandler = handler<PlayerNetworkMovementTickEvent>(priority = FIRST_PRIORITY) { event ->
+    private val networkMoveHandler = handler<PlayerNetworkMovementTickEvent>(priority = FIRST_PRIORITY) { event ->
         if (event.state != EventState.POST) {
             return@handler
         }
@@ -102,7 +102,7 @@ object PostRotationExecutor : EventListener {
      * Has [EventPriorityConvention.FIRST_PRIORITY] to run before any other module can send packets.
      */
     @Suppress("unused")
-    val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+    private val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         if (!priorityActionPostMove) {
             // execute the priority action
             priorityAction?.executeIfRunning()
@@ -120,7 +120,7 @@ object PostRotationExecutor : EventListener {
         }
     }
 
-    fun addTask(module: ClientModule, postMove: Boolean, task: () -> Unit, priority: Boolean = false) {
+    fun addTask(module: ClientModule, postMove: Boolean, priority: Boolean = false, task: Runnable) {
         val moduleAction = ModuleAction(module, task)
         if (priority) {
             priorityAction = moduleAction

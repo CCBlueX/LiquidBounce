@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.nuker.mode
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.areaMode
@@ -54,24 +55,29 @@ object InstantNukerMode : Choice("Instant") {
 
         val targets = areaMode.activeChoice.lookupTargets(range, count = bps.random())
 
-        if (targets.none()) {
+        if (targets.isEmpty()) {
             wasTarget = null
             waitTicks(1)
             return@tickHandler
         }
 
         for ((pos, _) in targets) {
-            network.sendPacket(
-                PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN)
-            )
+            interaction.sendSequencedPacket(world) { sequence ->
+                PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, sequence)
+            }
 
             swingMode.swing(Hand.MAIN_HAND)
             wasTarget = pos
 
             if (!doNotStop) {
-                network.sendPacket(
-                    PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
-                )
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+                        pos,
+                        Direction.DOWN,
+                        sequence
+                    )
+                }
             }
         }
     }

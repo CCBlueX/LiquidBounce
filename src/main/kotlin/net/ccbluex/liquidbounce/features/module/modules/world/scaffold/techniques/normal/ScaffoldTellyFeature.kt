@@ -46,10 +46,9 @@ object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "T
                 ticksUntilJump >= jumpTicks &&
                 !(ModuleScaffold.isTowering && aimOnTower)
 
-
-    // New val to determine if the player is telly bridging
+    /** New val to determine if the player is telly bridging */
     val isTellyBridging: Boolean
-        get() = ticksUntilJump >= jumpTicks && player.moving
+        get() = ticksUntilJump >= jumpTicks && player.moving && enabled
 
     private var ticksUntilJump = 0
 

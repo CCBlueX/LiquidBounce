@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.ccbluex.liquidbounce.additions.DrawContextAddition;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
@@ -32,7 +33,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud;
 import net.ccbluex.liquidbounce.integration.theme.component.Component;
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager;
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak;
-import net.ccbluex.liquidbounce.interfaces.DrawContextAddition;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -61,17 +61,12 @@ import java.util.function.Function;
 public abstract class MixinInGameHud {
 
     @Final
-    @Unique
-    private static final Identifier liquid_bounce$PUMPKIN_BLUR = Identifier.ofVanilla("misc/pumpkinblur");
-
-    @Final
     @Shadow
     private static Identifier POWDER_SNOW_OUTLINE;
 
     @Shadow
     @Nullable
     protected abstract PlayerEntity getCameraPlayer();
-
 
     @Shadow
     @Final
@@ -108,7 +103,7 @@ public abstract class MixinInGameHud {
             return;
         }
 
-        if (!ModuleAntiBlind.canRender(DoRender.PUMPKIN_BLUR) && liquid_bounce$PUMPKIN_BLUR.equals(texture)) {
+        if (!ModuleAntiBlind.canRender(DoRender.PUMPKIN_BLUR) && ModuleAntiBlind.TEXTURE_PUMPKIN_BLUR.equals(texture)) {
             callback.cancel();
             return;
         }

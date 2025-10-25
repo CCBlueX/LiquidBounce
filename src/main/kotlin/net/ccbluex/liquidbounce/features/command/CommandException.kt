@@ -19,8 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command
 
-import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.minecraft.text.MutableText
 
 class CommandException(val text: MutableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
-    Exception(text.convertToString(), cause)
+    Exception(text.string, cause)

@@ -24,7 +24,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.BoxRenderer
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
@@ -36,7 +37,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.decoration.ArmorStandEntity
 import net.minecraft.item.BowItem
-import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.s2c.play.EntityEquipmentUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerRespawnS2CPacket
@@ -91,12 +92,15 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
             playBow = false
         }
 
-        world.entities.filterIsInstance<ArmorStandEntity>().forEach {
-            if (it.getEquippedStack(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
-                renderDroppedBowBox(event, it)
+        renderEnvironmentForWorld(event.matrixStack) {
+            startBatch()
+            world.entities.filterIsInstance<ArmorStandEntity>().forEach {
+                if (it.getEquippedStack(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
+                    renderDroppedBowBox(event.partialTicks, it)
+                }
             }
+            commitBatch()
         }
-
     }
 
     val packetHandler = handler<PacketEvent> { packetEvent ->
@@ -115,10 +119,9 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
                 }
                 .forEach {
                     val itemStack = it.second
-                    val item = itemStack.item
                     val entity = world.getEntityById(packet.entityId)
 
-                    handleItem(item, entity)
+                    handleItem(itemStack, entity)
                 }
         }
         if (packetEvent.packet is GameJoinS2CPacket || packetEvent.packet is PlayerRespawnS2CPacket) {
@@ -156,15 +159,15 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
     }
 
     private fun handleItem(
-        item: Item?,
+        itemStack: ItemStack,
         entity: Entity?,
     ) {
         if (entity !is AbstractClientPlayerEntity) {
             return
         }
 
-        val isSword = MurderMysterySwordDetection.isSword(item)
-        val isBow = item is BowItem
+        val isSword = MurderMysterySwordDetection.isSword(itemStack)
+        val isBow = itemStack.item is BowItem
 
         val locationSkin = entity.skinTextures.texture
 
@@ -174,21 +177,15 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         }
     }
 
-    private fun renderDroppedBowBox(event: WorldRenderEvent, armorStandEntity: ArmorStandEntity) {
-        val matrixStack = event.matrixStack
+    private fun WorldRenderEnvironment.renderDroppedBowBox(partialTicks: Float, armorStandEntity: ArmorStandEntity) {
+        val box = Box(-0.6, 0.0, -0.6, 0.6, 2.5, 0.6)
+        val pos = armorStandEntity.interpolateCurrentPosition(partialTicks)
 
-        renderEnvironmentForWorld(matrixStack) {
-            BoxRenderer.drawWith(this) {
-                val box = Box(-0.6, 0.0, -0.6, 0.6, 2.5, 0.6)
-                val pos = armorStandEntity.interpolateCurrentPosition(event.partialTicks)
-
-                withPositionRelativeToCamera(pos) {
-                    drawBox(
-                        box,
-                        Color4b(127, 255, 212, 100), Color4b(0, 255, 255)
-                    )
-                }
-            }
+        withPositionRelativeToCamera(pos) {
+            drawBox(
+                box,
+                Color4b(127, 255, 212, 100), Color4b(0, 255, 255)
+            )
         }
     }
 

@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
@@ -48,7 +48,7 @@ import net.minecraft.text.ClickEvent
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
-import java.util.EnumSet
+import java.util.*
 
 /**
  * Debug Command to collect information about the client
@@ -58,14 +58,14 @@ import java.util.EnumSet
  * This command will create a JSON file with all the information
  * and send it to the CCBlueX Paste API.
  */
-object CommandDebug : CommandFactory {
+object CommandDebug : Command.Factory {
 
     private val gson = GsonBuilder()
         .setPrettyPrinting()
         .create()
 
     override fun createCommand() = CommandBuilder.begin("debug")
-        .suspendHandler { _, _ ->
+        .suspendHandler {
             chat("§7Collecting debug information...")
 
             val buffer = okio.Buffer()

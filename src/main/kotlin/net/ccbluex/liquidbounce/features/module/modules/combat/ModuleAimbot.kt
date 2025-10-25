@@ -26,6 +26,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -54,7 +57,7 @@ import net.minecraft.util.math.MathHelper
  * Automatically faces selected entities around you.
  */
 @Suppress("MagicNumber")
-object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf("AimAssist", "AutoAim")) {
+object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("AimAssist", "AutoAim")) {
 
     private val range = float("Range", 4.2f, 1f..8f)
 
@@ -65,7 +68,7 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
 
     private val requirementsMet
-        get() = requires.all { it.meets() }
+        get() = requires.all { it.asBoolean }
 
     private var angleSmooth = choices(this, "AngleSmooth") {
         arrayOf(
@@ -165,21 +168,24 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = arrayOf(
     }
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
-        for (target in targetTracker.targets()) {
+        for (entity in targetTracker.targets()) {
             val eyes = player.eyePos
-            val pointOnHitbox = pointTracker.findPoint(eyes, target, 0)
-            val rotationPreference = LeastDifferencePreference(player.rotation, pointOnHitbox.pos)
+            val point = pointTracker.findPoint(eyes, entity)
 
-            val spot = raytraceBox(
-                eyes,
-                pointOnHitbox.box,
+            debugGeometry("Box") { ModuleDebug.DebuggedBox(point.box, Color4b.ORANGE.with(a = 90)) }
+            debugGeometry("Point") { ModuleDebug.DebuggedPoint(point.pos, Color4b.WHITE, size = 0.1) }
+
+            val rotationPreference = LeastDifferencePreference.leastDifferenceToLastPoint(eyes, point.pos)
+            val rotation = raytraceBox(
+                eyes = eyes,
+                box = point.box,
                 range = targetTracker.maxRange.toDouble(),
                 wallsRange = 0.0,
                 rotationPreference = rotationPreference
             ) ?: continue
 
-            targetTracker.target = target
-            return target to spot
+            targetTracker.target = entity
+            return entity to rotation
         }
 
         targetTracker.reset()

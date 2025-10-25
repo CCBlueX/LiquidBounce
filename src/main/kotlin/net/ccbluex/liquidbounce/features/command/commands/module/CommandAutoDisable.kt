@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.module
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.modules
@@ -38,7 +37,7 @@ import net.minecraft.util.Formatting
  *
  * Module: [ModuleAutoDisable]
  */
-object CommandAutoDisable : CommandFactory {
+object CommandAutoDisable : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -53,8 +52,8 @@ object CommandAutoDisable : CommandFactory {
 
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
-        .handler { command, _ ->
-            ModuleAutoDisable.listOfModules.clear()
+        .handler {
+            ModuleAutoDisable.clear()
             chat(
                 command.result("modulesCleared"),
                 metadata = MessageMetadata(id = "CAutoDisable#global")
@@ -70,7 +69,7 @@ object CommandAutoDisable : CommandFactory {
                 result("modules").withColor(Formatting.RED).bold(true)
             },
             items = {
-                ModuleAutoDisable.listOfModules
+                ModuleAutoDisable.modules
             },
             eachRow = { _, module ->
                 "\u2B25 ".asText()
@@ -85,15 +84,15 @@ object CommandAutoDisable : CommandFactory {
     private fun removeSubcommand() = CommandBuilder
         .begin("remove")
         .parameter(
-            ParameterBuilder.modules(all = ModuleAutoDisable.listOfModules)
+            ParameterBuilder.modules(all = ModuleAutoDisable.modules)
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
 
             modules.forEach { module ->
-                if (!ModuleAutoDisable.listOfModules.remove(module)) {
+                if (!ModuleAutoDisable.remove(module)) {
                     throw CommandException(command.result("moduleNotPresent", module.name))
                 }
 
@@ -117,11 +116,11 @@ object CommandAutoDisable : CommandFactory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val modules = args[0] as Set<ClientModule>
 
             modules.forEach { module ->
-                if (!ModuleAutoDisable.listOfModules.add(module)) {
+                if (!ModuleAutoDisable.add(module)) {
                     throw CommandException(command.result("moduleIsPresent", module.name))
                 }
 

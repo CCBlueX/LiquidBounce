@@ -23,7 +23,6 @@ package net.ccbluex.liquidbounce.deeplearn.listener
 import ai.djl.training.Trainer
 import ai.djl.training.listener.TrainingListener
 import ai.djl.training.listener.TrainingListenerAdapter
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -76,7 +75,7 @@ class OverlayTrainingListener(
             .append("░".repeat(25 - progress / 4).asText().formatted(Formatting.DARK_GRAY))
             .append("]".asText().formatted(Formatting.GRAY))
 
-        RenderSystem.recordRenderCall {
+        mc.execute {
             mc.inGameHud.setOverlayMessage(progressBar, false)
         }
     }

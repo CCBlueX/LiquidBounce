@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.*
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.Items
+import java.util.function.BooleanSupplier
 
 /**
  * NoFall module
@@ -34,6 +35,7 @@ object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
     internal val modes = choices(
         "Mode", NoFallSpoofGround, arrayOf(
             NoFallSpoofGround,
+            NoFallSpoofLanding,
             NoFallNoGround,
             NoFallPacket,
             NoFallPacketJump,
@@ -53,7 +55,7 @@ object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
         )
     ).apply(::tagBy)
 
-    private val notConditions by multiEnumChoice<NotConditions>("Not")
+    private val notConditions by multiEnumChoice<NotCondition>("Not")
 
     override val running: Boolean
         get() = when {
@@ -66,26 +68,25 @@ object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
             player.abilities.invulnerable || player.abilities.flying -> false
 
             // Test other conditions
-            else -> notConditions.none { it.testCondition() }
+            else -> notConditions.none { it.asBoolean }
         }
 
     @Suppress("unused")
-    private enum class NotConditions(
+    private enum class NotCondition(
         override val choiceName: String,
-        val testCondition: () -> Boolean
-    ) : NamedChoice {
+    ) : NamedChoice, BooleanSupplier {
         /**
          * With Elytra - we don't want to reduce fall damage.
          */
-        WHILE_GLIDING("WhileGliding", {
-            player.isGliding && player.isInPose(EntityPose.GLIDING)
-        }),
+        WHILE_GLIDING("WhileGliding") {
+            override fun getAsBoolean() = player.isGliding && player.isInPose(EntityPose.GLIDING)
+        },
 
         /**
          * Check if we are holding a mace
          */
-        WITH_MACE("WithMace", {
-            player.mainHandStack.item == Items.MACE
-        })
+        WITH_MACE("WithMace") {
+            override fun getAsBoolean() = player.mainHandStack.item == Items.MACE
+        };
     }
 }

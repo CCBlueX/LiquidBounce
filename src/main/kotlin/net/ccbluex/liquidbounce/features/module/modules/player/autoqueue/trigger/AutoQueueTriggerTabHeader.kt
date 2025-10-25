@@ -21,8 +21,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger
 
-import net.ccbluex.liquidbounce.utils.client.convertToString
-
 /**
  * Can be used for different server that use paper to join a game
  */
@@ -33,7 +31,7 @@ object AutoQueueTriggerTabHeader : AutoQueueTrigger("TabHeader") {
     override val isTriggered: Boolean
         get() {
             val playerListHeader = mc.inGameHud?.playerListHud?.header ?: return false
-            return playerListHeader.convertToString().contains(text)
+            return playerListHeader.string.contains(text)
         }
 
 }

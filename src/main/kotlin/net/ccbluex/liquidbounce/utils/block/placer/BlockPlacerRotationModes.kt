@@ -80,14 +80,14 @@ class NormalRotationMode(configurable: ChoiceConfigurable<BlockPlacerRotationMod
 
                 raytraceResult.type == HitResult.Type.BLOCK && raytraceResult.blockPos == interactedBlockPos
             }, {
-                PostRotationExecutor.addTask(placer.module, postMove, priority = true, task = {
+                PostRotationExecutor.addTask(placer.module, postMove, priority = true) {
                     if (placer.ticksToWait > 0) {
                         return@addTask
                     }
 
                     placer.doPlacement(isSupport, pos, placementTarget)
                     placer.ranAction = true
-                })
+                }
             })
         )
 

@@ -51,7 +51,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
     private val scaleTransition by easing("ScaleTransition", Easing.QUAD_OUT)
     private val displacement by vec3d("Displacement", Vec3d(0.0, 1.0, 0.0))
     private val displacementTransition by easing("DisplacementTransition", Easing.QUAD_OUT)
-    private val trackMode by enumChoice("TrackMode", TrackMode.ON_UPDATE)
+    private val trackMode by enumChoice("TrackMode", TrackMode.ON_TICK)
 
     init {
         tree(Colors)
@@ -65,8 +65,8 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
     }
 
     private enum class TrackMode(override val choiceName: String) : NamedChoice {
-        ON_UPDATE("OnUpdate"),
         ON_TICK("OnTick"),
+        ON_UPDATE("OnUpdate"),
     }
 
     /**

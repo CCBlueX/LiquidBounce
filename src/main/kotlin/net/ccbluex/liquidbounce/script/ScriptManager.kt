@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.script
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
@@ -26,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptAsyncUtil
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptContextProvider
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import org.graalvm.polyglot.Engine
 import org.graalvm.polyglot.Source
 import java.io.File
@@ -165,7 +165,7 @@ object ScriptManager {
 
         if (scripts.isNotEmpty()) {
             // Reload the ClickGUI to update the module list.
-            RenderSystem.recordRenderCall(ModuleClickGui::reload)
+            mc.execute(ModuleClickGui::reload)
         }
     }
 

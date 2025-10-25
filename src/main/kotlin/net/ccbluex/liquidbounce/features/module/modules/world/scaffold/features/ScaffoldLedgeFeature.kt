@@ -34,6 +34,7 @@ data class LedgeAction(
     val stepBack: Boolean = false
 ) {
     companion object {
+        @JvmField
         val NO_LEDGE = LedgeAction(jump = false, sneakTime = 0, stopInput = false)
     }
 

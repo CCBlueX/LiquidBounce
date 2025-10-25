@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
 import net.ccbluex.liquidbounce.api.services.marketplace.MarketplaceApi
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
@@ -32,7 +32,7 @@ import net.minecraft.text.HoverEvent
  * Search marketplace items
  */
 @Suppress("LongMethod", "CognitiveComplexMethod")
-object MarketplaceSearchCommand : CommandFactory {
+object MarketplaceSearchCommand : Command.Factory {
 
     override fun createCommand() = CommandBuilder.begin("search")
         .parameter(
@@ -50,7 +50,7 @@ object MarketplaceSearchCommand : CommandFactory {
                 .optional()
                 .build()
         )
-        .suspendHandler { command, args ->
+        .suspendHandler {
             val query = (args[0] as Array<*>).joinToString(" ")
             val page = args.getOrNull(1) as? Int ?: 1
 

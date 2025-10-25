@@ -11,6 +11,7 @@ import type {
     GameWindow,
     GeneratorResult,
     HitResult,
+    Metadata,
     MinecraftKeybind,
     Module,
     PersistentStorageItem,
@@ -21,6 +22,7 @@ import type {
     RegistryItem,
     Server,
     Session,
+    Theme,
     VirtualScreen,
     World
 } from "./types";
@@ -28,6 +30,13 @@ import type {PlayerInventory} from "./events";
 import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
 
 const API_BASE = `${REST_BASE}/api/v1`;
+
+export async function getMetadata(): Promise<Metadata> {
+    const response = await fetch(`metadata.json`);
+    const data: Metadata = await response.json();
+
+    return data;
+}
 
 export async function getModules(): Promise<Module[]> {
     const response = await fetch(`${API_BASE}/client/modules`);
@@ -584,8 +593,19 @@ export async function getGameWindow(): Promise<GameWindow> {
     return data;
 }
 
-export async function getComponents(): Promise<Component[]> {
-    const response = await fetch(`${API_BASE}/client/components`);
+/**
+ * @param id Use the ID from [getMetadata].
+ */
+export async function getTheme(id: string): Promise<Theme> {
+    const response = await fetch(`${API_BASE}/client/theme/${id}`);
+    return await response.json();
+}
+
+/**
+ * @param id Use the ID from [getMetadata].
+ */
+export async function getComponents(id: string): Promise<Component[]> {
+    const response = await fetch(`${API_BASE}/client/components/${id}`);
     return await response.json();
 }
 

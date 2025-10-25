@@ -18,7 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
-import net.ccbluex.liquidbounce.event.Sequence
+import kotlinx.coroutines.CoroutineScope
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsConfigurable.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.simulateInventoryClosing
@@ -109,13 +110,13 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
      * This means, we make sure we are not blocking, we are not using another item,
      * and we are not in an inventory screen depending on the configuration.
      */
-    suspend fun attack(sequence: Sequence, rotation: Rotation? = null, attack: () -> Boolean) {
+    suspend fun attack(rotation: Rotation? = null, attack: () -> Boolean) {
         if (!isClickTick) {
             // If we are not going to click, we don't need to prepare the environment
             return
         }
 
-        val interactiveScene = InteractiveScene(sequence = sequence, rotation = rotation)
+        val interactiveScene = InteractiveScene(rotation = rotation)
         if (interactiveScene.prepare()) {
             return
         }
@@ -129,7 +130,6 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
      * Prepare the scene for e.g. attacking an entity.
      */
     private data class InteractiveScene(
-        val sequence: Sequence,
         val rotation: Rotation?,
         val isInInventoryScreen: Boolean = InventoryManager.isInventoryOpen,
     ) {
@@ -149,7 +149,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
                     // Wait for the tick off time to be over, if it's not 0
                     // Ideally this should not happen.
                     if (KillAuraAutoBlock.stopBlocking(pauses = true) && KillAuraAutoBlock.currentTickOff > 0) {
-                        sequence.waitTicks(KillAuraAutoBlock.currentTickOff)
+                        waitTicks(KillAuraAutoBlock.currentTickOff)
                     }
                 }
             } else if (player.isUsingItem && !ModuleMultiActions.mayAttackWhileUsing()) {

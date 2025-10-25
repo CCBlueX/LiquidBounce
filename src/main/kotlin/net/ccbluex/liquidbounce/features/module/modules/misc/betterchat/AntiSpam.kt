@@ -1,3 +1,23 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -13,16 +33,8 @@ import net.minecraft.util.Formatting
 
 object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
 
-    private var regexFilters = emptySet<Regex>()
-
     private val stack by boolean("StackMessages", false)
-    private val filters by textList("Filters", mutableListOf()).onChanged {
-        compileFilters()
-    }
-
-    private fun compileFilters() {
-        regexFilters = filters.mapTo(HashSet(filters.size, 1.0F), ::Regex)
-    }
+    private val regexFilters by regexList("Filters", linkedSetOf())
 
     @Suppress("unused", "CAST_NEVER_SUCCEEDS" /* succeed with mixins */)
     val chatHandler = handler<ChatReceiveEvent> { event ->
@@ -67,7 +79,7 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
             }
 
             val data = MessageMetadata(prefix = false, id = id, remove = true, count = count)
-            chat(texts = arrayOf(literalText), data)
+            chat(literalText, data)
         }
     }
 

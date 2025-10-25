@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client.marketplace
 
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Unsubscribe from a marketplace item
  */
-object MarketplaceUnsubscribeCommand : CommandFactory {
+object MarketplaceUnsubscribeCommand : Command.Factory {
 
     override fun createCommand() = CommandBuilder.begin("unsubscribe")
         .parameter(
@@ -45,7 +45,7 @@ object MarketplaceUnsubscribeCommand : CommandFactory {
                 .required()
                 .build()
         )
-        .suspendHandler { command, args ->
+        .suspendHandler {
             val id = args[0] as Int
 
             if (!MarketplaceManager.isSubscribed(id)) {

@@ -20,30 +20,39 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
+import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.block.BlockState
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.block.Blocks
+import net.minecraft.block.ChestBlock
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
+import java.util.function.BooleanSupplier
 
 /**
  * ChestAura feature
@@ -65,11 +74,36 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
     private val notDuringCombat by boolean("NotDuringCombat", true)
 
+    private val trackManualInteractions by boolean("TrackManualInteractions", true)
+
+    private val pauseOn by multiEnumChoice("PauseOn", emptyEnumSet<PauseCondition>())
+
+    @Suppress("unused")
+    private enum class PauseCondition(override val choiceName: String) : NamedChoice, BooleanSupplier {
+        COMBAT("Combat") {
+            override fun getAsBoolean() = CombatManager.isInCombat
+        },
+        USING_ITEM("UsingItem"){
+            override fun getAsBoolean() = player.isUsingItem
+        };
+    }
+
     // Sub-configurable for managing the await container settings
     private object AwaitContainerSettings : ToggleableConfigurable(this, "AwaitContainer", true) {
         val retryTimeout by int("Timeout", 10, 1..80, "ticks")
         val maxInteractionRetries by int("MaxRetries", 4, 1..10)
     }
+
+    // Set of block names that are considered as storage blocks
+    private val validStorageBlocks by blocks(
+        "ValidStorageBlocks",
+        findBlocksEndingWith("CHEST", "SHULKER_BOX", "BARREL", "FURNACE").apply {
+            add(Blocks.BREWING_STAND)
+            add(Blocks.DISPENSER)
+            add(Blocks.HOPPER)
+            add(Blocks.DECORATED_POT)
+        }
+    )
 
     init {
         tree(AwaitContainerSettings)
@@ -80,18 +114,32 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
     // The block position currently being interacted with
     private var currentTargetBlock: BlockPos? = null
-    val interactedBlocksSet = hashSetOf<BlockPos>()
+    val interactedBlocksSet: Set<BlockPos>
+        field = hashSetOf<BlockPos>()
 
     // Counter for the number of tries performed to interact with a block
     private var interactionAttempts = 0
 
-    // Set of block names that are considered as storage blocks
-    private val validStorageBlocks = findBlocksEndingWith("CHEST", "SHULKER_BOX", "BARREL")
-        .toHashSet()
+    override val running: Boolean
+        get() = super.running && pauseOn.none { it.asBoolean }
+
+    override fun onDisabled() {
+        interactedBlocksSet.clear()
+        interactionAttempts = 0
+        currentTargetBlock = null
+        super.onDisabled()
+    }
 
     // Event handler responsible for updating the target block
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
+        fun isUnblockedChestOrNotChest(state: BlockState, pos: BlockPos): Boolean {
+            if (state.block !is ChestBlock) return true
+            if (ChestBlock.isChestBlocked(world, pos)) return false
+
+            return !ChestBlock.isChestBlocked(world, pos.offset(state.anotherChestPartDirection() ?: return true))
+        }
+
         val searchRadius = interactionRange + 1
         val searchRadiusSquared = searchRadius * searchRadius
         val playerEyesPosition = player.eyePos
@@ -103,16 +151,14 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
         // Select blocks for processing within the search radius
         val nearbyStorageBlocks = playerEyesPosition.searchBlocksInCuboid(searchRadius) { pos, state ->
-            state.block in validStorageBlocks && pos !in interactedBlocksSet && getNearestPoint(
-                playerEyesPosition, Box(pos)
-            ).squaredDistanceTo(playerEyesPosition) <= searchRadiusSquared
-        }.sortedBy { it.first.getCenterDistanceSquared() }
+            pos !in interactedBlocksSet && state.block in validStorageBlocks && isUnblockedChestOrNotChest(state, pos)
+        }.sortedBy { it.first.getCenterDistanceSquaredEyes() }
 
         var nextTargetBlock: BlockPos? = null
 
         // Find the next block to interact with
         for ((blockPos, state) in nearbyStorageBlocks) {
-            val (rotation, _) = raytraceBlock(
+            val (rotation, _) = raytraceBlockRotation(
                 player.eyePos,
                 blockPos,
                 state,
@@ -142,10 +188,19 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
         currentTargetBlock = nextTargetBlock
     }
 
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent>(READ_FINAL_STATE) { event ->
+        if (trackManualInteractions && event.packet is PlayerInteractBlockC2SPacket && !event.isCancelled) {
+            mc.execute {
+                track(event.packet.blockHitResult.blockPos)
+            }
+        }
+    }
+
     // Task that repeats to interact with the target block
     @Suppress("unused")
     private val interactionRepeatableTask = tickHandler {
-        if (mc.currentScreen is GenericContainerScreen) {
+        if (mc.currentScreen is HandledScreen<*>) {
             // Do not proceed if a screen is open which implies player might be in a GUI
             return@tickHandler
         }
@@ -178,8 +233,9 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
             var wasInteractionSuccessful = false
 
             if (AwaitContainerSettings.enabled) {
-                waitConditional(AwaitContainerSettings.retryTimeout) {
-                    if (mc.currentScreen is GenericContainerScreen) {
+                tickConditional(AwaitContainerSettings.retryTimeout) {
+                    val currentScreen = mc.currentScreen
+                    if (currentScreen is HandledScreen<*>) { // TODO: check if the inner type matches?
                         // Interaction was successful if the inventory screen is open
                         wasInteractionSuccessful = true
                         true
@@ -188,8 +244,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
                     }
                 }
             } else {
-                interactedBlocksSet.add(targetBlockPos)
-                targetBlockPos.recordAnotherChestPart(targetBlockPos.getState())
+                track(targetBlockPos)
                 currentTargetBlock = null
                 wasInteractionSuccessful = true
 
@@ -199,8 +254,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
             // Update interacted block set and reset target if successful or exceeded retries
             if (wasInteractionSuccessful || interactionAttempts >= AwaitContainerSettings.maxInteractionRetries) {
-                interactedBlocksSet.add(targetBlockPos)
-                targetBlockPos.recordAnotherChestPart(targetBlockPos.getState())
+                track(targetBlockPos)
                 currentTargetBlock = null
             } else {
                 interactionAttempts++
@@ -208,8 +262,13 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
         }
     }
 
-    private fun BlockPos.recordAnotherChestPart(state: BlockState?) {
-        interactedBlocksSet.add(offset(state.anotherChestPartDirection() ?: return))
+    private fun track(blockPos: BlockPos) {
+        fun BlockPos.recordAnotherChestPart(state: BlockState?) {
+            interactedBlocksSet += offset(state.anotherChestPartDirection() ?: return)
+        }
+
+        interactedBlocksSet += blockPos
+        blockPos.recordAnotherChestPart(blockPos.getState())
     }
 
 }

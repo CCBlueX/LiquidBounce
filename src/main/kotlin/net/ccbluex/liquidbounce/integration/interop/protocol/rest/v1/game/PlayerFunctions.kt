@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitiz
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
+import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.netherPosition
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.netty.http.model.RequestObject
@@ -78,6 +79,8 @@ data class PlayerData(
     val actualHealth: Float,
     val maxHealth: Float,
     val absorption: Float,
+    val yaw: Float,
+    val pitch: Float,
     val armor: Int,
     val food: Int,
     val air: Int,
@@ -108,7 +111,9 @@ data class PlayerData(
             player.health.fixNaN(),
             player.getActualHealth().fixNaN(),
             player.maxHealth.fixNaN(),
-            player.absorptionAmount.fixNaN(),
+            if (player.hasHealthScoreboard()) 0f else player.absorptionAmount.fixNaN(),
+            player.yaw.fixNaN(),
+            player.pitch.fixNaN(),
             player.armor.coerceAtMost(20),
             min(player.hungerManager.foodLevel, 20),
             player.air,
@@ -139,7 +144,7 @@ data class PlayerInventoryData(
             armor = player.inventory.armor.map(ItemStack::copy),
             main = player.inventory.main.map(ItemStack::copy),
             crafting = player.playerScreenHandler.craftingInput.heldStacks.map(ItemStack::copy),
-            enderChest = player.enderChestInventory.heldStacks.map(ItemStack::copy),
+            enderChest = player.enderChestInventory.getHeldStacks().map(ItemStack::copy),
         )
     }
 

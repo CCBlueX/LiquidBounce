@@ -24,20 +24,16 @@ import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.entry.RegistryEntry
 
-fun addEnchantment(item: ItemStack, enchantment: RegistryEntry<Enchantment>, level: Int) {
-    item.addEnchantment(enchantment, level)
-}
-
-fun removeEnchantment(item: ItemStack, enchantment: RegistryEntry<Enchantment>) {
-    val enchantmentComponent = item.get(DataComponentTypes.ENCHANTMENTS) ?: return
+fun ItemStack.removeEnchantment(enchantment: RegistryEntry<Enchantment>) {
+    val enchantmentComponent = get(DataComponentTypes.ENCHANTMENTS) ?: return
 
     val builder = ItemEnchantmentsComponent.Builder(enchantmentComponent)
 
     builder.remove { it == enchantment }
 
-    item.set(DataComponentTypes.ENCHANTMENTS, builder.build())
+    set(DataComponentTypes.ENCHANTMENTS, builder.build())
 }
 
-fun clearEnchantments(item: ItemStack) {
-    item.set(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
+fun ItemStack.clearEnchantments() {
+    set(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
 }

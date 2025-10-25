@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.player
@@ -26,11 +27,12 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
+import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
@@ -51,13 +53,24 @@ class NametagTextFormatter(private val entity: Entity) {
         val name = entity.displayName!!
         val nameColor = this.nameColor
 
+        val isBaby = (entity as? MobEntity)?.isBaby == true
+        val baseNameString = (if (isBaby) "Baby " else "") + name.string
+
         val nameText: Text = if (nameColor != null) {
-            name.string.asText().withColor(nameColor)
+            baseNameString.asText().withColor(nameColor)
         } else {
-            name
+            baseNameString.asText()
         }
 
         outputText.append(nameText)
+
+        if (ModuleCombineMobs.running) {
+            val count = ModuleCombineMobs.getCombinedCount(entity)
+            if (count > 1) {
+                val countText = ("x $count").asText().formatted(Formatting.AQUA).bold(true)
+                outputText.append(" ").append(countText)
+            }
+        }
 
         if (NametagShowOptions.HEALTH.isShowing()) {
             outputText.append(" ").append(this.healthText)
@@ -80,7 +93,7 @@ class NametagTextFormatter(private val entity: Entity) {
                 isBot -> Formatting.DARK_AQUA.toTextColor()
                 entity.isInvisible -> Formatting.GOLD.toTextColor()
                 entity.isSneaking -> Formatting.DARK_RED.toTextColor()
-                tagColor != null -> TextColor.fromRgb(tagColor.toARGB())
+                tagColor != null -> tagColor.toTextColor()
                 else -> null
             }
         }
@@ -119,10 +132,10 @@ class NametagTextFormatter(private val entity: Entity) {
                 return regular("")
             }
 
-            val actualHealth = entity.getActualHealth().toInt()
+            val actualHealth = (entity.getActualHealth() +
+                if (entity.hasHealthScoreboard()) 0f else entity.absorptionAmount).toInt()
 
             val healthColor = when {
-                // Perhaps you should modify the values here
                 actualHealth >= 14 -> Formatting.GREEN
                 actualHealth >= 8 -> Formatting.YELLOW
                 else -> Formatting.RED

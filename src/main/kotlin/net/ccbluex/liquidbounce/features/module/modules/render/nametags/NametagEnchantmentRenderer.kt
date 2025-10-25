@@ -18,19 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.drawColoredQuad
+import net.ccbluex.liquidbounce.render.drawColoredQuadOutlines
+import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
-import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Rect
+import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
-import net.minecraft.client.render.VertexFormats
-import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.client.gl.ShaderProgramKeys
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
@@ -41,54 +39,58 @@ import net.minecraft.client.resource.language.I18n
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.ccbluex.liquidbounce.utils.client.mc
+import org.joml.Vector2f
+import org.joml.component1
+import org.joml.component2
+import kotlin.math.hypot
 
 private object EnchantmentDisplayHelper {
-    private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(100)
-    
+    private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(128)
+
     private val knownCurses = setOf(
         Enchantments.BINDING_CURSE,
         Enchantments.VANISHING_CURSE
     )
-    
+
     fun getEnchantmentInfo(enchantment: RegistryKey<Enchantment>): EnchantmentInfo {
         return EnchantmentInfo(
             displayName = getAbbreviation(enchantment),
             isCurse = isCurse(enchantment)
         )
     }
-    
+
     private fun getEnchantmentName(enchantment: RegistryKey<Enchantment>): String {
         val idPath = enchantment.value.toString().substringAfter(':')
         val translationKey = "enchantment.minecraft.$idPath"
         return I18n.translate(translationKey)
     }
-    
+
     private fun getSingleWordAbbreviation(word: String): String = word.take(3)
-    
-    private fun getInitialsAbbreviation(words: List<String>): String = 
+
+    private fun getInitialsAbbreviation(words: List<String>): String =
         words.joinToString("") { it.first().toString() }
-    
+
     private fun getCompoundAbbreviation(words: List<String>): String {
         val firstWord = words[0]
-        
+
         if (firstWord.length >= 3) {
             return firstWord.take(3)
         }
-        
+
         val remainingChars = 3 - firstWord.length
         return firstWord + words.getOrNull(1)?.take(remainingChars).orEmpty()
     }
-    
+
     private fun processMultiWordName(words: List<String>): String {
         val initials = getInitialsAbbreviation(words)
-        
+
         return if (initials.length >= 3) {
             initials
         } else {
             getCompoundAbbreviation(words)
         }
     }
-    
+
     private fun processName(name: String): String {
         if (name.length <= 3) {
             return name
@@ -102,14 +104,14 @@ private object EnchantmentDisplayHelper {
             getSingleWordAbbreviation(words.getOrNull(0) ?: "")
         }
     }
-    
+
     private fun getAbbreviation(enchantment: RegistryKey<Enchantment>): String {
         return enchantmentAbbreviationCache.getOrPut(enchantment) {
             val name = getEnchantmentName(enchantment)
             processName(name)
         }
     }
-    
+
     private fun isCurse(enchantment: RegistryKey<Enchantment>): Boolean = enchantment in knownCurses
 }
 
@@ -134,60 +136,33 @@ object NametagEnchantmentRenderer {
         mc.world?.registryManager?.getOrThrow(RegistryKeys.ENCHANTMENT)?.keys?.toList() ?: emptyList()
     }
 
+    @JvmRecord
     private data class EnchantCell(
-        val processedText: ProcessedText,
+        val processedText: MinecraftTextProcessor.RecyclingProcessedText,
         val textWidth: Float,
         val isCurse: Boolean
     )
 
+    @JvmRecord
     private data class EnchantColumn(
         val cells: List<EnchantCell>,
         val width: Float
     )
 
-    fun drawEnchantments(
-        env: RenderEnvironment,
-        itemStack: ItemStack,
-        x: Float,
-        y: Float,
-        fontRenderer: FontRendererBuffers
-    ) {
-        if (itemStack.isEmpty || !NametagShowOptions.ENCHANTMENTS.isShowing() || itemStack.getEnchantmentCount() <= 0) {
-            return
-        }
-
-        val cells = processItemEnchantments(itemStack)
-        if (cells.isEmpty()) {
-            return
-        }
-
-        RenderSystem.enableBlend()
-        RenderSystem.defaultBlendFunc()
-        renderEnchantmentColumn(env, cells, x, y, fontRenderer)
-    }
-
     fun drawEntityEnchantments(
         env: RenderEnvironment,
         entity: LivingEntity,
-        x: Float,
-        y: Float,
-        fontRenderer: FontRendererBuffers
+        worldX: Float,
+        worldY: Float,
     ) {
         if (!NametagShowOptions.ENCHANTMENTS.isShowing()) return
 
         val itemsWithEnchantments = getEntityItemsWithEnchantments(entity)
         if (itemsWithEnchantments.isEmpty()) return
 
-        val worldPos = entity.pos
-        val worldX = worldPos.x.toFloat()
-        val worldY = (worldPos.y + entity.height + 0.5f).toFloat()
-
         if (isPositionOccluded(worldX, worldY)) {
             return
         }
-
-        RenderSystem.enableBlend()
-        RenderSystem.defaultBlendFunc()
 
         val columnData = itemsWithEnchantments.mapNotNull { item ->
             val cells = processItemEnchantments(item)
@@ -200,25 +175,23 @@ object NametagEnchantmentRenderer {
 
         if (columnData.isNotEmpty()) {
             // Add this position to the drawn areas list
-            ModuleNametags.drawnEnchantmentAreas.add(Pair(worldX, worldY))
-            drawEnchantmentColumns(env, worldX, worldY, fontRenderer, columnData)
+            ModuleNametags.drawnEnchantmentAreas.add(Vector2f(worldX, worldY))
+            env.drawEnchantmentColumns(worldX, worldY, columnData)
         }
     }
-    
+
     // Check if a position would be occluded by another enchantment panel
     private fun isPositionOccluded(x: Float, y: Float): Boolean {
         val OCCLUSION_THRESHOLD = 2f
-        
+
         return ModuleNametags.drawnEnchantmentAreas.any { (existingX, existingY) ->
-            val distance = Math.sqrt(((existingX - x) * (existingX - x) + 
-                                     (existingY - y) * (existingY - y)).toDouble()).toFloat()
-            distance < OCCLUSION_THRESHOLD
+            hypot(existingX - x, existingY - y) < OCCLUSION_THRESHOLD
         }
     }
 
     private fun processItemEnchantments(itemStack: ItemStack): List<EnchantCell> {
         val enchantmentList = mutableListOf<Pair<EnchantmentInfo, Int>>()
-        
+
         for (enchantmentKey in supportedEnchantments) {
             val level = itemStack.getEnchantment(enchantmentKey)
             if (level > 0) {
@@ -233,14 +206,13 @@ object NametagEnchantmentRenderer {
 
         val cells = sortedEnchantments
             .take(MAX_ENCHANTMENTS_PER_ITEM)
-            .map { (info, level) -> createCell(info, level) }
-            .toMutableList()
+            .mapToArray { (info, level) -> createCell(info, level) }
 
         if (hasMoreEnchantments && cells.isNotEmpty()) {
             cells[cells.lastIndex] = createCell(null, 0, true)
         }
 
-        return cells
+        return cells.asList()
     }
 
     private fun getEntityItemsWithEnchantments(entity: LivingEntity): List<ItemStack> = listOf(
@@ -279,12 +251,10 @@ object NametagEnchantmentRenderer {
         )
     }
 
-    private fun renderEnchantmentColumn(
-        env: RenderEnvironment,
+    private fun RenderEnvironment.renderEnchantmentColumn(
         cells: List<EnchantCell>,
         x: Float,
         y: Float,
-        fontRenderer: FontRendererBuffers
     ) {
         val maxWidth = cells.maxOfOrNull { it.textWidth } ?: 0f
         val cellWidth = maxWidth * FIXED_SCALE + PADDING * 2
@@ -301,7 +271,7 @@ object NametagEnchantmentRenderer {
             )
             val bgColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL
 
-            drawCellBackground(env, rect, bgColor)
+            drawCellBackground(rect, bgColor)
 
             val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
             val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
@@ -315,33 +285,20 @@ object NametagEnchantmentRenderer {
                 scale = FIXED_SCALE
             )
         }
-
-        ModuleNametags.fontRenderer.commit(env, fontRenderer)
     }
 
-    private fun drawCellBackground(
-        env: RenderEnvironment,
+    private fun RenderEnvironment.drawCellBackground(
         rect: Rect,
         color: Color4b
     ) {
-        val argb = color.toARGB()
-        env.drawCustomMesh(
-            DrawMode.QUADS,
-            VertexFormats.POSITION_COLOR,
-            ShaderProgramKeys.POSITION_COLOR
-        ) { matrix ->
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(argb)
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(argb)
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(argb)
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(argb)
-        }
+        val leftTop = Vec3(rect.x1, rect.y1, 0F)
+        val rightBottom = Vec3(rect.x2, rect.y2, 0F)
+        drawColoredQuad(leftTop, rightBottom, color.toARGB())
     }
 
-    private fun drawEnchantmentColumns(
-        env: RenderEnvironment,
+    private fun RenderEnvironment.drawEnchantmentColumns(
         x: Float,
         y: Float,
-        fontRenderer: FontRendererBuffers,
         columnData: List<EnchantColumn>
     ) {
         val columnsWidth = columnData.sumOf { it.width.toDouble() }.toFloat()
@@ -360,50 +317,28 @@ object NametagEnchantmentRenderer {
             y + maxColumnHeight + FRAME_MARGIN
         )
 
-        drawGroupBorder(env, groupRect)
+        drawGroupBorder(groupRect)
 
         var columnX = x - halfTotalWidth
         columnData.forEach { column ->
             val columnCenterX = columnX + column.width / 2
-            renderEnchantmentColumn(env, column.cells, columnCenterX, y, fontRenderer)
+            renderEnchantmentColumn(column.cells, columnCenterX, y)
             columnX += column.width + COLUMN_SPACING
         }
     }
 
-    private fun drawGroupBorder(env: RenderEnvironment, rect: Rect) {
+    private fun RenderEnvironment.drawGroupBorder(rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
-        env.drawCustomMesh(
-            DrawMode.QUADS,
-            VertexFormats.POSITION_COLOR,
-            ShaderProgramKeys.POSITION_COLOR
-        ) { matrix ->
-            val bgColor = Color4b.BLACK.with(a = 120).toARGB()
-            
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(bgColor)
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(bgColor)
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(bgColor)
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(bgColor)
-        }
-        
-        // Still drawing the border lines
-        env.drawCustomMesh(
-            DrawMode.DEBUG_LINES,
-            VertexFormats.POSITION_COLOR,
-            ShaderProgramKeys.POSITION_COLOR
-        ) { matrix ->
-            val color = Color4b.RED.toARGB()
+        val leftTop = Vec3(rect.x1, rect.y1, 0F)
+        val rightBottom = Vec3(rect.x2, rect.y2, 0F)
+        drawColoredQuad(
+            leftTop, rightBottom,
+            Color4b.BLACK.with(a = 100).toARGB(),
+        )
 
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(color)
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(color)
-
-            vertex(matrix, rect.x2, rect.y1, 0.0f).color(color)
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(color)
-
-            vertex(matrix, rect.x2, rect.y2, 0.0f).color(color)
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(color)
-
-            vertex(matrix, rect.x1, rect.y2, 0.0f).color(color)
-            vertex(matrix, rect.x1, rect.y1, 0.0f).color(color)
-        }
+        drawColoredQuadOutlines(
+            leftTop, rightBottom,
+            Color4b.RED.toARGB(),
+        )
     }
 }

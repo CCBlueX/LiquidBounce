@@ -34,14 +34,14 @@ object CommandClientIntegrationSubcommand {
         .build()
 
     private fun resetSubcommand() = CommandBuilder.begin("reset")
-        .handler { _, _ ->
+        .handler {
             chat(regular("Resetting client JCEF browser..."))
             IntegrationListener.update()
         }.build()
 
     private fun menuSubcommand() = CommandBuilder.begin("menu")
         .alias("url")
-        .handler { _, _ ->
+        .handler {
             chat(variable("Client Integration"))
             val baseUrl = ThemeManager.getScreenLocation().url
 

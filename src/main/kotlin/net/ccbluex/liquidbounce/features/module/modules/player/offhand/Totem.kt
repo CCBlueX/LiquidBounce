@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFa
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.*
-import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.math.toVec3d
@@ -32,7 +32,7 @@ import net.minecraft.block.RespawnAnchorBlock
 import net.minecraft.entity.EntityPose
 import net.minecraft.util.math.BlockPos
 
-object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
+internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
     /**
      * The totem mode might have a lower switch delay than other items.
@@ -47,7 +47,7 @@ object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
     /**
      * Switch to a totem on low health and back to the original item when the health goes up again.
      */
-    object Health : ToggleableConfigurable(ModuleOffhand, "Health", true) {
+    object Health : ToggleableConfigurable(this, "Health", true) {
 
         /**
          * At which health we switch to a totem.
@@ -58,7 +58,7 @@ object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
          * For crystal pvp, allows to have longer a useful item in your offhand if you're not in danger of
          * the main damage source.
          */
-        private object Safety : ToggleableConfigurable(ModuleOffhand, "Safety", true) {
+        private object Safety : ToggleableConfigurable(this, "Safety", true) {
             // TODO option for 2x2 and 2x1
 
             /**
@@ -267,7 +267,7 @@ object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
     /**
      * @return `true` if the [actions] got performed.
      */
-    fun send(actions: List<ClickInventoryAction>): Boolean {
+    fun send(actions: List<InventoryAction.Click>): Boolean {
         if (!sendDirectly) {
             return false
         }

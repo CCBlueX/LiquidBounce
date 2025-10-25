@@ -22,7 +22,6 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonObject
-import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
@@ -95,13 +94,13 @@ fun deleteScreen(requestObject: RequestObject): FullHttpResponse {
     val screen = mc.currentScreen ?: return httpForbidden("No screen")
 
     if (screen is VirtualDisplayScreen && screen.parentScreen != null) {
-        RenderSystem.recordRenderCall {
+        mc.execute {
             mc.setScreen(screen.parentScreen)
         }
         return httpNoContent()
     }
 
-    RenderSystem.recordRenderCall {
+    mc.execute {
         mc.setScreen(
             if (inGame) {
                 null

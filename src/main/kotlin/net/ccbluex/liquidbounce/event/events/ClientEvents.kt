@@ -33,11 +33,12 @@ import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.InventoryActionChain
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.world.GameMode
 
@@ -74,7 +75,7 @@ class ModuleActivationEvent(val moduleName: String) : Event(), WebSocketEvent
 class ModuleToggleEvent(val moduleName: String, val hidden: Boolean, val enabled: Boolean) : Event(), WebSocketEvent
 
 @Nameable("refreshArrayList")
-object RefreshArrayListEvent : Event()
+object RefreshArrayListEvent : Event(), WebSocketEvent
 
 @Nameable("notification")
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event(), WebSocketEvent {
@@ -91,6 +92,9 @@ class TargetChangeEvent(val target: PlayerData?) : Event(), WebSocketEvent
 
 @Nameable("blockCountChange")
 class BlockCountChangeEvent(val count: Int?) : Event(), WebSocketEvent
+
+@Nameable("bedStateChange")
+class BedStateChangeEvent(val bedStates: Collection<BedState>) : Event(), WebSocketEvent
 
 @Nameable("clientChatStateChange")
 class ClientChatStateChange(val state: State) : Event(), WebSocketEvent {
@@ -174,7 +178,7 @@ class VirtualScreenEvent(
 class ServerPingedEvent(val server: ServerInfo) : Event(), WebSocketEvent
 
 @Nameable("componentsUpdate")
-class ComponentsUpdate(val components: List<Component>) : Event(), WebSocketEvent {
+class ComponentsUpdate(val id: String? = null, val components: List<Component>) : Event(), WebSocketEvent {
     override val serializer get() = accessibleInteropGson
 }
 
@@ -188,14 +192,14 @@ object ResourceReloadEvent : Event()
 class ScaleFactorChangeEvent(val scaleFactor: Double) : Event(), WebSocketEvent
 
 @Nameable("scheduleInventoryAction")
-class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChain> = mutableListOf()) : Event() {
+class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Chain> = mutableListOf()) : Event() {
 
     fun schedule(
         constrains: InventoryConstraints,
         action: InventoryAction,
         priority: Priority = Priority.NORMAL
     ) {
-        schedule.add(InventoryActionChain(constrains, listOf(action), priority))
+        this.schedule.add(InventoryAction.Chain(constrains, listOf(action), priority))
     }
 
     fun schedule(
@@ -203,7 +207,7 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChai
         vararg actions: InventoryAction,
         priority: Priority = Priority.NORMAL
     ) {
-        this.schedule.add(InventoryActionChain(constrains, actions.asList(), priority))
+        this.schedule.add(InventoryAction.Chain(constrains, actions.unmodifiable(), priority))
     }
 
     fun schedule(
@@ -211,7 +215,7 @@ class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChai
         actions: List<InventoryAction>,
         priority: Priority = Priority.NORMAL
     ) {
-        this.schedule.add(InventoryActionChain(constrains, actions, priority))
+        this.schedule.add(InventoryAction.Chain(constrains, actions, priority))
     }
 }
 

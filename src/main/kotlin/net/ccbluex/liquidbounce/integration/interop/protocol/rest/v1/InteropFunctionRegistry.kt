@@ -47,7 +47,9 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     delete("/localStorage", ::deleteLocalStorage)
 
     // Theme Functions
-    get("/theme", ::getThemeInfo)
+    get("/theme", ::getTheme) // returns current theme
+    get("/theme/:id", ::getTheme)
+    get("/shader", ::getToggleShaderInfo)
     post("/shader", ::postToggleShader)
 
     // VirtualScreen Functions
@@ -68,9 +70,9 @@ internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/clien
     }
     get("/module/:name", ::getModule)
 
-
     // Component Functions
     get("/components", ::getComponents)
+    get("/components/:id", ::getComponents)
 
     // Session Functions
     get("/session", ::getSessionInfo)

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.util.asRefreshable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
@@ -31,7 +32,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Eagle", false) {
 
     private val mode by enumChoice("Mode", EagleMode.INPUT)
-    private val blocksToEagle by int("BlocksToEagle", 0, 0..10)
+    private val blocksToEagle = intRange("BlocksToEagle", 0..0, 0..10).asRefreshable()
     private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..1.3f)
     private val onlyOnGround by boolean("OnlyOnGround", true)
 
@@ -66,8 +67,9 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
 
         placedBlocks += 1
 
-        if (placedBlocks > blocksToEagle) {
+        if (placedBlocks > blocksToEagle.current) {
             placedBlocks = 0
+            blocksToEagle.refresh()
 
             if (mode == EagleMode.PACKET) {
                 network.sendPacket(

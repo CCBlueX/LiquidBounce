@@ -24,32 +24,32 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
-import net.minecraft.item.AxeItem
-import net.minecraft.item.Item
+import net.ccbluex.liquidbounce.utils.item.isAxe
+import net.ccbluex.liquidbounce.utils.item.isSword
+import net.minecraft.item.ItemStack
 import net.minecraft.item.MaceItem
-import net.minecraft.item.SwordItem
+import java.util.function.BooleanSupplier
 
 @Suppress("unused")
 enum class KillAuraRequirements(
     override val choiceName: String,
-    val meets: () -> Boolean
-) : NamedChoice {
-    CLICK("Click", {
-        mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
-    }),
-    WEAPON("Weapon", {
-        player.inventory.mainHandStack.item.isWeapon()
-    }),
-    VANILLA_NAME("VanillaName", {
-        player.inventory.mainHandStack.customName == null
-    }),
-    NOT_BREAKING("NotBreaking", {
-        mc.interactionManager?.isBreakingBlock == false
-    });
+) : NamedChoice, BooleanSupplier {
+    CLICK("Click"),
+    WEAPON("Weapon"),
+    VANILLA_NAME("VanillaName"),
+    NOT_BREAKING("NotBreaking");
+
+    override fun getAsBoolean(): Boolean =
+        when (this) {
+            CLICK -> mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
+            WEAPON -> player.inventory.mainHandStack.isWeapon()
+            VANILLA_NAME -> player.inventory.mainHandStack.customName == null
+            NOT_BREAKING -> mc.interactionManager?.isBreakingBlock == false
+        }
 }
 
 /**
  * Check if the item is a weapon.
  */
-private fun Item.isWeapon() = this is SwordItem || !isOlderThanOrEqual1_8 && this is AxeItem
-    || this is MaceItem
+private fun ItemStack.isWeapon() = this.isSword || !isOlderThanOrEqual1_8 && this.isAxe
+    || this.item is MaceItem

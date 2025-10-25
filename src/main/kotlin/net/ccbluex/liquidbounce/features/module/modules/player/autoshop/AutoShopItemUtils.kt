@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
@@ -70,7 +69,8 @@ fun String.isArmorItem() : Boolean {
 
 fun GenericContainerScreen.stacks(): List<String> {
     return this.screenHandler.slots
-        .filter { !it.stack.isNothing() &&
+        .filter {
+            !it.stack.isEmpty &&
             it.inventory === this.screenHandler.inventory }
         .mapNotNull { Registries.ITEM.getId(it.stack.item).path }
 }

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.combat
 
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.RangedValue
@@ -28,8 +29,10 @@ import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.mob.Angerable
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.player.PlayerEntity
+import java.util.function.Predicate
 
 /**
  * A target tracker to choose the best enemy to attack
@@ -44,9 +47,10 @@ open class TargetTracker(
 
     var target: LivingEntity? = null
 
-    fun selectFirst(predicate: ((LivingEntity) -> Boolean)? = null): LivingEntity? {
+    fun selectFirst(predicate: Predicate<LivingEntity>? = null): LivingEntity? {
         val enemies = targets()
-        return (if (predicate != null) enemies.firstOrNull(predicate) else enemies.firstOrNull()).also { target = it }
+        val selected = if (predicate != null) enemies.firstOrNull(predicate::test) else enemies.firstOrNull()
+        return selected.also { this.target = it }
     }
 
     fun <R> select(evaluator: (LivingEntity) -> R): R? {
@@ -66,10 +70,10 @@ open class TargetTracker(
         target = null
     }
 
-    fun validate(validator: ((LivingEntity) -> Boolean)? = null) {
+    fun validate(predicate: Predicate<LivingEntity>? = null) {
         val target = target ?: return
 
-        if (!validate(target) || validator != null && !validator(target)) {
+        if (!validate(target) || predicate != null && !predicate.test(target)) {
             reset()
         }
     }
@@ -84,6 +88,7 @@ open class TargetSelector(
         this(defaultPriority, DummyRangedValueProvider(range))
 
     var closestSquaredEnemyDistance: Double = 0.0
+        private set
 
     private val range = rangeValue.register(this)
     private val fov by float("FOV", 180f, 0f..180f)
@@ -91,42 +96,35 @@ open class TargetSelector(
     private val priority by enumChoice("Priority", defaultPriority)
 
     /**
+     * Counts available targets.
+     */
+    fun countTargets(): Int = world.entities.count { entity ->
+        entity is LivingEntity && validate(entity)
+    }
+
+    /**
      * Update should be called to always pick the best target out of the current world context
      */
     fun targets(): MutableList<LivingEntity> {
-        val entities = world.entities
-            .asSequence()
-            .filterIsInstance<LivingEntity>()
-            .filter(::validate)
-            // Sort by distance (closest first) - in case of tie at priority level
-            .sortedBy { it.squaredBoxedDistanceTo(player) }
-            .toMutableList()
+        val entities = ObjectArrayList<LivingEntity>()
 
-        if (entities.isEmpty()) {
+        for (entity in world.entities) {
+            if (entity is LivingEntity && validate(entity)) {
+                entities.add(entity)
+            }
+        }
+
+        if (entities.isEmpty) {
             return entities
         }
 
-        // Sort by entity type
-        entities.sortWith(Comparator.comparingInt { entity ->
-            when (entity) {
-                is PlayerEntity -> 0
-                is HostileEntity -> 1
-                else -> 2
+        entities.sortWith(
+            if (priority == TargetPriority.DISTANCE) {
+                COMPARATOR_BY_TYPE.thenComparing(TargetPriority.DISTANCE.comparator)
+            } else {
+                COMPARATOR_BY_TYPE.thenComparing(priority.comparator).thenComparing(TargetPriority.DISTANCE.comparator)
             }
-        })
-
-        when (priority) {
-            // Lowest health first
-            TargetPriority.HEALTH -> entities.sortBy { it.getActualHealth() }
-            // Closest to your crosshair first
-            TargetPriority.DIRECTION -> entities.sortBy { RotationUtil.crosshairAngleToEntity(it) }
-            // Oldest entity first
-            TargetPriority.AGE -> entities.sortByDescending { it.age }
-            // With the lowest hurt time first
-            TargetPriority.HURT_TIME -> entities.sortBy { it.hurtTime } // Sort by hurt time
-            // Closest to you first
-            else -> {} // Do nothing
-        }
+        )
 
         // Update max distance squared
         closestSquaredEnemyDistance = entities.minOf { it.squaredBoxedDistanceTo(player) }
@@ -178,10 +176,38 @@ open class TargetSelector(
 
 }
 
-enum class TargetPriority(override val choiceName: String) : NamedChoice {
-    HEALTH("Health"),
-    DISTANCE("Distance"),
-    DIRECTION("Direction"),
-    HURT_TIME("HurtTime"),
-    AGE("Age")
+private val COMPARATOR_BY_TYPE: Comparator<LivingEntity> = Comparator.comparingInt { entity ->
+    when (entity) {
+        is PlayerEntity -> 0
+        is HostileEntity -> 1
+        is Angerable if entity.angryAt == player.uuid -> 2
+        else -> Int.MAX_VALUE
+    }
+}
+
+enum class TargetPriority(override val choiceName: String, val comparator: Comparator<in LivingEntity>) : NamedChoice {
+    /**
+     * Lowest health first
+     */
+    HEALTH("Health", Comparator.comparingDouble { it.getActualHealth().toDouble() }),
+
+    /**
+     * Closest to you first
+     */
+    DISTANCE("Distance", Comparator.comparingDouble { it.squaredBoxedDistanceTo(player) }),
+
+    /**
+     * Closest to your crosshair first
+     */
+    DIRECTION("Direction", Comparator.comparingDouble { RotationUtil.crosshairAngleToEntity(it).toDouble() }),
+
+    /**
+     * With the lowest hurt time first
+     */
+    HURT_TIME("HurtTime", Comparator.comparingInt { it.hurtTime }),
+
+    /**
+     * Oldest entity first
+     */
+    AGE("Age", Comparator.comparingInt { -it.age }),
 }

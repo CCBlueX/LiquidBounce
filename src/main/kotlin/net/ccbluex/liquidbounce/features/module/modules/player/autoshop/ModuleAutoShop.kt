@@ -21,8 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.config.AutoShopConfig.loadAutoShopConfig
 import net.ccbluex.liquidbounce.config.ShopConfigPreset
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.NormalPurchaseMode
@@ -90,7 +91,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
 
         // wait after opening a shop (before the first click)
         if (!waitedBeforeTheFirstClick) {
-            waitConditional(startDelay.random()) { !isShopOpen() }
+            tickConditional(startDelay.random()) { !isShopOpen() }
             waitedBeforeTheFirstClick = true
         }
 
@@ -124,7 +125,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         reset()
     }
 
-    private suspend fun Sequence.doClicks(remainingElements: List<ShopElement>) {
+    private suspend fun doClicks(remainingElements: List<ShopElement>) {
         val currentElement = remainingElements.first()
         val categorySlot = currentElement.categorySlot
         val itemSlot = currentElement.itemSlot
@@ -148,7 +149,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         buyAllItemsInCategory(remainingElements)
     }
 
-    private suspend fun Sequence.switchCategory(nextCategorySlot: Int) {
+    private suspend fun switchCategory(nextCategorySlot: Int) {
         // we don't need to open, for example, "Blocks" category again if it's already open
         if (prevCategorySlot == nextCategorySlot) {
             return
@@ -168,11 +169,11 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         }
 
         prevCategorySlot = nextCategorySlot
-        waitUntil { !isShopOpen() || hasItemCategoryChanged(prevShopStacks) }
-        waitConditional(extraCategorySwitchDelay.random()) { !isShopOpen() }
+        tickUntil { !isShopOpen() || hasItemCategoryChanged(prevShopStacks) }
+        tickConditional(extraCategorySwitchDelay.random()) { !isShopOpen() }
     }
 
-    private suspend fun Sequence.buyItem(itemSlot: Int, shopElement: ShopElement) {
+    private suspend fun buyItem(itemSlot: Int, shopElement: ShopElement) {
         val currentInventory = autoShopInventoryManager.getInventoryItems()
 
         interaction.clickSlot(
@@ -188,11 +189,14 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         }
 
         // waits to receive items from a server after clicking before performing the next click
-        waitUntil { !isShopOpen() || hasReceivedItems(
+        tickUntil {
+            !isShopOpen() || hasReceivedItems(
                 prevInventory = currentInventory,
                 expectedItems = mapOf(
                     shopElement.item.id to shopElement.amountPerClick,
-                    shopElement.price.id to -shopElement.price.minAmount))
+                    shopElement.price.id to -shopElement.price.minAmount
+                )
+            )
         }
 
         // expects to get an item later
@@ -203,10 +207,10 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         }
 
         // waits extra ticks
-        waitConditional(NormalPurchaseMode.extraDelay.random()) { !isShopOpen() }
+        tickConditional(NormalPurchaseMode.extraDelay.random()) { !isShopOpen() }
     }
 
-    private suspend fun Sequence.buyAllItemsInCategory(remainingElements: List<ShopElement>) {
+    private suspend fun buyAllItemsInCategory(remainingElements: List<ShopElement>) {
         val simulationResult = simulateNextPurchases(remainingElements, onlySameCategory = true)
         val slotsToClick = simulationResult.first
         val prevInventory = autoShopInventoryManager.getInventoryItems()
@@ -244,11 +248,13 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         autoShopInventoryManager.addPendingItems(newPendingItems)
 
         // waits for an inventory update and for an item category update
-        waitUntil { !isShopOpen() || (hasReceivedItems(prevInventory, simulationResult.second)
-            && (nextCategorySlot == -1 || hasItemCategoryChanged(prevShopStacks))) }
+        tickUntil {
+            !isShopOpen() || (hasReceivedItems(prevInventory, simulationResult.second)
+                && (nextCategorySlot == -1 || hasItemCategoryChanged(prevShopStacks)))
+        }
 
         // waits extra ticks
-        waitConditional(extraCategorySwitchDelay.random()) { !isShopOpen() }
+        tickConditional(extraCategorySwitchDelay.random()) { !isShopOpen() }
     }
 
     private fun hasItemCategoryChanged(prevShopStacks: List<String>): Boolean {

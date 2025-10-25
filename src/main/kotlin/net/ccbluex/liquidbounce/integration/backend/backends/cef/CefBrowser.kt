@@ -19,12 +19,8 @@
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
-import net.ccbluex.liquidbounce.integration.backend.browser.Browser
-import net.ccbluex.liquidbounce.integration.backend.browser.BrowserRenderer
-import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
-import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.*
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.backend.input.InputHandler
 import net.ccbluex.liquidbounce.integration.backend.input.InputListener
@@ -69,14 +65,20 @@ class CefBrowser(
             // current UI.
             mcefBrowser.clear()
 
-            logger.info("Browser $this viewport updated: $value," +
-                " scaled to $scaledWidth x $scaledHeight at zoom level $zoomLevel")
+            logger.debug(
+                "Browser {} viewport updated: {}, scaled to {} x {} at zoom level {}",
+                this,
+                value,
+                scaledWidth,
+                scaledHeight,
+                zoomLevel
+            )
         }
     override var visible = true
     private val mcefBrowser: MCEFBrowser
 
     private val renderer = BrowserRenderer(this)
-    private val inputListener: InputListener? = inputAcceptor?.let { inputChecker ->
+    private val inputListener: InputListener? = inputAcceptor?.let { _ ->
         InputListener(this, this, inputAcceptor)
     }
 

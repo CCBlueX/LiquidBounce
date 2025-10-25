@@ -67,7 +67,8 @@ class FallingPlayer(
             d = 0.01
         }
 
-        val j: Float = this.player.pitch * 0.017453292f
+
+        val j: Float = this.player.pitch * MathHelper.RADIANS_PER_DEGREE
 
         val k = sqrt(rotationVec.x * rotationVec.x + rotationVec.z * rotationVec.z)
         val l = sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ)

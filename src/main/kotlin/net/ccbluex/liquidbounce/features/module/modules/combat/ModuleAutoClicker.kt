@@ -20,21 +20,22 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
+import net.ccbluex.liquidbounce.utils.item.isAxe
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.Entity
-import net.minecraft.item.AxeItem
 import net.minecraft.item.BlockItem
-import net.minecraft.item.SwordItem
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
 
@@ -44,7 +45,7 @@ import net.minecraft.util.hit.EntityHitResult
  * Clicks automatically when holding down a mouse button.
  */
 
-object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases = arrayOf("TriggerBot")) {
+object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases = listOf("TriggerBot")) {
 
     object AttackButton : ToggleableConfigurable(this, "Attack", true) {
 
@@ -88,12 +89,12 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         }
 
         fun isWeaponSelected(): Boolean {
-            val item = player.mainHandStack.item
+            val stack = player.mainHandStack
 
             return when (weapon) {
-                Weapon.SWORD -> item is SwordItem
-                Weapon.AXE -> item is AxeItem
-                Weapon.BOTH -> item is SwordItem || item is AxeItem
+                Weapon.SWORD -> stack.isSword
+                Weapon.AXE -> stack.isAxe
+                Weapon.BOTH -> stack.isSword || stack.isAxe
                 Weapon.ANY -> true
             }
         }
@@ -102,10 +103,10 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             return criticalsSelectionMode.isCriticalHit(entity)
         }
 
-        suspend fun Sequence.encounterItemUse(): Boolean {
+        suspend fun encounterItemUse(): Boolean {
             return when (onItemUse) {
                 Use.WAIT -> {
-                    this.waitUntil { !player.isUsingItem }
+                    tickUntil { !player.isUsingItem }
 
                     if (delayPostStopUse > 0) {
                         waitTicks(delayPostStopUse)

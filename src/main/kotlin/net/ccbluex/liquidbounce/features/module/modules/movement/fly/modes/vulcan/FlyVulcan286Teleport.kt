@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -72,12 +73,12 @@ internal object FlyVulcan286Teleport : Choice("Vulcan286-Teleport-18") {
             player.jump()
             // Ugly code, yes I know
             // If this wasn't like this, it would trigger at the same tick...
-            waitUntil { !player.isOnGround }
-            waitUntil { player.isOnGround }
+            tickUntil { !player.isOnGround }
+            tickUntil { player.isOnGround }
         }
 
         jumping = false
-        waitUntil { player.hurtTime > 0 }
+        tickUntil { player.hurtTime > 0 }
 
         // Flag to disable some checks...
         network.sendPacket(PositionAndOnGround(
@@ -88,7 +89,7 @@ internal object FlyVulcan286Teleport : Choice("Vulcan286-Teleport-18") {
             player.horizontalCollision
         ))
 
-        waitUntil { flagged }
+        tickUntil { flagged }
 
         // Cool, we took damage so lets fly
         val vector = Vec3d.fromPolar(0F, player.yaw).normalize()

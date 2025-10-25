@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoices
@@ -52,7 +51,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * The command supports active detection modes for more thorough analysis.
  */
-object CommandServerInfo : CommandFactory, EventListener {
+object CommandServerInfo : Command.Factory, EventListener {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -63,7 +62,7 @@ object CommandServerInfo : CommandFactory, EventListener {
                     .optional()
                     .build()
             )
-            .suspendHandler { command, args ->
+            .suspendHandler {
                 val detectionTypes = args.getOrNull(0) as? Set<DetectionType>
 
                 if (!detectionTypes.isNullOrEmpty()) {
@@ -111,7 +110,7 @@ object CommandServerInfo : CommandFactory, EventListener {
         val resolvedServerAddress = ServerObserver.serverAddress?.toString()
         val tps = ServerObserver.tps
         val ping = network.getPlayerListEntry(player.uuid)?.latency ?: 0
-        val advertisedVersion = "${serverInfo?.version?.convertToString()} (${serverInfo?.protocolVersion})"
+        val advertisedVersion = "${serverInfo?.version?.string} (${serverInfo?.protocolVersion})"
         val detectedServerVersion = ServerObserver.serverVersion ?: "<= 1.20.4"
 
         chat(warning(command.result("header")))

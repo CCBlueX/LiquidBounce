@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.playerName
@@ -34,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
  *
  * Allows you to view from the perspective of another player in the game.
  */
-object CommandRemoteView : CommandFactory, MinecraftShortcuts {
+object CommandRemoteView : Command.Factory, MinecraftShortcuts {
 
     private var pName: String? = null
 
@@ -56,7 +55,7 @@ object CommandRemoteView : CommandFactory, MinecraftShortcuts {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val name = args[0] as String
             for (entity in mc.world!!.entities) {
                 if (name.equals(entity.nameForScoreboard, true)) {
@@ -87,7 +86,7 @@ object CommandRemoteView : CommandFactory, MinecraftShortcuts {
 
     private fun offSubcommand() = CommandBuilder
         .begin("off")
-        .handler { command, _ ->
+        .handler {
             if (mc.getCameraEntity() != player) {
                 mc.setCameraEntity(player)
                 chat(

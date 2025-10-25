@@ -4,12 +4,11 @@
     import type {BlockCountChangeEvent} from "../../../integration/events";
     import {mapToColor} from "../../../util/color_utils";
 
-    let count: number | undefined;
+    let count = $state<number | undefined>(undefined);
 
     listen("blockCountChange", (data: BlockCountChangeEvent) => {
         count = data.count;
     });
-
 </script>
 
 {#if count !== undefined}
@@ -28,6 +27,8 @@
     white-space: nowrap;
     padding: 5px 8px;
     font-weight: 500;
+    text-align: center;
+    width: fit-content;
     transform: translate(-100%);
   }
 </style>

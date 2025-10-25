@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
  */
 class RangedValue<T : Any>(
     name: String,
-    aliases: Array<String> = emptyArray(),
+    aliases: List<String> = emptyList(),
     defaultValue: T,
     @Exclude val range: ClosedRange<*>,
     @Exclude val suffix: String,

@@ -67,6 +67,7 @@ class LineSegment(position: Vec3d, direction: Vec3d, val phiRange: ClosedFloatin
     }
 
     companion object {
+        @JvmStatic
         fun fromPoints(a: Vec3d, b: Vec3d): LineSegment {
             return LineSegment(a, b.subtract(a), 0.0..1.0)
         }

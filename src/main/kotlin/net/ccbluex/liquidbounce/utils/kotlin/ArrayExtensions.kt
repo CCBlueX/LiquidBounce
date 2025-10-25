@@ -21,13 +21,10 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.doubles.DoubleIterable
-import it.unimi.dsi.fastutil.doubles.DoubleIterator
-import it.unimi.dsi.fastutil.floats.FloatIterable
-import it.unimi.dsi.fastutil.floats.FloatIterator
-import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet
-import it.unimi.dsi.fastutil.ints.IntList
 import it.unimi.dsi.fastutil.ints.IntSet
+import net.ccbluex.fastutil.forEachDouble
+import net.ccbluex.fastutil.mapToIntArray
 import java.util.*
 import java.util.stream.Stream
 
@@ -51,93 +48,9 @@ fun ClosedFloatingPointRange<Float>.proportionOfValue(value: Float): Float {
     }
 }
 
-// https://stackoverflow.com/questions/44315977/ranges-in-kotlin-using-data-type-double
-infix fun ClosedRange<Double>.step(step: Double): DoubleIterable {
-    require(start.isFinite())
-    require(endInclusive.isFinite())
-    require(step > 0.0)
-
-    return DoubleIterable {
-        object : DoubleIterator {
-            private var current = start
-            private var hasNextValue = current <= endInclusive
-
-            override fun hasNext(): Boolean = hasNextValue
-
-            override fun nextDouble(): Double {
-                if (!hasNextValue) {
-                    throw NoSuchElementException()
-                }
-
-                val nextValue = current
-                current += step
-                if (current > endInclusive) {
-                    hasNextValue = false
-                }
-
-                return nextValue
-            }
-
-            override fun remove() {
-                throw UnsupportedOperationException("This iterator is read-only")
-            }
-        }
-    }
-}
-
-infix fun ClosedRange<Float>.step(step: Float): FloatIterable {
-    require(start.isFinite())
-    require(endInclusive.isFinite())
-    require(step > 0.0f)
-
-    return FloatIterable {
-        object : FloatIterator {
-            private var current = start
-            private var hasNextValue = current <= endInclusive
-
-            override fun hasNext(): Boolean = hasNextValue
-
-            override fun nextFloat(): Float {
-                if (!hasNextValue) {
-                    throw NoSuchElementException()
-                }
-
-                val nextValue = current
-                current += step
-                if (current > endInclusive) {
-                    hasNextValue = false
-                }
-
-                return nextValue
-            }
-
-            override fun remove() {
-                throw UnsupportedOperationException("This iterator is read-only")
-            }
-        }
-    }
-}
-
-
-inline fun range(iterable: DoubleIterable, operation: (Double) -> Unit) {
-    iterable.doubleIterator().apply {
-        while (hasNext()) {
-            operation(nextDouble())
-        }
-    }
-}
-
-inline fun range(iterable: IntProgression, operation: (Int) -> Unit) {
-    iterable.iterator().apply {
-        while (hasNext()) {
-            operation(nextInt())
-        }
-    }
-}
-
 inline fun range(iterable1: DoubleIterable, iterable2: DoubleIterable, operation: (Double, Double) -> Unit) {
-    range(iterable1) { d1 ->
-        range(iterable2) { d2 ->
+    iterable1.forEachDouble { d1 ->
+        iterable2.forEachDouble { d2 ->
             operation(d1, d2)
         }
     }
@@ -149,9 +62,9 @@ inline fun range(
     iterable3: IntProgression,
     operation: (Int, Int, Int) -> Unit
 ) {
-    range(iterable1) { d1 ->
-        range(iterable2) { d2 ->
-            range(iterable3) { d3 ->
+    iterable1.forEach { d1 ->
+        iterable2.forEach { d2 ->
+            iterable3.forEach { d3 ->
                 operation(d1, d2, d3)
             }
         }
@@ -194,44 +107,16 @@ inline fun <T, C : Collection<T>> C.forEachWithSelf(action: (T, index: Int, self
 }
 
 inline fun <reified T : Enum<T>> Array<out T>.toEnumSet(): EnumSet<T> =
-    emptyEnumSet<T>().apply { addAll(this@toEnumSet) }
+    toCollection(emptyEnumSet())
 
 inline fun <reified T : Enum<T>> Iterable<T>.toEnumSet(): EnumSet<T> =
-    emptyEnumSet<T>().apply { addAll(this@toEnumSet) }
+    toCollection(emptyEnumSet())
 
 inline fun <reified T : Enum<T>> emptyEnumSet(): EnumSet<T> =
     EnumSet.noneOf(T::class.java)
 
-/**
- * Directly map to a typed array
- */
-inline fun <T, reified R> Array<T>.mapArray(transform: (T) -> R): Array<R> = Array(this.size) { idx ->
-    transform(this[idx])
-}
-
-/**
- * Directly map to a typed array
- */
-inline fun <T, reified R> Collection<T>.mapArray(transform: (T) -> R): Array<R> = with(iterator()) {
-    Array(size) {
-        transform(next())
-    }
-}
-
-inline fun <T> Collection<T>.mapInt(transform: (T) -> Int): IntList {
-    val result = IntArrayList(this.size)
-    for (element in this) {
-        result.add(transform(element))
-    }
-    return result
-}
-
 inline fun <T> Collection<T>.mapIntSet(transform: (T) -> Int): IntSet {
-    val result = IntLinkedOpenHashSet(this.size * 4 / 3)
-    for (element in this) {
-        result.add(transform(element))
-    }
-    return result
+    return IntLinkedOpenHashSet(mapToIntArray(transform))
 }
 
 /**

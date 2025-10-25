@@ -31,7 +31,7 @@ object ModuleTargets : ClientModule(
     category = Category.CLIENT,
     notActivatable = true,
     hide = true,
-    aliases = arrayOf("Enemies")
+    aliases = listOf("Enemies")
 ) {
     val combatConfigurable = multiEnumChoice("Combat",
         default = EnumSet.of(

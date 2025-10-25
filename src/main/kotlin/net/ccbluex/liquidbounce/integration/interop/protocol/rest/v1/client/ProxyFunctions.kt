@@ -23,7 +23,6 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
-import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
@@ -112,28 +111,26 @@ fun postAddProxy(requestObject: RequestObject): FullHttpResponse {
 // POST /api/v1/client/proxies/add/clipboard
 @Suppress("UNUSED_PARAMETER")
 fun postClipboardProxy(requestObject: RequestObject): FullHttpResponse {
-    RenderSystem.recordRenderCall {
-        RenderSystem.recordRenderCall {
-            try {
-                val clipboardText = GLFW.glfwGetClipboardString(mc.window.handle)
-                if (clipboardText.isNullOrBlank()) {
-                    return@recordRenderCall
-                }
-
-                val proxy = try {
-                    Proxy.parse(clipboardText.trim())
-                } catch (e: Exception) {
-                    throw IllegalArgumentException(
-                        "Invalid proxy format. Expected format: host:port:username:password or host:port",
-                        e
-                    )
-                }
-
-                ProxyManager.validateProxy(proxy)
-            } catch (e: Exception) {
-                logger.error("Failed to add proxy from clipboard.", e)
-                EventManager.callEvent(ProxyCheckResultEvent(null, error = e.message ?: "Unknown error"))
+    mc.execute {
+        try {
+            val clipboardText = GLFW.glfwGetClipboardString(mc.window.handle)
+            if (clipboardText.isNullOrBlank()) {
+                return@execute
             }
+
+            val proxy = try {
+                Proxy.parse(clipboardText.trim())
+            } catch (e: Exception) {
+                throw IllegalArgumentException(
+                    "Invalid proxy format. Expected format: host:port:username:password or host:port",
+                    e
+                )
+            }
+
+            ProxyManager.validateProxy(proxy)
+        } catch (e: Exception) {
+            logger.error("Failed to add proxy from clipboard.", e)
+            EventManager.callEvent(ProxyCheckResultEvent(null, error = e.message ?: "Unknown error"))
         }
     }
 

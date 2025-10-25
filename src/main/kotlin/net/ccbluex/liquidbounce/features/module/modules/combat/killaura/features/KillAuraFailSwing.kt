@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.feature
 
 import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker.attack
@@ -64,7 +63,7 @@ internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "Fail
         currentAdditionalRange = this.additionalRange.random()
     }
 
-    suspend fun dealWithFakeSwing(sequence: Sequence, target: Entity?) {
+    suspend fun dealWithFakeSwing(target: Entity?) {
         if (!enabled || !validateAttack()) {
             return
         }
@@ -81,7 +80,7 @@ internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "Fail
         // Make it seem like we are blocking
         KillAuraAutoBlock.makeSeemBlock()
 
-        attack(sequence) {
+        attack {
             // [this.crosshairTarget == null] results in a limited attack speed
             if (interaction.hasLimitedAttackSpeed()) {
                 mc.attackCooldown = 10

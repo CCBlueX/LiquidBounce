@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.*
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
  * Allows you to change values of a specific module.
  */
 @Suppress("SwallowedException")
-object CommandValue : CommandFactory {
+object CommandValue : Command.Factory {
 
     override fun createCommand() = CommandBuilder
         .begin("value")
@@ -61,7 +61,7 @@ object CommandValue : CommandFactory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val module = args[0] as ClientModule
             val valueName = args[1] as String
             val valueString = args[2] as String
@@ -97,7 +97,7 @@ object CommandValue : CommandFactory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val module = args[0] as ClientModule
             val valueName = args[1] as String
 
@@ -122,7 +122,7 @@ object CommandValue : CommandFactory {
                 .required()
                 .build()
         )
-        .handler { command, args ->
+        .handler {
             val module = args[0] as ClientModule
 
             module.getContainedValuesRecursively()

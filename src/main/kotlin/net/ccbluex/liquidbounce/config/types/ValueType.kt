@@ -17,10 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.config.types;
+package net.ccbluex.liquidbounce.config.types
 
-import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider;
-import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer;
+import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider
+import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 
 enum class ValueType(
     val deserializer: HumanInputDeserializer.StringDeserializer<*>? = null,
@@ -35,15 +35,20 @@ enum class ValueType(
     INT_RANGE(HumanInputDeserializer.intRangeDeserializer),
     TEXT(HumanInputDeserializer.textDeserializer),
     COLOR(HumanInputDeserializer.colorDeserializer),
+
+    // Registry Types
     BLOCK(HumanInputDeserializer.blockDeserializer),
     ITEM(HumanInputDeserializer.itemDeserializer),
     SOUND(HumanInputDeserializer.soundDeserializer),
     STATUS_EFFECT(HumanInputDeserializer.statusEffectDeserializer),
+    SCREEN_HANDLER,
     ENTITY_TYPE,
     CLIENT_PACKET,
     SERVER_PACKET,
+    CLIENT_MODULE(HumanInputDeserializer.clientModuleDeserializer),
+
     KEY(HumanInputDeserializer.keyDeserializer),
-    FILE(HumanInputDeserializer.pathDeserializer),
+    FILE(HumanInputDeserializer.fileDeserializer),
     BIND,
     VECTOR3_I,
     VECTOR3_D,

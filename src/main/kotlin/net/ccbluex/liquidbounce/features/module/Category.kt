@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-enum class Category(val readableName: String) {
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+
+enum class Category(override val choiceName: String) : NamedChoice {
 
     COMBAT("Combat"),
     PLAYER("Player"),
@@ -34,10 +36,19 @@ enum class Category(val readableName: String) {
      */
     CLIENT("Client");
 
+    @Deprecated(
+        message = "For script compatibility only. Use choiceName instead",
+        replaceWith = ReplaceWith("choiceName"),
+        level = DeprecationLevel.ERROR
+    )
+    val readableName: String
+        get() = choiceName
+
     companion object {
         /**
          * Gets an enum by its readable name
          */
+        @JvmStatic
         fun fromReadableName(name: String): Category? {
             return entries.find { name.equals(it.name, true) }
         }

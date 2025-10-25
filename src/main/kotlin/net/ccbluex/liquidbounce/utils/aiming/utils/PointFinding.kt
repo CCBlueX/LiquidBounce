@@ -1,11 +1,31 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package net.ccbluex.liquidbounce.utils.aiming.utils
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.ccbluex.liquidbounce.utils.math.geometry.PlaneSection
@@ -66,7 +86,7 @@ fun getRotationMatricesForVec(vec: Vec3d): Pair<Matrix3f, Matrix3f> {
  *
  * @return a list of projected points, or null if the virtual eye is inside the target box.
  */
-fun projectPointsOnBox(virtualEye: Vec3d, targetBox: Box, maxPoints: Int = 128): ArrayList<Vec3d>? {
+fun projectPointsOnBox(virtualEye: Vec3d, targetBox: Box, maxPoints: Int = 128): MutableList<Vec3d>? {
     val list = ArrayList<Vec3d>()
 
     val success = projectPointsOnBox(virtualEye, targetBox, maxPoints) {
@@ -100,14 +120,14 @@ inline fun projectPointsOnBox(
     // Find a point between the virtual eye and the target box such that every edge point of the box is behind it
     // (from the perspective of the virtual eye). This position is used to craft a the targeting frame
     val targetFrameOrigin = targetBox.edgePoints
-        .mapArray { playerToBoxLine.getNearestPointTo(it) }
+        .mapToArray { playerToBoxLine.getNearestPointTo(it) }
         .minBy { it.squaredDistanceTo(virtualEye) }
         .moveTowards(virtualEye, 0.1)
 
     val plane = NormalizedPlane(targetFrameOrigin, playerToBoxLine.direction)
     val (toMatrix, backMatrix) = getRotationMatricesForVec(plane.normalVec)
 
-    val projectedAndRotatedPoints = targetBox.edgePoints.mapArray {
+    val projectedAndRotatedPoints = targetBox.edgePoints.mapToArray {
         plane.intersection(Line.fromPoints(virtualEye, it))!!.subtract(targetFrameOrigin).toVector3f().mul(backMatrix)
     }
 

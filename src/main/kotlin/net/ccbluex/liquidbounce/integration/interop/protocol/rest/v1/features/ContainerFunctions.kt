@@ -50,7 +50,7 @@ fun getContainerInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
         }
 
         addProperty("syncId", screenHandler.screenHandler.syncId)
-        addProperty("title", screenHandler.title.convertToString())
+        addProperty("title", screenHandler.title.string)
         addProperty("slots", screenHandler.screenHandler.rows * 9)
         addProperty("emptySlots", inventory.heldStacks.count { it.isEmpty })
         addProperty("rows", screenHandler.screenHandler.rows)

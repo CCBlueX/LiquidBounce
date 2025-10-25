@@ -32,7 +32,7 @@ import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
 object ModuleBetterTitle : ClientModule(
-    "BetterTitle", Category.RENDER, aliases = arrayOf("BetterSubtitle")
+    "BetterTitle", Category.RENDER, aliases = listOf("BetterSubtitle")
 ) {
     init {
         tree(AutoTranslate)

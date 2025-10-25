@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -91,7 +92,7 @@ object ModuleAutoWindCharge : ClientModule("AutoWindCharge", Category.PLAYER) {
                 return RotationManager.serverRotation.angleTo(rotation) <= 1.0f
             }
 
-            waitConditional(20) {
+            tickConditional(20) {
                 CombatManager.pauseCombatForAtLeast(combatPauseTime)
                 RotationManager.setRotationTarget(
                     rotations.toRotationTarget(rotation),

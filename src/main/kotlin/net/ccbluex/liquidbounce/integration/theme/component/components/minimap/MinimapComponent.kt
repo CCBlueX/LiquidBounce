@@ -38,13 +38,12 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.render.Alignment
-import net.minecraft.client.gl.ShaderProgramKeys
-import net.minecraft.client.render.BufferBuilder
+import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.render.VertexFormat
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.ChunkPos
+import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import org.joml.AxisAngle4f
@@ -53,7 +52,6 @@ import org.joml.Quaternionf
 import org.joml.Vector2i
 import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
-import kotlin.math.sqrt
 
 object MinimapComponent : NativeComponent("Minimap", false, Alignment(
     horizontalAlignment = Alignment.ScreenAxisX.LEFT,
@@ -86,7 +84,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             return@handler
         }
 
-        val matStack = MatrixStack()
+        val matStack = event.context.matrices
 
         val playerPos = player.interpolateCurrentPosition(event.tickDelta)
         val playerRotation = player.interpolateCurrentRotation(event.tickDelta)
@@ -110,7 +108,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         val playerOffX = (playerPos.x / 16.0) % 1.0
         val playerOffZ = (playerPos.z / 16.0) % 1.0
 
-        val chunksToRenderAround = ceil(sqrt(2.0) * (viewDistance + 1)).toInt()
+        val chunksToRenderAround = ceil(MathHelper.SQUARE_ROOT_OF_TWO * (viewDistance + 1)).toInt()
 
         val scale = minimapSize / (2.0F * viewDistance)
 
@@ -122,32 +120,34 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         matStack.multiply(Quaternionf(AxisAngle4f(-(playerRotation.yaw + 180.0F).toRadians(), 0.0F, 0.0F, 1.0F)))
         matStack.translate(-playerOffX, -playerOffZ, 0.0)
 
-        renderEnvironmentForGUI(matStack) {
+        renderEnvironmentForGUI(event) {
             val glId = ChunkRenderer.prepareRendering()
 
             RenderSystem.bindTexture(glId)
 
             RenderSystem.setShaderTexture(0, glId)
 
+            startBatch()
             drawCustomMesh(
                 VertexFormat.DrawMode.QUADS,
-                VertexFormats.POSITION_TEXTURE_COLOR,
-                ShaderProgramKeys.POSITION_TEX_COLOR,
+                VertexInputType.PosTexColor,
             ) { matrix ->
-                buildMinimapMesh(this, matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
+                buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
             }
+            commitBatch()
 
+            startBatch()
             drawCustomMesh(
                 VertexFormat.DrawMode.TRIANGLES,
-                VertexFormats.POSITION_COLOR,
-                ShaderProgramKeys.POSITION_COLOR,
+                VertexInputType.PosColor,
             ) {
                 for (renderedEntity in RenderedEntities) {
                     drawEntityOnMinimap(
-                        this, matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
+                        matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
                     )
                 }
             }
+            commitBatch()
         }
 
         matStack.pop()
@@ -158,13 +158,14 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         )
         GL11.glDisable(GL11.GL_SCISSOR_TEST)
 
-        renderEnvironmentForGUI(matStack) {
-
-            val from = Color4b(0, 0, 0, 100)
-            val to = Color4b(0, 0, 0, 0)
+        renderEnvironmentForGUI(event) {
+            startBatch()
+            val from = Color4b.BLACK.copy(a = 100)
+            val to = Color4b.TRANSPARENT
 
             drawShadowForBB(boundingBox, from, to)
             drawLines(
+                argb = Color4b.WHITE.toARGB(),
                 // Cursor
                 Vec3(boundingBox.xMin, centerBB.y, 0.0F),
                 Vec3(boundingBox.xMax, centerBB.y, 0.0F),
@@ -181,6 +182,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                 Vec3(boundingBox.xMax, boundingBox.yMin, 0.0F),
                 Vec3(boundingBox.xMax, boundingBox.yMax, 0.0F),
             )
+            commitBatch()
         }
 
     }
@@ -243,8 +245,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         )
     }
 
-    private fun buildMinimapMesh(
-        builder: BufferBuilder,
+    private fun VertexConsumer.buildMinimapMesh(
         matrix: Matrix4f,
         centerPos: Vector2i,
         chunksToRenderAround: Int,
@@ -263,20 +264,19 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                 val from = Vec2f(x.toFloat(), y.toFloat())
                 val to = from.add(Vec2f(1.0F, 1.0F))
 
-                builder.vertex(matrix, from.x, from.y, 0.0F).texture(texPosition.xMin, texPosition.yMin)
+                vertex(matrix, from.x, from.y, 0.0F).texture(texPosition.xMin, texPosition.yMin)
                     .color(1.0F, 1.0F, 1.0F, 1.0F)
-                builder.vertex(matrix, from.x, to.y, 0.0F).texture(texPosition.xMin, texPosition.yMax)
+                vertex(matrix, from.x, to.y, 0.0F).texture(texPosition.xMin, texPosition.yMax)
                     .color(1.0F, 1.0F, 1.0F, 1.0F)
-                builder.vertex(matrix, to.x, to.y, 0.0F).texture(texPosition.xMax, texPosition.yMax)
+                vertex(matrix, to.x, to.y, 0.0F).texture(texPosition.xMax, texPosition.yMax)
                     .color(1.0F, 1.0F, 1.0F, 1.0F)
-                builder.vertex(matrix, to.x, from.y, 0.0F).texture(texPosition.xMax, texPosition.yMin)
+                vertex(matrix, to.x, from.y, 0.0F).texture(texPosition.xMax, texPosition.yMin)
                     .color(1.0F, 1.0F, 1.0F, 1.0F)
             }
         }
     }
 
-    private fun drawEntityOnMinimap(
-        bufferBuilder: BufferBuilder,
+    private fun VertexConsumer.drawEntityOnMinimap(
         matStack: MatrixStack,
         entity: LivingEntity,
         partialTicks: Float,
@@ -306,7 +306,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             -w / 5.0 * ChunkRenderer.SUN_DIRECTION.y / 16.0,/* z = */
             0.0
         )
-        bufferBuilder.coloredTriangle(
+        coloredTriangle(
             matStack.peek().positionMatrix,
             p1,
             p2,
@@ -315,7 +315,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         )
         matStack.pop()
 
-        bufferBuilder.coloredTriangle(matStack.peek().positionMatrix, p1, p2, p3, color)
+        coloredTriangle(matStack.peek().positionMatrix, p1, p2, p3, color)
 
         matStack.pop()
     }

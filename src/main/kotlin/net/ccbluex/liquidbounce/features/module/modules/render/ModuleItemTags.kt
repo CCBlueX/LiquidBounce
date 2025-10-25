@@ -18,11 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.fastutil.fastIterator
+import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -30,18 +35,21 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.drawItemTags
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.kotlin.forEachWithSelf
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
+import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
 import net.ccbluex.liquidbounce.utils.math.Easing
+import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.minecraft.component.ComponentChanges
+import net.minecraft.component.DataComponentTypes
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
 import net.minecraft.item.Item
@@ -55,11 +63,8 @@ import net.minecraft.util.math.Vec3d
  */
 object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
-    override val baseKey: String
-        get() = "liquidbounce.module.itemTags"
-
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val items by items("Items", hashSetOf())
+    private val items by items("Items", ReferenceOpenHashSet())
 
     private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
     private val scale by float("Scale", 1.5F, 0.25F..4F)
@@ -93,6 +98,73 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }
     }
 
+    private val mergeMode by enumChoice("MergeMode", MergeMode.BY_COMPONENTS)
+
+    private object Shulker : ToggleableConfigurable(this, "Shulker", false) {
+        val mergeStacks by boolean("MergeStacks", true)
+        val showTitle by boolean("ShowTitle", true)
+    }
+
+    init {
+        tree(Shulker)
+    }
+
+    private val itemStackComparator: Comparator<ItemStack> =
+        PreferStackSize.LESS.thenComparing { it.item.translationKey }
+
+    @Suppress("unused")
+    private enum class MergeMode(
+        override val choiceName: String,
+        val merge: (stacks: Array<ItemStack>) -> Array<ItemStack>,
+    ) : NamedChoice {
+        /**
+         * Nothing will be merged.
+         */
+        NONE("None", { stacks ->
+            stacks.sortWith(itemStackComparator)
+            stacks
+        }),
+
+        /**
+         * [ItemStack]s with same [Item] will be merged.
+         */
+        BY_ITEM("ByItem", { stacks ->
+            val map = Reference2ObjectOpenHashMap<Item, MutableList<ItemStack>>()
+            for (stack in stacks) {
+                map.computeIfAbsent(stack.item) { ObjectArrayList() }.add(stack)
+            }
+
+            map.values.mapToArray { stacks ->
+                if (stacks.size == 1) {
+                    stacks[0]
+                } else {
+                    ItemStack(stacks[0].item, stacks.sumOf { it.count })
+                }
+            }.apply {
+                sortWith(itemStackComparator)
+            }
+        }),
+
+        /**
+         * [ItemStack]s with same [Item] and same [ComponentChanges] will be merged.
+         */
+        BY_COMPONENTS("ByComponents", { stacks ->
+            val map = Object2IntOpenHashMap<ItemAndComponents>()
+
+            for (stack in stacks) {
+                map.addTo(ItemAndComponents(stack), stack.count)
+            }
+
+            val iter = map.fastIterator()
+            Array(map.size) {
+                val entry = iter.next()
+                entry.key.toItemStack(entry.intValue)
+            }.apply {
+                sortWith(itemStackComparator)
+            }
+        }),
+    }
+
     private val itemEntities by computedOn<GameTickEvent, ObjectArrayList<ClusteredEntities>>(
         initialValue = ObjectArrayList()
     ) { _, clusteredEntities ->
@@ -120,30 +192,42 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        renderEnvironmentForGUI {
-            itemEntities.mapNotNull { result ->
-                val worldPos = result.interpolateCurrentCenterPosition(event.tickDelta)
-                val renderPos = WorldToScreen.calculateScreenPos(worldPos.add(renderOffset))
-                    ?: return@mapNotNull null
-                renderPos to result.stacks
-            }.forEachWithSelf { (center, stacks), i, self ->
-                val z = 1000.0F * i / self.size
-                event.context.drawItemTags(
-                    stacks = stacks,
-                    centerPos = center.copy(z = z),
-                    backgroundColor = backgroundColor.toARGB(),
-                    scale = scale,
-                    rowLength = rowLength
-                )
+        for (result in itemEntities) {
+            val worldPos = result.interpolateCurrentCenterPosition(event.tickDelta)
+            val renderPos = WorldToScreen.calculateScreenPos(worldPos.add(renderOffset)) ?: continue
+
+            event.context.drawItemStackList(result.stacks.asList())
+                .center(renderPos)
+                .rectBackground(color = backgroundColor.toARGB())
+                .scale(scale)
+                .rowLength(rowLength)
+                .draw()
+
+            if (Shulker.enabled) {
+                result.stacks.forEach { stack ->
+                    val containerComponent = stack[DataComponentTypes.CONTAINER] ?: return@forEach
+                    val stacks = containerComponent.streamNonEmpty().toTypedArray()
+                    if (stacks.isEmpty()) {
+                        return@forEach
+                    }
+
+                    event.context.drawItemStackList(if (Shulker.mergeStacks) mergeMode.merge(stacks) else stacks)
+                        .title(stack.name.takeIf { Shulker.showTitle })
+                        .center(renderPos)
+                        .rectBackground(color = backgroundColor.toARGB())
+                        .scale(scale)
+                        .rowLength(rowLength)
+                        .draw()
+                }
             }
         }
     }
 
-    private class ClusteredEntities(val entities: List<Entity>, val stacks: List<ItemStack>) {
+    private class ClusteredEntities(@JvmField val entities: List<Entity>, @JvmField val stacks: Array<ItemStack>) {
         fun interpolateCurrentCenterPosition(tickDelta: Float): Vec3d {
-            return entities.fold(Vec3d.ZERO) { acc, entity ->
-                acc.add(entity.interpolateCurrentPosition(tickDelta))
-            }.multiply(1.0 / entities.size)
+            return entities.map { entity ->
+                entity.interpolateCurrentPosition(tickDelta)
+            }.average()
         }
     }
 
@@ -169,30 +253,9 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         // Output
         output.clear()
         output.ensureCapacity(groups.size)
-        groups.mapTo(output) {
-            ClusteredEntities(it, it.mergeStacks())
+        groups.mapTo(output) { entities ->
+            ClusteredEntities(entities, mergeMode.merge(entities.mapToArray { it.stack }))
         }
-    }
-
-    /**
-     * Merge stacks with same item, order by count desc
-     */
-    @JvmStatic
-    private fun List<ItemEntity>.mergeStacks(): List<ItemStack> {
-        val map = Reference2ObjectOpenHashMap<Item, MutableList<ItemStack>>()
-        for (itemEntity in this) {
-            map.getOrPut(itemEntity.stack.item, ::mutableListOf)
-                .add(itemEntity.stack)
-        }
-        val result = map.values.mapArray { stacks ->
-            if (stacks.size == 1) {
-                stacks[0]
-            } else {
-                ItemStack(stacks[0].item, stacks.sumOf { it.count })
-            }
-        }
-        result.sortByDescending { it.count }
-        return result.asList()
     }
 
 }

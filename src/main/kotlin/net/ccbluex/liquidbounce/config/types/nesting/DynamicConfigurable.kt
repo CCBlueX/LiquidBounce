@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.config.types.ValueType
  */
 open class DynamicConfigurable(
     name: String,
-    value: MutableList<Value<*>> = mutableListOf(),
+    value: MutableCollection<Value<*>> = mutableListOf(),
     val factory: (String, JsonObject) -> Value<*>?,
     valueType: ValueType = ValueType.CONFIGURABLE
 ) : Configurable(name, value = value, valueType = valueType)

@@ -26,10 +26,10 @@ import org.gradle.kotlin.dsl.support.listFilesOrdered
 plugins {
     id("fabric-loom")
     kotlin("jvm")
-    id("com.gorylenko.gradle-git-properties") version "2.5.2"
+    id("com.gorylenko.gradle-git-properties") version "2.5.3"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
     id("com.github.node-gradle.node") version "7.1.0"
-    id("org.jetbrains.dokka") version "1.9.10"
+    id("org.jetbrains.dokka") version "2.1.0"
 }
 
 base {
@@ -44,37 +44,8 @@ val includeDependency: Configuration by configurations.creating
 /** Includes mod in the JAR file */
 val includeModDependency: Configuration by configurations.creating
 
-/**
- * Provided by:
- * - Minecraft
- * - Mod dependencies
- */
-fun Configuration.excludeProvidedLibs() = apply {
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-
-    exclude(group = "com.google.code.gson", module = "gson")
-    exclude(group = "net.java.dev.jna", module = "jna")
-    exclude(group = "commons-codec", module = "commons-codec")
-    exclude(group = "commons-io", module = "commons-io")
-    exclude(group = "org.apache.commons", module = "commons-compress")
-    exclude(group = "org.apache.commons", module = "commons-lang3")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-core")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-api")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
-    exclude(group = "org.slf4j", module = "slf4j-api")
-    exclude(group = "com.mojang", module = "authlib")
-
-    // Note: from Netty HTTP Server, not all components are used
-    exclude(group = "io.netty", module = "netty-all")
-
-    exclude(group = "io.netty", module = "netty-buffer")
-    exclude(group = "io.netty", module = "netty-codec")
-    exclude(group = "io.netty", module = "netty-common")
-    exclude(group = "io.netty", module = "netty-handler")
-    exclude(group = "io.netty", module = "netty-resolver")
-    exclude(group = "io.netty", module = "netty-transport")
-    exclude(group = "io.netty", module = "netty-transport-native-unix-common")
-}
+/** Includes native-only dependency in the JAR file */
+val includeNative: Configuration by configurations.creating
 
 includeDependency.excludeProvidedLibs()
 includeModDependency.excludeProvidedLibs()
@@ -82,9 +53,13 @@ includeModDependency.excludeProvidedLibs()
 configurations {
     include.configure {
         extendsFrom(includeModDependency)
+        extendsFrom(includeNative)
     }
     modApi.configure {
         extendsFrom(includeModDependency)
+    }
+    runtimeOnly.configure {
+        extendsFrom(includeNative)
     }
 }
 
@@ -155,7 +130,11 @@ dependencies {
 
     // JCEF Support
     includeModDependency("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
-    includeDependency("net.ccbluex:netty-httpserver:2.3.2")
+    includeDependency("net.ccbluex:netty-httpserver:2.4.2")
+    // MacOS native (Linux native is included in game)
+    includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
+    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
+    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-x86_64")
 
     // Discord RPC Support
     includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")
@@ -178,10 +157,11 @@ dependencies {
 //    runtimeOnly("ai.djl.tensorflow:tensorflow-engine:${project.property("djl_version")}")
 
     // HTTP library
-    includeDependency("com.squareup.okhttp3:okhttp:5.1.0")
+    includeDependency("com.squareup.okhttp3:okhttp:${project.property("okhttp_version")}")
+    includeDependency("com.squareup.okhttp3:okhttp-coroutines:${project.property("okhttp_version")}")
 
     // SOCKS5 & HTTP Proxy Support
-    includeDependency("io.netty:netty-handler-proxy:4.1.115.Final")
+    includeDependency("io.netty:netty-handler-proxy:${project.property("netty_version")}")
 
     // Update Checker
     includeDependency("com.vdurmont:semver4j:3.1.0")
@@ -189,8 +169,13 @@ dependencies {
     // Name Protect
     includeDependency("org.ahocorasick:ahocorasick:0.6.3")
 
+    // External utils
+    compileOnlyApi("net.ccbluex:fastutil4k-extensions-only:0.2.0")
+    includeDependency("net.ccbluex:fastutil4k-more-collections:0.2.0")
+
     // Test libraries
     testImplementation(kotlin("test"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${project.property("kotlinx_coroutines_version")}")
 //    testImplementation("net.fabricmc:fabric-loader-junit:${project.property("loader_version")}")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
@@ -323,9 +308,8 @@ tasks.withType<JavaCompile>().configureEach {
     options.release = 21
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
     useJUnitPlatform()
-    dependsOn("genSources")
 }
 
 // Detekt check
@@ -386,6 +370,8 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(21)
+        freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
+        freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 

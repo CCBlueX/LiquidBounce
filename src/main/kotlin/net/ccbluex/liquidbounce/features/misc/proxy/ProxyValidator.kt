@@ -1,16 +1,32 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package net.ccbluex.liquidbounce.features.misc.proxy
 
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.*
 import io.netty.handler.timeout.ReadTimeoutHandler
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
-import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
 import net.minecraft.client.network.Address
@@ -57,13 +73,6 @@ import kotlin.jvm.optionals.getOrNull
 private const val PING_SERVER = "ping.liquidproxy.net"
 private const val PING_TIMEOUT = 5
 
-class ClientConnectionTicker(private val clientConnection: ClientConnection) : EventListener {
-    @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        clientConnection.tick()
-    }
-}
-
 /**
  * Checks if a proxy is valid and can be used for Minecraft. This will use network resources to check the proxy,
  * as well as update the ip information of the proxy.
@@ -80,9 +89,13 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
 
     val clientConnection = ClientConnection(NetworkSide.CLIENTBOUND)
     val channelFuture = connect(socketAddress, false, clientConnection)
-    channelFuture.syncUninterruptibly()
+        .syncUninterruptibly()
 
-    val ticker = ClientConnectionTicker(clientConnection)
+    // Channel is ready after connection future
+    val scope = CoroutineScope(channelFuture.channel().eventLoop().asCoroutineDispatcher())
+
+    // Add to tick list
+    ProxyManager.addClientConnection(clientConnection)
 
     val clientQueryPacketListener = object : ClientQueryPacketListener {
 
@@ -99,30 +112,28 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
             serverMetadata = metadata
             startTime = Util.getMeasuringTimeMs()
             clientConnection.send(QueryPingC2SPacket(startTime))
-            logger.info("Proxy Metadata [$host:$port]: ${metadata.description.convertToString()}")
+            logger.info("Proxy Metadata [$host:$port]: ${metadata.description.string}")
         }
 
         override fun onPingResult(packet: PingResultS2CPacket) {
-            val serverMetadata = this.serverMetadata ?: error("Received ping result without metadata")
-            val ping = Util.getMeasuringTimeMs() - startTime
-            logger.info("Proxy Ping [$host:$port]: $ping ms")
+            scope.launch {
+                val serverMetadata = serverMetadata ?: error("Received ping result without metadata")
+                val ping = Util.getMeasuringTimeMs() - startTime
+                logger.info("Proxy Ping [$host:$port]: $ping ms")
 
-            runCatching {
-                val ipInfo = runBlocking(Dispatchers.IO) {
-                    IpInfoApi.someoneElse(serverMetadata.description.convertToString())
+                runCatching {
+                    val ipInfo = IpInfoApi.someoneElse(serverMetadata.description.string)
+                    this@check.ipInfo = ipInfo
+                    logger.info("Proxy Info [$host:$port]: ${ipInfo.ip} [${ipInfo.country}, ${ipInfo.org}]")
+                }.onFailure { throwable ->
+                    logger.error("Failed to update IP info for proxy [$host:$port]", throwable)
                 }
-                this@check.ipInfo = ipInfo
-                logger.info("Proxy Info [$host:$port]: ${ipInfo.ip} [${ipInfo.country}, ${ipInfo.org}]")
-            }.onFailure { throwable ->
-                logger.error("Failed to update IP info for proxy [$host:$port]", throwable)
-            }
 
-            success(this@check)
+                success(this@check)
+            }
         }
 
         override fun onDisconnected(info: DisconnectionInfo) {
-            EventManager.unregisterEventHandler(ticker)
-
             if (this.serverMetadata == null) {
                 failure(IllegalStateException("Disconnected before receiving metadata"))
             }

@@ -27,6 +27,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.text.OrderedText;
+import net.minecraft.util.collection.ArrayListDeque;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -70,9 +71,9 @@ public abstract class MixinChatHud implements ChatHudAddition {
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
     public void hookNewArrayList2(MinecraftClient client, CallbackInfo ci) {
-        messages = new kotlin.collections.ArrayDeque<>(50);
+        messages = new ArrayListDeque<>(50);
         // ArrayDeque for addFirst operations
-        visibleMessages = new kotlin.collections.ArrayDeque<>(50);
+        visibleMessages = new ArrayListDeque<>(50);
     }
 
     /**

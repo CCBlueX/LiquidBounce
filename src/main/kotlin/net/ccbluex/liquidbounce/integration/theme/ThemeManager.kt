@@ -19,9 +19,10 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
-import com.mojang.blaze3d.systems.RenderSystem
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.core.renderScope
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -45,11 +46,11 @@ object ThemeManager : Configurable("theme") {
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
 
     val themes = mutableListOf<Theme>()
-    val themeNames get() = themes.map { theme -> theme.metadata.name }
+    val themeIds get() = themes.map { theme -> theme.metadata.id }
 
-    var currentTheme by text("Theme", "LiquidBounce").onChanged {
+    private var currentTheme by text("Theme", "liquidbounce").onChanged {
         // Update integration browser
-        RenderSystem.recordRenderCall {
+        mc.execute {
             IntegrationListener.update()
             ModuleHud.reopen()
             ModuleClickGui.reload(true)
@@ -58,21 +59,34 @@ object ThemeManager : Configurable("theme") {
 
     internal lateinit var includedTheme: Theme
         private set
+    /**
+     * Used for development.
+     */
+    private var temporaryTheme: Theme? = null
 
-    val theme: Theme
-        get() = themes.find { theme -> theme.metadata.name.equals(currentTheme, true) }
+    var theme: Theme
+        get() = temporaryTheme
+            ?: themes.find { theme -> theme.metadata.id.equals(currentTheme, true) }
             ?: includedTheme
+        set(value) {
+            // When external, set as a temporary theme.
+            if (value.origin.external) {
+                temporaryTheme = value
+                currentTheme = includedTheme.metadata.id
+            } else {
+                temporaryTheme = null
+                currentTheme = value.metadata.id
+            }
+        }
 
     private val takesInputHandler = InputAcceptor { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->
             if (enabled) {
-                RenderSystem.recordRenderCall {
-                    runBlocking {
-                        theme.compileShader()
-                        includedTheme.compileShader()
-                    }
+                renderScope.launch {
+                    theme.compileShader()
+                    includedTheme.compileShader()
                 }
             }
 
@@ -83,32 +97,32 @@ object ThemeManager : Configurable("theme") {
         ConfigSystem.root(this)
     }
 
-    fun init() {
+    suspend fun init() {
         // Load default theme
-        Theme(Theme.Origin.RESOURCE, File("liquidbounce")).apply {
-            includedTheme = this
-        }
+        includedTheme = Theme.load(Theme.Origin.RESOURCE, File("liquidbounce"))
     }
 
-    fun load() {
+    suspend fun load() {
+        fun Theme.addIfUnloaded() {
+            if (themes.none { it.metadata.id.equals(this.metadata.id, true) }) {
+                themes += this
+            } else {
+                logger.warn("Theme with ID '${this.metadata.id}' is already loaded, skipping duplicate.")
+            }
+        }
+
         themes.clear()
 
         // 1st priority
-        themesFolder.listFiles()
-            ?.filter(File::isDirectory)
+        themesFolder.listFiles { it.isDirectory }
             ?.forEach { file ->
                 if (file.name.equals("default", true)) {
                     return@forEach
                 }
 
                 runCatching {
-                    val theme = Theme(Theme.Origin.LOCAL, file.relativeTo(themesFolder))
-                    if (themes.any { it.metadata.name.equals(theme.metadata.name, true) }) {
-                        logger.warn("Theme with name '${theme.metadata.name}' is already loaded, skipping duplicate.")
-                        return@forEach
-                    }
-
-                    themes += theme
+                    Theme.load(Theme.Origin.LOCAL, file.relativeTo(themesFolder))
+                        .addIfUnloaded()
                 }.onFailure { err ->
                     logger.error("Failed to load theme '${file.name}'.", err)
                 }
@@ -119,14 +133,8 @@ object ThemeManager : Configurable("theme") {
             runCatching {
                 val installationFolder = item.getInstallationFolder() ?: return@forEach
                 val relativeFile = installationFolder.relativeTo(MarketplaceManager.marketplaceRoot)
-                val theme = Theme(Theme.Origin.MARKETPLACE, relativeFile)
-
-                if (themes.any { it.metadata.name.equals(theme.metadata.name, true) }) {
-                    logger.warn("Theme with name '${theme.metadata.name}' is already loaded, skipping duplicate.")
-                    return@forEach
-                }
-
-                themes += theme
+                Theme.load(Theme.Origin.MARKETPLACE, relativeFile)
+                    .addIfUnloaded()
             }.onFailure { err ->
                 logger.error("Failed to load theme '${item.name}'.", err)
             }
@@ -134,7 +142,7 @@ object ThemeManager : Configurable("theme") {
 
         themes.add(includedTheme)
 
-        ModuleHud.updateComponents()
+        ModuleHud.updateThemes()
         if (LiquidBounce.isInitialized) {
             IntegrationListener.update()
             ModuleHud.reopen()
@@ -195,21 +203,18 @@ object ThemeManager : Configurable("theme") {
     }
 
     fun loadBackground() = runBlocking {
-        if (!theme.loadBackgroundImage()) {
-            includedTheme.loadBackgroundImage()
-        }
-
-        if (shaderEnabled && !theme.compileShader()) {
-            includedTheme.compileShader()
+        theme.loadBackgroundImage()
+        if (shaderEnabled) {
+            theme.compileShader()
         }
     }
 
     @Suppress("LongParameterList")
     fun drawBackground(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
         val background = if (shaderEnabled) {
-            theme.themeBackgroundShader ?: includedTheme.themeBackgroundShader
+            theme.themeBackgroundShader
         } else {
-            theme.themeBackgroundTexture ?: includedTheme.themeBackgroundTexture
+            theme.themeBackgroundTexture
         } ?: return false
 
         background.draw(context, width, height, mouseX, mouseY, delta)

@@ -1,3 +1,23 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -10,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.block.BlockState
-import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
@@ -28,7 +47,7 @@ fun BlockPlacer.placeInstantOnBlockUpdate(event: PacketEvent) {
 }
 
 private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
-    val irrelevantPacket = !state.isReplaceable || pos !in blocks
+    val irrelevantPacket = !state.isReplaceable || pos.asLong() !in blocks
 
     val rotationMode = rotationMode.activeChoice
     if (irrelevantPacket || rotationMode !is NoRotationMode || pos.isBlockedByEntities()) {
@@ -41,7 +60,7 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
         ),
         FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
-        stackToPlaceWith = ItemStack(Items.SANDSTONE),
+        stackToPlaceWith = Items.SANDSTONE.defaultStack,
         PlayerLocationOnPlacement(position = player.pos, pose = player.pose),
     )
 
@@ -52,10 +71,7 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
         return
     }
 
-    if (placementTarget.interactedBlockPos.getBlock().isInteractable(
-            placementTarget.interactedBlockPos.getState()
-        )
-    ) {
+    if (placementTarget.interactedBlockPos.getState().isInteractable) {
         return
     }
 

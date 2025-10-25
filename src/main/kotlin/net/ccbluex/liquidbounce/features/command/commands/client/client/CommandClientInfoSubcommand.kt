@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 object CommandClientInfoSubcommand {
     fun infoCommand() = CommandBuilder
         .begin("info")
-        .handler { command, _ ->
+        .handler {
             chat(
                 regular(command.result("clientName", variable(LiquidBounce.CLIENT_NAME))),
                 metadata = MessageMetadata(prefix = false)

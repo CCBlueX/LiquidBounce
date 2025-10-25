@@ -1,5 +1,26 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes
 
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -12,7 +33,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraChoi
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -46,12 +66,11 @@ object ImmediateMode : TpAuraChoice("Immediate") {
 
         renderEnvironmentForWorld(matrixStack) {
             desyncPlayerPosition?.let { playerPosition ->
-                withColor(Color4b.WHITE) {
-                    drawLineStrip(listOf(
-                        relativeToCamera(player.pos.add(0.0, 1.0, 0.0)).toVec3(),
-                        relativeToCamera(playerPosition.add(0.0, 1.0, 0.0)).toVec3()
-                    ))
-                }
+                drawLineStrip(
+                    Color4b.WHITE.toARGB(),
+                    relativeToCamera(player.pos.add(0.0, 1.0, 0.0)).toVec3(),
+                    relativeToCamera(playerPosition.add(0.0, 1.0, 0.0)).toVec3()
+                )
             }
         }
     }

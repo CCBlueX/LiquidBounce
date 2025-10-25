@@ -20,11 +20,11 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import kotlin.collections.filter
-import kotlin.math.abs
 
 fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(item: Item): T? =
     findClosestSlot { it.item === item }
@@ -32,21 +32,11 @@ fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(item: Item): T? =
 fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(vararg items: Item): T? =
     findClosestSlot { it.item in items }
 
-/**
- * Distance order:
- * current hand -> offhand -> other slots
- */
+fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(items: Collection<Item>): T? =
+    findClosestSlot { it.item in items }
+
 inline fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(predicate: (ItemStack) -> Boolean): T? {
-    return mc.player?.let { player ->
-        val selected = player.inventory.selectedSlot
-        this.filter { predicate(it.itemStack) }.minByOrNull {
-            when {
-                it is OffHandSlot -> Int.MIN_VALUE + 1
-                it.hotbarSlotForServer == selected -> Int.MIN_VALUE
-                else -> abs(selected - it.hotbarSlotForServer)
-            }
-        }
-    }
+    return this.filter { predicate(it.itemStack) }.minWithOrNull(HotbarItemSlot.PREFER_NEARBY)
 }
 
 fun SlotGroup<*>.hasItem(item: Item): Boolean = any { it.itemStack.item === item }
@@ -102,8 +92,11 @@ object Slots {
 }
 
 class SlotGroup<T : ItemSlot>(val slots: List<T>) : List<T> by slots {
-    val items: List<Item>
-        get() = slots.map { it.itemStack.item }
+    val stacks: Array<ItemStack>
+        get() = slots.mapToArray { it.itemStack }
+
+    val items: Array<Item>
+        get() = slots.mapToArray { it.itemStack.item }
 
     fun findSlot(item: Item): T? {
         return findSlot { it.item === item }

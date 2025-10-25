@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.Sp
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.SpiderVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.SpiderVulcan288
 
-object ModuleSpider : ClientModule("Spider", Category.MOVEMENT, aliases = arrayOf("WallClimb")) {
+object ModuleSpider : ClientModule("Spider", Category.MOVEMENT, aliases = listOf("WallClimb")) {
 
     init {
         enableLock()

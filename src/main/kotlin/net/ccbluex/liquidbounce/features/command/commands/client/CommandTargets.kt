@@ -18,9 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
-import net.ccbluex.liquidbounce.config.types.MultiChooseEnumListValue
-import net.ccbluex.liquidbounce.features.command.CommandFactory
+import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.enumChoice
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
@@ -33,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.combat.Targets
  *
  * Provides subcommands for enemy configuration.
  */
-object CommandTargets : CommandFactory {
+object CommandTargets : Command.Factory {
 
     override fun createCommand() = CommandBuilder
         .begin("targets")
@@ -41,43 +43,41 @@ object CommandTargets : CommandFactory {
         .subcommand(
             CommandBuilder
                 .begin("combat")
-                .hub()
                 .fromTargets(ModuleTargets.combatConfigurable)
                 .build()
         )
         .subcommand(
             CommandBuilder
                 .begin("visual")
-                .hub()
                 .fromTargets(ModuleTargets.visualConfigurable)
                 .build()
         )
         .hub()
         .build()
 
-    private fun CommandBuilder.fromTargets(targets: MultiChooseEnumListValue<Targets>): CommandBuilder {
-        // Create sub-command for each value entry
-        for (entry in targets.choices) {
-            subcommand(
-                CommandBuilder
-                    .begin(entry.choiceName.lowercase())
-                    .handler { command, _ ->
-                        val state = targets.toggle(entry)
+    private fun CommandBuilder.fromTargets(targets: MultiChooseListValue<Targets>): CommandBuilder {
+        this.parameter(
+            ParameterBuilder
+                .enumChoice<Targets>("category") { it in targets.choices }
+                .required()
+                .build()
+        ).handler {
+            val entry = args[0] as Targets
 
-                        val localizedState = if (state) {
-                            "enabled"
-                        } else {
-                            "disabled"
-                        }
-                        chat(
-                            regular(command.result(localizedState)),
-                            metadata = MessageMetadata(id = "CTargets#info")
-                        )
-
-                        ModuleClickGui.reload()
-                    }
-                    .build()
+            val state = targets.toggle(entry)
+            val localizedState = if (state) {
+                "enabled"
+            } else {
+                "disabled"
+            }
+            chat(
+                regular(command.result(localizedState,
+                    entry.name.lowercase().replaceFirstChar { it.uppercase() })
+                ),
+                metadata = MessageMetadata(id = "CTargets#info")
             )
+
+            ModuleClickGui.reload()
         }
 
         return this

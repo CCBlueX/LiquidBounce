@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventState
@@ -137,7 +138,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         /**
          * With a higher priority so that it runs before [CrystalDestroyFeature].
          */
-        @Suppress("unused")
+        @Suppress("unused", "LoopWithTooManyJumpStatements")
         private val tickHandler = handler<GameTickEvent>(priority = 10) {
             // check if this feature isn't enabled and the extra layer forcefully applied or not enabled ->
             // checks are not needed
@@ -149,21 +150,23 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
             broken.clear()
 
             // iterate all surround blocks and check if they're being broken
-            placer.blocks.filter {
-                !it.value  // exclude support blocks
-            }.keys.forEach { pos ->
+            for (entry in placer.blocks.fastIterator()) {
+                if (entry.booleanValue) continue  // exclude support blocks
+                val posAsLong = entry.longKey
+
                 // find the list of current breaking data, or else return
-                val breakingProgressions = mc.worldRenderer.blockBreakingProgressions[pos.asLong()] ?: return@forEach
+                val breakingProgressions = mc.worldRenderer.blockBreakingProgressions[posAsLong] ?: continue
 
                 // find the braking info that doesn't belong to us, if we mine our own surround, it should be ignored
-                val breakingInfo = breakingProgressions.lastOrNull { it.actorId != player.id } ?: return@forEach
+                val breakingInfo = breakingProgressions.lastOrNull { it.actorId != player.id } ?: continue
                 val stage = breakingInfo.stage
 
                 // check if the stage is too low, if so return
                 if (stage < minDestroyProgress) {
-                    return@forEach
+                    continue
                 }
 
+                val pos = BlockPos.fromLong(posAsLong)
                 // add the block to the map of blocks that are being broken
                 if (ExtraLayer.enabled && stage > 0) {
                     broken.add(pos)
@@ -171,12 +174,12 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
 
                 // skip to the next entry if the crystal destroy feature is disabled
                 if (!placer.crystalDestroyer.enabled) {
-                    return@forEach
+                    continue
                 }
 
                 // destroy crystals that would block replacements
                 val blockedResult = pos.isBlockedByEntitiesReturnCrystal()
-                val crystal = blockedResult.value() ?: return@forEach
+                val crystal = blockedResult.value() ?: continue
 
                 // try to replace the current target
                 placer.crystalDestroyer.currentTarget = crystal
@@ -323,7 +326,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         placer.placeInstantOnBlockUpdate(it)
     }
 
-    fun getEntitySurround(
+    private fun getEntitySurround(
         entity: Entity,
         list: HashSet<BlockPos>,
         blocked: HashSet<BlockPos>,

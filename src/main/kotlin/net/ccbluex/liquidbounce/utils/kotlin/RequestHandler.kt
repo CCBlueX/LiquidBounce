@@ -34,7 +34,7 @@ class RequestHandler<T> {
 
     fun request(request: Request<T>) {
         // we remove all requests provided by module on new request
-        activeRequests.removeAll { it.provider == request.provider }
+        activeRequests.removeIf { it.provider === request.provider }
         request.expiresIn += currentTick
         activeRequests.add(request)
     }

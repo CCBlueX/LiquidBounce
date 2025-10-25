@@ -88,22 +88,11 @@ object ModuleBetterTab : ClientModule("BetterTab", Category.RENDER) {
 }
 
 class PlayerFilter: Configurable("Filter") {
-    private var filters = setOf<Regex>()
-
     private val filterBy by multiEnumChoice("FilterBy", Filter.entries)
 
-    @Suppress("unused")
-    private val names by textList("Names", mutableListOf()).onChanged { newValue ->
-        filters = newValue.mapTo(HashSet(newValue.size, 1.0F)) {
-            val regexPattern = it
-                .replace("*", ".*")
-                .replace("?", ".")
+    private val names by regexList("Names", linkedSetOf())
 
-            Regex("^$regexPattern\$")
-        }
-    }
-
-    fun isInFilter(entry: PlayerListEntry) = filters.any { regex ->
+    fun isInFilter(entry: PlayerListEntry) = names.any { regex ->
         filterBy.any { filter -> filter.matches(entry, regex) }
     }
 

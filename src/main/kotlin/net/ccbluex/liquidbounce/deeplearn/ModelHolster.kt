@@ -19,13 +19,13 @@
 
 package net.ccbluex.liquidbounce.deeplearn
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
 import net.ccbluex.liquidbounce.deeplearn.models.MinaraiModel
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import kotlin.time.measureTime
 
 object ModelHolster : EventListener, Configurable("DeepLearning") {
@@ -56,7 +56,7 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
     val models = choices(this, "Model", 0) { choiceConfigurable ->
         // Empty models for start-up initialization.
         // These will be replaced later on at [load].
-        allModels.mapArray { name ->
+        allModels.mapToArray { name ->
             MinaraiModel(name, choiceConfigurable)
         }
     }
@@ -68,7 +68,7 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
      */
     fun load() {
         logger.info("[DeepLearning] Loading models...")
-        val choices = allModels.mapArray { name ->
+        val choices = allModels.mapToArray { name ->
             MinaraiModel(name, models)
         }
 

@@ -21,16 +21,20 @@ package net.ccbluex.liquidbounce.config.types
 
 import com.google.gson.Gson
 import com.google.gson.JsonElement
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 
 class ChooseListValue<T : NamedChoice>(
     name: String,
-    aliases: Array<String> = emptyArray(),
+    aliases: List<String> = emptyList(),
     defaultValue: T,
-    @Exclude val choices: Array<T>
+    @Exclude val choices: Set<T>
 ) : Value<T>(name, aliases, defaultValue, ValueType.CHOOSE) {
+
+    init {
+        require(defaultValue in choices) { "default value must be in [${choices}]" }
+    }
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val name = element.asString
@@ -53,11 +57,31 @@ class ChooseListValue<T : NamedChoice>(
 
     @ScriptApiRequired
     fun getChoicesStrings(): Array<String> {
-        return this.choices.mapArray { it.choiceName }
+        return choices.mapToArray { it.choiceName }
     }
 
 }
 
 interface NamedChoice {
     val choiceName: String
+
+    companion object {
+        @JvmName("of")
+        @JvmStatic
+        fun String.asNamedChoice(): NamedChoice = object : NamedChoice {
+            override val choiceName get() = this@asNamedChoice
+
+            override fun equals(other: Any?): Boolean =
+                when (other) {
+                    is NamedChoice -> other.choiceName == this.choiceName
+                    is CharSequence -> this.choiceName == other
+                    is Enum<*> -> this.choiceName == other.name
+                    else -> false
+                }
+
+            override fun hashCode(): Int = this.choiceName.hashCode()
+
+            override fun toString(): String = this.choiceName
+        }
+    }
 }

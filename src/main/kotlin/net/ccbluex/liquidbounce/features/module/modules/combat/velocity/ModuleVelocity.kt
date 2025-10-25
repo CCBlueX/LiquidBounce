@@ -24,11 +24,10 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.*
-import net.minecraft.network.listener.ClientPlayPacketListener
-import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -39,7 +38,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  * Modifies the amount of velocity you take.
  */
 
-object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arrayOf("AntiKnockBack")) {
+object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = listOf("AntiKnockBack")) {
 
     init {
         enableLock()
@@ -96,7 +95,7 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arra
                     if (ticks > 0) {
                         val timeToWait = System.currentTimeMillis() + (ticks * 50L)
 
-                        waitUntil { System.currentTimeMillis() >= timeToWait }
+                        tickUntil { System.currentTimeMillis() >= timeToWait }
                     }
                 }
 
@@ -104,7 +103,7 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = arra
                 EventManager.callEvent(packetEvent)
 
                 if (!packetEvent.isCancelled) {
-                    (packet as Packet<ClientPlayPacketListener>).apply(network)
+                    packet.apply(network)
                 }
             }
         } else if (packet is PlayerPositionLookS2CPacket) {

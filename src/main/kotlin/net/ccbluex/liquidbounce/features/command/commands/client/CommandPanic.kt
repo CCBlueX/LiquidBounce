@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Category
@@ -36,7 +35,7 @@ import net.minecraft.text.MutableText
  *
  * Allows you to disable all modules or modules in a specific category.
  */
-object CommandPanic : CommandFactory {
+object CommandPanic : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -48,7 +47,7 @@ object CommandPanic : CommandFactory {
                     .optional()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 var modules = ModuleManager.filter { it.running }
                 val msg: MutableText
 
@@ -63,7 +62,7 @@ object CommandPanic : CommandFactory {
                         val category = Category.fromReadableName(type)
                             ?: throw CommandException(command.result("categoryNotFound", type))
                         modules = modules.filter { it.category == category }
-                        msg = command.result("disabledAllCategoryModules", category.readableName)
+                        msg = command.result("disabledAllCategoryModules", category.choiceName)
                     }
                 }
 

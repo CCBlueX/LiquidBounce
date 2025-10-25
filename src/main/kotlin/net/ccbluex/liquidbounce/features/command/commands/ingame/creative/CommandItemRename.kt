@@ -20,11 +20,9 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame.creative
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
-import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.text.Text
@@ -35,7 +33,7 @@ import net.minecraft.util.Hand
  *
  * Allows you to rename an item held in the player's hand.
  */
-object CommandItemRename : CommandFactory {
+object CommandItemRename : Command.Factory {
 
     override fun createCommand(): Command {
         return CommandBuilder
@@ -49,13 +47,13 @@ object CommandItemRename : CommandFactory {
                     .vararg()
                     .build()
             )
-            .handler { command, args ->
+            .handler {
                 if (!interaction.hasCreativeInventory()) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
                 val itemStack = player.getStackInHand(Hand.MAIN_HAND)
-                if (itemStack.isNothing()) {
+                if (itemStack.isEmpty) {
                     throw CommandException(command.result("mustHoldItem"))
                 }
 

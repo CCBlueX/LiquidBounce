@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
@@ -127,7 +126,7 @@ object ServerObserver : EventListener {
         val serverInfo = serverInfo ?: error("no known last server")
         val serverAddress = ServerAddress.parse(serverInfo.address)
 
-        RenderSystem.recordRenderCall {
+        mc.execute {
             ConnectScreen.connect(
                 MultiplayerScreen(TitleScreen()),
                 mc,

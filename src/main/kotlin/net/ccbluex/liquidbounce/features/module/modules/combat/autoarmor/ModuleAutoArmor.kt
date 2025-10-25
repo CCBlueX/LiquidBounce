@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.AutoArm
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.performMoveOrHotbarClick
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.item.Items
 
@@ -92,7 +91,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", Category.COMBAT) {
             return null
         }
 
-        return performMoveOrHotbarClick(armorPiece, isInArmorSlot = !stackInArmor.isNothing())
+        return performMoveOrHotbarClick(armorPiece, isInArmorSlot = !stackInArmor.isEmpty)
     }
 
     /**
@@ -116,16 +115,16 @@ object ModuleAutoArmor : ClientModule("AutoArmor", Category.COMBAT) {
             !InventoryManager.isInventoryOpen && (!isInArmorSlot || UseHotbar.canSwapArmor)
 
         if (inventorySlot is HotbarItemSlot && canTryHotbarMove) {
-            return UseInventoryAction(inventorySlot)
+            return InventoryAction.UseItem(inventorySlot)
         }
 
         // Should the item be just thrown out of the inventory
         val shouldThrow = isInArmorSlot && !hasInventorySpace()
 
         return if (shouldThrow) {
-            ClickInventoryAction.performThrow(screen = null, armorPieceSlot)
+            InventoryAction.Click.performThrow(screen = null, armorPieceSlot)
         } else {
-            ClickInventoryAction.performQuickMove(screen = null, armorPieceSlot)
+            InventoryAction.Click.performQuickMove(screen = null, armorPieceSlot)
         }
     }
 

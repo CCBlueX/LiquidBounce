@@ -23,15 +23,15 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.preset
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
-import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions.AutoQueueAction
-import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions.AutoQueueActionChat
-import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions.AutoQueueActionUseItem
+import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.*
 
 object AutoQueueCustom : Choice("Custom") {
@@ -41,6 +41,8 @@ object AutoQueueCustom : Choice("Custom") {
 
     internal val triggers = choices<AutoQueueTrigger>("Trigger", 0) {
         arrayOf(
+            AutoQueueTriggerTitle,
+            AutoQueueTriggerSubtitle,
             AutoQueueTriggerMessage,
             AutoQueueTriggerItem,
             AutoQueueTriggerTabHeader,
@@ -88,10 +90,10 @@ object AutoQueueCustom : Choice("Custom") {
         if (trigger.isTriggered) {
             AutoQueueControl.wasInQueue = true
 
-            actions.activeChoice.execute(this)
+            actions.activeChoice.execute()
 
             if (waitUntilWorldChange) {
-                waitUntil { worldChangeOccurred }
+                tickUntil { worldChangeOccurred }
                 worldChangeOccurred = false
             }
             waitTicks(20)

@@ -17,34 +17,46 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("TooManyFunctions")
+@file:Suppress("TooManyFunctions", "NOTHING_TO_INLINE")
 
 package net.ccbluex.liquidbounce.config.gson.util
 
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import org.apache.commons.io.input.CharSequenceReader
+import java.io.File
 import java.io.InputStream
 import java.io.Reader
+import java.nio.charset.Charset
 
 /**
- * Decode JSON content
+ * Read JSON content
  */
-inline fun <reified T> decode(stringJson: String): T =
-    stringJson.reader().use(::decode)
+inline fun <reified T> CharSequence.readJson(): T =
+    CharSequenceReader(this).readJson()
 
 /**
- * Decode JSON content from an [InputStream] and close it
+ * Read JSON content from a [File].
  */
-inline fun <reified T> decode(inputStream: InputStream): T =
-    inputStream.bufferedReader().use(::decode)
+inline fun <reified T> File.readJson(charset: Charset = Charsets.UTF_8): T =
+    inputStream().readJson(charset)
 
 /**
- * Decode JSON content from a [Reader] and close it
+ * Read JSON content from an [InputStream] and close it
  */
-inline fun <reified T> decode(reader: Reader): T = reader.use {
-    publicGson.fromJson(reader, object : TypeToken<T>() {}.type)
+inline fun <reified T> InputStream.readJson(charset: Charset = Charsets.UTF_8): T =
+    bufferedReader(charset).readJson()
+
+/**
+ * Read JSON content from a [Reader] and close it
+ */
+inline fun <reified T> Reader.readJson(gson: Gson = publicGson): T = use {
+    gson.fromJson(it, object : TypeToken<T>() {}.type)
 }
+
+inline fun JsonReader.parseTree(): JsonElement = JsonParser.parseReader(this)
 
 // Never add elements to it!
 private val EMPTY_JSON_ARRAY = JsonArray(0)

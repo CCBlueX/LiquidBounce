@@ -19,8 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post
 
 import it.unimi.dsi.fastutil.ints.Int2LongLinkedOpenHashMap
-import it.unimi.dsi.fastutil.ints.Int2LongMap
-import it.unimi.dsi.fastutil.ints.Int2LongMaps
+import net.ccbluex.fastutil.synchronized
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -35,19 +34,18 @@ import net.minecraft.sound.SoundEvents
  */
 abstract class CrystalPostAttackTracker : EventListener {
 
-    protected val attackedIds: Int2LongMap = Int2LongMaps.synchronize(Int2LongLinkedOpenHashMap())
+    protected val attackedIds = Int2LongLinkedOpenHashMap().synchronized()
 
     @Suppress("unused")
     private val repeatable = tickHandler {
         val currentTime = System.currentTimeMillis()
         val attackTime = currentTime - timeOutAfter()
-        attackedIds.int2LongEntrySet().iterator().apply {
-            while (hasNext()) {
-                val entry = next()
-                if (entry.longValue < attackTime) {
-                    timedOut(entry.intKey)
-                    remove()
-                }
+        attackedIds.int2LongEntrySet().removeIf { entry ->
+            if (entry.longValue < attackTime) {
+                timedOut(entry.intKey)
+                true
+            } else {
+                false
             }
         }
     }

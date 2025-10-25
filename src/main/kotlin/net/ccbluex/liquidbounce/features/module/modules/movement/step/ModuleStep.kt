@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -38,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.entity.canStep
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.stat.Stats
+import java.util.EnumSet
 
 /**
  * Step module
@@ -107,7 +109,8 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
             jumpOrder.indices)
         private val wait by intRange("Wait", 0..0, 0..60, "ticks")
         private val packetType by enumChoice("PacketType", MovePacketType.FULL,
-            arrayOf(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND))
+            EnumSet.of(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND)
+        )
 
         private var ticksWait = 0
 
@@ -293,7 +296,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                 stepping = true
                 player.velocity.y = 0.42
                 waitTicks(1)
-                if(currentStepHeight > 1.0) {
+                if (currentStepHeight > 1.0) {
                     player.velocity.y += 0.061
                 }
                 waitTicks(2)
@@ -303,7 +306,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                     player.velocity.y -= 0.095
                     if (currentStepHeight > 1.25) {
                         waitTicks(5)
-                        if(alternateBypass) {
+                        if (alternateBypass) {
                             player.isOnGround = true
                         } else {
                             player.velocity.y = 0.42

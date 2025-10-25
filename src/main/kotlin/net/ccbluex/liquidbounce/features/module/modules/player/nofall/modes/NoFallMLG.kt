@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -44,10 +44,7 @@ import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3i
 
-internal object NoFallMLG : Choice("MLG") {
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
-
+internal object NoFallMLG : NoFallMode("MLG") {
     private val minFallDist by float("MinFallDistance", 5f, 2f..50f)
 
     private object PickupWater : ToggleableConfigurable(NoFallMLG, "PickUpWater", true) {
@@ -60,10 +57,10 @@ internal object NoFallMLG : Choice("MLG") {
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
     private var currentTarget: PlacementPlan? = null
-    private var lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
+    private val lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
 
     private val netherItems =
-        arrayOf(
+        setOf(
             // overworld
             Items.COBWEB,
             Items.POWDER_SNOW_BUCKET,
@@ -73,7 +70,7 @@ internal object NoFallMLG : Choice("MLG") {
             // nether
             Items.TWISTING_VINES,
         )
-    private val normalItems = arrayOf(Items.WATER_BUCKET) + netherItems
+    private val normalItems = netherItems + Items.WATER_BUCKET
 
     private val itemsForMLG
         get() = if (world.dimension.ultrawarm) netherItems else normalItems
@@ -81,6 +78,9 @@ internal object NoFallMLG : Choice("MLG") {
     init {
         tree(PickupWater)
     }
+
+    override val running: Boolean
+        get() = super.running && !ModuleFreeze.running
 
     @Suppress("unused")
     private val tickMovementHandler =
@@ -102,33 +102,32 @@ internal object NoFallMLG : Choice("MLG") {
         }
 
     @Suppress("unused")
-    private val tickHandler =
-        tickHandler {
-            val target = currentTarget ?: return@tickHandler
+    private val tickHandler = handler<GameTickEvent> {
+        val target = currentTarget ?: return@handler
 
-            val rayTraceResult = raycast()
+        val rayTraceResult = raycast()
 
-            if (!target.doesCorrespondTo(rayTraceResult)) {
-                return@tickHandler
-            }
-
-            SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
-
-            val onSuccess: () -> Boolean = {
-                lastPlacements.add(target.targetPos to Chronometer().also { it.reset() })
-
-                true
-            }
-
-            doPlacement(
-                rayTraceResult,
-                hand = target.hotbarItemSlot.useHand,
-                onItemUseSuccess = onSuccess,
-                onPlacementSuccess = onSuccess,
-            )
-
-            currentTarget = null
+        if (!target.doesCorrespondTo(rayTraceResult)) {
+            return@handler
         }
+
+        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
+
+        val onSuccess: () -> Boolean = {
+            lastPlacements.add(target.targetPos to Chronometer(System.currentTimeMillis()))
+
+            true
+        }
+
+        doPlacement(
+            rayTraceResult,
+            hand = target.hotbarItemSlot.useHand,
+            onItemUseSuccess = onSuccess,
+            onPlacementSuccess = onSuccess,
+        )
+
+        currentTarget = null
+    }
 
     /**
      * Finds something to do, either
@@ -151,7 +150,7 @@ internal object NoFallMLG : Choice("MLG") {
      * Finds a position to pickup placed water from
      */
     private fun getCurrentPickupTarget(): PlacementPlan? {
-        val bestPickupItem = Slots.Hotbar.findClosestSlot(Items.BUCKET) ?: return null
+        val bestPickupItem = Slots.OffhandWithHotbar.findClosestSlot(Items.BUCKET) ?: return null
 
         // Remove all time outed/invalid pickup targets from the list
         this.lastPlacements.removeIf {

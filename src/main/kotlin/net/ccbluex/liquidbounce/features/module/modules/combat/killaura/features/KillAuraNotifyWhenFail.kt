@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
 import it.unimi.dsi.fastutil.objects.ObjectLongMutablePair
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.enabled
@@ -30,8 +32,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.kotlin.component1
-import net.ccbluex.liquidbounce.utils.kotlin.component2
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.sound.SoundEvents
@@ -109,9 +109,8 @@ internal object KillAuraNotifyWhenFail {
 
         val base = if (Box.colorRainbow) rainbow() else Box.color
 
-        val box = Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
-
         renderEnvironmentForWorld(matrixStack) {
+            startBatch()
             for ((pos, opacity) in markedBlocks) {
                 val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
 
@@ -119,16 +118,17 @@ internal object KillAuraNotifyWhenFail {
                 val outlineColor = base.with(a = fade)
 
                 withPositionRelativeToCamera(pos) {
-                    withColor(baseColor) {
-                        drawSolidBox(box)
-                    }
-
-                    withColor(outlineColor) {
-                        drawOutlinedBox(box)
-                    }
+                    drawBox(
+                        POINT_BOX,
+                        baseColor,
+                        outlineColor,
+                    )
                 }
             }
+            commitBatch()
         }
     }
+
+    private val POINT_BOX = Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
 
 }

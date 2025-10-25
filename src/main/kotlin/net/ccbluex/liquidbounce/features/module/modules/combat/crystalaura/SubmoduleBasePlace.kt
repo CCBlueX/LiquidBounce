@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
 import it.unimi.dsi.fastutil.doubles.DoubleDoubleImmutablePair
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementPositionCandidate
@@ -32,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.mapArray
 import net.minecraft.block.BlockState
 import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
@@ -262,16 +262,40 @@ object SubmoduleBasePlace : ToggleableConfigurable(ModuleCrystalAura, "BasePlace
         )
 
         // the block layer below the player, if the player is clipped in the ground block a bit, it doesn't matter
-        val floor = positions.mapArray { BlockPos.ofFloored(it.keyDouble(), yA - 1.0, it.valueDouble()) }
+        val floor = positions.mapToArray {
+            BlockPos.ofFloored(
+                it.keyDouble(),
+                yA - 1.0,
+                it.valueDouble()
+            )
+        }
 
         // the first wall layer
-        val layerA = positions.mapArray { BlockPos.ofFloored(it.keyDouble(), yA, it.valueDouble()) }
+        val layerA = positions.mapToArray {
+            BlockPos.ofFloored(
+                it.keyDouble(),
+                yA,
+                it.valueDouble()
+            )
+        }
 
         // the second wall layer
-        val layerB = positions.mapArray { BlockPos.ofFloored(it.keyDouble(), yB, it.valueDouble()) }
+        val layerB = positions.mapToArray {
+            BlockPos.ofFloored(
+                it.keyDouble(),
+                yB,
+                it.valueDouble()
+            )
+        }
 
         // the blocks above the player
-        val ceiling = positions.mapArray { BlockPos.ofFloored(it.keyDouble(), yB + 1.0, it.valueDouble()) }
+        val ceiling = positions.mapToArray {
+            BlockPos.ofFloored(
+                it.keyDouble(),
+                yB + 1.0,
+                it.valueDouble()
+            )
+        }
 
         val isInFloorOrCeiling = pos in floor || pos in ceiling
         if (isInFloorOrCeiling) {

@@ -21,16 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.minecraft.entity.attribute.EntityAttributes
 
-internal object NoFallPacket : Choice("Packet") {
+internal object NoFallPacket : NoFallMode("Packet") {
     private val packetType by enumChoice("PacketType", MovePacketType.FULL)
     private val filter = choices("Filter", FallDistance, arrayOf(FallDistance, Always))
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
 
     val repeatable = tickHandler {
         if (filter.activeChoice.isActive) {
@@ -67,7 +62,7 @@ internal object NoFallPacket : Choice("Packet") {
 
         private object Smart : DistanceMode("Smart") {
             override val value: Float
-                get() = player.getAttributeValue(EntityAttributes.SAFE_FALL_DISTANCE).toFloat()
+                get() = playerSafeFallDistance.toFloat()
         }
 
         private object Constant : DistanceMode("Constant") {

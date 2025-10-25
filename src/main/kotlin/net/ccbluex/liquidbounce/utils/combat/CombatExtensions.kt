@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.utils.combat
 
 import it.unimi.dsi.fastutil.objects.ObjectDoublePair
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -30,8 +32,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.kotlin.component1
-import net.ccbluex.liquidbounce.utils.kotlin.component2
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.minecraft.client.option.Perspective
 import net.minecraft.client.world.ClientWorld
@@ -42,6 +42,8 @@ import net.minecraft.entity.mob.Angerable
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.mob.Monster
 import net.minecraft.entity.mob.WaterCreatureEntity
+import net.minecraft.entity.passive.AllayEntity
+import net.minecraft.entity.passive.BatEntity
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
@@ -138,9 +140,10 @@ private fun EnumSet<Targets>.isInteresting(suspect: Entity): Boolean {
             else -> Targets.PLAYERS in this
         }
         is WaterCreatureEntity -> Targets.WATER_CREATURE in this
-        is PassiveEntity -> Targets.PASSIVE in this
+        is PassiveEntity, is BatEntity, is AllayEntity -> Targets.PASSIVE in this
         is HostileEntity, is Monster -> Targets.HOSTILE in this
         is Angerable -> Targets.ANGERABLE in this
+
         else -> false
     }
 }

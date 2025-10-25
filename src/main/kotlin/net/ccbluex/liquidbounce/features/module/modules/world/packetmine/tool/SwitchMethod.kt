@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.network.PickFromInventoryPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
@@ -62,7 +62,7 @@ enum class SwitchMethod(override val choiceName: String, val shouldSync: Boolean
 
 
             exchanged = desiredSlot
-            ClickInventoryAction.performSwap(
+            InventoryAction.Click.performSwap(
                 from = Slots.Hotbar[desiredSlot],
                 to = Slots.Hotbar[selectedSlot]
             ).performAction()
@@ -72,7 +72,7 @@ enum class SwitchMethod(override val choiceName: String, val shouldSync: Boolean
             val desiredSlot = exchanged ?: return
             val selectedSlot = SilentHotbar.serversideSlot
             exchanged = null
-            ClickInventoryAction.performSwap(
+            InventoryAction.Click.performSwap(
                 from = Slots.Hotbar[desiredSlot],
                 to = Slots.Hotbar[selectedSlot]
             ).performAction()

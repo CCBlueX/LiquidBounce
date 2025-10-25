@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder.Companion.STRING_VALIDATOR
 import net.ccbluex.liquidbounce.script.asArray
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import org.graalvm.polyglot.Value
 
 class ScriptCommandBuilder(private val commandObject: Value) {
@@ -63,7 +64,7 @@ class ScriptCommandBuilder(private val commandObject: Value) {
             val handler = commandObject.getMember("onExecute")
 
             @Suppress("SpreadOperator")
-            commandBuilder.handler { _, args ->
+            commandBuilder.handler {
                 handler.execute(*args)
             }
         }
@@ -93,7 +94,7 @@ class ScriptCommandBuilder(private val commandObject: Value) {
             val completions = parameterObject.getMember("getCompletions")
 
             parameterBuilder.autocompletedWith { begin, args ->
-                completions.execute(begin, args).asArray<String>().asList()
+                completions.execute(begin, args).asArray<String>().unmodifiable()
             }
         }
 

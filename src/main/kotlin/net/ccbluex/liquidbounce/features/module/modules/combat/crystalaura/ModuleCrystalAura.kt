@@ -48,7 +48,7 @@ import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 object ModuleCrystalAura : ClientModule(
     "CrystalAura",
     Category.COMBAT,
-    aliases = arrayOf("AutoCrystal"),
+    aliases = listOf("AutoCrystal"),
     disableOnQuit = true
 ) {
 
