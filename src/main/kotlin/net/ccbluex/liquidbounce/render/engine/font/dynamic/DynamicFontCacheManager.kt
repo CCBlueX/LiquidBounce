@@ -169,7 +169,7 @@ class DynamicFontCacheManager(
     }
 
     private fun freeSpace() {
-        val glyphsToFree = this.cacheData.entries.filter {
+        val glyphsToFree = this.cacheData.filter {
             System.currentTimeMillis() - it.value.lastUsage.get() > MAX_CACHE_TIME_MS
         }
 

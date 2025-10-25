@@ -42,16 +42,18 @@ import java.io.Closeable
  */
 open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, Closeable {
 
-    protected val framebuffers = mutableListOf<LiquidBounceFramebuffer>()
+    protected val framebuffers: Array<LiquidBounceFramebuffer>
     protected var buffer: GlGpuBuffer
 
     init {
+        require(shaders.isNotEmpty())
+
         val width = mc.window.framebufferWidth
         val height = mc.window.framebufferHeight
-        shaders.forEach { _ ->
+        framebuffers = Array(shaders.size) {
             val framebuffer = LiquidBounceFramebuffer(width, height, false)
             framebuffer.clearColor = Color4b.TRANSPARENT
-            framebuffers.add(framebuffer)
+            framebuffer
         }
 
         val builder = Tessellator.getInstance()
@@ -60,7 +62,7 @@ open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, C
         bufferBuilder.vertex(1f, -1f, 0f).texture(1f, 0f)
         bufferBuilder.vertex(1f, 1f, 0f).texture(1f, 1f)
         bufferBuilder.vertex(-1f, 1f, 0f).texture(0f, 1f)
-        buffer = bufferBuilder.upload(BufferUsage.DYNAMIC_WRITE, 4 * VertexFormats.POSITION_TEXTURE.vertexSize)
+        buffer = bufferBuilder.upload(BufferUsage.STATIC_WRITE, 4 * VertexFormats.POSITION_TEXTURE.vertexSize)
     }
 
     open fun prepare(clearFramebuffer: Boolean = true) {
