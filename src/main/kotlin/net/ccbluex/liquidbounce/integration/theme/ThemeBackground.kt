@@ -27,6 +27,8 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.newRenderPass
+import net.ccbluex.liquidbounce.render.trianglePosTexVertexBuffer
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.gui.DrawContext
@@ -94,25 +96,6 @@ sealed interface ThemeBackground : Closeable {
         private val pipeline: RenderPipeline,
     ) : ThemeBackground {
 
-        private val vertexBuffer: GpuBuffer
-
-        init {
-            // Vertex Buffer
-            val bufferBuilder = Tessellator.getInstance()
-                .begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE)
-            bufferBuilder.vertex(-1f, -1f, 0f).texture(0f, 0f)
-            bufferBuilder.vertex(3f, -1f, 0f).texture(2f, 0f)
-            bufferBuilder.vertex(-1f, 3f, 0f).texture(0f, 2f)
-            bufferBuilder.end().use { builtBuffer ->
-                vertexBuffer = RenderSystem.getDevice().createBuffer(
-                    { "Theme shader background vertex buffer" },
-                    BufferType.VERTICES,
-                    BufferUsage.DYNAMIC_WRITE,
-                    builtBuffer.buffer
-                )
-            }
-        }
-
         override fun draw(
             context: DrawContext,
             width: Int,
@@ -131,14 +114,14 @@ sealed interface ThemeBackground : Closeable {
                     mc.window.framebufferHeight.toFloat(),
                 )
 
-                pass.setVertexBuffer(0, vertexBuffer)
+                pass.setVertexBuffer(0, trianglePosTexVertexBuffer)
                 pass.draw(0, 3)
             }
             return true
         }
 
+        @Suppress("EmptyFunctionBlock")
         override fun close() {
-            vertexBuffer.close()
         }
 
         companion object {
@@ -167,7 +150,7 @@ sealed interface ThemeBackground : Closeable {
                     .withoutBlend()
                     .build()
 
-                RenderSystem.getDevice().precompilePipeline(pipeline) { id, _ ->
+                gpuDevice.precompilePipeline(pipeline) { id, _ ->
                     when (id) {
                         vshId -> vertexShader
                         fshId -> fragmentShader

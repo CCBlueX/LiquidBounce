@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.GlBackend;
 import net.minecraft.client.gl.GlResourceManager;
 import net.minecraft.client.render.*;
 import net.minecraft.client.texture.GlTexture;

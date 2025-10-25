@@ -161,7 +161,7 @@ private class ItemTextureRenderer(
 
         Registries.BLOCK.forEach {
             val pickUpState = it.getPickStack(
-                net.ccbluex.liquidbounce.utils.client.mc.world!!,
+                mc.world!!,
                 BlockPos.ORIGIN,
                 it.defaultState,
                 false
@@ -179,7 +179,7 @@ private class ItemTextureRenderer(
     }
 
     private fun clear(framebuffer: Framebuffer) {
-        RenderSystem.getDevice().createCommandEncoder().clearColorAndDepthTextures(
+        gpuDevice.createCommandEncoder().clearColorAndDepthTextures(
             framebuffer.colorAttachment, Color4b.TRANSPARENT.toARGB(),
             framebuffer.depthAttachment, 1.0,
         )

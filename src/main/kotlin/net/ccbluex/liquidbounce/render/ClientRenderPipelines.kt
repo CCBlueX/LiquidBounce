@@ -29,6 +29,7 @@ import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.render.VertexFormats
@@ -161,7 +162,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     }
 
     @JvmField
-    val Glow = newPipeline("glow") {
+    val ItemChams = newPipeline("glow") {
         withVertexShader(ClientShaders.PLANE_PROJECTION_VSH_ID)
         withFragmentShader(ClientShaders.GLOW_FSH_ID)
         withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.QUADS)
@@ -174,6 +175,8 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withUniform("glowColor", UniformType.VEC4)
         withUniform("falloff", UniformType.FLOAT)
         withUniform("layerCount", UniformType.INT)
+        withoutBlend()
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
 //        forWorldRender()
     }
 
@@ -197,15 +200,21 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         forWorldRender()
     }
 
+    @JvmField
+    val Blend = newPipeline("blend") {
+        withVertexShader(ClientShaders.PLAIN_POSITION_TEX_VSH_ID)
+        withFragmentShader(ClientShaders.BLEND_FSH_ID)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
+        withSampler("texture0")
+        withUniform("mixColor", UniformType.VEC4)
+    }
 
     /**
      * Precompile
      */
     override fun reload(manager: ResourceManager) {
-        val device = RenderSystem.getDevice()
-
         renderPipelines.fastIterator().forEach { (_, pipeline) ->
-            device.precompilePipeline(pipeline) { identifier, _ ->
+            gpuDevice.precompilePipeline(pipeline) { identifier, _ ->
                 ClientShaders[identifier] ?: error("Unknown identifier: $identifier")
             }
         }

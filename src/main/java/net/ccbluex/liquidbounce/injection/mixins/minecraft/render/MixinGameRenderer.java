@@ -150,18 +150,12 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/LightmapTextureManager;enable()V", shift = At.Shift.AFTER))
     public void prepareItemCharms(Camera camera, float tickDelta, Matrix4f matrix4f, CallbackInfo ci) {
-        if (ModuleItemChams.INSTANCE.getRunning()) {
-            ModuleItemChams.INSTANCE.setData();
-            OutlineEffectShader.INSTANCE.prepare(true);
-        }
+        ModuleItemChams.INSTANCE.applyToTexture(this.lightmapTextureManager.getGlTexture());
     }
 
     @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", shift = At.Shift.AFTER))
     public void drawItemCharms(Camera camera, float tickDelta, Matrix4f matrix4f, CallbackInfo ci) {
-        if (ModuleItemChams.INSTANCE.getActive()) {
-            ModuleItemChams.INSTANCE.setActive(false);
-            OutlineEffectShader.INSTANCE.apply(true);
-        }
+        ModuleItemChams.INSTANCE.restoreToTexture(this.lightmapTextureManager.getGlTexture());
     }
 
     /**

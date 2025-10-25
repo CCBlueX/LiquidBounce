@@ -61,19 +61,21 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
         return (double) Float.MAX_VALUE;
     }
 
-    @Inject(method = "update", at = @At("TAIL"))
-    private void setTextureWithCustomColor(float tickProgress, CallbackInfo ci) {
+    @Inject(
+            method = "update",
+            at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderPass;close()V", shift = At.Shift.AFTER)
+    )
+    private void setSkyLightColorUniformColor(float tickProgress, CallbackInfo ci) {
         if (ModuleCustomAmbience.CustomLightColor.INSTANCE.getRunning()) {
-            RenderSystem.getDevice().createCommandEncoder()
-                    .clearColorTexture(this.glTexture, ModuleCustomAmbience.CustomLightColor.INSTANCE.getLightColor().toARGB());
+            ModuleCustomAmbience.CustomLightColor.INSTANCE.applyLightColor(this.glTexture);
         }
     }
 
     @Override
     public void liquid_bounce$restoreLightMap() {
         // FIXME: make it correct
-//        RenderSystem.getDevice().createCommandEncoder()
-//                .clearColorTexture(this.glTexture, -1); // see original class <init> method tail
+        RenderSystem.getDevice().createCommandEncoder()
+                .clearColorTexture(this.glTexture, -1);
     }
 
     // Turns off blinking when the darkness effect is active.

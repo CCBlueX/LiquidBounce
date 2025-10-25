@@ -23,6 +23,7 @@ import com.mojang.blaze3d.buffers.BufferType
 import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.ScreenshotRecorder
 import java.awt.image.BufferedImage
@@ -36,15 +37,15 @@ fun GpuTexture.toNativeImage(): CompletableFuture<NativeImage> {
     val i = this.getWidth(0)
     val j = this.getHeight(0)
     val pixelSize = this.format.pixelSize()
-    val gpuBuffer = RenderSystem.getDevice()
+    val gpuBuffer = gpuDevice
         .createBuffer(
             { "Screenshot buffer" },
             BufferType.PIXEL_PACK,
             BufferUsage.STATIC_READ,
             i * j * pixelSize
         )
-    RenderSystem.getDevice().createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, Runnable {
-        RenderSystem.getDevice().createCommandEncoder().readBuffer(gpuBuffer).use { readView ->
+    gpuDevice.createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, Runnable {
+        gpuDevice.createCommandEncoder().readBuffer(gpuBuffer).use { readView ->
             val nativeImage = NativeImage(i, j, false)
             for (k in 0..<j) {
                 for (l in 0..<i) {

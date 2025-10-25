@@ -18,18 +18,26 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.FilterMode
+import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinBackgroundRenderer
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.setUniform
+import net.ccbluex.liquidbounce.render.trianglePosTexVertexBuffer
 import net.minecraft.block.enums.CameraSubmersionType
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.Fog
 import net.minecraft.client.render.FogShape
 import net.minecraft.util.math.MathHelper
 import org.lwjgl.opengl.GL11
+import java.util.OptionalInt
 
 /**
  * CustomAmbience module
@@ -97,7 +105,20 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
     }
 
     object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
-        val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
+        private val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
+
+        fun applyLightColor(texture: GpuTexture) {
+            if (!this.running) return
+
+            gpuDevice.createCommandEncoder()
+                .createRenderPass(texture, OptionalInt.empty()).use { pass ->
+                    pass.setPipeline(ClientRenderPipelines.Blend)
+                    pass.bindSampler("texture0", texture)
+                    pass.setUniform("mixColor", lightColor)
+                    pass.setVertexBuffer(0, trianglePosTexVertexBuffer)
+                    pass.draw(0, 3)
+                }
+        }
     }
 
     init {

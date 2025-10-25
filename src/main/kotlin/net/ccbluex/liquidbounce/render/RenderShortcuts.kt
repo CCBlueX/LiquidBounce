@@ -40,12 +40,14 @@ import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.GlGpuBuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
+import net.minecraft.client.util.BufferAllocator
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.*
 import org.joml.Matrix3x2fStack
@@ -81,6 +83,22 @@ val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 @JvmField
 val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
+val trianglePosTexVertexBuffer: GpuBuffer =
+    BufferAllocator(VertexFormats.POSITION_TEXTURE.vertexSize * 3).use { allocator ->
+        val bufferBuilder = BufferBuilder(allocator, DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE)
+        bufferBuilder.vertex(-1f, -1f, 0f).texture(0f, 0f)
+        bufferBuilder.vertex(3f, -1f, 0f).texture(2f, 0f)
+        bufferBuilder.vertex(-1f, 3f, 0f).texture(0f, 2f)
+        bufferBuilder.end().use { builtBuffer ->
+            gpuDevice.createBuffer(
+                { "Theme shader background vertex buffer" },
+                BufferType.VERTICES,
+                BufferUsage.STATIC_WRITE,
+                builtBuffer.buffer
+            )
+        }
+    }
+
 // Copied from 1.21.4
 
 fun defaultBlendFunc() {
@@ -96,7 +114,7 @@ fun defaultBlendFunc() {
 // Copied from 1.21.4 end
 
 fun BufferBuilder.upload(usage: BufferUsage, size: Int): GlGpuBuffer {
-    val buffer = RenderSystem.getDevice()
+    val buffer = gpuDevice
         .createBuffer(
             { LiquidBounce.CLIENT_NAME },
             BufferType.VERTICES,
@@ -105,7 +123,7 @@ fun BufferBuilder.upload(usage: BufferUsage, size: Int): GlGpuBuffer {
         ) as GlGpuBuffer
 
     this.end().use { builtBuffer ->
-        val commandEncoder = RenderSystem.getDevice().createCommandEncoder()
+        val commandEncoder = gpuDevice.createCommandEncoder()
         commandEncoder.writeToBuffer(buffer, builtBuffer.buffer, 0)
     }
     GlStateManager._glBindVertexArray(0)
@@ -344,7 +362,7 @@ inline fun RenderEnvironment.drawCustomMesh(
 
 @JvmOverloads
 internal fun newRenderPass(framebuffer: Framebuffer = mc.framebuffer): RenderPass {
-    return RenderSystem.getDevice()
+    return gpuDevice
         .createCommandEncoder()
         .createRenderPass(
             framebuffer.colorAttachment,

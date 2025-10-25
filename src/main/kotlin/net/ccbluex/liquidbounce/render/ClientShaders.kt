@@ -47,6 +47,12 @@ object ClientShaders {
     )
 
     @JvmField
+    val BLEND_FSH_ID = newShader(
+        "fsh/blend",
+        path = "/resources/liquidbounce/shaders/blend.frag",
+    )
+
+    @JvmField
     val SOBEL_VSH_ID = newShader(
         "vsh/sobel",
         path = "/resources/liquidbounce/shaders/sobel.vert",
