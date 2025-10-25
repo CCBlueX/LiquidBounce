@@ -158,7 +158,7 @@ public abstract class MixinWorldRenderer {
         outlineShader.getHandle().get().end();
     }
 
-    // FIXME: obf method name
+    // this method is a lambda
     @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
     private void onDrawOutlines(Fog fog, RenderTickCounter renderTickCounter, Camera camera, Profiler profiler, Matrix4f matrix4f, Matrix4f matrix4f2, Handle handle, Handle handle2, boolean bl, Frustum frustum, Handle handle3, Handle handle4, CallbackInfo ci) {
         if (OutlineShader.INSTANCE.getDirty()) {

@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -28,6 +30,7 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.setUniform
 import net.ccbluex.liquidbounce.render.trianglePosTexVertexBuffer
+import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.minecraft.block.enums.CameraSubmersionType
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.Fog
@@ -103,31 +106,63 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
 
     object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
         private val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
+            .onChanged {
+            }
 
-        private var edited = false
+        val texture: GpuTexture = gpuDevice.createTexture(
+            "Custom Light Texture",
+            TextureFormat.RGBA8,
+            16, 16,
+            1,
+        ).apply {
+            setTextureFilter(FilterMode.LINEAR, false)
+        }
 
-        fun applyToTexture(texture: GpuTexture) {
-            if (!this.running) return
+        fun update(texture: GpuTexture) {
+            gpuDevice.createCommandEncoder().copyTextureToTexture(
+                this.texture,
+                texture,
+                0,
+                0, 0,
+                0, 0,
+                16, 16,
+            )
 
             gpuDevice.createCommandEncoder()
-                .createRenderPass(texture, OptionalInt.empty()).use { pass ->
+                .createRenderPass(this.texture, optional(-1)).use { pass ->
                     pass.setPipeline(ClientRenderPipelines.Blend)
-                    pass.bindSampler("texture0", texture)
+                    pass.bindSampler("texture0", this.texture)
                     pass.setUniform("mixColor", lightColor)
                     pass.setVertexBuffer(0, trianglePosTexVertexBuffer)
                     pass.draw(0, 3)
                 }
-
-            edited = true
         }
 
-        fun resetTexture(texture: GpuTexture) {
-            if (!edited) return
+//        private var edited = false
 
-            gpuDevice.createCommandEncoder().clearColorTexture(texture, -1)
-
-            edited = false
-        }
+//        fun applyToTexture(texture: GpuTexture): Boolean {
+//            if (!this.running || edited) return false
+//
+//            gpuDevice.createCommandEncoder()
+//                .createRenderPass(texture, optional(-1)).use { pass ->
+//                    pass.setPipeline(ClientRenderPipelines.Blend)
+//                    pass.bindSampler("texture0", texture)
+//                    pass.setUniform("mixColor", lightColor)
+//                    pass.setVertexBuffer(0, trianglePosTexVertexBuffer)
+//                    pass.draw(0, 3)
+//                }
+//
+//            edited = true
+//            return true
+//        }
+//
+//        fun resetTexture(texture: GpuTexture) {
+//            if (!edited) return
+//
+//            gpuDevice.createCommandEncoder().clearColorTexture(texture, -1)
+//
+//            edited = false
+//        }
     }
 
     init {

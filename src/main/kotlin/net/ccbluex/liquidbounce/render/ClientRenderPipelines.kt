@@ -205,6 +205,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withUniform("mixColor", UniformType.VEC4)
+        withoutBlend()
     }
 
     /**

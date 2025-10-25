@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.interfaces.LightmapTextureManagerAddition;
@@ -30,6 +31,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -41,6 +43,9 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
     @Shadow
     @Final
     private GpuTexture glTexture;
+
+    @Unique
+    private boolean liquid_bounce$customLightMap = false;
 
     @ModifyExpressionValue(method = "update(F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/SimpleOption;getValue()Ljava/lang/Object;", ordinal = 1))
     private Object injectXRayFullBright(Object original) {
@@ -60,17 +65,39 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
         return (double) Float.MAX_VALUE;
     }
 
-    @Inject(
-            method = "update",
-            at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderPass;close()V", shift = At.Shift.AFTER, remap = false)
-    )
-    private void setSkyLightColorUniformColor(float tickProgress, CallbackInfo ci) {
-        ModuleCustomAmbience.CustomLightColor.INSTANCE.applyToTexture(this.glTexture);
+    @Inject(method = "update(F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiler/Profiler;pop()V"))
+    private void hookBlendTextureColors(float delta, CallbackInfo ci) {
+        var lightColor = ModuleCustomAmbience.CustomLightColor.INSTANCE;
+        if (lightColor.getRunning()) {
+            lightColor.update(this.glTexture);
+        }
+    }
+
+    @Inject(method = "update(F)V", at = @At(value = "HEAD"))
+    private void hookResetIndex(float delta, CallbackInfo ci) {
+        var customLightColor = ModuleCustomAmbience.CustomLightColor.INSTANCE;
+        if (customLightColor.getRunning()) {
+            liquid_bounce$customLightMap = true;
+            if (RenderSystem.getShaderTexture(2) == this.glTexture) {
+                RenderSystem.setShaderTexture(2, customLightColor.getTexture());
+            }
+        }
+    }
+
+    @Inject(method = "enable", at = @At("HEAD"), cancellable = true)
+    private void hookSpoof(CallbackInfo ci) {
+        if (liquid_bounce$customLightMap) {
+            RenderSystem.setShaderTexture(2, ModuleCustomAmbience.CustomLightColor.INSTANCE.getTexture());
+            ci.cancel();
+        }
     }
 
     @Override
     public void liquid_bounce$restoreLightMap() {
-        ModuleCustomAmbience.CustomLightColor.INSTANCE.resetTexture(this.glTexture);
+        if (RenderSystem.getShaderTexture(2) != null) {
+            RenderSystem.setShaderTexture(2, this.glTexture);
+        }
+        liquid_bounce$customLightMap = false;
     }
 
     // Turns off blinking when the darkness effect is active.
