@@ -18,61 +18,35 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
-import com.mojang.blaze3d.opengl.GlConst
-import com.mojang.blaze3d.opengl.GlStateManager
-import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.ClientShaders
-import net.ccbluex.liquidbounce.render.buffer.Framebuffer
-import net.ccbluex.liquidbounce.render.defaultBlendFunc
-import net.ccbluex.liquidbounce.render.newRenderPass
-import net.ccbluex.liquidbounce.render.shader.BlitShader
-import net.ccbluex.liquidbounce.render.shader.UniformProvider
-import net.ccbluex.liquidbounce.render.shader.shaders.BlitToScreenShader
+import net.ccbluex.liquidbounce.interfaces.PostEffectProcessorAdditions
+import net.ccbluex.liquidbounce.render.buffer.MinecraftFramebuffer
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.utils.kotlin.mixinInterfaceCast
+import net.minecraft.client.gl.Framebuffer
+import net.minecraft.client.gl.PostEffectProcessor
+import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
-import net.minecraft.client.texture.GlTexture
+import net.minecraft.client.render.DefaultFramebufferSet
+import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
-import org.lwjgl.opengl.GL13
-import org.lwjgl.opengl.GL20
 
 object BlurEffectRenderer : MinecraftShortcuts {
-
-    private object BlurShader : BlitShader(
-        ClientShaders[ClientShaders.SOBEL_VSH_ID]!!,
-        ClientShaders[ClientShaders.BLUR_FSH_ID]!!,
-        arrayOf(
-            UniformProvider("texture0") { pointer ->
-                GlStateManager._activeTexture(GL13.GL_TEXTURE0)
-                GlStateManager._bindTexture(tmpFramebuffer.colorAttachment)
-                GL20.glUniform1i(pointer, 0)
-            },
-            UniformProvider("overlay") { pointer ->
-                val active = GlStateManager._getActiveTexture()
-                GlStateManager._activeTexture(GL13.GL_TEXTURE9)
-                GlStateManager._bindTexture(overlayFramebuffer.colorAttachment)
-                GL20.glUniform1i(pointer, 9)
-                GlStateManager._activeTexture(active)
-            },
-            UniformProvider("radius") { pointer -> GL20.glUniform1f(pointer, getBlurRadius()) }
-        ))
+    private val OVERLAY_FRAMEBUFFER_ID = Identifier.of(LiquidBounce.RESOURCE_NAMESPACE, "overlay")
+    private val UI_BLUR_ID = Identifier.of(LiquidBounce.RESOURCE_NAMESPACE, "ui_blur")
 
     private var isDrawingHudFramebuffer = false
 
-    private val overlayFramebuffer = Framebuffer(
-        mc.window.framebufferWidth,
-        mc.window.framebufferHeight,
-        true
-    )
-
-    private val tmpFramebuffer = Framebuffer(
+    private val overlayFramebuffer = SimpleFramebuffer(
+        "LiquidBounceOverlay",
         mc.window.framebufferWidth,
         mc.window.framebufferHeight,
         true
@@ -106,21 +80,15 @@ object BlurEffectRenderer : MinecraftShortcuts {
     }
 
     fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
-        // FIXME: 1. BlurEffectRenderer is broken
         ItemImageAtlas.updateAtlas(context)
 
         if (ModuleHud.isBlurEffectActive) {
-//            this.isDrawingHudFramebuffer = true
+            this.isDrawingHudFramebuffer = true
 
-//            this.overlayFramebuffer.beginWrite(true)
-//            newRenderPass().use { pass ->
-//                pass.setPipeline(ClientRenderPipelines.Blur)
-////                pass.bindSampler("texture0", tmpFramebuffer.colorAttachment)
-////                pass.bindSampler("overlay", overlayFramebuffer.colorAttachment)
-//                pass.setUniform("radius", getBlurRadiusFactor())
-//
-//                pass.draw(0, 4)
-//            }
+            val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
+
+            framebufferWrapper.clearColor = Color4b.TRANSPARENT
+            framebufferWrapper.beginWrite(true)
         }
 
         callEvent(OverlayRenderEvent(context, tickDelta))
@@ -131,45 +99,42 @@ object BlurEffectRenderer : MinecraftShortcuts {
             return
         }
 
+        val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
+
         this.isDrawingHudFramebuffer = false
 
-        this.overlayFramebuffer.end()
+        framebufferWrapper.end()
 
-        // Remember the previous projection matrix because the draw method changes it AND NEVER FUCKING CHANGES IT
-        // BACK IN ORDER TO INTRODUCE HARD TO FUCKING FIND BUGS. Thanks Mojang :+1:
-        val projectionMatrix = RenderSystem.getProjectionMatrix()
-        val vertexSorting = RenderSystem.getProjectionType()
+        val postEffectProcessor = tryLoadBlurEffectProcessor()
+        val mixinInterfaceCast = mixinInterfaceCast<PostEffectProcessorAdditions>(postEffectProcessor)
 
-        GlStateManager._disableBlend()
-//        RenderSystem.disableDepthTest()
-//        RenderSystem.resetTextureMatrix()
+        mixinInterfaceCast.`liquid_bounce$renderWithAdditionalExternalTargets`(
+            mc.framebuffer, mc.gameRenderer.pool,
+            { pass ->
+                pass.setUniform("Radius", 5.0F)
+                pass.setUniform("BlurRange", ModuleHud.Blur.alphaBlendRange.start, ModuleHud.Blur.alphaBlendRange.endInclusive)
+            },
+            hashMapOf(OVERLAY_FRAMEBUFFER_ID to this.overlayFramebuffer as Framebuffer)
+        )
+    }
 
-        // Draw Minecraft's framebuffer to the temporary one to avoid feedback loop
-        this.tmpFramebuffer.beginWrite(false)
-
-        BlitToScreenShader.blit((mc.framebuffer.colorAttachment as GlTexture).glId)
-
-        this.tmpFramebuffer.end()
-
-        BlurShader.blit()
-
-        GlStateManager._enableBlend()
-        GlStateManager._blendFuncSeparate(
-            GlConst.GL_ONE,
-            GlConst.GL_ONE_MINUS_SRC_ALPHA,
-            GlConst.GL_ONE,
-            GlConst.GL_ZERO
+    fun tryLoadBlurEffectProcessor(): PostEffectProcessor {
+        val postEffect = mc.shaderLoader.loadPostEffect(
+            UI_BLUR_ID,
+            setOf(DefaultFramebufferSet.MAIN, OVERLAY_FRAMEBUFFER_ID)
         )
 
-        this.overlayFramebuffer.drawBlit()
+        if (postEffect == null) {
+            ModuleHud.disableBlur()
 
-        RenderSystem.setProjectionMatrix(projectionMatrix, vertexSorting)
-        defaultBlendFunc()
+            error("Failed to load ui blur shader. Blur shader will be disabled")
+        }
+
+        return postEffect
     }
 
     fun setupDimensions(width: Int, height: Int) {
         this.overlayFramebuffer.resize(width, height)
-        this.tmpFramebuffer.resize(width, height)
     }
 
 }

@@ -21,23 +21,19 @@ package net.ccbluex.liquidbounce.render.buffer
 
 import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.common.GlobalFramebuffer
-import net.ccbluex.liquidbounce.render.shader.shaders.BlitToScreenShader
-import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL30.*
-import java.io.Closeable
 import java.nio.ByteBuffer
-import java.nio.IntBuffer
 
-open class Framebuffer(var width: Int, var height: Int, val useDepth: Boolean) : Closeable {
+open class LiquidBounceFramebuffer(
+    override var width: Int,
+    override var height: Int,
+    override val useDepth: Boolean
+) : AbstractFramebuffer() {
 
     val colorAttachment = GlStateManager._genTexture()
     private var depthAttachment: Int? = null
-    open val id = GlStateManager.glGenFramebuffers()
-    private var clearR = 0f
-    private var clearG = 0f
-    private var clearB = 0f
-    private var clearA = 0f
+    override val id = GlStateManager.glGenFramebuffers()
 
     init {
         GlobalFramebuffer.push(this)
@@ -65,7 +61,7 @@ open class Framebuffer(var width: Int, var height: Int, val useDepth: Boolean) :
         GlobalFramebuffer.pop()
     }
 
-    fun resize(width: Int, height: Int) {
+    override fun resize(width: Int, height: Int) {
         GlStateManager._bindTexture(colorAttachment)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, null as ByteBuffer?)
 
@@ -76,38 +72,6 @@ open class Framebuffer(var width: Int, var height: Int, val useDepth: Boolean) :
 
         this.width = width
         this.height = height
-    }
-
-    fun beginWrite(viewport: Boolean, clear: Boolean = true) {
-        GlobalFramebuffer.push(this)
-
-        if (viewport) {
-            GlStateManager._viewport(0, 0, width, height)
-        }
-
-        if (clear) {
-            glClearColor(clearR, clearG, clearB, clearA)
-            if (useDepth) {
-                glClearDepth(1.0)
-            }
-
-            GlStateManager._clear(GL_COLOR_BUFFER_BIT or (if (useDepth) GL_DEPTH_BUFFER_BIT else 0))
-        }
-    }
-
-    fun drawBlit() {
-        BlitToScreenShader.blit(colorAttachment)
-    }
-
-    fun end() {
-        GlobalFramebuffer.pop()
-    }
-
-    fun setClearColor(r: Float, g: Float, b: Float, a: Float) {
-        clearR = r
-        clearG = g
-        clearB = b
-        clearA = a
     }
 
     override fun close() {

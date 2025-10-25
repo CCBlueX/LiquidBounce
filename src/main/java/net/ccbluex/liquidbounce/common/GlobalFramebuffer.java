@@ -22,8 +22,8 @@ import com.mojang.blaze3d.opengl.GlConst;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import net.ccbluex.liquidbounce.render.buffer.AbstractFramebuffer;
 import net.minecraft.client.MinecraftClient;
-import net.ccbluex.liquidbounce.render.buffer.Framebuffer;
 import org.lwjgl.opengl.GL30;
 
 /**
@@ -38,7 +38,7 @@ public final class GlobalFramebuffer {
 
     private static final IntArrayList readStack = new IntArrayList(2);
     private static final IntArrayList writeStack = new IntArrayList(2);
-    private static final ObjectArrayList<Framebuffer> stack = new ObjectArrayList<>(1);
+    private static final ObjectArrayList<AbstractFramebuffer> stack = new ObjectArrayList<>(1);
 
     static {
         readStack.add(0);
@@ -83,7 +83,7 @@ public final class GlobalFramebuffer {
         return writeStack.getInt(0);
     }
 
-    public static void push(Framebuffer spoofedFramebuffer) {
+    public static void push(AbstractFramebuffer spoofedFramebuffer) {
         if (!stack.isEmpty() && stack.top() == spoofedFramebuffer) {
             return;
         }

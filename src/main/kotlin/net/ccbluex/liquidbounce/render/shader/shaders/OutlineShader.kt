@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.render.shader.FramebufferShader
 import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.render.shader.UniformProvider
 import net.ccbluex.liquidbounce.utils.client.ImmutableHandle
-import net.ccbluex.liquidbounce.render.buffer.Framebuffer
+import net.ccbluex.liquidbounce.render.buffer.LiquidBounceFramebuffer
 import net.minecraft.client.render.OutlineVertexConsumerProvider
 import net.minecraft.client.util.Handle
 import org.lwjgl.opengl.GL20
@@ -39,7 +39,7 @@ object OutlineShader : FramebufferShader(Shader(
 
     var dirty = false
     var vertexConsumerProvider = OutlineVertexConsumerProvider(mc.bufferBuilders.entityVertexConsumers)
-    val handle: Handle<Framebuffer> = ImmutableHandle(framebuffers[0])
+    val handle: Handle<LiquidBounceFramebuffer> = ImmutableHandle(framebuffers[0])
 
     fun prepare() {
         super.prepare(dirty)

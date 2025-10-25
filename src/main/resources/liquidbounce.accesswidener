@@ -201,3 +201,4 @@ accessible field com/mojang/blaze3d/opengl/GlStateManager readFbo I
 accessible field com/mojang/blaze3d/opengl/GlStateManager writeFbo I
 
 accessible method net/minecraft/client/gl/GlResourceManager getBackend ()Lnet/minecraft/client/gl/GlBackend;
+accessible field net/minecraft/client/render/GameRenderer pool Lnet/minecraft/client/util/Pool;

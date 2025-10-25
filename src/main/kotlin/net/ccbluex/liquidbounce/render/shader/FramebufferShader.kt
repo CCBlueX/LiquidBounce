@@ -25,9 +25,10 @@ import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.common.GlobalFramebuffer
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.render.bind
-import net.ccbluex.liquidbounce.render.buffer.Framebuffer
+import net.ccbluex.liquidbounce.render.buffer.LiquidBounceFramebuffer
 import net.ccbluex.liquidbounce.render.defaultBlendFunc
 import net.ccbluex.liquidbounce.render.draw
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.unbind
 import net.ccbluex.liquidbounce.render.upload
 import net.minecraft.client.gl.GlGpuBuffer
@@ -41,15 +42,15 @@ import java.io.Closeable
  */
 open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, Closeable {
 
-    protected val framebuffers = mutableListOf<Framebuffer>()
+    protected val framebuffers = mutableListOf<LiquidBounceFramebuffer>()
     protected var buffer: GlGpuBuffer
 
     init {
         val width = mc.window.framebufferWidth
         val height = mc.window.framebufferHeight
         shaders.forEach { _ ->
-            val framebuffer = Framebuffer(width, height, false)
-            framebuffer.setClearColor(0f, 0f, 0f, 0f)
+            val framebuffer = LiquidBounceFramebuffer(width, height, false)
+            framebuffer.clearColor = Color4b.TRANSPARENT
             framebuffers.add(framebuffer)
         }
 
