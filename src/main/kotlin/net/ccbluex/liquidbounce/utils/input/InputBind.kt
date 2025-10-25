@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.input
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.util.InputUtil
@@ -31,9 +32,10 @@ import org.lwjgl.glfw.GLFW
  * @param boundKey The key that is bound to an action.
  * @param action The action triggered by the bound key (e.g., TOGGLE, HOLD).
  */
+@JvmRecord
 data class InputBind(
-    var boundKey: InputUtil.Key,
-    var action: BindAction
+    val boundKey: InputUtil.Key,
+    val action: BindAction,
 ) {
 
     /**
@@ -74,27 +76,6 @@ data class InputBind(
      */
     val isUnbound: Boolean
         get() = this.boundKey == InputUtil.UNKNOWN_KEY
-
-    /**
-     * Binds to the given input name.
-     */
-    fun bind(name: String) {
-        this.boundKey = inputByName(name)
-    }
-
-    /**
-     * Binds to the given input type and code.
-     */
-    fun bind(key: InputUtil.Key) {
-        this.boundKey = key
-    }
-
-    /**
-     * Unbinds the key by setting it to UNKNOWN_KEY.
-     */
-    fun unbind() {
-        this.boundKey = InputUtil.UNKNOWN_KEY
-    }
 
     /**
      * Determines if the specified key matches the bound key.
@@ -155,4 +136,25 @@ data class InputBind(
         HOLD("Hold")
     }
 
+    companion object {
+        @JvmField
+        val UNBOUND = InputBind(InputUtil.UNKNOWN_KEY, BindAction.TOGGLE)
+    }
+
 }
+
+
+/**
+ * Binds to the given input name.
+ */
+fun Value<InputBind>.bind(name: String) = set(get().copy(boundKey = inputByName(name)))
+
+/**
+ * Binds to the given input type and code.
+ */
+fun Value<InputBind>.bind(key: InputUtil.Key) = set(get().copy(boundKey = key))
+
+/**
+ * Unbinds the key by setting it to UNKNOWN_KEY.
+ */
+fun Value<InputBind>.unbind() = set(InputBind.UNBOUND)
