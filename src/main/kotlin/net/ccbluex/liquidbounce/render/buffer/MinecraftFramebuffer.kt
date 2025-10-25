@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.render.buffer
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.common.GlobalFramebuffer
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.GlResourceManager
 import net.minecraft.client.texture.GlTexture
@@ -48,8 +48,9 @@ class MinecraftFramebuffer(val framebuffer: Framebuffer) : AbstractFramebuffer()
     }
 
     companion object {
-        fun getFramebufferIdFromFramebuffer(framebuffer: Framebuffer): Int {
-            val resourceManager = RenderSystem.getDevice().createCommandEncoder() as GlResourceManager
+        @JvmStatic
+        private fun getFramebufferIdFromFramebuffer(framebuffer: Framebuffer): Int {
+            val resourceManager = gpuDevice.createCommandEncoder() as GlResourceManager
             val colorAttachment = framebuffer.getColorAttachment() as GlTexture
             val depthAttachment = framebuffer.getDepthAttachment()
 

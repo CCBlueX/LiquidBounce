@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.render.engine.type
 
 import net.minecraft.text.TextColor
-import org.joml.Vector4f
 import java.awt.Color
 
 @JvmRecord

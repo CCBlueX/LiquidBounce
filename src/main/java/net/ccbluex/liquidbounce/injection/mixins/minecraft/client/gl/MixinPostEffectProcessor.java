@@ -24,7 +24,12 @@ public abstract class MixinPostEffectProcessor implements PostEffectProcessorAdd
     public abstract void render(FrameGraphBuilder builder, int textureWidth, int textureHeight, PostEffectProcessor.FramebufferSet framebufferSet, @Nullable Consumer<RenderPass> additionalUniformsSetter);
 
     @Override
-    public void liquid_bounce$renderWithAdditionalExternalTargets(Framebuffer framebuffer, ObjectAllocator objectAllocator, @Nullable Consumer<RenderPass> additionalUniformsSetter, Map<Identifier, Framebuffer> additionalExternalFramebuffers) {
+    public void liquid_bounce$renderWithAdditionalExternalTargets(
+            Framebuffer framebuffer,
+            ObjectAllocator objectAllocator,
+            @Nullable Consumer<RenderPass> additionalUniformsSetter,
+            Map<Identifier, Framebuffer> additionalExternalFramebuffers
+    ) {
         // Copied from PostEffectProcessor.render
         // WARNING: original method is deprecated.
         FrameGraphBuilder frameGraphBuilder = new FrameGraphBuilder();

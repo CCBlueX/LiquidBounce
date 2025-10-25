@@ -111,10 +111,14 @@ object BlurEffectRenderer : MinecraftShortcuts {
         mixinInterfaceCast.`liquid_bounce$renderWithAdditionalExternalTargets`(
             mc.framebuffer, mc.gameRenderer.pool,
             { pass ->
-                pass.setUniform("Radius", 5.0F)
-                pass.setUniform("BlurRange", ModuleHud.Blur.alphaBlendRange.start, ModuleHud.Blur.alphaBlendRange.endInclusive)
+                pass.setUniform("Radius", getBlurRadius())
+                pass.setUniform(
+                    "BlurRange",
+                    ModuleHud.Blur.alphaBlendRange.start,
+                    ModuleHud.Blur.alphaBlendRange.endInclusive,
+                )
             },
-            hashMapOf(OVERLAY_FRAMEBUFFER_ID to this.overlayFramebuffer as Framebuffer)
+            mapOf(OVERLAY_FRAMEBUFFER_ID to this.overlayFramebuffer as Framebuffer)
         )
     }
 

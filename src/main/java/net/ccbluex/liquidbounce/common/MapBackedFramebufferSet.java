@@ -7,17 +7,13 @@ import net.minecraft.util.Identifier;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Stupid class, but Minecraft needed one more abstraction...
  */
-public class MapBackedFramebufferSet implements PostEffectProcessor.FramebufferSet {
-    private final HashMap<Identifier, Handle<Framebuffer>> backingMap;
-
-    public MapBackedFramebufferSet(HashMap<Identifier, Handle<Framebuffer>> backingMap) {
-        this.backingMap = backingMap;
-    }
+public record MapBackedFramebufferSet(
+        HashMap<Identifier, Handle<Framebuffer>> backingMap
+) implements PostEffectProcessor.FramebufferSet {
 
     @Override
     public void set(Identifier id, Handle<Framebuffer> framebuffer) {
