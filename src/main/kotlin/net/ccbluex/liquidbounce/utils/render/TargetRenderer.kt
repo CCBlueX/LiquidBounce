@@ -399,18 +399,14 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvi
                     Vec3d(0.0, entity.height.toDouble(), 0.0)
 
             val screenPos = calculateScreenPos(pos) ?: return
-
-            with(env) {
-                withColor(color) {
-                    drawCustomMesh(
-                        VertexFormat.DrawMode.TRIANGLE_STRIP,
-                        VertexInputType.Pos,
-                    ) {
-                        vertex(it, screenPos.x - 5 * size, screenPos.y - 10 * size, 1f)
-                        vertex(it, screenPos.x, screenPos.y, 1f)
-                        vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f)
-                    }
-                }
+            val argb = color.toARGB()
+            env.drawCustomMesh(
+                VertexFormat.DrawMode.TRIANGLE_STRIP,
+                VertexInputType.PosColor,
+            ) {
+                vertex(it, screenPos.x - 5 * size, screenPos.y - 10 * size, 1f).color(argb)
+                vertex(it, screenPos.x, screenPos.y, 1f).color(argb)
+                vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f).color(argb)
             }
         }
     }

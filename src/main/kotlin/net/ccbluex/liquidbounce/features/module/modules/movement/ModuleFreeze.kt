@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleEasyPearl
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -128,9 +127,10 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
             .getSnapshotsBetween(0 until this.missedOutTick)
 
         renderEnvironmentForWorld(event.matrixStack) {
-            withColor(Color4b(0x00, 0x80, 0xFF, 0xFF)) {
-                drawLineStrip(positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() })
-            }
+            drawLineStrip(
+                argb = Color4b(0x00, 0x80, 0xFF, 0xFF).toARGB(),
+                positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() },
+            )
         }
     }
 

@@ -165,6 +165,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
             drawShadowForBB(boundingBox, from, to)
             drawLines(
+                argb = Color4b.WHITE.toARGB(),
                 // Cursor
                 Vec3(boundingBox.xMin, centerBB.y, 0.0F),
                 Vec3(boundingBox.xMax, centerBB.y, 0.0F),

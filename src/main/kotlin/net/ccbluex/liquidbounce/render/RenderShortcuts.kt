@@ -272,21 +272,6 @@ inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) 
 }
 
 /**
- * Extension function to apply a color transformation to the current rendering environment.
- *
- * @param color4b The color transformation.
- * @param draw The block of code to be executed in the transformed environment.
- */
-inline fun RenderEnvironment.withColor(color4b: Color4b, draw: RenderEnvironment.() -> Unit) {
-    RenderSystem.setShaderColor(color4b.r / 255f, color4b.g / 255f, color4b.b / 255f, color4b.a / 255f)
-    try {
-        draw()
-    } finally {
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
-    }
-}
-
-/**
  * Extension function to disable cull
  * Good for rendering faces that should be visible from both sides
  *
@@ -327,9 +312,12 @@ fun BuiltBuffer.draw(vertexInputType: VertexInputType) = use { builtBuffer ->
  *
  * @param lines The vectors representing the lines.
  */
-
-fun RenderEnvironment.drawLines(vararg lines: Vec3) {
-    drawLines(lines.unmodifiable(), mode = DrawMode.DEBUG_LINES)
+fun RenderEnvironment.drawLines(argb: Int, vararg lines: Vec3) {
+    drawLines(
+        lines.unmodifiable(),
+        mode = DrawMode.DEBUG_LINES,
+        argb = argb,
+    )
 }
 
 /**
@@ -337,8 +325,12 @@ fun RenderEnvironment.drawLines(vararg lines: Vec3) {
  *
  * @param positions The vectors representing the line strip.
  */
-fun RenderEnvironment.drawLineStrip(vararg positions: Vec3) {
-    drawLines(positions.unmodifiable(), mode = DrawMode.DEBUG_LINE_STRIP)
+fun RenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3) {
+    drawLines(
+        positions.unmodifiable(),
+        mode = DrawMode.DEBUG_LINE_STRIP,
+        argb = argb,
+    )
 }
 
 /**
@@ -347,7 +339,11 @@ fun RenderEnvironment.drawLineStrip(vararg positions: Vec3) {
  * @param lines The vectors representing the lines.
  * @param mode The draw mode for the lines.
  */
-private fun RenderEnvironment.drawLines(lines: List<Vec3>, mode: DrawMode = DrawMode.DEBUG_LINES) {
+private fun RenderEnvironment.drawLines(
+    lines: List<Vec3>,
+    mode: DrawMode,
+    argb: Int,
+) {
     // If the array of lines is empty, we don't need to draw anything
     if (lines.isEmpty()) {
         return
@@ -355,10 +351,10 @@ private fun RenderEnvironment.drawLines(lines: List<Vec3>, mode: DrawMode = Draw
 
     drawCustomMesh(
         mode,
-        VertexInputType.Pos,
+        VertexInputType.PosColor,
     ) { matrix ->
         lines.forEach { (x, y, z) ->
-            vertex(matrix, x, y, z)
+            vertex(matrix, x, y, z).color(argb)
         }
     }
 }
@@ -413,15 +409,15 @@ fun RenderEnvironment.drawTextureQuad(
     }
 }
 
-fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3) {
+fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3, argb: Int) {
     drawCustomMesh(
         DrawMode.QUADS,
-        VertexInputType.Pos,
+        VertexInputType.PosColor,
     ) { matrix ->
-        vertex(matrix, pos1.x, pos2.y, pos1.z)
-        vertex(matrix, pos2.x, pos2.y, pos2.z)
-        vertex(matrix, pos2.x, pos1.y, pos2.z)
-        vertex(matrix, pos1.x, pos1.y, pos1.z)
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos2.z).color(argb)
+        vertex(matrix, pos2.x, pos1.y, pos2.z).color(argb)
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
     }
 }
 
@@ -437,22 +433,22 @@ fun RenderEnvironment.drawColoredQuad(pos1: Vec3, pos2: Vec3, argb: Int) {
     }
 }
 
-fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3) {
+fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3, argb: Int) {
     drawCustomMesh(
         DrawMode.DEBUG_LINES,
-        VertexInputType.Pos,
+        VertexInputType.PosColor,
     ) { matrix ->
-        vertex(matrix, pos1.x, pos1.y, pos1.z)
-        vertex(matrix, pos1.x, pos2.y, pos1.z)
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
 
-        vertex(matrix, pos1.x, pos2.y, pos1.z)
-        vertex(matrix, pos2.x, pos2.y, pos1.z)
+        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
 
-        vertex(matrix, pos2.x, pos1.y, pos1.z)
-        vertex(matrix, pos2.x, pos2.y, pos1.z)
+        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
 
-        vertex(matrix, pos1.x, pos1.y, pos1.z)
-        vertex(matrix, pos2.x, pos1.y, pos1.z)
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
+        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
     }
 }
 
@@ -475,14 +471,14 @@ fun RenderEnvironment.drawColoredQuadOutlines(pos1: Vec3, pos2: Vec3, argb: Int)
     }
 }
 
-fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3) {
+fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3, argb: Int) {
     drawCustomMesh(
         DrawMode.TRIANGLES,
-        VertexInputType.Pos,
+        VertexInputType.PosColor,
     ) { matrix ->
-        vertex(matrix, p1.x, p1.y, p1.z)
-        vertex(matrix, p2.x, p2.y, p2.z)
-        vertex(matrix, p3.x, p3.y, p3.z)
+        vertex(matrix, p1.x, p1.y, p1.z).color(argb)
+        vertex(matrix, p2.x, p2.y, p2.z).color(argb)
+        vertex(matrix, p3.x, p3.y, p3.z).color(argb)
     }
 }
 
