@@ -59,7 +59,7 @@ object BlurEffectRenderer : MinecraftShortcuts {
         return (x * MathHelper.HALF_PI).fastSin()
     }
 
-    private fun getBlurRadiusFactor(): Float {
+    fun getBlurRadiusFactor(): Float {
         val isScreenOpen = mc.currentScreen != null && mc.currentScreen !is ChatScreen
 
         if (isScreenOpen && !wasScreenOpen) {
@@ -69,7 +69,7 @@ object BlurEffectRenderer : MinecraftShortcuts {
         wasScreenOpen = isScreenOpen
 
         return if (isScreenOpen) {
-            easeFunction((lastTimeScreenOpened.elapsed.toFloat() / 500.0F + 0.1F).coerceIn(0.0F..1.0F))
+            easeFunction((lastTimeScreenOpened.elapsed.toFloat() / 333.0F + 0.1F).coerceIn(0.0F..1.0F))
         } else {
             1.0F
         }
@@ -111,11 +111,13 @@ object BlurEffectRenderer : MinecraftShortcuts {
         mixinInterfaceCast.`liquid_bounce$renderWithAdditionalExternalTargets`(
             mc.framebuffer, mc.gameRenderer.pool,
             { pass ->
+                val alphaBlendRange = ModuleHud.Blur.alphaBlendRange
+
                 pass.setUniform("Radius", getBlurRadius())
                 pass.setUniform(
                     "BlurRange",
-                    ModuleHud.Blur.alphaBlendRange.start,
-                    ModuleHud.Blur.alphaBlendRange.endInclusive,
+                    alphaBlendRange.start,
+                    alphaBlendRange.endInclusive,
                 )
             },
             mapOf(OVERLAY_FRAMEBUFFER_ID to this.overlayFramebuffer as Framebuffer)

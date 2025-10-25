@@ -62,6 +62,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
@@ -211,11 +212,16 @@ public abstract class MixinGameRenderer {
         BlurEffectRenderer.INSTANCE.endOverlayDrawing();
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V", shift = At.Shift.BEFORE))
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V"))
     private void hookBlurEffectEndAlternative(CallbackInfo ci) {
         if (!(client.currentScreen instanceof ChatScreen)) {
             BlurEffectRenderer.INSTANCE.endOverlayDrawing();
         }
+    }
+
+    @ModifyVariable(method = "renderBlur", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getShaderLoader()Lnet/minecraft/client/gl/ShaderLoader;"))
+    private float injectSmoothBlur(float value) {
+        return value * BlurEffectRenderer.INSTANCE.getBlurRadiusFactor();
     }
 
     @Inject(method = "showFloatingItem", at = @At("HEAD"), cancellable = true)
