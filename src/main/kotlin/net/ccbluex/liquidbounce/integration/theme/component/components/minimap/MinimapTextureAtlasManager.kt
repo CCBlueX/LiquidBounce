@@ -56,7 +56,7 @@ class MinimapTextureAtlasManager {
         { "$CLIENT_NAME MinimapTexture" },
         ATLAS_SIZE * 16, ATLAS_SIZE * 16, false
     ).apply {
-        glTexture.setTextureFilter(FilterMode.NEAREST, true)
+        glTexture.setTextureFilter(FilterMode.NEAREST, false)
     }
     private val availableAtlasPositions: ArrayBlockingQueue<AtlasPosition>
     private val dirtyAtlasPositions = ObjectOpenHashSet<AtlasPosition>()
