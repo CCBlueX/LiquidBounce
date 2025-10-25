@@ -34,7 +34,7 @@ open class BlitShader(vertex: String, fragment: String, uniforms: Array<UniformP
 
     companion object {
 
-        var buffer: GlGpuBuffer
+        private val buffer: GlGpuBuffer
 
         init {
             val builder = Tessellator.getInstance()

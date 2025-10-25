@@ -81,14 +81,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         }
 
         fun drawBoxMode(matrixStack: MatrixStack, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
-            val colorMode = colorMode.activeChoice
-
             var dirty = false
 
             renderEnvironmentForWorld(matrixStack) {
                 dirty = drawInternal(
                     BlockTracker.allPositions(),
-                    colorMode,
+                    colorMode.activeChoice,
                     fullAlpha,
                     drawOutline
                 )
