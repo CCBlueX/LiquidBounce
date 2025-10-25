@@ -121,13 +121,6 @@ fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
     return false
 }
 
-// TODO: inline them after successfully launched
-inline val Entity.prevX get() = lastX
-inline val Entity.prevY get() = lastY
-inline val Entity.prevZ get() = lastZ
-inline val Entity.prevYaw get() = lastYaw
-inline val Entity.prevPitch get() = lastPitch
-
 // Copied from 1.21.4 END
 
 val Entity.netherPosition: Vec3d
@@ -184,7 +177,7 @@ fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
         this.dimensions
             .getBoxAt(position)
             .expand(-0.05, 0.0, -0.05)
-            .offset(0.0, (this.fallDistance - this.stepHeight).toDouble(), 0.0)
+            .offset(0.0, this.fallDistance - this.stepHeight, 0.0)
 
     return world.isSpaceEmpty(this, hitbox)
 }
@@ -308,7 +301,7 @@ fun Vec3d.withStrafe(
 }
 
 val Entity.lastPos: Vec3d
-    get() = Vec3d(this.prevX, this.prevY, this.prevZ)
+    get() = Vec3d(lastX, lastY, lastZ)
 
 val Entity.rotation: Rotation
     get() = Rotation(this.yaw, this.pitch, true)
@@ -362,8 +355,8 @@ fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
     }
 
     return Rotation(
-        this.prevYaw + (this.yaw - this.prevYaw) * tickDelta,
-        this.prevPitch + (this.pitch - this.prevPitch) * tickDelta,
+        lastYaw + (this.yaw - lastYaw) * tickDelta,
+        lastPitch + (this.pitch - lastPitch) * tickDelta,
     )
 }
 
