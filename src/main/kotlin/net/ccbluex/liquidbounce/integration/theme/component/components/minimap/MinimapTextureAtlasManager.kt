@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -31,6 +33,7 @@ import net.minecraft.util.math.ChunkPos
 import org.joml.Vector2i
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.function.BiConsumer
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
@@ -56,8 +59,8 @@ class MinimapTextureAtlasManager {
         glTexture.setTextureFilter(FilterMode.NEAREST, true)
     }
     private val availableAtlasPositions: ArrayBlockingQueue<AtlasPosition>
-    private val dirtyAtlasPositions = hashSetOf<AtlasPosition>()
-    private val chunkPosAtlasPosMap = hashMapOf<ChunkPos, AtlasPosition>()
+    private val dirtyAtlasPositions = ObjectOpenHashSet<AtlasPosition>()
+    private val chunkPosAtlasPosMap = Long2ObjectOpenHashMap<AtlasPosition>() // key -> ChunkPos
 
     private val lock = ReentrantReadWriteLock()
 
@@ -91,7 +94,7 @@ class MinimapTextureAtlasManager {
         val atlasPosition = availableAtlasPositions.take() ?: error("No more space in the texture atlas!")
 
         lock.write {
-            chunkPosAtlasPosMap[chunkPos] = atlasPosition
+            chunkPosAtlasPosMap.put(chunkPos.toLong(), atlasPosition)
         }
 
         return atlasPosition
@@ -99,7 +102,7 @@ class MinimapTextureAtlasManager {
 
     fun deallocate(chunkPos: ChunkPos) {
         lock.write {
-            chunkPosAtlasPosMap.remove(chunkPos)?.apply(availableAtlasPositions::add)
+            chunkPosAtlasPosMap.remove(chunkPos.toLong())?.apply(availableAtlasPositions::add)
         }
     }
 
@@ -116,16 +119,16 @@ class MinimapTextureAtlasManager {
     }
 
     fun get(chunkPos: ChunkPos): AtlasPosition? {
-        return lock.read { chunkPosAtlasPosMap[chunkPos] }
+        return lock.read { chunkPosAtlasPosMap[chunkPos.toLong()] }
     }
 
     private fun getOrAllocate(chunkPos: ChunkPos): AtlasPosition {
-        return chunkPosAtlasPosMap[chunkPos] ?: allocate(chunkPos)
+        return chunkPosAtlasPosMap[chunkPos.toLong()] ?: allocate(chunkPos)
     }
 
     fun editChunk(
         chunkPos: ChunkPos,
-        editor: (NativeImageBackedTexture, AtlasPosition) -> Unit,
+        editor: BiConsumer<NativeImageBackedTexture, AtlasPosition>,
     ) {
         val atlasPosition = getOrAllocate(chunkPos)
 
@@ -133,7 +136,7 @@ class MinimapTextureAtlasManager {
             dirtyAtlasPositions.add(atlasPosition)
         }
 
-        editor(texture, atlasPosition)
+        editor.accept(texture, atlasPosition)
     }
 
     /**

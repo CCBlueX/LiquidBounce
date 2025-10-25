@@ -15,7 +15,7 @@ public class MixinGlDebug {
     /**
      * Adds source information to GL errors.
      */
-    @Redirect(method = "onDebugMessage", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;Ljava/lang/Object;)V"))
+    @Redirect(method = "onDebugMessage", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;info(Ljava/lang/String;Ljava/lang/Object;)V"), remap = false)
     private void injectAdvancedDebugInfo(Logger logger, String format, Object arg) {
         var exception = new Exception();
 
@@ -32,10 +32,15 @@ public class MixinGlDebug {
             }
         }
 
-        String locationText = "?";
+        StringBuilder locationText = new StringBuilder();
+        locationText.append('?');
 
         if (finalElement != null) {
-            locationText = finalElement.getClassName() + "." + finalElement.getMethodName() + ":" + finalElement.getLineNumber();
+            locationText.append(finalElement.getClassName())
+                    .append('.')
+                    .append(finalElement.getMethodName())
+                    .append(':')
+                    .append(finalElement.getLineNumber());
         }
 
         logger.info("OpenGL debug message: {} (at {})", arg, locationText);
