@@ -27,8 +27,9 @@ import net.minecraft.client.texture.NativeImageBackedTexture
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.image.BufferedImage
+import kotlin.math.min
 
-class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() {
+class DynamicGlyphPage(val atlasSize: Dimension = Companion.DEFAULT_ATLAS_SIZE, fontHeight: Int) : GlyphPage() {
     private val image = createBufferedImageWithDimensions(atlasSize)
     override val texture = NativeImageBackedTexture(null, image.toNativeImage())
     val glyphMap = HashMap<Pair<Int, Char>, Pair<GlyphRenderInfo, AtlasSliceHandle>>()
@@ -146,4 +147,8 @@ class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() 
     }
 
 
+    companion object {
+        private val atlasSize = min(2048, maxTextureSize.value)
+        val DEFAULT_ATLAS_SIZE = Dimension(atlasSize, atlasSize)
+    }
 }

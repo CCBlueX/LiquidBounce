@@ -42,8 +42,7 @@ class FontGlyphPageManager(
         loadedFont.styles.filterNotNull().flatMap { font -> BASIC_CHARS.map { ch -> FontGlyph(ch, font) } }
     })
     private val dynamicPage: DynamicGlyphPage = DynamicGlyphPage(
-        Dimension(1024, 1024),
-        ceil(baseFonts.first().styles[0]!!.height * 2.0F).toInt()
+        fontHeight = ceil(baseFonts.first().styles[0]!!.height * 2.0F).toInt()
     )
     private val dynamicFontManager: DynamicFontCacheManager = DynamicFontCacheManager(
         this.dynamicPage,

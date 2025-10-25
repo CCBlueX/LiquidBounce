@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
 import com.mojang.blaze3d.opengl.GlStateManager
+import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
 import net.ccbluex.liquidbounce.render.FontManager
@@ -88,18 +89,15 @@ class DynamicFontCacheManager(
                     val width = (bb.xMax - bb.xMin).toInt()
                     val height = (bb.yMax - bb.yMin).toInt()
 
-                    val chunkImage = NativeImage(width, height, false)
+                    val cmdEncoder = RenderSystem.getDevice().createCommandEncoder()
 
-                    chunkImage.use {
-                        this.dynamicGlyphPage.texture.image!!.copyRect(
-                            chunkImage,
-                            bb.xMin.toInt(), bb.yMin.toInt(),
-                            0, 0,
-                            width, height,
-                            false, false
-                        )
-                    }
-
+                    cmdEncoder.writeToTexture(
+                        this.dynamicGlyphPage.texture.glTexture, this.dynamicGlyphPage.texture.image!!,
+                        0,
+                        bb.xMin.toInt(), bb.yMin.toInt(),
+                        width, height,
+                        bb.xMin.toInt(), bb.yMin.toInt()
+                    )
                 }
             }
 

@@ -35,10 +35,10 @@ import kotlin.math.max
 @JvmRecord
 data class BoundingBox2f(val xMin: Float, val yMin: Float, val xMax: Float, val yMax: Float) {
     constructor(rect: Rectangle2D) : this(
-        rect.x.toFloat(),
-        rect.y.toFloat(),
-        rect.width.toFloat(),
-        rect.height.toFloat()
+        rect.minX.toFloat(),
+        rect.minY.toFloat(),
+        rect.maxX.toFloat(),
+        rect.maxY.toFloat()
     )
 
     fun contains(x: Float, y: Float): Boolean {
