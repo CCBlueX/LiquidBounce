@@ -378,15 +378,16 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
     val gpuBuffer2: GpuBuffer
     val indexType: VertexFormat.IndexType
     if (buffer.sortedBuffer == null) {
-        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawParameters.mode())
-        gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount())
+        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawParameters.mode)
+        gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount)
         indexType = shapeIndexBuffer.indexType
     } else {
         gpuBuffer2 = vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
-        indexType = buffer.drawParameters.indexType()
+        indexType = buffer.drawParameters.indexType
     }
 
     newRenderPass().use { renderPass ->
+        // TODO: render pass extra actions
         renderPass.setPipeline(this)
         renderPass.setVertexBuffer(0, gpuBuffer)
         if (RenderSystem.SCISSOR_STATE.isEnabled) {
@@ -401,7 +402,7 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         }
 
         renderPass.setIndexBuffer(gpuBuffer2, indexType)
-        renderPass.drawIndexed(0, buffer.drawParameters.indexCount())
+        renderPass.drawIndexed(0, buffer.drawParameters.indexCount)
     }
 }
 
