@@ -100,8 +100,6 @@ object LiquidBounce : EventListener {
     const val CLIENT_NAME = "LiquidBounce"
     const val CLIENT_AUTHOR = "CCBlueX"
 
-    const val RESOURCE_NAMESPACE = "liquidbounce"
-
     private object Client : Configurable("Client") {
         val version = text("Version", GitInfo.version())
             .immutable()

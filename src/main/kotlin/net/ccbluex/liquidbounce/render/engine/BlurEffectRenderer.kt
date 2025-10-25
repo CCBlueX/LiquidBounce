@@ -36,12 +36,11 @@ import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.render.DefaultFramebufferSet
-import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper
 
 object BlurEffectRenderer : MinecraftShortcuts {
-    private val OVERLAY_FRAMEBUFFER_ID = Identifier.of(LiquidBounce.RESOURCE_NAMESPACE, "overlay")
-    private val UI_BLUR_ID = Identifier.of(LiquidBounce.RESOURCE_NAMESPACE, "ui_blur")
+    private val OVERLAY_FRAMEBUFFER_ID = LiquidBounce.identifier("overlay")
+    private val UI_BLUR_ID = LiquidBounce.identifier("ui_blur")
 
     private var isDrawingHudFramebuffer = false
 
