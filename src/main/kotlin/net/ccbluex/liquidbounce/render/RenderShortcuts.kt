@@ -354,17 +354,6 @@ internal fun newRenderPass(framebuffer: Framebuffer = mc.framebuffer): RenderPas
         )
 }
 
-inline fun withScissor(
-    x: Int, y: Int, width: Int, height: Int,
-    action: () -> Unit,
-) {
-    try {
-        RenderSystem.enableScissor(x, y, width, height)
-        action()
-    } finally {
-        RenderSystem.disableScissor()
-    }
-}
 
 @Suppress("NOTHING_TO_INLINE")
 inline fun RenderPass.setUniform(name: String, color: Color4b) {

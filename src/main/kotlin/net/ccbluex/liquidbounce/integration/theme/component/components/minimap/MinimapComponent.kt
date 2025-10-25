@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -54,6 +53,7 @@ import org.joml.Quaternionf
 import org.joml.Vector2i
 import org.joml.Vector2ic
 import org.joml.Vector3f
+import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 
 object MinimapComponent : NativeComponent("Minimap", false, Alignment(
@@ -97,63 +97,63 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         val boundingBox = alignment.getBounds(minimapSize.toFloat(), minimapSize.toFloat())
         val scaleFactor = mc.window.scaleFactor
 
-        withScissor(
-            x = (boundingBox.xMin * scaleFactor).toInt(),
-            y = mc.framebuffer.viewportHeight - ((boundingBox.yMin + minimapSize) * scaleFactor).toInt(),
-            width = (minimapSize * scaleFactor).toInt(),
-            height = (minimapSize * scaleFactor).toInt(),
-        ) {
-            val baseX = (playerPos.x / 16.0).toInt()
-            val baseZ = (playerPos.z / 16.0).toInt()
+        GL11.glEnable(GL11.GL_SCISSOR_TEST)
+        GL11.glScissor(
+            (boundingBox.xMin * scaleFactor).toInt(),
+            mc.framebuffer.viewportHeight - ((boundingBox.yMin + minimapSize) * scaleFactor).toInt(),
+            (minimapSize * scaleFactor).toInt(),
+            (minimapSize * scaleFactor).toInt(),
+        )
 
-            val playerOffX = (playerPos.x / 16.0) % 1.0
-            val playerOffZ = (playerPos.z / 16.0) % 1.0
+        val baseX = (playerPos.x / 16.0).toInt()
+        val baseZ = (playerPos.z / 16.0).toInt()
 
-            val chunksToRenderAround = (MathHelper.SQUARE_ROOT_OF_TWO * (viewDistance + 1)).ceilToInt()
+        val playerOffX = (playerPos.x / 16.0) % 1.0
+        val playerOffZ = (playerPos.z / 16.0) % 1.0
 
-            val scale = minimapSize / (2.0F * viewDistance)
+        val chunksToRenderAround = ceil(MathHelper.SQUARE_ROOT_OF_TWO * (viewDistance + 1)).toInt()
 
-            matStack.push()
+        val scale = minimapSize / (2.0F * viewDistance)
 
-            matStack.translate(boundingBox.xMin + minimapSize * 0.5, boundingBox.yMin + minimapSize * 0.5, 0.0)
-            matStack.scale(scale, scale, scale)
+        matStack.push()
 
-            matStack.multiply(Quaternionf(AxisAngle4f(-(playerRotation.yaw + 180.0F).toRadians(), 0.0F, 0.0F, 1.0F)))
-            matStack.translate(-playerOffX, -playerOffZ, 0.0)
+        matStack.translate(boundingBox.xMin + minimapSize * 0.5, boundingBox.yMin + minimapSize * 0.5, 0.0)
+        matStack.scale(scale, scale, scale)
 
-            renderEnvironmentForGUI(event) {
-                val gpuTexture = ChunkRenderer.prepareRendering()
+        matStack.multiply(Quaternionf(AxisAngle4f(-(playerRotation.yaw + 180.0F).toRadians(), 0.0F, 0.0F, 1.0F)))
+        matStack.translate(-playerOffX, -playerOffZ, 0.0)
 
-                GlStateManager._bindTexture((gpuTexture as GlTexture).glId)
+        renderEnvironmentForGUI(event) {
+            val gpuTexture = ChunkRenderer.prepareRendering()
 
-                RenderSystem.setShaderTexture(0, gpuTexture)
+            GlStateManager._bindTexture((gpuTexture as GlTexture).glId)
 
-                startBatch()
-                drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
-                    buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
-                }
-                commitBatch()
+            RenderSystem.setShaderTexture(0, gpuTexture)
 
-                startBatch()
-                drawCustomMesh(ClientRenderPipelines.Triangles) {
-                    for (renderedEntity in RenderedEntities) {
-                        drawEntityOnMinimap(
-                            matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
-                        )
-                    }
-                }
-                commitBatch()
+            startBatch()
+            drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
+                buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
             }
+            commitBatch()
 
-            matStack.pop()
+            startBatch()
+            drawCustomMesh(ClientRenderPipelines.Triangles) {
+                for (renderedEntity in RenderedEntities) {
+                    drawEntityOnMinimap(
+                        matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
+                    )
+                }
+            }
+            commitBatch()
         }
 
-        // Border
+        matStack.pop()
 
         val centerBB = Vec2f(
             boundingBox.xMin + (boundingBox.xMax - boundingBox.xMin) * 0.5F,
             boundingBox.yMin + (boundingBox.yMax - boundingBox.yMin) * 0.5F
         )
+        GL11.glDisable(GL11.GL_SCISSOR_TEST)
 
         renderEnvironmentForGUI(event) {
             startBatch()
