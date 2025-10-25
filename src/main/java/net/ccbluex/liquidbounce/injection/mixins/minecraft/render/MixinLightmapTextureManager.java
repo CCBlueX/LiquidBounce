@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.interfaces.LightmapTextureManagerAddition;
@@ -63,19 +62,15 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
 
     @Inject(
             method = "update",
-            at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderPass;close()V", shift = At.Shift.AFTER)
+            at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderPass;close()V", shift = At.Shift.AFTER, remap = false)
     )
     private void setSkyLightColorUniformColor(float tickProgress, CallbackInfo ci) {
-        if (ModuleCustomAmbience.CustomLightColor.INSTANCE.getRunning()) {
-            ModuleCustomAmbience.CustomLightColor.INSTANCE.applyLightColor(this.glTexture);
-        }
+        ModuleCustomAmbience.CustomLightColor.INSTANCE.applyToTexture(this.glTexture);
     }
 
     @Override
     public void liquid_bounce$restoreLightMap() {
-        // FIXME: make it correct
-        RenderSystem.getDevice().createCommandEncoder()
-                .clearColorTexture(this.glTexture, -1);
+        ModuleCustomAmbience.CustomLightColor.INSTANCE.resetTexture(this.glTexture);
     }
 
     // Turns off blinking when the darkness effect is active.

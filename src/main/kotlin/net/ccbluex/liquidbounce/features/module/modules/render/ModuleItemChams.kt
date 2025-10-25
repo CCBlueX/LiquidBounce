@@ -18,16 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.setUniform
-import net.ccbluex.liquidbounce.render.shader.shaders.OutlineEffectShaderData
 import net.ccbluex.liquidbounce.render.trianglePosTexVertexBuffer
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import kotlin.use
@@ -50,77 +47,40 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
     private val layerSize by float("LayerSize", 1.91f, 1f..5f)
     private val falloff by float("Falloff", 6.83f, 0f..20f)
 
-    /**
-     * @see net.minecraft.client.render.LightmapTextureManager
-     */
-    private val texture = gpuDevice.createTexture(
-        "ItemChams Light Texture",
-        TextureFormat.RGBA8,
-        16, 16, 1
-    ).apply {
-        setTextureFilter(FilterMode.LINEAR, false)
-        gpuDevice.createCommandEncoder().clearColorTexture(this, -1)
-    }
+    private var edited = false
 
     fun applyToTexture(texture: GpuTexture) {
-        if (!this.running) return
-
-        gpuDevice.createCommandEncoder()
-            .copyTextureToTexture(
-                this.texture,
-                texture,
-                0,
-                0, 0,
-                0, 0,
-                16, 16,
-            )
+        if (!this.running || edited) return
 
         gpuDevice.createCommandEncoder().createRenderPass(
             texture,
             optional(-1),
-        ).use { renderPass ->
-            renderPass.setPipeline(ClientRenderPipelines.ItemChams)
+        ).use { pass ->
+            pass.setPipeline(ClientRenderPipelines.ItemChams)
 
-            renderPass.bindSampler("texture0", this.texture)
-            renderPass.bindSampler("image", this.texture)
-            renderPass.setUniform("useImage", 0)
-            renderPass.setUniform("blendColor", blendColor)
-            renderPass.setUniform("alpha", alpha / 255f)
-            renderPass.setUniform("sampleMul", layerSize)
-            renderPass.setUniform("glowColor", glowColor)
-            renderPass.setUniform("falloff", falloff)
-            renderPass.setUniform("layerCount", layers)
+            pass.bindSampler("texture0", texture)
+            pass.bindSampler("image", texture)
+            pass.setUniform("useImage", 0)
+            pass.setUniform("blendColor", blendColor)
+            pass.setUniform("alpha", alpha / 255f)
+            pass.setUniform("sampleMul", layerSize)
+            pass.setUniform("glowColor", glowColor)
+            pass.setUniform("falloff", falloff)
+            pass.setUniform("layerCount", layers)
 
-            renderPass.setVertexBuffer(0, trianglePosTexVertexBuffer)
-            renderPass.draw(0, 3)
+            pass.setVertexBuffer(0, trianglePosTexVertexBuffer)
+            pass.draw(0, 3)
         }
+
+        edited = true
     }
 
-    fun restoreToTexture(texture: GpuTexture) {
-        gpuDevice.createCommandEncoder()
-            .copyTextureToTexture(
-                texture,
-                this.texture,
-                0,
-                0, 0,
-                0, 0,
-                16, 16,
-            )
-    }
+    fun resetTexture(texture: GpuTexture) {
+        if (!edited) return
 
-    var active = false
+        gpuDevice.createCommandEncoder().clearColorTexture(texture, -1)
 
-    fun setData() {
-        // LightmapTextureManager
-        active = true
-        with(OutlineEffectShaderData) {
-            falloff = ModuleItemChams.falloff
-            sampleMul = layerSize
-            layerCount = layers
-            glowColor = ModuleItemChams.glowColor
-            blendColor = ModuleItemChams.blendColor
-            alpha = ModuleItemChams.alpha / 255f
-        }
+        edited = false
     }
 
 }

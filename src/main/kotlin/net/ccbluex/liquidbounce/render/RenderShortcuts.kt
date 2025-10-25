@@ -91,7 +91,7 @@ val trianglePosTexVertexBuffer: GpuBuffer =
         bufferBuilder.vertex(-1f, 3f, 0f).texture(0f, 2f)
         bufferBuilder.end().use { builtBuffer ->
             gpuDevice.createBuffer(
-                { "Theme shader background vertex buffer" },
+                { "Triangle covering position texture vertex buffer" },
                 BufferType.VERTICES,
                 BufferUsage.STATIC_WRITE,
                 builtBuffer.buffer

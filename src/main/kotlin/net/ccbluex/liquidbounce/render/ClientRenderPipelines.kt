@@ -24,7 +24,6 @@ import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.platform.DestFactor
 import com.mojang.blaze3d.platform.SourceFactor
-import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.fastIterator
@@ -165,7 +164,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     val ItemChams = newPipeline("glow") {
         withVertexShader(ClientShaders.PLANE_PROJECTION_VSH_ID)
         withFragmentShader(ClientShaders.GLOW_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.QUADS)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withSampler("image")
         withUniform("useImage", UniformType.INT)
@@ -177,7 +176,6 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withUniform("layerCount", UniformType.INT)
         withoutBlend()
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-//        forWorldRender()
     }
 
     @JvmField

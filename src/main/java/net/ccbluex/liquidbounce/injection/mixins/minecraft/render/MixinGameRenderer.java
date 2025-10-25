@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
 import net.ccbluex.liquidbounce.interfaces.LightmapTextureManagerAddition;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
-import net.ccbluex.liquidbounce.render.shader.shaders.OutlineEffectShader;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingKt;
@@ -155,7 +154,7 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", shift = At.Shift.AFTER))
     public void drawItemCharms(Camera camera, float tickDelta, Matrix4f matrix4f, CallbackInfo ci) {
-        ModuleItemChams.INSTANCE.restoreToTexture(this.lightmapTextureManager.getGlTexture());
+        ModuleItemChams.INSTANCE.resetTexture(this.lightmapTextureManager.getGlTexture());
     }
 
     /**

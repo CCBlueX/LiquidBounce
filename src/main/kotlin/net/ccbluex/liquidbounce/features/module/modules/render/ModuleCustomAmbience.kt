@@ -18,10 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -107,7 +104,9 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
     object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
         private val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
 
-        fun applyLightColor(texture: GpuTexture) {
+        private var edited = false
+
+        fun applyToTexture(texture: GpuTexture) {
             if (!this.running) return
 
             gpuDevice.createCommandEncoder()
@@ -118,6 +117,16 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
                     pass.setVertexBuffer(0, trianglePosTexVertexBuffer)
                     pass.draw(0, 3)
                 }
+
+            edited = true
+        }
+
+        fun resetTexture(texture: GpuTexture) {
+            if (!edited) return
+
+            gpuDevice.createCommandEncoder().clearColorTexture(texture, -1)
+
+            edited = false
         }
     }
 
