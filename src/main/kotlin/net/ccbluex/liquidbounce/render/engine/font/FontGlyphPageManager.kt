@@ -22,13 +22,13 @@ package net.ccbluex.liquidbounce.render.engine.font
 
 import it.unimi.dsi.fastutil.chars.Char2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.dynamic.DynamicFontCacheManager
 import net.ccbluex.liquidbounce.render.engine.font.dynamic.DynamicGlyphPage
-import java.awt.Dimension
 import kotlin.math.ceil
 
 private val BASIC_CHARS = '\u0000'..'\u0200'
@@ -46,7 +46,7 @@ class FontGlyphPageManager(
     )
     private val dynamicFontManager: DynamicFontCacheManager = DynamicFontCacheManager(
         this.dynamicPage,
-        HashSet<FontManager.FontFace>(baseFonts.size + staticPage.size).apply {
+        ObjectOpenHashSet<FontManager.FontFace>(baseFonts.size + staticPage.size).apply {
             addAll(baseFonts)
             addAll(additionalFonts)
         }
@@ -61,14 +61,10 @@ class FontGlyphPageManager(
         this.availableFonts = createGlyphRegistries(baseFonts, this.staticPage)
     }
 
-    private fun packIntCharKey(intValue: Int, charValue: Char): Long {
-        return (intValue.toLong() shl 32) or charValue.code.toLong()
-    }
-
     @Suppress("unused")
     private val renderHandler = handler<GameRenderEvent> {
         this.dynamicFontManager.update().forEach { update ->
-            val key = packIntCharKey(update.style, update.descriptor.renderInfo.char)
+            val key = GlyphIdentifier.asLong(update.descriptor.renderInfo.char, update.style)
 
             if (!update.removed) {
                 dynamicallyLoadedGlyphs.put(key, update.descriptor)
@@ -111,7 +107,7 @@ class FontGlyphPageManager(
         val glyph = getFont(font).glyphs[style][ch]
 
         if (glyph == null) {
-            val altGlyph = this.dynamicallyLoadedGlyphs[packIntCharKey(style, ch)]
+            val altGlyph = this.dynamicallyLoadedGlyphs[GlyphIdentifier.asLong(ch, style)]
 
             if (altGlyph == null) {
                 this.dynamicFontManager.requestGlyph(ch, style)

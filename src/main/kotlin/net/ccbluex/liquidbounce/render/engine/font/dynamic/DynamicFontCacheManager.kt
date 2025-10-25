@@ -21,14 +21,17 @@
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
 import com.mojang.blaze3d.opengl.GlStateManager
-import com.mojang.blaze3d.systems.RenderSystem
+import it.unimi.dsi.fastutil.objects.ObjectImmutableList
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphDescriptor
+import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.client.texture.NativeImage
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -47,7 +50,7 @@ class DynamicFontCacheManager(
     private var glyphPageChanges = ArrayList<ChangeOnAtlas>()
 
     private val cacheData = ConcurrentHashMap<GlyphIdentifier, CharCacheData>()
-    private val requests = HashSet<GlyphIdentifier>()
+    private val requests = ObjectOpenHashSet<GlyphIdentifier>()
 
     private val lock = ReentrantLock()
     private val condVar = lock.newCondition()
@@ -89,7 +92,7 @@ class DynamicFontCacheManager(
                     val width = (bb.xMax - bb.xMin).toInt()
                     val height = (bb.yMax - bb.yMin).toInt()
 
-                    val cmdEncoder = RenderSystem.getDevice().createCommandEncoder()
+                    val cmdEncoder = gpuDevice.createCommandEncoder()
 
                     cmdEncoder.writeToTexture(
                         this.dynamicGlyphPage.texture.glTexture, this.dynamicGlyphPage.texture.image!!,
@@ -133,7 +136,7 @@ class DynamicFontCacheManager(
             // Wait for stuff to happen
             this.condVar.await()
 
-            val retrievedRequests = ArrayList(this.requests)
+            val retrievedRequests = ObjectImmutableList(this.requests)
 
             this.requests.clear()
 
@@ -153,12 +156,12 @@ class DynamicFontCacheManager(
         freeSpace()
 
         val stillUnsuccessfulAllocations =
-            createAllocationRequests(unsuccessfulAllocations.map { GlyphIdentifier(it.codepoint, it.font.style) })
+            createAllocationRequests(unsuccessfulAllocations.mapToArray(::GlyphIdentifier).asList())
 
         // TODO: Optimize the atlas in this situation
         // We weren't able to allocate those chars even after freeing some space. Don't ask us ever again about
         // allocating them >:c
-        stillUnsuccessfulAllocations.forEach { dontRetryAllocationOf(GlyphIdentifier(it.codepoint, it.font.style)) }
+        stillUnsuccessfulAllocations.forEach { dontRetryAllocationOf(GlyphIdentifier(it)) }
     }
 
     private fun dontRetryAllocationOf(it: GlyphIdentifier) {
@@ -171,13 +174,13 @@ class DynamicFontCacheManager(
         }
 
         glyphsToFree.forEach { (glyphId, _) ->
-            val renderInfo = this.dynamicGlyphPage.free(glyphId.codepoint, glyphId.font)
+            val renderInfo = this.dynamicGlyphPage.free(glyphId.codepoint, glyphId.style)
 
             if (renderInfo != null) {
                 this.glyphPageChanges.add(
                     ChangeOnAtlas(
                         GlyphDescriptor(this.dynamicGlyphPage, renderInfo),
-                        glyphId.font,
+                        glyphId.style,
                         removed = true
                     )
                 )
@@ -197,7 +200,7 @@ class DynamicFontCacheManager(
 
         requests.forEach {
             if (it !in unsuccessful) {
-                this.cacheData[GlyphIdentifier(it.codepoint, it.font.style)]!!.cacheState.set(CACHED)
+                this.cacheData[GlyphIdentifier(it)]!!.cacheState.set(CACHED)
 
                 val addedGlyph = this.dynamicGlyphPage.getGlyph(it.codepoint, it.font.style)!!
 
@@ -236,14 +239,12 @@ class DynamicFontCacheManager(
 
     private fun findFontForGlyph(ch: GlyphIdentifier): FontManager.FontId? {
         return this.availableFonts.firstNotNullOfOrNull { fontFace ->
-            fontFace.styles[ch.font]?.takeIf { it.awtFont.canDisplay(ch.codepoint) }
+            fontFace.styles[ch.style]?.takeIf { it.awtFont.canDisplay(ch.codepoint) }
         }
     }
 
     class ChangeOnAtlas(val descriptor: GlyphDescriptor, val style: Int, val removed: Boolean)
 }
-
-private data class GlyphIdentifier(val codepoint: Char, val font: Int)
 
 private const val MAX_CACHE_TIME_MS = 30 * 1000
 
