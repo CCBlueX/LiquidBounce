@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.SAMPLER_NAMES
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.GlGpuBuffer
 import net.minecraft.client.gui.DrawContext
@@ -84,9 +85,6 @@ val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
 @JvmField
 val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-
-@JvmField
-val SAMPLER_NAMES = Array(12) { "Sampler$it" }
 
 val trianglePosTexVertexBuffer: GpuBuffer =
     BufferAllocator(VertexFormats.POSITION_TEXTURE.vertexSize * 3).use { allocator ->

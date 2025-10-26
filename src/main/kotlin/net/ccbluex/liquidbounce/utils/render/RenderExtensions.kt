@@ -30,6 +30,12 @@ import java.awt.image.BufferedImage
 import java.util.concurrent.CompletableFuture
 
 /**
+ * Avoiding String contract
+ */
+@JvmField
+val SAMPLER_NAMES = Array(12) { "Sampler$it" }
+
+/**
  * @see ScreenshotRecorder.takeScreenshot
  */
 fun GpuTexture.toNativeImage(): CompletableFuture<NativeImage> {

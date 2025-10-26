@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import static net.ccbluex.liquidbounce.render.RenderShortcutsKt.SAMPLER_NAMES;
+import static net.ccbluex.liquidbounce.utils.render.RenderExtensionsKt.SAMPLER_NAMES;
 
 @Mixin(ShaderProgram.class)
 public abstract class MixinShaderProgram {
