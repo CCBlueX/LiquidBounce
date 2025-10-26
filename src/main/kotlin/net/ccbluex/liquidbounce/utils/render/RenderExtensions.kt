@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.buffers.BufferType
 import com.mojang.blaze3d.buffers.BufferUsage
-import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.minecraft.client.texture.NativeImage
+import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.ScreenshotRecorder
 import java.awt.image.BufferedImage
 import java.util.concurrent.CompletableFuture
@@ -44,7 +44,7 @@ fun GpuTexture.toNativeImage(): CompletableFuture<NativeImage> {
             BufferUsage.STATIC_READ,
             i * j * pixelSize
         )
-    gpuDevice.createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, Runnable {
+    gpuDevice.createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, {
         gpuDevice.createCommandEncoder().readBuffer(gpuBuffer).use { readView ->
             val nativeImage = NativeImage(i, j, false)
             for (k in 0..<j) {
@@ -60,6 +60,18 @@ fun GpuTexture.toNativeImage(): CompletableFuture<NativeImage> {
 
     return future
 }
+
+fun NativeImageBackedTexture.uploadRect(
+    mipLevel: Int,
+    x: Int, y: Int,
+    width: Int, height: Int,
+) = gpuDevice.createCommandEncoder().writeToTexture(
+    this.glTexture, this.image!!,
+    mipLevel,
+    x, y,
+    width, height,
+    x, y,
+)
 
 fun NativeImage.toBufferedImage(): BufferedImage {
     val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)

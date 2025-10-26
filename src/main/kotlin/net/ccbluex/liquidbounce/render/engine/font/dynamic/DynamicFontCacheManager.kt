@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphDescriptor
 import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
-import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.render.uploadRect
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -90,17 +90,12 @@ class DynamicFontCacheManager(
 
                     val bb = change.descriptor.renderInfo.atlasLocation?.pixelBoundingBox ?: continue
 
-                    val width = (bb.xMax - bb.xMin).toInt()
-                    val height = (bb.yMax - bb.yMin).toInt()
-
-                    val cmdEncoder = gpuDevice.createCommandEncoder()
-
-                    cmdEncoder.writeToTexture(
-                        this.dynamicGlyphPage.texture.glTexture, this.dynamicGlyphPage.texture.image!!,
-                        0,
-                        bb.xMin.toInt(), bb.yMin.toInt(),
-                        width, height,
-                        bb.xMin.toInt(), bb.yMin.toInt()
+                    this.dynamicGlyphPage.texture.uploadRect(
+                        mipLevel = 0,
+                        x = bb.xMin.toInt(),
+                        y = bb.yMin.toInt(),
+                        width = (bb.xMax - bb.xMin).toInt(),
+                        height = (bb.yMax - bb.yMin).toInt()
                     )
                 }
             }
@@ -121,7 +116,7 @@ class DynamicFontCacheManager(
             while (!Thread.interrupted()) {
                 try {
                     threadMainLoop()
-                } catch (e: InterruptedException) { // I hate everything about handling thread interrupts in java...
+                } catch (_: InterruptedException) { // I hate everything about handling thread interrupts in java...
                     break
                 } catch (e: Throwable) {
                     logger.error("Error on dynamic font manager thread", e)

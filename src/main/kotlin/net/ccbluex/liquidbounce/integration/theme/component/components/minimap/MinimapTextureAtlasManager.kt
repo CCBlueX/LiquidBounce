@@ -23,15 +23,15 @@ package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.texture.NativeImage
+import net.ccbluex.liquidbounce.utils.render.uploadRect
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.math.ChunkPos
 import org.joml.Vector2i
-import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.function.BiConsumer
 import kotlin.concurrent.read
@@ -58,7 +58,18 @@ class MinimapTextureAtlasManager {
     ).apply {
         glTexture.setTextureFilter(FilterMode.NEAREST, false)
     }
-    private val availableAtlasPositions: ArrayBlockingQueue<AtlasPosition>
+
+    private val availableAtlasPositions = ObjectArrayList<AtlasPosition>(MAX_ATLAS_POSITIONS).apply {
+        for (x in 0 until ATLAS_SIZE) {
+            for (y in 0 until ATLAS_SIZE) {
+                if (x == 0 && y == 0) {
+                    continue
+                }
+
+                add(AtlasPosition(x, y))
+            }
+        }
+    }
     private val dirtyAtlasPositions = ObjectOpenHashSet<AtlasPosition>()
     private val chunkPosAtlasPosMap = Long2ObjectOpenHashMap<AtlasPosition>() // key -> ChunkPos
 
@@ -67,18 +78,6 @@ class MinimapTextureAtlasManager {
     private var allocated = false
 
     init {
-        val atlasPositions = ArrayList<AtlasPosition>(MAX_ATLAS_POSITIONS)
-        for (x in 0 until ATLAS_SIZE) {
-            for (y in 0 until ATLAS_SIZE) {
-                if (x == 0 && y == 0) {
-                    continue
-                }
-
-                atlasPositions.add(AtlasPosition(x, y))
-            }
-        }
-        availableAtlasPositions = ArrayBlockingQueue(MAX_ATLAS_POSITIONS, false, atlasPositions)
-
         for (x in 0..15) {
             for (y in 0..15) {
                 val color = if ((x and 1) xor (y and 1) == 0) Color4b.BLACK.toARGB() else Color4b.WHITE.toARGB()
@@ -91,18 +90,17 @@ class MinimapTextureAtlasManager {
     }
 
     private fun allocate(chunkPos: ChunkPos): AtlasPosition {
-        val atlasPosition = availableAtlasPositions.take() ?: error("No more space in the texture atlas!")
-
-        lock.write {
+        return lock.write {
+            val atlasPosition =
+                availableAtlasPositions.removeLastOrNull() ?: error("No more space in the texture atlas!")
             chunkPosAtlasPosMap.put(chunkPos.toLong(), atlasPosition)
+            atlasPosition
         }
-
-        return atlasPosition
     }
 
     fun deallocate(chunkPos: ChunkPos) {
         lock.write {
-            chunkPosAtlasPosMap.remove(chunkPos.toLong())?.apply(availableAtlasPositions::add)
+            chunkPosAtlasPosMap.remove(chunkPos.toLong())?.apply(availableAtlasPositions::push)
         }
     }
 
@@ -172,20 +170,13 @@ class MinimapTextureAtlasManager {
     }
 
     private fun uploadOnlyDirtyPositions() {
-        val image = this.texture.image!!
-
         for (dirtyAtlasPosition in this.dirtyAtlasPositions) {
-            val chunkImage = NativeImage(16, 16, false)
-
-            chunkImage.use {
-                image.copyRect(
-                    chunkImage,
-                    dirtyAtlasPosition.baseXOnAtlas, dirtyAtlasPosition.baseYOnAtlas,
-                    0, 0,
-                    16, 16,
-                    false, false
-                )
-            }
+            this.texture.uploadRect(
+                mipLevel = 0,
+                x = dirtyAtlasPosition.baseXOnAtlas,
+                y = dirtyAtlasPosition.baseYOnAtlas,
+                width = 16, height = 16,
+            )
         }
     }
 
