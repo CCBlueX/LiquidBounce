@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -52,6 +53,7 @@ import org.joml.Vector2i
 import org.joml.Vector2ic
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
+import java.util.EnumSet
 import kotlin.math.ceil
 
 object MinimapComponent : NativeComponent("Minimap", false, Alignment(
@@ -63,6 +65,15 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
+    private val show by multiEnumChoice("Show", EnumSet.allOf(Show::class.java), canBeNone = false)
+
+    private enum class Show(override val choiceName: String) : NamedChoice {
+        TEXTURE("Texture"),
+        ENTITY("Entity"),
+    }
+
+    private inline val showTexture get() = Show.TEXTURE in show
+    private inline val showEntity get() = Show.ENTITY in show
 
     init {
         ChunkRenderer
@@ -122,24 +133,27 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         matStack.translate(-playerOffX, -playerOffZ, 0.0)
 
         renderEnvironmentForGUI(event) {
-            val gpuTexture = ChunkRenderer.prepareRendering()
-
-            startBatch()
-            RenderSystem.setShaderTexture(0, gpuTexture)
-            drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
-                buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
-            }
-            commitBatch()
-
-            startBatch()
-            drawCustomMesh(ClientRenderPipelines.Triangles) {
-                for (renderedEntity in RenderedEntities) {
-                    drawEntityOnMinimap(
-                        matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
-                    )
+            if (showTexture) {
+                val gpuTexture = ChunkRenderer.prepareRendering()
+                startBatch()
+                RenderSystem.setShaderTexture(0, gpuTexture)
+                drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
+                    buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
                 }
+                commitBatch()
             }
-            commitBatch()
+
+            if (showEntity) {
+                startBatch()
+                drawCustomMesh(ClientRenderPipelines.Triangles) {
+                    for (renderedEntity in RenderedEntities) {
+                        drawEntityOnMinimap(
+                            matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
+                        )
+                    }
+                }
+                commitBatch()
+            }
         }
 
         matStack.pop()
