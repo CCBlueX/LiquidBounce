@@ -37,7 +37,6 @@ import net.minecraft.client.render.Fog
 import net.minecraft.client.render.FogShape
 import net.minecraft.util.math.MathHelper
 import org.lwjgl.opengl.GL11
-import java.util.OptionalInt
 
 /**
  * CustomAmbience module
@@ -106,8 +105,6 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
 
     object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
         private val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
-            .onChanged {
-            }
 
         val texture: GpuTexture = gpuDevice.createTexture(
             "Custom Light Texture",
@@ -118,16 +115,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
             setTextureFilter(FilterMode.LINEAR, false)
         }
 
-        fun update(texture: GpuTexture) {
-            gpuDevice.createCommandEncoder().copyTextureToTexture(
-                this.texture,
-                texture,
-                0,
-                0, 0,
-                0, 0,
-                16, 16,
-            )
-
+        fun update() {
             gpuDevice.createCommandEncoder()
                 .createRenderPass(this.texture, optional(-1)).use { pass ->
                     pass.setPipeline(ClientRenderPipelines.Blend)
@@ -137,32 +125,6 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
                     pass.draw(0, 3)
                 }
         }
-
-//        private var edited = false
-
-//        fun applyToTexture(texture: GpuTexture): Boolean {
-//            if (!this.running || edited) return false
-//
-//            gpuDevice.createCommandEncoder()
-//                .createRenderPass(texture, optional(-1)).use { pass ->
-//                    pass.setPipeline(ClientRenderPipelines.Blend)
-//                    pass.bindSampler("texture0", texture)
-//                    pass.setUniform("mixColor", lightColor)
-//                    pass.setVertexBuffer(0, trianglePosTexVertexBuffer)
-//                    pass.draw(0, 3)
-//                }
-//
-//            edited = true
-//            return true
-//        }
-//
-//        fun resetTexture(texture: GpuTexture) {
-//            if (!edited) return
-//
-//            gpuDevice.createCommandEncoder().clearColorTexture(texture, -1)
-//
-//            edited = false
-//        }
     }
 
     init {

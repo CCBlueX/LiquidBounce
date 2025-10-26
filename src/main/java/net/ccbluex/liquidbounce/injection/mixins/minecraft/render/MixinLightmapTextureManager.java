@@ -69,7 +69,7 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
     private void hookBlendTextureColors(float delta, CallbackInfo ci) {
         var lightColor = ModuleCustomAmbience.CustomLightColor.INSTANCE;
         if (lightColor.getRunning()) {
-            lightColor.update(this.glTexture);
+            lightColor.update();
         }
     }
 
