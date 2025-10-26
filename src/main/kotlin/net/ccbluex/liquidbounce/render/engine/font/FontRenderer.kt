@@ -18,9 +18,8 @@
  */
 package net.ccbluex.liquidbounce.render.engine.font
 
-import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.VertexFormat
+import com.mojang.blaze3d.textures.GpuTexture
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.Pool
 import net.ccbluex.fastutil.fastIterator
@@ -30,7 +29,6 @@ import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.texture.GlTexture
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.text.Text
 import org.joml.Vector3f
@@ -55,7 +53,7 @@ private data class RenderedLine(val p1: Vector3f, val p2: Vector3f, val color: C
 
 private class FontRendererCache {
     val renderedGlyphs = ArrayList<RenderedGlyph>(100)
-    val commitGlyphs = Reference2ReferenceOpenHashMap<GlyphPage, ArrayList<RenderedGlyph>>()
+    val commitGlyphs = Reference2ReferenceOpenHashMap<GpuTexture, ArrayList<RenderedGlyph>>()
     val renderedGlyphListPool = Pool(
         ::ArrayList,
         ArrayList<RenderedGlyph>::clear,
@@ -275,19 +273,16 @@ class FontRenderer(
 
     override fun commit(environment: RenderEnvironment) {
         for (glyph in cache.renderedGlyphs) {
-            val glyphPage = glyph.glyph.page
-            cache.commitGlyphs.getOrPut(glyphPage) { cache.renderedGlyphListPool.borrow() }.add(glyph)
+            val glyphPageTexture = glyph.glyph.page.texture.glTexture
+            cache.commitGlyphs.getOrPut(glyphPageTexture) { cache.renderedGlyphListPool.borrow() }.add(glyph)
         }
         cache.renderedGlyphs.clear()
 
         val vec3f1 = Pools.Vec3f.borrow()
         val vec3f2 = Pools.Vec3f.borrow()
-        cache.commitGlyphs.fastIterator().forEach { (glyphPage, renderedGlyphs) ->
-            val gpuTexture = glyphPage.texture.glTexture
-            GlStateManager._bindTexture((gpuTexture as GlTexture).glId)
-            RenderSystem.setShaderTexture(0, gpuTexture)
-
+        cache.commitGlyphs.fastIterator().forEach { (gpuTexture, renderedGlyphs) ->
             environment.startBatch()
+            RenderSystem.setShaderTexture(0, gpuTexture)
             for (renderedGlyph in renderedGlyphs) {
                 val glyphDescriptor = renderedGlyph.glyph
 

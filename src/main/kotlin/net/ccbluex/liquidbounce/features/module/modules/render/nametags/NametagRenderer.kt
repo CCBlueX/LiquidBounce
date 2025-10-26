@@ -55,20 +55,20 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
 
     startBatch()
 
-    val x =
-        ModuleNametags.fontRenderer.draw(
-            ModuleNametags.fontRenderer.process(nametag.text),
-            0f,
-            0f,
-            shadow = true,
-            z = 0.001f,
-        )
+    val fontRenderer = ModuleNametags.fontRenderer
+    val x = fontRenderer.draw(
+        fontRenderer.process(nametag.text),
+        0f,
+        0f,
+        shadow = true,
+        z = 0.001f,
+    )
 
     // Make the model view matrix center the text when rendering
-    matrixStack.translate(-x * 0.5f, -ModuleNametags.fontRenderer.height * 0.5f, 0f)
+    matrixStack.translate(-x * 0.5f, -fontRenderer.height * 0.5f, 0f)
 
-    val q1 = Vec3(-0.1f * fontSize, ModuleNametags.fontRenderer.height * -0.1f, 0f)
-    val q2 = Vec3(x + 0.2f * fontSize, ModuleNametags.fontRenderer.height * 1.1f, 0f)
+    val q1 = Vec3(-0.1f * fontSize, fontRenderer.height * -0.1f, 0f)
+    val q2 = Vec3(x + 0.2f * fontSize, fontRenderer.height * 1.1f, 0f)
 
     drawQuad(q1, q2, Int.MIN_VALUE)
 
@@ -83,7 +83,6 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
         val worldY = (entityPos.y + nametag.entity.height + 0.5f).toFloat()
 
         NametagEnchantmentRenderer.drawEntityEnchantments(
-            this@drawNametag,
             nametag.entity,
             worldX,
             worldY,
@@ -92,7 +91,7 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
 
     commitBatch()
 
-    ModuleNametags.fontRenderer.commit(this@drawNametag)
+    fontRenderer.commit(this@drawNametag)
 
     matrixStack.pop()
 }

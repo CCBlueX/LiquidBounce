@@ -228,16 +228,12 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
 
     val camera = mc.entityRenderDispatcher.camera ?: return
 
-    val (r, g, b, a) = RenderSystem.getShaderColor()
-    RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
 
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
 
     val environment = WorldRenderEnvironment(matrixStack, camera)
     draw(environment)
     if (environment.isBatchMode) environment.commitBatch()
-
-    RenderSystem.setShaderColor(r, g, b, a)
 
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
@@ -252,14 +248,9 @@ inline fun renderEnvironmentForGUI(
         callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
     }
 
-    val (r, g, b, a) = RenderSystem.getShaderColor()
-    RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
-
     val environment = GUIRenderEnvironment(event.context, matrixStack)
     draw(environment)
     if (environment.isBatchMode) environment.commitBatch()
-
-    RenderSystem.setShaderColor(r, g, b, a)
 }
 
 inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {

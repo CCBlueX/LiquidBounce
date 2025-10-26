@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
-import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -41,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.texture.GlTexture
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.ChunkPos
@@ -126,11 +124,8 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         renderEnvironmentForGUI(event) {
             val gpuTexture = ChunkRenderer.prepareRendering()
 
-            GlStateManager._bindTexture((gpuTexture as GlTexture).glId)
-
-            RenderSystem.setShaderTexture(0, gpuTexture)
-
             startBatch()
+            RenderSystem.setShaderTexture(0, gpuTexture)
             drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
                 buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
             }

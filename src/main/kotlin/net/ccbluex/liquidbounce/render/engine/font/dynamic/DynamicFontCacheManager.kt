@@ -20,7 +20,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
-import com.mojang.blaze3d.opengl.GlStateManager
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.atomicfu.locks.ReentrantLock
@@ -45,9 +45,10 @@ class DynamicFontCacheManager(
      */
     private val availableFonts: Collection<FontManager.FontFace>
 ) {
+
     private val glyphPageLock = ReentrantLock()
     private val glyphPageDirtyFlag = AtomicBoolean(false)
-    private var glyphPageChanges = ArrayList<ChangeOnAtlas>()
+    private val glyphPageChanges = ObjectArrayList<ChangeOnAtlas>()
 
     private val cacheData = ConcurrentHashMap<GlyphIdentifier, CharCacheData>()
     private val requests = ObjectOpenHashSet<GlyphIdentifier>()
@@ -104,15 +105,13 @@ class DynamicFontCacheManager(
                 }
             }
 
-            val changes = this.glyphPageChanges
+            val changes = ObjectImmutableList(this.glyphPageChanges)
 
-            this.glyphPageChanges = ArrayList()
+            this.glyphPageChanges.clear()
             this.glyphPageDirtyFlag.set(false)
 
             changes
         }
-
-        GlStateManager._bindTexture(0)
 
         return changes
     }
@@ -169,11 +168,11 @@ class DynamicFontCacheManager(
     }
 
     private fun freeSpace() {
-        val glyphsToFree = this.cacheData.filter {
-            System.currentTimeMillis() - it.value.lastUsage.get() > MAX_CACHE_TIME_MS
-        }
+        for ((glyphId, charCacheData) in this.cacheData) {
+            if (System.currentTimeMillis() - charCacheData.lastUsage.get() <= MAX_CACHE_TIME_MS) {
+                continue
+            }
 
-        glyphsToFree.forEach { (glyphId, _) ->
             val renderInfo = this.dynamicGlyphPage.free(glyphId.codepoint, glyphId.style)
 
             if (renderInfo != null) {
@@ -188,7 +187,7 @@ class DynamicFontCacheManager(
                 logger.warn("Character '${glyphId.codepoint}' was freed twice.")
             }
 
-            this.cacheData[glyphId]!!.cacheState.set(UNCACHED)
+            charCacheData.cacheState.set(UNCACHED)
         }
     }
 
@@ -252,10 +251,10 @@ private const val UNCACHED = 0
 private const val CACHED = 1
 private const val BLOCKED = 2
 
-private class CharCacheData(
+private class CharCacheData {
     /**
      * Possible values: [UNCACHED], [CACHED] and [BLOCKED]
      */
-    val cacheState: AtomicInteger = AtomicInteger(UNCACHED),
-    val lastUsage: AtomicLong = AtomicLong(0L)
-)
+    val cacheState = AtomicInteger(UNCACHED)
+    val lastUsage = AtomicLong(0L)
+}

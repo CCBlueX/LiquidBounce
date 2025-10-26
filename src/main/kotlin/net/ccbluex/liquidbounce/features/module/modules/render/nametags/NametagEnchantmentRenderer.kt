@@ -149,8 +149,8 @@ object NametagEnchantmentRenderer {
         val width: Float
     )
 
+    context(env: RenderEnvironment)
     fun drawEntityEnchantments(
-        env: RenderEnvironment,
         entity: LivingEntity,
         worldX: Float,
         worldY: Float,
@@ -176,7 +176,7 @@ object NametagEnchantmentRenderer {
         if (columnData.isNotEmpty()) {
             // Add this position to the drawn areas list
             ModuleNametags.drawnEnchantmentAreas.add(Vector2f(worldX, worldY))
-            env.drawEnchantmentColumns(worldX, worldY, columnData)
+            drawEnchantmentColumns(worldX, worldY, columnData)
         }
     }
 
@@ -296,7 +296,8 @@ object NametagEnchantmentRenderer {
         drawQuad(leftTop, rightBottom, color.toARGB())
     }
 
-    private fun RenderEnvironment.drawEnchantmentColumns(
+    context(environment: RenderEnvironment)
+    private fun drawEnchantmentColumns(
         x: Float,
         y: Float,
         columnData: List<EnchantColumn>
@@ -322,21 +323,22 @@ object NametagEnchantmentRenderer {
         var columnX = x - halfTotalWidth
         columnData.forEach { column ->
             val columnCenterX = columnX + column.width / 2
-            renderEnchantmentColumn(column.cells, columnCenterX, y)
+            environment.renderEnchantmentColumn(column.cells, columnCenterX, y)
             columnX += column.width + COLUMN_SPACING
         }
     }
 
-    private fun RenderEnvironment.drawGroupBorder(rect: Rect) {
+    context(environment: RenderEnvironment)
+    private fun drawGroupBorder(rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
         val leftTop = Vec3(rect.x1, rect.y1, 0F)
         val rightBottom = Vec3(rect.x2, rect.y2, 0F)
-        drawQuad(
+        environment.drawQuad(
             leftTop, rightBottom,
             Color4b.BLACK.with(a = 100).toARGB()
         )
 
-        drawQuadOutlines(
+        environment.drawQuadOutlines(
             leftTop, rightBottom,
             Color4b.RED.toARGB()
         )
