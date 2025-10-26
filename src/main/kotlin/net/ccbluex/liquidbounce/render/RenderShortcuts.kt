@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.GlGpuBuffer
 import net.minecraft.client.gui.DrawContext
@@ -52,7 +51,10 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.*
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
+import org.joml.Vector2fc
 import org.joml.Vector3fc
+import org.joml.component1
+import org.joml.component2
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11C
 import java.util.OptionalDouble
@@ -82,6 +84,9 @@ val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
 @JvmField
 val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+@JvmField
+val SAMPLER_NAMES = Array(12) { "Sampler$it" }
 
 val trianglePosTexVertexBuffer: GpuBuffer =
     BufferAllocator(VertexFormats.POSITION_TEXTURE.vertexSize * 3).use { allocator ->
@@ -395,7 +400,7 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         for (i in 0..11) {
             val gpuTexture = RenderSystem.getShaderTexture(i)
             if (gpuTexture != null) {
-                renderPass.bindSampler("Sampler$i", gpuTexture)
+                renderPass.bindSampler(SAMPLER_NAMES[i], gpuTexture)
             }
         }
 
@@ -515,19 +520,33 @@ fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3, argb: Int) {
     }
 }
 
-fun RenderEnvironment.drawQuadOutlines(pos1: Vec3, pos2: Vec3, argb: Int) {
-    drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
-        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
-        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
-
-        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
-        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
-
-        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
-        vertex(matrix, pos2.x, pos2.y, pos1.z).color(argb)
-
-        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
-        vertex(matrix, pos2.x, pos1.y, pos1.z).color(argb)
+fun RenderEnvironment.drawQuad(
+    pos1: Vector2fc,
+    pos2: Vector2fc,
+    z: Float,
+    fillColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) {
+    val (x1, y1) = pos1
+    val (x2, y2) = pos2
+    if (fillColor != null && !fillColor.isTransparent) {
+        val argb = fillColor.toARGB()
+        drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
+            vertex(matrix, x1, y1, z).color(argb)
+            vertex(matrix, x1, y2, z).color(argb)
+            vertex(matrix, x2, y2, z).color(argb)
+            vertex(matrix, x2, y1, z).color(argb)
+        }
+    }
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        val argb = outlineColor.toARGB()
+        drawCustomMesh(ClientRenderPipelines.LineStrip) { matrix ->
+            vertex(matrix, x1, y1, z).color(argb)
+            vertex(matrix, x1, y2, z).color(argb)
+            vertex(matrix, x2, y2, z).color(argb)
+            vertex(matrix, x2, y1, z).color(argb)
+            vertex(matrix, x1, y1, z).color(argb)
+        }
     }
 }
 
@@ -558,7 +577,7 @@ private fun RenderEnvironment.drawBox(
     box: Box,
     pipeline: RenderPipeline,
     useOutlineVertices: Boolean = false,
-    color: Color4b? = null,
+    color: Color4b,
     verticesToUse: Int = -1
 ) = drawCustomMesh(pipeline) { matrix ->
     val check = verticesToUse != -1
@@ -570,11 +589,8 @@ private fun RenderEnvironment.drawBox(
                 return@forEachOutlineVertex
             }
 
-            val bb = vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-
-            if (color != null) {
-                bb.color(color.toARGB())
-            }
+            vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
+                .color(color.toARGB())
         }
     } else {
         box.forEachFaceVertex { i, x, y, z ->
@@ -582,11 +598,8 @@ private fun RenderEnvironment.drawBox(
                 return@forEachFaceVertex
             }
 
-            val bb = vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-
-            if (color != null) {
-                bb.color(color.toARGB())
-            }
+            vertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
+                .color(color.toARGB())
         }
     }
 }

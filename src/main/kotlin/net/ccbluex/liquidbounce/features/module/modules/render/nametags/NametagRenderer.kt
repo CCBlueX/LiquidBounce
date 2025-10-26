@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.drawQuad
-import net.ccbluex.liquidbounce.render.drawQuadOutlines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.minecraft.entity.LivingEntity
+import org.joml.Vector2f
 
 private const val NAMETAG_PADDING: Int = 15
 
@@ -67,14 +67,14 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     // Make the model view matrix center the text when rendering
     matrixStack.translate(-x * 0.5f, -fontRenderer.height * 0.5f, 0f)
 
-    val q1 = Vec3(-0.1f * fontSize, fontRenderer.height * -0.1f, 0f)
-    val q2 = Vec3(x + 0.2f * fontSize, fontRenderer.height * 1.1f, 0f)
+    val q1 = Vector2f(-0.1f * fontSize, fontRenderer.height * -0.1f)
+    val q2 = Vector2f(x + 0.2f * fontSize, fontRenderer.height * 1.1f)
 
-    drawQuad(q1, q2, Int.MIN_VALUE)
-
-    if (NametagShowOptions.BORDER.isShowing()) {
-        drawQuadOutlines(q1, q2, Color4b.BLACK.toARGB())
-    }
+    drawQuad(
+        q1, q2, z = 0f,
+        fillColor = Color4b(Int.MIN_VALUE, hasAlpha = true),
+        outlineColor = Color4b.BLACK.takeIf { NametagShowOptions.BORDER.isShowing() },
+    )
 
     // Draw enchantments directly for the entity (regardless of whether items are shown)
     if (NametagShowOptions.ENCHANTMENTS.isShowing() && nametag.entity is LivingEntity) {
