@@ -36,7 +36,6 @@ import net.minecraft.client.render.Camera
 import net.minecraft.client.render.Fog
 import net.minecraft.client.render.FogShape
 import net.minecraft.util.math.MathHelper
-import org.lwjgl.opengl.GL11
 
 /**
  * CustomAmbience module
@@ -81,18 +80,12 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
             return Fog(start, end, shape, color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
         }
 
-        fun modifyClearColor(): Boolean {
+        fun modifyClearColor(original: Int): Int {
             if (!this.running || backgroundColor.a == 0) {
-                return false
+                return original
             }
 
-            GL11.glClearColor(
-                backgroundColor.r / 255f,
-                backgroundColor.g / 255f,
-                backgroundColor.b / 255f,
-                backgroundColor.a / 255f
-            )
-            return true
+            return backgroundColor.toARGB()
         }
 
         @Suppress("unused")

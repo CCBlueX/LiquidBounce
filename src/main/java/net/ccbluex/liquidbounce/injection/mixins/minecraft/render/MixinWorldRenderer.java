@@ -146,6 +146,11 @@ public abstract class MixinWorldRenderer {
         outlineShader.getHandle().get().end();
     }
 
+    @ModifyExpressionValue(method = "method_62218", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/ColorHelper;fromFloats(FFFF)I"))
+    private int customFogClearColor(int original) {
+        return ModuleCustomAmbience.FogConfigurable.INSTANCE.modifyClearColor(original);
+    }
+
     // this method is a lambda
     @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
     private void onDrawOutlines(Fog fog, RenderTickCounter renderTickCounter, Camera camera, Profiler profiler, Matrix4f matrix4f, Matrix4f matrix4f2, Handle handle, Handle handle2, boolean bl, Frustum frustum, Handle handle3, Handle handle4, CallbackInfo ci) {
