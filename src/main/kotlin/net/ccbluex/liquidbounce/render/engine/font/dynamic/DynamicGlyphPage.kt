@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.render.engine.font.*
 import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
@@ -52,8 +53,8 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
      *
      * @return A list of characters that could not be added
      */
-    fun tryAdd(c: List<FontGlyph>): List<FontGlyph> {
-        val failed = ArrayList<FontGlyph>()
+    fun tryAdd(c: Iterable<FontGlyph>): List<FontGlyph> {
+        val failed = ObjectArrayList<FontGlyph>()
 
         val changesToDo = c
             .filter { glyphId -> !glyphMap.containsKey(GlyphIdentifier.asLong(glyphId)) }
@@ -104,7 +105,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
      *
      * @return Removed chars
      */
-    fun optimizeAtlas(): List<Triple<Int, Char, GlyphRenderInfo>> {
+    fun optimizeAtlas(): List<Pair<GlyphIdentifier, GlyphRenderInfo>> {
         // Free everything, create a new allocator and use max(largestFontGlyph.height, medianFontGlyphHeight) as
         // minimal vertical slice height and the dimensions of the smallest character is minDimension.
 

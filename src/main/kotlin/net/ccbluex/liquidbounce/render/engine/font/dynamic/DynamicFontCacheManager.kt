@@ -51,10 +51,10 @@ class DynamicFontCacheManager(
     private val glyphPageChanges = ObjectArrayList<ChangeOnAtlas>()
 
     private val cacheData = ConcurrentHashMap<GlyphIdentifier, CharCacheData>()
-    private val requests = ObjectOpenHashSet<GlyphIdentifier>()
 
-    private val lock = ReentrantLock()
-    private val condVar = lock.newCondition()
+    private val requests = ObjectOpenHashSet<GlyphIdentifier>()
+    private val requestsLock = ReentrantLock()
+    private val hasRequest = requestsLock.newCondition()
 
     fun requestGlyph(ch: Char, font: Int) {
         val glyphIdentifier = GlyphIdentifier(ch, font)
@@ -64,10 +64,10 @@ class DynamicFontCacheManager(
 
         if (cacheObject.cacheState.get() == UNCACHED) {
             // Notify font cache manager main thread
-            this.lock.withLock {
+            this.requestsLock.withLock {
                 requests.add(glyphIdentifier)
 
-                condVar.signal()
+                hasRequest.signal()
             }
         }
     }
@@ -77,13 +77,15 @@ class DynamicFontCacheManager(
             return emptyList()
         }
 
-        val changes = this.glyphPageLock.withLock {
-            val requiredUpdateCount = this.glyphPageChanges.count { !it.removed }
+        return this.glyphPageLock.withLock {
+            val changes = ObjectImmutableList(this.glyphPageChanges)
+            this.glyphPageChanges.clear()
+            val requiredUpdateCount = changes.count { !it.removed }
 
             if (requiredUpdateCount > 15) {
                 this.dynamicGlyphPage.texture.upload()
             } else {
-                for (change in this.glyphPageChanges) {
+                for (change in changes) {
                     if (change.removed) {
                         continue
                     }
@@ -100,19 +102,14 @@ class DynamicFontCacheManager(
                 }
             }
 
-            val changes = ObjectImmutableList(this.glyphPageChanges)
-
-            this.glyphPageChanges.clear()
             this.glyphPageDirtyFlag.set(false)
 
             changes
         }
-
-        return changes
     }
 
     fun startThread() {
-        thread(name = "lb-dynamic-font-manager") {
+        thread(name = "lb-dynamic-font-manager", isDaemon = true) {
             while (!Thread.interrupted()) {
                 try {
                     threadMainLoop()
@@ -126,9 +123,9 @@ class DynamicFontCacheManager(
     }
 
     private fun threadMainLoop() {
-        val requestedChars = this.lock.withLock {
+        val requestedChars = this.requestsLock.withLock {
             // Wait for stuff to happen
-            this.condVar.await()
+            this.hasRequest.await()
 
             val retrievedRequests = ObjectImmutableList(this.requests)
 
@@ -189,7 +186,7 @@ class DynamicFontCacheManager(
     /**
      * Tries the given allocations, returns all allocations that failed.
      */
-    private fun tryAllocations(requests: List<FontGlyph>): List<FontGlyph> {
+    private fun tryAllocations(requests: Iterable<FontGlyph>): List<FontGlyph> {
         val unsuccessful = this.dynamicGlyphPage.tryAdd(requests)
 
         requests.forEach {
@@ -212,8 +209,8 @@ class DynamicFontCacheManager(
         return unsuccessful
     }
 
-    private fun createAllocationRequests(requestedGlyphs: List<GlyphIdentifier>): List<FontGlyph> {
-        val requests = ArrayList<FontGlyph>()
+    private fun createAllocationRequests(requestedGlyphs: Iterable<GlyphIdentifier>): List<FontGlyph> {
+        val requests = ObjectArrayList<FontGlyph>()
 
         for (requestedGlyph in requestedGlyphs) {
             val font = findFontForGlyph(requestedGlyph)
@@ -240,7 +237,7 @@ class DynamicFontCacheManager(
     class ChangeOnAtlas(val descriptor: GlyphDescriptor, val style: Int, val removed: Boolean)
 }
 
-private const val MAX_CACHE_TIME_MS = 30 * 1000
+private const val MAX_CACHE_TIME_MS = 30 * 1000L
 
 private const val UNCACHED = 0
 private const val CACHED = 1

@@ -164,7 +164,7 @@ abstract class GlyphPage {
         @JvmStatic
         protected fun renderGlyphs(
             atlas: BufferedImage,
-            glyphsToRender: List<CharacterGenerationInfo>
+            glyphsToRender: Iterable<CharacterGenerationInfo>,
         ) {
             // Allocate the atlas texture
             val atlasGraphics = atlas.createGraphics()
