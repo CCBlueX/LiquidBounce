@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAu
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.stuckChronometer
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.targetSelector
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraChoice
-import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
@@ -66,10 +66,10 @@ object ImmediateMode : TpAuraChoice("Immediate") {
 
         renderEnvironmentForWorld(matrixStack) {
             desyncPlayerPosition?.let { playerPosition ->
-                drawLineStrip(
-                    Color4b.WHITE.toARGB(),
+                drawLine(
                     relativeToCamera(player.pos.add(0.0, 1.0, 0.0)).toVec3(),
-                    relativeToCamera(playerPosition.add(0.0, 1.0, 0.0)).toVec3()
+                    relativeToCamera(playerPosition.add(0.0, 1.0, 0.0)).toVec3(),
+                    Color4b.WHITE.toARGB(),
                 )
             }
         }

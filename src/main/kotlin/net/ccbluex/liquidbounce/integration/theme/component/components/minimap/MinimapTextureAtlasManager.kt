@@ -180,9 +180,10 @@ class MinimapTextureAtlasManager {
         }
     }
 
+    @JvmRecord
     data class AtlasPosition(private val x: Int, private val y: Int) {
-        val baseXOnAtlas: Int = x shl 4
-        val baseYOnAtlas: Int = y shl 4
+        val baseXOnAtlas: Int get() = x shl 4
+        val baseYOnAtlas: Int get() = y shl 4
 
         val uv: BoundingBox2f
             get() {

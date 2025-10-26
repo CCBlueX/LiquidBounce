@@ -405,13 +405,22 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
 }
 
 /**
+ * Draws a line with endpoint [p1] and [p2] and color [argb].
+ */
+fun RenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
+    drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
+        vertex(matrix, p1.x, p1.y, p1.z).color(argb)
+        vertex(matrix, p2.x, p2.y, p2.z).color(argb)
+    }
+
+/**
  * Function to draw lines using the specified [lines] vectors.
  *
  * @param lines The vectors representing the lines.
  */
 fun RenderEnvironment.drawLines(argb: Int, vararg lines: Vec3) {
     drawLines(
-        lines.unmodifiable(),
+        lines,
         pipeline = ClientRenderPipelines.Lines,
         argb = argb,
     )
@@ -424,7 +433,7 @@ fun RenderEnvironment.drawLines(argb: Int, vararg lines: Vec3) {
  */
 fun RenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3) {
     drawLines(
-        positions.unmodifiable(),
+        positions,
         pipeline = ClientRenderPipelines.LineStrip,
         argb = argb,
     )
@@ -437,7 +446,7 @@ fun RenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3) {
  * @param pipeline The render pipeline for the lines.
  */
 private fun RenderEnvironment.drawLines(
-    lines: List<Vec3>,
+    lines: Array<out Vec3>,
     pipeline: RenderPipeline,
     argb: Int,
 ) {

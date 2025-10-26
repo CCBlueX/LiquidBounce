@@ -364,10 +364,10 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
 
         override fun render(env: WorldRenderEnvironment) {
-            env.drawLineStrip(
-                color.toARGB(),
+            env.drawLine(
                 env.relativeToCamera(from).toVec3(),
-                env.relativeToCamera(to).toVec3()
+                env.relativeToCamera(to).toVec3(),
+                color.toARGB(),
             )
         }
     }
@@ -384,10 +384,10 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
-            env.drawLineStrip(
-                color.toARGB(),
+            env.drawLine(
                 env.relativeToCamera(from).toVec3(),
                 env.relativeToCamera(to).toVec3(),
+                color.toARGB(),
             )
         }
     }
