@@ -42,7 +42,7 @@ import java.io.Closeable
  */
 open class FramebufferShader(vararg val shaders: Shader) : MinecraftShortcuts, Closeable {
 
-    protected val framebuffers: Array<LiquidBounceFramebuffer>
+    val framebuffers: Array<LiquidBounceFramebuffer>
     protected var buffer: GlGpuBuffer
 
     init {

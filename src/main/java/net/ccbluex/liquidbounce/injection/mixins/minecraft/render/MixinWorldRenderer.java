@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.blaze3d.opengl.GlConst;
 import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.common.GlobalFramebuffer;
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
@@ -30,13 +30,13 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspOutlineMode;
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
 import net.ccbluex.liquidbounce.render.RenderShortcutsKt;
 import net.ccbluex.liquidbounce.render.buffer.MinecraftFramebuffer;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.ccbluex.liquidbounce.render.shader.shaders.OutlineShader;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
-import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.MinecraftClient;
@@ -51,12 +51,16 @@ import net.minecraft.entity.TntEntity;
 import net.minecraft.util.profiler.Profiler;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL13;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -83,20 +87,6 @@ public abstract class MixinWorldRenderer {
 
     @Shadow
     public abstract @Nullable Framebuffer getEntityOutlinesFramebuffer();
-
-    @Inject(method = "loadEntityOutlinePostProcessor", at = @At("RETURN"))
-    private void onLoadEntityOutlineShader(CallbackInfo info) {
-        try {
-            // load the shader class to compile the shaders
-            //noinspection unused
-            var instance = OutlineShader.INSTANCE;
-        } catch (Exception e) {
-            ErrorHandler.fatal(e, null, true, "Failed to load outline shader");
-
-            // This will make Minecraft unable to continue loading
-            throw e;
-        }
-    }
 
     @Inject(method = "render", at = @At("HEAD"))
     private void onRender(ObjectAllocator allocator, RenderTickCounter tickCounter, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, Matrix4f positionMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
@@ -167,13 +157,24 @@ public abstract class MixinWorldRenderer {
     @Inject(method = "drawEntityOutlinesFramebuffer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/Framebuffer;drawBlit(Lcom/mojang/blaze3d/textures/GpuTexture;)V"))
     private void onDrawEntityOutlinesFramebuffer(CallbackInfo info) {
         if (OutlineShader.INSTANCE.getDirty()) {
-            GlStateManager._enableBlend();
-            GlStateManager._blendFuncSeparate(
-                    GlConst.GL_SRC_ALPHA, GlConst.GL_ONE_MINUS_SRC_ALPHA, GlConst.GL_ZERO, GlConst.GL_ONE
-            );
-            OutlineShader.INSTANCE.apply(false);
-            GlStateManager._disableBlend();
-            RenderShortcutsKt.defaultBlendFunc();
+            var framebuffer = this.client.getFramebuffer();
+            var active = GlStateManager._getActiveTexture();
+            try (var pass = RenderSystem.getDevice().createCommandEncoder()
+                    .createRenderPass(
+                            framebuffer.getColorAttachment(),
+                            OptionalInt.empty(),
+                            framebuffer.useDepthAttachment ? framebuffer.getDepthAttachment() : null,
+                            OptionalDouble.empty()
+                    )) {
+                pass.setPipeline(ClientRenderPipelines.Outline);
+                // TODO: replace with MC render system
+                // pass.bindSampler("texture0", OutlineShader.INSTANCE.getFramebuffers()[0].getColorAttachment());
+                GlStateManager._activeTexture(GL13.GL_TEXTURE0);
+                GlStateManager._bindTexture(OutlineShader.INSTANCE.getFramebuffers()[0].getColorAttachment());
+                pass.setVertexBuffer(0, RenderShortcutsKt.getTrianglePosTexVertexBuffer());
+                pass.draw(0, 3);
+            }
+            GlStateManager._activeTexture(active);
         }
     }
 

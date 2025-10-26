@@ -38,7 +38,7 @@ object OutlineShader : FramebufferShader(Shader(
 )) {
 
     var dirty = false
-    var vertexConsumerProvider = OutlineVertexConsumerProvider(mc.bufferBuilders.entityVertexConsumers)
+    val vertexConsumerProvider = OutlineVertexConsumerProvider(mc.bufferBuilders.entityVertexConsumers)
     val handle: Handle<LiquidBounceFramebuffer> = ImmutableHandle(framebuffers[0])
 
     fun prepare() {
