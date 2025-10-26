@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.ScreenshotRecorder
+import net.minecraft.client.util.math.MatrixStack
 import java.awt.image.BufferedImage
 import java.util.concurrent.CompletableFuture
 
@@ -34,6 +35,11 @@ import java.util.concurrent.CompletableFuture
  */
 @JvmField
 val SAMPLER_NAMES = Array(12) { "Sampler$it" }
+
+fun MatrixStack.reset() {
+    while (!isEmpty) pop()
+    loadIdentity()
+}
 
 /**
  * @see ScreenshotRecorder.takeScreenshot

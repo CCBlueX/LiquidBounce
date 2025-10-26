@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingKt;
+import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -140,12 +141,10 @@ public abstract class MixinGameRenderer {
      */
     @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0))
     public void hookWorldRender(RenderTickCounter tickCounter, CallbackInfo ci, @Local(ordinal = 2) Matrix4f matrix4f2) {
-        // TODO: Improve this
-        var newMatStack = new MatrixStack();
-
+        var newMatStack = Pools.MatStack.borrow();
         newMatStack.multiplyPositionMatrix(matrix4f2);
-
         EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.camera, tickCounter.getTickProgress(false)));
+        Pools.MatStack.recycle(newMatStack);
     }
 
     @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/LightmapTextureManager;enable()V", shift = At.Shift.AFTER))

@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.ccbluex.liquidbounce.render.shader.shaders.OutlineShader;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler;
+import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
@@ -99,11 +100,10 @@ public abstract class MixinWorldRenderer {
 
     @Inject(method = "render", at = @At("HEAD"))
     private void onRender(ObjectAllocator allocator, RenderTickCounter tickCounter, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, Matrix4f positionMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
+        var matrixStack = Pools.MatStack.borrow();
         try {
             OutlineShader outlineShader = OutlineShader.INSTANCE;
             outlineShader.prepare();
-
-            var matrixStack = new MatrixStack();
             // Apply camera transformation to fix outline positioning
             matrixStack.peek().getPositionMatrix().mul(positionMatrix);
 
@@ -118,6 +118,7 @@ public abstract class MixinWorldRenderer {
         } catch (Throwable e) {
             ClientUtilsKt.getLogger().error("Failed to begin outline shader", e);
         }
+        Pools.MatStack.recycle(matrixStack);
     }
 
     @Inject(method = "renderEntity", at = @At("HEAD"))
@@ -258,12 +259,14 @@ public abstract class MixinWorldRenderer {
             return;
         }
 
+        var matrixStack = Pools.MatStack.borrow();
         var outlineFb = new MinecraftFramebuffer(getEntityOutlinesFramebuffer());
         GlobalFramebuffer.push(outlineFb);
-        var event = new DrawOutlinesEvent(new MatrixStack(), camera, renderTickCounter.getTickProgress(false), DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW);
+        var event = new DrawOutlinesEvent(matrixStack, camera, renderTickCounter.getTickProgress(false), DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW);
         EventManager.INSTANCE.callEvent(event);
         OutlineFlag.drawOutline |= event.getDirtyFlag();
         GlobalFramebuffer.pop();
+        Pools.MatStack.recycle(matrixStack);
     }
 
     @ModifyVariable(method = "render", at = @At(
