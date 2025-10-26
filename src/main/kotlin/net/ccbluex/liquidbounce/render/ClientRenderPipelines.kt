@@ -155,9 +155,10 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     val Outline = newPipeline("outline") {
         withVertexShader(ClientShaders.SOBEL_VSH_ID)
         withFragmentShader(ClientShaders.OUTLINE_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.QUADS)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
-//        forWorldRender()
+        withBlend(BlendFunction.ENTITY_OUTLINE_BLIT)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
     }
 
     @JvmField
