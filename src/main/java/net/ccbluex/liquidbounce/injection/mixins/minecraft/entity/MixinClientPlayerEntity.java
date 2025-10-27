@@ -363,11 +363,10 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return !ModuleSprint.INSTANCE.getShouldIgnoreBlindness() && original;
     }
 
-    // FIXME: in shouldStopSprinting?
-//    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;horizontalCollision:Z"))
-//    private boolean hookSprintIgnoreCollision(boolean original) {
-//        return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
-//    }
+    @ModifyExpressionValue(method = "shouldStopSprinting", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;horizontalCollision:Z"))
+    private boolean hookSprintIgnoreCollision(boolean original) {
+        return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
+    }
 
     @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/input/Input;hasForwardMovement()Z"))
     private boolean hookIsWalking(boolean original) {
