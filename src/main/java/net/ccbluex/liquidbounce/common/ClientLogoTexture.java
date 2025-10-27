@@ -30,7 +30,6 @@ import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -39,7 +38,7 @@ import java.util.Objects;
  * Should be drawn using [CustomRenderPhase::getTextureBilinear] to make it look smoother.
  */
 @Environment(EnvType.CLIENT)
-public class ClientLogoTexture extends ReloadableTexture {
+public final class ClientLogoTexture extends ReloadableTexture {
 
     public static final Identifier CLIENT_LOGO = LiquidBounce.identifier("logo");
     public static final int WIDTH = 1920;

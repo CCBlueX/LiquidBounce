@@ -53,7 +53,7 @@ abstract class AbstractFramebuffer: Closeable {
                 clearColor.a / 255.0F
             )
 
-            if (useDepth) {
+            if (!useDepth) {
                 glClearDepth(1.0)
             }
 
