@@ -191,8 +191,6 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
         batchBuffer.clear()
     }
 
-    open fun relativeToCamera(pos: Vec3d): Vec3d = pos
-
     companion object {
         @JvmStatic
         private val batchBuffer = Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()
@@ -208,7 +206,7 @@ class WorldRenderEnvironment(
     matrixStack: MatrixStack,
     val camera: Camera,
 ) : RenderEnvironment(matrixStack) {
-    override fun relativeToCamera(pos: Vec3d): Vec3d {
+    fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos.subtract(camera.pos)
     }
 
@@ -230,7 +228,6 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
     }
 
     val camera = mc.entityRenderDispatcher.camera ?: return
-
 
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
 
@@ -366,7 +363,9 @@ internal fun newRenderPass(framebuffer: Framebuffer = mc.framebuffer): RenderPas
         )
 }
 
-
+/**
+ * Pass [color] as a vec4 to the shader.
+ */
 @Suppress("NOTHING_TO_INLINE")
 inline fun RenderPass.setUniform(name: String, color: Color4b) {
     setUniform(name, color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
