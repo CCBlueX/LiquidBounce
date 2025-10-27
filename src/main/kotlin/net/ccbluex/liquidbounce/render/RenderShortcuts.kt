@@ -508,15 +508,6 @@ fun RenderEnvironment.drawTextureQuad(
     }
 }
 
-fun RenderEnvironment.drawQuad(pos1: Vec3, pos2: Vec3, argb: Int) {
-    drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
-        vertex(matrix, pos1.x, pos2.y, pos1.z).color(argb)
-        vertex(matrix, pos2.x, pos2.y, pos2.z).color(argb)
-        vertex(matrix, pos2.x, pos1.y, pos2.z).color(argb)
-        vertex(matrix, pos1.x, pos1.y, pos1.z).color(argb)
-    }
-}
-
 fun RenderEnvironment.drawQuad(
     pos1: Vector2fc,
     pos2: Vector2fc,
@@ -537,10 +528,13 @@ fun RenderEnvironment.drawQuad(
     }
     if (outlineColor != null && !outlineColor.isTransparent) {
         val argb = outlineColor.toARGB()
-        drawCustomMesh(ClientRenderPipelines.LineStrip) { matrix ->
+        drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
             vertex(matrix, x1, y1, z).color(argb)
             vertex(matrix, x1, y2, z).color(argb)
+            vertex(matrix, x1, y2, z).color(argb)
             vertex(matrix, x2, y2, z).color(argb)
+            vertex(matrix, x2, y2, z).color(argb)
+            vertex(matrix, x2, y1, z).color(argb)
             vertex(matrix, x2, y1, z).color(argb)
             vertex(matrix, x1, y1, z).color(argb)
         }

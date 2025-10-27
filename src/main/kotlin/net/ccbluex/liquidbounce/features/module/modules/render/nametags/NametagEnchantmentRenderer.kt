@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Rect
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
@@ -291,9 +290,9 @@ object NametagEnchantmentRenderer {
         rect: Rect,
         color: Color4b
     ) {
-        val leftTop = Vec3(rect.x1, rect.y1, 0F)
-        val rightBottom = Vec3(rect.x2, rect.y2, 0F)
-        drawQuad(leftTop, rightBottom, color.toARGB())
+        val leftTop = Vector2f(rect.x1, rect.y1)
+        val rightBottom = Vector2f(rect.x2, rect.y2)
+        drawQuad(leftTop, rightBottom, 0F, fillColor = color)
     }
 
     context(environment: RenderEnvironment)
