@@ -113,7 +113,6 @@
     "minecraft.render.MixinGameRenderer",
     "minecraft.render.MixinInactivityFpsLimiter",
     "minecraft.render.MixinInGameOverlayRenderer",
-    "minecraft.render.MixinItemRender",
     "minecraft.render.MixinLightmapTextureManager",
     "minecraft.render.MixinLivingEntityRenderer",
     "minecraft.render.MixinMapRenderer",

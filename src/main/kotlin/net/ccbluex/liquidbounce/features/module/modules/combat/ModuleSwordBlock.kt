@@ -67,8 +67,8 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
             val itemInHand = player.getStackInHand(hand) // or activeItem
 
             if (hand == Hand.MAIN_HAND && itemInHand.isSword) {
-                val offHandItem = player.getStackInHand(Hand.OFF_HAND)
-                if (offHandItem?.item !is ShieldItem) {
+                val offHandItem = player.offHandStack
+                if (offHandItem.item !is ShieldItem) {
                     // Until "now" we should get a shield from the server
                     waitTicks(1)
                     interaction.sendSequencedPacket(world) { sequence ->
