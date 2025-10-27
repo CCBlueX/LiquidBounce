@@ -342,21 +342,30 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return ModuleSprint.INSTANCE.getShouldIgnoreHunger() ? -1F : constant;
     }
 
-    // FIXME: sprintKey not found?
-//    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
-//    private boolean hookSprintStart(boolean original) {
-//        var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.MOVEMENT_TICK);
-//        EventManager.INSTANCE.callEvent(event);
-//        return event.getSprint();
-//    }
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/PlayerInput;sprint()Z"))
+    private boolean hookSprintStart(boolean original) {
+        var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.MOVEMENT_TICK);
+        EventManager.INSTANCE.callEvent(event);
+        return event.getSprint();
+    }
 
-    // FIXME: split into shouldStopSwimSprinting & shouldStopSprinting
-//    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canSprint()Z"))
-//    private boolean hookSprintStop(boolean original) {
-//        var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.MOVEMENT_TICK);
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;shouldStopSwimSprinting()Z"))
+    private boolean hookSprintStopSwimming(boolean original) {
+//        var event = new SprintEvent(new DirectionalInput(input), !original, SprintEvent.Source.MOVEMENT_TICK);
 //        EventManager.INSTANCE.callEvent(event);
-//        return event.getSprint();
-//    }
+//        return !event.getSprint();
+        // FIXME
+        return original;
+    }
+
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;shouldStopSprinting()Z"))
+    private boolean hookSprintStop(boolean original) {
+//        var event = new SprintEvent(new DirectionalInput(input), !original, SprintEvent.Source.MOVEMENT_TICK);
+//        EventManager.INSTANCE.callEvent(event);
+//        return !event.getSprint();
+        // FIXME
+        return original;
+    }
 
     @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isBlind()Z"))
     private boolean hookSprintIgnoreBlindness(boolean original) {
