@@ -94,7 +94,7 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
 
     @Override
     public void liquid_bounce$restoreLightMap() {
-        if (RenderSystem.getShaderTexture(2) != null) {
+        if (RenderSystem.getShaderTexture(2) == ModuleCustomAmbience.CustomLightColor.INSTANCE.getTexture()) {
             RenderSystem.setShaderTexture(2, this.glTexture);
         }
         liquid_bounce$customLightMap = false;
