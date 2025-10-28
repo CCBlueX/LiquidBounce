@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("NOTHING_TO_INLINE")
+@file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.buffers.BufferType
@@ -56,6 +56,7 @@ inline fun GpuTexture.clearDepth(depth: Double) =
 inline fun Framebuffer.clearColorAndDepth(color: Int, depth: Double) =
     gpuDevice.createCommandEncoder().clearColorAndDepthTextures(colorAttachment, color, depthAttachment, depth)
 
+@Suppress("LongParameterList")
 inline fun GpuTexture.copyFrom(
     source: GpuTexture,
     mipLevel: Int = 0,

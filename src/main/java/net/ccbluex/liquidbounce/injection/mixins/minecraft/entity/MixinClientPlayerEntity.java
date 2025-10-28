@@ -342,29 +342,18 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return ModuleSprint.INSTANCE.getShouldIgnoreHunger() ? -1F : constant;
     }
 
-    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/PlayerInput;sprint()Z"))
-    private boolean hookSprintStart(boolean original) {
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canStartSprinting()Z"))
+    private boolean hookSprint0(boolean original) {
         var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.MOVEMENT_TICK);
         EventManager.INSTANCE.callEvent(event);
         return event.getSprint();
     }
 
-    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;shouldStopSwimSprinting()Z"))
-    private boolean hookSprintStopSwimming(boolean original) {
-//        var event = new SprintEvent(new DirectionalInput(input), !original, SprintEvent.Source.MOVEMENT_TICK);
-//        EventManager.INSTANCE.callEvent(event);
-//        return !event.getSprint();
-        // FIXME
-        return original;
-    }
-
-    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;shouldStopSprinting()Z"))
-    private boolean hookSprintStop(boolean original) {
-//        var event = new SprintEvent(new DirectionalInput(input), !original, SprintEvent.Source.MOVEMENT_TICK);
-//        EventManager.INSTANCE.callEvent(event);
-//        return !event.getSprint();
-        // FIXME
-        return original;
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/PlayerInput;sprint()Z"))
+    private boolean hookSprint1(boolean original) {
+        var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.MOVEMENT_TICK);
+        EventManager.INSTANCE.callEvent(event);
+        return event.getSprint();
     }
 
     @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isBlind()Z"))
