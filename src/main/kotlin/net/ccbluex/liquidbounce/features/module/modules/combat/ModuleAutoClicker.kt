@@ -254,15 +254,16 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             }
 
             val mainHandStack = player.mainHandStack
+            val offHandStack = player.offHandStack
             if (mainHandStack.item in SPECIAL_ITEMS_FOR_IGNORE && mainHandStack.customName != null) {
                 return@run
             }
 
-            if (mainHandStack.item in holdingItemsForIgnore) {
+            if (mainHandStack.item in holdingItemsForIgnore || offHandStack.item in holdingItemsForIgnore) {
                 return@run
             }
 
-            if (onlyBlock && mainHandStack.item !is BlockItem && player.offHandStack.item !is BlockItem) {
+            if (onlyBlock && mainHandStack.item !is BlockItem && offHandStack.item !is BlockItem) {
                 return@run
             }
 
