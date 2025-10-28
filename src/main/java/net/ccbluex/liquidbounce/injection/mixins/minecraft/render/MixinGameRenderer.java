@@ -22,10 +22,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
-import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
-import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
+import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoEntityInteract;
@@ -203,6 +200,7 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "onResized", at = @At("HEAD"))
     private void hookBlurEffectResize(int width, int height, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new ResolutionChangedEvent(width, height));
         BlurEffectRenderer.INSTANCE.setupDimensions(width, height);
     }
 

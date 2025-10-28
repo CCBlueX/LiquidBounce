@@ -66,3 +66,6 @@ class DrawOutlinesEvent(
 
 @Nameable("overlayRender")
 class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
+
+@Nameable("resolutionChanged")
+class ResolutionChangedEvent(val newWidth: Int, val newHeight: Int) : Event()

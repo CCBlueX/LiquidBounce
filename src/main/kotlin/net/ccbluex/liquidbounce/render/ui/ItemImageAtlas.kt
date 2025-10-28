@@ -28,13 +28,12 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.math.Rect2i
@@ -113,7 +112,7 @@ private class ItemTextureRenderer(
 
     fun render(ctx: DrawContext): CompletableFuture<Atlas> {
         mc.framebuffer.resize(textureSize, textureSize)
-        clear(mc.framebuffer)
+        mc.framebuffer.clearColorAndDepth(0, 1.0)
 
         val projectionMatrix = RenderSystem.getProjectionMatrix()
         val matrix = Matrix4f().setOrtho(
@@ -146,7 +145,7 @@ private class ItemTextureRenderer(
         return mc.framebuffer.colorAttachment!!.toNativeImage()
             .thenApply {
                 mc.framebuffer.resize(mc.window.framebufferWidth, mc.window.framebufferHeight)
-                clear(mc.framebuffer)
+                mc.framebuffer.clearColorAndDepth(0, 1.0)
                 it
             }.thenApplyAsync(NativeImage::toBufferedImage, Util.getIoWorkerExecutor())
             .thenApply { image ->
@@ -176,13 +175,6 @@ private class ItemTextureRenderer(
         }
 
         return map
-    }
-
-    private fun clear(framebuffer: Framebuffer) {
-        gpuDevice.createCommandEncoder().clearColorAndDepthTextures(
-            framebuffer.colorAttachment, Color4b.TRANSPARENT.toARGB(),
-            framebuffer.depthAttachment, 1.0,
-        )
     }
 
 }

@@ -183,11 +183,11 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     val Blur = newPipeline("blur") {
         withVertexShader(ClientShaders.SOBEL_VSH_ID)
         withFragmentShader(ClientShaders.BLUR_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.QUADS)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withSampler("overlay")
         withUniform("radius", UniformType.FLOAT)
-//        forWorldRender()
+        withoutBlend()
     }
 
     @JvmField

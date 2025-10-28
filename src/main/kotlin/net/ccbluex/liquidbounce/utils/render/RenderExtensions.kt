@@ -25,6 +25,7 @@ import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.ScreenshotRecorder
@@ -45,6 +46,28 @@ fun MatrixStack.reset() {
     while (!isEmpty) pop()
     loadIdentity()
 }
+
+inline fun GpuTexture.clearColor(color: Int) =
+    gpuDevice.createCommandEncoder().clearColorTexture(this, color)
+
+inline fun GpuTexture.clearDepth(depth: Double) =
+    gpuDevice.createCommandEncoder().clearDepthTexture(this, depth)
+
+inline fun Framebuffer.clearColorAndDepth(color: Int, depth: Double) =
+    gpuDevice.createCommandEncoder().clearColorAndDepthTextures(colorAttachment, color, depthAttachment, depth)
+
+inline fun GpuTexture.copyFrom(
+    source: GpuTexture,
+    mipLevel: Int = 0,
+    intoX: Int = 0,
+    intoY: Int = 0,
+    sourceX: Int = 0,
+    sourceY: Int = 0,
+    width: Int = source.getWidth(0),
+    height: Int = source.getHeight(0),
+) = gpuDevice.createCommandEncoder().copyTextureToTexture(
+    this, source, mipLevel, intoX, intoY, sourceX, sourceY, width, height
+)
 
 /**
  * @see ScreenshotRecorder.takeScreenshot
