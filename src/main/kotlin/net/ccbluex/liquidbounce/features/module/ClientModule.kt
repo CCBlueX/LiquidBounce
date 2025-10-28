@@ -68,13 +68,15 @@ open class ClientModule(
     override val running: Boolean
         get() = super<EventListener>.running && inGame && (enabled || notActivatable)
 
-    val bind by bind("Bind", InputBind(InputUtil.Type.KEYSYM, bind, bindAction))
+    internal val bindValue = bind("Bind", InputBind(InputUtil.Type.KEYSYM, bind, bindAction))
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
         .independentDescription().apply {
             if (notActivatable) {
                 notAnOption()
             }
         }
+    val bind get() = bindValue.get()
+
     var hidden by boolean("Hidden", hide)
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeHidden }
         .independentDescription()

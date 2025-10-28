@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.features.command.dsl.cast
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.input.availableInputKeys
+import net.ccbluex.liquidbounce.utils.input.bind
+import net.ccbluex.liquidbounce.utils.input.unbind
 
 /**
  * Bind Command
@@ -51,7 +53,7 @@ object CommandBind : Command.Factory {
             val keyName = key.cast()
 
             if (keyName.equals("none", true)) {
-                module.bind.unbind()
+                module.bindValue.unbind()
                 ModuleClickGui.reload()
                 chat(
                     regular(command.result("moduleUnbound", variable(module.name))),
@@ -61,7 +63,7 @@ object CommandBind : Command.Factory {
             }
 
             runCatching {
-                module.bind.bind(keyName)
+                module.bindValue.bind(keyName)
                 ModuleClickGui.reload()
             }.onSuccess {
                 chat(
