@@ -20,13 +20,12 @@
 package net.ccbluex.liquidbounce.config.types
 
 import net.ccbluex.liquidbounce.utils.input.InputBind
+import net.ccbluex.liquidbounce.utils.input.bind
 
 class BindValue(
     name: String,
     aliases: List<String> = emptyList(),
     defaultValue: InputBind,
 ) : Value<InputBind>(name, aliases, defaultValue, ValueType.BIND) {
-    override fun setByString(string: String) {
-        get().bind(string)
-    }
+    override fun setByString(string: String) = bind(string)
 }

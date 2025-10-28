@@ -30,7 +30,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.input.availableInputKeys
+import net.ccbluex.liquidbounce.utils.input.bind
 import net.ccbluex.liquidbounce.utils.input.inputByName
+import net.ccbluex.liquidbounce.utils.input.unbind
 import net.minecraft.client.util.InputUtil
 import net.minecraft.util.Formatting
 
@@ -56,7 +58,7 @@ object CommandBinds : Command.Factory {
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
         .handler {
-            ModuleManager.forEach { it.bind.unbind() }
+            ModuleManager.forEach { it.bindValue.unbind() }
             chat(command.result("bindsCleared"), metadata = MessageMetadata(id = "Binds#global"))
         }
         .build()
@@ -99,7 +101,7 @@ object CommandBinds : Command.Factory {
                     throw CommandException(command.result("moduleNotBound"))
                 }
 
-                module.bind.unbind()
+                module.bindValue.unbind()
 
                 chat(
                     regular(command.result("bindRemoved", variable(module.name))),
@@ -134,7 +136,7 @@ object CommandBinds : Command.Factory {
                 throw CommandException(command.result("unknownKey"))
             }
 
-            module.bind.bind(bindKey)
+            module.bindValue.bind(bindKey)
             ModuleClickGui.reload()
             chat(
                 regular(
