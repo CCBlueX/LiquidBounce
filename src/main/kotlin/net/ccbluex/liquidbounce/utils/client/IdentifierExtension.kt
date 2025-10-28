@@ -18,37 +18,24 @@
  *
  */
 
-@file:Suppress("NOTHING_TO_INLINE")
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.ccbluex.liquidbounce.utils.render.registerTexture
+import net.minecraft.client.texture.NativeImage.read
 import net.minecraft.util.Identifier
 import java.util.*
 
-/**
- * @param path prefix /resources/liquidbounce/$path
- */
-internal fun Identifier.registerDynamicImageFromResources(path: String) {
-    val resourceStream = LiquidBounce::class.java.getResourceAsStream("/resources/liquidbounce/$path")!!
-
-    NativeImage.read(resourceStream).registerTexture(this@registerDynamicImageFromResources)
-}
-
 internal fun String.registerAsDynamicImageFromClientResources(): Identifier =
     LiquidBounce.identifier("dynamic-texture-" + UUID.randomUUID()).apply {
-        registerDynamicImageFromResources(this@registerAsDynamicImageFromClientResources)
+        val resourceStream = LiquidBounce.resource(this@registerAsDynamicImageFromClientResources)
+        read(resourceStream).registerTexture(this)
     }
-
-fun NativeImage.registerTexture(identifier: Identifier) {
-    mc.textureManager.registerTexture(identifier, NativeImageBackedTexture(identifier::toName, this))
-}
 
 /**
  * Converts an [Identifier] to a human-readable name without localization.
  */
-inline fun Identifier.toName() = toString()
+fun Identifier.toName() = toString()
     .substringAfterLast(':')
     .replace('.', ' ')
     .replace('_', ' ')

@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.texture.NativeImageBackedTexture
 import okhttp3.Headers
 import java.io.Closeable
@@ -159,7 +158,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             return false
         }
 
-        val vertexShader = resourceToString("/resources/liquidbounce/shaders/position_tex.vert")
+        val vertexShader = LiquidBounce.resourceToString("shaders/position_tex.vert")
         val fragmentShader = runCatching {
             get<String>("/backgrounds/${background.name.lowercase(Locale.US)}.frag")
         }.getOrNull() ?: return false

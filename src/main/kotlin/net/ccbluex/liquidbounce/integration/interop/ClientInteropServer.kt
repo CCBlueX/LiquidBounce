@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInt
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.netty.http.HttpServer
 import net.ccbluex.netty.http.middleware.CorsMiddleware
 import net.ccbluex.netty.http.model.RequestObject
@@ -57,7 +56,7 @@ object ClientInteropServer {
                     get("/", ::getRootResponse)
                     registerInteropFunctions(this)
 
-                    resource("/resources/liquidbounce/themes/liquidbounce.zip").use { stream ->
+                    LiquidBounce.resource("themes/liquidbounce.zip").use { stream ->
                         zip("/resource/liquidbounce", stream)
                     }
                     file("/local", ThemeManager.themesFolder)

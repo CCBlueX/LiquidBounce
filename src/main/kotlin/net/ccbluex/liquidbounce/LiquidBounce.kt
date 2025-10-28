@@ -80,6 +80,7 @@ import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
 import net.minecraft.util.Identifier
+import java.io.InputStream
 import java.util.Locale
 import kotlin.time.measureTime
 
@@ -150,6 +151,27 @@ object LiquidBounce : EventListener {
      */
     @JvmStatic
     fun identifier(path: String): Identifier = Identifier.of(CLIENT_NAME.lowercase(Locale.ROOT), path)
+
+    /**
+     * Gets client resource.
+     *
+     * @param path prefix `/resources/liquidbounce/`
+     * @throws IllegalArgumentException if the resource is not found
+     */
+    @JvmStatic
+    fun resource(path: String): InputStream =
+        LiquidBounce::class.java.getResourceAsStream("/resources/liquidbounce/$path")
+            ?: throw IllegalArgumentException("Resource $path not found")
+
+    /**
+     * Gets client resource as string.
+     *
+     * @param path prefix `/resources/liquidbounce/`
+     * @throws IllegalArgumentException if the resource is not found
+     */
+    @JvmStatic
+    fun resourceToString(path: String): String =
+        resource(path).use { it.bufferedReader().readText() }
 
     /**
      * Initializes the client, called when

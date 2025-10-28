@@ -23,10 +23,12 @@ import com.mojang.blaze3d.buffers.BufferType
 import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.ScreenshotRecorder
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.util.Identifier
 import java.awt.image.BufferedImage
 import java.util.concurrent.CompletableFuture
 
@@ -112,4 +114,8 @@ fun BufferedImage.toNativeImage(): NativeImage {
     }
 
     return nativeImage
+}
+
+fun NativeImage.registerTexture(identifier: Identifier) {
+    mc.textureManager.registerTexture(identifier, NativeImageBackedTexture(identifier::toString, this))
 }

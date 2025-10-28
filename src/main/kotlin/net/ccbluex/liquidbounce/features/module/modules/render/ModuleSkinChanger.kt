@@ -42,7 +42,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.registerTexture
+import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.SkinTextures

@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.render
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.util.Identifier
 
 object ClientShaders {
@@ -31,62 +30,62 @@ object ClientShaders {
     @JvmField
     val BGRA_FSH_ID = newShader(
         "fsh/bgra_pos_tex_color",
-        path = "/resources/liquidbounce/shaders/bgra_position_tex_color.frag",
+        path = "shaders/bgra_position_tex_color.frag",
     )
 
     @JvmField
     val PLAIN_POSITION_TEX_VSH_ID = newShader(
         "vsh/plain_pos_tex",
-        path = "/resources/liquidbounce/shaders/position_tex.vert",
+        path = "shaders/position_tex.vert",
     )
 
     @JvmField
     val BLIT_FSH_ID = newShader(
         "fsh/blit",
-        path = "/resources/liquidbounce/shaders/blit.frag",
+        path = "shaders/blit.frag",
     )
 
     @JvmField
     val BLEND_FSH_ID = newShader(
         "fsh/blend",
-        path = "/resources/liquidbounce/shaders/blend.frag",
+        path = "shaders/blend.frag",
     )
 
     @JvmField
     val SOBEL_VSH_ID = newShader(
         "vsh/sobel",
-        path = "/resources/liquidbounce/shaders/sobel.vert",
+        path = "shaders/sobel.vert",
     )
 
     @JvmField
     val BLUR_FSH_ID = newShader(
         "fsh/blur",
-        path = "/resources/liquidbounce/shaders/blur/ui_blur.frag",
+        path = "shaders/blur/ui_blur.frag",
     )
 
     @JvmField
     val PLANE_PROJECTION_VSH_ID = newShader(
         "vsh/plane_projection",
-        path = "/resources/liquidbounce/shaders/plane_projection.vert",
+        path = "shaders/plane_projection.vert",
     )
 
     @JvmField
     val GLOW_FSH_ID = newShader(
         "fsh/glow",
-        path = "/resources/liquidbounce/shaders/glow/glow.frag",
+        path = "shaders/glow/glow.frag",
     )
 
     @JvmField
     val OUTLINE_FSH_ID = newShader(
         "fsh/outline",
-        path = "/resources/liquidbounce/shaders/outline/entity_outline.frag",
+        path = "shaders/outline/entity_outline.frag",
     )
 
     private fun newShader(id: String, path: String): Identifier {
         val k = LiquidBounce.identifier(id)
         shaders.put(
             k,
-            resourceToString(path),
+            LiquidBounce.resourceToString(path),
         )?.let { error("Duplicated shader: $k") }
         return k
     }
