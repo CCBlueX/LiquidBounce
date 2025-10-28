@@ -93,9 +93,6 @@ class NormalRotationMode(configurable: ChoiceConfigurable<BlockPlacerRotationMod
 
         return true
     }
-
-    override fun getVerificationRotation(targetedRotation: Rotation): Rotation = RotationManager.serverRotation
-
 }
 
 /**
