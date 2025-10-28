@@ -37,6 +37,7 @@
     "minecraft.client.MixinWindow",
     "minecraft.client.MixinWorld",
     "minecraft.client.MixinWorldBorderRendering",
+    "minecraft.client.gl.MixinFramebuffer",
     "minecraft.client.gl.MixinGlDebug",
     "minecraft.client.gl.MixinPostEffectProcessor",
     "minecraft.client.gl.MixinRenderPassImpl",
