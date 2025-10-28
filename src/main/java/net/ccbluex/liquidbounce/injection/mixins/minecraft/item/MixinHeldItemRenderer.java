@@ -172,6 +172,22 @@ public abstract class MixinHeldItemRenderer {
         return equipProgress;
     }
 
+    /**
+     * This transformation was previously a VFP option but got now added to minecraft directly.
+     * View the code that was used to disable the VFP option here:
+     * https://github.com/CCBlueX/LiquidBounce/blob/e5a0dbf5458b063d3028e69e04762b8b25b998b5/src/main/java/net/ccbluex/liquidbounce/utils/client/vfp/VfpCompatibility.java#L44
+     */
+//    @ModifyExpressionValue(method = "renderFirstPersonItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
+//    private Item preventConflictingCode(Item item) {
+//        // only applies to sword items,
+//        // so that future items won't be affected if minecraft decides to actually make use out of this
+//        if (item.getDefaultStack().isIn(ItemTags.SWORDS)) {
+//            return Items.SHIELD; // makes the instanceof return true and therefore not do the transformation
+//        }
+//
+//        return item;
+//    }
+
     @Inject(method = "renderFirstPersonItem",
             slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getUseAction()Lnet/minecraft/item/consume/UseAction;")),
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;applyEquipOffset(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/Arm;F)V", ordinal = 2, shift = At.Shift.AFTER))
@@ -181,7 +197,8 @@ public abstract class MixinHeldItemRenderer {
                                                 CallbackInfo ci) {
         var shouldAnimate = ModuleSwordBlock.INSTANCE.getRunning() || KillAuraAutoBlock.INSTANCE.getBlockVisual();
 
-        if (shouldAnimate && item.isIn(ItemTags.SWORDS)) {
+        // Check vanilla blocking since 1.21.5 to prevent "double transformed"
+        if (shouldAnimate && item.isIn(ItemTags.SWORDS) && !item.hasChangedComponent(DataComponentTypes.BLOCKS_ATTACKS)) {
             final Arm arm = (hand == Hand.MAIN_HAND) ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getRunning()) {

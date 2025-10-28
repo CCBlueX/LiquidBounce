@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.item.isSword
+import net.minecraft.component.DataComponentTypes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.ShieldItem
@@ -47,7 +48,8 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
         offHandStack: ItemStack = player.offHandStack,
         mainHandStack: ItemStack = player.mainHandStack,
     ) = (running || KillAuraAutoBlock.blockVisual) && offHandStack.item is ShieldItem
-        && (mainHandStack.isSword || player === this.player && running && alwaysHideShield)
+        && (mainHandStack.isSword && !mainHandStack.hasChangedComponent(DataComponentTypes.BLOCKS_ATTACKS)
+        || player === this.player && running && alwaysHideShield)
 
     @Suppress("UNUSED")
     private val packetHandler = sequenceHandler<PacketEvent> { event ->
