@@ -30,9 +30,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.item.consume.UseAction;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.Arm;
@@ -172,22 +170,6 @@ public abstract class MixinHeldItemRenderer {
         }
 
         return equipProgress;
-    }
-
-    /**
-     * This transformation was previously a VFP option but got now added to minecraft directly.
-     * View the code that was used to disable the VFP option here:
-     * https://github.com/CCBlueX/LiquidBounce/blob/e5a0dbf5458b063d3028e69e04762b8b25b998b5/src/main/java/net/ccbluex/liquidbounce/utils/client/vfp/VfpCompatibility.java#L44
-     */
-    @ModifyExpressionValue(method = "renderFirstPersonItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
-    private Item preventConflictingCode(Item item) {
-        // only applies to sword items,
-        // so that future items won't be affected if minecraft decides to actually make use out of this
-        if (item.getDefaultStack().isIn(ItemTags.SWORDS)) {
-            return Items.SHIELD; // makes the instanceof return true and therefore not do the transformation
-        }
-
-        return item;
     }
 
     @Inject(method = "renderFirstPersonItem",
