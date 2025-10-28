@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("NOTHING_TO_INLINE")
 package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.buffers.BufferType
@@ -30,7 +31,9 @@ import net.minecraft.client.util.ScreenshotRecorder
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
 import java.awt.image.BufferedImage
+import java.io.InputStream
 import java.util.concurrent.CompletableFuture
+import java.util.function.Supplier
 
 /**
  * Avoiding String contract
@@ -117,5 +120,10 @@ fun BufferedImage.toNativeImage(): NativeImage {
 }
 
 fun NativeImage.registerTexture(identifier: Identifier) {
-    mc.textureManager.registerTexture(identifier, NativeImageBackedTexture(identifier::toString, this))
+    mc.textureManager.registerTexture(identifier, asTexture(identifier::toString))
 }
+
+inline fun InputStream.toNativeImage(): NativeImage = NativeImage.read(this)
+
+inline fun NativeImage.asTexture(nameSupplier: Supplier<String>? = null) =
+    NativeImageBackedTexture(nameSupplier, this)

@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.VertexFormat
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.utils.client.registerAsDynamicImageFromClientResources
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
@@ -71,6 +70,8 @@ sealed class TargetRenderer<T: RenderEnvironment>(
 
 }
 
+private val ghostModeTexture = LiquidBounce.resource("particles/glow.png").toNativeImage().asTexture { "Ghost" }
+
 class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvironment>(module) {
 
     override val appearance = choices(module, "Mode", 2) {
@@ -78,8 +79,6 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
     }
 
     inner class Ghost : WorldTargetRenderAppearance("Ghost") {
-
-        private val glow = "particles/glow.png".registerAsDynamicImageFromClientResources()
 
         private var lastTime = System.currentTimeMillis()
 
@@ -110,7 +109,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 )
             }
 
-            RenderSystem.setShaderTexture(0, mc.textureManager.getTexture(glow).glTexture)
+            RenderSystem.setShaderTexture(0, ghostModeTexture.glTexture)
 
             with(env) {
                 drawParticle(

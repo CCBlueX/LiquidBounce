@@ -20,17 +20,8 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.render.registerTexture
-import net.minecraft.client.texture.NativeImage.read
 import net.minecraft.util.Identifier
 import java.util.*
-
-internal fun String.registerAsDynamicImageFromClientResources(): Identifier =
-    LiquidBounce.identifier("dynamic-texture-" + UUID.randomUUID()).apply {
-        val resourceStream = LiquidBounce.resource(this@registerAsDynamicImageFromClientResources)
-        read(resourceStream).registerTexture(this)
-    }
 
 /**
  * Converts an [Identifier] to a human-readable name without localization.
