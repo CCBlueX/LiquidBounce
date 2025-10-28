@@ -104,7 +104,7 @@ object ChunkRenderer {
             Vector2i(1, -1),
         )
 
-        private val AIR_COLOR = Color(255, 207, 179).rgb
+        private val AIR_COLOR = Color(179, 207, 255).rgb
 
         private fun getColor(x: Int, z: Int): Int {
             try {
