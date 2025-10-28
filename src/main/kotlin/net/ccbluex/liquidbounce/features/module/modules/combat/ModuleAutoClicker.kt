@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -34,12 +35,15 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.block.Blocks
+import net.minecraft.block.DoorBlock
+import net.minecraft.block.FenceGateBlock
+import net.minecraft.block.TrapdoorBlock
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.Entity
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.registry.Registries
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
 
@@ -63,21 +67,21 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         private val criticalsSelectionMode by enumChoice("Criticals", CriticalsSelectionMode.SMART)
         private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
 
-        enum class ObjectiveType(override val choiceName: String) : NamedChoice {
+        private enum class ObjectiveType(override val choiceName: String) : NamedChoice {
             ENEMY("Enemy"),
             ENTITY("Entity"),
             BLOCK("Block"),
             ANY("Any")
         }
 
-        enum class Weapon(override val choiceName: String) : NamedChoice {
+        private enum class Weapon(override val choiceName: String) : NamedChoice {
             SWORD("Sword"),
             AXE("Axe"),
             BOTH("Both"),
             ANY("Any")
         }
 
-        enum class Use(override val choiceName: String) : NamedChoice {
+        private enum class Use(override val choiceName: String) : NamedChoice {
             WAIT("Wait"),
             STOP("Stop"),
             IGNORE("Ignore")
@@ -113,21 +117,13 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             return when (onItemUse) {
                 Use.WAIT -> {
                     tickUntil { !player.isUsingItem }
-
-                    if (delayPostStopUse > 0) {
-                        waitTicks(delayPostStopUse)
-                    }
-
+                    waitTicks(delayPostStopUse)
                     true
                 }
 
                 Use.STOP -> {
                     interaction.stopUsingItem(player)
-
-                    if (delayPostStopUse > 0) {
-                        waitTicks(delayPostStopUse)
-                    }
-
+                    waitTicks(delayPostStopUse)
                     true
                 }
 
@@ -148,12 +144,27 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 }
             }
         }
+
     }
 
     object UseButton : ToggleableConfigurable(this, "Use", false) {
         val clicker = tree(Clicker(this, mc.options.useKey, null))
-        internal val holdingItemsForIgnore by items("HoldingItemsForIgnore", defaultItems.toMutableSet())
-        internal val blocksForIgnore by blocks("BlocksForIgnore", defaultBlocks.toMutableSet())
+        internal val holdingItemsForIgnore by items(
+            "HoldingItemsForIgnore",
+            default = ReferenceOpenHashSet.of(
+                Items.WATER_BUCKET,
+                Items.LAVA_BUCKET,
+                Items.ENDER_PEARL,
+                Items.ENDER_EYE,
+                Items.PLAYER_HEAD,
+            ),
+        )
+        internal val blocksForIgnore by blocks(
+            "BlocksForIgnore",
+            default = Registries.BLOCK.filterTo(ReferenceOpenHashSet()) {
+                it is DoorBlock || it is FenceGateBlock || it is TrapdoorBlock
+            },
+        )
         internal val delayStart by boolean("DelayStart", false)
         internal val onlyBlock by boolean("OnlyBlock", false)
         internal val requiresNoInput by boolean("RequiresNoInput", false)
@@ -161,27 +172,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         internal var needToWait = true
     }
 
-    private val defaultItems = setOf(
-        Items.WATER_BUCKET,
-        Items.LAVA_BUCKET,
-        Items.ENDER_PEARL,
-        Items.ENDER_EYE,
-        Items.PLAYER_HEAD,
-    )
-
-    private val defaultBlocks = setOf(
-        Blocks.OAK_DOOR,
-        Blocks.SPRUCE_DOOR,
-        Blocks.BIRCH_DOOR,
-        Blocks.JUNGLE_DOOR,
-        Blocks.ACACIA_DOOR,
-        Blocks.DARK_OAK_DOOR,
-        Blocks.MANGROVE_DOOR,
-        Blocks.CRIMSON_DOOR,
-        Blocks.WARPED_DOOR
-    )
-
-    private val specialItems = setOf(
+    private val SPECIAL_ITEMS_FOR_IGNORE = ReferenceOpenHashSet.of(
         Items.RED_BED,
         Items.PLAYER_HEAD,
         Items.COMPASS,
@@ -204,7 +195,8 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
     val use: Boolean
         get() = mc.options.useKey.isPressedOnAny || UseButton.requiresNoInput
 
-    private var lastFinishBreak: Long = 0
+    @Volatile
+    private var lastFinishBreak = 0L
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
@@ -215,19 +207,21 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
     }
 
     @Suppress("unused")
-    val tickHandler = tickHandler {
+    private val tickHandler = tickHandler {
         AttackButton.run {
             if (!enabled || !attack || !isWeaponSelected() || !isOnObjective()) {
                 return@run
             }
+
             // Check if the player is breaking a block, if so, return
             if (interaction.isBreakingBlock) {
                 return@run
             }
-     
-            if ((System.currentTimeMillis() - lastFinishBreak < 300) && delayOnBroken) {
+
+            if ((System.currentTimeMillis() - lastFinishBreak < 300L) && delayOnBroken) {
                 return@run
             }
+
             val crosshairTarget = mc.crosshairTarget
             if (crosshairTarget is EntityHitResult) {
                 ModuleAutoWeapon.onTarget(crosshairTarget.entity)
@@ -259,15 +253,16 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 return@run
             }
 
-            if (player.mainHandStack.item in specialItems && player.inventory.mainHandStack.customName != null) {
+            val mainHandStack = player.mainHandStack
+            if (mainHandStack.item in SPECIAL_ITEMS_FOR_IGNORE && mainHandStack.customName != null) {
                 return@run
             }
 
-            if (player.mainHandStack.item in holdingItemsForIgnore) {
+            if (mainHandStack.item in holdingItemsForIgnore) {
                 return@run
             }
 
-            if (onlyBlock && player.mainHandStack.item !is BlockItem) {
+            if (onlyBlock && mainHandStack.item !is BlockItem && player.offHandStack.item !is BlockItem) {
                 return@run
             }
 
