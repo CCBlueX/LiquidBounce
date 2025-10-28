@@ -20,22 +20,27 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleClickSound
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isSword
+import net.minecraft.block.Blocks
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.Entity
 import net.minecraft.item.BlockItem
+import net.minecraft.item.Items
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
 
@@ -50,7 +55,9 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
     object AttackButton : ToggleableConfigurable(this, "Attack", true) {
 
         val clicker = tree(Clicker(this, mc.options.attackKey))
+
         internal val requiresNoInput by boolean("RequiresNoInput", false)
+        internal val delayOnBroken by boolean("DelayOnBroken", true)
         private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
         private val onItemUse by enumChoice("OnItemUse", Use.WAIT)
         private val weapon by enumChoice("Weapon", Weapon.ANY)
@@ -142,17 +149,50 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 }
             }
         }
-
     }
 
     object UseButton : ToggleableConfigurable(this, "Use", false) {
         val clicker = tree(Clicker(this, mc.options.useKey, null))
+        internal val holdingItemsForIgnore by items("HoldingItemsForIgnore", defaultItems.toMutableSet())
+        internal val blocksForIgnore by blocks("BlocksForIgnore", defaultBlocks.toMutableSet())
         internal val delayStart by boolean("DelayStart", false)
         internal val onlyBlock by boolean("OnlyBlock", false)
         internal val requiresNoInput by boolean("RequiresNoInput", false)
 
         internal var needToWait = true
     }
+
+    private val defaultItems = setOf(
+        Items.WATER_BUCKET,
+        Items.LAVA_BUCKET,
+        Items.ENDER_PEARL,
+        Items.ENDER_EYE,
+        Items.PLAYER_HEAD,
+    )
+
+    private val defaultBlocks = setOf(
+        Blocks.OAK_DOOR,
+        Blocks.SPRUCE_DOOR,
+        Blocks.BIRCH_DOOR,
+        Blocks.JUNGLE_DOOR,
+        Blocks.ACACIA_DOOR,
+        Blocks.DARK_OAK_DOOR,
+        Blocks.MANGROVE_DOOR,
+        Blocks.CRIMSON_DOOR,
+        Blocks.WARPED_DOOR
+    )
+
+    private val specialItems = setOf(
+        Items.RED_BED,
+        Items.PLAYER_HEAD,
+        Items.COMPASS,
+        Items.EMERALD,
+        Items.LAPIS_LAZULI,
+        Items.GREEN_DYE,
+        Items.GRAY_DYE,
+        Items.PINK_DYE,
+        Items.SLIME_BALL,
+    )
 
     init {
         tree(AttackButton)
@@ -165,18 +205,30 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
     val use: Boolean
         get() = mc.options.useKey.isPressedOnAny || UseButton.requiresNoInput
 
+    private var lastFinishBreak: Long = 0
+
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
+        if (packet is PlayerActionC2SPacket && packet.action == PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK) {
+            lastFinishBreak = System.currentTimeMillis()
+        }
+    }
+
     @Suppress("unused")
     val tickHandler = tickHandler {
         AttackButton.run {
             if (!enabled || !attack || !isWeaponSelected() || !isOnObjective()) {
                 return@run
             }
-
             // Check if the player is breaking a block, if so, return
             if (interaction.isBreakingBlock) {
                 return@run
             }
-
+     
+            if ((System.currentTimeMillis() - lastFinishBreak < 300) && delayOnBroken) {
+                return@run
+            }
             val crosshairTarget = mc.crosshairTarget
             if (crosshairTarget is EntityHitResult) {
                 ModuleAutoWeapon.onTarget(crosshairTarget.entity)
@@ -208,8 +260,24 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 return@run
             }
 
+            if (player.mainHandStack.item in specialItems && player.inventory.mainHandStack.customName != null) {
+                return@run
+            }
+
+            if (player.mainHandStack.item in holdingItemsForIgnore) {
+                return@run
+            }
+
             if (onlyBlock && player.mainHandStack.item !is BlockItem) {
                 return@run
+            }
+
+            val crosshairTarget = mc.crosshairTarget
+            if (crosshairTarget is BlockHitResult) {
+                val blockState = mc.world?.getBlockState(crosshairTarget.blockPos)
+                if (blockState?.block in blocksForIgnore) {
+                    return@run
+                }
             }
 
             if (delayStart && needToWait) {
