@@ -25,6 +25,7 @@ data class ShopConfig (
     val elements: List<ShopElement>
 ) {
     companion object {
-        fun emptyConfig() = ShopConfig(emptyList(), -1, emptyMap(), emptyList())
+        @JvmField
+        val Empty = ShopConfig(emptyList(), -1, emptyMap(), emptyList())
     }
 }
