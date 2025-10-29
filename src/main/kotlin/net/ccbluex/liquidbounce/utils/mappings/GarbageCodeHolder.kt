@@ -140,9 +140,6 @@ object GarbageCodeHolder {
             val eh = getEntryHandler(i2y.asEntryLike(), o2i.asEntryLike())
             MethodEntry { ns ->
                 val t = eh(ns)
-                if (ns == "official" && t?.name == "a" && t.desc == "(I)Lbum;" && t.owner == "gga") {
-                    logger.info("why won't it find the funny????")
-                }
                 t
             }
         }
