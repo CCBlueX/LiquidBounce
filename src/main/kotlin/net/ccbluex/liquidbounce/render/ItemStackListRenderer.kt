@@ -344,6 +344,9 @@ class ItemStackListRenderer private constructor(
                 drawStackOverlay(textRenderer, stack, x, y)
             }
 
+            @JvmField
+            val ForOtherPlayer = of(drawItemBar = true, drawStackCount = true, drawCooldownProgress = false)
+
             @JvmStatic
             fun of(
                 drawItemBar: Boolean = true,
@@ -354,6 +357,7 @@ class ItemStackListRenderer private constructor(
                 if (drawItemBar && drawStackCount && drawCooldownProgress) return All
 
                 return SingleItemStackRenderer { textRenderer, index, stack, x, y ->
+                    if (stack.isEmpty) return@SingleItemStackRenderer
                     drawItem(stack, x, y)
                     matrices.withPush {
                         if (drawItemBar) drawItemBar(stack, x, y)

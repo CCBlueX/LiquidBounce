@@ -23,20 +23,24 @@ import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemS
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.entity.LivingEntity
 import org.joml.Vector2f
 
 private const val NAMETAG_PADDING: Int = 15
 
-private val currentItemStackRenderer
-    get() = if (NametagShowOptions.ITEM_INFO.isShowing()) {
-        ItemStackListRenderer.SingleItemStackRenderer.All
-    } else {
-        ItemStackListRenderer.SingleItemStackRenderer.OnlyItem
-    }
-
 internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     if (NametagShowOptions.ITEMS.isShowing()) {
+        val currentItemStackRenderer = if (NametagShowOptions.ITEM_INFO.isShowing()) {
+            if (nametag.entity === player) {
+                ItemStackListRenderer.SingleItemStackRenderer.All
+            } else {
+                ItemStackListRenderer.SingleItemStackRenderer.ForOtherPlayer
+            }
+        } else {
+            ItemStackListRenderer.SingleItemStackRenderer.OnlyItem
+        }
+
         context.drawItemStackList(nametag.items)
             .center(pos.copy(y = pos.y - NAMETAG_PADDING * ModuleNametags.scale))
             .scale(ModuleNametags.scale)
