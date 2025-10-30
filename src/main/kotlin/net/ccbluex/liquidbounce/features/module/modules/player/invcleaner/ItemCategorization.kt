@@ -44,9 +44,10 @@ val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
 
 @JvmField
 val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = Comparator.comparingInt {
-    it.itemStack.maxDamage - it.itemStack.damage
+    it.itemStack.durability
 }
 
+@JvmRecord
 data class ItemCategory(val type: ItemType, val subtype: Int)
 
 enum class ItemType(
@@ -241,7 +242,7 @@ class ItemCategorization(
                     add(PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1))
                 }
 
-                Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> add(ThrowableItemFacet(slot))
+                is EggItem, is SnowballItem, is WindChargeItem -> add(ThrowableItemFacet(slot))
 
                 else -> when {
                     itemStack.isPlayerArmor -> add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))

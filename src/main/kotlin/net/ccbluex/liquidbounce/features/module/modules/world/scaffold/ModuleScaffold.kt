@@ -274,6 +274,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             PreferStackSize.LESS,
             PreferAverageHardBlocks(neutralRange = false),
         )
+    @JvmField
     val BLOCK_COMPARATOR_FOR_INVENTORY =
         ComparatorChain(
             PreferFavourableBlocks,

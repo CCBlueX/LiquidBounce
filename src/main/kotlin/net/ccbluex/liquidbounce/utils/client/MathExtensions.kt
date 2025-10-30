@@ -85,4 +85,4 @@ fun Double.roundToDecimalPlaces(decimalPlaces: Int = 1): Double {
     return BigDecimal(this).setScale(decimalPlaces, RoundingMode.HALF_UP).toDouble()
 }
 
-infix fun Float.vector2f(other: Float) = Vector2f(this, other)
+inline infix fun Float.vector2f(other: Float) = Vector2f(this, other)
