@@ -16,20 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
 
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.MutableText
+package net.ccbluex.liquidbounce.utils.client;
+
+import net.minecraft.text.ClickEvent;
 
 /**
- * Allows [MutableText] to execute anything on click.
+ * Allows {@link net.minecraft.text.MutableText} to execute anything on click.
+ * <p>
+ * Known issue: This type cannot be resolved with {@link ClickEvent#CODEC}.
  */
-class RunnableClickEvent(private val action: Runnable) : ClickEvent {
-
-    override fun getAction(): ClickEvent.Action? = null
-
-    fun run() {
-        action.run()
+public record RunnableClickEvent(Runnable action) implements ClickEvent, Runnable {
+    @Override
+    public ClickEvent.Action getAction() {
+        return null;
     }
 
+    @Override
+    public void run() {
+        action.run();
+    }
 }
