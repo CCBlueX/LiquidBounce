@@ -43,6 +43,9 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
     private val alwaysHideShield by boolean("AlwaysHideShield", false).doNotIncludeAlways()
 
     @JvmStatic
+    val PlayerEntity.isBlockingWithOffhandShield get() = isUsingItem && offHandStack.item is ShieldItem && activeItem === offHandStack
+
+    @JvmStatic
     fun ItemStack.hasLegacyBlockingAnimation() = isSword && !hasChangedComponent(DataComponentTypes.BLOCKS_ATTACKS)
 
     @JvmOverloads

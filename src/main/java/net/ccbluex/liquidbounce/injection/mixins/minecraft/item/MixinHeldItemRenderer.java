@@ -30,6 +30,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -85,11 +86,17 @@ public abstract class MixinHeldItemRenderer {
     }
 
     @Unique
-    private void liquid_bounce$applyTransformations(MatrixStack matrices, float translateX, float translateY, float translateZ, float rotateX, float rotateY, float rotateZ) {
+    private static void liquid_bounce$applyTransformations(MatrixStack matrices, float translateX, float translateY, float translateZ, float rotateX, float rotateY, float rotateZ) {
         matrices.translate(translateX, translateY, translateZ);
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(rotateX));
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotateY));
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotateZ));
+    }
+
+    @Unique
+    private static boolean liquid_bounce$shouldAnimate(PlayerEntity player) {
+        return ModuleSwordBlock.INSTANCE.getRunning() && ModuleSwordBlock.isBlockingWithOffhandShield(player)
+                || KillAuraAutoBlock.INSTANCE.getBlockVisual();
     }
 
     @Inject(method = "renderFirstPersonItem", at = @At("HEAD"), cancellable = true)
@@ -108,7 +115,7 @@ public abstract class MixinHeldItemRenderer {
             ordinal = 0
     ))
     private UseAction hookUseAction(ItemStack instance) {
-        if (instance.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (instance.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(client.player)) {
             return UseAction.BLOCK;
         }
 
@@ -123,7 +130,7 @@ public abstract class MixinHeldItemRenderer {
     private boolean hookIsUseItem(AbstractClientPlayerEntity instance) {
         var itemStack = instance.getMainHandStack();
 
-        if (itemStack.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (itemStack.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(instance)) {
             return true;
         }
 
@@ -138,7 +145,7 @@ public abstract class MixinHeldItemRenderer {
     private Hand hookActiveHand(AbstractClientPlayerEntity instance) {
         var itemStack = instance.getMainHandStack();
 
-        if (itemStack.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (itemStack.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(instance)) {
             return Hand.MAIN_HAND;
         }
 
@@ -153,7 +160,7 @@ public abstract class MixinHeldItemRenderer {
     private int hookItemUseItem(AbstractClientPlayerEntity instance) {
         var itemStack = instance.getMainHandStack();
 
-        if (itemStack.isIn(ItemTags.SWORDS) && KillAuraAutoBlock.INSTANCE.getBlockVisual()) {
+        if (itemStack.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(instance)) {
             return 7200;
         }
 
@@ -180,10 +187,9 @@ public abstract class MixinHeldItemRenderer {
      */
     @Redirect(method = "renderFirstPersonItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
     private Item preventConflictingCode(ItemStack instance) {
-        var shouldAnimate = ModuleSwordBlock.INSTANCE.getRunning() || KillAuraAutoBlock.INSTANCE.getBlockVisual();
         // only applies to sword items,
         // so that future items won't be affected if minecraft decides to actually make use out of this
-        if (shouldAnimate && ModuleSwordBlock.hasLegacyBlockingAnimation(instance))
+        if (liquid_bounce$shouldAnimate(client.player) && ModuleSwordBlock.hasLegacyBlockingAnimation(instance))
             return Items.SHIELD; // makes the instanceof return true and therefore not do the transformation
 
         return instance.getItem();
@@ -196,9 +202,7 @@ public abstract class MixinHeldItemRenderer {
                                                 Hand hand, float swingProgress, ItemStack item, float equipProgress,
                                                 MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
                                                 CallbackInfo ci) {
-        var shouldAnimate = ModuleSwordBlock.INSTANCE.getRunning() || KillAuraAutoBlock.INSTANCE.getBlockVisual();
-
-        if (shouldAnimate && ModuleSwordBlock.hasLegacyBlockingAnimation(item)) {
+        if (liquid_bounce$shouldAnimate(player) && ModuleSwordBlock.hasLegacyBlockingAnimation(item)) {
             var arm = (hand == Hand.MAIN_HAND) ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getRunning()) {
