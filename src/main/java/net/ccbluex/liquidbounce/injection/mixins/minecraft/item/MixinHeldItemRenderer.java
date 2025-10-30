@@ -30,10 +30,11 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.item.consume.UseAction;
 import net.minecraft.registry.tag.ItemTags;
-import net.minecraft.util.Arm;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.RotationAxis;
 import org.spongepowered.asm.mixin.Final;
@@ -175,18 +176,18 @@ public abstract class MixinHeldItemRenderer {
     /**
      * This transformation was previously a VFP option but got now added to minecraft directly.
      * View the code that was used to disable the VFP option here:
-     * https://github.com/CCBlueX/LiquidBounce/blob/e5a0dbf5458b063d3028e69e04762b8b25b998b5/src/main/java/net/ccbluex/liquidbounce/utils/client/vfp/VfpCompatibility.java#L44
+     * <a href="https://github.com/CCBlueX/LiquidBounce/blob/e5a0dbf5458b063d3028e69e04762b8b25b998b5/src/main/java/net/ccbluex/liquidbounce/utils/client/vfp/VfpCompatibility.java#L44">...</a>
      */
-//    @ModifyExpressionValue(method = "renderFirstPersonItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
-//    private Item preventConflictingCode(Item item) {
-//        // only applies to sword items,
-//        // so that future items won't be affected if minecraft decides to actually make use out of this
-//        if (item.getDefaultStack().isIn(ItemTags.SWORDS)) {
-//            return Items.SHIELD; // makes the instanceof return true and therefore not do the transformation
-//        }
-//
-//        return item;
-//    }
+    @Redirect(method = "renderFirstPersonItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
+    private Item preventConflictingCode(ItemStack instance) {
+        var shouldAnimate = ModuleSwordBlock.INSTANCE.getRunning() || KillAuraAutoBlock.INSTANCE.getBlockVisual();
+        // only applies to sword items,
+        // so that future items won't be affected if minecraft decides to actually make use out of this
+        if (shouldAnimate && ModuleSwordBlock.hasLegacyBlockingAnimation(instance))
+            return Items.SHIELD; // makes the instanceof return true and therefore not do the transformation
+
+        return instance.getItem();
+    }
 
     @Inject(method = "renderFirstPersonItem",
             slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getUseAction()Lnet/minecraft/item/consume/UseAction;")),
@@ -197,9 +198,8 @@ public abstract class MixinHeldItemRenderer {
                                                 CallbackInfo ci) {
         var shouldAnimate = ModuleSwordBlock.INSTANCE.getRunning() || KillAuraAutoBlock.INSTANCE.getBlockVisual();
 
-        // Check vanilla blocking since 1.21.5 to prevent "double transformed"
-        if (shouldAnimate && item.isIn(ItemTags.SWORDS) && !item.hasChangedComponent(DataComponentTypes.BLOCKS_ATTACKS)) {
-            final Arm arm = (hand == Hand.MAIN_HAND) ? player.getMainArm() : player.getMainArm().getOpposite();
+        if (shouldAnimate && ModuleSwordBlock.hasLegacyBlockingAnimation(item)) {
+            var arm = (hand == Hand.MAIN_HAND) ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getRunning()) {
                 var activeChoice = ModuleAnimations.INSTANCE.getBlockAnimationChoice().getActiveChoice();

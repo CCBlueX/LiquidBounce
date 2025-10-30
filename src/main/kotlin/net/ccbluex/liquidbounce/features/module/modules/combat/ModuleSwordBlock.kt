@@ -42,14 +42,16 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
     val hideShieldSlot by boolean("HideShieldSlot", false).doNotIncludeAlways()
     private val alwaysHideShield by boolean("AlwaysHideShield", false).doNotIncludeAlways()
 
+    @JvmStatic
+    fun ItemStack.hasLegacyBlockingAnimation() = isSword && !hasChangedComponent(DataComponentTypes.BLOCKS_ATTACKS)
+
     @JvmOverloads
     fun shouldHideOffhand(
         player: PlayerEntity = this.player,
         offHandStack: ItemStack = player.offHandStack,
         mainHandStack: ItemStack = player.mainHandStack,
     ) = (running || KillAuraAutoBlock.blockVisual) && offHandStack.item is ShieldItem
-        && (mainHandStack.isSword && !mainHandStack.hasChangedComponent(DataComponentTypes.BLOCKS_ATTACKS)
-        || player === this.player && running && alwaysHideShield)
+        && (mainHandStack.hasLegacyBlockingAnimation() || player === this.player && running && alwaysHideShield)
 
     @Suppress("UNUSED")
     private val packetHandler = sequenceHandler<PacketEvent> { event ->
