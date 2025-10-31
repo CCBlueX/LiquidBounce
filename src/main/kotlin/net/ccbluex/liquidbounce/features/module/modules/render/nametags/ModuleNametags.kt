@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -32,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.sq
 import org.joml.Vector2fc
-import kotlin.math.abs
 
 /**
  * Nametags module
@@ -44,6 +44,13 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
     val scale by float("Scale", 2F, 0.25F..4F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
+
+    internal val batchRenderMode by enumChoice("BatchRenderMode", BatchRenderMode.EACH)
+
+    internal enum class BatchRenderMode(override val choiceName: String) : NamedChoice {
+        FULL("Full"),
+        EACH("Each"),
+    }
 
     internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
 
@@ -94,11 +101,11 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
         val nametagsCount = filteredNameTags.size.toFloat()
 
-        filteredNameTags.sortBy { tag ->
+        filteredNameTags.sortByDescending { tag ->
             tag.entity.squaredDistanceTo(mc.cameraEntity)
         }
 
-        startBatch()
+        if (batchRenderMode == BatchRenderMode.FULL) startBatch()
         filteredNameTags.forEachIndexed { index, nametagInfo ->
             val pos = nametagInfo.position!!
 
@@ -107,7 +114,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
             drawNametag(nametagInfo, pos.copy(z = renderZ))
         }
-        commitBatch()
+        if (batchRenderMode == BatchRenderMode.FULL) commitBatch()
     }
 
     /**

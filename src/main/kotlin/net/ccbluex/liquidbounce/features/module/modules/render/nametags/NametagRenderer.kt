@@ -53,6 +53,8 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
 
     val scale = 1f / (fontSize * 0.15f) * ModuleNametags.scale
 
+    if (ModuleNametags.batchRenderMode == ModuleNametags.BatchRenderMode.EACH) startBatch()
+
     matrixStack.push()
     matrixStack.translate(pos.x, pos.y, 0f)
     matrixStack.scale(scale, scale, 1f)
@@ -96,4 +98,6 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     }
 
     matrixStack.pop()
+
+    if (ModuleNametags.batchRenderMode == ModuleNametags.BatchRenderMode.EACH) commitBatch()
 }
