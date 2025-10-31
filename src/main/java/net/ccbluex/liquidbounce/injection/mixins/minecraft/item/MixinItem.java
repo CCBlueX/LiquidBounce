@@ -52,7 +52,7 @@ public abstract class MixinItem {
     private void hookSwordUse(World world, PlayerEntity user, Hand hand,
                               CallbackInfoReturnable<ActionResult> cir) {
         // Hooks sword use - only if main hand (otherwise this makes no sense on 1.8)
-        if (getDefaultStack().isIn(ItemTags.SWORDS) && ModuleSwordBlock.INSTANCE.getRunning()
+        if (ModuleSwordBlock.hasLegacyBlockingAnimation(this.getDefaultStack()) && ModuleSwordBlock.INSTANCE.getRunning()
             && !ModuleSwordBlock.INSTANCE.getOnlyVisual() && hand == Hand.MAIN_HAND) {
             var itemStack = user.getStackInHand(hand);
             user.setCurrentHand(hand);
@@ -68,7 +68,7 @@ public abstract class MixinItem {
     @ModifyReturnValue(method = "getUseAction", at = @At("RETURN"))
     private UseAction hookSwordUseAction(UseAction original) {
         // Hooks sword use action
-        if (getDefaultStack().isIn(ItemTags.SWORDS) && ModuleSwordBlock.INSTANCE.getRunning()
+        if (ModuleSwordBlock.hasLegacyBlockingAnimation(this.getDefaultStack()) && ModuleSwordBlock.INSTANCE.getRunning()
           && !ModuleSwordBlock.INSTANCE.getOnlyVisual()) {
             return UseAction.BLOCK;
         }
@@ -79,7 +79,7 @@ public abstract class MixinItem {
     @ModifyReturnValue(method = "getMaxUseTime", at = @At("RETURN"))
     private int hookMaxUseTime(int original) {
         // Hooks sword max use time
-        if (getDefaultStack().isIn(ItemTags.SWORDS) && ModuleSwordBlock.INSTANCE.getRunning()
+        if (ModuleSwordBlock.hasLegacyBlockingAnimation(this.getDefaultStack()) && ModuleSwordBlock.INSTANCE.getRunning()
             && !ModuleSwordBlock.INSTANCE.getOnlyVisual()) {
             return 72000;
         }
