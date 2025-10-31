@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 
 /**
  * Sprint module
@@ -44,7 +45,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
  * Sprints automatically.
  */
 
-object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
+object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT, state = true) {
 
     private enum class SprintMode(override val choiceName: String) : NamedChoice {
         LEGIT("Legit"),
@@ -74,6 +75,11 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
 
     val shouldIgnoreCollision
         get() = running && Ignore.COLLISION in ignore
+
+    val shouldIgnoreLiquid
+        //Swimming and sprinting cannot be done at the same time
+        get() = running && Ignore.LIQUID in ignore && !player.isSwimming
+
 
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(priority = CRITICAL_MODIFICATION) { event ->
@@ -118,11 +124,24 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
         // todo: unhook pitch - AimPlan needs support for only yaw or pitch operation
         val rotation = Rotation(yaw, player.pitch)
 
-        RotationManager.setRotationTarget(rotationsConfigurable.toRotationTarget(rotation), Priority.NOT_IMPORTANT,
-            this@ModuleSprint)
+        RotationManager.setRotationTarget(
+            rotationsConfigurable.toRotationTarget(rotation), Priority.NOT_IMPORTANT,
+            this@ModuleSprint
+        )
+    }
+
+    private fun getChestScreen(): GenericContainerScreen? {
+        val screen = mc.currentScreen
+
+        return screen as? GenericContainerScreen
     }
 
     private fun shouldPreventSprint(): Boolean {
+        // Check if chest screen is open and StopOn.CHEST is enabled
+        if (StopOn.CHEST in stopOn && getChestScreen() != null) {
+            return true
+        }
+
         val deltaYawRad = (player.yaw - (RotationManager.currentRotation ?: return false).yaw).toRadians()
         val forward = player.input.movementForward
         val sideways = player.input.movementSideways
@@ -138,11 +157,13 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     private enum class Ignore(override val choiceName: String) : NamedChoice {
         BLINDNESS("Blindness"),
         HUNGER("Hunger"),
-        COLLISION("Collision")
+        COLLISION("Collision"),
+        LIQUID("Liquid"),
     }
 
     private enum class StopOn(override val choiceName: String) : NamedChoice {
         GROUND("Ground"),
         AIR("Air"),
+        CHEST("Chest")
     }
 }
