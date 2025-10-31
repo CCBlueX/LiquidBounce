@@ -58,7 +58,7 @@ fun OrderedText.toText(): Text {
     val text = Text.empty()
 
     var currentStyle = Style.EMPTY
-    val currentText = if (mc.isOnThread) Pools.StringBuilder.borrow() else StringBuilder()
+    val currentText = Pools.StringBuilder.borrow()
 
     this.accept { index, style, codePoint ->
         if (style != currentStyle) {
@@ -80,7 +80,7 @@ fun OrderedText.toText(): Text {
         text.append(currentText.toString().asText().setStyle(currentStyle))
     }
 
-    if (mc.isOnThread) Pools.StringBuilder.recycle(currentText)
+    Pools.StringBuilder.recycle(currentText)
 
     return text
 }
