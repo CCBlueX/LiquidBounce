@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition
 import net.ccbluex.liquidbounce.interfaces.InputAddition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
 import net.ccbluex.liquidbounce.utils.client.*
