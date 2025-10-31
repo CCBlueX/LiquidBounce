@@ -76,7 +76,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
 
-        val offsets = if (!ScaffoldTellyFeature.isTellyBridging || ModuleFreeze.running) {
+        val offsets = if (ModuleFreeze.running) {
             FULL_INVESTIGATION_OFFSETS
         } else if (ScaffoldDownFeature.shouldGoDown) {
             INVESTIGATE_DOWN_OFFSETS
