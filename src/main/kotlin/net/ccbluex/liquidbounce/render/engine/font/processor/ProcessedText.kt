@@ -24,7 +24,19 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 
 interface ProcessedText {
     val chars: List<ProcessedChar>
+
+    /**
+     * Elements: start char index, to char index, ...
+     *
+     * Size should be even,
+     */
     val underlines: IntList
+
+    /**
+     * Elements: start char index, to char index, ...
+     *
+     * Size should be even,
+     */
     val strikeThroughs: IntList
 
     @JvmRecord

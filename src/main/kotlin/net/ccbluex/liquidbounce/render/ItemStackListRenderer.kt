@@ -353,9 +353,6 @@ class ItemStackListRenderer private constructor(
                 drawStackCount: Boolean = true,
                 drawCooldownProgress: Boolean = true,
             ): SingleItemStackRenderer {
-                if (!drawItemBar && !drawStackCount && !drawCooldownProgress) return OnlyItem
-                if (drawItemBar && drawStackCount && drawCooldownProgress) return All
-
                 return SingleItemStackRenderer { textRenderer, index, stack, x, y ->
                     if (stack.isEmpty) return@SingleItemStackRenderer
                     drawItem(stack, x, y)

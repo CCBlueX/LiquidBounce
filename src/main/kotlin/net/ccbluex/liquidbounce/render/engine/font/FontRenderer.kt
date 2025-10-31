@@ -19,13 +19,13 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
+import it.unimi.dsi.fastutil.ints.IntStack
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.text.Text
 import org.joml.Vector3f
 import org.joml.Vector3fc
@@ -49,15 +49,30 @@ class FontRenderer(
     override val size: Float = DEFAULT_FONT_SIZE
 ) : AbstractFontRenderer<MinecraftTextProcessor.RecyclingProcessedText>() {
 
+    // Caches
+    private val underlinesIdxStack = IntArrayList()
+    private val strikethroughIdxStack = IntArrayList()
     private val positionCache = Vector3f()
-    private val underlinesCache = IntArrayList()
-    private val strikethroughCache = IntArrayList()
+    private val charPos1 = Vector3f()
+    private val charPos2 = Vector3f()
 
     override val height: Float = font.styles.firstNotNullOf { it?.height }
 
     private val ascent: Float = font.styles.firstNotNullOf { it?.ascent }
 
     private val shadowColor = Color4b(0, 0, 0, 150)
+
+    private fun loadUnderlines(text: ProcessedText): IntStack = underlinesIdxStack.apply {
+        clear()
+        addAll(text.underlines)
+        elements().reverse(0, size)
+    }
+
+    private fun loadStrikethroughs(text: ProcessedText): IntStack = strikethroughIdxStack.apply {
+        clear()
+        addAll(text.strikeThroughs)
+        elements().reverse(0, size)
+    }
 
     override fun process(text: Text, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
         return MinecraftTextProcessor.process(text.sanitizeForeignInput(), defaultColor)
@@ -95,8 +110,8 @@ class FontRenderer(
      *
      * @return The resulting x value
      */
-    @Suppress("CognitiveComplexMethod")
     context(environment: GUIRenderEnvironment)
+    @Suppress("CognitiveComplexMethod")
     private fun drawInternal(
         text: ProcessedText,
         pos: Vector3fc,
@@ -107,26 +122,17 @@ class FontRenderer(
             return pos.x()
         }
 
-        // remove from last
-        val underlineStack = underlinesCache.apply {
-            addAll(text.underlines)
-            elements().reverse(0, size)
-        }
-        val strikethroughStack = strikethroughCache.apply {
-            addAll(text.strikeThroughs)
-            elements().reverse(0, size)
-        }
+        val underlineStack = loadUnderlines(text)
+        val strikethroughStack = loadStrikethroughs(text)
 
         var x = pos.x()
         var y = pos.y() + this.ascent * scale
+        val z = pos.z()
 
         var strikeThroughStartX: Float? = null
         var underlineStartX: Float? = null
 
         val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
-
-        val vec3f1 = Pools.Vec3f.borrow()
-        val vec3f2 = Pools.Vec3f.borrow()
 
         text.chars.forEachIndexed { charIdx, processedChar ->
             val glyph = this.glyphManager.requestGlyph(this.font, processedChar.font, processedChar.char)
@@ -142,48 +148,24 @@ class FontRenderer(
                 strikeThroughStartX = x
             }
 
-            // We don't need to render whitespaces.
-            val renderInfo = glyph.renderInfo
-            val atlasLocation = renderInfo.atlasLocation
-
-            // We don't need to render whitespaces.
-            if (atlasLocation != null) {
-                val x1 = x + renderInfo.glyphBounds.xMin * scale
-                val y1 = y + renderInfo.glyphBounds.yMin * scale
-                val x2 = x + (renderInfo.glyphBounds.xMin + atlasLocation.atlasWidth) * scale
-                val y2 = y + (renderInfo.glyphBounds.yMin + atlasLocation.atlasHeight) * scale
-
-                environment.drawTextureQuad(
-                    glyph.page.texture.glTexture,
-                    vec3f1.set(x1, y1, pos.z()),
-                    atlasLocation.uvCoordinatesOnTexture.min,
-                    vec3f2.set(x2, y2, pos.z()),
-                    atlasLocation.uvCoordinatesOnTexture.max,
-                    color.toARGB(),
-                )
-            }
+            drawChar(glyph, x, y, z, scale, color)
 
             val layoutInfo =
-                if (!processedChar.obfuscated) renderInfo.layoutInfo else fallbackGlyph.renderInfo.layoutInfo
+                if (!processedChar.obfuscated) glyph.renderInfo.layoutInfo else fallbackGlyph.renderInfo.layoutInfo
 
             x += layoutInfo.advanceX * scale
             y += layoutInfo.advanceY * scale
 
             if (!underlineStack.isEmpty && underlineStack.topInt() == charIdx) {
                 underlineStack.popInt()
-                drawLine(underlineStartX!!, x, y, pos.z(), color, false)
+                drawLine(underlineStartX!!, x, y, z, color, false)
             }
 
             if (!strikethroughStack.isEmpty && strikethroughStack.topInt() == charIdx) {
                 strikethroughStack.popInt()
-                drawLine(strikeThroughStartX!!, x, y, pos.z(), color, true)
+                drawLine(strikeThroughStartX!!, x, y, z, color, true)
             }
         }
-
-        Pools.Vec3f.recycle(vec3f1)
-        Pools.Vec3f.recycle(vec3f2)
-        underlinesCache.clear()
-        strikethroughCache.clear()
 
         return x
     }
@@ -217,7 +199,6 @@ class FontRenderer(
         }
     }
 
-    @Suppress("LongParameterList")
     context(environment: GUIRenderEnvironment)
     private fun drawLine(
         x0: Float,
@@ -231,6 +212,34 @@ class FontRenderer(
         environment.drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
             vertex(matrix, x0, y, z).color(color)
             vertex(matrix, x1, y, z).color(color)
+        }
+    }
+
+    context(environment: GUIRenderEnvironment)
+    private fun drawChar(
+        glyph: GlyphDescriptor,
+        x: Float,
+        y: Float,
+        z: Float,
+        scale: Float,
+        color: Color4b,
+    ) {
+        val renderInfo = glyph.renderInfo
+        // We don't need to render whitespaces.
+        if (renderInfo.atlasLocation != null && !color.isTransparent) {
+            val x1 = x + renderInfo.glyphBounds.xMin * scale
+            val y1 = y + renderInfo.glyphBounds.yMin * scale
+            val x2 = x + (renderInfo.glyphBounds.xMin + renderInfo.atlasLocation.atlasWidth) * scale
+            val y2 = y + (renderInfo.glyphBounds.yMin + renderInfo.atlasLocation.atlasHeight) * scale
+
+            environment.drawTextureQuad(
+                glyph.page.texture.glTexture,
+                charPos1.set(x1, y1, z),
+                renderInfo.atlasLocation.uvCoordinatesOnTexture.min,
+                charPos2.set(x2, y2, z),
+                renderInfo.atlasLocation.uvCoordinatesOnTexture.max,
+                color.toARGB(),
+            )
         }
     }
 
