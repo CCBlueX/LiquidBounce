@@ -28,6 +28,7 @@ import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.vertex.VertexFormat
 import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
@@ -172,6 +173,17 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
         }
     }
 
+    fun getOrCreateBuffer(texture: GpuTexture): BufferBuilder {
+        return if (isBatchMode) {
+            texQuadBatchBuffer.computeIfAbsent(texture, ClientTessellator::begin)
+        } else {
+            Tessellator.getInstance().begin(
+                ClientRenderPipelines.TexQuads.vertexFormatMode,
+                ClientRenderPipelines.TexQuads.vertexFormat
+            )
+        }
+    }
+
     fun startBatch() {
         if (isBatchMode) commitBatch()
         isBatchMode = true
@@ -189,11 +201,26 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
             }
         }
         batchBuffer.clear()
+
+        texQuadBatchBuffer.fastIterator().forEach { (gpuTexture, bufferBuilder) ->
+            RenderSystem.setShaderTexture(0, gpuTexture) // Sampler0
+            bufferBuilder.endNullable()?.let {
+                ClientRenderPipelines.TexQuads.draw(it)
+                ClientTessellator.allocator(gpuTexture).clear()
+            }
+        }
+        texQuadBatchBuffer.clear()
     }
 
     companion object {
         @JvmStatic
         private val batchBuffer = Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()
+
+        /**
+         * For [ClientRenderPipelines.TexQuads] only. Each texture has its buffer builder.
+         */
+        @JvmStatic
+        private val texQuadBatchBuffer = Reference2ReferenceOpenHashMap<GpuTexture, BufferBuilder>()
     }
 }
 
@@ -351,6 +378,24 @@ inline fun RenderEnvironment.drawCustomMesh(
     }
 }
 
+private inline fun RenderEnvironment.drawTexQuads(
+    texture: GpuTexture,
+    drawer: VertexConsumer.(Matrix4f) -> Unit
+) {
+    val matrix = matrixStack.peek().positionMatrix
+
+    val buffer = getOrCreateBuffer(texture)
+
+    drawer(buffer, matrix)
+
+    if (!isBatchMode) {
+        buffer.endNullable()?.let {
+            RenderSystem.setShaderTexture(0, texture)
+            ClientRenderPipelines.TexQuads.draw(it)
+        }
+    }
+}
+
 @JvmOverloads
 internal fun newRenderPass(framebuffer: Framebuffer = mc.framebuffer): RenderPass {
     return gpuDevice
@@ -486,13 +531,14 @@ fun RenderEnvironment.drawSquareTexture(
 }
 
 fun RenderEnvironment.drawTextureQuad(
+    texture: GpuTexture,
     pos1: Vector3fc,
     uv1: UV2f = UV2f(0f, 0f),
     pos2: Vector3fc,
     uv2: UV2f = UV2f(1f, 1f),
     argb: Int,
 ) {
-    drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
+    drawTexQuads(texture) { matrix ->
         vertex(matrix, pos1.x(), pos2.y(), pos1.z())
             .texture(uv1.u, uv2.v)
             .color(argb)

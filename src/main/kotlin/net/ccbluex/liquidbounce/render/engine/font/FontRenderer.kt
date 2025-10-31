@@ -280,9 +280,8 @@ class FontRenderer(
 
         val vec3f1 = Pools.Vec3f.borrow()
         val vec3f2 = Pools.Vec3f.borrow()
+        environment.startBatch()
         cache.commitGlyphs.fastIterator().forEach { (gpuTexture, renderedGlyphs) ->
-            environment.startBatch()
-            RenderSystem.setShaderTexture(0, gpuTexture)
             for (renderedGlyph in renderedGlyphs) {
                 val glyphDescriptor = renderedGlyph.glyph
 
@@ -290,6 +289,7 @@ class FontRenderer(
                 val atlasLocation = glyphDescriptor.renderInfo.atlasLocation!!
 
                 environment.drawTextureQuad(
+                    gpuTexture,
                     vec3f1.set(renderedGlyph.x1, renderedGlyph.y1, renderedGlyph.z),
                     atlasLocation.uvCoordinatesOnTexture.min,
                     vec3f2.set(renderedGlyph.x2, renderedGlyph.y2, renderedGlyph.z),
@@ -297,9 +297,9 @@ class FontRenderer(
                     color.toARGB(),
                 )
             }
-            environment.commitBatch()
             cache.renderedGlyphListPool.recycle(renderedGlyphs)
         }
+        environment.commitBatch()
         Pools.Vec3f.recycle(vec3f1)
         Pools.Vec3f.recycle(vec3f2)
         cache.commitGlyphs.clear()
