@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldB
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.minecraft.item.ItemStack
 import java.util.function.Predicate
 
 /**
@@ -42,19 +43,15 @@ object ModuleEagle : ClientModule(
 ) {
 
     private val edgeDistance by floatRange("EdgeDistance", 0.4f..0.6f, 0.01f..1.3f)
-        .onChanged {
-            currentEdgeDistance = it.random()
-        }
+        .onChanged { currentEdgeDistance = it.random() }
 
     private var currentEdgeDistance: Float = edgeDistance.random()
     private var wasSneaking = false
     private var sneakCaptured = false
+    var shouldBeActive = false
 
     private fun shouldActivateEagle(event: MovementInputEvent, conditionsMet: Boolean): Boolean {
-        if (player.abilities.flying || !conditionsMet) {
-            return false
-        }
-
+        if (player.abilities.flying || !conditionsMet) return false
         return player.isCloseToEdge(event.directionalInput, currentEdgeDistance.toDouble())
     }
 
@@ -63,7 +60,6 @@ object ModuleEagle : ClientModule(
             sneakCaptured = false
             return
         }
-
         when {
             !sneakCaptured && active && originalSneak -> sneakCaptured = true
             sneakCaptured && !originalSneak -> sneakCaptured = false
@@ -79,19 +75,38 @@ object ModuleEagle : ClientModule(
             wasSneaking = true
             return
         }
-
         if (wasSneaking) {
             currentEdgeDistance = edgeDistance.random()
             wasSneaking = false
         }
     }
 
-    private object Conditional : ToggleableConfigurable(this, "Conditional", true) {
-        private val conditions by multiEnumChoice(
-            "Conditions",
-            Condition.ON_GROUND
-        )
+    private object EagleAutoBlockFeature : ToggleableConfigurable(this, "AutoBlock", true) {
+        val doNotUseBelowCount by int("DoNotUseBelowCount", 2, 0..64)
+        fun trySwitchBlock(): Boolean {
+            if (!enabled || player.isCreative || !shouldBeActive) return false
 
+            val handStack = player.mainHandStack
+            if (isValidBlock(handStack) && handStack.count >= doNotUseBelowCount) return false
+
+            fun switchTo(predicate: (ItemStack) -> Boolean): Boolean {
+                for (i in 0..8) {
+                    val stack = player.inventory.getStack(i)
+                    if (predicate(stack)) {
+                        player.inventory.selectedSlot = i
+                        return true
+                    }
+                }
+                return false
+            }
+
+            return switchTo { isValidBlock(it) && it.count >= doNotUseBelowCount }
+                || switchTo { isValidBlock(it) }
+        }
+    }
+
+    private object Conditional : ToggleableConfigurable(this, "Conditional", true) {
+        private val conditions by multiEnumChoice("Conditions", Condition.ON_GROUND)
         val pitch by floatRange("Pitch", -90f..90f, -90f..90f)
 
         val controlsSneak
@@ -123,7 +138,7 @@ object ModuleEagle : ClientModule(
     }
 
     init {
-        tree(Conditional)
+        treeAll(Conditional, EagleAutoBlockFeature)
     }
 
     override fun onDisabled() {
@@ -138,19 +153,15 @@ object ModuleEagle : ClientModule(
 
         val originalSneak = mc.options.sneakKey.isPressed
         val conditionsMet = Conditional.shouldSneak(event)
-        val isActive = shouldActivateEagle(event, conditionsMet)
+        shouldBeActive = shouldActivateEagle(event, conditionsMet)
 
-        updateSneakCapture(originalSneak, isActive)
+        EagleAutoBlockFeature.trySwitchBlock()
 
-        val controlsSneak = shouldOverrideSneak(conditionsMet, isActive)
+        updateSneakCapture(originalSneak, shouldBeActive)
 
-        event.sneak = if (controlsSneak) {
-            isActive
-        } else {
-            originalSneak || isActive
-        }
+        val controlsSneak = shouldOverrideSneak(conditionsMet, shouldBeActive)
+        event.sneak = if (controlsSneak) shouldBeActive else (originalSneak || shouldBeActive)
 
         updateSneakState(event.sneak)
     }
-
 }
