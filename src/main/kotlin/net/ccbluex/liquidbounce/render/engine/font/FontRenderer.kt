@@ -58,7 +58,6 @@ private class FontRendererCache {
         ::ArrayList,
         ArrayList<RenderedGlyph>::clear,
     )
-    val lines = ArrayList<RenderedLine>()
 }
 
 class FontRenderer(
@@ -89,16 +88,11 @@ class FontRenderer(
 
     private val shadowColor = Color4b(0, 0, 0, 150)
 
-    override fun begin() {
-        if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty()) {
-            error("Can't begin a build a new batch when there are pending operations.")
-        }
-    }
-
     override fun process(text: Text, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
         return MinecraftTextProcessor.process(text.sanitizeForeignInput(), defaultColor)
     }
 
+    context(environment: GUIRenderEnvironment)
     override fun draw(
         text: MinecraftTextProcessor.RecyclingProcessedText,
         x0: Float,
@@ -131,6 +125,7 @@ class FontRenderer(
      * @return The resulting x value
      */
     @Suppress("CognitiveComplexMethod")
+    context(environment: GUIRenderEnvironment)
     private fun drawInternal(
         text: ProcessedText,
         pos: Vector3fc,
@@ -243,6 +238,7 @@ class FontRenderer(
     }
 
     @Suppress("LongParameterList")
+    context(environment: GUIRenderEnvironment)
     private fun drawLine(
         x0: Float,
         x1: Float,
@@ -251,24 +247,11 @@ class FontRenderer(
         color: Color4b,
         through: Boolean
     ) {
-        if (through) {
-            this.cache.lines.add(
-                RenderedLine(
-                    Pools.Vec3f.borrow().set(x0, y - this.height + this.ascent, z),
-                    Pools.Vec3f.borrow().set(x1, y - this.height + this.ascent, z),
-                    color
-                )
-            )
-        } else {
-            this.cache.lines.add(
-                RenderedLine(
-                    Pools.Vec3f.borrow().set(x0, y + 1.0f, z),
-                    Pools.Vec3f.borrow().set(x1, y + 1.0f, z),
-                    color
-                )
-            )
+        val y = if (through) y - this.height + this.ascent else y + 1f
+        environment.drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
+            vertex(matrix, x0, y, z).color(color)
+            vertex(matrix, x1, y, z).color(color)
         }
-
     }
 
     override fun commit(environment: RenderEnvironment) {
@@ -303,21 +286,6 @@ class FontRenderer(
         Pools.Vec3f.recycle(vec3f1)
         Pools.Vec3f.recycle(vec3f2)
         cache.commitGlyphs.clear()
-
-        if (cache.lines.isNotEmpty()) {
-            environment.startBatch()
-            for (line in cache.lines) {
-                environment.drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
-                    vertex(matrix, line.p1.x, line.p1.y, line.p1.z).color(line.color.toARGB())
-                    vertex(matrix, line.p2.x, line.p2.y, line.p2.z).color(line.color.toARGB())
-                }
-                Pools.Vec3f.recycle(line.p1)
-                Pools.Vec3f.recycle(line.p2)
-            }
-            environment.commitBatch()
-        }
-
-        cache.lines.clear()
     }
 
 }

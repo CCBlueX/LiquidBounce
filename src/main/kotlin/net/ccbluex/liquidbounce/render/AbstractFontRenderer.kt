@@ -28,11 +28,6 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
     abstract val height: Float
 
     /**
-     * Must be called before rendering
-     */
-    abstract fun begin()
-
-    /**
      * Draws a string with minecraft font markup to this object.
      *
      * @param defaultColor The color of the font when no minecraft-markup applies
@@ -40,6 +35,7 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
      * @return The width of the font, without considering the scaling
      */
     @Suppress("LongParameterList")
+    context(environment: GUIRenderEnvironment)
     abstract fun draw(
         text: T,
         x0: Float,
