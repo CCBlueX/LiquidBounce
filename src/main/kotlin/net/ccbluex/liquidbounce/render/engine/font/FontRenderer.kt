@@ -18,11 +18,6 @@
  */
 package net.ccbluex.liquidbounce.render.engine.font
 
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuTexture
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
-import net.ccbluex.fastutil.Pool
-import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
@@ -35,30 +30,6 @@ import org.joml.Vector3f
 import org.joml.Vector3fc
 import java.awt.Font
 import kotlin.math.max
-
-@JvmRecord
-private data class RenderedGlyph(
-    val style: Int,
-    val glyph: GlyphDescriptor,
-    val x1: Float,
-    val y1: Float,
-    val x2: Float,
-    val y2: Float,
-    val z: Float,
-    val color: Color4b
-)
-
-@JvmRecord
-private data class RenderedLine(val p1: Vector3f, val p2: Vector3f, val color: Color4b)
-
-private class FontRendererCache {
-    val renderedGlyphs = ArrayList<RenderedGlyph>(100)
-    val commitGlyphs = Reference2ReferenceOpenHashMap<GpuTexture, ArrayList<RenderedGlyph>>()
-    val renderedGlyphListPool = Pool(
-        ::ArrayList,
-        ArrayList<RenderedGlyph>::clear,
-    )
-}
 
 class FontRenderer(
     /**
@@ -77,7 +48,6 @@ class FontRenderer(
     override val size: Float = DEFAULT_FONT_SIZE
 ) : AbstractFontRenderer<MinecraftTextProcessor.RecyclingProcessedText>() {
 
-    private val cache = FontRendererCache()
     private val positionCache = Vector3f()
     private val underlinesCache = ArrayDeque<IntRange>()
     private val strikethroughCache = ArrayDeque<IntRange>()
@@ -154,6 +124,9 @@ class FontRenderer(
 
         val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
 
+        val vec3f1 = Pools.Vec3f.borrow()
+        val vec3f2 = Pools.Vec3f.borrow()
+
         text.chars.forEachIndexed { charIdx, processedChar ->
             val glyph = this.glyphManager.requestGlyph(this.font, processedChar.font, processedChar.char)
                 ?: fallbackGlyph
@@ -172,18 +145,19 @@ class FontRenderer(
 
             // We don't need to render whitespaces.
             if (atlasLocation != null) {
-                val renderedGlyph = RenderedGlyph(
-                    processedChar.font,
-                    glyph,
-                    x + renderInfo.glyphBounds.xMin * scale,
-                    y + renderInfo.glyphBounds.yMin * scale,
-                    x + (renderInfo.glyphBounds.xMin + atlasLocation.atlasWidth) * scale,
-                    y + (renderInfo.glyphBounds.yMin + atlasLocation.atlasHeight) * scale,
-                    pos.z(),
-                    color
-                )
+                val x1 = x + renderInfo.glyphBounds.xMin * scale
+                val y1 = y + renderInfo.glyphBounds.yMin * scale
+                val x2 = x + (renderInfo.glyphBounds.xMin + atlasLocation.atlasWidth) * scale
+                val y2 = y + (renderInfo.glyphBounds.yMin + atlasLocation.atlasHeight) * scale
 
-                this.cache.renderedGlyphs.add(renderedGlyph)
+                environment.drawTextureQuad(
+                    glyph.page.texture.glTexture,
+                    vec3f1.set(x1, y1, pos.z()),
+                    atlasLocation.uvCoordinatesOnTexture.min,
+                    vec3f2.set(x2, y2, pos.z()),
+                    atlasLocation.uvCoordinatesOnTexture.max,
+                    color.toARGB(),
+                )
             }
 
             val layoutInfo =
@@ -204,6 +178,9 @@ class FontRenderer(
                 drawLine(strikeThroughStartX!!, x, y, pos.z(), color, true)
             }
         }
+
+        Pools.Vec3f.recycle(vec3f1)
+        Pools.Vec3f.recycle(vec3f2)
 
         return x
     }
@@ -252,40 +229,6 @@ class FontRenderer(
             vertex(matrix, x0, y, z).color(color)
             vertex(matrix, x1, y, z).color(color)
         }
-    }
-
-    override fun commit(environment: RenderEnvironment) {
-        for (glyph in cache.renderedGlyphs) {
-            val glyphPageTexture = glyph.glyph.page.texture.glTexture
-            cache.commitGlyphs.getOrPut(glyphPageTexture) { cache.renderedGlyphListPool.borrow() }.add(glyph)
-        }
-        cache.renderedGlyphs.clear()
-
-        val vec3f1 = Pools.Vec3f.borrow()
-        val vec3f2 = Pools.Vec3f.borrow()
-        environment.startBatch()
-        cache.commitGlyphs.fastIterator().forEach { (gpuTexture, renderedGlyphs) ->
-            for (renderedGlyph in renderedGlyphs) {
-                val glyphDescriptor = renderedGlyph.glyph
-
-                val color = renderedGlyph.color
-                val atlasLocation = glyphDescriptor.renderInfo.atlasLocation!!
-
-                environment.drawTextureQuad(
-                    gpuTexture,
-                    vec3f1.set(renderedGlyph.x1, renderedGlyph.y1, renderedGlyph.z),
-                    atlasLocation.uvCoordinatesOnTexture.min,
-                    vec3f2.set(renderedGlyph.x2, renderedGlyph.y2, renderedGlyph.z),
-                    atlasLocation.uvCoordinatesOnTexture.max,
-                    color.toARGB(),
-                )
-            }
-            cache.renderedGlyphListPool.recycle(renderedGlyphs)
-        }
-        environment.commitBatch()
-        Pools.Vec3f.recycle(vec3f1)
-        Pools.Vec3f.recycle(vec3f2)
-        cache.commitGlyphs.clear()
     }
 
 }

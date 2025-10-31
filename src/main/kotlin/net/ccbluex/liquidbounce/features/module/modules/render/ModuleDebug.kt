@@ -115,6 +115,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             val context = event.context
 
             renderEnvironmentForGUI(event) {
+                startBatch()
                 with(context) {
                     var posX = 300
                     var posY = 500
@@ -154,9 +155,8 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                         )
                     }
                 }
-                fontRenderer.commit(this)
+                commitBatch()
             }
-
         }
 
     }
@@ -241,6 +241,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
 
         renderEnvironmentForGUI(event) {
+            startBatch()
             /**
              * Separate the debugged owner from its parameter
              * Structure should be like this:
@@ -305,7 +306,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                 )
             }
 
-            fontRenderer.commit(this)
+            commitBatch()
         }
     }
 

@@ -49,10 +49,6 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
     abstract fun process(text: Text, defaultColor: Color4b = Color4b.WHITE): T
 
     /**
-     */
-    abstract fun commit(environment: RenderEnvironment)
-
-    /**
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting
      */
     abstract fun getStringWidth(

@@ -95,7 +95,5 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
 
     commitBatch()
 
-    fontRenderer.commit(this@drawNametag)
-
     matrixStack.pop()
 }

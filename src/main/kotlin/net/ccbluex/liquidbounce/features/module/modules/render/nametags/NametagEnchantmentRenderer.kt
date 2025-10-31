@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.render.RenderEnvironment
+import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -148,7 +148,7 @@ object NametagEnchantmentRenderer {
         val width: Float
     )
 
-    context(env: RenderEnvironment)
+    context(env: GUIRenderEnvironment)
     fun drawEntityEnchantments(
         entity: LivingEntity,
         worldX: Float,
@@ -250,7 +250,7 @@ object NametagEnchantmentRenderer {
         )
     }
 
-    private fun RenderEnvironment.renderEnchantmentColumn(
+    private fun GUIRenderEnvironment.renderEnchantmentColumn(
         cells: List<EnchantCell>,
         x: Float,
         y: Float,
@@ -286,16 +286,17 @@ object NametagEnchantmentRenderer {
         }
     }
 
-    private fun RenderEnvironment.drawCellBackground(
+    context(environment: GUIRenderEnvironment)
+    private fun drawCellBackground(
         rect: Rect,
         color: Color4b
     ) {
         val leftTop = Vector2f(rect.x1, rect.y1)
         val rightBottom = Vector2f(rect.x2, rect.y2)
-        drawQuad(leftTop, rightBottom, 0F, fillColor = color)
+        environment.drawQuad(leftTop, rightBottom, 0F, fillColor = color)
     }
 
-    context(environment: RenderEnvironment)
+    context(environment: GUIRenderEnvironment)
     private fun drawEnchantmentColumns(
         x: Float,
         y: Float,
@@ -327,7 +328,7 @@ object NametagEnchantmentRenderer {
         }
     }
 
-    context(environment: RenderEnvironment)
+    context(environment: GUIRenderEnvironment)
     private fun drawGroupBorder(rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
         val leftTop = Vector2f(rect.x1, rect.y1)
