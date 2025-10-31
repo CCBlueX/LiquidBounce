@@ -649,6 +649,7 @@ fun ClientPlayerEntity.getFeetBlockPos(): BlockPos {
     )
 }
 
+@Suppress("NestedBlockDepth","CognitiveComplexMethod")
 fun isInVoid(pos: Vec3d, considerGround: Boolean = true): Boolean {
     if (considerGround && player.isOnGround) return false
 
