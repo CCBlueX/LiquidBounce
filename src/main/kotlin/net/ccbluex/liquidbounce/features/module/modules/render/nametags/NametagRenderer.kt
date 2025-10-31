@@ -54,30 +54,32 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     val scale = 1f / (fontSize * 0.15f) * ModuleNametags.scale
 
     matrixStack.push()
-    matrixStack.translate(pos.x, pos.y, pos.z)
+    matrixStack.translate(pos.x, pos.y, 0f)
     matrixStack.scale(scale, scale, 1f)
 
-    startBatch()
-
     val fontRenderer = ModuleNametags.fontRenderer
-    val x = fontRenderer.draw(
-        fontRenderer.process(nametag.text),
-        0f,
-        0f,
-        shadow = true,
-        z = 0.001f,
-    )
+    val processedText = fontRenderer.process(nametag.text)
+    val textWidth = fontRenderer.getStringWidth(processedText, shadow = true)
 
     // Make the model view matrix center the text when rendering
-    matrixStack.translate(-x * 0.5f, -fontRenderer.height * 0.5f, 0f)
+    matrixStack.translate(-textWidth * 0.5f, -fontRenderer.height * 0.5f, 0f)
 
     val q1 = Vector2f(-0.1f * fontSize, fontRenderer.height * -0.1f)
-    val q2 = Vector2f(x + 0.2f * fontSize, fontRenderer.height * 1.1f)
+    val q2 = Vector2f(textWidth + 0.2f * fontSize, fontRenderer.height * 1.1f)
 
+    // Background
     drawQuad(
         q1, q2, z = 0f,
         fillColor = Color4b(Int.MIN_VALUE, hasAlpha = true),
         outlineColor = Color4b.BLACK.takeIf { NametagShowOptions.BORDER.isShowing() },
+    )
+
+    // Text
+    fontRenderer.draw(
+        processedText,
+        x0 = 0f, y0 = 0f,
+        shadow = true,
+        z = 0.001f,
     )
 
     // Draw enchantments directly for the entity (regardless of whether items are shown)
@@ -92,8 +94,6 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
             worldY,
         )
     }
-
-    commitBatch()
 
     matrixStack.pop()
 }

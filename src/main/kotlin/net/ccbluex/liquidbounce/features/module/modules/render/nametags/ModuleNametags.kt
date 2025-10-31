@@ -98,6 +98,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
             tag.entity.squaredDistanceTo(mc.cameraEntity)
         }
 
+        startBatch()
         filteredNameTags.forEachIndexed { index, nametagInfo ->
             val pos = nametagInfo.position!!
 
@@ -106,6 +107,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
             drawNametag(nametagInfo, pos.copy(z = renderZ))
         }
+        commitBatch()
     }
 
     /**

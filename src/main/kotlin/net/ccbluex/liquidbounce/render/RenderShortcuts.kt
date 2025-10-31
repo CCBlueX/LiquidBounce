@@ -203,8 +203,8 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
         batchBuffer.clear()
 
         texQuadBatchBuffer.fastIterator().forEach { (gpuTexture, bufferBuilder) ->
-            RenderSystem.setShaderTexture(0, gpuTexture) // Sampler0
             bufferBuilder.endNullable()?.let {
+                RenderSystem.setShaderTexture(0, gpuTexture) // Sampler0
                 ClientRenderPipelines.TexQuads.draw(it)
                 ClientTessellator.allocator(gpuTexture).clear()
             }

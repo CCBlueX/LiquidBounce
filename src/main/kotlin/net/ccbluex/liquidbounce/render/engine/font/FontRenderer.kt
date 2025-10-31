@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine.font
 
+import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
@@ -49,8 +50,8 @@ class FontRenderer(
 ) : AbstractFontRenderer<MinecraftTextProcessor.RecyclingProcessedText>() {
 
     private val positionCache = Vector3f()
-    private val underlinesCache = ArrayDeque<IntRange>()
-    private val strikethroughCache = ArrayDeque<IntRange>()
+    private val underlinesCache = IntArrayList()
+    private val strikethroughCache = IntArrayList()
 
     override val height: Float = font.styles.firstNotNullOf { it?.height }
 
@@ -108,12 +109,12 @@ class FontRenderer(
 
         // remove from last
         val underlineStack = underlinesCache.apply {
-            clear()
             addAll(text.underlines)
+            elements().reverse(0, size)
         }
         val strikethroughStack = strikethroughCache.apply {
-            clear()
             addAll(text.strikeThroughs)
+            elements().reverse(0, size)
         }
 
         var x = pos.x()
@@ -132,10 +133,12 @@ class FontRenderer(
                 ?: fallbackGlyph
             val color = overrideColor ?: processedChar.color
 
-            if (underlineStack.firstOrNull()?.start == charIdx) {
+            if (!underlineStack.isEmpty && underlineStack.topInt() == charIdx) {
+                underlineStack.popInt()
                 underlineStartX = x
             }
-            if (strikethroughStack.firstOrNull()?.start == charIdx) {
+            if (!strikethroughStack.isEmpty && strikethroughStack.topInt() == charIdx) {
+                strikethroughStack.popInt()
                 strikeThroughStartX = x
             }
 
@@ -166,21 +169,21 @@ class FontRenderer(
             x += layoutInfo.advanceX * scale
             y += layoutInfo.advanceY * scale
 
-            if (underlineStack.isNotEmpty() && underlineStack.first().last == charIdx) {
-                underlineStack.removeFirst()
-
+            if (!underlineStack.isEmpty && underlineStack.topInt() == charIdx) {
+                underlineStack.popInt()
                 drawLine(underlineStartX!!, x, y, pos.z(), color, false)
             }
 
-            if (strikethroughStack.isNotEmpty() && strikethroughStack.first().last == charIdx) {
-                strikethroughStack.removeFirst()
-
+            if (!strikethroughStack.isEmpty && strikethroughStack.topInt() == charIdx) {
+                strikethroughStack.popInt()
                 drawLine(strikeThroughStartX!!, x, y, pos.z(), color, true)
             }
         }
 
         Pools.Vec3f.recycle(vec3f1)
         Pools.Vec3f.recycle(vec3f2)
+        underlinesCache.clear()
+        strikethroughCache.clear()
 
         return x
     }
