@@ -255,7 +255,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
                 else -> true
             }
         }.toCollection(WeightedSortedList(upperBound = range.sq().toDouble()) { (pos, state) ->
-            state.getCollisionShape(world, pos, ShapeContext.of(player))
+            state.getOutlineShape(world, pos, ShapeContext.of(player))
                 .offset(pos)
                 .getClosestSquaredDistanceTo(player.eyePos)
         }).mapToArray { it.first }.unmodifiable()
@@ -459,7 +459,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
     private val comparator = Comparator.comparingDouble(ToDoubleFunction(::miningDuration))
         .thenComparingDouble(ToDoubleFunction { (pos, state) ->
-            state.getCollisionShape(world, pos, ShapeContext.of(player))
+            state.getOutlineShape(world, pos, ShapeContext.of(player))
                 .offset(pos)
                 .getClosestSquaredDistanceTo(player.eyePos)
         })
