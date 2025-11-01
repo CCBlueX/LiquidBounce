@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.collection
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
@@ -58,7 +58,7 @@ class LfuCache<K : Any, V : Any> @JvmOverloads constructor(
      * `countTable.values.flatten() == counts.keys`
      * `countTable.keys == counts.values`
      */
-    private val countTable = Int2ObjectOpenHashMap<MutableSet<K>>()
+    private val countTable = Int2ObjectRBTreeMap<MutableSet<K>>()
 
     private val setPool = mutableListOf<MutableSet<K>>()
 
