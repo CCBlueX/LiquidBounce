@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import com.mojang.blaze3d.opengl.GlStateManager
-import net.ccbluex.liquidbounce.utils.client.ImmutableText
+import net.ccbluex.liquidbounce.utils.client.PlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -31,7 +31,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.screen.PlayerScreenHandler
 import net.minecraft.screen.slot.Slot
 
-class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(ImmutableText.EMPTY) {
+class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(PlainText.EMPTY) {
 
     val handler: PlayerScreenHandler?
         get() = player()?.playerScreenHandler

@@ -40,16 +40,16 @@ class Nametag private constructor(
     val items: List<ItemStack>
 ) {
 
-    var position: Vec3? = null
+    var screenPos: Vec3? = null
         private set
 
     constructor(entity: LivingEntity) : this(entity, NametagTextFormatter(entity).format(), createItemList(entity))
 
-    fun calculatePosition(tickDelta: Float) {
+    fun calculateScreenPos(tickDelta: Float) {
         val nametagPos = entity.interpolateCurrentPosition(tickDelta)
             .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
 
-        position = WorldToScreen.calculateScreenPos(nametagPos)
+        screenPos = WorldToScreen.calculateScreenPos(nametagPos)
     }
 
     companion object {

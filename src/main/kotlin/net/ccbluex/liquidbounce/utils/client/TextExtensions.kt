@@ -47,7 +47,17 @@ fun String.asText(): MutableText = Text.literal(this)
 /**
  * Returns an immutable [Text] from the receiver.
  */
-fun String.asPlainText(): Text = ImmutableText.of(this)
+fun String.asPlainText(): Text = PlainText.of(this, Style.EMPTY)
+
+/**
+ * Returns an immutable [Text] from the receiver with [style].
+ */
+fun String.asPlainText(style: Style = Style.EMPTY): Text = PlainText.of(this, style)
+
+/**
+ * Returns an immutable [Text] from the receiver with [formatting].
+ */
+fun String.asPlainText(formatting: Formatting): Text = PlainText.of(this, Style.EMPTY.withFormatting(formatting))
 
 fun Text.asNbt(world: World? = null): NbtString =
     NbtString.of(
@@ -55,6 +65,8 @@ fun Text.asNbt(world: World? = null): NbtString =
     )
 
 fun OrderedText.toText(): Text {
+    if (this is Text) return this
+
     val text = Text.empty()
 
     var currentStyle = Style.EMPTY
@@ -63,12 +75,12 @@ fun OrderedText.toText(): Text {
     this.accept { index, style, codePoint ->
         if (style != currentStyle) {
             if (currentText.isNotEmpty()) {
-                text.append(currentText.toString().asText().setStyle(currentStyle))
+                text.append(currentText.toString().asPlainText(currentStyle))
             }
 
             currentStyle = style
 
-            currentText.clear()
+            currentText.setLength(0)
         }
 
         currentText.appendCodePoint(codePoint)
@@ -77,7 +89,7 @@ fun OrderedText.toText(): Text {
     }
 
     if (currentText.isNotEmpty()) {
-        text.append(currentText.toString().asText().setStyle(currentStyle))
+        text.append(currentText.toString().asPlainText(currentStyle))
     }
 
     Pools.StringBuilder.recycle(currentText)

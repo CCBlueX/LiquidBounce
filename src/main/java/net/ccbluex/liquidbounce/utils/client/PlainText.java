@@ -27,19 +27,33 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 /**
  * A plain and immutable {@link Text}, {@link OrderedText} and {@link CharSequence}.
  */
-public record ImmutableText(@NotNull PlainTextContent content) implements Text, OrderedText, CharSequence {
+public record PlainText(
+        @NotNull PlainTextContent content,
+        @NotNull Style style
+) implements Text, OrderedText, CharSequence {
 
-    public static final ImmutableText EMPTY = new ImmutableText(PlainTextContent.EMPTY);
+    public static final PlainText EMPTY = new PlainText(PlainTextContent.EMPTY, Style.EMPTY);
 
-    public ImmutableText(@NotNull String content) {
-        this(PlainTextContent.of(content));
+    public PlainText(@NotNull PlainTextContent content) {
+        this(content, Style.EMPTY);
     }
 
-    public static @NotNull ImmutableText of(@NotNull String content) {
-        return content.isEmpty() ? EMPTY : new ImmutableText(content);
+    public static @NotNull PlainText of(@NotNull PlainTextContent content, @NotNull Style style) {
+        return content.string().isEmpty() && style.isEmpty()
+                ? EMPTY
+                : new PlainText(content, style);
+    }
+
+    public static @NotNull PlainText of(@NotNull String content, @NotNull Style style) {
+        return content.isEmpty() && style.isEmpty()
+                ? EMPTY
+                : new PlainText(PlainTextContent.of(content), style);
     }
 
     public @NotNull String string() {
@@ -50,23 +64,23 @@ public record ImmutableText(@NotNull PlainTextContent content) implements Text, 
     public boolean contains(Text text) {
         if (text == null) return false;
         if (text.equals(this)) return true;
-        final List<Text> sameStyle = text.withoutStyle();
-        return sameStyle.size() == 1 && sameStyle.getFirst().equals(this);
+        List<Text> sameStyle = style.isEmpty() ? text.withoutStyle() : getWithStyle(this.getStyle());
+        return sameStyle.isEmpty() || sameStyle.size() == 1 && sameStyle.getFirst().equals(this);
     }
 
     @Override
     public List<Text> getWithStyle(Style style) {
-        return Collections.singletonList(copy().setStyle(style));
+        return singletonList(this.style.equals(style) ? this : of(this.content, style));
     }
 
     @Override
     public List<Text> withoutStyle() {
-        return Collections.singletonList(this);
+        return getWithStyle(Style.EMPTY);
     }
 
     @Override
     public MutableText copy() {
-        return MutableText.of(content);
+        return copyContentOnly().setStyle(this.style);
     }
 
     @Override
@@ -87,7 +101,7 @@ public record ImmutableText(@NotNull PlainTextContent content) implements Text, 
 
     @Override
     public Style getStyle() {
-        return Style.EMPTY;
+        return this.style;
     }
 
     @Override
@@ -102,7 +116,7 @@ public record ImmutableText(@NotNull PlainTextContent content) implements Text, 
 
     @Override
     public List<Text> getSiblings() {
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Override
@@ -112,33 +126,17 @@ public record ImmutableText(@NotNull PlainTextContent content) implements Text, 
 
     @Override
     public boolean accept(CharacterVisitor visitor) {
-        return TextVisitFactory.visitFormatted(string(), Style.EMPTY, visitor);
+        return TextVisitFactory.visitFormatted(string(), this.style, visitor);
     }
 
     @Override
     public <T> Optional<T> visit(StyledVisitor<T> styledVisitor, Style style) {
-        return styledVisitor.accept(style, string());
+        return styledVisitor.accept(this.style.withParent(style), string());
     }
 
     @Override
     public <T> Optional<T> visit(Visitor<T> visitor) {
         return visitor.accept(string());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) return true;
-
-        return switch (obj) {
-            case PlainTextContent plainTextContent -> plainTextContent.string().equals(string());
-            case CharSequence charSequence -> string().contentEquals(charSequence);
-            case null, default -> false;
-        };
-    }
-
-    @Override
-    public int hashCode() {
-        return string().hashCode();
     }
 
     @Override

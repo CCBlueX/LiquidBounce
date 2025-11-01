@@ -65,6 +65,10 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
         list
     }
 
+    private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
+        nametag.entity.squaredDistanceTo(mc.cameraEntity)
+    }
+
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> {
         nametagsToRender.clear()
@@ -92,22 +96,18 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
     private fun GUIRenderEnvironment.drawNametags(tickDelta: Float) {
         drawnEnchantmentAreas.clear()
-        nametagsToRender.forEach { it.calculatePosition(tickDelta) }
+        nametagsToRender.forEach { it.calculateScreenPos(tickDelta) }
 
-        val filteredNameTags = nametagsToRender.filterTo(mutableListOf()) { it.position != null }
+        val filteredNameTags = nametagsToRender.filterTo(mutableListOf()) { it.screenPos != null }
         if (filteredNameTags.isEmpty()) {
             return
         }
 
         val nametagsCount = filteredNameTags.size.toFloat()
 
-        filteredNameTags.sortByDescending { tag ->
-            tag.entity.squaredDistanceTo(mc.cameraEntity)
-        }
-
         if (batchRenderMode == BatchRenderMode.FULL) startBatch()
         filteredNameTags.forEachIndexed { index, nametagInfo ->
-            val pos = nametagInfo.position!!
+            val pos = nametagInfo.screenPos!!
 
             // We want nametags that are closer to the player to be rendered above nametags that are further away.
             val renderZ = 0.01f + index / nametagsCount * 1000.0F
@@ -131,6 +131,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
             list += Nametag(entity)
         }
+        list.sortWith(NAMETAG_COMPARATOR)
     }
 
 }

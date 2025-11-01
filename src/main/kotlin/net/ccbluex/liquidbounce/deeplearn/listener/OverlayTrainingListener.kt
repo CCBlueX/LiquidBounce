@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.deeplearn.listener
 import ai.djl.training.Trainer
 import ai.djl.training.listener.TrainingListener
 import ai.djl.training.listener.TrainingListenerAdapter
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
@@ -70,10 +70,10 @@ class OverlayTrainingListener(
             .append(regular("Batch "))
             .append(variable("$progress%"))
             .append(regular("\n".repeat(1)))
-            .append("[".asText().formatted(Formatting.GRAY))
-            .append("█".repeat(progress / 4).asText().formatted(Formatting.GREEN))
-            .append("░".repeat(25 - progress / 4).asText().formatted(Formatting.DARK_GRAY))
-            .append("]".asText().formatted(Formatting.GRAY))
+            .append("[".asPlainText(Formatting.GRAY))
+            .append("█".repeat(progress / 4).asPlainText(Formatting.GREEN))
+            .append("░".repeat(25 - progress / 4).asPlainText(Formatting.DARK_GRAY))
+            .append("]".asPlainText(Formatting.GRAY))
 
         mc.execute {
             mc.inGameHud.setOverlayMessage(progressBar, false)

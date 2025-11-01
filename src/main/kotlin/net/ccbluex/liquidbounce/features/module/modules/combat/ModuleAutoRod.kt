@@ -107,12 +107,12 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         get() = requires.all { it.asBoolean }
             && !ignores.any { it.asBoolean }
             && player.health > minHealth
-            && maxEnemiesNearby == 0 || targetTracker.countTargets() <= maxEnemiesNearby
             && availableRodSlot != null
             && player.mainHandStack.item !in holdingItemsForIgnore
             && !ModuleBlink.running
             && !ModuleScaffold.running
             && !ModuleFreeze.running
+            && maxEnemiesNearby == 0 || targetTracker.countTargets() <= maxEnemiesNearby
 
     private var fishingBobberEntity by computedOn<GameTickEvent, FishingBobberEntity?>(
         priority = FIRST_PRIORITY,
