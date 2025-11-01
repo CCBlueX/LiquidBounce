@@ -39,7 +39,6 @@ import org.joml.Vector2fc
  *
  * Makes player name tags more visible and adds useful information.
  */
-@Suppress("MagicNumber")
 object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
     val scale by float("Scale", 2F, 0.25F..4F)

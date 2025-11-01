@@ -130,7 +130,7 @@
     "minecraft.render.entity.feature.MixinFeatureRenderer",
     "minecraft.text.MixinChatHudLine",
     "minecraft.text.MixinChatHudLineVisible",
-    "minecraft.text.MixinMutableTextAccessor",
+    "minecraft.text.MixinMutableText",
     "minecraft.text.MixinTextColor",
     "minecraft.text.MixinTranslatableTextContent",
     "minecraft.util.MixinDownloader",

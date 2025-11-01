@@ -46,7 +46,7 @@ private val BOT_STYLE = Style.EMPTY.withFormatting(Formatting.RED, Formatting.BO
 
 class NametagTextFormatter(private val entity: Entity) {
     fun format(): Text {
-        val outputText = Text.empty()
+        val outputText = "".asText()
 
         if (NametagShowOptions.DISTANCE.isShowing()) {
             outputText.append(this.distanceText).append(" ")

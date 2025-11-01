@@ -26,8 +26,8 @@ import ai.djl.training.listener.TrainingListenerAdapter
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 
 /**
@@ -63,17 +63,18 @@ class OverlayTrainingListener(
         val progressTotal = batch.progressTotal
         val progress = (progressCurrent.toFloat() / progressTotal.toFloat() * 100).toInt()
 
-        val progressBar = Text.empty()
-            .append(regular("Training Epoch "))
-            .append(variable("$numEpochs/$maxEpoch"))
-            .append(regular(" - "))
-            .append(regular("Batch "))
-            .append(variable("$progress%"))
-            .append(regular("\n".repeat(1)))
-            .append("[".asPlainText(Formatting.GRAY))
-            .append("█".repeat(progress / 4).asPlainText(Formatting.GREEN))
-            .append("░".repeat(25 - progress / 4).asPlainText(Formatting.DARK_GRAY))
-            .append("]".asPlainText(Formatting.GRAY))
+        val progressBar = textOf(
+            regular("Training Epoch "),
+            variable("$numEpochs/$maxEpoch"),
+            regular(" - "),
+            regular("Batch "),
+            variable("$progress%"),
+            regular("\n".repeat(1)),
+            "[".asPlainText(Formatting.GRAY),
+            "█".repeat(progress / 4).asPlainText(Formatting.GREEN),
+            "░".repeat(25 - progress / 4).asPlainText(Formatting.DARK_GRAY),
+            "]".asPlainText(Formatting.GRAY),
+        )
 
         mc.execute {
             mc.inGameHud.setOverlayMessage(progressBar, false)

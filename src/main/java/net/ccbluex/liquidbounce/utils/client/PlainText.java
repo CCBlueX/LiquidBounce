@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.utils.client;
 
 import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -39,6 +39,8 @@ public record PlainText(
 ) implements Text, OrderedText, CharSequence {
 
     public static final PlainText EMPTY = new PlainText(PlainTextContent.EMPTY, Style.EMPTY);
+    public static final PlainText SPACE = new PlainText(PlainTextContent.of(" "), Style.EMPTY);
+    public static final PlainText NEW_LINE = new PlainText(PlainTextContent.of("\n"), Style.EMPTY);
 
     public PlainText(@NotNull PlainTextContent content) {
         this(content, Style.EMPTY);
@@ -54,6 +56,10 @@ public record PlainText(
         return content.isEmpty() && style.isEmpty()
                 ? EMPTY
                 : new PlainText(PlainTextContent.of(content), style);
+    }
+
+    public static @NotNull PlainText of(@NotNull String content, @NotNull Formatting formatting) {
+        return of(content, Style.EMPTY.withFormatting(formatting));
     }
 
     public @NotNull String string() {

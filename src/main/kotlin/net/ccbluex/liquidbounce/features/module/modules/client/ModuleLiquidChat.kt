@@ -52,11 +52,11 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     private val autoTranslate by multiEnumChoice<ClientChatMessageEvent.ChatGroup>("AutoTranslate")
 
     private val chatClient = ChatClient()
-    private val prefix: Text = Text.empty()
+    private val prefix: Text = "".asText()
         .formatted(Formatting.RESET).formatted(Formatting.GRAY)
-        .append(Text.literal(this.name).withColor(Formatting.BLUE))
+        .append(this.name.asPlainText(Formatting.BLUE))
         .formatted(Formatting.BOLD)
-        .append(Text.literal(" ▸ ").formatted(Formatting.RESET).withColor(Formatting.DARK_GRAY))
+        .append(" ▸ ".asText().formatted(Formatting.RESET).withColor(Formatting.DARK_GRAY))
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
     private val messageData = MessageMetadata(prefix = false)
 

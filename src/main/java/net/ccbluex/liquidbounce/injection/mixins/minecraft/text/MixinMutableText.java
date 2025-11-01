@@ -20,24 +20,33 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.text;
 
+import net.ccbluex.liquidbounce.utils.client.PlainText;
 import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
+import net.minecraft.text.PlainTextContent;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextContent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Invoker;
-
-import java.util.List;
+import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(MutableText.class)
-public interface MixinMutableTextAccessor {
+public abstract class MixinMutableText {
+
+    @Shadow
+    public abstract MutableText append(Text text);
 
     /**
-     * @param siblings should be mutable list, unless you are sure it will not be modified!
+     * @author MukjepScarlet
+     * @reason avoid {@link Text#literal(String)} because it creates {@link MutableText}
      */
-    @Invoker("<init>")
-    static MutableText create(TextContent content, List<Text> siblings, Style style) {
-        throw new AssertionError();
+    @Overwrite
+    public MutableText append(String text) {
+        if (text.isEmpty()) {
+            return (MutableText) (Object) this;
+        } else if (text.equals(" ")) {
+            return this.append(PlainText.SPACE);
+        } else {
+            return this.append(new PlainText(PlainTextContent.of(text)));
+        }
     }
 
 }

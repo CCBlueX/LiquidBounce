@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatScreenAccessor
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.text.MixinMutableTextAccessor
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -38,10 +37,10 @@ import net.minecraft.util.Util
 import java.io.File
 
 // Chat formatting
-private val clientPrefix: Text = Text.empty()
+private val clientPrefix: Text = "".asText()
     .formatted(Formatting.RESET, Formatting.GRAY)
     .append(gradientText("LiquidBounce", Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
-    .append(Text.literal(" ▸ ").formatted(Formatting.RESET, Formatting.GRAY))
+    .append(" ▸ ".asText().formatted(Formatting.RESET, Formatting.GRAY))
 
 fun regular(text: MutableText): MutableText = text.formatted(Formatting.GRAY)
 
@@ -115,12 +114,12 @@ inline operator fun MutableText.plusAssign(other: Text) {
  * @return A MutableText with the gradient applied
  */
 fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableText {
-    return text.foldIndexed(Text.empty()) { index, newText, char ->
+    return text.foldIndexed("".asText()) { index, newText, char ->
         val factor = if (text.length > 1) index / (text.length - 1.0) else 0.0
         val color = startColor.interpolateTo(endColor, factor)
 
         newText.append(
-            Text.literal(char.toString()).withColor(color.toARGB())
+            char.toString().asText().withColor(color.toARGB())
         )
     }
 }
@@ -209,10 +208,7 @@ fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
  * Adds a new chat message.
  */
 fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata) {
-    val text: Text = MixinMutableTextAccessor.create(
-        PlainTextContent.EMPTY, texts.asList(), Style.EMPTY
-    )
-    chat(text, metadata)
+    chat(texts.asText(), metadata)
 }
 
 fun chat(text: Text, module: ClientModule) = chat(text, metadata = MessageMetadata.byModule(module))
@@ -238,7 +234,7 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
  * Joins a list of [Text] into a single [Text] with the given [separator].
  */
 fun List<Text>.joinToText(separator: Text): MutableText {
-    val result = Text.empty()
+    val result = "".asText()
     if (isEmpty()) {
         return result
     }

@@ -24,8 +24,8 @@ package net.ccbluex.liquidbounce.integration.task
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.integration.task.type.Task
+import net.ccbluex.liquidbounce.utils.client.PlainText
 import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.collection.Pools
@@ -125,7 +125,7 @@ class TaskProgressScreen(
         // Prepare text to display
         val textLines = mutableListOf<Text>()
         textLines.add("Total: ${percentFormat.format(progress * 100)}%$speed".asPlainText())
-        textLines.add(Text.empty())
+        textLines.add(PlainText.EMPTY)
 
         activeTasks.take(3).forEach { task ->
             textLines.add(Pools.buildStringPooled {

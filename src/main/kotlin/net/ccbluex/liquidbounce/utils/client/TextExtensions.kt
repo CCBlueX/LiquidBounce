@@ -24,6 +24,7 @@ import com.google.common.base.CaseFormat
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.nbt.NbtString
 import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.*
@@ -57,7 +58,13 @@ fun String.asPlainText(style: Style = Style.EMPTY): Text = PlainText.of(this, st
 /**
  * Returns an immutable [Text] from the receiver with [formatting].
  */
-fun String.asPlainText(formatting: Formatting): Text = PlainText.of(this, Style.EMPTY.withFormatting(formatting))
+fun String.asPlainText(formatting: Formatting): Text = PlainText.of(this, formatting)
+
+fun List<Text>.asText(): Text = TextList.of(this)
+
+fun Array<out Text>.asText(): Text = TextList.of(this.unmodifiable())
+
+fun textOf(vararg parts: Text): Text = parts.asText()
 
 fun Text.asNbt(world: World? = null): NbtString =
     NbtString.of(
@@ -67,7 +74,7 @@ fun Text.asNbt(world: World? = null): NbtString =
 fun OrderedText.toText(): Text {
     if (this is Text) return this
 
-    val text = Text.empty()
+    val parts = mutableListOf<Text>()
 
     var currentStyle = Style.EMPTY
     val currentText = Pools.StringBuilder.borrow()
@@ -75,7 +82,7 @@ fun OrderedText.toText(): Text {
     this.accept { index, style, codePoint ->
         if (style != currentStyle) {
             if (currentText.isNotEmpty()) {
-                text.append(currentText.toString().asPlainText(currentStyle))
+                parts += currentText.toString().asPlainText(currentStyle)
             }
 
             currentStyle = style
@@ -89,12 +96,12 @@ fun OrderedText.toText(): Text {
     }
 
     if (currentText.isNotEmpty()) {
-        text.append(currentText.toString().asPlainText(currentStyle))
+        parts += currentText.toString().asPlainText(currentStyle)
     }
 
     Pools.StringBuilder.recycle(currentText)
 
-    return text
+    return parts.asText()
 }
 
 fun Text.processContent(): Text {
@@ -228,6 +235,7 @@ fun String.hideSensitiveAddress(): String {
     }
 }
 
+@JvmRecord
 data class ColoredChar(val char: Char, val color: Formatting) {
     init {
         requireNotNull(color.colorValue) { "The formatting must be a color formatting!" }
@@ -251,7 +259,8 @@ fun textLoadingBar(
     val progressPart = progress.char.toString().repeat(filledBars)
     val remainingPart = remaining.char.toString().repeat(length - filledBars)
 
-    return Text.empty()
-        .append(progressPart.asPlainText(progress.color))
-        .append(remainingPart.asPlainText(remaining.color))
+    return textOf(
+        progressPart.asPlainText(progress.color),
+        remainingPart.asPlainText(remaining.color),
+    )
 }
