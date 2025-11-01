@@ -65,7 +65,7 @@ object CommandItemRename : Command.Factory {
                         chat(regular(command.result("nameReset")), command)
                     }
                     else -> {
-                        itemStack!!.set<Text>(DataComponentTypes.CUSTOM_NAME, name.translateColorCodes().asText())
+                        itemStack!!.set(DataComponentTypes.CUSTOM_NAME, name.translateColorCodes().asPlainText())
                         chat(regular(command.result("renamedItem", itemStack.item.name, variable(name))), command)
                     }
                 }

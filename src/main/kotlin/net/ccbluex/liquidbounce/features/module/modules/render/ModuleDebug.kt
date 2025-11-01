@@ -256,20 +256,20 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
             val currentTime = System.currentTimeMillis()
 
-            fun ownerName(owner: DebuggedOwner): MutableText {
+            fun ownerName(owner: DebuggedOwner): Text {
                 return when (owner) {
                     is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
                     is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
                     is EventListener -> owner.parent()?.let { ownerName(it) } ?: "".asText()
-                        .append("::".asText().formatted(Formatting.GRAY))
+                        .append("::".asPlainText(Formatting.GRAY))
                         .append(
                             owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true)
                         )
 
-                    is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asText()
-                        ?.formatted(Formatting.GRAY) ?: owner.toString().asText()
+                    is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asPlainText(Formatting.GRAY)
+                        ?: owner.toString().asPlainText()
 
-                    else -> owner.javaClass.simpleName.asText().formatted(Formatting.BLUE)
+                    else -> owner.javaClass.simpleName.asPlainText(Formatting.BLUE)
                 }
             }
 

@@ -63,7 +63,7 @@ object CommandCoordinates : Command.Factory {
             .subcommand(
                 CommandBuilder.begin("info")
                     .handler {
-                        chat(getCoordinates().asText().formatted(Formatting.GRAY), command)
+                        chat(getCoordinates().asPlainText(Formatting.GRAY), command)
                     }
                     .build()
             )

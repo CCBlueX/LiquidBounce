@@ -123,9 +123,9 @@ object CommandLocalConfig : Command.Factory {
             }
 
             if (configFiles.isNullOrEmpty()) {
-                chat("No local config!".asText().formatted(Formatting.RED))
+                chat("No local config!".asPlainText(Formatting.RED))
             } else {
-                chat("Settings:".asText().formatted(Formatting.AQUA))
+                chat("Settings:".asPlainText(Formatting.AQUA))
                 for (file in configFiles) {
                     val fileNameWithoutSuffix = file.name.removeSuffix(".json")
 

@@ -252,6 +252,6 @@ fun textLoadingBar(
     val remainingPart = remaining.char.toString().repeat(length - filledBars)
 
     return Text.empty()
-        .append(progressPart.asText().formatted(progress.color))
-        .append(remainingPart.asText().formatted(remaining.color))
+        .append(progressPart.asPlainText(progress.color))
+        .append(remainingPart.asPlainText(remaining.color))
 }

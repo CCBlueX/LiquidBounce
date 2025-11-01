@@ -148,13 +148,13 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
         fun prefix(): MutableText = when (event.chatGroup) {
             ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT ->
                 event.user.name.asText().formatted(Formatting.GRAY).copyable(copyContent = event.user.name)
-                    .append(" ▸ ".asText().formatted(Formatting.DARK_GRAY))
+                    .append(" ▸ ".asPlainText(Formatting.DARK_GRAY))
             ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT ->
                 "[".asText().formatted(Formatting.DARK_GRAY)
                     .append(
                         event.user.name.asText().formatted(Formatting.BLUE).copyable(copyContent = event.message)
                     )
-                    .append("] ".asText().formatted(Formatting.DARK_GRAY))
+                    .append("] ".asPlainText(Formatting.DARK_GRAY))
         }
 
         writeChat(prefix().append(regular(event.message).copyable(copyContent = event.message)))

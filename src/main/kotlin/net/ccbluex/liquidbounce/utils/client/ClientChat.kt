@@ -54,7 +54,7 @@ fun variable(text: String): MutableText = text.asText().formatted(Formatting.GOL
 fun clickablePath(file: File): MutableText =
     variable(file.absolutePath)
         .onClickRun { Util.getOperatingSystem().open(file) }
-        .onHover(HoverEvent.ShowText("Open".asText()))
+        .onHover(HoverEvent.ShowText("Open".asPlainText()))
 
 fun highlight(text: MutableText): MutableText = text.formatted(Formatting.DARK_PURPLE)
 
