@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -34,10 +35,17 @@ import kotlin.math.sin
 
 internal object ElytraFlyModePackage : ElytraFlyMode("Package") {
 
-    private val speed by float("Speed", 1.5f, 0.5f..3.0f)
-    private val acceleration by float("Acceleration", 0.05f, 0.01f..0.2f)
-    private val deceleration by float("Deceleration", 0.03f, 0.01f..0.15f)
-    private val verticalSpeed by float("VerticalSpeed", 0.5f, 0.1f..2.0f)
+    private object SpeedOptions : Configurable("Speed") {
+        val horizontal by float("Speed", 1.5f, 0.5f..3.0f)
+        val acceleration by float("Acceleration", 0.05f, 0.01f..0.2f)
+        val deceleration by float("Deceleration", 0.03f, 0.01f..0.15f)
+        val vertical by float("Vertical", 0.5f, 0.1f..2.0f)
+    }
+
+    init {
+        tree(SpeedOptions)
+    }
+
     private val smoothing by boolean("Smoothing", true)
     private val antiKick by boolean("AntiKick", true)
     private val glideOnStop by boolean("GlideOnStop", true)
@@ -82,9 +90,9 @@ internal object ElytraFlyModePackage : ElytraFlyMode("Package") {
 
     private fun updateTargetSpeed() {
         targetSpeed = when {
-            player.moving && mc.options.jumpKey.isPressed -> speed.toDouble() * 1.2
-            player.moving -> speed.toDouble()
-            glideOnStop -> speed.toDouble() * 0.3
+            player.moving && mc.options.jumpKey.isPressed -> SpeedOptions.horizontal.toDouble() * 1.2
+            player.moving -> SpeedOptions.horizontal.toDouble()
+            glideOnStop -> SpeedOptions.horizontal.toDouble() * 0.3
             else -> 0.0
         }
     }
@@ -92,10 +100,10 @@ internal object ElytraFlyModePackage : ElytraFlyMode("Package") {
     private fun updateCurrentSpeed() {
         currentSpeed = when {
             currentSpeed < targetSpeed -> {
-                (currentSpeed + acceleration).coerceAtMost(targetSpeed)
+                (currentSpeed + SpeedOptions.acceleration).coerceAtMost(targetSpeed)
             }
             currentSpeed > targetSpeed -> {
-                (currentSpeed - deceleration).coerceAtLeast(targetSpeed)
+                (currentSpeed - SpeedOptions.deceleration).coerceAtLeast(targetSpeed)
             }
             else -> currentSpeed
         }
@@ -129,7 +137,7 @@ internal object ElytraFlyModePackage : ElytraFlyMode("Package") {
             val movementSpeed = if (smoothing) {
                 currentSpeed
             } else {
-                speed.toDouble()
+                SpeedOptions.horizontal.toDouble()
             }
             
             event.movement = event.movement.withStrafe(speed = movementSpeed)
@@ -142,10 +150,10 @@ internal object ElytraFlyModePackage : ElytraFlyMode("Package") {
     private fun handleVerticalMovement() {
         motionY = when {
             mc.options.jumpKey.isPressed && !mc.options.sneakKey.isPressed -> {
-                verticalSpeed.toDouble()
+                SpeedOptions.vertical.toDouble()
             }
             mc.options.sneakKey.isPressed && !mc.options.jumpKey.isPressed -> {
-                -verticalSpeed.toDouble()
+                -SpeedOptions.vertical.toDouble()
             }
             glideOnStop && !player.moving -> {
                 -0.02
