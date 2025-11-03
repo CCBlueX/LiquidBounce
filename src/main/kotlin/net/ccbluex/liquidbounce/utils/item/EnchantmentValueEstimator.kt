@@ -22,7 +22,9 @@ import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.RegistryKey
 
-class EnchantmentValueEstimator(private vararg val weightedEnchantments: WeightedEnchantment) {
+class EnchantmentValueEstimator(
+    private vararg val weightedEnchantments: WeightedEnchantment,
+) : Comparator<ItemStack> {
 
     fun estimateValue(itemStack: ItemStack): Float {
         var sum = 0.0f
@@ -33,6 +35,9 @@ class EnchantmentValueEstimator(private vararg val weightedEnchantments: Weighte
 
         return sum
     }
+
+    override fun compare(o1: ItemStack, o2: ItemStack): Int =
+        this.estimateValue(o1).compareTo(this.estimateValue(o2))
 
     class WeightedEnchantment(val enchantment: RegistryKey<Enchantment>, val factor: Float)
 }

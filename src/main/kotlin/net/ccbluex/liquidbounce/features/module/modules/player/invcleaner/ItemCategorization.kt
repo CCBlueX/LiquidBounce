@@ -27,25 +27,11 @@ import net.ccbluex.liquidbounce.utils.inventory.VirtualItemSlot
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
 import java.util.function.Predicate
-
-@JvmField
-val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareByCondition(ItemFacet::isInHotbar)
-
-@JvmField
-val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
-    it.itemStack.hashCode()
-}
-
-@JvmField
-val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = Comparator.comparingInt {
-    it.itemStack.durability
-}
 
 @JvmRecord
 data class ItemCategory(val type: ItemType, val subtype: Int)

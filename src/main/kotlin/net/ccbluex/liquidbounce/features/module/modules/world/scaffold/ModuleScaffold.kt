@@ -271,7 +271,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             PreferFullCubeBlocks,
             PreferWalkableBlocks,
             PreferAverageHardBlocks(neutralRange = true),
-            PreferStackSize.LESS,
+            PreferStackSize.PREFER_MORE,
             PreferAverageHardBlocks(neutralRange = false),
         )
     @JvmField
@@ -282,7 +282,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             PreferFullCubeBlocks,
             PreferWalkableBlocks,
             PreferAverageHardBlocks(neutralRange = true),
-            PreferStackSize.MORE,
+            PreferStackSize.PREFER_FEWER,
             PreferAverageHardBlocks(neutralRange = false),
         )
 

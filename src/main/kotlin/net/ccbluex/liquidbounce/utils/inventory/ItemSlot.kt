@@ -22,6 +22,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSl
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.item.asItemSlotComparator
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ItemStack
@@ -66,12 +68,10 @@ sealed interface ItemSlot {
         }
 
         @JvmField
-        val PREFER_FEWER_ITEM: Comparator<ItemSlot> = Comparator<ItemSlot> { left, right ->
-            left.itemStack.count.compareTo(right.itemStack.count)
-        }
+        val PREFER_FEWER_ITEM: Comparator<ItemSlot> = PreferStackSize.PREFER_FEWER.asItemSlotComparator()
 
         @JvmField
-        val PREFER_MORE_ITEM: Comparator<ItemSlot> = PREFER_FEWER_ITEM.reversed()
+        val PREFER_MORE_ITEM: Comparator<ItemSlot> = PreferStackSize.PREFER_MORE.asItemSlotComparator()
     }
 }
 
