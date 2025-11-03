@@ -32,6 +32,7 @@ import net.minecraft.client.util.ScreenshotRecorder
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
 import java.awt.image.BufferedImage
+import java.io.File
 import java.io.InputStream
 import java.util.concurrent.CompletableFuture
 import java.util.function.Supplier
@@ -69,6 +70,11 @@ inline fun GpuTexture.copyFrom(
 ) = gpuDevice.createCommandEncoder().copyTextureToTexture(
     this, source, mipLevel, intoX, intoY, sourceX, sourceY, width, height
 )
+
+fun GpuTexture.saveToFile(file: File): CompletableFuture<*> =
+    this.toNativeImage().thenAccept { nativeImage ->
+        nativeImage.writeTo(file)
+    }
 
 /**
  * @see ScreenshotRecorder.takeScreenshot

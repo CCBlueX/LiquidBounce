@@ -68,13 +68,15 @@ object ItemImageAtlas : EventListener {
     private var atlas: Atlas? = null
     private var updateFuture: CompletableFuture<*>? = null
 
-    fun updateAtlas(drawContext: DrawContext) {
+    fun updateAtlas(drawContext: DrawContext): Boolean {
         if (this.atlas != null || this.updateFuture != null) {
-            return
+            return false
         }
 
         updateFuture = ItemTextureRenderer(items = Registries.ITEM, scale = 4)
             .render(drawContext).thenAcceptAsync({ atlas = it }, mc)
+
+        return true
     }
 
     @Suppress("unused")
