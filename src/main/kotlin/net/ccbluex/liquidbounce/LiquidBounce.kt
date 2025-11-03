@@ -61,6 +61,7 @@ import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
+import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
@@ -344,6 +345,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.load(MarketplaceManager)
         ConfigSystem.load(ThemeManager)
         ThemeManager.load()
+        BlurEffectRenderer
         IntegrationListener
 
         taskManager = TaskManager(ioScope).apply {

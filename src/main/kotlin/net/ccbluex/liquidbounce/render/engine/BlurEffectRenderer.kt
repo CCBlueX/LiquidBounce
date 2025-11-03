@@ -19,8 +19,11 @@
 package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
+import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.interfaces.PostEffectProcessorAdditions
@@ -38,7 +41,7 @@ import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.render.DefaultFramebufferSet
 import net.minecraft.util.math.MathHelper
 
-object BlurEffectRenderer : MinecraftShortcuts {
+object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     private val OVERLAY_FRAMEBUFFER_ID = LiquidBounce.identifier("overlay")
     private val UI_BLUR_ID = LiquidBounce.identifier("ui_blur")
 
@@ -56,6 +59,11 @@ object BlurEffectRenderer : MinecraftShortcuts {
 
     private fun easeFunction(x: Float): Float {
         return (x * MathHelper.HALF_PI).fastSin()
+    }
+
+    @Suppress("unused")
+    private val resizeHandler = handler<FramebufferResizeEvent> {
+        this.overlayFramebuffer.resize(it.width, it.height)
     }
 
     fun getBlurRadiusFactor(): Float {
@@ -123,7 +131,7 @@ object BlurEffectRenderer : MinecraftShortcuts {
         )
     }
 
-    fun tryLoadBlurEffectProcessor(): PostEffectProcessor {
+    private fun tryLoadBlurEffectProcessor(): PostEffectProcessor {
         val postEffect = mc.shaderLoader.loadPostEffect(
             UI_BLUR_ID,
             setOf(DefaultFramebufferSet.MAIN, OVERLAY_FRAMEBUFFER_ID)
@@ -136,10 +144,6 @@ object BlurEffectRenderer : MinecraftShortcuts {
         }
 
         return postEffect
-    }
-
-    fun setupDimensions(width: Int, height: Int) {
-        this.overlayFramebuffer.resize(width, height)
     }
 
 }
