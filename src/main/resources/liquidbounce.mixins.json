@@ -31,7 +31,6 @@
     "minecraft.client.MixinNarratorManager",
     "minecraft.client.MixinParticleManager",
     "minecraft.client.MixinPlayerInventory",
-    "minecraft.client.MixinServerResourcePackManager",
     "minecraft.client.MixinTextHandler",
     "minecraft.client.MixinTranslationStorage",
     "minecraft.client.MixinWindow",
