@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
+import net.ccbluex.fastutil.asObjectList
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.entity.EquipmentSlot
@@ -49,7 +50,7 @@ object Slots {
      */
     @JvmField
     val Hotbar = SlotGroup(
-        List(9) { HotbarItemSlot(it) }
+        Array(9) { HotbarItemSlot(it) }
     )
 
     /**
@@ -57,7 +58,7 @@ object Slots {
      */
     @JvmField
     val Inventory = SlotGroup(
-        List(27) { InventoryItemSlot(it) }
+        Array(27) { InventoryItemSlot(it) }
     )
 
     /**
@@ -75,7 +76,7 @@ object Slots {
      */
     @JvmField
     val Armor = SlotGroup(
-        listOf(
+        arrayOf(
             ArmorItemSlot(EquipmentSlot.FEET), // 0
             ArmorItemSlot(EquipmentSlot.LEGS), // 1
             ArmorItemSlot(EquipmentSlot.CHEST), // 2
@@ -98,6 +99,9 @@ object Slots {
 }
 
 class SlotGroup<T : ItemSlot>(val slots: List<T>) : List<T> by slots {
+
+    internal constructor(slots: Array<T>) : this(slots.asObjectList())
+
     val stacks: Array<ItemStack>
         get() = slots.mapToArray { it.itemStack }
 
