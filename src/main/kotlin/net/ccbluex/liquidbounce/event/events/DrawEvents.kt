@@ -67,4 +67,8 @@ class DrawOutlinesEvent(
 }
 
 @Nameable("overlayRender")
-class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
+class OverlayRenderEvent(
+    val framebuffer: Framebuffer,
+    val context: DrawContext,
+    val tickDelta: Float,
+) : Event()

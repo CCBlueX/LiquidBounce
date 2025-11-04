@@ -279,14 +279,13 @@ inline fun renderEnvironmentForWorld(
 @OptIn(ExperimentalContracts::class)
 inline fun renderEnvironmentForGUI(
     event: OverlayRenderEvent,
-    framebuffer: Framebuffer = mc.framebuffer,
     draw: GUIRenderEnvironment.() -> Unit
 ) {
     contract {
         callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
     }
 
-    val environment = GUIRenderEnvironment(framebuffer, event.context, event.context.matrices)
+    val environment = GUIRenderEnvironment(event.framebuffer, event.context, event.context.matrices)
     draw(environment)
     if (environment.isBatchMode) environment.commitBatch()
 }

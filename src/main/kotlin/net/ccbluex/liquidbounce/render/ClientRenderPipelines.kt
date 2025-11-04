@@ -180,7 +180,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     }
 
     @JvmField
-    val Blur = newPipeline("blur") {
+    val GuiBlur = newPipeline("blur") {
         withVertexShader(ClientShaders.SOBEL_VSH_ID)
         withFragmentShader(ClientShaders.BLUR_FSH_ID)
         withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
@@ -188,6 +188,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withSampler("overlay")
         withUniform("radius", UniformType.FLOAT)
         withoutBlend()
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
     }
 
     @JvmField
