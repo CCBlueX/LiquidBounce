@@ -200,7 +200,6 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "onResized", at = @At("HEAD"))
     private void hookBlurEffectResize(int width, int height, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new ResolutionChangedEvent(width, height));
     }
 
     @Inject(method = "render", at = @At(value = "RETURN"))
