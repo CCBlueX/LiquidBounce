@@ -197,9 +197,12 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     val Blit = newPipeline("blit") {
         withVertexShader(ClientShaders.PLAIN_POSITION_TEX_VSH_ID)
         withFragmentShader(ClientShaders.BLIT_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.QUADS)
+        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
-        forWorldRender()
+        withBlend(BlendFunction.TRANSLUCENT)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withDepthWrite(false)
+        withColorWrite(true, true)
     }
 
     @JvmField

@@ -112,6 +112,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         framebufferWrapper.end()
 
+        // Draw blur areas
         newRenderPass(mc.framebuffer).use { pass ->
             pass.setPipeline(ClientRenderPipelines.GuiBlur)
             pass.bindSampler("texture0", mc.framebuffer.colorAttachment)
@@ -121,7 +122,13 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             pass.setUniform("alphaBlendMax", ModuleHud.Blur.alphaBlendRange.endInclusive)
             pass.drawFullScreenPositionTexture()
         }
-        overlayFramebuffer.drawBlit(mc.framebuffer.colorAttachment)
+
+        // overlayFramebuffer ---blit--> mc.framebuffer
+        newRenderPass(mc.framebuffer).use { pass ->
+            pass.setPipeline(ClientRenderPipelines.Blit)
+            pass.bindSampler("texture0", overlayFramebuffer.colorAttachment)
+            pass.drawFullScreenPositionTexture()
+        }
     }
 
 }
