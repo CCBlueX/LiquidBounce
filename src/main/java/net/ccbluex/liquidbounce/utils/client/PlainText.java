@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.client;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -101,8 +102,8 @@ public record PlainText(
     }
 
     @Override
-    public @NotNull String getLiteralString() {
-        return string();
+    public @Nullable String getLiteralString() {
+        return this.style.isEmpty() ? this.string() : null;
     }
 
     @Override
@@ -112,7 +113,7 @@ public record PlainText(
 
     @Override
     public TextContent getContent() {
-        return content;
+        return this.content;
     }
 
     @Override
