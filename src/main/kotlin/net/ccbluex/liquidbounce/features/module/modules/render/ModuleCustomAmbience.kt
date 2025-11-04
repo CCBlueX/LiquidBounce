@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinBackgroun
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.setUniform
-import net.ccbluex.liquidbounce.render.trianglePosTexVertexBuffer
+import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.minecraft.block.enums.CameraSubmersionType
 import net.minecraft.client.render.Camera
@@ -114,8 +114,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
                     pass.setPipeline(ClientRenderPipelines.Blend)
                     pass.bindSampler("texture0", this.texture)
                     pass.setUniform("mixColor", lightColor)
-                    pass.setVertexBuffer(0, trianglePosTexVertexBuffer)
-                    pass.draw(0, 3)
+                    pass.drawFullScreenPositionTexture()
                 }
         }
     }

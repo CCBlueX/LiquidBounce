@@ -22,7 +22,6 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.common.GlobalFramebuffer;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
@@ -38,13 +37,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.integration.IntegrationListener;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
-import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
-import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screen.Overlay;
 import net.minecraft.client.gui.screen.Screen;
@@ -341,13 +338,6 @@ public abstract class MixinMinecraftClient {
     private void hookItemPick(CallbackInfo ci) {
         if (ModuleMiddleClickAction.Pearl.INSTANCE.cancelPick()) {
             ci.cancel();
-        }
-    }
-
-    @Inject(method = "hasOutline", cancellable = true, at = @At("HEAD"))
-    private void injectOutlineESPFix(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        if (RenderingFlags.isCurrentlyRenderingEntityOutline().get()) {
-            cir.setReturnValue(true);
         }
     }
 

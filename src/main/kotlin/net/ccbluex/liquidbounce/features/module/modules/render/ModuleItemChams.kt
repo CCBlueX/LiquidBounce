@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.render.setUniform
-import net.ccbluex.liquidbounce.render.trianglePosTexVertexBuffer
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import kotlin.use
 
@@ -68,8 +68,7 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
             pass.setUniform("falloff", falloff)
             pass.setUniform("layerCount", layers)
 
-            pass.setVertexBuffer(0, trianglePosTexVertexBuffer)
-            pass.draw(0, 3)
+            pass.drawFullScreenPositionTexture()
         }
 
         edited = true

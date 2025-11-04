@@ -19,21 +19,16 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
-import com.mojang.blaze3d.buffers.BufferType
-import com.mojang.blaze3d.buffers.BufferUsage
-import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.render.newRenderPass
-import net.ccbluex.liquidbounce.render.trianglePosTexVertexBuffer
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.util.Identifier
 import java.io.Closeable
@@ -114,8 +109,7 @@ sealed interface ThemeBackground : Closeable {
                     mc.window.framebufferHeight.toFloat(),
                 )
 
-                pass.setVertexBuffer(0, trianglePosTexVertexBuffer)
-                pass.draw(0, 3)
+                pass.drawFullScreenPositionTexture()
             }
             return true
         }

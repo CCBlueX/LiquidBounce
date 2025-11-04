@@ -103,6 +103,11 @@ val trianglePosTexVertexBuffer: GpuBuffer =
         }
     }
 
+fun RenderPass.drawFullScreenPositionTexture() {
+    setVertexBuffer(0, trianglePosTexVertexBuffer)
+    draw(0, 3)
+}
+
 // Copied from 1.21.4
 
 fun defaultBlendFunc() {
@@ -158,7 +163,7 @@ fun GlGpuBuffer.draw() {
  *
  * @property matrixStack The matrix stack for rendering.
  */
-sealed class RenderEnvironment(val matrixStack: MatrixStack) {
+sealed class RenderEnvironment(val framebuffer: Framebuffer, val matrixStack: MatrixStack) {
     var isBatchMode: Boolean = false
         private set
 
@@ -225,14 +230,16 @@ sealed class RenderEnvironment(val matrixStack: MatrixStack) {
 }
 
 class GUIRenderEnvironment(
+    framebuffer: Framebuffer,
     val context: DrawContext,
-    matrixStack: MatrixStack?,
-) : RenderEnvironment(matrixStack ?: context.matrices)
+    matrixStack: MatrixStack,
+) : RenderEnvironment(framebuffer, matrixStack)
 
 class WorldRenderEnvironment(
+    framebuffer: Framebuffer,
     matrixStack: MatrixStack,
     val camera: Camera,
-) : RenderEnvironment(matrixStack) {
+) : RenderEnvironment(framebuffer, matrixStack) {
     fun relativeToCamera(pos: Vec3d): Vec3d {
         return pos.subtract(camera.pos)
     }
@@ -249,7 +256,11 @@ class WorldRenderEnvironment(
  * @param draw The block of code to be executed in the rendering environment.
  */
 @OptIn(ExperimentalContracts::class)
-inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRenderEnvironment.() -> Unit) {
+inline fun renderEnvironmentForWorld(
+    matrixStack: MatrixStack,
+    framebuffer: Framebuffer = mc.framebuffer,
+    draw: WorldRenderEnvironment.() -> Unit,
+) {
     contract {
         callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
     }
@@ -258,7 +269,7 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
 
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
 
-    val environment = WorldRenderEnvironment(matrixStack, camera)
+    val environment = WorldRenderEnvironment(framebuffer, matrixStack, camera)
     draw(environment)
     if (environment.isBatchMode) environment.commitBatch()
 
@@ -268,14 +279,14 @@ inline fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRender
 @OptIn(ExperimentalContracts::class)
 inline fun renderEnvironmentForGUI(
     event: OverlayRenderEvent,
-    matrixStack: MatrixStack? = null,
+    framebuffer: Framebuffer = mc.framebuffer,
     draw: GUIRenderEnvironment.() -> Unit
 ) {
     contract {
         callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
     }
 
-    val environment = GUIRenderEnvironment(event.context, matrixStack)
+    val environment = GUIRenderEnvironment(framebuffer, event.context, event.context.matrices)
     draw(environment)
     if (environment.isBatchMode) environment.commitBatch()
 }
@@ -417,6 +428,7 @@ inline fun RenderPass.setUniform(name: String, color: Color4b) {
 }
 
 @Suppress("detekt:all")
+context(env: RenderEnvironment)
 // copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
 fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
     val gpuBuffer = vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
@@ -431,7 +443,7 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         indexType = buffer.drawParameters.indexType
     }
 
-    newRenderPass().use { renderPass ->
+    newRenderPass(env.framebuffer).use { renderPass ->
         // TODO: render pass extra actions
         renderPass.setPipeline(this)
         renderPass.setVertexBuffer(0, gpuBuffer)
