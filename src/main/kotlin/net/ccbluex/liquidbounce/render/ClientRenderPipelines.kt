@@ -187,6 +187,8 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withSampler("texture0")
         withSampler("overlay")
         withUniform("radius", UniformType.FLOAT)
+        withUniform("alphaBlendMin", UniformType.FLOAT)
+        withUniform("alphaBlendMax", UniformType.FLOAT)
         withoutBlend()
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
     }

@@ -117,6 +117,8 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             pass.bindSampler("texture0", mc.framebuffer.colorAttachment)
             pass.bindSampler("overlay", overlayFramebuffer.colorAttachment)
             pass.setUniform("radius", getBlurRadius())
+            pass.setUniform("alphaBlendMin", ModuleHud.Blur.alphaBlendRange.start)
+            pass.setUniform("alphaBlendMax", ModuleHud.Blur.alphaBlendRange.endInclusive)
             pass.drawFullScreenPositionTexture()
         }
         overlayFramebuffer.drawBlit(mc.framebuffer.colorAttachment)

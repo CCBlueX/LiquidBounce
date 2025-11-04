@@ -6,6 +6,8 @@ out vec4 fragColor;
 uniform sampler2D texture0;
 uniform sampler2D overlay;
 uniform float radius;
+uniform float alphaBlendMin;
+uniform float alphaBlendMax;
 
 const vec2 BlurDir = vec2(1.2, 0.8);
 
@@ -18,7 +20,12 @@ void main() {
         return;
     }
 
-    float opacity = clamp((overlay_color.a - 0.1) * 2.0, 0.1, 1.0);
+    float a = overlay_color.a;
+    float range = alphaBlendMax - alphaBlendMin;
+    float opacity = range > 0.0
+    ? clamp((a - alphaBlendMin) / range, 0.0, 1.0)
+    : 1.0;
+    opacity = clamp(opacity, 0.1, 1.0);
 
     vec4 origColor = texture(texture0, fragTexCoord);
 
