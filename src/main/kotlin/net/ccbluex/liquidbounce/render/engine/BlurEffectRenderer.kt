@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
@@ -27,12 +28,19 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.interfaces.PostEffectProcessorAdditions
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.buffer.MinecraftFramebuffer
+import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.newRenderPass
+import net.ccbluex.liquidbounce.render.setUniform
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.kotlin.mixinInterfaceCast
+import net.ccbluex.liquidbounce.utils.render.clearColor
+import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
+import net.ccbluex.liquidbounce.utils.render.saveToFile
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.PostEffectProcessor
 import net.minecraft.client.gl.SimpleFramebuffer
@@ -40,6 +48,7 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.render.DefaultFramebufferSet
 import net.minecraft.util.math.MathHelper
+import java.util.concurrent.CompletableFuture
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     private val OVERLAY_FRAMEBUFFER_ID = LiquidBounce.identifier("overlay")
@@ -54,6 +63,13 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         true
     )
 
+    private val tempFramebuffer = SimpleFramebuffer(
+        "LiquidBounceTemp",
+        mc.window.framebufferWidth,
+        mc.window.framebufferHeight,
+        false
+    )
+
     private val lastTimeScreenOpened = Chronometer()
     private var wasScreenOpen = false
 
@@ -64,6 +80,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     @Suppress("unused")
     private val resizeHandler = handler<FramebufferResizeEvent> {
         this.overlayFramebuffer.resize(it.width, it.height)
+        this.tempFramebuffer.resize(it.width, it.height)
     }
 
     fun getBlurRadiusFactor(): Float {
@@ -94,12 +111,14 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
             val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
 
-            framebufferWrapper.clearColor = Color4b.TRANSPARENT
-            framebufferWrapper.beginWrite(true)
+            framebufferWrapper.beginWrite(viewport = true, clear = false)
         }
 
         callEvent(OverlayRenderEvent(context, tickDelta))
     }
+
+    private var future1: CompletableFuture<*>? = null
+    private var future2: CompletableFuture<*>? = null
 
     fun endOverlayDrawing() {
         if (!this.isDrawingHudFramebuffer) {
@@ -112,38 +131,61 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         framebufferWrapper.end()
 
-        val postEffectProcessor = tryLoadBlurEffectProcessor()
-        val mixinInterfaceCast = mixinInterfaceCast<PostEffectProcessorAdditions>(postEffectProcessor)
+        // Debug picture
+//        if (future1 == null || future1!!.isDone) {
+//            future1 = this.overlayFramebuffer.colorAttachment!!.saveToFile(ConfigSystem.rootFolder.resolve("overlay.png"))
+//        }
+//        if (future2 == null || future2!!.isDone) {
+//            future2 = mc.framebuffer.colorAttachment!!.saveToFile(ConfigSystem.rootFolder.resolve("game.png"))
+//        }
+        // FIXME: why mc.framebuffer.colorAttachment is transparent?
 
-        mixinInterfaceCast.`liquid_bounce$renderWithAdditionalExternalTargets`(
-            mc.framebuffer, mc.gameRenderer.pool,
-            { pass ->
-                val alphaBlendRange = ModuleHud.Blur.alphaBlendRange
+        mc.framebuffer.drawBlit(this.tempFramebuffer.colorAttachment)
+        mc.framebuffer.copyDepthFrom(this.overlayFramebuffer)
 
-                pass.setUniform("Radius", getBlurRadius())
-                pass.setUniform(
-                    "BlurRange",
-                    alphaBlendRange.start,
-                    alphaBlendRange.endInclusive,
-                )
-            },
-            mapOf(OVERLAY_FRAMEBUFFER_ID to this.overlayFramebuffer as Framebuffer)
-        )
-    }
-
-    private fun tryLoadBlurEffectProcessor(): PostEffectProcessor {
-        val postEffect = mc.shaderLoader.loadPostEffect(
-            UI_BLUR_ID,
-            setOf(DefaultFramebufferSet.MAIN, OVERLAY_FRAMEBUFFER_ID)
-        )
-
-        if (postEffect == null) {
-            ModuleHud.disableBlur()
-
-            error("Failed to load ui blur shader. Blur shader will be disabled")
+        newRenderPass(mc.framebuffer).use { pass ->
+            pass.setPipeline(ClientRenderPipelines.Blur)
+            pass.bindSampler("texture0", tempFramebuffer.colorAttachment)
+            pass.bindSampler("overlay", overlayFramebuffer.colorAttachment)
+            pass.setUniform("radius", getBlurRadius())
+            pass.drawFullScreenPositionTexture()
         }
 
-        return postEffect
+        tempFramebuffer.colorAttachment!!.clearColor(0)
+        overlayFramebuffer.clearColorAndDepth(0, 1.0)
+
+//        val postEffectProcessor = tryLoadBlurEffectProcessor()
+//        val mixinInterfaceCast = mixinInterfaceCast<PostEffectProcessorAdditions>(postEffectProcessor)
+//
+//        mixinInterfaceCast.`liquid_bounce$renderWithAdditionalExternalTargets`(
+//            mc.framebuffer, mc.gameRenderer.pool,
+//            { pass ->
+//                val alphaBlendRange = ModuleHud.Blur.alphaBlendRange
+//
+//                pass.setUniform("Radius", getBlurRadius())
+//                pass.setUniform(
+//                    "BlurRange",
+//                    alphaBlendRange.start,
+//                    alphaBlendRange.endInclusive,
+//                )
+//            },
+//            mapOf(OVERLAY_FRAMEBUFFER_ID to this.overlayFramebuffer as Framebuffer)
+//        )
     }
+
+//    private fun tryLoadBlurEffectProcessor(): PostEffectProcessor {
+//        val postEffect = mc.shaderLoader.loadPostEffect(
+//            UI_BLUR_ID,
+//            setOf(DefaultFramebufferSet.MAIN, OVERLAY_FRAMEBUFFER_ID)
+//        )
+//
+//        if (postEffect == null) {
+//            ModuleHud.disableBlur()
+//
+//            error("Failed to load ui blur shader. Blur shader will be disabled")
+//        }
+//
+//        return postEffect
+//    }
 
 }
