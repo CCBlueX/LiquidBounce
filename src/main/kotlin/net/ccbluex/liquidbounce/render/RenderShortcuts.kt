@@ -87,7 +87,7 @@ val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 @JvmField
 val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
-val trianglePosTexVertexBuffer: GpuBuffer =
+private val trianglePosTexVertexBuffer: GpuBuffer =
     BufferAllocator(VertexFormats.POSITION_TEXTURE.vertexSize * 3).use { allocator ->
         val bufferBuilder = BufferBuilder(allocator, DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE)
         bufferBuilder.vertex(-1f, -1f, 0f).texture(0f, 0f)
@@ -106,56 +106,6 @@ val trianglePosTexVertexBuffer: GpuBuffer =
 fun RenderPass.drawFullScreenPositionTexture() {
     setVertexBuffer(0, trianglePosTexVertexBuffer)
     draw(0, 3)
-}
-
-// Copied from 1.21.4
-
-fun defaultBlendFunc() {
-    // BlendFunction.PANORAMA
-    GlStateManager._blendFuncSeparate(
-        GlConst.GL_SRC_ALPHA,
-        GlConst.GL_ONE_MINUS_SRC_ALPHA,
-        GlConst.GL_ONE,
-        GlConst.GL_ZERO
-    )
-}
-
-// Copied from 1.21.4 end
-
-fun BufferBuilder.upload(usage: BufferUsage, size: Int): GlGpuBuffer {
-    val buffer = gpuDevice
-        .createBuffer(
-            { LiquidBounce.CLIENT_NAME },
-            BufferType.VERTICES,
-            usage,
-            size
-        ) as GlGpuBuffer
-
-    this.end().use { builtBuffer ->
-        val commandEncoder = gpuDevice.createCommandEncoder()
-        commandEncoder.writeToBuffer(buffer, builtBuffer.buffer, 0)
-    }
-    GlStateManager._glBindVertexArray(0)
-
-    return buffer
-}
-
-fun GlGpuBuffer.bind() {
-    GlStateManager._glBindVertexArray(this.id)
-}
-
-@Suppress("UnusedReceiverParameter")
-fun GlGpuBuffer.unbind() {
-    GlStateManager._glBindVertexArray(0)
-}
-
-fun GlGpuBuffer.draw() {
-    GL11.glDrawElements(
-        GlConst.toGl(DrawMode.QUADS),
-        this.size(),
-        GlConst.toGl(this.type()),
-        0L
-    )
 }
 
 /**
@@ -427,9 +377,12 @@ inline fun RenderPass.setUniform(name: String, color: Color4b) {
     setUniform(name, color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
 }
 
-@Suppress("detekt:all")
+/**
+ * copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
+ * @see RenderLayer.MultiPhase.draw
+ */
 context(env: RenderEnvironment)
-// copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
+@Suppress("detekt:all")
 fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
     val gpuBuffer = vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
     val gpuBuffer2: GpuBuffer
