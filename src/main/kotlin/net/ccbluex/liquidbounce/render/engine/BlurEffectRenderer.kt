@@ -106,9 +106,9 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             return
         }
 
-        val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
-
         this.isDrawingHudFramebuffer = false
+
+        val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
 
         framebufferWrapper.end()
 

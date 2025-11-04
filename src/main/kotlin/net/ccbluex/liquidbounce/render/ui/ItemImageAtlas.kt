@@ -74,7 +74,10 @@ object ItemImageAtlas : EventListener {
         }
 
         updateFuture = ItemTextureRenderer(items = Registries.ITEM, scale = 4)
-            .render(drawContext).thenAcceptAsync({ atlas = it }, mc)
+            .render(drawContext).thenAcceptAsync({
+                atlas = it
+                updateFuture = null
+            }, mc)
 
         return true
     }
