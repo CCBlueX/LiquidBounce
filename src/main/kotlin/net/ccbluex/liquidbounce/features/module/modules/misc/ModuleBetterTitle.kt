@@ -83,10 +83,7 @@ private enum class ShowIn(
         )
     }),
     MESSAGE("Message", { type, event, result ->
-        result.translation
-            .asText()
-            .formatted(Formatting.WHITE)
-        .let {
+        result.translation.asPlainText(Formatting.WHITE).let {
             event.text = it
             type.setText(it)
         }
