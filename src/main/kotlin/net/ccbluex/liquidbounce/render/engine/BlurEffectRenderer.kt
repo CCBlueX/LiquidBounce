@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.render.newRenderPass
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.fastSin
-import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
@@ -44,17 +43,10 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     private var isDrawingHudFramebuffer = false
 
     private val overlayFramebuffer = SimpleFramebuffer(
-        "LiquidBounceOverlay",
+        "BlurOverlay",
         mc.window.framebufferWidth,
         mc.window.framebufferHeight,
         true
-    )
-
-    private val tempFramebuffer = SimpleFramebuffer(
-        "LiquidBounceTemp",
-        mc.window.framebufferWidth,
-        mc.window.framebufferHeight,
-        false
     )
 
     private val lastTimeScreenOpened = Chronometer()
@@ -67,7 +59,6 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     @Suppress("unused")
     private val resizeHandler = handler<FramebufferResizeEvent> {
         this.overlayFramebuffer.resize(it.width, it.height)
-        this.tempFramebuffer.resize(it.width, it.height)
     }
 
     fun getBlurRadiusFactor(): Float {
@@ -98,7 +89,6 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         if (ModuleHud.isBlurEffectActive) {
             this.isDrawingHudFramebuffer = true
 
-            tempFramebuffer.colorAttachment!!.clearColor(0)
             overlayFramebuffer.clearColorAndDepth(0, 1.0)
 
             val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
