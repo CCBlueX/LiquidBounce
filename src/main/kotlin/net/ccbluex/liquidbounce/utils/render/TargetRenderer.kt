@@ -69,7 +69,8 @@ sealed class TargetRenderer<T: RenderEnvironment>(
 
 }
 
-private val ghostModeTexture = LiquidBounce.resource("particles/glow.png").toNativeImage().asTexture { "Ghost" }
+private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
+    .toNativeImage().asTexture { "TargetRenderer Ghost" }
 
 class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvironment>(module) {
 
@@ -85,8 +86,8 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             get() = appearance
 
         private val color by color("Color", Color4b(Color.BLUE.rgb, true))
-        private var size by float("Size", 0.5f, 0.4f..0.7f)
-        private var length by int("Length", 25, 15..40)
+        private val size by float("Size", 0.5f, 0.4f..0.7f)
+        private val length by int("Length", 25, 15..40)
 
         override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
             env.matrixStack.push()
