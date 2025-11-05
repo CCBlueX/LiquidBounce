@@ -22,10 +22,12 @@ package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.buffers.BufferType
 import com.mojang.blaze3d.buffers.BufferUsage
+import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.Framebuffer
+import net.minecraft.client.render.BuiltBuffer
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.util.ScreenshotRecorder
@@ -155,5 +157,16 @@ fun NativeImage.registerTexture(identifier: Identifier) {
 
 inline fun InputStream.toNativeImage(): NativeImage = NativeImage.read(this)
 
+@JvmOverloads
 inline fun NativeImage.asTexture(nameSupplier: Supplier<String>? = null) =
     NativeImageBackedTexture(nameSupplier, this)
+
+@JvmOverloads
+fun BuiltBuffer.createGpuBuffer(labelGetter: Supplier<String>? = null): GpuBuffer = use {
+    gpuDevice.createBuffer(
+        labelGetter,
+        BufferType.VERTICES,
+        BufferUsage.STATIC_WRITE,
+        it.buffer
+    )
+}

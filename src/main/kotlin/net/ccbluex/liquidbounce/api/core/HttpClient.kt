@@ -32,7 +32,8 @@ import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.minecraft.client.texture.NativeImage
+import net.ccbluex.liquidbounce.utils.render.asTexture
+import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Util
 import net.minecraft.util.crash.CrashException
@@ -197,11 +198,8 @@ inline fun <reified T> Response.parse(): T {
         InputStream::class.java -> body.byteStream() as T
         BufferedSource::class.java -> body.source() as T
         Reader::class.java -> body.charStream() as T
-        NativeImageBackedTexture::class.java -> body.byteStream().use { stream ->
-            NativeImageBackedTexture(
-                { "NetworkImage ${request.url}" },
-                NativeImage.read(stream)
-            )
+        NativeImageBackedTexture::class.java -> body.byteStream().toNativeImage().asTexture {
+            "NetworkImage ${request.url}"
         } as T
         else -> body.charStream().readJson<T>()
     }
