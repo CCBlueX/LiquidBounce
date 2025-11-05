@@ -92,6 +92,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
             overlayFramebuffer.clearColorAndDepth(0, 1.0)
 
+            // TODO: GlobalFramebuffer is incompatible with OSX
             if (Util.getOperatingSystem() != Util.OperatingSystem.OSX) {
                 val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
 
