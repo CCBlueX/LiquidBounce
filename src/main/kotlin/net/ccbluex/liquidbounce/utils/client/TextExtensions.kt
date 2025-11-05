@@ -16,11 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-@file:Suppress("TooManyFunctions")
+@file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 
 package net.ccbluex.liquidbounce.utils.client
 
 import com.google.common.base.CaseFormat
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonParseException
+import com.mojang.serialization.JsonOps
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.utils.collection.Pools
@@ -39,37 +42,44 @@ fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
 
+private val TEXT_GSON = GsonBuilder().disableHtmlEscaping().create()
+
 /**
  * Returns a [MutableText] from the receiver.
  * If you just need a [Text], use [asPlainText] instead.
  */
-fun String.asText(): MutableText = Text.literal(this)
+inline fun String.asText(): MutableText = Text.literal(this)
 
 /**
  * Returns an immutable [Text] from the receiver.
  */
-fun String.asPlainText(): Text = PlainText.of(this, Style.EMPTY)
+inline fun String.asPlainText(): Text = PlainText.of(this, Style.EMPTY)
 
 /**
  * Returns an immutable [Text] from the receiver with [style].
  */
-fun String.asPlainText(style: Style = Style.EMPTY): Text = PlainText.of(this, style)
+inline fun String.asPlainText(style: Style = Style.EMPTY): Text = PlainText.of(this, style)
 
 /**
  * Returns an immutable [Text] from the receiver with [formatting].
  */
-fun String.asPlainText(formatting: Formatting): Text = PlainText.of(this, formatting)
+inline fun String.asPlainText(formatting: Formatting): Text = PlainText.of(this, formatting)
 
-fun List<Text>.asText(): Text = TextList.of(this)
+inline fun List<Text>.asText(): Text = TextList.of(this)
 
-fun Array<out Text>.asText(): Text = TextList.of(this.unmodifiable())
+inline fun Array<out Text>.asText(): Text = TextList.of(this.unmodifiable())
 
-fun textOf(vararg parts: Text): Text = parts.asText()
+inline fun textOf(vararg parts: Text): Text = parts.asText()
 
-fun Text.asNbt(world: World? = null): NbtString =
-    NbtString.of(
-        Text.Serialization.toJsonString(this, world?.registryManager ?: DynamicRegistryManager.EMPTY)
+fun Text.asNbt(world: World? = null): NbtString {
+    val registries = world?.registryManager ?: DynamicRegistryManager.EMPTY
+    return NbtString.of(
+        TEXT_GSON.toJson(
+            TextCodecs.CODEC.encodeStart(registries.getOps(JsonOps.INSTANCE), this)
+                .getOrThrow(::JsonParseException)
+        )
     )
+}
 
 fun OrderedText.toText(): Text {
     if (this is Text) return this
@@ -79,7 +89,7 @@ fun OrderedText.toText(): Text {
     var currentStyle = Style.EMPTY
     val currentText = Pools.StringBuilder.borrow()
 
-    this.accept { index, style, codePoint ->
+    this.accept { _, style, codePoint ->
         if (style != currentStyle) {
             if (currentText.isNotEmpty()) {
                 parts += currentText.toString().asPlainText(currentStyle)
@@ -242,7 +252,9 @@ data class ColoredChar(val char: Char, val color: Formatting) {
     }
 }
 
-fun Char.colored(color: Formatting) = ColoredChar(this, color)
+inline fun Char.colored(color: Formatting) = ColoredChar(this, color)
+
+inline fun Char.repeat(n: Int): String = CharArray(n) { this }.concatToString()
 
 /**
  * Generates a progress bar based on the [percent]age (range 0 to 100).
@@ -256,8 +268,8 @@ fun textLoadingBar(
     val clampedPercent = percent.coerceIn(0, 100)
     val filledBars = clampedPercent * length / 100
 
-    val progressPart = progress.char.toString().repeat(filledBars)
-    val remainingPart = remaining.char.toString().repeat(length - filledBars)
+    val progressPart = progress.char.repeat(filledBars)
+    val remainingPart = remaining.char.repeat(length - filledBars)
 
     return textOf(
         progressPart.asPlainText(progress.color),

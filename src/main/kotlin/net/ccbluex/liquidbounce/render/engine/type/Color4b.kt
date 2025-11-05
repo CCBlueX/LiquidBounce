@@ -84,11 +84,36 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
                     (rgb shr 16) and 0xFF,
                     (rgb shr 8) and 0xFF,
                     rgb and 0xFF,
-                    255
+                    0xFF
                 )
             }
         }
 
+        /**
+         * Create a color from HSB values.
+         *
+         * @param hue The hue value (0.0 to 1.0)
+         * @param saturation The saturation value (0.0 to 1.0)
+         * @param brightness The brightness value (0.0 to 1.0)
+         * @param alpha The alpha value (0.0 to 1.0)
+         * @return The color
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun ofHSB(
+            hue: Float,
+            saturation: Float,
+            brightness: Float,
+            alpha: Float = 1f,
+        ): Color4b {
+            val rgb = Color.HSBtoRGB(hue, saturation, brightness)
+            return Color4b(
+                r = (rgb shr 16) and 0xFF,
+                g = (rgb shr 8) and 0xFF,
+                b = rgb and 0xFF,
+                a = (alpha * 255).toInt(),
+            )
+        }
     }
 
     constructor(color: Color) : this(color.red, color.green, color.blue, color.alpha)
@@ -97,7 +122,7 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
         r = (hex shr 16) and 0xFF,
         g = (hex shr 8) and 0xFF,
         b = hex and 0xFF,
-        a = if (hasAlpha) (hex shr 24) and 0xFF else 255
+        a = if (hasAlpha) (hex shr 24) and 0xFF else 0xFF
     )
 
     val isTransparent: Boolean
