@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
 import kotlin.math.cos
@@ -46,7 +45,6 @@ private const val BASE_YAW_SPEED = 45.0f
 private const val BASE_PITCH_SPEED = 35.0f
 private const val IDEAL_DISTANCE = 10
 
-@Suppress("MagicNumber")
 internal object ElytraRotationProcessor : Configurable("Rotations"), RotationProcessor, EventListener {
     private val sharpRotations by boolean("Sharp", false)
     internal val ignoreKillAura by boolean("IgnoreKillAuraRotation", true)
@@ -128,8 +126,8 @@ internal object ElytraRotationProcessor : Configurable("Rotations"), RotationPro
 
         val microAdjustment = (sin(currentTime / 80.0) * 0.08 + cos(currentTime / 120.0) * 0.05).toFloat()
 
-        var moveYaw = MathHelper.clamp(deltaYaw, -yawSpeed, yawSpeed)
-        var movePitch = MathHelper.clamp(deltaPitch, -pitchSpeed, pitchSpeed)
+        var moveYaw = Math.clamp(deltaYaw, -yawSpeed, yawSpeed)
+        var movePitch = Math.clamp(deltaPitch, -pitchSpeed, pitchSpeed)
 
         if (difference < 5.0f) {
             moveYaw += microAdjustment * 0.2f
@@ -138,7 +136,7 @@ internal object ElytraRotationProcessor : Configurable("Rotations"), RotationPro
 
         return Rotation(
             currentRotation.yaw + moveYaw,
-            MathHelper.clamp(currentRotation.pitch + movePitch, -90.0f, 90.0f),
+            Math.clamp(currentRotation.pitch + movePitch, -90.0f, 90.0f),
         )
     }
 

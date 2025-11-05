@@ -28,7 +28,6 @@ import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.RegistryKey
-import net.minecraft.util.math.MathHelper
 
 class ArmorParameter(val defensePoints: Float, val toughness: Float)
 
@@ -143,7 +142,7 @@ class ArmorComparator(
      */
     fun getDamageFactor(damage: Float, defensePoints: Float, toughness: Float): Float {
         val f = 2.0f + toughness / 4.0f
-        val g = MathHelper.clamp(defensePoints - damage / f, defensePoints * 0.2f, 20.0f)
+        val g = Math.clamp(defensePoints - damage / f, defensePoints * 0.2f, 20.0f)
 
         return 1.0f - g / 25.0f
     }
