@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
+import net.minecraft.util.Util
 import net.minecraft.util.math.MathHelper
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
@@ -91,9 +92,11 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
             overlayFramebuffer.clearColorAndDepth(0, 1.0)
 
-            val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
+            if (Util.getOperatingSystem() != Util.OperatingSystem.OSX) {
+                val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
 
-            framebufferWrapper.beginWrite(viewport = true, clear = false)
+                framebufferWrapper.beginWrite(viewport = true, clear = false)
+            }
 
             callEvent(OverlayRenderEvent(this.overlayFramebuffer, context, tickDelta))
         } else {
@@ -108,9 +111,11 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         this.isDrawingHudFramebuffer = false
 
-        val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
+        if (Util.getOperatingSystem() != Util.OperatingSystem.OSX) {
+            val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
 
-        framebufferWrapper.end()
+            framebufferWrapper.end()
+        }
 
         // Draw blur areas
         newRenderPass(mc.framebuffer).use { pass ->
