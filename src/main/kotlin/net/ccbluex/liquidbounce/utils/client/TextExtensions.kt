@@ -119,9 +119,9 @@ fun Text.processContent(): Text {
 
     if (content is TranslatableTextContent) {
         return MutableText.of(content.toPlainContent())
-            .setStyle(style)
+            .setStyle(this.style)
             .apply {
-                for (child in siblings) {
+                for (child in this.siblings) {
                     append(child.processContent())
                 }
             }

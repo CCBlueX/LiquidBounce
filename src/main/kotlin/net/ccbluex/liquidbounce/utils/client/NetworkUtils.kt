@@ -48,7 +48,7 @@ import org.apache.commons.lang3.mutable.MutableObject
 import java.util.*
 
 internal fun sendStartSneaking() {
-    network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
 }
 
 internal fun sendStopSneaking() {
