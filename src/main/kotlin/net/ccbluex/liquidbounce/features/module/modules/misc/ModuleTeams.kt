@@ -31,7 +31,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import java.awt.Color
+import java.util.function.Predicate
 
 /**
  * Teams module
@@ -67,7 +67,7 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
      * name color, armor color or team prefix.
      */
     private fun isInClientPlayersTeam(entity: LivingEntity) =
-        matches.any { it.testMatches(entity) } || checkArmor(entity)
+        matches.any { it.testMatches.test(entity) } || checkArmor(entity)
 
     /**
      * Checks if the color of any armor piece matches.
@@ -78,13 +78,13 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
     /**
      * Returns the team color of the [entity] or null if the entity is not in a team.
      */
-    private fun getTeamColor(entity: Entity)
-        = entity.displayName?.style?.color?.rgb?.let { Color4b(Color(it)) }
+    private fun getTeamColor(entity: Entity) =
+        entity.displayName?.style?.color?.rgb?.let { Color4b(it, hasAlpha = true) }
 
     @Suppress("unused")
     private enum class Matches(
         override val choiceName: String,
-        val testMatches: (suspected: LivingEntity) -> Boolean
+        val testMatches: Predicate<LivingEntity>,
     ) : NamedChoice {
         /**
          * Check if [LivingEntity] is in your own team using scoreboard,

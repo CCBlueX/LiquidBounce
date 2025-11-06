@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
 
 internal class NoSlowSneakingAAC5(override val parent: ChoiceConfigurable<*>) : Choice("AAC5") {
     private val timingMode by enumChoice("Timing", TimingMode.PRE_POST)
@@ -36,7 +36,7 @@ internal class NoSlowSneakingAAC5(override val parent: ChoiceConfigurable<*>) : 
         if (timingMode == TimingMode.PRE_POST
             || event.state == EventState.PRE && timingMode == TimingMode.PRE_TICK
             || event.state == EventState.POST && timingMode == TimingMode.POST_TICK) {
-            network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+            sendStartSneaking()
         }
     }
 

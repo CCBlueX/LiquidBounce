@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -31,7 +30,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
-import net.ccbluex.liquidbounce.render.defaultBlendFunc
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -130,20 +128,13 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
-            GlStateManager._depthMask(true)
-            GlStateManager._disableCull()
             mc.gameRenderer.lightmapTextureManager.disable()
-            defaultBlendFunc()
 
             for (particle in particles) {
                 if (!particle.visible) continue
 
                 particle.render(event.partialTicks)
             }
-
-            GlStateManager._depthMask(true)
-            GlStateManager._enableCull()
-            defaultBlendFunc()
             mc.gameRenderer.lightmapTextureManager.enable()
         }
     }

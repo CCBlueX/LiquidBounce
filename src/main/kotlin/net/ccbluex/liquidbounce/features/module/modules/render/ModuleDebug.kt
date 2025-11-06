@@ -45,12 +45,10 @@ import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import java.awt.Color
 
 /**
  * Rotations module
@@ -345,7 +343,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     fun getArrayEntryColor(idx: Int, length: Int): Color4b {
         val hue = idx.toFloat() / length.toFloat()
-        return Color4b(Color.getHSBColor(hue, 1f, 1f)).with(a = 32)
+        return Color4b.ofHSB(hue, 1f, 1f).with(a = 32)
     }
 
     sealed interface DebuggedGeometry {

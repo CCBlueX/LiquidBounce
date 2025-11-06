@@ -65,6 +65,7 @@ import java.util.function.Predicate
  */
 data class EntityTargetingInfo(val classification: EntityTargetClassification, val isFriend: Boolean) {
     companion object {
+        @JvmField
         val DEFAULT = EntityTargetingInfo(EntityTargetClassification.TARGET, false)
     }
 }

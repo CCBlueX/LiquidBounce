@@ -31,6 +31,8 @@ import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
+import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
+import net.ccbluex.liquidbounce.utils.client.sendStopSneaking
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -107,24 +109,14 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
             when (event.state) {
                 EventState.PRE -> {
                     if (networkSneaking) {
-                        network.sendPacket(
-                            ClientCommandC2SPacket(
-                                player,
-                                ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY
-                            )
-                        )
+                        sendStopSneaking()
                         networkSneaking = false
                     }
                 }
 
                 EventState.POST -> {
-                    if (networkSneaking) {
-                        network.sendPacket(
-                            ClientCommandC2SPacket(
-                                player,
-                                ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY
-                            )
-                        )
+                    if (!networkSneaking) {
+                        sendStartSneaking()
                         networkSneaking = true
                     }
                 }
@@ -133,7 +125,7 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
 
         override fun disable() {
             if (networkSneaking) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+                sendStopSneaking()
                 networkSneaking = false
             }
         }

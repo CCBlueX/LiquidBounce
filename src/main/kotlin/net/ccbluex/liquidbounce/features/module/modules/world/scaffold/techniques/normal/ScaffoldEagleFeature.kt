@@ -24,10 +24,11 @@ import net.ccbluex.liquidbounce.config.util.asRefreshable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
+import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
+import net.ccbluex.liquidbounce.utils.client.sendStopSneaking
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
 object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Eagle", false) {
 
@@ -72,18 +73,8 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
             blocksToEagle.refresh()
 
             if (mode == EagleMode.PACKET) {
-                network.sendPacket(
-                    ClientCommandC2SPacket(
-                        player,
-                        ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY
-                    )
-                )
-                network.sendPacket(
-                    ClientCommandC2SPacket(
-                        player,
-                        ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY
-                    )
-                )
+                sendStartSneaking()
+                sendStopSneaking()
             }
         }
     }

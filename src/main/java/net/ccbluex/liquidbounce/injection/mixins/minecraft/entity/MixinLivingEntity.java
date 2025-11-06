@@ -345,7 +345,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     private void hookSetHealth(float health, CallbackInfo callbackInfo) {
         var oldHealth = this.getHealth();
         var maxHealth = this.getMaxHealth();
-        var newHealth = MathHelper.clamp(health, 0.0F, maxHealth);
+        var newHealth = Math.clamp(health, 0.0F, maxHealth);
 
         if (oldHealth != newHealth) {
             EventManager.INSTANCE.callEvent(new EntityHealthUpdateEvent((LivingEntity) (Object) this, oldHealth, newHealth, maxHealth));

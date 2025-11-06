@@ -20,20 +20,13 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.buffers.BufferType
-import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.buffers.GpuBuffer
-import com.mojang.blaze3d.opengl.GlConst
-import com.mojang.blaze3d.opengl.GlStateManager
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.systems.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.vertex.VertexFormat
-import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextAccessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -41,14 +34,11 @@ import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
-import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.SAMPLER_NAMES
 import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.gl.GlGpuBuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
-import net.minecraft.client.util.BufferAllocator
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.*
 import org.joml.Matrix3x2fStack
@@ -57,10 +47,7 @@ import org.joml.Vector2fc
 import org.joml.Vector3fc
 import org.joml.component1
 import org.joml.component2
-import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL11C
-import java.util.OptionalDouble
-import java.util.OptionalInt
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.contracts.ExperimentalContracts
@@ -86,77 +73,6 @@ val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
 @JvmField
 val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-
-val trianglePosTexVertexBuffer: GpuBuffer =
-    BufferAllocator(VertexFormats.POSITION_TEXTURE.vertexSize * 3).use { allocator ->
-        val bufferBuilder = BufferBuilder(allocator, DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE)
-        bufferBuilder.vertex(-1f, -1f, 0f).texture(0f, 0f)
-        bufferBuilder.vertex(3f, -1f, 0f).texture(2f, 0f)
-        bufferBuilder.vertex(-1f, 3f, 0f).texture(0f, 2f)
-        bufferBuilder.end().use { builtBuffer ->
-            gpuDevice.createBuffer(
-                { "Triangle covering position texture vertex buffer" },
-                BufferType.VERTICES,
-                BufferUsage.STATIC_WRITE,
-                builtBuffer.buffer
-            )
-        }
-    }
-
-fun RenderPass.drawFullScreenPositionTexture() {
-    setVertexBuffer(0, trianglePosTexVertexBuffer)
-    draw(0, 3)
-}
-
-// Copied from 1.21.4
-
-fun defaultBlendFunc() {
-    // BlendFunction.PANORAMA
-    GlStateManager._blendFuncSeparate(
-        GlConst.GL_SRC_ALPHA,
-        GlConst.GL_ONE_MINUS_SRC_ALPHA,
-        GlConst.GL_ONE,
-        GlConst.GL_ZERO
-    )
-}
-
-// Copied from 1.21.4 end
-
-fun BufferBuilder.upload(usage: BufferUsage, size: Int): GlGpuBuffer {
-    val buffer = gpuDevice
-        .createBuffer(
-            { LiquidBounce.CLIENT_NAME },
-            BufferType.VERTICES,
-            usage,
-            size
-        ) as GlGpuBuffer
-
-    this.end().use { builtBuffer ->
-        val commandEncoder = gpuDevice.createCommandEncoder()
-        commandEncoder.writeToBuffer(buffer, builtBuffer.buffer, 0)
-    }
-    GlStateManager._glBindVertexArray(0)
-
-    return buffer
-}
-
-fun GlGpuBuffer.bind() {
-    GlStateManager._glBindVertexArray(this.id)
-}
-
-@Suppress("UnusedReceiverParameter")
-fun GlGpuBuffer.unbind() {
-    GlStateManager._glBindVertexArray(0)
-}
-
-fun GlGpuBuffer.draw() {
-    GL11.glDrawElements(
-        GlConst.toGl(DrawMode.QUADS),
-        this.size(),
-        GlConst.toGl(this.type()),
-        0L
-    )
-}
 
 /**
  * Data class representing the rendering environment.
@@ -406,29 +322,12 @@ private inline fun RenderEnvironment.drawTexQuads(
     }
 }
 
-@JvmOverloads
-internal fun newRenderPass(framebuffer: Framebuffer = mc.framebuffer): RenderPass {
-    return gpuDevice
-        .createCommandEncoder()
-        .createRenderPass(
-            framebuffer.colorAttachment,
-            OptionalInt.empty(),
-            framebuffer.depthAttachment.takeIf { framebuffer.useDepthAttachment },
-            OptionalDouble.empty()
-        )
-}
-
 /**
- * Pass [color] as a vec4 to the shader.
+ * copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
+ * @see RenderLayer.MultiPhase.draw
  */
-@Suppress("NOTHING_TO_INLINE")
-inline fun RenderPass.setUniform(name: String, color: Color4b) {
-    setUniform(name, color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
-}
-
-@Suppress("detekt:all")
 context(env: RenderEnvironment)
-// copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
+@Suppress("detekt:all")
 fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
     val gpuBuffer = vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
     val gpuBuffer2: GpuBuffer

@@ -35,6 +35,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -45,6 +46,14 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.world.GameMode
 import org.apache.commons.lang3.mutable.MutableObject
 import java.util.*
+
+internal fun sendStartSneaking() {
+    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+}
+
+internal fun sendStopSneaking() {
+    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+}
 
 @Suppress("LongParameterList")
 fun clickBlockWithSlot(

@@ -35,7 +35,6 @@ import net.minecraft.block.enums.CameraSubmersionType
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.Fog
 import net.minecraft.client.render.FogShape
-import net.minecraft.util.math.MathHelper
 
 /**
  * CustomAmbience module
@@ -68,8 +67,8 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
                 return fog
             }
 
-            val start = MathHelper.clamp(fogStart, -8f, viewDistance)
-            val end = MathHelper.clamp(fogStart + density, 0f, viewDistance)
+            val start = Math.clamp(fogStart, -8f, viewDistance)
+            val end = Math.clamp(fogStart + density, 0f, viewDistance)
 
             var shape = fog.shape
             val type = camera.submersionType

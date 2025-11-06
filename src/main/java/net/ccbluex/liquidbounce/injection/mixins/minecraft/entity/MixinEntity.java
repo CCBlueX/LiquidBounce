@@ -35,7 +35,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -108,7 +107,7 @@ public abstract class MixinEntity {
         boolean noLimit = ModuleNoPitchLimit.INSTANCE.getRunning();
 
         if (noLimit) return value;
-        return MathHelper.clamp(value, min, max);
+        return Math.clamp(value, min, max);
     }
 
     @ModifyExpressionValue(method = "updateVelocity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;movementInputToVelocity(Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;"))
