@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations;
@@ -31,9 +32,7 @@ import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.item.consume.UseAction;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.util.Hand;
@@ -42,7 +41,10 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -93,10 +95,24 @@ public abstract class MixinHeldItemRenderer {
         matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(rotateZ));
     }
 
-    @Unique
-    private static boolean liquid_bounce$shouldAnimate(PlayerEntity player) {
-        return ModuleSwordBlock.INSTANCE.getRunning() && ModuleSwordBlock.isBlockingWithOffhandShield(player)
-                || KillAuraAutoBlock.INSTANCE.getBlockVisual();
+    @Inject(method = "renderFirstPersonItem",
+        slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getUseAction()Lnet/minecraft/item/consume/UseAction;")),
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;applyEquipOffset(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/Arm;F)V", ordinal = 2, shift = At.Shift.AFTER))
+    private void transformBlockAnimation(AbstractClientPlayerEntity player, float tickDelta, float pitch,
+                                                Hand hand, float swingProgress, ItemStack item, float equipProgress,
+                                                MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
+                                                CallbackInfo ci) {
+        if (ModuleSwordBlock.hasBlocking(item)) {
+            var arm = hand == Hand.MAIN_HAND ? player.getMainArm() : player.getMainArm().getOpposite();
+
+            if (ModuleAnimations.INSTANCE.getRunning()) {
+                var activeChoice = ModuleAnimations.INSTANCE.getBlockAnimationChoice().getActiveChoice();
+                activeChoice.transform(matrices, arm, equipProgress, swingProgress);
+            } else {
+                // Default animation
+                ModuleAnimations.OneSevenAnimation.INSTANCE.transform(matrices, arm, equipProgress, swingProgress);
+            }
+        }
     }
 
     @Inject(method = "renderFirstPersonItem", at = @At("HEAD"), cancellable = true)
@@ -104,67 +120,10 @@ public abstract class MixinHeldItemRenderer {
                                                 Hand hand, float swingProgress, ItemStack item, float equipProgress,
                                                 MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
                                                 CallbackInfo ci) {
-        if (hand == Hand.OFF_HAND && ModuleSwordBlock.INSTANCE.shouldHideOffhand(player, item)) {
+        if (hand == Hand.OFF_HAND && player == MinecraftClient.getInstance().player &&
+            ModuleSwordBlock.INSTANCE.shouldHideOffhand(item)) {
             ci.cancel();
         }
-    }
-
-    @Redirect(method = "renderFirstPersonItem", at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/item/ItemStack;getUseAction()Lnet/minecraft/item/consume/UseAction;",
-            ordinal = 0
-    ))
-    private UseAction hookUseAction(ItemStack instance) {
-        if (instance.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(client.player)) {
-            return UseAction.BLOCK;
-        }
-
-        return instance.getUseAction();
-    }
-
-    @Redirect(method = "renderFirstPersonItem", at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;isUsingItem()Z",
-            ordinal = 1
-    ))
-    private boolean hookIsUseItem(AbstractClientPlayerEntity instance) {
-        var itemStack = instance.getMainHandStack();
-
-        if (itemStack.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(instance)) {
-            return true;
-        }
-
-        return instance.isUsingItem();
-    }
-
-    @Redirect(method = "renderFirstPersonItem", at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getActiveHand()Lnet/minecraft/util/Hand;",
-            ordinal = 1
-    ))
-    private Hand hookActiveHand(AbstractClientPlayerEntity instance) {
-        var itemStack = instance.getMainHandStack();
-
-        if (itemStack.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(instance)) {
-            return Hand.MAIN_HAND;
-        }
-
-        return instance.getActiveHand();
-    }
-
-    @Redirect(method = "renderFirstPersonItem", at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getItemUseTimeLeft()I",
-            ordinal = 2
-    ))
-    private int hookItemUseItem(AbstractClientPlayerEntity instance) {
-        var itemStack = instance.getMainHandStack();
-
-        if (itemStack.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(instance)) {
-            return 7200;
-        }
-
-        return instance.getItemUseTimeLeft();
     }
 
     @ModifyArg(method = "renderFirstPersonItem", at = @At(
@@ -178,43 +137,6 @@ public abstract class MixinHeldItemRenderer {
         }
 
         return equipProgress;
-    }
-
-    /**
-     * This transformation was previously a VFP option but got now added to minecraft directly.
-     * View the code that was used to disable the VFP option here:
-     * <a href="https://github.com/CCBlueX/LiquidBounce/blob/e5a0dbf5458b063d3028e69e04762b8b25b998b5/src/main/java/net/ccbluex/liquidbounce/utils/client/vfp/VfpCompatibility.java#L44">...</a>
-     */
-    @Redirect(method = "renderFirstPersonItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
-    private Item preventConflictingCode(ItemStack instance) {
-        // only applies to sword items,
-        // so that future items won't be affected if minecraft decides to actually make use out of this
-        if (liquid_bounce$shouldAnimate(client.player) && ModuleSwordBlock.hasLegacyBlockingAnimation(instance))
-            return Items.SHIELD; // makes the instanceof return true and therefore not do the transformation
-
-        return instance.getItem();
-    }
-
-    @Inject(method = "renderFirstPersonItem",
-            slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;getUseAction()Lnet/minecraft/item/consume/UseAction;")),
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;applyEquipOffset(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/Arm;F)V", ordinal = 2, shift = At.Shift.AFTER))
-    private void transformLegacyBlockAnimations(AbstractClientPlayerEntity player, float tickDelta, float pitch,
-                                                Hand hand, float swingProgress, ItemStack item, float equipProgress,
-                                                MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
-                                                CallbackInfo ci) {
-        if (liquid_bounce$shouldAnimate(player) && ModuleSwordBlock.hasLegacyBlockingAnimation(item)) {
-            var arm = (hand == Hand.MAIN_HAND) ? player.getMainArm() : player.getMainArm().getOpposite();
-
-            if (ModuleAnimations.INSTANCE.getRunning()) {
-                var activeChoice = ModuleAnimations.INSTANCE.getBlockAnimationChoice().getActiveChoice();
-
-                activeChoice.transform(matrices, arm, equipProgress, swingProgress);
-                return;
-            }
-
-            // Default animation
-            ModuleAnimations.OneSevenAnimation.INSTANCE.transform(matrices, arm, equipProgress, swingProgress);
-        }
     }
 
     @ModifyExpressionValue(method = "updateHeldItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getMainHandStack()Lnet/minecraft/item/ItemStack;"))
@@ -258,7 +180,72 @@ public abstract class MixinHeldItemRenderer {
         if (ModuleAnimations.INSTANCE.getRunning() && !ModuleAnimations.EquipOffset.INSTANCE.getRunning()) {
             return EQUIP_OFFSET_TRANSLATE_Y;
         }
-
         return y;
     }
+
+    /**
+     * Determines if the sword block animation should be applied no matter if we
+     * are actually blocking.
+     */
+    @Unique
+    private static boolean liquid_bounce$shouldAnimate(PlayerEntity player) {
+        return ModuleSwordBlock.INSTANCE.getRunning() && ModuleSwordBlock.isBlockingWithOffhandShield(player)
+            || KillAuraAutoBlock.INSTANCE.getBlockVisual();
+    }
+
+    @ModifyExpressionValue(method = "renderFirstPersonItem", at = @At(
+        value = "INVOKE",
+        target = "Lnet/minecraft/item/ItemStack;getUseAction()Lnet/minecraft/item/consume/UseAction;",
+        ordinal = 0
+    ))
+    private UseAction hookUseAction(UseAction original, @Local(argsOnly = true) ItemStack item) {
+        if (item.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(client.player)) {
+            return UseAction.BLOCK;
+        }
+        return original;
+    }
+
+    @ModifyExpressionValue(method = "renderFirstPersonItem", at = @At(
+        value = "INVOKE",
+        target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;isUsingItem()Z",
+        ordinal = 1
+    ))
+    private boolean hookIsUseItem(boolean original, @Local(argsOnly = true) AbstractClientPlayerEntity entity) {
+        var itemStack = entity.getMainHandStack();
+        if (itemStack.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(entity)) {
+            return true;
+        }
+
+        return entity.isUsingItem();
+    }
+
+    @ModifyExpressionValue(method = "renderFirstPersonItem", at = @At(
+        value = "INVOKE",
+        target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getActiveHand()Lnet/minecraft/util/Hand;",
+        ordinal = 1
+    ))
+    private Hand hookActiveHand(Hand original, @Local(argsOnly = true) AbstractClientPlayerEntity entity) {
+        var itemStack = entity.getMainHandStack();
+        if (itemStack.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(entity)) {
+            return Hand.MAIN_HAND;
+        }
+
+        return entity.getActiveHand();
+    }
+
+    @ModifyExpressionValue(method = "renderFirstPersonItem", at = @At(
+        value = "INVOKE",
+        target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getItemUseTimeLeft()I",
+        ordinal = 2
+    ))
+    private int hookItemUseItem(int original, @Local(argsOnly = true) AbstractClientPlayerEntity entity) {
+        var itemStack = entity.getMainHandStack();
+        if (itemStack.isIn(ItemTags.SWORDS) && liquid_bounce$shouldAnimate(entity)) {
+            return 7200;
+        }
+
+        return entity.getItemUseTimeLeft();
+    }
+
+
 }

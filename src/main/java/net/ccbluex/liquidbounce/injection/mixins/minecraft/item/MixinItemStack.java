@@ -19,8 +19,13 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ItemLoreQueryEvent;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
+import net.minecraft.component.ComponentType;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item.TooltipContext;
 import net.minecraft.item.ItemStack;
@@ -37,6 +42,15 @@ import java.util.List;
 
 @Mixin(ItemStack.class)
 public class MixinItemStack {
+
+    @ModifyReturnValue(method = "hasChangedComponent", at = @At("RETURN"))
+    private boolean hookBlockingSupport(boolean original, @Local(argsOnly = true) ComponentType<?> type) {
+        if (type == DataComponentTypes.BLOCKS_ATTACKS && ModuleSwordBlock.INSTANCE.getRunning()) {
+            return true;
+        }
+
+        return original;
+    }
 
     @Inject(method = "getTooltip", at = @At("RETURN"), cancellable = true)
     void injectLoreQueryEvent(TooltipContext context, @Nullable PlayerEntity player, TooltipType type, CallbackInfoReturnable<List<Text>> cir) {
