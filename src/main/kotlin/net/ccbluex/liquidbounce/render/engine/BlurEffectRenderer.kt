@@ -39,6 +39,7 @@ import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.render.DefaultFramebufferSet
+import net.minecraft.util.Util
 import net.minecraft.util.math.MathHelper
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
@@ -89,7 +90,8 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
         ItemImageAtlas.updateAtlas(context)
 
-        if (ModuleHud.isBlurEffectActive) {
+        // TODO: Fix OSX HUD Blur
+        if (ModuleHud.isBlurEffectActive && Util.getOperatingSystem() != Util.OperatingSystem.OSX) {
             this.isDrawingHudFramebuffer = true
 
             val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
