@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.component.DataComponentTypes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.ShieldItem
@@ -39,9 +38,6 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
     val PlayerEntity.isBlockingWithOffhandShield
         get() = isUsingItem && offHandStack.item is ShieldItem && activeItem === offHandStack
 
-    @JvmStatic
-    fun ItemStack.hasBlocking() = isSword && hasChangedComponent(DataComponentTypes.BLOCKS_ATTACKS)
-
     @JvmOverloads
     fun shouldHideOffhand(
         offHandStack: ItemStack = player.offHandStack,
@@ -55,7 +51,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
             return false
         }
 
-        return mainHandStack.hasBlocking() || alwaysHideShield
+        return mainHandStack.isSword || alwaysHideShield
     }
 
 }
