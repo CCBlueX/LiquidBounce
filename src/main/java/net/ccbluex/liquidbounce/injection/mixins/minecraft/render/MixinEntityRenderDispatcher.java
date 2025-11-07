@@ -38,7 +38,6 @@ public abstract class MixinEntityRenderDispatcher {
     @Unique
     private static Entity $entity = null;
 
-    // FIXME: TESTING
     @Inject(method = "render(Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/client/render/entity/EntityRenderer;)V", at = @At(value = "HEAD"))
     private static void getEntity(Entity entity, double x, double y, double z, float tickProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, EntityRenderer<?, ?> renderer, CallbackInfo ci) {
         MixinEntityRenderDispatcher.$entity = entity;
