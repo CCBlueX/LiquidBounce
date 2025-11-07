@@ -21,22 +21,22 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.authlib.GameProfile
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
+import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.core.HttpClient
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.core.renderScope
 import net.ccbluex.liquidbounce.authlib.utils.generateOfflinePlayerUuid
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
+import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.SessionEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -44,9 +44,17 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.registerTexture
 import net.minecraft.client.network.PlayerListEntry
+import net.minecraft.client.session.Session
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.SkinTextures
 import net.minecraft.util.Identifier
+import okhttp3.Call
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import okio.IOException
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
@@ -58,8 +66,32 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
      */
     private val allowMixinAbstractClientPlayerEntity by boolean("ForceOverride", false)
 
+    private val uploadSkin = boolean("UploadSkin", false)
+
     private val mode = choices("Mode", 0) {
         arrayOf(Mode.Online, Mode.File)
+    }
+
+    private val uploadSkinFlow = MutableSharedFlow<Unit>(replay = 0)
+
+    init {
+        ioScope.launch {
+            // debounce skin uploads to prevent rapid calls
+            uploadSkinFlow.debounce(3.seconds).collectLatest {
+                logger.info("Uploading skin")
+                mode.activeChoice.uploadSkin()
+            }
+
+            uploadSkin.asStateFlow().collectLatest {
+                if (it) {
+                    uploadSkin()
+                }
+            }
+
+            mode.asStateFlow().collectLatest {
+                uploadSkin()
+            }
+        }
     }
 
     private suspend fun waitUntilInGame() {
@@ -79,6 +111,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                         chat("Unable to load custom skin because: ${e.message} (${e.javaClass.simpleName})")
                     }
                     logger.error("Unable to load custom skin", e)
+                    return@collectLatest
                 }
             }
         }
@@ -90,12 +123,16 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
         abstract val skinTextures: Supplier<SkinTextures>?
 
+        abstract suspend fun uploadSkin()
+
         object Online : Mode("Online") {
             private val username = text("Username", "LiquidBounce")
 
             init {
                 username.asStateFlow().debounceUntilInGame { username ->
                     skinTextures = textureSupplier(username)
+
+                    ModuleSkinChanger.uploadSkin()
                 }
             }
 
@@ -110,6 +147,26 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                 }
 
                 return PlayerListEntry.texturesSupplier(profile)
+            }
+
+            override suspend fun uploadSkin() {
+                val uuid = withContext(Dispatchers.IO) {
+                    GameProfileRepository().fetchUuidByUsername(username.get())
+                } ?: return
+
+                val profile = withContext(Dispatchers.IO) {
+                    mc.sessionService.fetchProfile(uuid, false)
+                } ?: return
+
+                val texture = mc.sessionService.unpackTextures(mc.sessionService.getPackedTextures(profile.profile))
+                val skinTexture = texture.skin ?: return
+                val variant = if (skinTexture.getMetadata("model") == "slim") {
+                    SkinTextures.Model.SLIM
+                } else {
+                    SkinTextures.Model.WIDE
+                }
+
+                changeSkin(skinTexture.url, variant)
             }
         }
 
@@ -145,7 +202,18 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                     skinTextures = Supplier {
                         SkinTextures(id, null, null, null, model.model, false)
                     }
+
+                    ModuleSkinChanger.uploadSkin()
                 }
+            }
+
+            override suspend fun uploadSkin() {
+                val file = image.get()
+                if (!file.isFile) {
+                    return
+                }
+
+                uploadSkin(file.readBytes(), model.model)
             }
         }
     }
@@ -156,4 +224,113 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
     fun shouldApplyChanges(): Boolean =
         running && allowMixinAbstractClientPlayerEntity
 
+    @Suppress("unused")
+    private val sessionHandler = handler<SessionEvent> {
+        uploadSkin()
+    }
+
+    override fun onEnabled() {
+        uploadSkin()
+    }
+
+    private fun uploadSkin() {
+        if (!uploadSkin.get()) {
+            return
+        }
+
+        if (!canUploadSkin()) {
+            return
+        }
+
+        ioScope.launch {
+            uploadSkinFlow.emit(Unit)
+        }
+    }
+
+    private fun canUploadSkin(): Boolean {
+        if (mc.session.accountType == Session.AccountType.LEGACY) {
+            return false
+        }
+
+        val sessionService = mc.sessionService
+        if (sessionService !is YggdrasilMinecraftSessionService) {
+            return false
+        }
+
+        // query environment with reflection
+        val baseUrlField = sessionService.javaClass.getDeclaredField("baseUrl")
+
+        baseUrlField.isAccessible = true
+        val baseUrl = baseUrlField.get(sessionService) as String
+
+        if (!baseUrl.startsWith(YggdrasilEnvironment.PROD.environment.sessionHost)) {
+            // custom authentication endpoints are used
+            // e.g. The Altening
+            logger.info("Skipped skin upload as custom authentication endpoint is used: $baseUrl")
+            return false
+        }
+
+        return true
+    }
+
+    private fun changeSkin(url: String, variant: SkinTextures.Model) {
+        // https://minecraft.wiki/w/Mojang_API#Change_skin
+        val jsonString = publicGson.toJson(ChangeSkinRequestDto(url, variant.variant))
+
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val body = jsonString.toRequestBody(mediaType)
+
+        val request = Request.Builder()
+            .url(YggdrasilEnvironment.PROD.environment.servicesHost + "/minecraft/profile/skins")
+            .addHeader("Authorization", "Bearer ${mc.session.accessToken}")
+            .post(body)
+            .build()
+
+        postAndForget(request)
+    }
+
+    private fun uploadSkin(data: ByteArray, variant: SkinTextures.Model) {
+        // https://minecraft.wiki/w/Mojang_API#Upload_skin
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("variant", variant.variant)
+            .addFormDataPart(
+                name = "file",
+                filename = "skin.png",
+                body = data.toRequestBody("image/png".toMediaType())
+            )
+            .build()
+
+        val request = Request.Builder()
+            .url(YggdrasilEnvironment.PROD.environment.servicesHost + "/minecraft/profile/skins")
+            .addHeader("Authorization", "Bearer ${mc.session.accessToken}")
+            .post(requestBody)
+            .build()
+
+        postAndForget(request)
+    }
+
+    private fun postAndForget(request: Request) {
+        // fire and forget, we don't care responses
+        HttpClient.client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onResponse(call: Call, response: Response) {
+                if (!response.isSuccessful) {
+                    logger.warn("Failed to upload skin: ${response.code} ${response.message}")
+                }
+                response.close()
+                logger.info("Successfully uploaded skin")
+            }
+
+            override fun onFailure(call: Call, e: IOException) {
+                logger.error("Failed to upload skin", e)
+            }
+        })
+    }
+
+    private val SkinTextures.Model.variant get() = when (this) {
+        SkinTextures.Model.WIDE -> "classic"
+        SkinTextures.Model.SLIM -> "slim"
+    }
+
+    private data class ChangeSkinRequestDto(val url: String, val variant: String)
 }
