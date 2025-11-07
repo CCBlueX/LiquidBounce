@@ -44,6 +44,8 @@ fun String.stripMinecraftColorCodes(): String {
 
 private val TEXT_GSON = GsonBuilder().disableHtmlEscaping().create()
 
+inline fun String.asTextContent(): TextContent = PlainTextContent.of(this)
+
 /**
  * Returns a [MutableText] from the receiver.
  * If you just need a [Text], use [asPlainText] instead.
@@ -115,31 +117,29 @@ fun OrderedText.toText(): Text {
 }
 
 fun Text.processContent(): Text {
+    fun translateOrSelf(content: TextContent): TextContent =
+        (content as? TranslatableTextContent)?.toTranslatedString()?.asTextContent() ?: content
+
     val content = this.content
+    val processedContent = translateOrSelf(content)
 
-    if (content is TranslatableTextContent) {
-        return MutableText.of(content.toPlainContent())
-            .setStyle(this.style)
-            .apply {
-                for (child in this.siblings) {
-                    append(child.processContent())
-                }
-            }
+    val processedSiblings = siblings.map(Text::processContent)
+
+    return if (processedContent === content && processedSiblings == siblings) {
+        this
+    } else {
+        MutableText.of(processedContent).setStyle(style).apply {
+            siblings.addAll(processedSiblings)
+        }
     }
-
-    return this
 }
 
-fun TranslatableTextContent.toPlainContent(): TextContent {
-    val stringBuilder = StringBuilder()
-
+fun TranslatableTextContent.toTranslatedString(): String = buildString {
     visit {
-        stringBuilder.append(it)
+        append(it)
 
-        Optional.empty<Any?>()
+        Optional.empty<Nothing>()
     }
-
-    return PlainTextContent.of(stringBuilder.toString())
 }
 
 private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray()).unmodifiable()
