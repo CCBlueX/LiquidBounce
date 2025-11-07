@@ -35,8 +35,9 @@ import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.SessionEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -49,13 +50,14 @@ import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.SkinTextures
 import net.minecraft.util.Identifier
 import okhttp3.Call
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okio.IOException
+import java.io.File
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
@@ -78,20 +80,18 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
     init {
         ioScope.launch {
             // debounce skin uploads to prevent rapid calls
-            uploadSkinFlow.debounce(3.seconds).collectLatest {
-                logger.info("Uploading skin")
+            uploadSkinFlow.debounce(3.seconds).filter { canUploadSkin() }.collectLatest {
+                logger.info("Uploading skin...")
                 mode.activeChoice.uploadSkin()
             }
+        }
 
-            uploadSkin.asStateFlow().collectLatest {
-                if (it) {
-                    uploadSkin()
+        ioScope.launch {
+            combine(uploadSkin.asStateFlow(), mode.asStateFlow()) { skin, mode ->
+                if (skin) {
+                    triggerUpload()
                 }
-            }
-
-            mode.asStateFlow().collectLatest {
-                uploadSkin()
-            }
+            }.collect()
         }
     }
 
@@ -112,7 +112,6 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                         chat("Unable to load custom skin because: ${e.message} (${e.javaClass.simpleName})")
                     }
                     logger.error("Unable to load custom skin", e)
-                    return@collectLatest
                 }
             }
         }
@@ -133,7 +132,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                 username.asStateFlow().debounceUntilInGame { username ->
                     skinTextures = textureSupplier(username)
 
-                    ModuleSkinChanger.uploadSkin()
+                    triggerUpload()
                 }
             }
 
@@ -204,7 +203,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                         SkinTextures(id, null, null, null, model.model, false)
                     }
 
-                    ModuleSkinChanger.uploadSkin()
+                    triggerUpload()
                 }
             }
 
@@ -214,7 +213,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                     return
                 }
 
-                uploadSkin(file.readBytes(), model.model)
+                uploadSkin(file, model.model)
             }
         }
     }
@@ -226,30 +225,20 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         running && allowMixinAbstractClientPlayerEntity
 
     @Suppress("unused")
-    private val sessionHandler = handler<SessionEvent> {
-        uploadSkin()
+    private val sessionHandler = suspendHandler<SessionEvent>(behavior = SuspendHandlerBehavior.CancelPrevious) {
+        triggerUpload()
     }
 
-    override fun onEnabled() {
-        uploadSkin()
+    override suspend fun enabledEffect() {
+        triggerUpload()
     }
 
-    private fun uploadSkin() {
-        if (!uploadSkin.get()) {
-            return
-        }
-
-        if (!canUploadSkin()) {
-            return
-        }
-
-        ioScope.launch {
-            uploadSkinFlow.emit(Unit)
-        }
+    private suspend fun triggerUpload() {
+        uploadSkinFlow.emit(Unit)
     }
 
     private fun canUploadSkin(): Boolean {
-        if (mc.session.accountType == Session.AccountType.LEGACY) {
+        if (!uploadSkin.get() || mc.session.accountType == Session.AccountType.LEGACY) {
             return false
         }
 
@@ -278,13 +267,12 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         // https://minecraft.wiki/w/Mojang_API#Change_skin
         val jsonString = publicGson.toJson(ChangeSkinRequestDto(url, variant.variant))
 
-        val mediaType = "application/json; charset=utf-8".toMediaType()
-        val body = jsonString.toRequestBody(mediaType)
+        val body = jsonString.toRequestBody(HttpClient.MediaTypes.JSON)
 
         uploadSkin(body)
     }
 
-    private fun uploadSkin(data: ByteArray, variant: SkinTextures.Model) {
+    private fun uploadSkin(data: File, variant: SkinTextures.Model) {
         // https://minecraft.wiki/w/Mojang_API#Upload_skin
         val body = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -292,7 +280,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             .addFormDataPart(
                 name = "file",
                 filename = "skin.png",
-                body = data.toRequestBody("image/png".toMediaType())
+                body = data.asRequestBody(HttpClient.MediaTypes.IMAGE_PNG)
             )
             .build()
 
@@ -327,5 +315,6 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         SkinTextures.Model.SLIM -> "slim"
     }
 
+    @JvmRecord
     private data class ChangeSkinRequestDto(val url: String, val variant: String)
 }
