@@ -52,6 +52,7 @@ import okhttp3.Call
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okio.IOException
@@ -280,18 +281,12 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         val mediaType = "application/json; charset=utf-8".toMediaType()
         val body = jsonString.toRequestBody(mediaType)
 
-        val request = Request.Builder()
-            .url(YggdrasilEnvironment.PROD.environment.servicesHost + "/minecraft/profile/skins")
-            .addHeader("Authorization", "Bearer ${mc.session.accessToken}")
-            .post(body)
-            .build()
-
-        postAndForget(request)
+        uploadSkin(body)
     }
 
     private fun uploadSkin(data: ByteArray, variant: SkinTextures.Model) {
         // https://minecraft.wiki/w/Mojang_API#Upload_skin
-        val requestBody = MultipartBody.Builder()
+        val body = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("variant", variant.variant)
             .addFormDataPart(
@@ -301,16 +296,16 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             )
             .build()
 
+        uploadSkin(body)
+    }
+
+    private fun uploadSkin(body: RequestBody) {
         val request = Request.Builder()
             .url(YggdrasilEnvironment.PROD.environment.servicesHost + "/minecraft/profile/skins")
             .addHeader("Authorization", "Bearer ${mc.session.accessToken}")
-            .post(requestBody)
+            .post(body)
             .build()
 
-        postAndForget(request)
-    }
-
-    private fun postAndForget(request: Request) {
         // fire and forget, we don't care responses
         HttpClient.client.newCall(request).enqueue(object : okhttp3.Callback {
             override fun onResponse(call: Call, response: Response) {
