@@ -96,8 +96,6 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             return@handler
         }
 
-        val matStack = event.context.matrices
-
         val playerPos = player.interpolateCurrentPosition(event.tickDelta)
         val playerRotation = player.interpolateCurrentRotation(event.tickDelta)
 
@@ -124,19 +122,18 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
         val scale = minimapSize / (2.0F * viewDistance)
 
-        matStack.push()
-
-        matStack.translate(boundingBox.xMin + minimapSize * 0.5, boundingBox.yMin + minimapSize * 0.5, 0.0)
-        matStack.scale(scale, scale, scale)
-
-        matStack.multiply(Quaternionf(AxisAngle4f(-(playerRotation.yaw + 180.0F).toRadians(), 0.0F, 0.0F, 1.0F)))
-        matStack.translate(-playerOffX, -playerOffZ, 0.0)
-
         renderEnvironmentForGUI(event) {
+            matrixStack.push()
+
+            matrixStack.translate(boundingBox.xMin + minimapSize * 0.5, boundingBox.yMin + minimapSize * 0.5, 0.0)
+            matrixStack.scale(scale, scale, scale)
+
+            matrixStack.multiply(Quaternionf(AxisAngle4f(-(playerRotation.yaw + 180.0F).toRadians(), 0.0F, 0.0F, 1.0F)))
+            matrixStack.translate(-playerOffX, -playerOffZ, 0.0)
+
             if (showTexture) {
-                val gpuTexture = ChunkRenderer.prepareRendering()
                 startBatch()
-                RenderSystem.setShaderTexture(0, gpuTexture)
+                RenderSystem.setShaderTexture(0, ChunkRenderer.prepareRendering())
                 drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
                     buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
                 }
@@ -148,15 +145,13 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                 drawCustomMesh(ClientRenderPipelines.Triangles) {
                     for (renderedEntity in RenderedEntities) {
                         drawEntityOnMinimap(
-                            matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
+                            matrixStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
                         )
                     }
                 }
                 commitBatch()
             }
         }
-
-        matStack.pop()
 
         val centerBB = Vec2f(
             boundingBox.xMin + (boundingBox.xMax - boundingBox.xMin) * 0.5F,

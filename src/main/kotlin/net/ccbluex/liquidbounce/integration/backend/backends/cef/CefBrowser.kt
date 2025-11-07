@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
 import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
@@ -31,8 +32,8 @@ import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
 import net.ccbluex.liquidbounce.mcef.cef.MCEFRenderer
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.render.asView
 import net.minecraft.client.texture.AbstractTexture
-import net.minecraft.util.TriState
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
@@ -223,9 +224,18 @@ class CefBrowser(
 
     private class CefBrowserTexture(val mcefBrowserRenderer: MCEFRenderer) : AbstractTexture() {
         override fun getGlTexture(): GpuTexture? {
-            this.glTexture = mcefBrowserRenderer.texture
+            if (mcefBrowserRenderer.texture !== this.glTexture) {
+                this.glTexture = mcefBrowserRenderer.texture
+                this.glTextureView = this.glTexture!!.asView()
+            }
 
             return super.getGlTexture()
+        }
+
+        override fun getGlTextureView(): GpuTextureView? {
+            this.getGlTexture()
+
+            return super.getGlTextureView()
         }
 
         override fun setClamp(clamp: Boolean) {
@@ -234,7 +244,7 @@ class CefBrowser(
             super.setClamp(clamp)
         }
 
-        override fun setFilter(bilinear: TriState?, mipmap: Boolean) {
+        override fun setFilter(bilinear: Boolean, mipmap: Boolean) {
             this.getGlTexture()
 
             super.setFilter(bilinear, mipmap)

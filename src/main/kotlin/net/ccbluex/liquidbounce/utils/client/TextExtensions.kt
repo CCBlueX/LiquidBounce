@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.client
 
 import com.google.common.base.CaseFormat
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonElement
 import com.google.gson.JsonParseException
 import com.mojang.serialization.JsonOps
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
@@ -32,7 +33,6 @@ import net.minecraft.nbt.NbtString
 import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
-import net.minecraft.world.World
 import java.util.*
 import java.util.regex.Pattern
 
@@ -73,15 +73,16 @@ inline fun Array<out Text>.asText(): Text = TextList.of(this.unmodifiable())
 
 inline fun textOf(vararg parts: Text): Text = parts.asText()
 
-fun Text.asNbt(world: World? = null): NbtString {
-    val registries = world?.registryManager ?: DynamicRegistryManager.EMPTY
-    return NbtString.of(
-        TEXT_GSON.toJson(
-            TextCodecs.CODEC.encodeStart(registries.getOps(JsonOps.INSTANCE), this)
-                .getOrThrow(::JsonParseException)
-        )
-    )
-}
+inline fun String.asNbtString(): NbtString = NbtString.of(this)
+
+fun Text.toJson(
+    registries: DynamicRegistryManager = mc.world?.registryManager ?: DynamicRegistryManager.EMPTY,
+): JsonElement = TextCodecs.CODEC.encodeStart(registries.getOps(JsonOps.INSTANCE), this)
+    .getOrThrow(::JsonParseException)
+
+fun Text.toJsonString(
+    registries: DynamicRegistryManager = mc.world?.registryManager ?: DynamicRegistryManager.EMPTY,
+): String = TEXT_GSON.toJson(toJson(registries))
 
 fun OrderedText.toText(): Text {
     if (this is Text) return this

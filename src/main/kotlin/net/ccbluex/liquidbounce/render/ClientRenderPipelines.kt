@@ -72,7 +72,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withFragmentShader(ClientShaders.BGRA_FSH_ID)
         withSampler("Sampler0")
         withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
-        withSnippet(RenderPipelines.MATRICES_COLOR_SNIPPET)
+        withSnippet(RenderPipelines.TRANSFORMS_AND_PROJECTION_SNIPPET)
     }
 
     @Suppress("NOTHING_TO_INLINE")
@@ -180,19 +180,13 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     }
 
     @JvmField
-    val ItemChams = newPipeline("glow") {
+    val ItemChams = newPipeline("item_chams") {
         withVertexShader(ClientShaders.PLANE_PROJECTION_VSH_ID)
         withFragmentShader(ClientShaders.GLOW_FSH_ID)
         withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withSampler("image")
-        withUniform("useImage", UniformType.INT)
-        withUniform("blendColor", UniformType.VEC4)
-        withUniform("alpha", UniformType.FLOAT)
-        withUniform("sampleMul", UniformType.FLOAT)
-        withUniform("glowColor", UniformType.VEC4)
-        withUniform("falloff", UniformType.FLOAT)
-        withUniform("layerCount", UniformType.INT)
+        withUniform("ItemChamsData", UniformType.UNIFORM_BUFFER)
         withoutBlend()
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
     }
@@ -204,9 +198,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withSampler("overlay")
-        withUniform("radius", UniformType.FLOAT)
-        withUniform("alphaBlendMin", UniformType.FLOAT)
-        withUniform("alphaBlendMax", UniformType.FLOAT)
+        withUniform("BlurData", UniformType.UNIFORM_BUFFER)
         withoutBlend()
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
     }
@@ -217,7 +209,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withFragmentShader(ClientShaders.BLEND_FSH_ID)
         withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
-        withUniform("mixColor", UniformType.VEC4)
+        withUniform("BlendData", UniformType.UNIFORM_BUFFER)
         withoutBlend()
     }
 

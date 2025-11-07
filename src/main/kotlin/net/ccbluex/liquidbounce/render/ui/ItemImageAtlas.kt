@@ -20,8 +20,11 @@
 
 package net.ccbluex.liquidbounce.render.ui
 
+import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.systems.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.TextureFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.EventListener
@@ -31,7 +34,9 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
+import net.ccbluex.liquidbounce.utils.render.saveToFile
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.gui.DrawContext
@@ -44,6 +49,7 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.Util
 import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
+import org.lwjgl.system.MemoryUtil
 import java.awt.image.BufferedImage
 import java.util.concurrent.CompletableFuture
 import kotlin.math.sqrt
@@ -116,23 +122,38 @@ private class ItemTextureRenderer(
     private val textureSize = itemPixelSize * itemsPerDimension
 
     fun render(ctx: DrawContext): CompletableFuture<Atlas> {
-        mc.framebuffer.resize(textureSize, textureSize)
-        mc.framebuffer.clearColorAndDepth(0, 1.0)
-
-        val projectionMatrix = RenderSystem.getProjectionMatrix()
-        val matrix = Matrix4f().setOrtho(
-            0f,
-            textureSize.toFloat(),
-            textureSize.toFloat(),
-            0f,
-            1000f,
-            21000f
+        // FIXME
+        val texture = gpuDevice.createTexture(
+            "ItemImageAtlas Texture",
+            GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_SRC,
+            TextureFormat.RGBA8,
+            textureSize,
+            textureSize,
+            1,
+            1,
         )
 
-        RenderSystem.setProjectionMatrix(matrix, ProjectionType.ORTHOGRAPHIC)
-        ctx.matrices.push()
-        ctx.matrices.loadIdentity()
-        ctx.matrices.scale(scale.toFloat(), scale.toFloat(), 1f)
+        val backupTexture = RenderSystem.outputColorTextureOverride
+        RenderSystem.outputColorTextureOverride = texture.asView()
+
+        val projectionMatrix = RenderSystem.getProjectionMatrixBuffer()
+
+        val bufferSlice = gpuDevice.createBuffer(
+            { "ItemImageAtlas ProjMat" },
+            GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_COPY_DST or GpuBuffer.USAGE_MAP_READ,
+            Matrix4f().setOrtho(
+                0f,
+                textureSize.toFloat(),
+                textureSize.toFloat(),
+                0f,
+                1000f,
+                21000f
+            )[MemoryUtil.memAlloc(4 * 4 * Float.SIZE_BYTES)],
+        ).slice()
+
+        RenderSystem.setProjectionMatrix(bufferSlice, ProjectionType.ORTHOGRAPHIC)
+        ctx.matrices.pushMatrix()
+        ctx.matrices.scale(scale.toFloat())
 
         val itemMap = Reference2ObjectOpenHashMap<Item, Rect2i>(items.size())
 
@@ -143,16 +164,13 @@ private class ItemTextureRenderer(
             itemMap[item] = Rect2i(x * scale, y * scale, itemPixelSize, itemPixelSize)
         }
 
-        ctx.matrices.pop()
+        ctx.matrices.popMatrix()
 
         RenderSystem.setProjectionMatrix(projectionMatrix, ProjectionType.ORTHOGRAPHIC)
+        RenderSystem.outputColorTextureOverride = backupTexture
 
-        return mc.framebuffer.colorAttachment!!.toNativeImage()
-            .thenApply {
-                mc.framebuffer.resize(mc.window.framebufferWidth, mc.window.framebufferHeight)
-                mc.framebuffer.clearColorAndDepth(0, 1.0)
-                it
-            }.thenApplyAsync(NativeImage::toBufferedImage, Util.getIoWorkerExecutor())
+        return texture.toNativeImage()
+            .thenApplyAsync(NativeImage::toBufferedImage, Util.getIoWorkerExecutor())
             .thenApply { image ->
                 logger.info("Loaded ${image.width} x ${image.height} item atlas")
 

@@ -19,16 +19,20 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
+import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.render.newRenderPass
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.std140Size
+import net.ccbluex.liquidbounce.utils.render.writeStd140
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.util.Identifier
 import java.io.Closeable
@@ -68,7 +72,7 @@ sealed interface ThemeBackground : Closeable {
             delta: Float
         ): Boolean {
             context.drawTexture(
-                RenderLayer::getGuiTextured,
+                RenderPipelines.GUI_TEXTURED,
                 imageId,
                 0, 0,
                 0f, 0f,
@@ -99,16 +103,15 @@ sealed interface ThemeBackground : Closeable {
             mouseY: Int,
             delta: Float
         ): Boolean {
+            gpuBuffer.writeStd140 {
+                putFloat((System.currentTimeMillis() - mc.startTime) / 1000F)
+                putVec2(mouseX.toFloat(), mouseY.toFloat())
+                putVec2(mc.window.framebufferWidth.toFloat(), mc.window.framebufferHeight.toFloat())
+            }
+
             newRenderPass().use { pass ->
                 pass.setPipeline(pipeline)
-                pass.setUniform(UNIFORM_TIME, (System.currentTimeMillis() - mc.startTime) / 1000F)
-                pass.setUniform(UNIFORM_MOUSE, mouseX.toFloat(), mouseY.toFloat())
-                pass.setUniform(
-                    UNIFORM_RESOLUTION,
-                    mc.window.framebufferWidth.toFloat(),
-                    mc.window.framebufferHeight.toFloat(),
-                )
-
+                pass.setUniform(UNIFORM_NAME, gpuBuffer)
                 pass.drawFullScreenPositionTexture()
             }
             return true
@@ -119,9 +122,14 @@ sealed interface ThemeBackground : Closeable {
         }
 
         companion object {
-            private const val UNIFORM_TIME = "time"
-            private const val UNIFORM_MOUSE = "mouse"
-            private const val UNIFORM_RESOLUTION = "resolution"
+            private const val UNIFORM_NAME = "ThemeBackgroundData"
+
+            @JvmStatic
+            private val gpuBuffer = gpuDevice.createBuffer(
+                { "ThemeShaderBackground UBO" },
+                GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
+                std140Size { float + vec2 + vec2 },
+            ).slice()
 
             @JvmStatic
             fun build(
@@ -138,10 +146,9 @@ sealed interface ThemeBackground : Closeable {
                     .withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
                     .withVertexShader(vshId)
                     .withFragmentShader(fshId)
-                    .withUniform(UNIFORM_TIME, UniformType.FLOAT)
-                    .withUniform(UNIFORM_MOUSE, UniformType.VEC2)
-                    .withUniform(UNIFORM_RESOLUTION, UniformType.VEC2)
+                    .withUniform(UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
                     .withoutBlend()
+                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
                     .build()
 
                 gpuDevice.precompilePipeline(pipeline) { id, _ ->

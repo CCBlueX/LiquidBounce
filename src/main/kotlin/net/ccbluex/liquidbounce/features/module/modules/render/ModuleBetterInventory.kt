@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.toFixed
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.item.ItemStack
 import net.minecraft.screen.slot.Slot
@@ -67,7 +67,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
                  */
                 override fun drawHighlightSlot(context: DrawContext, slot: Slot) {
                     context.drawGuiTexture(
-                        RenderLayer::getGuiTextured,
+                        RenderPipelines.GUI_TEXTURED,
                         MixinInGameHudAccessor.getHotbarSelectionTexture(),
                         slot.x - 3,
                         slot.y - 3,
@@ -120,9 +120,8 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         val progress = player.itemCooldownManager.getCooldownProgress(stack, mc.renderTickCounter.getTickProgress(true))
 
         if (progress > 0.0F) {
-            this.matrices.push()
-            this.matrices.translate(0.0, 0.0, 200.0)
-            this.matrices.scale(TextCooldownProgress.scale, TextCooldownProgress.scale, 1f)
+            this.matrices.pushMatrix()
+            this.matrices.scale(TextCooldownProgress.scale, TextCooldownProgress.scale)
             val text = when (TextCooldownProgress.mode) {
                 CooldownProgressMode.PERCENTAGE -> "${(progress * 100f).toInt()}%"
                 CooldownProgressMode.DURATION_TICKS -> {
@@ -137,7 +136,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
                 }
             }
             this.drawCenteredTextWithShadow(mc.textRenderer, text, x + 16 / 2, y, TextCooldownProgress.color.toARGB())
-            this.matrices.pop()
+            this.matrices.popMatrix()
         }
     }
 

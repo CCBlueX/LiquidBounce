@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.render
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.systems.RenderPass
 import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.createGpuBuffer
@@ -52,17 +52,10 @@ internal fun newRenderPass(framebuffer: Framebuffer = mc.framebuffer): RenderPas
     return gpuDevice
         .createCommandEncoder()
         .createRenderPass(
-            framebuffer.colorAttachment,
+            { LiquidBounce.CLIENT_NAME + " Pass" },
+            framebuffer.colorAttachmentView,
             OptionalInt.empty(),
-            framebuffer.depthAttachment.takeIf { framebuffer.useDepthAttachment },
+            framebuffer.depthAttachmentView.takeIf { framebuffer.useDepthAttachment },
             OptionalDouble.empty()
         )
-}
-
-/**
- * Pass [color] as a vec4 to the shader.
- */
-@Suppress("NOTHING_TO_INLINE")
-inline fun RenderPass.setUniform(name: String, color: Color4b) {
-    setUniform(name, color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
 }

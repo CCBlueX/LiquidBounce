@@ -92,9 +92,9 @@ class TaskProgressScreen(
         var progressBarHeight = 14
 
         // Draw progress bar
-        poseStack.push()
-        poseStack.translate(cx, yOffset.toDouble() + 18.0, 0.0)
-        poseStack.translate(-progressBarWidth / 2.0, -progressBarHeight / 2.0, 0.0)
+        poseStack.pushMatrix()
+        poseStack.translate(cx.toFloat(), yOffset.toFloat() + 18.0f)
+        poseStack.translate(progressBarWidth.toFloat() * -0.5f, progressBarHeight.toFloat() * -0.5f)
 
         // Bar border
         context.fill(
@@ -115,7 +115,7 @@ class TaskProgressScreen(
             ((progressBarWidth - 4) * progress).toInt(), (progressBarHeight - 4).toInt(),
             -1
         )
-        poseStack.pop()
+        poseStack.popMatrix()
     }
 
     private fun getTaskLines(progress: Float): List<Text> {

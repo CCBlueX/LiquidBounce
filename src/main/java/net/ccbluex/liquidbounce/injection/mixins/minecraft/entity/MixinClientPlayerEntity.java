@@ -391,15 +391,16 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return event.getSprint();
     }
 
-    @ModifyExpressionValue(method = "sendSneakingPacket", at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSneaking()Z")
-    )
-    private boolean hookNetworkSneak(boolean original) {
-        var event = new SneakNetworkEvent(new DirectionalInput(input), original);
-        EventManager.INSTANCE.callEvent(event);
-        return event.getSneak();
-    }
+//    FIXME
+//    @ModifyExpressionValue(method = "sendSneakingPacket", at = @At(
+//            value = "INVOKE",
+//            target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSneaking()Z")
+//    )
+//    private boolean hookNetworkSneak(boolean original) {
+//        var event = new SneakNetworkEvent(new DirectionalInput(input), original);
+//        EventManager.INSTANCE.callEvent(event);
+//        return event.getSneak();
+//    }
 
     @WrapWithCondition(method = "closeScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))
     private boolean preventCloseScreen(MinecraftClient instance, Screen screen) {

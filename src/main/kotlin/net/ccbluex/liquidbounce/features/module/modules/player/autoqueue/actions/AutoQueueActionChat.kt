@@ -24,7 +24,7 @@ object AutoQueueActionChat : AutoQueueAction("Chat") {
 
     override suspend fun execute() {
         if (message.startsWith("/")) {
-            network.sendCommand(message.substring(1))
+            network.sendChatCommand(message.substring(1))
         } else {
             network.sendChatMessage(message)
         }

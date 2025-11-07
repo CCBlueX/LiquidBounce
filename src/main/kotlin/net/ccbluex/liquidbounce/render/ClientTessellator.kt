@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.GpuTextureView
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.util.BufferAllocator
@@ -33,7 +33,7 @@ object ClientTessellator {
     private val bufferAllocators = Reference2ReferenceOpenHashMap<RenderPipeline, BufferAllocator>()
 
     @JvmStatic
-    internal val texQuadsSpecialAllocators = Reference2ReferenceOpenHashMap<GpuTexture, BufferAllocator>()
+    internal val texQuadsSpecialAllocators = Reference2ReferenceOpenHashMap<GpuTextureView, BufferAllocator>()
 
     @JvmStatic
     fun allocator(pipeline: RenderPipeline): BufferAllocator =
@@ -48,11 +48,11 @@ object ClientTessellator {
         )
 
     @JvmStatic
-    fun allocator(texture: GpuTexture): BufferAllocator =
+    fun allocator(texture: GpuTextureView): BufferAllocator =
         texQuadsSpecialAllocators.getOrPut(texture) { BufferAllocator(BUFFER_SIZE) }
 
     @JvmStatic
-    fun begin(texture: GpuTexture): BufferBuilder =
+    fun begin(texture: GpuTextureView): BufferBuilder =
         BufferBuilder(
             allocator(texture),
             ClientRenderPipelines.TexQuads.vertexFormatMode,

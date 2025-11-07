@@ -198,7 +198,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                         drawItem(stack, x, y)
                         val countString = stack.count.toString()
                         matrices.withPush {
-                            translate(0.0F, 0.0F, 200.0F)
+                            translate(0.0F, 0.0F)
                             // draw layer text
                             if (!compact) {
                                 drawText(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, textShadow)

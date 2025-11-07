@@ -37,8 +37,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(AbstractClientPlayerEntity.class)
 public abstract class MixinAbstractClientPlayerEntity extends PlayerEntity {
 
-    public MixinAbstractClientPlayerEntity(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
-        super(world, pos, yaw, gameProfile);
+    public MixinAbstractClientPlayerEntity(World world, GameProfile gameProfile) {
+        super(world, gameProfile);
     }
 
     @ModifyReturnValue(method = "getFovMultiplier", at = @At("RETURN"))

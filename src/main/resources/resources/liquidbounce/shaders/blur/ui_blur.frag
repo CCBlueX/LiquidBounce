@@ -5,9 +5,11 @@ out vec4 fragColor;
 
 uniform sampler2D texture0;
 uniform sampler2D overlay;
-uniform float radius;
-uniform float alphaBlendMin;
-uniform float alphaBlendMax;
+layout(std140) uniform BlurData {
+    float radius;
+    float alphaBlendMin;
+    float alphaBlendMax;
+};
 
 const vec2 BlurDir = vec2(1.2, 0.8);
 const vec2 BlurDirPerp = vec2(-BlurDir.y, BlurDir.x);

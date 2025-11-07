@@ -226,7 +226,7 @@ object ActiveServerList : EventListener {
             try {
                 serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }) {
                     serverEntry.status =
-                        if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion) {
+                        if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion()) {
                             ServerInfo.Status.SUCCESSFUL
                         } else {
                             ServerInfo.Status.INCOMPATIBLE

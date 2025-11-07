@@ -15,20 +15,32 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.VertexConsumerProvider;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import net.minecraft.client.render.RawProjectionMatrix;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 
-@Mixin(DrawContext.class)
-public interface MixinDrawContextAccessor {
+@Mixin(RawProjectionMatrix.class)
+public abstract class MixinRawProjectionMatrix {
 
-    @Accessor("vertexConsumers")
-    VertexConsumerProvider.Immediate getVertexConsumers();
+    /**
+     * @see net.ccbluex.liquidbounce.utils.render.WorldToScreen
+     */
+    @ModifyArg(
+        method = "<init>",
+        at = @At(
+            value = "INVOKE",
+            target = "Lcom/mojang/blaze3d/systems/GpuDevice;createBuffer(Ljava/util/function/Supplier;II)Lcom/mojang/blaze3d/buffers/GpuBuffer;"
+        ),
+        index = 1
+    )
+    private int makeBufferReadable(int usage) {
+        return usage | GpuBuffer.USAGE_MAP_READ;
+    }
 
 }

@@ -19,9 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.ccbluex.liquidbounce.additions.DrawContextAddition;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
@@ -30,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud;
 import net.ccbluex.liquidbounce.integration.theme.component.Component;
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager;
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak;
@@ -39,9 +36,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.option.Perspective;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.util.Window;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
@@ -55,8 +50,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.function.Function;
 
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHud {
@@ -126,25 +119,6 @@ public abstract class MixinInGameHud {
         }
     }
 
-    @WrapOperation(method = "renderCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIII)V", ordinal = 0))
-    private void centerCrosshair(DrawContext drawContext, Function<Identifier, RenderLayer> renderLayers, Identifier sprite, int x, int y, int width, int height, Operation<Void> original) {
-        if (!ModuleHud.INSTANCE.getCenteredCrosshair()) {
-            original.call(drawContext, renderLayers, sprite, x, y, width, height);
-            return;
-        }
-
-        Window window = MinecraftClient.getInstance().getWindow();
-        double scaleFactor = window.getScaleFactor();
-        double scaledCenterX = (window.getFramebufferWidth() / scaleFactor) / 2.0;
-        double scaledCenterY = (window.getFramebufferHeight() / scaleFactor) / 2.0;
-        ((DrawContextAddition) drawContext).liquid_bounce$drawTexture(
-                renderLayers, sprite,
-                Math.round((scaledCenterX - 7.5) * 4.0) * 0.25f,
-                Math.round((scaledCenterY - 7.5) * 4.0) * 0.25f,
-                width, height
-        );
-    }
-
     @Inject(method = "renderPortalOverlay", at = @At("HEAD"), cancellable = true)
     private void hookRenderPortalOverlay(CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.PORTAL_OVERLAY)) {
@@ -174,18 +148,12 @@ public abstract class MixinInGameHud {
         }
     }
 
-    @Inject(method = "renderExperienceBar", at = @At("HEAD"), cancellable = true)
-    private void hookRenderExperienceBar(CallbackInfo ci) {
+    @ModifyReturnValue(method = "shouldShowExperienceBar", at = @At("RETURN"))
+    private boolean hookRenderExperienceBar(boolean original) {
         if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_EXP_BAR)) {
-            ci.cancel();
+            return false;
         }
-    }
-
-    @Inject(method = "renderExperienceLevel", at = @At("HEAD"), cancellable = true)
-    private void hookRenderExperienceLevel(CallbackInfo ci) {
-        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_EXP_BAR)) {
-            ci.cancel();
-        }
+        return original;
     }
 
     @Inject(method = "renderHeldItemTooltip", at = @At("HEAD"), cancellable = true)

@@ -2,7 +2,7 @@ accessWidener	v1	named
 
 accessible field net/minecraft/entity/AreaEffectCloudEntity potionContentsComponent Lnet/minecraft/component/type/PotionContentsComponent;
 
-accessible class net/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier
+#accessible class net/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier
 
 accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
 mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
@@ -31,7 +31,7 @@ accessible field net/minecraft/client/network/ClientPlayerEntity lastYawClient F
 accessible field net/minecraft/client/network/ClientPlayerEntity lastPitchClient F # 1.21.4 lastPitch
 accessible field net/minecraft/client/network/ClientPlayerEntity lastOnGround Z
 accessible field net/minecraft/client/network/ClientPlayerEntity inSneakingPose Z
-accessible field net/minecraft/client/network/ClientPlayerEntity lastSneaking Z
+#accessible field net/minecraft/client/network/ClientPlayerEntity lastSneaking Z
 accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
 accessible field net/minecraft/client/network/ClientPlayerEntity ticksSinceLastPositionPacketSent I
 accessible field net/minecraft/client/network/ClientPlayerEntity usingItem Z
@@ -97,8 +97,6 @@ accessible field net/minecraft/world/chunk/WorldChunk loadedToWorld Z
 accessible field net/minecraft/client/world/ClientChunkManager$ClientChunkMap chunks Ljava/util/concurrent/atomic/AtomicReferenceArray;
 
 accessible field net/minecraft/client/render/WorldRenderer blockBreakingProgressions Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;
-
-accessible field net/minecraft/entity/projectile/ProjectileEntity ownerUuid Ljava/util/UUID;
 
 accessible method net/minecraft/entity/LivingEntity getJumpVelocity ()F
 accessible method net/minecraft/entity/LivingEntity computeFallDamage (DF)I
@@ -196,5 +194,5 @@ accessible field net/minecraft/client/gl/GlGpuBuffer id I
 accessible field com/mojang/blaze3d/opengl/GlStateManager readFbo I
 accessible field com/mojang/blaze3d/opengl/GlStateManager writeFbo I
 
-accessible method net/minecraft/client/gl/GlResourceManager getBackend ()Lnet/minecraft/client/gl/GlBackend;
+accessible method net/minecraft/client/gl/GlCommandEncoder getBackend ()Lnet/minecraft/client/gl/GlBackend;
 accessible field net/minecraft/client/render/GameRenderer pool Lnet/minecraft/client/util/Pool;

@@ -22,11 +22,11 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.utils.toVec3d
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -39,7 +39,7 @@ import java.text.NumberFormat
 /**
  * This util should only be called from main thread
  */
-object WorldToScreen : EventListener {
+object WorldToScreen : MinecraftShortcuts, EventListener {
 
     private val mvpMatrix = Matrix4f()
     private val projectionMatrix = Matrix4f()
@@ -52,7 +52,19 @@ object WorldToScreen : EventListener {
         val matrixStack = event.matrixStack
 
         this.mvpMatrix.set(matrixStack.peek().positionMatrix)
-        this.projectionMatrix.set(RenderSystem.getProjectionMatrix())
+
+        // Important: here we need this buffer to be USAGE_MAP_READ, so add mixins at all sources.
+        // Usages (2025/11/09, 1.21.6):
+        // - PostEffectPass
+        // - CubeMapRenderer
+        // - GuiRenderer
+        // - SpecialGuiElementRenderer
+        // - GameRenderer -> renderWorld (we need this within event callback) (@see MixinRawProjectionMatrix)
+        val projMat = RenderSystem.getProjectionMatrixBuffer() ?: return@handler
+
+        projMat.mapBuffer(read = true, write = false).use {
+            this.projectionMatrix.set(it.data())
+        }
     }
 
     @JvmStatic

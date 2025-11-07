@@ -19,13 +19,14 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import com.mojang.blaze3d.opengl.GlStateManager
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.PlainText
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen.BACKGROUND_TEXTURE
 import net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.screen.PlayerScreenHandler
@@ -51,8 +52,8 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Pl
 
         val handler = handler ?: return
         GlStateManager._disableDepthTest()
-        context.matrices.push()
-        context.matrices.translate(x.toFloat(), y.toFloat(), 0.0f)
+        context.matrices.pushMatrix()
+        context.matrices.translate(x.toFloat(), y.toFloat())
         var hoveredSlot: Slot? = null
 
         for (slot in handler.slots) {
@@ -65,9 +66,8 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Pl
                 if (slot.canBeHighlighted()) {
                     // draw slot highlight
                     context.fillGradient(
-                        RenderLayer.getGuiOverlay(),
                         slot.x, slot.y, slot.x + 16, slot.y + 16,
-                        -2130706433, -2130706433, 0
+                        -2130706433, -2130706433,
                     )
                 }
             }
@@ -78,7 +78,7 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Pl
             drawItem(context, cursorStack, mouseX - x - 8, mouseY - y - 8)
         }
 
-        context.matrices.pop()
+        context.matrices.popMatrix()
         GlStateManager._enableDepthTest()
 
         if (cursorStack.isEmpty && hoveredSlot != null && hoveredSlot.hasStack()) {
@@ -96,15 +96,15 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Pl
     }
 
     private fun drawItem(context: DrawContext, stack: ItemStack, x: Int, y: Int) {
-        context.matrices.push()
-        context.matrices.translate(0f, 0f, 232f)
-        context.drawItem(stack, x, y)
-        context.drawStackOverlay(textRenderer, stack, x, y, null)
-        context.matrices.pop()
+        context.matrices.withPush {
+            context.drawItem(stack, x, y)
+            context.drawStackOverlay(textRenderer, stack, x, y, null)
+        }
     }
 
     private fun drawBackground(context: DrawContext, mouseX: Int, mouseY: Int) {
-        context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x, y,
+        context.drawTexture(
+            RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x, y,
             0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256)
         player()?.let { player ->
             drawEntity(
@@ -117,12 +117,12 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Pl
     private fun drawSlot(context: DrawContext, slot: Slot) {
         var spriteDrawn = false
 
-        context.matrices.push()
-        context.matrices.translate(0f, 0f, 100f)
+        context.matrices.pushMatrix()
+        context.matrices.translate(0f, 0f)
         if (slot.stack.isEmpty && slot.isEnabled) {
             val identifier = slot.backgroundSprite
             if (identifier != null) {
-                context.drawGuiTexture(RenderLayer::getGuiTextured, identifier, slot.x, slot.y, 16, 16)
+                context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, identifier, slot.x, slot.y, 16, 16)
                 spriteDrawn = true
             }
         }
@@ -138,7 +138,7 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Pl
             context.drawStackOverlay(textRenderer, slot.stack, slot.x, slot.y, null)
         }
 
-        context.matrices.pop()
+        context.matrices.popMatrix()
     }
 
     private fun isPointOverSlot(slot: Slot, pointX: Double, pointY: Double): Boolean {

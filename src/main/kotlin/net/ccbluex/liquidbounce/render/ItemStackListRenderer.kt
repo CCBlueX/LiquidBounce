@@ -35,8 +35,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.client.font.TextRenderer
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -146,7 +146,7 @@ class ItemStackListRenderer private constructor(
 
     private fun drawSlotTexture(x: Int, y: Int) {
         drawContext.drawGuiTexture(
-            RenderLayer::getGuiTextured,
+            RenderPipelines.GUI_TEXTURED,
             ID_SINGLE_SLOT,
             x,
             y,
@@ -165,9 +165,9 @@ class ItemStackListRenderer private constructor(
             val width = dimensions.x
             val height = dimensions.y
 
-            translate(center.x, center.y, center.z)
-            scale(scale, scale, 1.0F)
-            translate(-width * 0.5F, -height * 0.5F, 0.0F)
+            translate(center.x, center.y)
+            scale(scale, scale)
+            translate(-width * 0.5F, -height * 0.5F)
 
             if (!useTexture) {
                 fillBackground(width, height)
@@ -175,7 +175,7 @@ class ItemStackListRenderer private constructor(
 
             if (title != null) {
                 drawContext.drawCenteredTextWithShadow(textRenderer, title, width / 2, 0, titleColor)
-                translate(0F, textRenderer.fontHeight + 2F, 0F)
+                translate(0F, textRenderer.fontHeight + 2F)
             }
 
             // render stacks

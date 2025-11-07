@@ -189,7 +189,7 @@ object RotationUpdateEvent : Event()
 object ResourceReloadEvent : Event()
 
 @Nameable("scaleFactorChange")
-class ScaleFactorChangeEvent(val scaleFactor: Double) : Event(), WebSocketEvent
+class ScaleFactorChangeEvent(val scaleFactor: Int) : Event(), WebSocketEvent
 
 @Nameable("scheduleInventoryAction")
 class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Chain> = mutableListOf()) : Event() {

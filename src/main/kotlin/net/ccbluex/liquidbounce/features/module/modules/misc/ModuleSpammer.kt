@@ -147,7 +147,7 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
         }
 
         if (text.startsWith('/')) {
-            network.sendCommand(text.substring(1))
+            network.sendChatCommand(text.substring(1))
         } else {
             network.sendChatMessage(text)
         }

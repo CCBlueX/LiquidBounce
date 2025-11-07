@@ -215,7 +215,8 @@ class TrajectoryInfoRenderer(
 
         val entityHitResult = ProjectileUtil.getEntityCollision(
             world,
-            owner,
+            null,
+//            owner, FIXME
             posBefore,
             posAfter,
             hitbox.offset(pos).stretch(velocity).expand(1.0)

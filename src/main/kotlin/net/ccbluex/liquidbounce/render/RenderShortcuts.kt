@@ -23,18 +23,18 @@ package net.ccbluex.liquidbounce.render
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextAccessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.SAMPLER_NAMES
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gui.DrawContext
@@ -46,6 +46,7 @@ import org.joml.Matrix4f
 import org.joml.Vector2fc
 import org.joml.Vector3f
 import org.joml.Vector3fc
+import org.joml.Vector4f
 import org.joml.component1
 import org.joml.component2
 import org.lwjgl.opengl.GL11C
@@ -95,7 +96,7 @@ sealed class RenderEnvironment(val framebuffer: Framebuffer, val matrixStack: Ma
         }
     }
 
-    fun getOrCreateBuffer(texture: GpuTexture): BufferBuilder {
+    fun getOrCreateBuffer(texture: GpuTextureView): BufferBuilder {
         return if (isBatchMode) {
             texQuadBatchBuffer.computeIfAbsent(texture, ClientTessellator::begin)
         } else {
@@ -142,7 +143,7 @@ sealed class RenderEnvironment(val framebuffer: Framebuffer, val matrixStack: Ma
          * For [ClientRenderPipelines.TexQuads] only. Each texture has its buffer builder.
          */
         @JvmStatic
-        private val texQuadBatchBuffer = Reference2ReferenceOpenHashMap<GpuTexture, BufferBuilder>()
+        private val texQuadBatchBuffer = Reference2ReferenceOpenHashMap<GpuTextureView, BufferBuilder>()
     }
 }
 
@@ -202,9 +203,12 @@ inline fun renderEnvironmentForGUI(
         callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
     }
 
-    val environment = GUIRenderEnvironment(event.framebuffer, event.context, event.context.matrices)
+    // FIXME: event.context.matrices compatible?
+    val matStack = Pools.MatStack.borrow()
+    val environment = GUIRenderEnvironment(event.framebuffer, event.context, matStack)
     draw(environment)
     if (environment.isBatchMode) environment.commitBatch()
+    Pools.MatStack.recycle(matStack)
 }
 
 inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {
@@ -306,7 +310,7 @@ inline fun RenderEnvironment.drawCustomMesh(
 }
 
 private inline fun RenderEnvironment.drawTexQuads(
-    texture: GpuTexture,
+    texture: GpuTextureView,
     drawer: VertexConsumer.(Matrix4f) -> Unit
 ) {
     val matrix = matrixStack.peek().positionMatrix
@@ -330,6 +334,14 @@ private inline fun RenderEnvironment.drawTexQuads(
 context(env: RenderEnvironment)
 @Suppress("detekt:all")
 fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
+    val gpuBufferSlice = RenderSystem.getDynamicUniforms()
+        .write(
+            RenderSystem.getModelViewMatrix(),
+            Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
+            RenderSystem.getModelOffset(),
+            RenderSystem.getTextureMatrix(),
+            RenderSystem.getShaderLineWidth(),
+        )
     val gpuBuffer = vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
     val gpuBuffer2: GpuBuffer
     val indexType: VertexFormat.IndexType
@@ -345,10 +357,19 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
     newRenderPass(env.framebuffer).use { renderPass ->
         // TODO: render pass extra actions
         renderPass.setPipeline(this)
-        renderPass.setVertexBuffer(0, gpuBuffer)
-        if (RenderSystem.SCISSOR_STATE.isEnabled) {
-            renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
+        val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
+        if (scissorState.method_72091()) {
+            renderPass.enableScissor(
+                scissorState.method_72092(),
+                scissorState.method_72093(),
+                scissorState.method_72094(),
+                scissorState.method_72095()
+            )
         }
+
+        RenderSystem.bindDefaultUniforms(renderPass)
+        renderPass.setUniform("DynamicTransforms", gpuBufferSlice)
+        renderPass.setVertexBuffer(0, gpuBuffer)
 
         for (i in 0..11) {
             val gpuTexture = RenderSystem.getShaderTexture(i)
@@ -358,7 +379,7 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         }
 
         renderPass.setIndexBuffer(gpuBuffer2, indexType)
-        renderPass.drawIndexed(0, buffer.drawParameters.indexCount)
+        renderPass.drawIndexed(0, 0, buffer.drawParameters.indexCount, 1)
     }
 }
 
@@ -442,14 +463,14 @@ fun RenderEnvironment.drawSquareTexture(
 }
 
 fun RenderEnvironment.drawTextureQuad(
-    texture: GpuTexture,
+    textureView: GpuTextureView,
     pos1: Vector3fc,
     uv1: UV2f = UV2f(0f, 0f),
     pos2: Vector3fc,
     uv2: UV2f = UV2f(1f, 1f),
     argb: Int,
 ) {
-    drawTexQuads(texture) { matrix ->
+    drawTexQuads(textureView) { matrix ->
         vertex(matrix, pos1.x(), pos2.y(), pos1.z())
             .texture(uv1.u, uv2.v)
             .color(argb)
@@ -713,48 +734,4 @@ fun RenderEnvironment.drawGradientSides(
         ),
         vertexColors
     )
-}
-
-/**
- * Float version of [DrawContext.fill]
- */
-@Suppress("LongParameterList")
-fun DrawContext.fill(x1: Float, y1: Float, x2: Float, y2: Float, z: Float, color: Int) {
-    val layer = RenderLayer.getGui()
-    var x1 = x1
-    var y1 = y1
-    var x2 = x2
-    var y2 = y2
-    val matrix4f = this.matrices.peek().getPositionMatrix()
-    if (x1 < x2) {
-        val i = x1
-        x1 = x2
-        x2 = i
-    }
-
-    if (y1 < y2) {
-        val i = y1
-        y1 = y2
-        y2 = i
-    }
-
-    val vertexConsumer: VertexConsumer = (this as MixinDrawContextAccessor).vertexConsumers.getBuffer(layer)
-    vertexConsumer.vertex(matrix4f, x1, y1, z).color(color)
-    vertexConsumer.vertex(matrix4f, x1, y2, z).color(color)
-    vertexConsumer.vertex(matrix4f, x2, y2, z).color(color)
-    vertexConsumer.vertex(matrix4f, x2, y1, z).color(color)
-}
-
-/**
- * Float version of [DrawContext.drawHorizontalLine]
- */
-fun DrawContext.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Float, color: Int) {
-    this.fill(x1, y, x2, y + thickness, 0f, color)
-}
-
-/**
- * Float version of [DrawContext.drawVerticalLine]
- */
-fun DrawContext.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Int) {
-    this.fill(x, y1, x + thickness, y2, 0f, color)
 }

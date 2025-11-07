@@ -72,3 +72,6 @@ class OverlayRenderEvent(
     val context: DrawContext,
     val tickDelta: Float,
 ) : Event()
+
+@Nameable("flipFrame")
+object FlipFrameEvent : Event()

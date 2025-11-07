@@ -233,7 +233,7 @@ class FontRenderer(
             val y2 = y + (renderInfo.glyphBounds.yMin + renderInfo.atlasLocation.atlasHeight) * scale
 
             environment.drawTextureQuad(
-                glyph.page.texture.glTexture,
+                glyph.page.texture.glTextureView,
                 charPos1.set(x1, y1, z),
                 renderInfo.atlasLocation.uvCoordinatesOnTexture.min,
                 charPos2.set(x2, y2, z),

@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.interfaces.LightmapTextureManagerAddition;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -42,7 +42,7 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
 
     @Shadow
     @Final
-    private GpuTexture glTexture;
+    private GpuTextureView glTextureView;
 
     @Unique
     private boolean liquid_bounce$customLightMap = false;
@@ -78,8 +78,8 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
         var customLightColor = ModuleCustomAmbience.CustomLightColor.INSTANCE;
         if (customLightColor.getRunning()) {
             liquid_bounce$customLightMap = true;
-            if (RenderSystem.getShaderTexture(2) == this.glTexture) {
-                RenderSystem.setShaderTexture(2, customLightColor.getTexture());
+            if (RenderSystem.getShaderTexture(2) == this.glTextureView) {
+                RenderSystem.setShaderTexture(2, customLightColor.getTextureView());
             }
         }
     }
@@ -87,15 +87,15 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
     @Inject(method = "enable", at = @At("HEAD"), cancellable = true)
     private void hookSpoof(CallbackInfo ci) {
         if (liquid_bounce$customLightMap) {
-            RenderSystem.setShaderTexture(2, ModuleCustomAmbience.CustomLightColor.INSTANCE.getTexture());
+            RenderSystem.setShaderTexture(2, ModuleCustomAmbience.CustomLightColor.INSTANCE.getTextureView());
             ci.cancel();
         }
     }
 
     @Override
     public void liquid_bounce$restoreLightMap() {
-        if (RenderSystem.getShaderTexture(2) == ModuleCustomAmbience.CustomLightColor.INSTANCE.getTexture()) {
-            RenderSystem.setShaderTexture(2, this.glTexture);
+        if (RenderSystem.getShaderTexture(2) == ModuleCustomAmbience.CustomLightColor.INSTANCE.getTextureView()) {
+            RenderSystem.setShaderTexture(2, this.glTextureView);
         }
         liquid_bounce$customLightMap = false;
     }

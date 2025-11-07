@@ -41,6 +41,7 @@ object OutlineFramebufferHolder : MinecraftShortcuts {
     )
 
     private val outlineTexture get() = framebuffer.colorAttachment!!
+    private val outlineTextureView get() = framebuffer.colorAttachmentView!!
 
     @JvmStatic
     fun prepare(): Framebuffer {
@@ -65,7 +66,7 @@ object OutlineFramebufferHolder : MinecraftShortcuts {
 
             newRenderPass(target).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.Outline)
-                pass.bindSampler("texture0", outlineTexture)
+                pass.bindSampler("texture0", outlineTextureView)
                 pass.drawFullScreenPositionTexture()
             }
         }

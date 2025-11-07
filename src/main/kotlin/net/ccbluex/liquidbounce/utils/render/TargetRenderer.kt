@@ -101,7 +101,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             env.matrixStack.translate(interpolated)
 
             with(env) {
-                RenderSystem.setShaderTexture(0, ghostModeTexture.glTexture)
+                RenderSystem.setShaderTexture(0, ghostModeTexture.glTextureView)
                 startBatch()
                 drawParticle(
                     { sin, cos -> Vec3d(sin, cos, -cos) },
