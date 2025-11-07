@@ -44,6 +44,7 @@ import net.minecraft.util.math.*
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
 import org.joml.Vector2fc
+import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.joml.component1
 import org.joml.component2
@@ -607,9 +608,9 @@ fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4
 private const val CIRCLE_RES = 40
 
 // using a val instead of a function for better performance
-private val circlePoints = Array(CIRCLE_RES + 1) {
-    val theta = MathHelper.PI * 2 * it / CIRCLE_RES
-    Vec3(theta.fastCos(), 0f, theta.fastSin())
+private val circlePoints: Array<Vector3fc> = Array(CIRCLE_RES + 1) {
+    val theta = MathHelper.PI * 2f * it / CIRCLE_RES
+    Vector3f(theta.fastCos(), 0f, theta.fastSin())
 }
 
 /**
@@ -625,12 +626,14 @@ fun RenderEnvironment.drawGradientCircle(
     innerRadius: Float,
     outerColor4b: Color4b,
     innerColor4b: Color4b,
-    innerOffset: Vec3 = Vec3.ZERO,
+    innerOffset: Vector3fc = Vector3f(),
 ) {
     drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
+        val innerP = Vector3f()
+        val outerP = Vector3f()
         for (p in circlePoints) {
-            val outerP = p * outerRadius
-            val innerP = p * innerRadius + innerOffset
+            outerP.set(p).mul(outerRadius)
+            innerP.set(p).mul(innerRadius).add(innerOffset)
 
             vertex(matrix, outerP.x, outerP.y, outerP.z)
                 .color(outerColor4b.toARGB())
@@ -648,8 +651,9 @@ fun RenderEnvironment.drawGradientCircle(
  */
 fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) =
     drawCustomMesh(ClientRenderPipelines.LineStrip) { matrix ->
+        val point = Vector3f()
         for (p in circlePoints) {
-            val point = p * radius
+            point.set(p).mul(radius)
 
             vertex(matrix, point.x, point.y, point.z)
                 .color(color4b.toARGB())
