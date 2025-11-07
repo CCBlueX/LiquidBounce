@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.authlib.GameProfile
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
-import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -40,6 +39,7 @@ import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.injection.mixins.authlib.MixinYggdrasilMinecraftSessionServiceAccessor
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -75,12 +75,14 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         arrayOf(Mode.Online, Mode.File)
     }
 
+    private val DEBOUNCE_DURATION = 3.seconds
+
     private val uploadSkinFlow = MutableSharedFlow<Unit>(replay = 0)
 
     init {
         ioScope.launch {
             // debounce skin uploads to prevent rapid calls
-            uploadSkinFlow.debounce(3.seconds).filter { canUploadSkin() }.collectLatest {
+            uploadSkinFlow.debounce(DEBOUNCE_DURATION).filter { canUploadSkin() }.collectLatest {
                 logger.info("Uploading skin...")
                 mode.activeChoice.uploadSkin()
             }
@@ -103,7 +105,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
     private inline fun <T> Flow<T>.debounceUntilInGame(crossinline action: suspend (T) -> Unit) {
         renderScope.launch {
-            this@debounceUntilInGame.debounce { 2.seconds }.collectLatest {
+            this@debounceUntilInGame.debounce(DEBOUNCE_DURATION).collectLatest {
                 waitUntilInGame()
                 try {
                     action(it)
@@ -243,16 +245,12 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         }
 
         val sessionService = mc.sessionService
-        if (sessionService !is YggdrasilMinecraftSessionService) {
+        if (sessionService !is MixinYggdrasilMinecraftSessionServiceAccessor) {
             return false
         }
 
         // query environment with reflection
-        val baseUrlField = sessionService.javaClass.getDeclaredField("baseUrl")
-
-        baseUrlField.isAccessible = true
-        val baseUrl = baseUrlField.get(sessionService) as String
-
+        val baseUrl = sessionService.baseUrl
         if (!baseUrl.startsWith(YggdrasilEnvironment.PROD.environment.sessionHost)) {
             // custom authentication endpoints are used
             // e.g. The Altening
