@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
 import net.ccbluex.liquidbounce.integration.theme.component.Component
@@ -80,10 +81,10 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
     }
 
-    var components: MutableList<Component>
-        field: MutableList<Component>? = null
-        private set
-        get() = requireNotNull(field) { "components not loaded" }
+    private var _components: List<Component>? = null
+
+    val components: List<Component>
+        get() = requireNotNull(_components) { "components not loaded" }
 
     var settings: Configurable
         field: Configurable? = null
@@ -91,7 +92,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         get() = requireNotNull(field) { "settings not loaded" }
 
     private suspend fun loadComponents() {
-        components = metadata.components.mapNotNullTo(mutableListOf()) { name ->
+        _components = metadata.components.mapNotNullTo(mutableListOf()) { name ->
             val componentFactory = runCatching {
                 get<JsonComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
             }.onFailure {
@@ -220,6 +221,7 @@ class Theme private constructor(val origin: Origin, url: String) :
     override fun close() {
         themeBackgroundShader?.close()
         themeBackgroundTexture?.close()
+        _components?.forEach { EventManager.unregisterEventHandler(it) }
     }
 
     override fun toString() = "Theme(name=${metadata.name}, origin=${origin.choiceName}, url=$baseUrl)"
