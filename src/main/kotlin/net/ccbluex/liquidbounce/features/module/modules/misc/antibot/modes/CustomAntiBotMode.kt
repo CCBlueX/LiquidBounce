@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
+import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -82,13 +83,31 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
             val predicate: Predicate<ItemStack>,
         ) : NamedChoice {
             // General
-            NOTHING("Nothing", ItemStack::isEmpty),
-            LEATHER("Leather", Items.LEATHER_HELMET, Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS, Items.LEATHER_BOOTS),
-            CHAIN("Chain", Items.CHAINMAIL_HELMET, Items.CHAINMAIL_CHESTPLATE, Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS),
-            IRON("Iron", Items.IRON_HELMET, Items.IRON_CHESTPLATE, Items.IRON_LEGGINGS, Items.IRON_BOOTS),
-            GOLD("Gold", Items.GOLDEN_HELMET, Items.GOLDEN_CHESTPLATE, Items.GOLDEN_LEGGINGS, Items.GOLDEN_BOOTS),
-            DIAMOND("Diamond", Items.DIAMOND_HELMET, Items.DIAMOND_CHESTPLATE, Items.DIAMOND_LEGGINGS, Items.DIAMOND_BOOTS),
-            NETHERITE("Netherite", Items.NETHERITE_HELMET, Items.NETHERITE_CHESTPLATE, Items.NETHERITE_LEGGINGS, Items.NETHERITE_BOOTS),
+            NOTHING("Nothing", Predicate(ItemStack::isEmpty)),
+            LEATHER(
+                "Leather",
+                Items.LEATHER_HELMET, Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS, Items.LEATHER_BOOTS,
+            ),
+            CHAIN(
+                "Chain",
+                Items.CHAINMAIL_HELMET, Items.CHAINMAIL_CHESTPLATE, Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS
+            ),
+            IRON(
+                "Iron",
+                Items.IRON_HELMET, Items.IRON_CHESTPLATE, Items.IRON_LEGGINGS, Items.IRON_BOOTS
+            ),
+            GOLD(
+                "Gold",
+                Items.GOLDEN_HELMET, Items.GOLDEN_CHESTPLATE, Items.GOLDEN_LEGGINGS, Items.GOLDEN_BOOTS
+            ),
+            DIAMOND(
+                "Diamond",
+                Items.DIAMOND_HELMET, Items.DIAMOND_CHESTPLATE, Items.DIAMOND_LEGGINGS, Items.DIAMOND_BOOTS
+            ),
+            NETHERITE(
+                "Netherite",
+                Items.NETHERITE_HELMET, Items.NETHERITE_CHESTPLATE, Items.NETHERITE_LEGGINGS, Items.NETHERITE_BOOTS
+            ),
 
             // Chestplate only
             ELYTRA("Elytra", Items.ELYTRA),
@@ -171,15 +190,6 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
 
     private val armorSet = IntOpenHashSet()
 
-    private inline fun IntOpenHashSet.filterInPlace(predicate: (Int) -> Boolean) {
-        val iter = this.intIterator()
-        while (iter.hasNext()) {
-            if (predicate(iter.nextInt())) {
-                iter.remove()
-            }
-        }
-    }
-
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = CRITICAL_MODIFICATION) {
         val rangeSquared = AlwaysInRadius.alwaysInRadiusRange.sq()
@@ -197,7 +207,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
             }
         }
 
-        armorSet.filterInPlace {
+        armorSet.removeIf {
             val entity = world.getEntityById(it) as? PlayerEntity
             entity == null || Armor.isValid(entity)
         }
