@@ -116,16 +116,15 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
      * Replaces the call to `overlayFramebuffer.drawBlit(mc.framebuffer.colorAttachment)`.
      */
     private fun drawOverlayBlit() {
-        RenderSystem.assertOnRenderThread()
         val shapeIndexBuffer = RenderSystem.getSequentialBuffer(VertexFormat.DrawMode.QUADS)
         val indexBuffer = shapeIndexBuffer.getIndexBuffer(6)
         val vertexBuffer = RenderSystem.getQuadVertexBuffer()
 
-        RenderSystem.getDevice().createCommandEncoder().createRenderPass(
+        gpuDevice.createCommandEncoder().createRenderPass(
             mc.framebuffer.colorAttachment,
             OptionalInt.empty()
         ).use { renderPass ->
-            renderPass.setPipeline(ClientRenderPipelines.JcefBlit)
+            renderPass.setPipeline(ClientRenderPipelines.JCEF.Blit)
             renderPass.setVertexBuffer(0, vertexBuffer)
             renderPass.setIndexBuffer(indexBuffer, shapeIndexBuffer.indexType)
             renderPass.bindSampler("InSampler", overlayFramebuffer.colorAttachment)

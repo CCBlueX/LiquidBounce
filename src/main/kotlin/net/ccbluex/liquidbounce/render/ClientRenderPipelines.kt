@@ -110,6 +110,19 @@ object ClientRenderPipelines : SynchronousResourceReloader {
             withBlend(JCEF_COMPATIBLE_BLEND)
             withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
         }
+
+        @JvmField
+        val Blit = newPipeline("jcef_blit") {
+            withLocation("pipeline/entity_outline_blit")
+            withVertexShader("core/blit_screen")
+            withFragmentShader("core/blit_screen")
+            withSampler("InSampler")
+            withBlend(JCEF_COMPATIBLE_BLEND)
+            withDepthWrite(false)
+            withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            withColorWrite(true, false)
+            withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
+        }
     }
 
     @JvmField
@@ -196,31 +209,6 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withUniform("alphaBlendMax", UniformType.FLOAT)
         withoutBlend()
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-    }
-
-    @JvmField
-    val Blit = newPipeline("blit") {
-        withVertexShader(ClientShaders.PLAIN_POSITION_TEX_VSH_ID)
-        withFragmentShader(ClientShaders.BLIT_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
-        withSampler("texture0")
-        withBlend(BlendFunction.TRANSLUCENT)
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withDepthWrite(false)
-        withColorWrite(true, true)
-    }
-
-    @JvmField
-    val JcefBlit = newPipeline("jcefblit") {
-        withLocation("pipeline/entity_outline_blit")
-        withVertexShader("core/blit_screen")
-        withFragmentShader("core/blit_screen")
-        withSampler("InSampler")
-        withBlend(JCEF_COMPATIBLE_BLEND)
-        withDepthWrite(false)
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-        withColorWrite(true, false)
-        withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
     }
 
     @JvmField
