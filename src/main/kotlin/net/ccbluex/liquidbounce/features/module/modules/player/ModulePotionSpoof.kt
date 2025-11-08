@@ -76,11 +76,16 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
 
     @Suppress("unused")
     private val tickHandler = handler<PlayerTickEvent> {
-        for (configurable in statusEffectValues) {
-            if (configurable.enabled) {
-                player.addStatusEffect(configurable.instance)
-            } else if (player.getStatusEffect(configurable.registryEntry)?.duration == 0) {
-                player.removeStatusEffect(configurable.registryEntry)
+        for (effect in statusEffectValues) {
+            if (effect.enabled) {
+                player.addStatusEffect(effect.instance)
+                effect.instance.effectType.value().onApplied(
+                    player.attributes,
+                    effect.instance.amplifier
+                )
+            } else if (player.getStatusEffect(effect.registryEntry)?.duration == 0) {
+                player.removeStatusEffect(effect.registryEntry)
+                effect.instance.effectType.value().onRemoved(player.attributes)
             }
         }
     }
