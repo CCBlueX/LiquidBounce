@@ -211,6 +211,19 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     }
 
     @JvmField
+    val JcefBlit = newPipeline("jcefblit") {
+        withLocation("pipeline/entity_outline_blit")
+        withVertexShader("core/blit_screen")
+        withFragmentShader("core/blit_screen")
+        withSampler("InSampler")
+        withBlend(JCEF_COMPATIBLE_BLEND)
+        withDepthWrite(false)
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withColorWrite(true, false)
+        withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
+    }
+
+    @JvmField
     val Blend = newPipeline("blend") {
         withVertexShader(ClientShaders.PLAIN_POSITION_TEX_VSH_ID)
         withFragmentShader(ClientShaders.BLEND_FSH_ID)

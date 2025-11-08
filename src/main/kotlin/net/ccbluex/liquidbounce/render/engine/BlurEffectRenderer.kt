@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
+import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
+import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
@@ -39,6 +41,7 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.util.Util
 import net.minecraft.util.math.MathHelper
+import java.util.*
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
@@ -135,7 +138,29 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         }
 
         // overlayFramebuffer ---blit--> mc.framebuffer
-        overlayFramebuffer.drawBlit(mc.framebuffer.colorAttachment)
+        drawOverlayBlit()
+    }
+
+    /**
+     * Draws a blit using a custom JCEF-compatible blending pipeline.
+     * Replaces the call to `overlayFramebuffer.drawBlit(mc.framebuffer.colorAttachment)`.
+     */
+    private fun drawOverlayBlit() {
+        RenderSystem.assertOnRenderThread()
+        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(VertexFormat.DrawMode.QUADS)
+        val indexBuffer = shapeIndexBuffer.getIndexBuffer(6)
+        val vertexBuffer = RenderSystem.getQuadVertexBuffer()
+
+        RenderSystem.getDevice().createCommandEncoder().createRenderPass(
+            mc.framebuffer.colorAttachment,
+            OptionalInt.empty()
+        ).use { renderPass ->
+            renderPass.setPipeline(ClientRenderPipelines.JcefBlit)
+            renderPass.setVertexBuffer(0, vertexBuffer)
+            renderPass.setIndexBuffer(indexBuffer, shapeIndexBuffer.indexType)
+            renderPass.bindSampler("InSampler", overlayFramebuffer.colorAttachment)
+            renderPass.drawIndexed(0, 6)
+        }
     }
 
 }
