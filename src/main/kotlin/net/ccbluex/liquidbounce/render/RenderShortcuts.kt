@@ -562,11 +562,11 @@ fun RenderEnvironment.drawBox(
     faceVertices: Int = -1,
     outlineVertices: Int = -1,
 ) {
-    if (faceColor != null && !faceColor.isTransparent && faceVertices != 0) {
+    if (faceColor != null && !faceColor.isTransparent) {
         drawBox(box, ClientRenderPipelines.Quads, color = faceColor, verticesToUse = faceVertices)
     }
 
-    if (outlineColor != null && !outlineColor.isTransparent && outlineVertices != 0) {
+    if (outlineColor != null && !outlineColor.isTransparent) {
         drawBox(box, ClientRenderPipelines.Lines, useOutlineVertices = true, outlineColor, outlineVertices)
     }
 }
