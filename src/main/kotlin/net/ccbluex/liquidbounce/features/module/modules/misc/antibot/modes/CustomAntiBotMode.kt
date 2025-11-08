@@ -142,7 +142,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
             return entity.armorItems.withIndex().all { (index, armor) ->
                 val predicates = values[values.lastIndex - index].get()
                 // Nothing selected = skip this part
-                return predicates.isEmpty() || predicates.any {
+                predicates.isEmpty() || predicates.any {
                     it.predicate.test(armor)
                 }
             }
