@@ -19,13 +19,13 @@
 
 package net.ccbluex.liquidbounce.render
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.minecraft.util.Identifier
 
 object ClientShaders {
 
-    private val shaders = Object2ObjectRBTreeMap<Identifier, String>()
+    private val shaders = Object2ObjectOpenHashMap<Identifier, String>()
 
     @JvmField
     val BGRA_FSH_ID = newShader(

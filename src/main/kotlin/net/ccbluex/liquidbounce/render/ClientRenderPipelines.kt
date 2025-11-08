@@ -25,7 +25,7 @@ import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.platform.DestFactor
 import com.mojang.blaze3d.platform.SourceFactor
 import com.mojang.blaze3d.vertex.VertexFormat
-import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
@@ -38,7 +38,7 @@ import net.minecraft.util.Identifier
 
 object ClientRenderPipelines : SynchronousResourceReloader {
 
-    private val renderPipelines = Object2ObjectRBTreeMap<Identifier, RenderPipeline>()
+    private val renderPipelines = Object2ObjectOpenHashMap<Identifier, RenderPipeline>()
 
     /**
      * Blend mode for JCEF compatible blending.
@@ -71,7 +71,6 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withFragmentShader(ClientShaders.BGRA_FSH_ID)
         withSampler("Sampler0")
         withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
-        withSnippet(RenderPipelines.MATRICES_SNIPPET)
         withSnippet(RenderPipelines.MATRICES_COLOR_SNIPPET)
     }
 
