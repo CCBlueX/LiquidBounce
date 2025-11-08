@@ -60,7 +60,7 @@ inline fun String.asPlainText(): Text = PlainText.of(this, Style.EMPTY)
 /**
  * Returns an immutable [Text] from the receiver with [style].
  */
-inline fun String.asPlainText(style: Style = Style.EMPTY): Text = PlainText.of(this, style)
+inline fun String.asPlainText(style: Style): Text = PlainText.of(this, style)
 
 /**
  * Returns an immutable [Text] from the receiver with [formatting].
@@ -254,7 +254,7 @@ data class ColoredChar(val char: Char, val color: Formatting) {
 
 inline fun Char.colored(color: Formatting) = ColoredChar(this, color)
 
-inline fun Char.repeat(n: Int): String = CharArray(n) { this }.concatToString()
+fun Char.repeat(n: Int): String = CharArray(n) { this }.concatToString()
 
 /**
  * Generates a progress bar based on the [percent]age (range 0 to 100).
