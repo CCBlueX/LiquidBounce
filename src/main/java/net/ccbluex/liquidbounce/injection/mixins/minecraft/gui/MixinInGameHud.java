@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.additions.DrawContextAddition;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
@@ -80,6 +81,10 @@ public abstract class MixinInGameHud {
      */
     @Inject(method = "renderMainHud", at = @At("HEAD"))
     private void hookRenderEventStart(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        if (HideAppearance.INSTANCE.isHidingNow()) {
+            return;
+        }
+
         BlurEffectRenderer.INSTANCE.startOverlayDrawing(context, tickCounter.getTickProgress(false));
 
         // Draw after overlay event
