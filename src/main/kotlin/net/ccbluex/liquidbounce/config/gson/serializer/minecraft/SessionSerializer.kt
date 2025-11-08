@@ -23,18 +23,22 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
-import net.ccbluex.liquidbounce.utils.client.isPremium
+import net.ccbluex.liquidbounce.features.account.SessionWithService
 import net.minecraft.client.session.Session
 import java.lang.reflect.Type
 
 object SessionSerializer : JsonSerializer<Session> {
     override fun serialize(src: Session?, typeOfSrc: Type, context: JsonSerializationContext) = src?.let {
         JsonObject().apply {
+            val service = SessionWithService.getService(src)
+
             addProperty("username", it.username)
             addProperty("uuid", it.uuidOrNull.toString())
-            addProperty("accountType", it.accountType.getName())
+            addProperty("service", service.choiceName)
+            addProperty("type", it.accountType.getName())
             addProperty("avatar", formatAvatarUrl(it.uuidOrNull, it.username))
-            addProperty("premium", it.isPremium())
+            addProperty("online", service.canJoinOnline)
+            addProperty("premium", service.canJoinOnline) // todo: deprecated, kept for compatibility
         }
     }
 }

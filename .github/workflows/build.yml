@@ -20,6 +20,7 @@ jobs:
         with:
           distribution: 'graalvm'
           java-version: '21'
+          cache: 'gradle'
       - name: Grant permissions to src-theme
         run: sudo chmod -R 777 src-theme
       - name: Setup Gradle
@@ -79,6 +80,7 @@ jobs:
         with:
           distribution: 'graalvm'
           java-version: '21'
+          cache: 'gradle'
       - name: Grant permissions to src-theme
         run: sudo chmod -R 777 src-theme
       - name: Setup Gradle

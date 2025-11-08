@@ -140,7 +140,7 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(MinecraftAccount::class.javaObjectType, MinecraftAccountAdapter)
         .registerTypeHierarchyAdapter(Text::class.javaObjectType, CodecBasedAdapter.PROCESSED_TEXT)
         .registerTypeHierarchyAdapter(Screen::class.javaObjectType, ScreenSerializer)
-        .registerTypeAdapter(Session::class.javaObjectType, SessionSerializer)
+        .registerTypeHierarchyAdapter(Session::class.javaObjectType, SessionSerializer)
         .registerTypeAdapter(ServerInfo::class.javaObjectType, ServerInfoSerializer)
         .registerTypeHierarchyAdapter(StringIdentifiable::class.java, StringIdentifiableSerializer)
         .registerTypeAdapter(ItemStack::class.javaObjectType, ItemStackSerializer)

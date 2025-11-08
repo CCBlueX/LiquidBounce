@@ -16,9 +16,35 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
+
+package net.ccbluex.liquidbounce.features.account
 
 import net.minecraft.client.session.Session
+import java.util.*
 
-fun Session.isPremium() = (accountType == Session.AccountType.MOJANG || accountType == Session.AccountType.MSA)
+@Suppress("LongParameterList")
+class SessionWithService(
+    username: String,
+    uuid: UUID,
+    accessToken: String,
+    xuid: Optional<String>,
+    clientId: Optional<String>,
+    accountType: AccountType?,
+    val service: AccountService
+) : Session(username, uuid, accessToken, xuid, clientId, accountType) {
+
+    companion object {
+        fun getService(session: Session) = when {
+            session is SessionWithService -> session.service
+            session.couldBeOnline() -> AccountService.MICROSOFT
+            else -> AccountService.CRACKED
+        }
+    }
+
+}
+
+/**
+ * Checks if the session is online by checking the account type and if we have a valid access token.
+ */
+fun Session.couldBeOnline() = (accountType == Session.AccountType.MOJANG || accountType == Session.AccountType.MSA)
     && accessToken.isNotBlank() && accessToken.length > 3

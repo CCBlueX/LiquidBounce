@@ -262,9 +262,10 @@ export interface MinecraftKeybind {
 
 export interface Session {
     username: string;
-    accountType: string;
+    type: string;
+    service: string;
     avatar: string;
-    premium: boolean;
+    online: boolean;
     uuid: string;
 }
 

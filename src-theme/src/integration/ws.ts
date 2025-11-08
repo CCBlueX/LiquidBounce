@@ -1,5 +1,6 @@
 import {WS_BASE} from "./host";
 import type {EventMap} from "./events";
+import {onDestroy} from "svelte";
 
 console.log("Connecting to server at: ", WS_BASE);
 
@@ -45,6 +46,16 @@ export function listenAlways<NAME extends keyof EventMap>(eventName: NAME, callb
     alwaysListeners.get(eventName)!!.push(callback);
 }
 
+/**
+ * Registers a event listener that will be called on every event of the given name.
+ *
+ * The listener will be automatically removed when the component is destroyed.
+ *
+ * Should only be used inside a Svelte component.
+ *
+ * @param eventName
+ * @param callback
+ */
 export function listen<NAME extends keyof EventMap>(eventName: NAME, callback: (event: EventMap[NAME]) => void) {
     if (!listeners.has(eventName)) {
         listeners.set(eventName, []);
@@ -52,7 +63,7 @@ export function listen<NAME extends keyof EventMap>(eventName: NAME, callback: (
 
     listeners.get(eventName)!!.push(callback);
 
-    return () => deleteListener(eventName, callback);
+    onDestroy(() => deleteListener(eventName, callback));
 }
 
 export function cleanupListeners() {
