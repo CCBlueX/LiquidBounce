@@ -34,20 +34,17 @@ import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.render.newRenderPass
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
-import net.minecraft.util.Util
-import net.minecraft.util.math.MathHelper
 import java.util.*
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
     private var isDrawingHudFramebuffer = false
-
-    private val OS = Util.getOperatingSystem()
 
     private val overlayFramebuffer = SimpleFramebuffer(
         "BlurOverlay",
@@ -61,33 +58,9 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     private val lastTimeScreenOpened = Chronometer()
     private var wasScreenOpen = false
 
-    private fun easeFunction(x: Float): Float {
-        return (x * MathHelper.HALF_PI).fastSin()
-    }
-
     @Suppress("unused")
     private val resizeHandler = handler<FramebufferResizeEvent> {
         this.overlayFramebuffer.resize(it.width, it.height)
-    }
-
-    fun getBlurRadiusFactor(): Float {
-        val isScreenOpen = mc.currentScreen != null && mc.currentScreen !is ChatScreen
-
-        if (isScreenOpen && !wasScreenOpen) {
-            lastTimeScreenOpened.reset()
-        }
-
-        wasScreenOpen = isScreenOpen
-
-        return if (isScreenOpen) {
-            easeFunction((lastTimeScreenOpened.elapsed.toFloat() / 333.0F + 0.1F).coerceIn(0.0F..1.0F))
-        } else {
-            1.0F
-        }
-    }
-
-    private fun getBlurRadius(): Float {
-        return (this.getBlurRadiusFactor() * 20.0F).coerceIn(5.0F..20.0F)
     }
 
     fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
@@ -97,13 +70,11 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         if (ModuleHud.isBlurEffectActive) {
             this.isDrawingHudFramebuffer = true
-
             overlayFramebuffer.clearColorAndDepth(0, 1.0)
 
             // TODO: GlobalFramebuffer is incompatible with OSX
-            if (OS != Util.OperatingSystem.OSX) {
+            if (!MinecraftClient.IS_SYSTEM_MAC) {
                 val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
-
                 framebufferWrapper.beginWrite(viewport = true, clear = false)
             }
 
@@ -120,9 +91,8 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         this.isDrawingHudFramebuffer = false
 
-        if (OS != Util.OperatingSystem.OSX) {
+        if (!MinecraftClient.IS_SYSTEM_MAC) {
             val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
-
             framebufferWrapper.end()
         }
 
@@ -161,6 +131,26 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             renderPass.bindSampler("InSampler", overlayFramebuffer.colorAttachment)
             renderPass.drawIndexed(0, 6)
         }
+    }
+
+    fun getBlurRadiusFactor(): Float {
+        val isScreenOpen = mc.currentScreen != null && mc.currentScreen !is ChatScreen
+
+        if (isScreenOpen && !wasScreenOpen) {
+            lastTimeScreenOpened.reset()
+        }
+        wasScreenOpen = isScreenOpen
+
+        return if (isScreenOpen) {
+            val x = (lastTimeScreenOpened.elapsed.toFloat() / 333.0F + 0.1F).coerceIn(0.0F..1.0F)
+            Easing.QUAD_OUT.transform(x)
+        } else {
+            1.0F
+        }
+    }
+
+    private fun getBlurRadius(): Float {
+        return (this.getBlurRadiusFactor() * 20.0F).coerceIn(5.0F..20.0F)
     }
 
 }
