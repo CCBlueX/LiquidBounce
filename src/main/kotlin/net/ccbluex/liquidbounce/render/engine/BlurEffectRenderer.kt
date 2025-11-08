@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
+import com.mojang.blaze3d.textures.FilterMode
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
@@ -43,12 +44,16 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
     private var isDrawingHudFramebuffer = false
 
+    private val OS = Util.getOperatingSystem()
+
     private val overlayFramebuffer = SimpleFramebuffer(
         "BlurOverlay",
         mc.window.framebufferWidth,
         mc.window.framebufferHeight,
         true
-    )
+    ).apply {
+        this.setFilter(FilterMode.NEAREST)
+    }
 
     private val lastTimeScreenOpened = Chronometer()
     private var wasScreenOpen = false
@@ -93,7 +98,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             overlayFramebuffer.clearColorAndDepth(0, 1.0)
 
             // TODO: GlobalFramebuffer is incompatible with OSX
-            if (Util.getOperatingSystem() != Util.OperatingSystem.OSX) {
+            if (OS != Util.OperatingSystem.OSX) {
                 val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
 
                 framebufferWrapper.beginWrite(viewport = true, clear = false)
@@ -112,7 +117,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         this.isDrawingHudFramebuffer = false
 
-        if (Util.getOperatingSystem() != Util.OperatingSystem.OSX) {
+        if (OS != Util.OperatingSystem.OSX) {
             val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
 
             framebufferWrapper.end()
@@ -130,11 +135,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         }
 
         // overlayFramebuffer ---blit--> mc.framebuffer
-        newRenderPass(mc.framebuffer).use { pass ->
-            pass.setPipeline(ClientRenderPipelines.Blit)
-            pass.bindSampler("texture0", overlayFramebuffer.colorAttachment)
-            pass.drawFullScreenPositionTexture()
-        }
+        overlayFramebuffer.drawBlit(mc.framebuffer.colorAttachment)
     }
 
 }
