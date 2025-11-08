@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.misc
 
-import com.mojang.authlib.minecraft.MinecraftSessionService
+package net.ccbluex.liquidbounce.features.account
+
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
 import net.ccbluex.liquidbounce.authlib.account.*
@@ -45,7 +45,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
 
     val accounts by list(name, mutableListOf<MinecraftAccount>(), ValueType.ACCOUNT)
 
-    private var initialSession: SessionData
+    private var initialSession: SessionBundle
 
     private val loggingIn = AtomicBoolean(false)
 
@@ -53,11 +53,11 @@ object AccountManager : Configurable("Accounts"), EventListener {
         ConfigSystem.root(this)
 
         try {
-            initialSession = SessionData(mc.session, mc.sessionService, mc.profileKeys)
+            initialSession = SessionBundle(mc.session, mc.sessionService, mc.profileKeys)
             logger.info("Initial session saved: ${mc.session.username} (${mc.session.uuidOrNull})")
         } catch (e: Exception) {
             logger.error("Failed to save initial session", e)
-            initialSession = SessionData(mc.session, null, ProfileKeys.MISSING)
+            initialSession = SessionBundle(mc.session, null, ProfileKeys.MISSING)
         }
     }
 
@@ -78,11 +78,12 @@ object AccountManager : Configurable("Accounts"), EventListener {
     fun loginDirectAccount(account: MinecraftAccount) = try {
         logger.info("Start logging in with username '${account.profile?.username}'")
         val (compatSession, service) = account.login()
-        val session = Session(
+        val session = SessionWithService(
             compatSession.username, compatSession.uuid, compatSession.token,
             Optional.empty(),
             Optional.of(clientIdentifier),
-            Session.AccountType.byName(compatSession.type)
+            Session.AccountType.byName(compatSession.type),
+            AccountService.getService(account)
         )
 
         val profileKeys = runCatching {
@@ -296,8 +297,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
     }
 
     fun restoreInitial() {
-        val initialSession = initialSession!!
-
+        val initialSession = initialSession
         mc.session = initialSession.session
         mc.sessionService = initialSession.sessionService
         mc.profileKeys = initialSession.profileKeys
@@ -347,7 +347,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
             return
         }
 
-        // Create new cracked account
+        // Create a new cracked account
         accounts += SessionAccount(token).also { it.refresh() }.apply {
             val profile = this.profile
 
@@ -356,7 +356,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
                 return
             }
 
-            // Check if account already exists
+            // Check if an account already exists
             if (accounts.any { it.profile?.username.equals(profile.username, true) }) {
                 EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Account already exists!"))
                 return
@@ -368,8 +368,5 @@ object AccountManager : Configurable("Accounts"), EventListener {
             EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
         }
     }
-
-    data class SessionData(val session: Session, val sessionService: MinecraftSessionService?,
-                           val profileKeys: ProfileKeys)
 
 }
