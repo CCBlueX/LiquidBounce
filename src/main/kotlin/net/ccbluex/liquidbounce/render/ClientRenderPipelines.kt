@@ -47,6 +47,11 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     private val COVERING_BLEND = BlendFunction(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA)
 
+    private val OLD_DEFAULT_BLEND = BlendFunction(
+        SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA,
+        SourceFactor.ONE, DestFactor.ZERO,
+    )
+
     private inline fun newPipeline(
         name: String,
         builderAction: RenderPipeline.Builder.() -> Unit,
@@ -104,6 +109,19 @@ object ClientRenderPipelines : SynchronousResourceReloader {
             bgraPosTexColorQuads()
             withBlend(JCEF_COMPATIBLE_BLEND)
             withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+        }
+
+        @JvmField
+        val Blit = newPipeline("jcef_blit") {
+            withLocation("pipeline/entity_outline_blit")
+            withVertexShader("core/blit_screen")
+            withFragmentShader("core/blit_screen")
+            withSampler("InSampler")
+            withBlend(JCEF_COMPATIBLE_BLEND)
+            withDepthWrite(false)
+            withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+            withColorWrite(true, false)
+            withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
         }
     }
 
@@ -180,23 +198,17 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     }
 
     @JvmField
-    val Blur = newPipeline("blur") {
+    val GuiBlur = newPipeline("blur") {
         withVertexShader(ClientShaders.SOBEL_VSH_ID)
         withFragmentShader(ClientShaders.BLUR_FSH_ID)
         withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withSampler("overlay")
         withUniform("radius", UniformType.FLOAT)
+        withUniform("alphaBlendMin", UniformType.FLOAT)
+        withUniform("alphaBlendMax", UniformType.FLOAT)
         withoutBlend()
-    }
-
-    @JvmField
-    val Blit = newPipeline("blit") {
-        withVertexShader(ClientShaders.PLAIN_POSITION_TEX_VSH_ID)
-        withFragmentShader(ClientShaders.BLIT_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.QUADS)
-        withSampler("texture0")
-        forWorldRender()
+        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
     }
 
     @JvmField

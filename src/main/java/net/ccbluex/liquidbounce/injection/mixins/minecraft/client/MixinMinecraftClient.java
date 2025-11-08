@@ -55,7 +55,6 @@ import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.session.Session;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.Util;
 import net.minecraft.util.hit.BlockHitResult;
