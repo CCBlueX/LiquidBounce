@@ -83,18 +83,18 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         ) : NamedChoice {
             // General
             NOTHING("Nothing", ItemStack::isEmpty),
-            LEATHER("Leather", ItemTags.REPAIRS_LEATHER_ARMOR),
-            CHAIN("Chain", ItemTags.REPAIRS_CHAIN_ARMOR),
-            IRON("Iron", ItemTags.REPAIRS_IRON_ARMOR),
-            GOLD("Gold", ItemTags.REPAIRS_GOLD_ARMOR),
-            DIAMOND("Diamond", ItemTags.REPAIRS_DIAMOND_ARMOR),
-            NETHERITE("Netherite", ItemTags.REPAIRS_NETHERITE_ARMOR),
+            LEATHER("Leather", Items.LEATHER_HELMET, Items.LEATHER_CHESTPLATE, Items.LEATHER_LEGGINGS, Items.LEATHER_BOOTS),
+            CHAIN("Chain", Items.CHAINMAIL_HELMET, Items.CHAINMAIL_CHESTPLATE, Items.CHAINMAIL_LEGGINGS, Items.CHAINMAIL_BOOTS),
+            IRON("Iron", Items.IRON_HELMET, Items.IRON_CHESTPLATE, Items.IRON_LEGGINGS, Items.IRON_BOOTS),
+            GOLD("Gold", Items.GOLDEN_HELMET, Items.GOLDEN_CHESTPLATE, Items.GOLDEN_LEGGINGS, Items.GOLDEN_BOOTS),
+            DIAMOND("Diamond", Items.DIAMOND_HELMET, Items.DIAMOND_CHESTPLATE, Items.DIAMOND_LEGGINGS, Items.DIAMOND_BOOTS),
+            NETHERITE("Netherite", Items.NETHERITE_HELMET, Items.NETHERITE_CHESTPLATE, Items.NETHERITE_LEGGINGS, Items.NETHERITE_BOOTS),
 
             // Chestplate only
             ELYTRA("Elytra", Items.ELYTRA),
 
             // Helmet only
-            TURTLE_SCUTE("TurtleScute", ItemTags.REPAIRS_TURTLE_HELMET),
+            TURTLE_SCUTE("TurtleScute", Items.TURTLE_HELMET),
             PUMPKIN("Pumpkin", Items.CARVED_PUMPKIN),
             SKULL("Skull", ItemTags.SKULLS);
 
@@ -106,6 +106,11 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
             constructor(choiceName: String, item: Item) : this(
                 choiceName,
                 Predicate { it.isOf(item) }
+            )
+
+            constructor(choiceName: String, vararg items: Item) : this(
+                choiceName,
+                Predicate { items.contains(it.item) }
             )
         }
 
@@ -243,15 +248,12 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
             }
 
             is EntitiesDestroyS2CPacket -> {
-                with(packet.entityIds.intIterator()) {
-                    while (hasNext()) {
-                        val entityId = nextInt()
-                        attributesSet.remove(entityId)
-                        flyingSet.remove(entityId)
-                        hitSet.remove(entityId)
-                        notAlwaysInRadiusSet.remove(entityId)
-                        armorSet.remove(entityId)
-                    }
+                packet.entityIds.forEachInt { entityId ->
+                    attributesSet.remove(entityId)
+                    flyingSet.remove(entityId)
+                    hitSet.remove(entityId)
+                    notAlwaysInRadiusSet.remove(entityId)
+                    armorSet.remove(entityId)
                 }
             }
         }
