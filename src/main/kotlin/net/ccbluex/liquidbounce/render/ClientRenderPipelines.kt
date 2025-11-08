@@ -47,6 +47,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     private val COVERING_BLEND = BlendFunction(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA)
 
+    @Suppress("unused")
     private val OLD_DEFAULT_BLEND = BlendFunction(
         SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA,
         SourceFactor.ONE, DestFactor.ZERO,

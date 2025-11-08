@@ -221,7 +221,7 @@ class CefBrowser(
         }
     }
 
-    class CefBrowserTexture(val mcefBrowserRenderer: MCEFRenderer): AbstractTexture() {
+    private class CefBrowserTexture(val mcefBrowserRenderer: MCEFRenderer) : AbstractTexture() {
         override fun getGlTexture(): GpuTexture? {
             this.glTexture = mcefBrowserRenderer.texture
 
