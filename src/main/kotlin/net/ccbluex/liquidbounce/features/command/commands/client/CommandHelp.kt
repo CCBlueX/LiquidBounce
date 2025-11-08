@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -58,9 +59,7 @@ object CommandHelp : Command.Factory {
                         .append(
                             commandStart.asText()
                                 .formatted(Formatting.GRAY)
-                                .onClickRun {
-                                    mc.openChat(commandStart)
-                                }
+                                .onClick(ClickEvent.SuggestCommand(commandStart))
                         )
                         .append(buildAliasesText(command))
                 }
@@ -74,9 +73,7 @@ object CommandHelp : Command.Factory {
             cmd.aliases.forEach { alias ->
                 aliasesText += ", ".asPlainText(Formatting.DARK_GRAY)
                 aliasesText += regular(alias).formatted(Formatting.GRAY)
-                    .onClickRun {
-                        mc.openChat(CommandManager.Options.prefix + alias)
-                    }
+                    .onClick(ClickEvent.SuggestCommand(CommandManager.Options.prefix + alias))
             }
         }
 

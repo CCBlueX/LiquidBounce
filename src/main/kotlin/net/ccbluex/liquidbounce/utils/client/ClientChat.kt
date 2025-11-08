@@ -33,7 +33,6 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
-import net.minecraft.util.Util
 import java.io.File
 
 // Chat formatting
@@ -52,7 +51,7 @@ fun variable(text: String): MutableText = text.asText().formatted(Formatting.GOL
 
 fun clickablePath(file: File): MutableText =
     variable(file.absolutePath)
-        .onClickRun { Util.getOperatingSystem().open(file) }
+        .onClick(ClickEvent.OpenFile(file))
         .onHover(HoverEvent.ShowText("Open".asPlainText()))
 
 fun highlight(text: MutableText): MutableText = text.formatted(Formatting.DARK_PURPLE)
