@@ -1,6 +1,6 @@
 import {writable} from "svelte/store";
-import {listen} from "../../../integration/ws";
+import {listenAlways} from "../../../integration/ws";
 
 export const isLoggingIn = writable(false);
 
-listen("accountManagerLogin", () => isLoggingIn.set(false));
+listenAlways("accountManagerLogin", () => isLoggingIn.set(false));
