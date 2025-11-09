@@ -57,24 +57,6 @@ inline fun DrawContext.drawCustomElement(
     )
 )
 
-@Deprecated("drawQuad")
-fun DrawContext.drawRect(x1: Float, y1: Float, x2: Float, y2: Float, argb: Int) {
-    val x1 = minOf(x1, x2)
-    val y1 = minOf(y1, y2)
-    val x2 = maxOf(x1, x2)
-    val y2 = maxOf(y1, y2)
-
-    drawCustomElement(
-        pipeline = RenderPipelines.GUI,
-        bounds = createBounds(x1, y1, x2 - x1, y2 - y1),
-    ) { pose, depth ->
-        vertex(pose, x1, y1, depth).color(argb)
-        vertex(pose, x1, y2, depth).color(argb)
-        vertex(pose, x2, y2, depth).color(argb)
-        vertex(pose, x2, y1, depth).color(argb)
-    }
-}
-
 fun DrawContext.drawQuad(
     x1: Float,
     y1: Float,
@@ -121,13 +103,13 @@ fun DrawContext.drawQuad(
 /**
  * Float version of [DrawContext.drawHorizontalLine]
  */
-fun DrawContext.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Float, color: Int) {
-    this.drawRect(x1, y, x2, y + thickness, color)
+fun DrawContext.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Float, color: Color4b) {
+    this.drawQuad(x1, y, x2, y + thickness, color)
 }
 
 /**
  * Float version of [DrawContext.drawVerticalLine]
  */
-fun DrawContext.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Int) {
-    this.drawRect(x, y1, x + thickness, y2, color)
+fun DrawContext.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Color4b) {
+    this.drawQuad(x, y1, x + thickness, y2, color)
 }

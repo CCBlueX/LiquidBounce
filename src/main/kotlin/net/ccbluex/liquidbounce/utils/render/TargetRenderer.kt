@@ -322,7 +322,7 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvi
             val screenPos = calculateScreenPos(pos) ?: return
             val argb = color.toARGB()
 //            FIXME
-//            env.drawCustomMesh(ClientRenderPipelines.TriangleStrip) {
+//            env.drawCustomMesh(ClientRenderPipelines.Triangle) {
 //                vertex(it, screenPos.x - 5 * size, screenPos.y - 10 * size, 1f).color(argb)
 //                vertex(it, screenPos.x, screenPos.y, 1f).color(argb)
 //                vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f).color(argb)

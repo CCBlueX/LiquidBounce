@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
 import net.ccbluex.liquidbounce.render.drawHorizontalLine
+import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
@@ -30,7 +31,6 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.ccbluex.liquidbounce.render.drawRect
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
@@ -55,9 +55,9 @@ object Esp2DMode : EspMode("2D") {
 
         for ((entity, box) in entitiesWithBoxes) {
             val color = getColor(entity)
-            val baseColor = color.with(a = 50).toARGB()
-            val outlineColor = color.with(a = 255).toARGB()
-            val black = Color4b.BLACK.toARGB()
+            val baseColor = color.with(a = 50)
+            val outlineColor = color.with(a = 255)
+            val black = Color4b.BLACK
 
             val corners = arrayOf(
                 Vec3d(box.minX, box.minY, box.minZ),
@@ -87,7 +87,7 @@ object Esp2DMode : EspMode("2D") {
                     translate(minX, minY)
 
                     if (fill) {
-                        drawRect(0.0f, 0.0f, rectWidth, rectHeight, baseColor)
+                        drawQuad(0.0f, 0.0f, rectWidth, rectHeight, fillColor = baseColor)
                     }
 
                     if (outline) {
@@ -118,7 +118,6 @@ object Esp2DMode : EspMode("2D") {
 
                         val healthColor = Color4b.RED
                             .interpolateTo(Color4b.GREEN, healthPercentage.toDouble())
-                            .toARGB()
                         val healthHeight = rectHeight * healthPercentage
 
                         translate(-3.0f, 0.0f)

@@ -45,7 +45,6 @@ import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.ccbluex.liquidbounce.render.drawRect
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.Box
@@ -128,12 +127,12 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
                     curve.xAxis.range.step(0.1f).forEachFloat { x ->
                         var y = curve.transform(x)
-                        this.drawRect(
+                        this.drawQuad(
                             posX + x,
                             posY - y,
                             posX + x + 1,
                             posY - y + 1,
-                            Color4b.GREEN.toARGB()
+                            Color4b.GREEN
                         )
                     }
 
@@ -142,12 +141,12 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                         var x = point[0]
                         var y = point[1]
 
-                        this.drawRect(
+                        this.drawQuad(
                             posX + x - 2,
                             posY - y - 2,
                             posX + x + 2,
                             posY - y + 2,
-                            Color4b.WHITE.toARGB()
+                            Color4b.WHITE
                         )
                     }
                 }
@@ -254,11 +253,11 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                 return when (owner) {
                     is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).strikethrough(true).bold(true)
                     is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
-                    is EventListener -> owner.parent()?.let { ownerName(it) } ?: "".asText()
-                        .append("::".asPlainText(Formatting.GRAY))
-                        .append(
-                            owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true)
-                        )
+                    is EventListener -> listOfNotNull(
+                        owner.parent()?.let { ownerName(it) },
+                        "::".asPlainText(Formatting.GRAY),
+                        owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true),
+                    ).asText()
 
                     is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asPlainText(Formatting.GRAY)
                         ?: owner.toString().asPlainText()
