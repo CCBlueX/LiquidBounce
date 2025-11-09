@@ -54,11 +54,10 @@ class MinecraftFramebuffer(val framebuffer: Framebuffer) : AbstractFramebuffer()
             val colorAttachment = framebuffer.getColorAttachment() as GlTexture
             val depthAttachment = framebuffer.getDepthAttachment()
 
-            return 0 // FIXME
-//            return colorAttachment.getOrCreateFramebuffer(
-//                resourceManager.backend.framebufferManager,
-//                depthAttachment
-//            )
+            return colorAttachment.getOrCreateFramebuffer(
+                resourceManager.backend.bufferManager,
+                depthAttachment
+            )
         }
     }
 }
