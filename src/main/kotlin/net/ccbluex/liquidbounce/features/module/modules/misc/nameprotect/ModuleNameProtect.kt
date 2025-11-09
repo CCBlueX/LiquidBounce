@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.fastutil.LfuCache
 import net.ccbluex.fastutil.Pool
 import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -34,7 +35,6 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.LegacyTextSanitizer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
 import net.ccbluex.liquidbounce.utils.client.toText
-import net.ccbluex.liquidbounce.utils.collection.LfuCache
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.text.CharacterVisitor
 import net.minecraft.text.OrderedText
@@ -130,7 +130,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         mappedCharListPool.recycle(v.mappedCharacters)
     }
     private val mappedCharListPool = Pool(
-        initializer = ::ObjectArrayList,
+        initializer = { ObjectArrayList(128) },
         finalizer = ObjectArrayList<MappedCharacter>::clear,
     ).synchronized()
 

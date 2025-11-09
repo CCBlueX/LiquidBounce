@@ -613,10 +613,12 @@ fun LivingEntity.hasHealthScoreboard(): Boolean {
     if (this == player) return false
 
     val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME) ?: return false
-    val displayName = objective.displayName
+    val displayName = objective.displayName?.string ?: return false
 
-    return (displayName?.string.let { name -> name != null && listOf("❤", "HP", "Health", "Здоровья", "Здоровье")
-        .any { name.contains(it) } })
+    return (displayName.let { name ->
+        listOf("❤", "HP", "Health", "Здоровья", "Здоровье")
+            .any { name.contains(it) }
+    })
 }
 
 private fun LivingEntity.getHealthFromScoreboard(): Float? {

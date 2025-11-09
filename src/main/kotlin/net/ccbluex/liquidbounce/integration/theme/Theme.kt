@@ -90,12 +90,12 @@ class Theme private constructor(val origin: Origin, url: String) :
         get() = requireNotNull(field) { "settings not loaded" }
 
     private suspend fun loadComponents() {
-        _components = metadata.components.mapNotNullTo(mutableListOf()) { name ->
+        _components = metadata.components.mapNotNull { name ->
             val componentFactory = runCatching {
                 get<JsonComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
             }.onFailure {
                 logger.warn("Failed to load component $name", it)
-            }.getOrNull() ?: return@mapNotNullTo null
+            }.getOrNull() ?: return@mapNotNull null
 
             runCatching {
                 componentFactory.createComponent()

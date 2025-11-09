@@ -170,8 +170,8 @@ dependencies {
     includeDependency("org.ahocorasick:ahocorasick:0.6.3")
 
     // External utils
-    compileOnlyApi("net.ccbluex:fastutil4k-extensions-only:0.2.0")
-    includeDependency("net.ccbluex:fastutil4k-more-collections:0.2.0")
+    compileOnlyApi("net.ccbluex:fastutil4k-extensions-only:0.2.2")
+    includeDependency("net.ccbluex:fastutil4k-more-collections:0.2.2")
 
     // Test libraries
     testImplementation(kotlin("test"))
