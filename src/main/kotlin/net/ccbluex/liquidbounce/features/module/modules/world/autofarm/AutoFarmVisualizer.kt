@@ -70,7 +70,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             private val color by color("Color", Color4b(66, 120, 245, 255))
             private val colorRainbow by boolean("Rainbow", false)
 
-            fun render(renderEnvironment: RenderEnvironment) {
+            fun render(renderEnvironment: WorldRenderEnvironment) {
                 if (!this.enabled) return
                 val target = ModuleAutoFarm.currentTarget ?: return
                 with(renderEnvironment) {

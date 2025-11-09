@@ -125,6 +125,14 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         }
     }
 
+    object GUI {
+        @JvmField
+        val Lines = newPipeline("gui/lines") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINES)
+        }
+    }
+
     @JvmField
     val Lines = newPipeline("lines") {
         withSnippet(RenderPipelines.POSITION_COLOR_SNIPPET)

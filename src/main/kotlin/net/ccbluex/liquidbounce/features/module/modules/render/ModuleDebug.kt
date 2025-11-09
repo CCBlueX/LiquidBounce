@@ -114,7 +114,6 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             val context = event.context
 
             renderEnvironmentForGUI(event) {
-                startBatch()
                 with(context) {
                     var posX = 300
                     var posY = 500
@@ -152,7 +151,6 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                         )
                     }
                 }
-                commitBatch()
             }
         }
 
@@ -238,7 +236,6 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
 
         renderEnvironmentForGUI(event) {
-            startBatch()
             /**
              * Separate the debugged owner from its parameter
              * Structure should be like this:
@@ -255,7 +252,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
             fun ownerName(owner: DebuggedOwner): Text {
                 return when (owner) {
-                    is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
+                    is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).strikethrough(true).bold(true)
                     is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
                     is EventListener -> owner.parent()?.let { ownerName(it) } ?: "".asText()
                         .append("::".asPlainText(Formatting.GRAY))
@@ -277,9 +274,11 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                     val parameterName = debuggedParameter.name
                     val parameterCapture = debugParameters[debuggedParameter] ?: return@forEach
                     val duration = (currentTime - parameterCapture.time) / 1000
-                    textList += "$parameterName: ".asText().formatted(Formatting.WHITE)
-                        .append(parameterCapture.value.toString().asText().formatted(Formatting.GREEN))
-                        .append(" [${duration}s ago]".asText().formatted(Formatting.GRAY))
+                    textList += textOf(
+                        "$parameterName: ".asPlainText(Formatting.WHITE),
+                        parameterCapture.value.toString().asPlainText(Formatting.GREEN),
+                        " [${duration}s ago]".asPlainText(Formatting.GRAY),
+                    )
                 }
             }
 
@@ -302,8 +301,6 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                     scale = 0.17f
                 )
             }
-
-            commitBatch()
         }
     }
 

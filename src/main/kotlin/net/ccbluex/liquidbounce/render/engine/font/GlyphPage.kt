@@ -45,6 +45,11 @@ data class BoundingBox2f(val xMin: Float, val yMin: Float, val xMax: Float, val 
         return x in xMin..xMax && y in yMin..yMax
     }
 
+    val width: Float
+        get() = xMax - xMin
+
+    val height: Float
+        get() = yMax - yMin
 }
 
 @JvmRecord

@@ -270,7 +270,7 @@ object NametagEnchantmentRenderer {
             )
             val bgColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL
 
-            drawCellBackground(rect, bgColor)
+            context.drawQuad(rect.x1, rect.y1, rect.x2, rect.y2, fillColor = bgColor)
 
             val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
             val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
@@ -280,20 +280,9 @@ object NametagEnchantmentRenderer {
                 textX,
                 textY,
                 shadow = true,
-                z = 0.001f,
                 scale = FIXED_SCALE
             )
         }
-    }
-
-    context(environment: GUIRenderEnvironment)
-    private fun drawCellBackground(
-        rect: Rect,
-        color: Color4b
-    ) {
-        val leftTop = Vector2f(rect.x1, rect.y1)
-        val rightBottom = Vector2f(rect.x2, rect.y2)
-        environment.drawQuad(leftTop, rightBottom, 0F, fillColor = color)
     }
 
     context(environment: GUIRenderEnvironment)
@@ -331,12 +320,9 @@ object NametagEnchantmentRenderer {
     context(environment: GUIRenderEnvironment)
     private fun drawGroupBorder(rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
-        val leftTop = Vector2f(rect.x1, rect.y1)
-        val rightBottom = Vector2f(rect.x2, rect.y2)
-        environment.drawQuad(
-            leftTop,
-            rightBottom,
-            z = 0F,
+        environment.context.drawQuad(
+            rect.x1, rect.y1,
+            rect.x2, rect.y2,
             fillColor = Color4b.BLACK.with(a = 100),
             outlineColor = Color4b.RED,
         )

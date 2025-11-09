@@ -20,9 +20,11 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.render.LambdaSimpleGuiElementRenderState
+import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.ScreenRect
@@ -43,7 +45,7 @@ inline fun DrawContext.drawCustomElement(
     textureSetup: TextureSetup = TextureSetup.empty(),
     scissorArea: ScreenRect? = this.scissorStack.peekLast(),
     bounds: ScreenRect? = null,
-    verticesSetupHandler: LambdaSimpleGuiElementRenderState.VerticesSetupHandler,
+    verticesSetupHandler: VerticesSetupHandler,
 ) = this.state.addSimpleElement(
     LambdaSimpleGuiElementRenderState(
         pipeline,
@@ -55,6 +57,7 @@ inline fun DrawContext.drawCustomElement(
     )
 )
 
+@Deprecated("drawQuad")
 fun DrawContext.drawRect(x1: Float, y1: Float, x2: Float, y2: Float, argb: Int) {
     val x1 = minOf(x1, x2)
     val y1 = minOf(y1, y2)
@@ -62,12 +65,56 @@ fun DrawContext.drawRect(x1: Float, y1: Float, x2: Float, y2: Float, argb: Int) 
     val y2 = maxOf(y1, y2)
 
     drawCustomElement(
+        pipeline = RenderPipelines.GUI,
         bounds = createBounds(x1, y1, x2 - x1, y2 - y1),
-    ) { pose, vertices, depth ->
-        vertices.vertex(pose, x1, y1, depth).color(argb)
-        vertices.vertex(pose, x1, y2, depth).color(argb)
-        vertices.vertex(pose, x2, y2, depth).color(argb)
-        vertices.vertex(pose, x2, y1, depth).color(argb)
+    ) { pose, depth ->
+        vertex(pose, x1, y1, depth).color(argb)
+        vertex(pose, x1, y2, depth).color(argb)
+        vertex(pose, x2, y2, depth).color(argb)
+        vertex(pose, x2, y1, depth).color(argb)
+    }
+}
+
+fun DrawContext.drawQuad(
+    x1: Float,
+    y1: Float,
+    x2: Float,
+    y2: Float,
+    fillColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) {
+    val x1 = minOf(x1, x2)
+    val y1 = minOf(y1, y2)
+    val x2 = maxOf(x1, x2)
+    val y2 = maxOf(y1, y2)
+
+    if (fillColor != null && !fillColor.isTransparent) {
+        val argb = fillColor.toARGB()
+        drawCustomElement(
+            pipeline = RenderPipelines.GUI,
+            bounds = createBounds(x1, y1, x2 - x1, y2 - y1),
+        ) { pose, depth ->
+            vertex(pose, x1, y1, depth).color(argb)
+            vertex(pose, x1, y2, depth).color(argb)
+            vertex(pose, x2, y2, depth).color(argb)
+            vertex(pose, x2, y1, depth).color(argb)
+        }
+    }
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        val argb = outlineColor.toARGB()
+        drawCustomElement(
+            pipeline = ClientRenderPipelines.GUI.Lines,
+            bounds = createBounds(x1, y1, x2 - x1, y2 - y1),
+        ) { pose, depth ->
+            vertex(pose, x1, y1, depth).color(argb)
+            vertex(pose, x1, y2, depth).color(argb)
+            vertex(pose, x1, y2, depth).color(argb)
+            vertex(pose, x2, y2, depth).color(argb)
+            vertex(pose, x2, y2, depth).color(argb)
+            vertex(pose, x2, y1, depth).color(argb)
+            vertex(pose, x2, y1, depth).color(argb)
+            vertex(pose, x1, y1, depth).color(argb)
+        }
     }
 }
 

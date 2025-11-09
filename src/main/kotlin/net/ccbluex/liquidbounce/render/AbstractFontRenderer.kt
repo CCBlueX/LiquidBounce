@@ -41,7 +41,6 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
         x0: Float,
         y0: Float,
         shadow: Boolean = false,
-        z: Float = 0.0f,
         scale: Float = 1.0f
     ): Float
 

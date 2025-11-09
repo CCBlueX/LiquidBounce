@@ -44,8 +44,6 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     val scale by float("Scale", 2F, 0.25F..4F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
 
-    internal val batchRenderMode by enumChoice("BatchRenderMode", BatchRenderMode.EACH)
-
     internal enum class BatchRenderMode(override val choiceName: String) : NamedChoice {
         FULL("Full"),
         EACH("Each"),
@@ -104,7 +102,6 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
         val nametagsCount = filteredNameTags.size.toFloat()
 
-        if (batchRenderMode == BatchRenderMode.FULL) startBatch()
         filteredNameTags.forEachIndexed { index, nametagInfo ->
             val pos = nametagInfo.screenPos!!
 
@@ -113,7 +110,6 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
             drawNametag(nametagInfo, pos.copy(z = renderZ))
         }
-        if (batchRenderMode == BatchRenderMode.FULL) commitBatch()
     }
 
     /**

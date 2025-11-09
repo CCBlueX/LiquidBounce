@@ -37,11 +37,6 @@ public record LambdaSimpleGuiElementRenderState(
 ) implements SimpleGuiElementRenderState {
     @Override
     public void setupVertices(VertexConsumer vertices, float depth) {
-        verticesSetupHandler.setupVertices(this.pose(), vertices, depth);
-    }
-
-    @FunctionalInterface
-    public interface VerticesSetupHandler {
-        void setupVertices(Matrix3x2f pose, VertexConsumer vertices, float depth);
+        verticesSetupHandler.setupVertices(vertices, this.pose(), depth);
     }
 }
