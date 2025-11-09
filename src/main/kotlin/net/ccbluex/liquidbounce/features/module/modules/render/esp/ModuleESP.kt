@@ -48,7 +48,7 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     val modes = choices("Mode", EspGlowMode, arrayOf(
         EspBoxMode,
         Esp2DMode,
-        EspOutlineMode,
+//        EspOutlineMode,
         EspGlowMode
     ))
 

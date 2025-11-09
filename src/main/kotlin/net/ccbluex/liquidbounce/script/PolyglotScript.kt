@@ -43,7 +43,9 @@ import java.net.BindException
 import java.net.ServerSocket
 import java.util.function.Consumer
 import java.util.function.Function
+import kotlin.time.measureTime
 
+@Suppress("TooManyFunctions")
 class PolyglotScript(
     val language: String, val file: File,
     val debugOptions: ScriptDebugOptions = ScriptDebugOptions()
@@ -58,65 +60,8 @@ class PolyglotScript(
         .allowCreateThread(true) // Enable thread creation
         .allowNativeAccess(false) // Disable native access
         .allowExperimentalOptions(true) // Allow experimental options
-        .apply {
-            if (language == "js") {
-                option("js.nashorn-compat", "true") // Enable Nashorn compatibility
-                option("js.ecmascript-version", "2023") // Enable ECMAScript 2023
-                option("js.commonjs-require", "true")
-                option("js.commonjs-require-cwd", file.parentFile.absolutePath)
-            }
-        }
-        .apply {
-            if (debugOptions.enabled) {
-                val protocolString = debugOptions.protocol.toString().lowercase()
-                option("${protocolString}.Suspend", debugOptions.suspendOnStart.toString())
-                option("${protocolString}.Internal", debugOptions.inspectInternals.toString())
-                option(protocolString, "${debugOptions.port}")
-
-                when (debugOptions.protocol) {
-                    DebugProtocol.INSPECT -> {
-                        option("inspect.Path", file.name)
-
-                        val devtoolURL =
-                            "devtools://devtools/bundled/js_app.html?ws=127.0.0.1:${debugOptions.port}/${file.name}"
-
-                        chat(
-                            regular(translation("liquidbounce.scripts.debug.support", variable(file.toString())))
-                                .append(
-                                    variable(devtoolURL)
-                                        .copyable(
-                                            copyContent = devtoolURL, hover = HoverEvent(
-                                                HoverEvent.Action.SHOW_TEXT,
-                                                regular(translation("liquidbounce.scripts.debug.inspect.url"))
-                                            )
-                                        )
-                                        .underline(true)
-                                )
-                        )
-                    }
-
-                    DebugProtocol.DAP -> {
-                        try {
-                            // this happens when trying to build the options before the port is bound.
-                            ServerSocket(debugOptions.port).close()
-                        } catch (e: BindException) {
-                            throw IllegalStateException("Debug port ${debugOptions.port} already in use", e)
-                        }
-
-                        chat(
-                            regular(
-                                translation("liquidbounce.scripts.debug.support", variable(file.toString())).append(
-                                    translation(
-                                        "liquidbounce.scripts.debug.dap",
-                                        variable(debugOptions.port.toString())
-                                    )
-                                )
-                            )
-                        )
-                    }
-                }
-            }
-        }
+        .applyJsFeatures()
+        .applyDebugOptions()
         .build().apply {
             // Global instances
             val bindings = getBindings(language)
@@ -126,6 +71,68 @@ class PolyglotScript(
             // Global functions
             bindings.putMember("registerScript", RegisterScript())
         }
+
+    private fun Context.Builder.applyJsFeatures(): Context.Builder {
+        if (language == "js") {
+            option("js.nashorn-compat", "true") // Enable Nashorn compatibility
+            option("js.ecmascript-version", "2023") // Enable ECMAScript 2023
+            option("js.commonjs-require", "true")
+            option("js.commonjs-require-cwd", file.parentFile.absolutePath)
+        }
+        return this
+    }
+
+    private fun Context.Builder.applyDebugOptions(): Context.Builder {
+        if (debugOptions.enabled) {
+            val protocolString = debugOptions.protocol.toString().lowercase()
+            option("${protocolString}.Suspend", debugOptions.suspendOnStart.toString())
+            option("${protocolString}.Internal", debugOptions.inspectInternals.toString())
+            option(protocolString, "${debugOptions.port}")
+
+            when (debugOptions.protocol) {
+                DebugProtocol.INSPECT -> {
+                    option("inspect.Path", file.name)
+
+                    val devtoolURL =
+                        "devtools://devtools/bundled/js_app.html?ws=127.0.0.1:${debugOptions.port}/${file.name}"
+
+                    chat(
+                        regular(translation("liquidbounce.scripts.debug.support", variable(file.toString())))
+                            .append(
+                                variable(devtoolURL)
+                                    .copyable(
+                                        copyContent = devtoolURL, hover = HoverEvent.ShowText(
+                                            regular(translation("liquidbounce.scripts.debug.inspect.url"))
+                                        )
+                                    )
+                                    .underline(true)
+                            )
+                    )
+                }
+
+                DebugProtocol.DAP -> {
+                    try {
+                        // this happens when trying to build the options before the port is bound.
+                        ServerSocket(debugOptions.port).close()
+                    } catch (e: BindException) {
+                        throw IllegalStateException("Debug port ${debugOptions.port} already in use", e)
+                    }
+
+                    chat(
+                        regular(
+                            translation("liquidbounce.scripts.debug.support", variable(file.toString())).append(
+                                translation(
+                                    "liquidbounce.scripts.debug.dap",
+                                    variable(debugOptions.port.toString())
+                                )
+                            )
+                        )
+                    )
+                }
+            }
+        }
+        return this
+    }
 
     // Script information
     lateinit var scriptName: String
@@ -152,17 +159,18 @@ class PolyglotScript(
     fun initScript() {
         try {
             // Evaluate script
-            context.eval(Source.newBuilder(language, file).build())
+            val duration = measureTime {
+                context.eval(Source.newBuilder(language, file).build())
 
-            // Call load event
-            callGlobalEvent("load")
+                // Call load event
+                callGlobalEvent("load")
 
-            if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
-                logger.error("[ScriptAPI] Script '${file.name}' is missing required information!")
-                error("Script '${file.name}' is missing required information!")
+                if (!::scriptName.isInitialized || !::scriptVersion.isInitialized || !::scriptAuthors.isInitialized) {
+                    logger.error("[ScriptAPI] Script '${file.name}' is missing required information!")
+                    error("Script '${file.name}' is missing required information!")
+                }
             }
-
-            logger.info("[ScriptAPI] Successfully loaded script '${file.name}'.")
+            logger.info("[ScriptAPI] Successfully loaded script '${file.name}' in ${duration.inWholeMilliseconds}ms.")
         } catch (e: Exception) {
             logger.error("[ScriptAPI] Failed to load script '${file.name}'.", e)
             context.close()

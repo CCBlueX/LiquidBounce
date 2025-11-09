@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorKitParameters
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
 import net.minecraft.entity.EquipmentSlot
-import net.minecraft.item.ArmorItem
 
 object ArmorEvaluation {
     /**
@@ -66,11 +66,14 @@ object ArmorEvaluation {
 
     private fun groupArmorByType(slots: List<ItemSlot>): Map<EquipmentSlot, List<ArmorPiece>> {
         val armorPiecesGroupedByType = slots.mapNotNull { slot ->
-            when (slot.itemStack.item) {
+            if (slot.itemStack.isPlayerArmor) {
                 // Filter out animal armor which is an armor item but not for the player
                 // Note: in 1.21.4 [AnimalArmorItem] is not a subclass of [ArmorItem]
-                is ArmorItem -> ArmorPiece(slot)
-                else -> null
+
+                // ArmorItem class has been removed from 1.21.5
+                ArmorPiece(slot)
+            } else {
+                null
             }
         }.groupBy(ArmorPiece::slotType)
 

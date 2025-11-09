@@ -19,9 +19,11 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
+import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
 import net.ccbluex.liquidbounce.features.module.modules.movement.*;
@@ -31,9 +33,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -75,7 +79,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Shadow
     public abstract void tick();
 
-    @Shadow public abstract void swingHand(Hand hand, boolean fromServerPlayer);
+    @Shadow
+    public abstract void swingHand(Hand hand, boolean fromServerPlayer);
 
     @Shadow
     public abstract void setHealth(float health);
@@ -86,13 +91,23 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Shadow
     protected abstract boolean canGlide();
 
-  @Shadow
-  public abstract float getHealth();
+    @Shadow
+    public abstract float getHealth();
 
-  @Shadow
-  public abstract float getMaxHealth();
+    @Shadow
+    public abstract float getMaxHealth();
 
-  /**
+    @ModifyReturnValue(method = "getMainHandStack", at = @At("RETURN"))
+    private ItemStack applySilentHotbarForMainHand(ItemStack original) {
+        var player = MinecraftClient.getInstance().player;
+        if ((Object) this == player) {
+            return player.getInventory().getMainStacks().get(SilentHotbar.INSTANCE.getServersideSlot());
+        }
+
+        return original;
+    }
+
+    /**
      * Disable [StatusEffects.LEVITATION] effect when [ModuleAntiLevitation] is enabled
      */
     @ModifyExpressionValue(
@@ -135,14 +150,6 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
 
         return original;
-    }
-
-    @Inject(method = "hasStatusEffect", at = @At("HEAD"), cancellable = true)
-    private void hookAntiNausea(RegistryEntry<StatusEffect> effect, CallbackInfoReturnable<Boolean> cir) {
-        if (effect == StatusEffects.NAUSEA && !ModuleAntiBlind.canRender(DoRender.NAUSEA)) {
-            cir.setReturnValue(false);
-            cir.cancel();
-        }
     }
 
     @Unique
@@ -228,8 +235,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
         // The jumping cooldown would lead to very slow tower building
         var towerActive = ModuleScaffold.INSTANCE.getRunning() &&
-        ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice() != ScaffoldTowerNone.INSTANCE &&
-        ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice().getRunning();
+                ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice() != ScaffoldTowerNone.INSTANCE &&
+                ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice().getRunning();
 
         if (noJumpDelay || towerActive) {
             jumpingCooldown = 0;
@@ -338,10 +345,16 @@ public abstract class MixinLivingEntity extends MixinEntity {
     private void hookSetHealth(float health, CallbackInfo callbackInfo) {
         var oldHealth = this.getHealth();
         var maxHealth = this.getMaxHealth();
-        var newHealth = MathHelper.clamp(health, 0.0F, maxHealth);
+        var newHealth = Math.clamp(health, 0.0F, maxHealth);
 
         if (oldHealth != newHealth) {
             EventManager.INSTANCE.callEvent(new EntityHealthUpdateEvent((LivingEntity) (Object) this, oldHealth, newHealth, maxHealth));
         }
     }
+
+    @Inject(method = "equipStack", at = @At("HEAD"))
+    private void hookEquipmentChange(EquipmentSlot slot, ItemStack stack, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, stack));
+    }
+
 }

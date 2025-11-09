@@ -27,7 +27,7 @@ plugins {
     id("fabric-loom")
     kotlin("jvm")
     id("com.gorylenko.gradle-git-properties") version "2.5.3"
-    id("io.gitlab.arturbosch.detekt") version "1.23.6"
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.node-gradle.node") version "7.1.0"
     id("org.jetbrains.dokka") version "2.1.0"
 }
@@ -170,8 +170,8 @@ dependencies {
     includeDependency("org.ahocorasick:ahocorasick:0.6.3")
 
     // External utils
-    compileOnlyApi("net.ccbluex:fastutil4k-extensions-only:0.2.0")
-    includeDependency("net.ccbluex:fastutil4k-more-collections:0.2.0")
+    compileOnlyApi("net.ccbluex:fastutil4k-extensions-only:0.2.2")
+    includeDependency("net.ccbluex:fastutil4k-more-collections:0.2.2")
 
     // Test libraries
     testImplementation(kotlin("test"))

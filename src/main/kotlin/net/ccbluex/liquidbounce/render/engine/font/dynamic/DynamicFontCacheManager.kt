@@ -20,14 +20,18 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
-import com.mojang.blaze3d.platform.GlStateManager
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import it.unimi.dsi.fastutil.objects.ObjectImmutableList
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphDescriptor
+import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.client.texture.NativeImage
+import net.ccbluex.liquidbounce.utils.render.uploadRect
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -41,15 +45,16 @@ class DynamicFontCacheManager(
      */
     private val availableFonts: Collection<FontManager.FontFace>
 ) {
+
     private val glyphPageLock = ReentrantLock()
     private val glyphPageDirtyFlag = AtomicBoolean(false)
-    private var glyphPageChanges = ArrayList<ChangeOnAtlas>()
+    private val glyphPageChanges = ObjectArrayList<ChangeOnAtlas>()
 
     private val cacheData = ConcurrentHashMap<GlyphIdentifier, CharCacheData>()
-    private val requests = HashSet<GlyphIdentifier>()
 
-    private val lock = ReentrantLock()
-    private val condVar = lock.newCondition()
+    private val requests = ObjectOpenHashSet<GlyphIdentifier>()
+    private val requestsLock = ReentrantLock()
+    private val hasRequest = requestsLock.newCondition()
 
     fun requestGlyph(ch: Char, font: Int) {
         val glyphIdentifier = GlyphIdentifier(ch, font)
@@ -59,10 +64,10 @@ class DynamicFontCacheManager(
 
         if (cacheObject.cacheState.get() == UNCACHED) {
             // Notify font cache manager main thread
-            this.lock.withLock {
+            this.requestsLock.withLock {
                 requests.add(glyphIdentifier)
 
-                condVar.signal()
+                hasRequest.signal()
             }
         }
     }
@@ -72,66 +77,43 @@ class DynamicFontCacheManager(
             return emptyList()
         }
 
-        val changes = this.glyphPageLock.withLock {
-            this.dynamicGlyphPage.texture.bindTexture()
-
-            val requiredUpdateCount = this.glyphPageChanges.count { !it.removed }
+        return this.glyphPageLock.withLock {
+            val changes = ObjectImmutableList(this.glyphPageChanges)
+            this.glyphPageChanges.clear()
+            val requiredUpdateCount = changes.count { !it.removed }
 
             if (requiredUpdateCount > 15) {
                 this.dynamicGlyphPage.texture.upload()
             } else {
-                for (change in this.glyphPageChanges) {
+                for (change in changes) {
                     if (change.removed) {
                         continue
                     }
 
                     val bb = change.descriptor.renderInfo.atlasLocation?.pixelBoundingBox ?: continue
 
-                    val width = (bb.xMax - bb.xMin).toInt()
-                    val height = (bb.yMax - bb.yMin).toInt()
-
-                    val chunkImage = NativeImage(width, height, false)
-
-                    chunkImage.use {
-                        this.dynamicGlyphPage.texture.image!!.copyRect(
-                            chunkImage,
-                            bb.xMin.toInt(), bb.yMin.toInt(),
-                            0, 0,
-                            width, height,
-                            false, false
-                        )
-
-                        chunkImage.upload(
-                            0,
-                            bb.xMin.toInt(), bb.yMin.toInt(),
-                            0, 0,
-                            width, height,
-                            false
-                        )
-                    }
-
+                    this.dynamicGlyphPage.texture.uploadRect(
+                        mipLevel = 0,
+                        x = bb.xMin.toInt(),
+                        y = bb.yMin.toInt(),
+                        width = (bb.xMax - bb.xMin).toInt(),
+                        height = (bb.yMax - bb.yMin).toInt()
+                    )
                 }
             }
 
-            val changes = this.glyphPageChanges
-
-            this.glyphPageChanges = ArrayList()
             this.glyphPageDirtyFlag.set(false)
 
             changes
         }
-
-        GlStateManager._bindTexture(0)
-
-        return changes
     }
 
     fun startThread() {
-        thread(name = "lb-dynamic-font-manager") {
+        thread(name = "lb-dynamic-font-manager", isDaemon = true) {
             while (!Thread.interrupted()) {
                 try {
                     threadMainLoop()
-                } catch (e: InterruptedException) { // I hate everything about handling thread interrupts in java...
+                } catch (_: InterruptedException) { // I hate everything about handling thread interrupts in java...
                     break
                 } catch (e: Throwable) {
                     logger.error("Error on dynamic font manager thread", e)
@@ -141,11 +123,11 @@ class DynamicFontCacheManager(
     }
 
     private fun threadMainLoop() {
-        val requestedChars = this.lock.withLock {
+        val requestedChars = this.requestsLock.withLock {
             // Wait for stuff to happen
-            this.condVar.await()
+            this.hasRequest.await()
 
-            val retrievedRequests = ArrayList(this.requests)
+            val retrievedRequests = ObjectImmutableList(this.requests)
 
             this.requests.clear()
 
@@ -165,12 +147,12 @@ class DynamicFontCacheManager(
         freeSpace()
 
         val stillUnsuccessfulAllocations =
-            createAllocationRequests(unsuccessfulAllocations.map { GlyphIdentifier(it.codepoint, it.font.style) })
+            createAllocationRequests(unsuccessfulAllocations.mapToArray(::GlyphIdentifier).asList())
 
         // TODO: Optimize the atlas in this situation
         // We weren't able to allocate those chars even after freeing some space. Don't ask us ever again about
         // allocating them >:c
-        stillUnsuccessfulAllocations.forEach { dontRetryAllocationOf(GlyphIdentifier(it.codepoint, it.font.style)) }
+        stillUnsuccessfulAllocations.forEach { dontRetryAllocationOf(GlyphIdentifier(it)) }
     }
 
     private fun dontRetryAllocationOf(it: GlyphIdentifier) {
@@ -178,18 +160,18 @@ class DynamicFontCacheManager(
     }
 
     private fun freeSpace() {
-        val glyphsToFree = this.cacheData.entries.filter {
-            System.currentTimeMillis() - it.value.lastUsage.get() > MAX_CACHE_TIME_MS
-        }
+        for ((glyphId, charCacheData) in this.cacheData) {
+            if (System.currentTimeMillis() - charCacheData.lastUsage.get() <= MAX_CACHE_TIME_MS) {
+                continue
+            }
 
-        glyphsToFree.forEach { (glyphId, _) ->
-            val renderInfo = this.dynamicGlyphPage.free(glyphId.codepoint, glyphId.font)
+            val renderInfo = this.dynamicGlyphPage.free(glyphId.codepoint, glyphId.style)
 
             if (renderInfo != null) {
                 this.glyphPageChanges.add(
                     ChangeOnAtlas(
                         GlyphDescriptor(this.dynamicGlyphPage, renderInfo),
-                        glyphId.font,
+                        glyphId.style,
                         removed = true
                     )
                 )
@@ -197,19 +179,19 @@ class DynamicFontCacheManager(
                 logger.warn("Character '${glyphId.codepoint}' was freed twice.")
             }
 
-            this.cacheData[glyphId]!!.cacheState.set(UNCACHED)
+            charCacheData.cacheState.set(UNCACHED)
         }
     }
 
     /**
      * Tries the given allocations, returns all allocations that failed.
      */
-    private fun tryAllocations(requests: List<FontGlyph>): List<FontGlyph> {
+    private fun tryAllocations(requests: Iterable<FontGlyph>): List<FontGlyph> {
         val unsuccessful = this.dynamicGlyphPage.tryAdd(requests)
 
         requests.forEach {
             if (it !in unsuccessful) {
-                this.cacheData[GlyphIdentifier(it.codepoint, it.font.style)]!!.cacheState.set(CACHED)
+                this.cacheData[GlyphIdentifier(it)]!!.cacheState.set(CACHED)
 
                 val addedGlyph = this.dynamicGlyphPage.getGlyph(it.codepoint, it.font.style)!!
 
@@ -227,8 +209,8 @@ class DynamicFontCacheManager(
         return unsuccessful
     }
 
-    private fun createAllocationRequests(requestedGlyphs: List<GlyphIdentifier>): List<FontGlyph> {
-        val requests = ArrayList<FontGlyph>()
+    private fun createAllocationRequests(requestedGlyphs: Iterable<GlyphIdentifier>): List<FontGlyph> {
+        val requests = ObjectArrayList<FontGlyph>()
 
         for (requestedGlyph in requestedGlyphs) {
             val font = findFontForGlyph(requestedGlyph)
@@ -248,25 +230,23 @@ class DynamicFontCacheManager(
 
     private fun findFontForGlyph(ch: GlyphIdentifier): FontManager.FontId? {
         return this.availableFonts.firstNotNullOfOrNull { fontFace ->
-            fontFace.styles[ch.font]?.takeIf { it.awtFont.canDisplay(ch.codepoint) }
+            fontFace.styles[ch.style]?.takeIf { it.awtFont.canDisplay(ch.codepoint) }
         }
     }
 
     class ChangeOnAtlas(val descriptor: GlyphDescriptor, val style: Int, val removed: Boolean)
 }
 
-private data class GlyphIdentifier(val codepoint: Char, val font: Int)
-
-private const val MAX_CACHE_TIME_MS = 30 * 1000
+private const val MAX_CACHE_TIME_MS = 30 * 1000L
 
 private const val UNCACHED = 0
 private const val CACHED = 1
 private const val BLOCKED = 2
 
-private class CharCacheData(
+private class CharCacheData {
     /**
      * Possible values: [UNCACHED], [CACHED] and [BLOCKED]
      */
-    val cacheState: AtomicInteger = AtomicInteger(UNCACHED),
-    val lastUsage: AtomicLong = AtomicLong(0L)
-)
+    val cacheState = AtomicInteger(UNCACHED)
+    val lastUsage = AtomicLong(0L)
+}

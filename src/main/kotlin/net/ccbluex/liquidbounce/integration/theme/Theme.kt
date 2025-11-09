@@ -20,22 +20,21 @@
 package net.ccbluex.liquidbounce.integration.theme
 
 import io.netty.handler.codec.http.HttpHeaderNames
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.JsonComponentFactory
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.liquidbounce.render.shader.CanvasShader
 import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.minecraft.client.texture.NativeImageBackedTexture
-import net.minecraft.util.Identifier
 import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
@@ -80,10 +79,10 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
     }
 
-    var components: MutableList<Component>
-        field: MutableList<Component>? = null
-        private set
-        get() = requireNotNull(field) { "components not loaded" }
+    private var _components: List<Component>? = null
+
+    val components: List<Component>
+        get() = requireNotNull(_components) { "components not loaded" }
 
     var settings: Configurable
         field: Configurable? = null
@@ -91,12 +90,12 @@ class Theme private constructor(val origin: Origin, url: String) :
         get() = requireNotNull(field) { "settings not loaded" }
 
     private suspend fun loadComponents() {
-        components = metadata.components.mapNotNullTo(mutableListOf()) { name ->
+        _components = metadata.components.mapNotNull { name ->
             val componentFactory = runCatching {
                 get<JsonComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
             }.onFailure {
                 logger.warn("Failed to load component $name", it)
-            }.getOrNull() ?: return@mapNotNullTo null
+            }.getOrNull() ?: return@mapNotNull null
 
             runCatching {
                 componentFactory.createComponent()
@@ -160,15 +159,18 @@ class Theme private constructor(val origin: Origin, url: String) :
             return false
         }
 
-        val vertexShader = resourceToString("/resources/liquidbounce/shaders/vertex.vert")
+        val vertexShader = LiquidBounce.resourceToString("shaders/position_tex.vert")
         val fragmentShader = runCatching {
             get<String>("/backgrounds/${background.name.lowercase(Locale.US)}.frag")
         }.getOrNull() ?: return false
 
-        themeBackgroundShader = ThemeBackground.shader(CanvasShader(
+        themeBackgroundShader = ThemeBackground.Shader.build(
+            metadata,
+            background,
             vertexShader,
             fragmentShader,
-        ))
+        )
+
         logger.info("Compiled shader background for theme ${metadata.name}")
         return true
     }
@@ -189,9 +191,8 @@ class Theme private constructor(val origin: Origin, url: String) :
             get<NativeImageBackedTexture>("/backgrounds/${background.name}.png")
         }.getOrNull() ?: return false
 
-        val id = Identifier.of("liquidbounce",
-            "theme-bg-${metadata.name.lowercase(Locale.US)}")
-        themeBackgroundTexture = ThemeBackground.image(id)
+        val id = LiquidBounce.identifier("theme-bg-${metadata.name.lowercase(Locale.US)}")
+        themeBackgroundTexture = ThemeBackground.Image(id)
         mc.textureManager.registerTexture(id, image)
         logger.info("Loaded background image for theme ${metadata.name}")
         return true
@@ -220,6 +221,7 @@ class Theme private constructor(val origin: Origin, url: String) :
     override fun close() {
         themeBackgroundShader?.close()
         themeBackgroundTexture?.close()
+        _components?.forEach { EventManager.unregisterEventHandler(it) }
     }
 
     override fun toString() = "Theme(name=${metadata.name}, origin=${origin.choiceName}, url=$baseUrl)"

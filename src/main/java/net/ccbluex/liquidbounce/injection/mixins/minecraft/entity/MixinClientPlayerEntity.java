@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData;
 import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition;
+import net.ccbluex.liquidbounce.interfaces.InputAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
@@ -49,6 +50,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -238,7 +240,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
     /**
      * Hook custom sneaking multiplier
      */
-    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getAttributeValue(Lnet/minecraft/registry/entry/RegistryEntry;)D"))
+    @ModifyExpressionValue(method = "applyMovementSpeedFactors", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getAttributeValue(Lnet/minecraft/registry/entry/RegistryEntry;)D"))
     private double hookCustomSneakingMultiplier(double original) {
         var playerSneakMultiplier = new PlayerSneakMultiplier(original);
         EventManager.INSTANCE.callEvent(playerSneakMultiplier);
@@ -250,16 +252,15 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
      */
     @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0))
     private void hookCustomMultiplier(CallbackInfo callbackInfo) {
-        final Input input = this.input;
-        // reverse
-        input.movementForward /= 0.2f;
-        input.movementSideways /= 0.2f;
-
-        // then
-        final PlayerUseMultiplier playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
+        var input = (Input & InputAddition) this.input;
+        var playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
         EventManager.INSTANCE.callEvent(playerUseMultiplier);
-        input.movementForward *= playerUseMultiplier.getForward();
-        input.movementSideways *= playerUseMultiplier.getSideways();
+        input.liquid_bounce$setMovementInput(
+                new Vec2f(
+                        input.getMovementInput().x / 0.2f * playerUseMultiplier.getSideways(),
+                        input.getMovementInput().y / 0.2f * playerUseMultiplier.getForward()
+                )
+        );
     }
 
     /**
@@ -341,15 +342,15 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return ModuleSprint.INSTANCE.getShouldIgnoreHunger() ? -1F : constant;
     }
 
-    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
-    private boolean hookSprintStart(boolean original) {
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canStartSprinting()Z"))
+    private boolean hookSprint0(boolean original) {
         var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.MOVEMENT_TICK);
         EventManager.INSTANCE.callEvent(event);
         return event.getSprint();
     }
 
-    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canSprint()Z"))
-    private boolean hookSprintStop(boolean original) {
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/PlayerInput;sprint()Z"))
+    private boolean hookSprint1(boolean original) {
         var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.MOVEMENT_TICK);
         EventManager.INSTANCE.callEvent(event);
         return event.getSprint();
@@ -360,21 +361,23 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return !ModuleSprint.INSTANCE.getShouldIgnoreBlindness() && original;
     }
 
-    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;horizontalCollision:Z"))
+    @ModifyExpressionValue(method = "shouldStopSprinting", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;horizontalCollision:Z"))
     private boolean hookSprintIgnoreCollision(boolean original) {
         return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
     }
 
-    @ModifyReturnValue(method = "isWalking", at = @At("RETURN"))
+    @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/input/Input;hasForwardMovement()Z"))
     private boolean hookIsWalking(boolean original) {
         if (!ModuleSprint.INSTANCE.getShouldSprintOmnidirectional()) {
             return original;
         }
 
-        var hasMovement = Math.abs(input.movementForward) > 1.0E-5F ||
-                Math.abs(input.movementSideways) > 1.0E-5F;
-        var isWalking = (double) Math.abs(input.movementForward) >= 0.8 ||
-                (double) Math.abs(input.movementSideways) >= 0.8;
+        float movementForward = input.getMovementInput().y;
+        float movementSideways = input.getMovementInput().x;
+        var hasMovement = Math.abs(movementForward) > 1.0E-5F ||
+                Math.abs(movementSideways) > 1.0E-5F;
+        var isWalking = (double) Math.abs(movementForward) >= 0.8 ||
+                (double) Math.abs(movementSideways) >= 0.8;
         return this.isSubmergedInWater() ? hasMovement : isWalking;
     }
 

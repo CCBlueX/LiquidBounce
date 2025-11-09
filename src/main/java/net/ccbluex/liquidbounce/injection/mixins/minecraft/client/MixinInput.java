@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
 import net.ccbluex.liquidbounce.interfaces.InputAddition;
 import net.minecraft.client.input.Input;
 import net.minecraft.util.PlayerInput;
+import net.minecraft.util.math.Vec2f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -33,10 +34,7 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class MixinInput implements InputAddition {
 
     @Shadow
-    public float movementForward;
-
-    @Shadow
-    public float movementSideways;
+    protected Vec2f movementVector;
 
     @Unique
     protected PlayerInput initial = PlayerInput.DEFAULT;
@@ -48,10 +46,15 @@ public abstract class MixinInput implements InputAddition {
     private boolean hookOmnidirectionalSprint(boolean original) {
         // Allow omnidirectional sprinting
         if (ModuleSprint.INSTANCE.getShouldSprintOmnidirectional()) {
-            return Math.abs(movementForward) > 1.0E-5F || Math.abs(movementSideways) > 1.0E-5F;
+            return Math.abs(movementVector.x) > 1.0E-5F || Math.abs(movementVector.y) > 1.0E-5F;
         }
 
         return original;
+    }
+
+    @Override
+    public void liquid_bounce$setMovementInput(Vec2f movementVector) {
+        this.movementVector = movementVector;
     }
 
     @Override

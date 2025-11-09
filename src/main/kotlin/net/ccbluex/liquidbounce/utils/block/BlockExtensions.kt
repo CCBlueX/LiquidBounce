@@ -507,7 +507,7 @@ fun doPlacement(
         }
 
         interactionResult.isAccepted -> {
-            val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
+            val wasStackUsed = !stack.isEmpty && (stack.count != count || player.isCreative)
 
             handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess, swingMode)
         }

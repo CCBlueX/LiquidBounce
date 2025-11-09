@@ -3,7 +3,7 @@
  * Created: 2024
  * License: GPL-3.0
  */
-#version 410 core
+#version 330
 
 in vec2 fragTexCoord;
 out vec4 fragColor;

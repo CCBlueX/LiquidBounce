@@ -22,7 +22,6 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.common.GlobalFramebuffer;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
@@ -38,13 +37,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.integration.IntegrationListener;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
-import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
-import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screen.Overlay;
 import net.minecraft.client.gui.screen.Screen;
@@ -58,7 +55,6 @@ import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.session.Session;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.Util;
 import net.minecraft.util.hit.BlockHitResult;
@@ -344,13 +340,6 @@ public abstract class MixinMinecraftClient {
         }
     }
 
-    @Inject(method = "hasOutline", cancellable = true, at = @At("HEAD"))
-    private void injectOutlineESPFix(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        if (RenderingFlags.isCurrentlyRenderingEntityOutline().get()) {
-            cir.setReturnValue(true);
-        }
-    }
-
     @ModifyExpressionValue(method = "doAttack",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;attackCooldown:I", ordinal = 0))
     private int injectNoMissCooldown(int original) {
@@ -453,14 +442,6 @@ public abstract class MixinMinecraftClient {
         // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
         // unintended modification to the attack cooldown, which is not intended.
         return !IntegrationListener.isClientScreen(this.currentScreen);
-    }
-
-    @Inject(method = "getFramebuffer", at = @At("HEAD"), cancellable = true)
-    private void hookSpoofFramebuffer(CallbackInfoReturnable<Framebuffer> cir) {
-        var framebuffer = GlobalFramebuffer.getSpoofedFramebuffer();
-        if (framebuffer != null) {
-            cir.setReturnValue(framebuffer);
-        }
     }
 
     @Inject(method = "onDisconnected", at = @At("HEAD"))

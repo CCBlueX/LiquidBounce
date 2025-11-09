@@ -24,11 +24,11 @@ mutable field net/minecraft/network/packet/c2s/common/KeepAliveC2SPacket id J
 accessible field net/minecraft/network/packet/c2s/common/KeepAliveC2SPacket id J
 accessible field net/minecraft/network/packet/c2s/play/ChatMessageC2SPacket chatMessage Ljava/lang/String;
 
-accessible field net/minecraft/client/network/ClientPlayerEntity lastX D
-accessible field net/minecraft/client/network/ClientPlayerEntity lastBaseY D
-accessible field net/minecraft/client/network/ClientPlayerEntity lastZ D
-accessible field net/minecraft/client/network/ClientPlayerEntity lastYaw F
-accessible field net/minecraft/client/network/ClientPlayerEntity lastPitch F
+accessible field net/minecraft/client/network/ClientPlayerEntity lastXClient D # 1.21.4 laseX
+accessible field net/minecraft/client/network/ClientPlayerEntity lastYClient D # 1.21.4 laseBaseY
+accessible field net/minecraft/client/network/ClientPlayerEntity lastZClient D # 1.21.4 laseZ
+accessible field net/minecraft/client/network/ClientPlayerEntity lastYawClient F # 1.21.4 lastYaw
+accessible field net/minecraft/client/network/ClientPlayerEntity lastPitchClient F # 1.21.4 lastPitch
 accessible field net/minecraft/client/network/ClientPlayerEntity lastOnGround Z
 accessible field net/minecraft/client/network/ClientPlayerEntity inSneakingPose Z
 accessible field net/minecraft/client/network/ClientPlayerEntity lastSneaking Z
@@ -101,7 +101,7 @@ accessible field net/minecraft/client/render/WorldRenderer blockBreakingProgress
 accessible field net/minecraft/entity/projectile/ProjectileEntity ownerUuid Ljava/util/UUID;
 
 accessible method net/minecraft/entity/LivingEntity getJumpVelocity ()F
-accessible method net/minecraft/entity/LivingEntity computeFallDamage (FF)I
+accessible method net/minecraft/entity/LivingEntity computeFallDamage (DF)I
 
 accessible field net/minecraft/entity/mob/CreeperEntity explosionRadius I
 
@@ -121,7 +121,6 @@ accessible method net/minecraft/client/input/KeyboardInput getMovementMultiplier
 accessible field net/minecraft/client/option/KeyBinding timesPressed I
 
 accessible field net/minecraft/client/font/TextHandler widthRetriever Lnet/minecraft/client/font/TextHandler$WidthRetriever;
-accessible method net/minecraft/text/Text$Serialization toJson (Lnet/minecraft/text/Text;Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;)Lcom/google/gson/JsonElement;
 
 accessible method net/minecraft/entity/LivingEntity applyArmorToDamage (Lnet/minecraft/entity/damage/DamageSource;F)F
 accessible method net/minecraft/entity/LivingEntity modifyAppliedDamage (Lnet/minecraft/entity/damage/DamageSource;F)F
@@ -143,7 +142,7 @@ accessible method net/minecraft/client/render/OutlineVertexConsumerProvider$Outl
 accessible field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parameter I
 mutable field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parameter I
 
-accessible field net/minecraft/entity/LimbAnimator pos F
+accessible field net/minecraft/entity/LimbAnimator animationProgress F
 
 accessible field net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket entityId I
 accessible method net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket <init> (IZLnet/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket$InteractTypeHandler;)V
@@ -161,6 +160,7 @@ accessible method net/minecraft/client/gui/hud/ChatHud addMessage (Lnet/minecraf
 accessible method net/minecraft/text/TextColor <init> (ILjava/lang/String;)V
 
 accessible field net/minecraft/client/MinecraftClient renderTaskQueue Ljava/util/Queue;
+accessible field net/minecraft/client/MinecraftClient startTime J
 
 accessible field net/minecraft/util/math/Direction HORIZONTAL [Lnet/minecraft/util/math/Direction;
 
@@ -168,7 +168,7 @@ accessible field net/minecraft/client/util/InputUtil$Type map Lit/unimi/dsi/fast
 
 accessible method net/minecraft/client/network/ClientPlayerInteractionManager syncSelectedSlot ()V
 
-accessible method net/minecraft/block/EntityShapeContext <init> (ZDLnet/minecraft/item/ItemStack;Ljava/util/function/Predicate;Lnet/minecraft/entity/Entity;)V
+accessible method net/minecraft/block/EntityShapeContext <init> (ZZDLnet/minecraft/item/ItemStack;Ljava/util/function/Predicate;Lnet/minecraft/entity/Entity;)V
 
 accessible method net/minecraft/entity/Entity unsetRemoved ()V
 
@@ -180,20 +180,21 @@ accessible method net/minecraft/block/AbstractBlock getPickStack (Lnet/minecraft
 
 accessible method net/minecraft/client/texture/NativeImage write (Ljava/nio/channels/WritableByteChannel;)Z
 
-accessible field net/minecraft/client/render/LightmapTextureManager lightmapFramebuffer Lnet/minecraft/client/gl/SimpleFramebuffer;
 accessible field net/minecraft/client/render/WorldRenderer entityOutlineFramebuffer Lnet/minecraft/client/gl/Framebuffer;
 
-accessible method net/minecraft/client/render/RenderLayer of (Ljava/lang/String;Lnet/minecraft/client/render/VertexFormat;Lnet/minecraft/client/render/VertexFormat$DrawMode;ILnet/minecraft/client/render/RenderLayer$MultiPhaseParameters;)Lnet/minecraft/client/render/RenderLayer$MultiPhase;
-accessible class net/minecraft/client/render/RenderPhase$Transparency
-accessible method net/minecraft/client/render/RenderPhase$Texture <init> (Lnet/minecraft/util/Identifier;Lnet/minecraft/util/TriState;Z)V
-accessible field net/minecraft/client/render/RenderPhase POSITION_TEXTURE_COLOR_PROGRAM Lnet/minecraft/client/render/RenderPhase$ShaderProgram;
-accessible field net/minecraft/client/render/RenderPhase TRANSLUCENT_TRANSPARENCY Lnet/minecraft/client/render/RenderPhase$Transparency;
-accessible field net/minecraft/client/render/RenderPhase ALWAYS_DEPTH_TEST Lnet/minecraft/client/render/RenderPhase$DepthTest;
-accessible field net/minecraft/client/render/RenderPhase LEQUAL_DEPTH_TEST Lnet/minecraft/client/render/RenderPhase$DepthTest;
-accessible method net/minecraft/client/gl/ShaderProgram <init> (I)V
+accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder <init> ()V
+accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder withSnippet (Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;)V
 
 accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen connect (Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/network/ServerAddress;Lnet/minecraft/client/network/ServerInfo;Lnet/minecraft/client/network/CookieStorage;)V
 accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen setStatus (Lnet/minecraft/text/Text;)V
 
 accessible method net/minecraft/client/network/PlayerListEntry texturesSupplier (Lcom/mojang/authlib/GameProfile;)Ljava/util/function/Supplier;
 accessible method net/minecraft/client/network/AbstractClientPlayerEntity getPlayerListEntry ()Lnet/minecraft/client/network/PlayerListEntry;
+
+accessible field net/minecraft/client/gl/GlGpuBuffer id I
+
+accessible field com/mojang/blaze3d/opengl/GlStateManager readFbo I
+accessible field com/mojang/blaze3d/opengl/GlStateManager writeFbo I
+
+accessible method net/minecraft/client/gl/GlResourceManager getBackend ()Lnet/minecraft/client/gl/GlBackend;
+accessible field net/minecraft/client/render/GameRenderer pool Lnet/minecraft/client/util/Pool;

@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatScreenAccessor
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.text.MixinMutableTextAccessor
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -34,14 +33,13 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
-import net.minecraft.util.Util
 import java.io.File
 
 // Chat formatting
-private val clientPrefix: Text = Text.empty()
+private val clientPrefix: Text = "".asText()
     .formatted(Formatting.RESET, Formatting.GRAY)
     .append(gradientText("LiquidBounce", Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
-    .append(Text.literal(" ▸ ").formatted(Formatting.RESET, Formatting.GRAY))
+    .append(" ▸ ".asText().formatted(Formatting.RESET, Formatting.GRAY))
 
 fun regular(text: MutableText): MutableText = text.formatted(Formatting.GRAY)
 
@@ -53,8 +51,8 @@ fun variable(text: String): MutableText = text.asText().formatted(Formatting.GOL
 
 fun clickablePath(file: File): MutableText =
     variable(file.absolutePath)
-        .onClick { Util.getOperatingSystem().open(file) }
-        .onHover(HoverEvent(HoverEvent.Action.SHOW_TEXT, "Open".asText()))
+        .onClick(ClickEvent.OpenFile(file))
+        .onHover(HoverEvent.ShowText("Open".asPlainText()))
 
 fun highlight(text: MutableText): MutableText = text.formatted(Formatting.DARK_PURPLE)
 
@@ -95,7 +93,7 @@ inline fun MutableText.onHover(event: HoverEvent?): MutableText =
 inline fun MutableText.onClick(event: ClickEvent?): MutableText =
     setStyle(style.withClickEvent(event))
 
-inline fun MutableText.onClick(callback: Runnable): MutableText =
+inline fun MutableText.onClickRun(callback: Runnable): MutableText =
     setStyle(style.withClickEvent(RunnableClickEvent(callback)))
 
 inline operator fun MutableText.plusAssign(other: String) {
@@ -115,12 +113,12 @@ inline operator fun MutableText.plusAssign(other: Text) {
  * @return A MutableText with the gradient applied
  */
 fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableText {
-    return text.foldIndexed(Text.empty()) { index, newText, char ->
+    return text.foldIndexed("".asText()) { index, newText, char ->
         val factor = if (text.length > 1) index / (text.length - 1.0) else 0.0
         val color = startColor.interpolateTo(endColor, factor)
 
         newText.append(
-            Text.literal(char.toString()).withColor(color.toARGB())
+            char.toString().asText().withColor(color.toARGB())
         )
     }
 }
@@ -135,13 +133,12 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableT
  */
 fun MutableText.copyable(
     copyContent: String = this.string,
-    hover: HoverEvent? = HoverEvent(
-        HoverEvent.Action.SHOW_TEXT,
+    hover: HoverEvent? = HoverEvent.ShowText(
         translation("liquidbounce.tooltip.clickToCopy")
     )
 ): MutableText = apply {
     hover?.let(::onHover)
-    onClick(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, copyContent))
+    onClick(ClickEvent.CopyToClipboard(copyContent))
 }
 
 fun MutableText.bypassNameProtection(): MutableText = styled {
@@ -210,10 +207,7 @@ fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
  * Adds a new chat message.
  */
 fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata) {
-    val text: Text = MixinMutableTextAccessor.create(
-        PlainTextContent.EMPTY, texts.asList(), Style.EMPTY
-    )
-    chat(text, metadata)
+    chat(texts.asText(), metadata)
 }
 
 fun chat(text: Text, module: ClientModule) = chat(text, metadata = MessageMetadata.byModule(module))
@@ -239,7 +233,7 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
  * Joins a list of [Text] into a single [Text] with the given [separator].
  */
 fun List<Text>.joinToText(separator: Text): MutableText {
-    val result = Text.empty()
+    val result = "".asText()
     if (isEmpty()) {
         return result
     }

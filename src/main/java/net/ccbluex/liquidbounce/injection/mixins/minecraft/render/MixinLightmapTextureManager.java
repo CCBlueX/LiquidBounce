@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.interfaces.LightmapTextureManagerAddition;
-import net.minecraft.client.gl.SimpleFramebuffer;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.registry.entry.RegistryEntry;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -40,9 +40,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LightmapTextureManager.class)
 public abstract class MixinLightmapTextureManager implements LightmapTextureManagerAddition {
 
-    @Final
     @Shadow
-    private SimpleFramebuffer lightmapFramebuffer;
+    @Final
+    private GpuTexture glTexture;
 
     @Unique
     private boolean liquid_bounce$customLightMap = false;
@@ -78,8 +78,8 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
         var customLightColor = ModuleCustomAmbience.CustomLightColor.INSTANCE;
         if (customLightColor.getRunning()) {
             liquid_bounce$customLightMap = true;
-            if (RenderSystem.getShaderTexture(2) == lightmapFramebuffer.getColorAttachment()) {
-                RenderSystem.setShaderTexture(2, customLightColor.getFramebuffer().getColorAttachment());
+            if (RenderSystem.getShaderTexture(2) == this.glTexture) {
+                RenderSystem.setShaderTexture(2, customLightColor.getTexture());
             }
         }
     }
@@ -87,33 +87,27 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
     @Inject(method = "enable", at = @At("HEAD"), cancellable = true)
     private void hookSpoof(CallbackInfo ci) {
         if (liquid_bounce$customLightMap) {
-            RenderSystem.setShaderTexture(2, ModuleCustomAmbience.CustomLightColor.INSTANCE.getFramebuffer().getColorAttachment());
+            RenderSystem.setShaderTexture(2, ModuleCustomAmbience.CustomLightColor.INSTANCE.getTexture());
             ci.cancel();
         }
     }
 
-    @Unique
     @Override
     public void liquid_bounce$restoreLightMap() {
-        if (RenderSystem.getShaderTexture(2) != 0) {
-            RenderSystem.setShaderTexture(2, lightmapFramebuffer.getColorAttachment());
+        if (RenderSystem.getShaderTexture(2) == ModuleCustomAmbience.CustomLightColor.INSTANCE.getTexture()) {
+            RenderSystem.setShaderTexture(2, this.glTexture);
         }
         liquid_bounce$customLightMap = false;
     }
 
-    @Inject(method = "close", at = @At("HEAD"))
-    private void hookClose(CallbackInfo ci) {
-        ModuleCustomAmbience.CustomLightColor.INSTANCE.close();
-    }
-
     // Turns off blinking when the darkness effect is active.
-    @Redirect(method = "getDarknessFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Lnet/minecraft/entity/effect/StatusEffectInstance;"))
-    private StatusEffectInstance injectAntiDarkness(ClientPlayerEntity instance, RegistryEntry<StatusEffect> registryEntry) {
-        if (!ModuleAntiBlind.canRender(DoRender.DARKNESS)) {
-            return null;
+    @Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getEffectFadeFactor(Lnet/minecraft/registry/entry/RegistryEntry;F)F"))
+    private float injectAntiDarkness(ClientPlayerEntity instance, RegistryEntry<StatusEffect> registryEntry, float v) {
+        if (!ModuleAntiBlind.canRender(DoRender.DARKNESS) && registryEntry == StatusEffects.DARKNESS) {
+            return 0f;
         }
 
-        return instance.getStatusEffect(registryEntry);
+        return instance.getEffectFadeFactor(registryEntry, v);
     }
 
 }

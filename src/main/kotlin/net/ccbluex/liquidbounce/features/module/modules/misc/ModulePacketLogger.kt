@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.minecraft.network.packet.Packet
 import net.minecraft.text.MutableText
-import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.lang.reflect.*
 import java.util.concurrent.ConcurrentHashMap
@@ -81,7 +80,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
 
         val clazz = packet::class.java
 
-        val text = Text.empty()
+        val text = "".asText()
         if (origin == TransferOrigin.INCOMING) {
             text.append(message("receive").formatted(Formatting.BLUE).bold(true))
         } else {
@@ -101,13 +100,13 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         text.append(regular(")"))
 
         if (clazz.isRecord) {
-            text.append(" (Record)".asText().formatted(Formatting.DARK_GRAY))
+            text.append(" (Record)".asPlainText(Formatting.DARK_GRAY))
         }
 
         if (canceled) {
-            text.append(" (".asText().formatted(Formatting.RED))
+            text.append(" (".asPlainText(Formatting.RED))
             text.append(message("canceled").formatted(Formatting.RED))
-            text.append(")".asText().formatted(Formatting.RED))
+            text.append(")".asPlainText(Formatting.RED))
         }
 
         text.appendFields(clazz, packet)
@@ -145,14 +144,14 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
                     "null"
                 }
 
-                append("- ".asText().formatted(Formatting.GRAY))
+                append("- ".asPlainText(Formatting.GRAY))
                 append(name.asText().formatted(Formatting.AQUA).copyable(copyContent = name))
                 if (showFieldType) {
-                    append(": ".asText().formatted(Formatting.GRAY))
+                    append(": ".asPlainText(Formatting.GRAY))
                     val type = field.fullTypeString()
                     append(type.asText().formatted(Formatting.YELLOW).copyable(copyContent = type))
                 }
-                append(" = ".asText().formatted(Formatting.GRAY))
+                append(" = ".asPlainText(Formatting.GRAY))
                 val valueString = value.toString()
                 append(valueString.asText().formatted(Formatting.WHITE).copyable(copyContent = valueString))
             }

@@ -110,7 +110,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     }
 
     private val itemStackComparator: Comparator<ItemStack> =
-        PreferStackSize.LESS.thenComparing { it.item.translationKey }
+        PreferStackSize.PREFER_MORE.thenComparing { it.item.translationKey }
 
     @Suppress("unused")
     private enum class MergeMode(

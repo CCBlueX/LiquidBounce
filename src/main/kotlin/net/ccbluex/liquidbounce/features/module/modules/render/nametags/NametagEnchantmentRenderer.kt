@@ -18,14 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.drawColoredQuad
-import net.ccbluex.liquidbounce.render.drawColoredQuadOutlines
+import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
+import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Rect
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
@@ -47,7 +46,7 @@ import kotlin.math.hypot
 private object EnchantmentDisplayHelper {
     private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(128)
 
-    private val knownCurses = setOf(
+    private val knownCurses = ReferenceSet.of(
         Enchantments.BINDING_CURSE,
         Enchantments.VANISHING_CURSE
     )
@@ -149,8 +148,8 @@ object NametagEnchantmentRenderer {
         val width: Float
     )
 
+    context(env: GUIRenderEnvironment)
     fun drawEntityEnchantments(
-        env: RenderEnvironment,
         entity: LivingEntity,
         worldX: Float,
         worldY: Float,
@@ -176,7 +175,7 @@ object NametagEnchantmentRenderer {
         if (columnData.isNotEmpty()) {
             // Add this position to the drawn areas list
             ModuleNametags.drawnEnchantmentAreas.add(Vector2f(worldX, worldY))
-            env.drawEnchantmentColumns(worldX, worldY, columnData)
+            drawEnchantmentColumns(worldX, worldY, columnData)
         }
     }
 
@@ -251,7 +250,7 @@ object NametagEnchantmentRenderer {
         )
     }
 
-    private fun RenderEnvironment.renderEnchantmentColumn(
+    private fun GUIRenderEnvironment.renderEnchantmentColumn(
         cells: List<EnchantCell>,
         x: Float,
         y: Float,
@@ -287,16 +286,18 @@ object NametagEnchantmentRenderer {
         }
     }
 
-    private fun RenderEnvironment.drawCellBackground(
+    context(environment: GUIRenderEnvironment)
+    private fun drawCellBackground(
         rect: Rect,
         color: Color4b
     ) {
-        val leftTop = Vec3(rect.x1, rect.y1, 0F)
-        val rightBottom = Vec3(rect.x2, rect.y2, 0F)
-        drawColoredQuad(leftTop, rightBottom, color.toARGB())
+        val leftTop = Vector2f(rect.x1, rect.y1)
+        val rightBottom = Vector2f(rect.x2, rect.y2)
+        environment.drawQuad(leftTop, rightBottom, 0F, fillColor = color)
     }
 
-    private fun RenderEnvironment.drawEnchantmentColumns(
+    context(environment: GUIRenderEnvironment)
+    private fun drawEnchantmentColumns(
         x: Float,
         y: Float,
         columnData: List<EnchantColumn>
@@ -322,23 +323,22 @@ object NametagEnchantmentRenderer {
         var columnX = x - halfTotalWidth
         columnData.forEach { column ->
             val columnCenterX = columnX + column.width / 2
-            renderEnchantmentColumn(column.cells, columnCenterX, y)
+            environment.renderEnchantmentColumn(column.cells, columnCenterX, y)
             columnX += column.width + COLUMN_SPACING
         }
     }
 
-    private fun RenderEnvironment.drawGroupBorder(rect: Rect) {
+    context(environment: GUIRenderEnvironment)
+    private fun drawGroupBorder(rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
-        val leftTop = Vec3(rect.x1, rect.y1, 0F)
-        val rightBottom = Vec3(rect.x2, rect.y2, 0F)
-        drawColoredQuad(
-            leftTop, rightBottom,
-            Color4b.BLACK.with(a = 100).toARGB(),
-        )
-
-        drawColoredQuadOutlines(
-            leftTop, rightBottom,
-            Color4b.RED.toARGB(),
+        val leftTop = Vector2f(rect.x1, rect.y1)
+        val rightBottom = Vector2f(rect.x2, rect.y2)
+        environment.drawQuad(
+            leftTop,
+            rightBottom,
+            z = 0F,
+            fillColor = Color4b.BLACK.with(a = 100),
+            outlineColor = Color4b.RED,
         )
     }
 }

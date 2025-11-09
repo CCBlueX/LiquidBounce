@@ -18,23 +18,20 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.utils.client.registerAsDynamicImageFromClientResources
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
 import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -42,6 +39,7 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.RotationAxis
 import net.minecraft.util.math.Vec3d
+import org.joml.Vector3f
 import java.awt.Color
 import kotlin.math.cos
 import kotlin.math.min
@@ -61,7 +59,7 @@ sealed class TargetRenderer<T: RenderEnvironment>(
 
     abstract val appearance: ChoiceConfigurable<out TargetRenderAppearance<in T>>
 
-    open fun render(env: T, entity: Entity, partialTicks: Float) {
+    fun render(env: T, entity: Entity, partialTicks: Float) {
         if (!enabled) {
             return
         }
@@ -71,6 +69,9 @@ sealed class TargetRenderer<T: RenderEnvironment>(
 
 }
 
+private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
+    .toNativeImage().asTexture { "TargetRenderer Ghost" }
+
 class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvironment>(module) {
 
     override val appearance = choices(module, "Mode", 2) {
@@ -79,47 +80,29 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
     inner class Ghost : WorldTargetRenderAppearance("Ghost") {
 
-        private val glow = "particles/glow.png".registerAsDynamicImageFromClientResources()
-
         private var lastTime = System.currentTimeMillis()
 
         override val parent: ChoiceConfigurable<*>
             get() = appearance
 
         private val color by color("Color", Color4b(Color.BLUE.rgb, true))
-        private var size by float("Size", 0.5f, 0.4f..0.7f)
-        private var length by int("Length", 25, 15..40)
+        private val size by float("Size", 0.5f, 0.4f..0.7f)
+        private val length by int("Length", 25, 15..40)
 
         override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
             env.matrixStack.push()
-            RenderSystem.depthMask(false)
-            RenderSystem.disableCull()
             mc.gameRenderer.lightmapTextureManager.disable()
-            RenderSystem.blendFuncSeparate(
-                GlStateManager.SrcFactor.SRC_ALPHA,
-                GlStateManager.DstFactor.ONE,
-                GlStateManager.SrcFactor.ZERO,
-                GlStateManager.DstFactor.ONE
-            )
 
-            with(mc.gameRenderer.camera.pos) {
-                env.matrixStack.translate(-this.x, -this.y, -this.z)
-            }
+            env.matrixStack.translate(mc.gameRenderer.camera.pos.negate())
 
             val interpolated = entity.pos.interpolate(entity.lastRenderPos(), partialTicks.toDouble())
-                .add(0.0, 0.75, 0.0)
+                .add(0.2, 1.25, 0.0)
 
-            with(interpolated) {
-                env.matrixStack.translate(
-                    this.x + 0.2f,
-                    this.y + 0.5f,
-                    this.z
-                )
-            }
-
-            RenderSystem.setShaderTexture(0, glow)
+            env.matrixStack.translate(interpolated)
 
             with(env) {
+                RenderSystem.setShaderTexture(0, ghostModeTexture.glTexture)
+                startBatch()
                 drawParticle(
                     { sin, cos -> Vec3d(sin, cos, -cos) },
                     { sin, cos -> Vec3d(-sin, -cos, cos) }
@@ -134,12 +117,10 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                     { sin, cos -> Vec3d(-sin, -sin, cos) },
                     { sin, cos -> Vec3d(sin, sin, -cos) }
                 )
+                commitBatch()
             }
 
-            RenderSystem.depthMask(true)
-            RenderSystem.defaultBlendFunc()
             mc.gameRenderer.lightmapTextureManager.enable()
-            RenderSystem.enableCull()
             env.matrixStack.pop()
         }
 
@@ -157,9 +138,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 val cos = cos(angle) * radius
 
                 with(matrixStack) {
-                    with(translationsBefore(sin, cos)) {
-                        translate(x, y, z)
-                    }
+                    translate(translationsBefore(sin, cos))
 
                     translate(-size / 2.0, -size / 2.0, 0.0)
                     multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-mc.gameRenderer.camera.yaw))
@@ -223,7 +202,13 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             .onChange { min(radius, it) }
 
         private val heightMode = choices(module, "HeightMode") {
-            arrayOf(FeetHeight(it), TopHeight(it), RelativeHeight(it), HealthHeight(it))
+            arrayOf(
+                HeightMode.Feet(it),
+                HeightMode.Top(it),
+                HeightMode.Relative(it),
+                HeightMode.Health(it),
+                HeightMode.Animated(it),
+            )
         }
 
         private val outerColor by color("OuterColor", Color4b(0x64007CFF, true))
@@ -233,17 +218,17 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
         override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
             val height = heightMode.activeChoice.getHeight(entity, partialTicks)
-            val pos = entity.interpolateCurrentPosition(partialTicks) + Vec3d(0.0, height, 0.0)
+            val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
             with(env) {
-                withPosition(this.relativeToCamera(pos)) {
-                    withDisabledCull {
-                        drawGradientCircle(radius, innerRadius, outerColor, innerColor)
-                    }
+                startBatch()
+                withPosition(relativeToCamera(pos)) {
+                    drawGradientCircle(radius, innerRadius, outerColor, innerColor)
                     if (outline.enabled) {
                         drawCircleOutline(radius, outline.color)
                     }
                 }
+                commitBatch()
             }
         }
 
@@ -256,7 +241,13 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         private val radius by float("Radius", 0.85f, 0.1f..2f)
 
         private val heightMode = choices(module, "HeightMode") {
-            arrayOf(FeetHeight(it), TopHeight(it), RelativeHeight(it), HealthHeight(it), AnimatedHeight(it))
+            arrayOf(
+                HeightMode.Feet(it),
+                HeightMode.Top(it),
+                HeightMode.Relative(it),
+                HeightMode.Health(it),
+                HeightMode.Animated(it),
+            )
         }
 
         private val color by color("OuterColor", Color4b(0x64007CFF, true))
@@ -272,34 +263,34 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
             val currentHeightMode = heightMode.activeChoice
 
-            val glowHeight = if (currentHeightMode is HeightWithGlow) {
+            val glowHeight = if (currentHeightMode is HeightMode.WithGlow) {
                 currentHeightMode.getGlowHeight(entity, partialTicks) - height
             } else {
                 glowHeightSetting.toDouble()
             }
 
             with(env) {
+                startBatch()
                 withPosition(this.relativeToCamera(pos)) {
-                    withDisabledCull {
-                        drawGradientCircle(
-                            radius,
-                            radius,
-                            color,
-                            glowColor,
-                            Vec3(0.0, glowHeight, 0.0)
-                        )
+                    drawGradientCircle(
+                        radius,
+                        radius,
+                        color,
+                        glowColor,
+                        Vector3f(0f, glowHeight.toFloat(), 0f)
+                    )
 
-                        drawGradientCircle(
-                            radius,
-                            0f,
-                            color,
-                            color
-                        )
-                    }
+                    drawGradientCircle(
+                        radius,
+                        0f,
+                        color,
+                        color
+                    )
                     if (outline.enabled) {
                         drawCircleOutline(radius, outline.color)
                     }
                 }
+                commitBatch()
             }
         }
 
@@ -309,23 +300,57 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         val color by color("Color", Color4b(0x00007CFF, false))
     }
 
-    inner class FeetHeight(private val choiceConfigurable: ChoiceConfigurable<*>) : HeightMode("Feet") {
-        override val parent: ChoiceConfigurable<*>
-            get() = choiceConfigurable
+}
 
-        val offset by float("Offset", 0f, -1f..1f)
-
-        override fun getHeight(entity: Entity, partialTicks: Float): Double {
-            return offset.toDouble()
-        }
-
+class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvironment>(module) {
+    override val appearance = choices<TargetRenderAppearance<GUIRenderEnvironment>>(module, "Mode") {
+        arrayOf(Legacy())
     }
 
-    inner class TopHeight(private val choiceConfigurable: ChoiceConfigurable<*>) : HeightMode("Top") {
-        override val parent: ChoiceConfigurable<*>
-            get() = choiceConfigurable
+    inner class Legacy : OverlayTargetRenderAppearance("Arrow") {
 
-        val offset by float("Offset", 0f, -1f..1f)
+        override val parent: ChoiceConfigurable<TargetRenderAppearance<GUIRenderEnvironment>>
+            get() = appearance
+
+        private val color by color("Color", Color4b.RED)
+        private val size by float("Size", 1.5f, 0.5f..20f)
+
+        override fun render(env: GUIRenderEnvironment, entity: Entity, partialTicks: Float) {
+            val pos = entity.interpolateCurrentPosition(partialTicks)
+                .add(0.0, entity.height.toDouble(), 0.0)
+
+            val screenPos = calculateScreenPos(pos) ?: return
+            val argb = color.toARGB()
+            env.drawCustomMesh(ClientRenderPipelines.TriangleStrip) {
+                vertex(it, screenPos.x - 5 * size, screenPos.y - 10 * size, 1f).color(argb)
+                vertex(it, screenPos.x, screenPos.y, 1f).color(argb)
+                vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f).color(argb)
+            }
+        }
+    }
+}
+
+sealed class TargetRenderAppearance<T: RenderEnvironment>(name: String) : Choice(name) {
+    open fun render(env: T, entity: Entity, partialTicks: Float) {}
+}
+
+sealed class WorldTargetRenderAppearance(name: String) : TargetRenderAppearance<WorldRenderEnvironment>(name)
+sealed class OverlayTargetRenderAppearance(name: String) : TargetRenderAppearance<GUIRenderEnvironment>(name)
+
+sealed class HeightMode(name: String) : Choice(name) {
+    abstract fun getHeight(entity: Entity, partialTicks: Float): Double
+
+    interface WithGlow {
+        fun getGlowHeight(entity: Entity, partialTicks: Float): Double
+    }
+
+    class Feet(override val parent: ChoiceConfigurable<*>) : HeightMode("Feet") {
+        private val offset by float("Offset", 0f, -1f..1f)
+        override fun getHeight(entity: Entity, partialTicks: Float): Double = offset.toDouble()
+    }
+
+    class Top(override val parent: ChoiceConfigurable<*>) : HeightMode("Top") {
+        private val offset by float("Offset", 0f, -1f..1f)
         override fun getHeight(entity: Entity, partialTicks: Float) = entity.box.maxY - entity.box.minY + offset
     }
 
@@ -333,10 +358,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
     // Use 1 for it to always be at the top of the entity
     // Use 0 for it to always be at the feet of the entity
 
-    inner class RelativeHeight(private val choiceConfigurable: ChoiceConfigurable<*>) : HeightMode("Relative") {
-        override val parent: ChoiceConfigurable<*>
-            get() = choiceConfigurable
-
+    class Relative(override val parent: ChoiceConfigurable<*>) : HeightMode("Relative") {
         private val height by float("Height", 0.5f, -0.5f..1.5f)
 
         override fun getHeight(entity: Entity, partialTicks: Float): Double {
@@ -346,10 +368,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         }
     }
 
-    inner class HealthHeight(private val choiceConfigurable: ChoiceConfigurable<*>) : HeightMode("Health") {
-        override val parent: ChoiceConfigurable<*>
-            get() = choiceConfigurable
-
+    class Health(override val parent: ChoiceConfigurable<*>) : HeightMode("Health") {
         override fun getHeight(entity: Entity, partialTicks: Float): Double {
             if (entity !is LivingEntity) return 0.0
             val box = entity.box
@@ -358,10 +377,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         }
     }
 
-    inner class AnimatedHeight(private val choiceConfigurable: ChoiceConfigurable<*>) : HeightWithGlow("Animated") {
-        override val parent: ChoiceConfigurable<*>
-            get() = choiceConfigurable
-
+    class Animated(override val parent: ChoiceConfigurable<*>) : HeightMode("Animated"), WithGlow {
         private val speed by float("Speed", 0.18f, 0.01f..1f)
         private val heightMultiplier by float("HeightMultiplier", 0.4f, 0.1f..1f)
         private val heightOffset by float("HeightOffset", 1.3f, 0f..2f)
@@ -379,52 +395,3 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             (sin(time) * heightMultiplier + heightOffset).toDouble()
     }
 }
-
-class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvironment>(module) {
-    override val appearance = choices<TargetRenderAppearance<GUIRenderEnvironment>>(module, "Mode") {
-        arrayOf(Legacy())
-    }
-
-    inner class Legacy : OverlayTargetRenderAppearance("Arrow") {
-
-        override val parent: ChoiceConfigurable<TargetRenderAppearance<GUIRenderEnvironment>>
-            get() = appearance
-
-        private val color by color("Color", Color4b.RED)
-        private val size by float("Size", 1.5f, 0.5f..20f)
-
-        override fun render(env: GUIRenderEnvironment, entity: Entity, partialTicks: Float) {
-            val pos =
-                entity.interpolateCurrentPosition(partialTicks) +
-                    Vec3d(0.0, entity.height.toDouble(), 0.0)
-
-            val screenPos = calculateScreenPos(pos) ?: return
-            val argb = color.toARGB()
-            env.drawCustomMesh(
-                VertexFormat.DrawMode.TRIANGLE_STRIP,
-                VertexInputType.PosColor,
-            ) {
-                vertex(it, screenPos.x - 5 * size, screenPos.y - 10 * size, 1f).color(argb)
-                vertex(it, screenPos.x, screenPos.y, 1f).color(argb)
-                vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f).color(argb)
-            }
-        }
-    }
-}
-
-sealed class TargetRenderAppearance<T: RenderEnvironment>(name: String) : Choice(name) {
-    open fun render(env: T, entity: Entity, partialTicks: Float) {}
-}
-
-sealed class WorldTargetRenderAppearance(name: String) : TargetRenderAppearance<WorldRenderEnvironment>(name)
-sealed class OverlayTargetRenderAppearance(name: String) : TargetRenderAppearance<GUIRenderEnvironment>(name)
-
-sealed class HeightMode(name: String) : Choice(name) {
-    open fun getHeight(entity: Entity, partialTicks: Float): Double = 0.0
-}
-
-sealed class HeightWithGlow(name: String) : HeightMode(name) {
-    open fun getGlowHeight(entity: Entity, partialTicks: Float): Double = 0.0
-
-}
-

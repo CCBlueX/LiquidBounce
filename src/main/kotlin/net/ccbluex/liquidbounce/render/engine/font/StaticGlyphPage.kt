@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.font
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -103,14 +104,12 @@ class StaticGlyphPage(
             renderGlyphs(atlas, placementPlan.glyphsToRender)
 
             val glyphs = placementPlan.glyphsToRender
-                .map { it.fontGlyph.font to createGlyphFromGenerationInfo(it, placementPlan.atlasDimension) }
-                .toSet()
+                .mapTo(ObjectOpenHashSet(placementPlan.glyphsToRender.size)) {
+                    it.fontGlyph.font to createGlyphFromGenerationInfo(it, placementPlan.atlasDimension)
+                }
 
             val nativeImage = atlas.toNativeImage()
-            val texture = NativeImageBackedTexture(nativeImage)
-
-            texture.bindTexture()
-            texture.image!!.upload(0, 0, 0, 0, 0, nativeImage.width, nativeImage.height, true)
+            val texture = NativeImageBackedTexture(null, nativeImage)
 
             return StaticGlyphPage(
                 texture,

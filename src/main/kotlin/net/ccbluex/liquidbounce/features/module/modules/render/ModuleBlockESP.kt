@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
+import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.BlockPos
 
@@ -77,18 +78,21 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
-            drawBoxMode(matrixStack, this.outline, false)
+            drawBoxMode(mc.framebuffer, matrixStack, this.outline, false)
         }
 
-        fun drawBoxMode(matrixStack: MatrixStack, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
-            val colorMode = colorMode.activeChoice
-
+        fun drawBoxMode(
+            framebuffer: Framebuffer,
+            matrixStack: MatrixStack,
+            drawOutline: Boolean,
+            fullAlpha: Boolean,
+        ): Boolean {
             var dirty = false
 
-            renderEnvironmentForWorld(matrixStack) {
+            renderEnvironmentForWorld(matrixStack, framebuffer) {
                 dirty = drawInternal(
                     BlockTracker.allPositions(),
-                    colorMode,
+                    colorMode.activeChoice,
                     fullAlpha,
                     drawOutline
                 )
@@ -152,7 +156,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 return@handler
             }
 
-            val dirty = Box.drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
+            val dirty = Box.drawBoxMode(
+                event.framebuffer,
+                event.matrixStack,
+                drawOutline = false,
+                fullAlpha = true
+            )
 
             if (dirty) {
                 event.markDirty()
@@ -171,7 +180,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 return@handler
             }
 
-            val dirty = Box.drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
+            val dirty = Box.drawBoxMode(
+                event.framebuffer,
+                event.matrixStack,
+                drawOutline = false,
+                fullAlpha = true
+            )
 
             if (dirty) {
                 event.markDirty()

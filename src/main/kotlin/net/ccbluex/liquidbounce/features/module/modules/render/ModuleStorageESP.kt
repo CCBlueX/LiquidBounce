@@ -207,7 +207,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 return@handler
             }
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            renderEnvironmentForWorld(event.matrixStack, event.framebuffer) {
                 // non-model blocks are already processed by WorldRenderer where we injected code which renders
                 // their outline
                 startBatch()

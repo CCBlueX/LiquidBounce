@@ -18,13 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import com.mojang.blaze3d.systems.GpuDevice
+import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.util.Window
 import net.minecraft.client.world.ClientWorld
-
 
 val Window.dimensions
     get() = Pair(width, height)
@@ -42,3 +43,5 @@ val network: ClientPlayNetworkHandler
     inline get() = mc.networkHandler!!
 val interaction: ClientPlayerInteractionManager
     inline get() = mc.interactionManager!!
+val gpuDevice: GpuDevice
+    inline get() = RenderSystem.getDevice()

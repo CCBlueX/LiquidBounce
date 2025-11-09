@@ -147,7 +147,7 @@ internal object FlyCreative : Choice("Creative") {
 
     val packetHandler = handler<PacketEvent> { event ->
         if (shouldFlyDown() && event.packet is PlayerMoveC2SPacket) {
-            event.packet.y = player.lastBaseY - 0.04
+            event.packet.y = player.lastYClient - 0.04
         }
     }
 

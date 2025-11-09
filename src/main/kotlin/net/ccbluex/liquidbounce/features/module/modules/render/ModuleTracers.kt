@@ -113,7 +113,8 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
 
                     drawLines(
                         argb = color.toARGB(),
-                        eyeVector, pos, pos, pos + Vec3(0f, entity.height, 0f)
+                        eyeVector, pos,
+                        pos, pos + Vec3(0f, entity.height, 0f)
                     )
                 }
             }

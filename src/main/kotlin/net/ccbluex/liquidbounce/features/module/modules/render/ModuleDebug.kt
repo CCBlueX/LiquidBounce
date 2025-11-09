@@ -45,12 +45,10 @@ import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import java.awt.Color
 
 /**
  * Rotations module
@@ -115,6 +113,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             val context = event.context
 
             renderEnvironmentForGUI(event) {
+                startBatch()
                 with(context) {
                     var posX = 300
                     var posY = 500
@@ -154,9 +153,8 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                         )
                     }
                 }
-                fontRenderer.commit(this)
+                commitBatch()
             }
-
         }
 
     }
@@ -241,6 +239,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
 
         renderEnvironmentForGUI(event) {
+            startBatch()
             /**
              * Separate the debugged owner from its parameter
              * Structure should be like this:
@@ -255,20 +254,20 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
             val currentTime = System.currentTimeMillis()
 
-            fun ownerName(owner: DebuggedOwner): MutableText {
+            fun ownerName(owner: DebuggedOwner): Text {
                 return when (owner) {
                     is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
                     is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
                     is EventListener -> owner.parent()?.let { ownerName(it) } ?: "".asText()
-                        .append("::".asText().formatted(Formatting.GRAY))
+                        .append("::".asPlainText(Formatting.GRAY))
                         .append(
                             owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true)
                         )
 
-                    is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asText()
-                        ?.formatted(Formatting.GRAY) ?: owner.toString().asText()
+                    is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asPlainText(Formatting.GRAY)
+                        ?: owner.toString().asPlainText()
 
-                    else -> owner.javaClass.simpleName.asText().formatted(Formatting.BLUE)
+                    else -> owner.javaClass.simpleName.asPlainText(Formatting.BLUE)
                 }
             }
 
@@ -305,7 +304,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                 )
             }
 
-            fontRenderer.commit(this)
+            commitBatch()
         }
     }
 
@@ -344,7 +343,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     fun getArrayEntryColor(idx: Int, length: Int): Color4b {
         val hue = idx.toFloat() / length.toFloat()
-        return Color4b(Color.getHSBColor(hue, 1f, 1f)).with(a = 32)
+        return Color4b.ofHSB(hue, 1f, 1f).with(a = 32)
     }
 
     sealed interface DebuggedGeometry {
@@ -364,19 +363,25 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
 
         override fun render(env: WorldRenderEnvironment) {
-            env.drawLineStrip(
-                color.toARGB(),
+            env.drawLine(
                 env.relativeToCamera(from).toVec3(),
-                env.relativeToCamera(to).toVec3()
+                env.relativeToCamera(to).toVec3(),
+                color.toARGB(),
             )
         }
     }
 
-    class DebuggedQuad(val p1: Vec3d, val p2: Vec3d, override val color: Color4b) : DebuggedGeometry {
+    class DebuggedTriangle(
+        val p1: Vec3d,
+        val p2: Vec3d,
+        val p3: Vec3d,
+        override val color: Color4b,
+    ) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
-            env.drawQuad(
-                pos1 = env.relativeToCamera(p1).toVec3(),
-                pos2 = env.relativeToCamera(p2).toVec3(),
+            env.drawTriangle(
+                p1 = env.relativeToCamera(p1).toVec3(),
+                p2 = env.relativeToCamera(p2).toVec3(),
+                p3 = env.relativeToCamera(p2).toVec3(),
                 argb = color.toARGB(),
             )
         }
@@ -384,10 +389,10 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
-            env.drawLineStrip(
-                color.toARGB(),
+            env.drawLine(
                 env.relativeToCamera(from).toVec3(),
                 env.relativeToCamera(to).toVec3(),
+                color.toARGB(),
             )
         }
     }

@@ -271,9 +271,10 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             PreferFullCubeBlocks,
             PreferWalkableBlocks,
             PreferAverageHardBlocks(neutralRange = true),
-            PreferStackSize.LESS,
+            PreferStackSize.PREFER_MORE,
             PreferAverageHardBlocks(neutralRange = false),
         )
+    @JvmField
     val BLOCK_COMPARATOR_FOR_INVENTORY =
         ComparatorChain(
             PreferFavourableBlocks,
@@ -281,7 +282,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             PreferFullCubeBlocks,
             PreferWalkableBlocks,
             PreferAverageHardBlocks(neutralRange = true),
-            PreferStackSize.MORE,
+            PreferStackSize.PREFER_FEWER,
             PreferAverageHardBlocks(neutralRange = false),
         )
 

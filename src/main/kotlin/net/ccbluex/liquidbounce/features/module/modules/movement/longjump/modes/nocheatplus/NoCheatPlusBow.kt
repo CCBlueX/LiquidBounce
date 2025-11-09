@@ -118,7 +118,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
 
         if (player.fallDistance >= fallDistance) {
             it.jump = true
-            player.fallDistance = 0f
+            player.fallDistance = 0.0
         }
     }
 

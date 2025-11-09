@@ -51,24 +51,24 @@ open class FakePlayer(
      */
     fun loadAttributes(snapshot: PosPoseSnapshot) {
         this.setPosition(snapshot.x, snapshot.y, snapshot.z)
-        this.prevX = snapshot.prevX
-        this.prevY = snapshot.prevY
-        this.prevZ = snapshot.prevZ
+        this.lastX = snapshot.lastX
+        this.lastY = snapshot.lastY
+        this.lastZ = snapshot.lastZ
         this.handSwinging = snapshot.handSwinging
         this.handSwingTicks = snapshot.handSwingTicks
         this.handSwingProgress = snapshot.handSwingProgress
-        this.prevYaw = snapshot.yaw
-        this.yaw = snapshot.prevYaw
-        this.prevPitch = snapshot.pitch
-        this.pitch = snapshot.prevPitch
-        this.prevBodyYaw = snapshot.bodyYaw
-        this.bodyYaw = snapshot.prevBodyYaw
-        this.prevHeadYaw = snapshot.headYaw
-        this.headYaw = snapshot.prevHeadYaw
+        this.lastYaw = snapshot.yaw
+        this.yaw = snapshot.lastYaw
+        this.lastPitch = snapshot.pitch
+        this.pitch = snapshot.lastPitch
+        this.lastBodyYaw = snapshot.bodyYaw
+        this.bodyYaw = snapshot.lastBodyYaw
+        this.lastHeadYaw = snapshot.headYaw
+        this.headYaw = snapshot.lastHeadYaw
         this.pose = snapshot.pose
         this.preferredHand = snapshot.preferredHand
         this.inventory.clone(snapshot.inventory)
-        this.limbAnimator.pos = snapshot.limbPos
+        this.limbAnimator.animationProgress = snapshot.limbPos
     }
 
     override fun setHealth(health: Float) {
@@ -83,7 +83,7 @@ open class FakePlayer(
             val event = PacketEvent(TransferOrigin.INCOMING, packet, true)
             callEvent(event)
             if (!event.isCancelled) {
-                mc.execute { packet.apply(MinecraftClient.getInstance().networkHandler) }
+                mc.execute { packet.apply(mc.networkHandler) }
             }
         }
     }

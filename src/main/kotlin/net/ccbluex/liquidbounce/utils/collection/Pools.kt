@@ -20,14 +20,25 @@
 package net.ccbluex.liquidbounce.utils.collection
 
 import net.ccbluex.fastutil.Pool
+import net.ccbluex.liquidbounce.utils.render.reset
+import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.BlockPos
+import org.joml.Vector2f
 import org.joml.Vector3f
 
 object Pools {
     @JvmField
+    val MatStack = Pool(::MatrixStack, MatrixStack::reset)
+
+    @JvmField
     val Vec3f: Pool<Vector3f> = Pool(
         initializer = ::Vector3f,
     ) { it.set(0f, 0f, 0f) }
+
+    @JvmField
+    val Vec2f: Pool<Vector2f> = Pool(
+        initializer = ::Vector2f,
+    ) { it.set(0f, 0f) }
 
     @JvmField
     val MutableBlockPos: Pool<BlockPos.Mutable> = Pool(

@@ -22,13 +22,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet
+import net.ccbluex.fastutil.mapToIntArray
 import net.ccbluex.liquidbounce.deeplearn.data.TrainingData
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
@@ -45,7 +47,6 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.*
-import net.ccbluex.liquidbounce.utils.kotlin.mapIntSet
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.util.math.Box
@@ -69,12 +70,8 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
 
     private var targetEntityId: Int? = null
 
-    private data class Fight(
+    private class Fight {
         var ticks: Int = 0
-    )
-
-    private inline fun <V> Int2ObjectOpenHashMap<V>.getOrPut(key: Int, valueProvider: () -> V): V {
-        return get(key) ?: valueProvider().also { put(key, it) }
     }
 
     private val doNotTrack
@@ -82,14 +79,14 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
             player.isDead || player.abilities.flying
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         if (doNotTrack) {
-            return@tickHandler
+            return@handler
         }
 
         if (interaction.isBreakingBlock || player.isUsingItem && !player.isBlockAction) {
             reset()
-            return@tickHandler
+            return@handler
         }
 
         val next = RotationManager.currentRotation ?: player.rotation
@@ -111,16 +108,16 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
                 }
             }
 
-            val fight = fightMap.getOrPut(target.id, ::Fight)
-            val buffer = trainingCollection.getOrPut(target.id, ::ArrayList)
+            val fight = fightMap.computeIfAbsent(target.id) { Fight() }
+            val buffer = trainingCollection.computeIfAbsent(target.id) { mutableListOf() }
 
             buffer.add(TrainingData(
                 currentVector = current.directionVector,
                 previousVector = previous.directionVector,
                 targetVector = targetRotation.directionVector,
                 velocityDelta = current.rotationDeltaTo(next).toVec2f(),
-                playerDiff = player.pos.subtract(player.prevPos),
-                targetDiff = target.pos.subtract(target.prevPos),
+                playerDiff = player.pos.subtract(player.lastPos),
+                targetDiff = target.pos.subtract(target.lastPos),
                 age = fight.ticks,
                 hurtTime = target.hurtTime,
                 distance = player.squaredBoxedDistanceTo(target).toFloat()
@@ -130,7 +127,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
         }
 
         // Drop from [startingVector] and [trainingCollection] if target is not present anymore
-        val targetIds = targets.mapIntSet { it.id }
+        val targetIds = IntOpenHashSet(targets.mapToIntArray { it.id })
 
         fightMap.keys.retainAll(targetIds)
         trainingCollection.keys.retainAll(targetIds)

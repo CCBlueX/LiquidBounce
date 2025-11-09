@@ -133,12 +133,12 @@ open class TargetSelector(
     }
 
     open fun validate(entity: LivingEntity) =
-        entity != player
-        && !entity.isRemoved
-        && entity.shouldBeAttacked()
-        && fov >= RotationUtil.crosshairAngleToEntity(entity)
-        && entity.hurtTime <= hurtTime
-        && validateRange(entity)
+        entity !== player
+            && !entity.isRemoved
+            && entity.hurtTime <= hurtTime
+            && validateRange(entity)
+            && entity.shouldBeAttacked()
+            && fov >= RotationUtil.crosshairAngleToEntity(entity)
 
     private fun validateRange(entity: LivingEntity): Boolean {
         if (range == null) return true

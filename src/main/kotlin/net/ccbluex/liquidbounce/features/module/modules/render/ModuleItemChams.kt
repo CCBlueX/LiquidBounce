@@ -18,18 +18,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.shader.shaders.OutlineEffectShaderData
+import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
+import net.ccbluex.liquidbounce.render.setUniform
+import net.ccbluex.liquidbounce.utils.kotlin.optional
+import kotlin.use
 
 /**
  * Module ItemChams
  *
  * Applies visual effects to your held items.
  *
- * [MixinGameRenderer]
+ * @see MixinGameRenderer
  *
  * @author ccetl
  */
@@ -42,18 +47,39 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
     private val layerSize by float("LayerSize", 1.91f, 1f..5f)
     private val falloff by float("Falloff", 6.83f, 0f..20f)
 
-    var active = false
+    private var edited = false
 
-    fun setData() {
-        active = true
-        with(OutlineEffectShaderData) {
-            falloff = ModuleItemChams.falloff
-            sampleMul = layerSize
-            layerCount = layers
-            glowColor = ModuleItemChams.glowColor
-            blendColor = ModuleItemChams.blendColor
-            alpha = ModuleItemChams.alpha / 255f
+    fun applyToTexture(texture: GpuTexture) {
+        if (!this.running || edited) return
+
+        gpuDevice.createCommandEncoder().createRenderPass(
+            texture,
+            optional(-1),
+        ).use { pass ->
+            pass.setPipeline(ClientRenderPipelines.ItemChams)
+
+            pass.bindSampler("texture0", texture)
+            pass.bindSampler("image", texture)
+            pass.setUniform("useImage", 0)
+            pass.setUniform("blendColor", blendColor)
+            pass.setUniform("alpha", alpha / 255f)
+            pass.setUniform("sampleMul", layerSize)
+            pass.setUniform("glowColor", glowColor)
+            pass.setUniform("falloff", falloff)
+            pass.setUniform("layerCount", layers)
+
+            pass.drawFullScreenPositionTexture()
         }
+
+        edited = true
+    }
+
+    fun resetTexture(texture: GpuTexture) {
+        if (!edited) return
+
+        gpuDevice.createCommandEncoder().clearColorTexture(texture, -1)
+
+        edited = false
     }
 
 }

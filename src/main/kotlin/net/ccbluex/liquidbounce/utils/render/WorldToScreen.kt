@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.utils.toVec3d
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.minecraft.util.math.Vec2f
@@ -40,17 +41,17 @@ import java.text.NumberFormat
  */
 object WorldToScreen : EventListener {
 
-    private val mvMatrix = Matrix4f()
+    private val mvpMatrix = Matrix4f()
     private val projectionMatrix = Matrix4f()
 
     private val cacheMatrix = Matrix4f()
     private val cacheVec3f = Vector3f()
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent>(priority = -100) { event ->
+    private val renderHandler = handler<WorldRenderEvent>(priority = READ_FINAL_STATE) { event ->
         val matrixStack = event.matrixStack
 
-        this.mvMatrix.set(matrixStack.peek().positionMatrix)
+        this.mvpMatrix.set(matrixStack.peek().positionMatrix)
         this.projectionMatrix.set(RenderSystem.getProjectionMatrix())
     }
 
@@ -63,7 +64,7 @@ object WorldToScreen : EventListener {
         val relativePos = pos - cameraPos
 
         val transformedPos = cacheVec3f.set(relativePos)
-            .mulProject(cacheMatrix.set(projectionMatrix).mul(mvMatrix))
+            .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix))
 
         val scaleFactor = mc.window.scaleFactor
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
@@ -89,7 +90,7 @@ object WorldToScreen : EventListener {
         ).sub(1.0F, 1.0F, 0.0F).mul(1.0F, -1.0F, 1.0F)
 
         val relativePos = cacheVec3f.set(transformedPos)
-            .mulProject(cacheMatrix.set(projectionMatrix).mul(mvMatrix).invert())
+            .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix).invert())
 
         ModuleProjectileAimbot.debugParameter("s2w") {
             relativePos.toString(NumberFormat.getInstance())

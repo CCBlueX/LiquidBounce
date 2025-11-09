@@ -248,7 +248,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
     @JvmRecord
     private data class TickData(
         val position: Vec3d,
-        val fallDistance: Float,
+        val fallDistance: Double,
         val velocity: Vec3d,
         val onGround: Boolean
     )

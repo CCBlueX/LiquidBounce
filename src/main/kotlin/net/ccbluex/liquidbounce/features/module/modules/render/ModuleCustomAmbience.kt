@@ -18,23 +18,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.platform.GlStateManager
+import com.mojang.blaze3d.textures.FilterMode
+import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinBackgroundRenderer
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.shader.shaders.BlendShader
-import net.ccbluex.liquidbounce.render.shader.shaders.BlendShaderData
+import net.ccbluex.liquidbounce.render.setUniform
+import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
+import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.minecraft.block.enums.CameraSubmersionType
-import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.Fog
 import net.minecraft.client.render.FogShape
-import net.minecraft.util.math.MathHelper
-import org.lwjgl.opengl.GL13
 
 /**
  * CustomAmbience module
@@ -67,8 +67,8 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
                 return fog
             }
 
-            val start = MathHelper.clamp(fogStart, -8f, viewDistance)
-            val end = MathHelper.clamp(fogStart + density, 0f, viewDistance)
+            val start = Math.clamp(fogStart, -8f, viewDistance)
+            val end = Math.clamp(fogStart + density, 0f, viewDistance)
 
             var shape = fog.shape
             val type = camera.submersionType
@@ -79,18 +79,12 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
             return Fog(start, end, shape, color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
         }
 
-        fun modifyClearColor(): Boolean {
+        fun modifyClearColor(original: Int): Int {
             if (!this.running || backgroundColor.a == 0) {
-                return false
+                return original
             }
 
-            GlStateManager._clearColor(
-                backgroundColor.r / 255f,
-                backgroundColor.g / 255f,
-                backgroundColor.b / 255f,
-                backgroundColor.a / 255f
-            )
-            return true
+            return backgroundColor.toARGB()
         }
 
         @Suppress("unused")
@@ -101,34 +95,27 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
 
     }
 
-    object CustomLightColor :
-        ToggleableConfigurable(this, "CustomLightColor", true), AutoCloseable {
+    object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
+        private val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
 
-        private val lightColor by color("LightColor", Color4b(70, 119, 255, 255)).onChanged {
-            update()
-        }
-
-        val framebuffer: Framebuffer = SimpleFramebuffer(16, 16, false)
-
-        init {
-            framebuffer.setTexFilter(9729)
-            framebuffer.setClearColor(1f, 1f, 1f, 1f)
+        val texture: GpuTexture = gpuDevice.createTexture(
+            "Custom Light Texture",
+            TextureFormat.RGBA8,
+            16, 16,
+            1,
+        ).apply {
+            setTextureFilter(FilterMode.LINEAR, false)
         }
 
         fun update() {
-            framebuffer.clear()
-            framebuffer.beginWrite(true)
-            GlStateManager._activeTexture(GL13.GL_TEXTURE0)
-            GlStateManager._bindTexture(mc.gameRenderer.lightmapTextureManager.lightmapFramebuffer.colorAttachment)
-            BlendShaderData.color = lightColor
-            BlendShader.blit()
-            framebuffer.endWrite()
+            gpuDevice.createCommandEncoder()
+                .createRenderPass(this.texture, optional(-1)).use { pass ->
+                    pass.setPipeline(ClientRenderPipelines.Blend)
+                    pass.bindSampler("texture0", this.texture)
+                    pass.setUniform("mixColor", lightColor)
+                    pass.drawFullScreenPositionTexture()
+                }
         }
-
-        override fun close() {
-            framebuffer.delete()
-        }
-
     }
 
     init {

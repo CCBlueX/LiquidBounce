@@ -123,23 +123,21 @@ object CommandLocalConfig : Command.Factory {
             }
 
             if (configFiles.isNullOrEmpty()) {
-                chat("No local config!".asText().formatted(Formatting.RED))
+                chat("No local config!".asPlainText(Formatting.RED))
             } else {
-                chat("Settings:".asText().formatted(Formatting.AQUA))
+                chat("Settings:".asPlainText(Formatting.AQUA))
                 for (file in configFiles) {
                     val fileNameWithoutSuffix = file.name.removeSuffix(".json")
 
                     chat(
                         variable(file.name)
                             .onClick(
-                                ClickEvent(
-                                    ClickEvent.Action.SUGGEST_COMMAND,
+                                ClickEvent.SuggestCommand(
                                     ".localconfig load $fileNameWithoutSuffix"
                                 )
                             )
                             .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
+                                HoverEvent.ShowText(
                                     Text.of("§7Click to load ${file.name}")
                                 )
                             ),

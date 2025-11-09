@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 
 import net.minecraft.client.network.AbstractClientPlayerEntity
+import net.minecraft.entity.EntityEquipment
 import net.minecraft.entity.EntityPose
 import net.minecraft.entity.player.PlayerInventory
 import net.minecraft.util.Hand
@@ -28,20 +29,20 @@ data class PosPoseSnapshot(
     val x: Double,
     val y: Double,
     val z: Double,
-    val prevX: Double,
-    val prevY: Double,
-    val prevZ: Double,
+    val lastX: Double,
+    val lastY: Double,
+    val lastZ: Double,
     val handSwinging: Boolean,
     val handSwingTicks: Int,
     val handSwingProgress: Float,
     val yaw: Float,
-    val prevYaw: Float,
+    val lastYaw: Float,
     val pitch: Float,
-    val prevPitch: Float,
+    val lastPitch: Float,
     val bodyYaw: Float,
-    val prevBodyYaw: Float,
+    val lastBodyYaw: Float,
     val headYaw: Float,
-    val prevHeadYaw: Float,
+    val lastHeadYaw: Float,
     val pose: EntityPose,
     val preferredHand: Hand,
     val inventory: PlayerInventory,
@@ -70,34 +71,34 @@ fun fromPlayer(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
         entity.pose,
         entity.preferredHand ?: Hand.MAIN_HAND,
         entity.inventory,
-        entity.limbAnimator.pos
+        entity.limbAnimator.animationProgress
     )
 }
 
 fun fromPlayerMotion(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
-    val playerInventory = PlayerInventory(null)
+    val playerInventory = PlayerInventory(null, EntityEquipment())
     playerInventory.clone(entity.inventory)
     return PosPoseSnapshot(
         entity.x,
         entity.y,
         entity.z,
-        entity.prevX,
-        entity.prevY,
-        entity.prevZ,
+        entity.lastX,
+        entity.lastY,
+        entity.lastZ,
         entity.handSwinging,
         entity.handSwingTicks,
         entity.handSwingProgress,
         entity.yaw,
-        entity.prevYaw,
+        entity.lastYaw,
         entity.pitch,
-        entity.prevPitch,
+        entity.lastPitch,
         entity.bodyYaw,
-        entity.prevBodyYaw,
+        entity.lastBodyYaw,
         entity.headYaw,
-        entity.prevHeadYaw,
+        entity.lastHeadYaw,
         entity.pose,
         entity.preferredHand ?: Hand.MAIN_HAND,
         playerInventory,
-        entity.limbAnimator.pos
+        entity.limbAnimator.animationProgress
     )
 }

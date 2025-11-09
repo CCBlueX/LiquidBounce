@@ -20,18 +20,18 @@ package net.ccbluex.liquidbounce.integration
 
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserUrlChangeEvent
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
+import net.ccbluex.liquidbounce.utils.client.PlainText
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
 
-var browserBrowsers = mutableListOf<Browser>()
+val browserBrowsers = mutableListOf<Browser>()
 
-class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) {
+class BrowserScreen(val url: String, title: Text = PlainText.EMPTY) : Screen(title) {
 
     // todo: implement multi-tab support and tab switching
     var selectedIndex = 0

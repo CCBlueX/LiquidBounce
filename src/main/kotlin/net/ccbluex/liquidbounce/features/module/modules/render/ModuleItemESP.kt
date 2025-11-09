@@ -66,7 +66,13 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
 
     private val showTridents by boolean("ShowTridents", true)
 
-    private val modes = choices("Mode", OutlineMode, arrayOf(GlowMode, OutlineMode, BoxMode))
+    private val modes = choices("Mode", 0) {
+        arrayOf(
+            GlowMode,
+//            OutlineMode,
+            BoxMode,
+        )
+    }
     private val colorMode = choices("ColorMode", 0) {
         arrayOf(
             GenericStaticColorMode(it, Color4b(255, 179, 72, 255)),

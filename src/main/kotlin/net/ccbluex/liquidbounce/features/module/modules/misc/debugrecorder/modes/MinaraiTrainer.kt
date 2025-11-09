@@ -94,8 +94,8 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
                             from = player.eyePos
                         ).directionVector,
                         velocityDelta = current.rotationDeltaTo(next).toVec2f(),
-                        playerDiff = player.pos.subtract(player.prevPos),
-                        targetDiff = target.pos.subtract(target.prevPos),
+                        playerDiff = player.pos.subtract(player.lastPos),
+                        targetDiff = target.pos.subtract(target.lastPos),
                         age = target.age,
                         hurtTime = target.hurtTime,
                         distance = distance
@@ -147,7 +147,7 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
         world.addEntity(slime)
 
         // Play sound at position
-        world.playSound(
+        world.playSoundClient(
             position.x,
             position.y,
             position.z,
@@ -155,7 +155,7 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
             SoundCategory.NEUTRAL,
             1f,
             1f,
-            false
+            false,
         )
 
         return slime

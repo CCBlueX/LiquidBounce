@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
@@ -25,6 +26,7 @@ import net.ccbluex.liquidbounce.render.drawHorizontalLine
 import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.fill
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -42,7 +44,7 @@ object Esp2DMode : EspMode("2D") {
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        val entitiesWithBoxes = RenderedEntities.map { entity ->
+        val entitiesWithBoxes = RenderedEntities.mapToArray { entity ->
             val dimensions = entity.getDimensions(entity.pose)
             val d = dimensions.width.toDouble() / 2.0
             val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
@@ -82,8 +84,7 @@ object Esp2DMode : EspMode("2D") {
             var rectHeight = (maxY - minY)
 
             with(event.context) {
-                with(matrices) {
-                    push()
+                matrices.withPush {
                     translate(minX, minY, minZ)
 
                     if (fill) {
@@ -127,7 +128,6 @@ object Esp2DMode : EspMode("2D") {
                         }
                         drawVerticalLine(0.5f, rectHeight + 1f, rectHeight - healthHeight + 0.5f, 0.5f, healthColor)
                     }
-                    pop()
                 }
             }
         }

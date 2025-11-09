@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.integration.backend.browser
 import net.ccbluex.liquidbounce.common.RenderLayerExtensions
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.FrameBufferResizeEvent
+import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
@@ -11,8 +11,6 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
-import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowser
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
@@ -34,7 +32,7 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
     }
 
     @Suppress("unused")
-    private val windowResizeHandler = handler<FrameBufferResizeEvent> { event ->
+    private val windowResizeHandler = handler<FramebufferResizeEvent> { event ->
         browser.update(event.width, event.height)
     }
 
@@ -100,9 +98,9 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
         height: Float
     ) {
         val layer = if (texture.bgra) {
-            RenderLayerExtensions::getBgraBlurredTextureLayer
+            RenderLayerExtensions.BGRA_BLURRED_TEXTURE_LAYER
         } else {
-            RenderLayerExtensions::getBlurredTextureLayer
+            RenderLayerExtensions.BLURRED_TEXTURE_LAYER
         }
 
         context.drawTexture(

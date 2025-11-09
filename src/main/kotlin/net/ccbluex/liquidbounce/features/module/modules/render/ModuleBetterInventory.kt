@@ -117,7 +117,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
 
         val player = mc.player ?: return
 
-        val progress = player.itemCooldownManager.getCooldownProgress(stack, mc.renderTickCounter.getTickDelta(true))
+        val progress = player.itemCooldownManager.getCooldownProgress(stack, mc.renderTickCounter.getTickProgress(true))
 
         if (progress > 0.0F) {
             this.matrices.push()

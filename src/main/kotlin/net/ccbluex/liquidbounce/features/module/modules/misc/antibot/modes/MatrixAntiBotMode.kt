@@ -27,7 +27,9 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isGameProfileUnique
+import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
@@ -82,7 +84,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
                 continue
             }
 
-            var armor: MutableIterable<ItemStack>? = null
+            var armor: Iterable<ItemStack>? = null
 
             if (!isFullyArmored(entity)) {
                 armor = entity.armorItems
@@ -98,8 +100,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
     }
 
     private fun isFullyArmored(entity: PlayerEntity): Boolean {
-        return (0..3).all {
-            val stack = entity.inventory.getArmorStack(it)
+        return entity.armorItems.all { stack ->
             stack.isPlayerArmor && stack.hasEnchantments()
         }
     }
@@ -110,7 +111,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
      *
      * With the help of at least 1 tick of waiting time, this function patches this "trick".
      */
-    private fun updatesArmor(entity: PlayerEntity, prevArmor: MutableIterable<ItemStack>?): Boolean {
+    private fun updatesArmor(entity: PlayerEntity, prevArmor: Iterable<ItemStack>?): Boolean {
         return prevArmor != entity.armorItems
     }
 

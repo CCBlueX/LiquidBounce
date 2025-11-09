@@ -16,14 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-@file:Suppress("TooManyFunctions")
+@file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 
 package net.ccbluex.liquidbounce.utils.client
 
 import com.google.common.base.CaseFormat
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonParseException
+import com.mojang.serialization.JsonOps
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.nbt.NbtString
 import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.*
@@ -38,37 +42,64 @@ fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
 
+private val TEXT_GSON = GsonBuilder().disableHtmlEscaping().create()
+
+inline fun String.asTextContent(): TextContent = PlainTextContent.of(this)
+
 /**
  * Returns a [MutableText] from the receiver.
  * If you just need a [Text], use [asPlainText] instead.
  */
-fun String.asText(): MutableText = Text.literal(this)
+inline fun String.asText(): MutableText = Text.literal(this)
 
 /**
  * Returns an immutable [Text] from the receiver.
  */
-fun String.asPlainText(): Text = ImmutableText.of(this)
+inline fun String.asPlainText(): Text = PlainText.of(this, Style.EMPTY)
 
-fun Text.asNbt(world: World? = null): NbtString =
-    NbtString.of(
-        Text.Serialization.toJsonString(this, world?.registryManager ?: DynamicRegistryManager.EMPTY)
+/**
+ * Returns an immutable [Text] from the receiver with [style].
+ */
+inline fun String.asPlainText(style: Style): Text = PlainText.of(this, style)
+
+/**
+ * Returns an immutable [Text] from the receiver with [formatting].
+ */
+inline fun String.asPlainText(formatting: Formatting): Text = PlainText.of(this, formatting)
+
+inline fun List<Text>.asText(): Text = TextList.of(this)
+
+inline fun Array<out Text>.asText(): Text = TextList.of(this.unmodifiable())
+
+inline fun textOf(vararg parts: Text): Text = parts.asText()
+
+fun Text.asNbt(world: World? = null): NbtString {
+    val registries = world?.registryManager ?: DynamicRegistryManager.EMPTY
+    return NbtString.of(
+        TEXT_GSON.toJson(
+            TextCodecs.CODEC.encodeStart(registries.getOps(JsonOps.INSTANCE), this)
+                .getOrThrow(::JsonParseException)
+        )
     )
+}
 
 fun OrderedText.toText(): Text {
-    val text = Text.empty()
+    if (this is Text) return this
+
+    val parts = mutableListOf<Text>()
 
     var currentStyle = Style.EMPTY
-    val currentText = if (mc.isOnThread) Pools.StringBuilder.borrow() else StringBuilder()
+    val currentText = Pools.StringBuilder.borrow()
 
-    this.accept { index, style, codePoint ->
+    this.accept { _, style, codePoint ->
         if (style != currentStyle) {
             if (currentText.isNotEmpty()) {
-                text.append(currentText.toString().asText().setStyle(currentStyle))
+                parts += currentText.toString().asPlainText(currentStyle)
             }
 
             currentStyle = style
 
-            currentText.clear()
+            currentText.setLength(0)
         }
 
         currentText.appendCodePoint(codePoint)
@@ -77,40 +108,38 @@ fun OrderedText.toText(): Text {
     }
 
     if (currentText.isNotEmpty()) {
-        text.append(currentText.toString().asText().setStyle(currentStyle))
+        parts += currentText.toString().asPlainText(currentStyle)
     }
 
-    if (mc.isOnThread) Pools.StringBuilder.recycle(currentText)
+    Pools.StringBuilder.recycle(currentText)
 
-    return text
+    return parts.asText()
 }
 
 fun Text.processContent(): Text {
+    fun translateOrSelf(content: TextContent): TextContent =
+        (content as? TranslatableTextContent)?.toTranslatedString()?.asTextContent() ?: content
+
     val content = this.content
+    val processedContent = translateOrSelf(content)
 
-    if (content is TranslatableTextContent) {
-        return MutableText.of(content.toPlainContent())
-            .setStyle(style)
-            .apply {
-                for (child in siblings) {
-                    append(child.processContent())
-                }
-            }
+    val processedSiblings = siblings.map(Text::processContent)
+
+    return if (processedContent === content && processedSiblings == siblings) {
+        this
+    } else {
+        MutableText.of(processedContent).setStyle(style).apply {
+            siblings.addAll(processedSiblings)
+        }
     }
-
-    return this
 }
 
-fun TranslatableTextContent.toPlainContent(): TextContent {
-    val stringBuilder = StringBuilder()
-
+fun TranslatableTextContent.toTranslatedString(): String = buildString {
     visit {
-        stringBuilder.append(it)
+        append(it)
 
-        Optional.empty<Any?>()
+        Optional.empty<Nothing>()
     }
-
-    return PlainTextContent.of(stringBuilder.toString())
 }
 
 private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray()).unmodifiable()
@@ -216,13 +245,16 @@ fun String.hideSensitiveAddress(): String {
     }
 }
 
+@JvmRecord
 data class ColoredChar(val char: Char, val color: Formatting) {
     init {
         requireNotNull(color.colorValue) { "The formatting must be a color formatting!" }
     }
 }
 
-fun Char.colored(color: Formatting) = ColoredChar(this, color)
+inline fun Char.colored(color: Formatting) = ColoredChar(this, color)
+
+fun Char.repeat(n: Int): String = CharArray(n) { this }.concatToString()
 
 /**
  * Generates a progress bar based on the [percent]age (range 0 to 100).
@@ -236,10 +268,11 @@ fun textLoadingBar(
     val clampedPercent = percent.coerceIn(0, 100)
     val filledBars = clampedPercent * length / 100
 
-    val progressPart = progress.char.toString().repeat(filledBars)
-    val remainingPart = remaining.char.toString().repeat(length - filledBars)
+    val progressPart = progress.char.repeat(filledBars)
+    val remainingPart = remaining.char.repeat(length - filledBars)
 
-    return Text.empty()
-        .append(progressPart.asText().formatted(progress.color))
-        .append(remainingPart.asText().formatted(remaining.color))
+    return textOf(
+        progressPart.asPlainText(progress.color),
+        remainingPart.asPlainText(remaining.color),
+    )
 }

@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.createItemStackForRendering
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
@@ -196,22 +197,22 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
                         drawItem(stack, x, y)
                         val countString = stack.count.toString()
-                        matrices.push()
-                        matrices.translate(0.0F, 0.0F, 200.0F)
-                        // draw layer text
-                        if (!compact) {
-                            drawText(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, textShadow)
+                        matrices.withPush {
+                            translate(0.0F, 0.0F, 200.0F)
+                            // draw layer text
+                            if (!compact) {
+                                drawText(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, textShadow)
+                            }
+                            // drawStackCount, with custom color (copied from DrawContext)
+                            drawText(
+                                textRenderer,
+                                countString,
+                                x + 19 - 2 - textRenderer.getWidth(countString),
+                                y + 6 + 3,
+                                color,
+                                textShadow,
+                            )
                         }
-                        // drawStackCount, with custom color (copied from DrawContext)
-                        drawText(
-                            textRenderer,
-                            countString,
-                            x + 19 - 2 - textRenderer.getWidth(countString),
-                            y + 6 + 3,
-                            color,
-                            textShadow,
-                        )
-                        matrices.pop()
                     }
                 }.draw()
         }

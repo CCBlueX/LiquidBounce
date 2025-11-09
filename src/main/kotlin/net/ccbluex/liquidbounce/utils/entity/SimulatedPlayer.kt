@@ -73,7 +73,7 @@ class SimulatedPlayer(
     var pitch: Float,
     private var sprinting: Boolean,
 
-    var fallDistance: Float,
+    var fallDistance: Double,
     private var jumpingCooldown: Int,
     private var isJumping: Boolean,
     private var isFallFlying: Boolean,
@@ -124,7 +124,7 @@ class SimulatedPlayer(
                 player,
                 input,
                 player.pos,
-                velocity = player.pos.subtract(player.prevPos),
+                velocity = player.pos.subtract(player.lastPos),
                 player.boundingBox,
                 player.yaw,
                 player.pitch,
@@ -305,7 +305,7 @@ class SimulatedPlayer(
             var k: Double
             var e: Vec3d = this.velocity
             if (e.y > -0.5) {
-                fallDistance = 1.0f
+                fallDistance = 1.0
             }
             val vec3d3 = this.getRotationVector()
             val f: Float = this.pitch * (Math.PI.toFloat() / 180)
@@ -512,7 +512,7 @@ class SimulatedPlayer(
     }
 
     private fun onLanding() {
-        this.fallDistance = 0.0f
+        this.fallDistance = 0.0
     }
 
     fun jump() {
@@ -969,7 +969,7 @@ class SimulatedPlayer(
              * Guesses the current input of a server player based on player position and velocity
              */
             fun guessInput(entity: PlayerEntity): SimulatedPlayerInput {
-                val velocity = entity.pos.subtract(entity.prevPos)
+                val velocity = entity.pos.subtract(entity.lastPos)
 
                 val horizontalVelocity = velocity.horizontalLengthSquared()
 

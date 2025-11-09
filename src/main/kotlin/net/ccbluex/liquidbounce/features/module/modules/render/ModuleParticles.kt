@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -37,14 +38,15 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeePointFrom
 import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.registerAsDynamicImageFromClientResources
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.util.Identifier
+import net.ccbluex.liquidbounce.utils.render.asTexture
+import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.minecraft.client.texture.NativeImage
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import org.joml.Quaternionf
@@ -126,20 +128,13 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
-            RenderSystem.depthMask(true)
-            RenderSystem.disableCull()
             mc.gameRenderer.lightmapTextureManager.disable()
-            RenderSystem.defaultBlendFunc()
 
             for (particle in particles) {
                 if (!particle.visible) continue
 
                 particle.render(event.partialTicks)
             }
-
-            RenderSystem.depthMask(true)
-            RenderSystem.enableCull()
-            RenderSystem.defaultBlendFunc()
             mc.gameRenderer.lightmapTextureManager.enable()
         }
     }
@@ -148,24 +143,26 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     @Suppress("UNUSED")
     private enum class ParticleImage(
         override val choiceName: String,
-        val texture: Identifier
+        val image: NativeImage,
     ) : NamedChoice {
         /**
          * Original: IDK (first: https://github.com/CCBlueX/LiquidBounce/pull/4976)
          */
-        ORBIZ("Orbiz", "particles/glow.png".registerAsDynamicImageFromClientResources()),
+        ORBIZ("Orbiz", LiquidBounce.resource("particles/glow.png").toNativeImage()),
 
         /**
          * Original: https://www.svgrepo.com/svg/528677/stars-minimalistic
          * Modified: @sqlerrorthing
          */
-        STAR("Star", "particles/star.png".registerAsDynamicImageFromClientResources()),
+        STAR("Star", LiquidBounce.resource("particles/star.png").toNativeImage()),
 
         /**
          * Original: https://www.svgrepo.com/svg/487288/dollar?edit=true
          * Modified: @sqlerrorthing
          */
-        DOLLAR("Dollar", "particles/dollar.png".registerAsDynamicImageFromClientResources())
+        DOLLAR("Dollar", LiquidBounce.resource("particles/dollar.png").toNativeImage());
+
+        val texture = this.image.asTexture { choiceName }
     }
 
     private class Particle(var pos: Vec3d, val particleImage: ParticleImage) {
@@ -225,7 +222,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         fun render(partialTicks: Float) {
             val interpPos = prevPos.lerp(pos, partialTicks.toDouble())
             env.withPositionRelativeToCamera(interpPos) {
-                RenderSystem.setShaderTexture(0, particleImage.texture)
+                RenderSystem.setShaderTexture(0, particleImage.texture.glTexture)
 
                 val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - spawnTime) / 12000f)
                 val rotation = if (rotate) {

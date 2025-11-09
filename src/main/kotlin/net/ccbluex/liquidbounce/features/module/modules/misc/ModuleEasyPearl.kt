@@ -149,34 +149,32 @@ object ModuleEasyPearl :
         val state = blockPos.getState() ?: return@handler
 
         renderEnvironmentForWorld(matrixStack) {
-            withDisabledCull {
-                val color =
-                    if (getTargetRotation(pos) != null) {
-                        Color4b(0x20, 0xC2, 0x06)
-                    } else {
-                        Color4b(0xD7, 0x09, 0x09)
-                    }
+            val color =
+                if (getTargetRotation(pos) != null) {
+                    Color4b(0x20, 0xC2, 0x06)
+                } else {
+                    Color4b(0xD7, 0x09, 0x09)
+                }
 
-                val baseColor = color.with(a = 50)
-                val transparentColor = baseColor.with(a = 0)
-                val outlineColor = color.with(a = 200)
+            val baseColor = color.with(a = 50)
+            val transparentColor = baseColor.with(a = 0)
+            val outlineColor = color.with(a = 200)
 
-                withPositionRelativeToCamera(blockPos) {
-                    if (state.renderType != BlockRenderType.MODEL && state.isAir) {
-                        drawBoxSide(
-                            FULL_BOX,
-                            Direction.DOWN,
-                            baseColor,
-                            outlineColor,
-                        )
-                        drawGradientSides(0.7, baseColor, transparentColor, FULL_BOX)
-                    } else {
-                        drawBox(
-                            FULL_BOX,
-                            baseColor,
-                            outlineColor,
-                        )
-                    }
+            withPositionRelativeToCamera(blockPos) {
+                if (state.renderType != BlockRenderType.MODEL && state.isAir) {
+                    drawBoxSide(
+                        FULL_BOX,
+                        Direction.DOWN,
+                        baseColor,
+                        outlineColor,
+                    )
+                    drawGradientSides(0.7, baseColor, transparentColor, FULL_BOX)
+                } else {
+                    drawBox(
+                        FULL_BOX,
+                        baseColor,
+                        outlineColor,
+                    )
                 }
             }
         }

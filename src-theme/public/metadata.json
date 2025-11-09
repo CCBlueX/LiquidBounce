@@ -35,7 +35,8 @@
     "Keystrokes",
     "Taco",
     "Image",
-    "Text"
+    "Text",
+    "KeyBinds"
   ],
   "fonts": [
     "Inter-Black.ttf",

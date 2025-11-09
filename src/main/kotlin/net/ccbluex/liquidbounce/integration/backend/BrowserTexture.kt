@@ -19,19 +19,20 @@
  */
 package net.ccbluex.liquidbounce.integration.backend
 
+import com.mojang.blaze3d.textures.GpuTexture
 import net.minecraft.util.Identifier
 
 /**
  * Represents a texture used by the browser.
  *
- * @param textureId The OpenGL texture ID.
+ * @param texture The texture object.
  * @param identifier The identifier of the texture, used for rendering.
  * @param width The width of the texture.
  * @param height The height of the texture.
  * @param bgra Whether the texture is in BGRA format (true) or RGBA format (false).
  */
 data class BrowserTexture(
-    val textureId: Int,
+    val texture: GpuTexture,
     val identifier: Identifier,
     val width: Int,
     val height: Int,

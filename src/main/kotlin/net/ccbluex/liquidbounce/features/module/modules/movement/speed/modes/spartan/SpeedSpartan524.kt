@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.Items
 
 
@@ -47,7 +48,7 @@ class SpeedSpartanV4043(override val parent: ChoiceConfigurable<*>) : Choice("Sp
             return@handler
         }
 
-        val wearingLeatherBoots = player.inventory.getArmorStack(0).item == Items.LEATHER_BOOTS
+        val wearingLeatherBoots = player.getEquippedStack(EquipmentSlot.FEET).isOf(Items.LEATHER_BOOTS)
         val horizontalMove = if (wearingLeatherBoots) 1.8 else 1.3
 
         if (player.isOnGround) {
@@ -80,7 +81,7 @@ class SpeedSpartanV4043FastFall(override val parent: ChoiceConfigurable<*>) : Ch
             return@handler
         }
 
-        val wearingLeatherBoots = player.inventory.getArmorStack(0).item == Items.LEATHER_BOOTS
+        val wearingLeatherBoots = player.getEquippedStack(EquipmentSlot.FEET).isOf(Items.LEATHER_BOOTS)
         val horizontalMove = if (wearingLeatherBoots) 1.2 else 1.05
         val jumps = if (wearingLeatherBoots) 7 else 3
 

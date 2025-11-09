@@ -97,3 +97,11 @@ val ItemStack.armorValue
 
 val ItemStack.armorKnockbackResistance
     get() = this.getAttributeValue(EntityAttributes.KNOCKBACK_RESISTANCE)
+
+// Shield
+
+/**
+ * @see Items.SHIELD
+ */
+val ItemStack.blocksAttacksComponent
+    get() = this.get(DataComponentTypes.BLOCKS_ATTACKS)

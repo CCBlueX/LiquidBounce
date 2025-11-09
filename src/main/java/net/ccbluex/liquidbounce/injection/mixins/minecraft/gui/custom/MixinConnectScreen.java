@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.event.events.ServerConnectEvent;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
+import net.ccbluex.liquidbounce.utils.client.PlainText;
+import net.ccbluex.liquidbounce.utils.client.TextList;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
@@ -47,6 +49,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 
 import static net.ccbluex.liquidbounce.utils.client.TextExtensionsKt.hideSensitiveAddress;
 
@@ -114,17 +117,23 @@ public abstract class MixinConnectScreen extends MixinScreen {
         );
         var ipInfo = IpInfoApi.INSTANCE.getCurrent();
 
-        var client = Text.literal("Client").formatted(Formatting.BLUE);
+        var spacer = PlainText.of(" ⟺ ", Formatting.DARK_GRAY);
+
+        var textParts = new ArrayList<Text>();
+
+        var client = PlainText.of("Client", Formatting.BLUE);
+        textParts.add(client);
+
         if (ipInfo != null) {
             var country = ipInfo.getCountry();
 
             if (country != null) {
-                client.append(Text.literal(" (").formatted(Formatting.DARK_GRAY));
-                client.append(Text.literal(country).formatted(Formatting.BLUE));
-                client.append(Text.literal(")").formatted(Formatting.DARK_GRAY));
+                textParts.add(PlainText.of(" (", Formatting.DARK_GRAY));
+                textParts.add(PlainText.of(country, Formatting.BLUE));
+                textParts.add(PlainText.of(")", Formatting.DARK_GRAY));
             }
         }
-        var spacer = Text.literal(" ⟺ ").formatted(Formatting.DARK_GRAY);
+        textParts.add(spacer);
 
         var socket = Text.literal(socketAddr);
         if (ProxyManager.INSTANCE.getCurrentProxy() != null) {
@@ -132,15 +141,13 @@ public abstract class MixinConnectScreen extends MixinScreen {
         } else {
             socket.formatted(Formatting.RED); // No proxy - shows server address
         }
+        textParts.add(socket);
+        textParts.add(spacer);
 
-        var server = Text.literal(serverAddr).formatted(Formatting.GREEN);
+        var server = PlainText.of(serverAddr, Formatting.GREEN);
+        textParts.add(server);
 
-        return Text.empty()
-                .append(client)
-                .append(spacer.copy())
-                .append(socket)
-                .append(spacer.copy())
-                .append(server);
+        return TextList.of(textParts);
     }
 
     @Unique

@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
+import net.minecraft.text.ClickEvent
 import net.minecraft.util.Formatting
 import okio.appendingSink
 import okio.buffer
@@ -145,9 +146,7 @@ object CommandExecutor : EventListener {
                             "\u2B25 ".asText()
                                 .formatted(Formatting.BLUE)
                                 .append(regular(CommandManager.Options.prefix + usage))
-                                .onClick {
-                                    mc.openChat(CommandManager.Options.prefix + usage)
-                                },
+                                .onClick(ClickEvent.SuggestCommand(CommandManager.Options.prefix + usage)),
                             metadata = data
                         )
                     }

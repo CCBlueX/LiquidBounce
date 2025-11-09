@@ -18,7 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
+import it.unimi.dsi.fastutil.ints.IntArrayList
+import it.unimi.dsi.fastutil.ints.IntList
+import it.unimi.dsi.fastutil.objects.Object2IntArrayMap
+import it.unimi.dsi.fastutil.objects.Object2IntMap
+import it.unimi.dsi.fastutil.objects.Object2IntMaps
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import net.ccbluex.fastutil.fastIterator
+import net.ccbluex.fastutil.forEachInt
+import net.ccbluex.fastutil.intListOf
 import net.ccbluex.liquidbounce.config.AutoShopConfig.loadAutoShopConfig
 import net.ccbluex.liquidbounce.config.ShopConfigPreset
 import net.ccbluex.liquidbounce.event.tickConditional
@@ -35,9 +45,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializ
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
-import net.ccbluex.liquidbounce.utils.kotlin.incrementOrSet
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.kotlin.subList
-import net.ccbluex.liquidbounce.utils.kotlin.sumValues
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.screen.slot.SlotActionType
 import kotlin.math.ceil
@@ -64,14 +73,13 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         0..10, "ticks")
     private val autoClose by boolean("AutoClose", true)
 
-    private val autoShopInventoryManager = AutoShopInventoryManager()
     private var waitedBeforeTheFirstClick = false
     private var canAutoClose = false    // allows closing the shop menu only after a purchase
     private var prevCategorySlot = -1
-    var currentConfig = ShopConfig.emptyConfig()
+    var currentConfig = ShopConfig.Empty
 
     // Debug
-    private val recordedClicks = mutableListOf<Int>()
+    private val recordedClicks = IntArrayList()
     private var startMilliseconds = 0L
 
     init {
@@ -80,7 +88,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
     }
 
     @Suppress("unused")
-    private val repeatable = tickHandler {
+    private val repeatable = tickHandler(Dispatchers.Minecraft) {
         if (!isShopOpen()) {
             return@tickHandler
         }
@@ -174,7 +182,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
     }
 
     private suspend fun buyItem(itemSlot: Int, shopElement: ShopElement) {
-        val currentInventory = autoShopInventoryManager.getInventoryItems()
+        val currentInventory = AutoShopInventoryManager.getInventoryItems()
 
         interaction.clickSlot(
             (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
@@ -192,18 +200,18 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         tickUntil {
             !isShopOpen() || hasReceivedItems(
                 prevInventory = currentInventory,
-                expectedItems = mapOf(
-                    shopElement.item.id to shopElement.amountPerClick,
-                    shopElement.price.id to -shopElement.price.minAmount
+                expectedItems = Object2IntArrayMap(
+                    arrayOf(shopElement.item.id, shopElement.price.id),
+                    intArrayOf(shopElement.amountPerClick, -shopElement.price.minAmount),
                 )
             )
         }
 
         // expects to get an item later
         if (shopElement.item.id.isArmorItem()) {
-            autoShopInventoryManager.addPendingItems(mapOf(
-                shopElement.item.id to shopElement.amountPerClick
-            ))
+            AutoShopInventoryManager.addPendingItems(
+                Object2IntMaps.singleton(shopElement.item.id, shopElement.amountPerClick)
+            )
         }
 
         // waits extra ticks
@@ -213,12 +221,12 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
     private suspend fun buyAllItemsInCategory(remainingElements: List<ShopElement>) {
         val simulationResult = simulateNextPurchases(remainingElements, onlySameCategory = true)
         val slotsToClick = simulationResult.first
-        val prevInventory = autoShopInventoryManager.getInventoryItems()
+        val prevInventory = AutoShopInventoryManager.getInventoryItems()
         val prevShopStacks = (mc.currentScreen as GenericContainerScreen).stacks()
 
-        for(slot in slotsToClick) {
+        slotsToClick.forEachInt { slot ->
             if (slot == -1) {
-                continue    // it looks as if it doesn't require to switch an item category anymore
+                return@forEachInt // it looks as if it doesn't require to switch an item category anymore
             }
 
             delay(QuickPurchaseMode.delay.random().toLong())
@@ -236,16 +244,22 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
             }
         }
 
-        val nextCategorySlot = slotsToClick.last()
+        val nextCategorySlot = slotsToClick.getInt(slotsToClick.lastIndex)
         if (nextCategorySlot != -1) {
             prevCategorySlot = nextCategorySlot
         }
 
         // expects to get items later
         val newPendingItems = if (QuickPurchaseMode.waitForItems) {
-            simulationResult.second.filter { it.key.isArmorItem() }
-        } else { simulationResult.second }
-        autoShopInventoryManager.addPendingItems(newPendingItems)
+            val map = Object2IntOpenHashMap<String>()
+            simulationResult.second.fastIterator().forEach {
+                if (it.key.isArmorItem()) map.put(it.key, it.intValue)
+            }
+            map
+        } else {
+            simulationResult.second
+        }
+        AutoShopInventoryManager.addPendingItems(newPendingItems)
 
         // waits for an inventory update and for an item category update
         tickUntil {
@@ -273,23 +287,25 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
      * If [expectedItems] contain only armor which can be received only after the shop is closed,
      * it will check whether the items required to buy it are taken.
      **/
-    private fun hasReceivedItems(prevInventory: Map<String, Int>,
-                                 expectedItems: Map<String, Int>): Boolean {
+    private fun hasReceivedItems(
+        prevInventory: Object2IntMap<String>,
+        expectedItems: Object2IntMap<String>,
+    ): Boolean {
         val exceptedItemsToGet = expectedItems.filter { it.value > 0 }
         val exceptedItemsToLose = expectedItems.filter { it.value < 0 }
         val isArmorOnly = exceptedItemsToGet.all { it.key.isArmorItem() }
 
-        val currentInventory = autoShopInventoryManager.getInventoryItems()
+        val currentInventory = AutoShopInventoryManager.getInventoryItems()
         val receivedNewItems = exceptedItemsToGet.all { (item, expectedNewAmount) ->
-            val prevItemAmount = prevInventory[item] ?: 0
-            val newItemAmount = currentInventory[item] ?: 0
+            val prevItemAmount = prevInventory.getOrDefault(item, 0)
+            val newItemAmount = currentInventory.getOrDefault(item, 0)
 
             newItemAmount - prevItemAmount >= expectedNewAmount
         }
 
         val lostPriceItems = isArmorOnly && exceptedItemsToLose.all { (item, expectedNewAmount) ->
-            val prevItemAmount = prevInventory[item] ?: 0
-            val newItemAmount = currentInventory[item] ?: 0
+            val prevItemAmount = prevInventory.getOrDefault(item, 0)
+            val newItemAmount = currentInventory.getOrDefault(item, 0)
 
             newItemAmount - prevItemAmount <= expectedNewAmount
         }
@@ -308,17 +324,18 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
      */
     private fun simulateNextPurchases(
         remainingElements: List<ShopElement>,
-        onlySameCategory: Boolean) : Pair<List<Int>, Map<String, Int>> {
+        onlySameCategory: Boolean,
+    ): Pair<IntList, Object2IntMap<String>> {
 
         if (remainingElements.isEmpty()) {
-            return Pair(emptyList(), emptyMap())
+            return Pair(intListOf(), Object2IntMaps.emptyMap())
         }
 
         val initialCategorySlot = remainingElements.first().categorySlot
         var currentCategorySlot = initialCategorySlot
-        val currentItems = autoShopInventoryManager.getInventoryItems().toMutableMap()
-        val slots = mutableListOf<Int>()
-        val expectedItems = mutableMapOf<String, Int>()
+        val currentItems = Object2IntOpenHashMap(AutoShopInventoryManager.getInventoryItems())
+        val slots = IntArrayList()
+        val expectedItems = Object2IntOpenHashMap<String>()
         var nextCategorySlot = -1
 
         @Suppress("LoopWithTooManyJumpStatements")
@@ -330,9 +347,10 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
             }
 
             // subtract the required items from the limited items we have
-            currentItems.sumValues(requiredItems.mapValues { -it.value * clicks })
-            currentItems.incrementOrSet(element.item.id, element.amountPerClick * clicks)
-
+            requiredItems.fastIterator().forEach {
+                currentItems.addTo(key, -it.intValue * clicks)
+            }
+            currentItems.addTo(element.item.id, element.amountPerClick * clicks)
 
             if (!onlySameCategory) {
                 if (element.categorySlot != currentCategorySlot) {
@@ -340,16 +358,16 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
                     currentCategorySlot = element.categorySlot
                 }
                 repeat(clicks) { slots.add(element.itemSlot) }
-                expectedItems.incrementOrSet(element.item.id, element.amountPerClick * clicks)
-                expectedItems.incrementOrSet(element.price.id, -element.price.minAmount * clicks)
+                expectedItems.addTo(element.item.id, element.amountPerClick * clicks)
+                expectedItems.addTo(element.price.id, -element.price.minAmount * clicks)
                 continue
             }
 
             if (element.categorySlot == initialCategorySlot) {
                 repeat(clicks) { slots.add(element.itemSlot) }
                 // for example, [wool: 64, iron_ingot: -16]
-                expectedItems.incrementOrSet(element.item.id, element.amountPerClick * clicks)
-                expectedItems.incrementOrSet(element.price.id, -element.price.minAmount * clicks)
+                expectedItems.addTo(element.item.id, element.amountPerClick * clicks)
+                expectedItems.addTo(element.price.id, -element.price.minAmount * clicks)
                 continue
             }
 
@@ -372,10 +390,11 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
     private fun checkElement(
         shopElement: ShopElement,
         remainingElements: List<ShopElement>? = null,
-        items: Map<String, Int> = autoShopInventoryManager.getInventoryItems()) : Map<String, Int>? {
+        items: Object2IntMap<String> = AutoShopInventoryManager.getInventoryItems(),
+    ): Object2IntMap<String>? {
 
         // checks if the player already has the required item to be bought
-        if ((items[shopElement.item.id] ?: 0) >= shopElement.item.minAmount) {
+        if (items.getOrDefault(shopElement.item.id, 0) >= shopElement.item.minAmount) {
             return null
         }
 
@@ -394,12 +413,12 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         }
 
         // makes sure that other conditions are met
-        if (!ConditionCalculator.items(items).process(
+        if (!ConditionCalculator(items).process(
                 shopElement.item.id, shopElement.purchaseConditions)) {
             return null
         }
 
-        return mapOf(shopElement.price.id to shopElement.price.minAmount)
+        return Object2IntMaps.singleton(shopElement.price.id, shopElement.price.minAmount)
     }
 
     /**
@@ -409,29 +428,29 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
      */
     private fun getRequiredClicks(
         shopElement: ShopElement,
-        items: Map<String, Int>,
-        requiredLimitedItems: Map<String, Int>) : Int {
-
-        val currentLimitedItems = items.filterKeys { it in LIMITED_ITEMS }
-        val currentItemAmount = min(items[shopElement.item.id] ?: 0, shopElement.item.minAmount)
+        items: Object2IntMap<String>,
+        requiredLimitedItems: Object2IntMap<String>,
+    ): Int {
+        val currentLimitedItems = Object2IntOpenHashMap<String>()
+        items.fastIterator().forEach {
+            if (it.key in LIMITED_ITEMS) currentLimitedItems.put(it.key, it.intValue)
+        }
+        val currentItemAmount = min(items.getOrDefault(shopElement.item.id, 0), shopElement.item.minAmount)
         val maxBuyClicks = ceil(
             1f * (shopElement.item.minAmount - currentItemAmount) / shopElement.amountPerClick).toInt()
-        var minMultiplier = Int.MAX_VALUE
 
-        for (key in requiredLimitedItems.keys) {
-            val requiredItemsAmount = requiredLimitedItems[key] ?: 0
-            val currentItemsAmount = currentLimitedItems[key] ?: 0
-            val newMultiplier = min(maxBuyClicks, currentItemsAmount / requiredItemsAmount)
-            minMultiplier = min(minMultiplier, newMultiplier)
+        return requiredLimitedItems.keys.minOf { key ->
+            val requiredItemsAmount = requiredLimitedItems.getOrDefault(key, 0)
+            val currentItemsAmount = currentLimitedItems.getOrDefault(key, 0)
+            min(maxBuyClicks, currentItemsAmount / requiredItemsAmount)
         }
-        return minMultiplier
     }
 
     /**
      * Checks the whole price block
      */
-    private fun checkPrice(price: ItemInfo, items: Map<String, Int>) : Boolean {
-        val requiredItemAmount = items[price.id] ?: 0
+    private fun checkPrice(price: ItemInfo, items: Object2IntMap<String>): Boolean {
+        val requiredItemAmount = items.getOrDefault(price.id, 0)
         return requiredItemAmount >= price.minAmount
     }
 
@@ -454,7 +473,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
             startMilliseconds = 0L
         }
 
-        autoShopInventoryManager.clearPendingItems()
+        AutoShopInventoryManager.clearPendingItems()
         prevCategorySlot = currentConfig.initialCategorySlot
         waitedBeforeTheFirstClick = false
         canAutoClose = false

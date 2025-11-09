@@ -20,6 +20,7 @@
     import Text from "./elements/Text.svelte";
     import CraftingInput from "./elements/inventory/CraftingInput.svelte";
     import DraggableComponent from "./elements/DraggableComponent.svelte";
+    import KeyBinds from "./elements/KeyBinds.svelte";
 
     let zoom = 100;
     let metadata: Metadata;
@@ -85,6 +86,8 @@
                     <Text settings={c.settings} />
                 {:else if c.name === "Image"}
                     <img alt="" src="{c.settings.uRL}" style="scale: {c.settings.scale};">
+                {:else if c.name === "KeyBinds"}
+                    <KeyBinds/>
                 {/if}
             </DraggableComponent>
         {/if}

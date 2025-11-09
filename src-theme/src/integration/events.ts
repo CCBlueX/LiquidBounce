@@ -7,7 +7,7 @@ import type {
     Proxy,
     Screen,
     Server,
-    Session,
+    Session, Setting,
     TextComponent,
 } from "./types";
 
@@ -191,7 +191,7 @@ export interface BrowserUrlChangeEvent {
 }
 
 export interface ValueChangedEvent {
-    value: ConfigurableSetting;
+    value: Setting<any>;
 }
 
 export interface ClickGuiScaleChangeEvent {

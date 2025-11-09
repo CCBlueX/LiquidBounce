@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.api.core
 
 import com.google.gson.JsonElement
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,11 +29,14 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.minecraft.client.texture.NativeImage
+import net.ccbluex.liquidbounce.utils.render.asTexture
+import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Util
+import net.minecraft.util.crash.CrashException
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -50,9 +54,21 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
-val renderScope = CoroutineScope(Dispatchers.Minecraft + SupervisorJob())
+val renderScope = CoroutineScope(
+    Dispatchers.Minecraft + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
+        if (throwable is CrashException) {
+            ErrorHandler.fatal(throwable, additionalMessage = "Render scope")
+        }
+    }
+)
 
-val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+val ioScope = CoroutineScope(
+    Dispatchers.IO + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
+        if (throwable is CrashException) {
+            ErrorHandler.fatal(throwable, additionalMessage = "IO scope")
+        }
+    }
+)
 
 fun withScope(block: suspend CoroutineScope.() -> Unit) = ioScope.launch { block() }
 
@@ -182,8 +198,8 @@ inline fun <reified T> Response.parse(): T {
         InputStream::class.java -> body.byteStream() as T
         BufferedSource::class.java -> body.source() as T
         Reader::class.java -> body.charStream() as T
-        NativeImageBackedTexture::class.java -> body.byteStream().use { stream ->
-            NativeImageBackedTexture(NativeImage.read(stream))
+        NativeImageBackedTexture::class.java -> body.byteStream().toNativeImage().asTexture {
+            "NetworkImage ${request.url}"
         } as T
         else -> body.charStream().readJson<T>()
     }

@@ -250,14 +250,14 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
         val longValue = pos.asLong()
         var needUpdate = false
 
-        if (inList.containsKey(longValue)) {
+        inList[longValue]?.let {
             needUpdate = true
-            inList.put(longValue, inList.get(longValue).copy(box = box))
+            inList.put(longValue, it.copy(box = box))
         }
 
-        if (currentList.containsKey(longValue)) {
+        currentList[longValue]?.let {
             needUpdate = true
-            currentList.put(longValue, currentList.get(longValue).copy(box = box))
+            currentList.put(longValue, it.copy(box = box))
         }
 
         if (needUpdate) {

@@ -19,30 +19,44 @@
 
 package net.ccbluex.liquidbounce.render
 
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
+import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.textures.GpuTexture
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.minecraft.client.render.BufferBuilder
-import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.util.BufferAllocator
-import java.util.EnumMap
+import kotlin.jvm.JvmStatic
 
 object ClientTessellator {
 
     private const val BUFFER_SIZE = 0xC0000
 
-    private val bufferAllocators = enumMapOf<DrawMode, EnumMap<VertexInputType, BufferAllocator>> { _ ->
-        enumMapOf()
-    }
+    private val bufferAllocators = Reference2ReferenceOpenHashMap<RenderPipeline, BufferAllocator>()
 
     @JvmStatic
-    fun allocator(drawMode: DrawMode, vertexInputType: VertexInputType): BufferAllocator =
-        bufferAllocators[drawMode]!!.getOrPut(vertexInputType) { BufferAllocator(BUFFER_SIZE) }
+    internal val texQuadsSpecialAllocators = Reference2ReferenceOpenHashMap<GpuTexture, BufferAllocator>()
 
     @JvmStatic
-    fun begin(drawMode: DrawMode, vertexInputType: VertexInputType): BufferBuilder =
+    fun allocator(pipeline: RenderPipeline): BufferAllocator =
+        bufferAllocators.getOrPut(pipeline) { BufferAllocator(BUFFER_SIZE) }
+
+    @JvmStatic
+    fun begin(pipeline: RenderPipeline): BufferBuilder =
         BufferBuilder(
-            allocator(drawMode, vertexInputType),
-            drawMode,
-            vertexInputType.vertexFormat
+            allocator(pipeline),
+            pipeline.vertexFormatMode,
+            pipeline.vertexFormat
+        )
+
+    @JvmStatic
+    fun allocator(texture: GpuTexture): BufferAllocator =
+        texQuadsSpecialAllocators.getOrPut(texture) { BufferAllocator(BUFFER_SIZE) }
+
+    @JvmStatic
+    fun begin(texture: GpuTexture): BufferBuilder =
+        BufferBuilder(
+            allocator(texture),
+            ClientRenderPipelines.TexQuads.vertexFormatMode,
+            ClientRenderPipelines.TexQuads.vertexFormat
         )
 
 }

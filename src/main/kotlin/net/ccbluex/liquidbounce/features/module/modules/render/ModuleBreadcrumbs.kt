@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.opengl.GlStateManager
 import it.unimi.dsi.fastutil.objects.ObjectFloatMutablePair
 import it.unimi.dsi.fastutil.objects.ObjectFloatPair
 import net.ccbluex.fastutil.component1
@@ -31,14 +31,13 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.VertexInputType
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
@@ -84,7 +83,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
 
         renderEnvironmentForWorld(matrixStack) {
             if (height > 0) {
-                RenderSystem.disableCull()
+                GlStateManager._disableCull()
             }
 
             val camera = mc.entityRenderDispatcher.camera ?: return@handler
@@ -92,8 +91,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
             val lines = height == 0f
             drawCustomMesh(
-                if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS,
-                VertexInputType.PosColor,
+                if (lines) ClientRenderPipelines.Lines else ClientRenderPipelines.Quads
             ) { matrix ->
                 val renderData = RenderData(matrix, this, colorF, lines)
                 trails.forEach { (entity, trail) ->
@@ -102,7 +100,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             }
 
             if (height > 0) {
-                RenderSystem.enableCull()
+                GlStateManager._enableCull()
             }
         }
     }
@@ -193,7 +191,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
                 ObjectFloatMutablePair.of(point, alpha)
             }
 
-            val interpolatedPos = entity.getLerpedPos(mc.renderTickCounter.getTickDelta(true))
+            val interpolatedPos = entity.getLerpedPos(mc.renderTickCounter.getTickProgress(true))
             val point = calculatePoint(camera, interpolatedPos.x, interpolatedPos.y, interpolatedPos.z)
             pointsWithAlpha.last().left(point)
 

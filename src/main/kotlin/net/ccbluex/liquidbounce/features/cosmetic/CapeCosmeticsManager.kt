@@ -87,7 +87,7 @@ object CapeCosmeticsManager : EventListener {
 
                     LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
 
-                    val id = Identifier.of("liquidbounce", "cape-$name")
+                    val id = LiquidBounce.identifier("cape-$name")
 
                     // Register cape texture
                     mc.textureManager.registerTexture(id, nativeImageBackedTexture)

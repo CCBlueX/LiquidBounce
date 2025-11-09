@@ -120,8 +120,13 @@ fun Task.getContributors(repoOwner: String, repoName: String): List<String> = tr
  * - Mod dependencies
  */
 fun Configuration.excludeProvidedLibs() = apply {
+    // fabric-language-kotlin
     exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+    exclude(group = "org.jetbrains.kotlin", module = "kotlin-reflect")
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-io-core")
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-io-bytestring")
     exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-serialization-core")
 
     exclude(group = "com.google.code.gson", module = "gson")
     exclude(group = "net.java.dev.jna", module = "jna")
@@ -144,5 +149,7 @@ fun Configuration.excludeProvidedLibs() = apply {
     exclude(group = "io.netty", module = "netty-handler")
     exclude(group = "io.netty", module = "netty-resolver")
     exclude(group = "io.netty", module = "netty-transport")
+    exclude(group = "io.netty", module = "netty-transport-classes-epoll")
+    exclude(group = "io.netty", module = "netty-transport-native-epoll")
     exclude(group = "io.netty", module = "netty-transport-native-unix-common")
 }
