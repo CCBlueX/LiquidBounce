@@ -45,7 +45,7 @@ import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.ccbluex.liquidbounce.utils.render.fill
+import net.ccbluex.liquidbounce.render.drawRect
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.Box
@@ -129,7 +129,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
                     curve.xAxis.range.step(0.1f).forEachFloat { x ->
                         var y = curve.transform(x)
-                        this.fill(
+                        this.drawRect(
                             posX + x,
                             posY - y,
                             posX + x + 1,
@@ -143,7 +143,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                         var x = point[0]
                         var y = point[1]
 
-                        this.fill(
+                        this.drawRect(
                             posX + x - 2,
                             posY - y - 2,
                             posX + x + 2,

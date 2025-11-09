@@ -22,15 +22,15 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
-import net.ccbluex.liquidbounce.utils.render.drawHorizontalLine
-import net.ccbluex.liquidbounce.utils.render.drawVerticalLine
+import net.ccbluex.liquidbounce.render.drawHorizontalLine
+import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.render.fill
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.ccbluex.liquidbounce.render.drawRect
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
@@ -87,7 +87,7 @@ object Esp2DMode : EspMode("2D") {
                     translate(minX, minY)
 
                     if (fill) {
-                        fill(0f, 0f, rectWidth, rectHeight, baseColor)
+                        drawRect(0.0f, 0.0f, rectWidth, rectHeight, baseColor)
                     }
 
                     if (outline) {
@@ -111,7 +111,7 @@ object Esp2DMode : EspMode("2D") {
                     }
 
                     if (healthBar) {
-                        // FIXME: this is broken
+                        // FIXME: the health is incorrect
                         val actualHealth = entity.getActualHealth()
                         val maxHealth = entity.maxHealth.coerceAtLeast(1f) // prevent division by zero
                         val healthPercentage = (actualHealth / maxHealth).coerceIn(0f..1f)
