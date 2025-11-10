@@ -111,7 +111,6 @@ object Esp2DMode : EspMode("2D") {
                     }
 
                     if (healthBar) {
-                        // FIXME: the health is incorrect
                         val actualHealth = entity.getActualHealth()
                         val maxHealth = entity.maxHealth.coerceAtLeast(1f) // prevent division by zero
                         val healthPercentage = (actualHealth / maxHealth).coerceIn(0f..1f)

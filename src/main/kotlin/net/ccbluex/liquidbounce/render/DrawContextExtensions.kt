@@ -41,7 +41,7 @@ fun DrawContext.createBounds(x: Float, y: Float, w: Float, h: Float): ScreenRect
 }
 
 inline fun DrawContext.drawCustomElement(
-    pipeline: RenderPipeline = RenderPipelines.GUI,
+    pipeline: RenderPipeline = RenderPipelines.GUI, // PosColor + QUADS
     textureSetup: TextureSetup = TextureSetup.empty(),
     scissorArea: ScreenRect? = this.scissorStack.peekLast(),
     bounds: ScreenRect? = null,
@@ -65,37 +65,39 @@ fun DrawContext.drawQuad(
     fillColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
 ) {
-    val x1 = minOf(x1, x2)
-    val y1 = minOf(y1, y2)
-    val x2 = maxOf(x1, x2)
-    val y2 = maxOf(y1, y2)
+    val x11 = minOf(x1, x2)
+    val y11 = minOf(y1, y2)
+    val x21 = maxOf(x1, x2)
+    val y21 = maxOf(y1, y2)
+
+    val bounds = createBounds(x11, y11, x21 - x11, y21 - y11)
 
     if (fillColor != null && !fillColor.isTransparent) {
         val argb = fillColor.toARGB()
         drawCustomElement(
             pipeline = RenderPipelines.GUI,
-            bounds = createBounds(x1, y1, x2 - x1, y2 - y1),
+            bounds = bounds,
         ) { pose, depth ->
-            vertex(pose, x1, y1, depth).color(argb)
-            vertex(pose, x1, y2, depth).color(argb)
-            vertex(pose, x2, y2, depth).color(argb)
-            vertex(pose, x2, y1, depth).color(argb)
+            vertex(pose, x11, y11, depth).color(argb)
+            vertex(pose, x11, y21, depth).color(argb)
+            vertex(pose, x21, y21, depth).color(argb)
+            vertex(pose, x21, y11, depth).color(argb)
         }
     }
     if (outlineColor != null && !outlineColor.isTransparent) {
         val argb = outlineColor.toARGB()
         drawCustomElement(
             pipeline = ClientRenderPipelines.GUI.Lines,
-            bounds = createBounds(x1, y1, x2 - x1, y2 - y1),
+            bounds = bounds,
         ) { pose, depth ->
-            vertex(pose, x1, y1, depth).color(argb)
-            vertex(pose, x1, y2, depth).color(argb)
-            vertex(pose, x1, y2, depth).color(argb)
-            vertex(pose, x2, y2, depth).color(argb)
-            vertex(pose, x2, y2, depth).color(argb)
-            vertex(pose, x2, y1, depth).color(argb)
-            vertex(pose, x2, y1, depth).color(argb)
-            vertex(pose, x1, y1, depth).color(argb)
+            vertex(pose, x11, y11, depth).color(argb)
+            vertex(pose, x11, y21, depth).color(argb)
+            vertex(pose, x11, y21, depth).color(argb)
+            vertex(pose, x21, y21, depth).color(argb)
+            vertex(pose, x21, y21, depth).color(argb)
+            vertex(pose, x21, y11, depth).color(argb)
+            vertex(pose, x21, y11, depth).color(argb)
+            vertex(pose, x11, y11, depth).color(argb)
         }
     }
 }
