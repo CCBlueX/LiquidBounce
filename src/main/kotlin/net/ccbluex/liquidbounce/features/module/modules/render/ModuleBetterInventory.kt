@@ -105,7 +105,8 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
 
         val scale by float("Scale", 1F, 0.25F..4F)
         val relativeToMouse by boolean("RelativeToMouse", true)
-        val renderOffset by vec3d("RenderOffset", Vec3d(150.0, 0.0, 200.0))
+        val renderOffsetX by float("RenderOffsetX", 150.0F, -4096F..4096F)
+        val renderOffsetY by float("RenderOffsetY", 0.0F, -4096F..4096F)
     }
 
     init {
@@ -165,8 +166,8 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
 
         if (stacks.isEmpty()) return false
 
-        var renderX = ContainerItemView.renderOffset.x.toFloat() - x.toFloat()
-        var renderY = ContainerItemView.renderOffset.y.toFloat() - y.toFloat()
+        var renderX = ContainerItemView.renderOffsetX - x.toFloat()
+        var renderY = ContainerItemView.renderOffsetY - y.toFloat()
 
         if (ContainerItemView.relativeToMouse) {
             renderX += mouseX
