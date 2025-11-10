@@ -122,7 +122,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
 
         if (progress > 0.0F) {
             this.matrices.pushMatrix()
-            this.matrices.scale(TextCooldownProgress.scale, TextCooldownProgress.scale)
+            this.matrices.scale(TextCooldownProgress.scale)
             val text = when (TextCooldownProgress.mode) {
                 CooldownProgressMode.PERCENTAGE -> "${(progress * 100f).toInt()}%"
                 CooldownProgressMode.DURATION_TICKS -> {
