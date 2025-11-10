@@ -131,7 +131,7 @@ fun DrawContext.drawTriangle(
     val maxX = maxOf(p1.x, p2.x, p3.x)
     val maxY = maxOf(p1.y, p2.y, p3.y)
     drawCustomElement(
-        pipeline = RenderPipelines.GUI,
+        pipeline = ClientRenderPipelines.GUI.Triangles,
         bounds = createBounds(minX, minY, maxX - minX, maxY - minY),
     ) { pose, depth ->
         vertex(pose, p1.x, p1.y, depth).color(argb)

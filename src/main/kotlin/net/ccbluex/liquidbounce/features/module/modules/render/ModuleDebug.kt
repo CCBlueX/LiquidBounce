@@ -251,7 +251,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
             fun ownerName(owner: DebuggedOwner): Text {
                 return when (owner) {
-                    is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).strikethrough(true).bold(true)
+                    is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
                     is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
                     is EventListener -> listOfNotNull(
                         owner.parent()?.let { ownerName(it) },

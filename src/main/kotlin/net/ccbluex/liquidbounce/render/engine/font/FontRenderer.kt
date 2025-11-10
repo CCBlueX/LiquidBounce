@@ -216,13 +216,7 @@ class FontRenderer(
         through: Boolean
     ) {
         val y = if (through) y - this.height * 0.85f + this.ascent else y + 1f
-        environment.context.drawCustomElement(
-            pipeline = ClientRenderPipelines.GUI.Lines,
-            bounds = environment.context.createBounds(x0, y, x1 - x0, 1f),
-        ) { pose, depth ->
-            vertex(pose, x0, y, depth).color(color)
-            vertex(pose, x1, y, depth).color(color)
-        }
+        environment.context.drawHorizontalLine(x0, x1, y, 1f, color)
     }
 
     context(environment: GUIRenderEnvironment)
