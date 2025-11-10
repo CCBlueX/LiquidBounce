@@ -193,7 +193,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             pipeline = RenderPipelines.GUI,
             bounds = bounds,
         ) { pose, depth ->
-            val z = depth - 1.0F
+            val z = depth // - 1.0F
 
             vertex(pose, boundingBox.xMin + offset, boundingBox.yMax, z).color(from)
             vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width, z).color(to)

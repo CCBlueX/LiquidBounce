@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.render.LambdaSimpleGuiElementRenderState
+import net.ccbluex.liquidbounce.utils.render.QuadGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
@@ -79,16 +80,18 @@ fun DrawContext.drawQuad(
     val bounds = createBounds(x11, y11, x21 - x11, y21 - y11)
 
     if (fillColor != null && !fillColor.isTransparent) {
-        val argb = fillColor.toARGB()
-        drawCustomElement(
-            pipeline = RenderPipelines.GUI,
-            bounds = bounds,
-        ) { pose, depth ->
-            vertex(pose, x11, y11, depth).color(argb)
-            vertex(pose, x11, y21, depth).color(argb)
-            vertex(pose, x21, y21, depth).color(argb)
-            vertex(pose, x21, y11, depth).color(argb)
-        }
+        this.state.addSimpleElement(
+            QuadGuiElementRenderState(
+                x11,
+                y11,
+                x21,
+                y21,
+                fillColor.toARGB(),
+                Matrix3x2f(this.matrices),
+                this.scissorStack.peekLast(),
+                bounds,
+            )
+        )
     }
     if (outlineColor != null && !outlineColor.isTransparent) {
         val argb = outlineColor.toARGB()
