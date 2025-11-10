@@ -131,6 +131,12 @@ object ClientRenderPipelines : SynchronousResourceReloader {
             withSnippet(RenderPipelines.GUI_SNIPPET)
             withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINES)
         }
+
+        @JvmField
+        val Triangles = newPipeline("gui/triangles") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES)
+        }
     }
 
     @JvmField

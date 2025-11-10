@@ -304,10 +304,10 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
 class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvironment>(module) {
     override val appearance = choices<TargetRenderAppearance<GUIRenderEnvironment>>(module, "Mode") {
-        arrayOf(Legacy())
+        arrayOf(Arrow())
     }
 
-    inner class Legacy : OverlayTargetRenderAppearance("Arrow") {
+    private inner class Arrow : OverlayTargetRenderAppearance("Arrow") {
 
         override val parent: ChoiceConfigurable<TargetRenderAppearance<GUIRenderEnvironment>>
             get() = appearance
@@ -320,13 +320,19 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvi
                 .add(0.0, entity.height.toDouble(), 0.0)
 
             val screenPos = calculateScreenPos(pos) ?: return
-            val argb = color.toARGB()
-//            FIXME
-//            env.drawCustomMesh(ClientRenderPipelines.Triangle) {
-//                vertex(it, screenPos.x - 5 * size, screenPos.y - 10 * size, 1f).color(argb)
-//                vertex(it, screenPos.x, screenPos.y, 1f).color(argb)
-//                vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f).color(argb)
-//            }
+            val minX = screenPos.x - 5 * size
+            val midX = screenPos.x
+            val maxX = screenPos.x + 5 * size
+            val minY = screenPos.y - 10 * size
+            val maxY = screenPos.y
+            env.context.drawCustomElement(
+                pipeline = ClientRenderPipelines.GUI.Triangles,
+                bounds = env.context.createBounds(x = minX, y = minY, w = 10 * size, h = 10 * size),
+            ) { pose, depth ->
+                vertex(pose, minX, minY, depth).color(color)
+                vertex(pose, midX, maxY, depth).color(color)
+                vertex(pose, maxX, minY, depth).color(color)
+            }
         }
     }
 }
