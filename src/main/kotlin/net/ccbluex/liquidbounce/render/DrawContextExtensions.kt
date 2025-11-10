@@ -35,13 +35,43 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.ScreenRect
 import net.minecraft.client.texture.TextureSetup
 import net.minecraft.util.math.Vec2f
+import org.joml.Matrix3x2f
+
+/**
+ * Primitive version of [ScreenRect.transformEachVertex]
+ */
+private fun Matrix3x2f.transformEachVertex(
+    sameAxis: Int, otherAxis: Int, width: Int, height: Int,
+): ScreenRect {
+    val left = sameAxis
+    val right = sameAxis + width
+    val top = otherAxis
+    val bottom = otherAxis + height
+
+    val vector2f = transformPosition(left.toFloat(), top.toFloat(), Pools.Vec2f.borrow())
+    val vector2f2 = transformPosition(right.toFloat(), top.toFloat(), Pools.Vec2f.borrow())
+    val vector2f3 = transformPosition(left.toFloat(), bottom.toFloat(), Pools.Vec2f.borrow())
+    val vector2f4 = transformPosition(right.toFloat(), bottom.toFloat(), Pools.Vec2f.borrow())
+    val f = minOf(vector2f.x, vector2f3.x, vector2f2.x, vector2f4.x)
+    val g = maxOf(vector2f.x, vector2f3.x, vector2f2.x, vector2f4.x)
+    val h = minOf(vector2f.y, vector2f3.y, vector2f2.y, vector2f4.y)
+    val i = maxOf(vector2f.y, vector2f3.y, vector2f2.y, vector2f4.y)
+    Pools.Vec2f.recycle(vector2f)
+    Pools.Vec2f.recycle(vector2f2)
+    Pools.Vec2f.recycle(vector2f3)
+    Pools.Vec2f.recycle(vector2f4)
+    return ScreenRect(f.floorToInt(), h.floorToInt(), (g - f).ceilToInt(), (i - h).ceilToInt())
+}
 
 /**
  * @see net.minecraft.client.gui.render.state.ColoredQuadGuiElementRenderState.createBounds
  */
 fun DrawContext.createBounds(x: Float, y: Float, w: Float, h: Float): ScreenRect {
-    val rect = ScreenRect(x.floorToInt(), y.floorToInt(), w.ceilToInt(), h.ceilToInt())
-        .transformEachVertex(this.matrices)
+//    val rect = ScreenRect(x.floorToInt(), y.floorToInt(), w.ceilToInt(), h.ceilToInt())
+//        .transformEachVertex(this.matrices)
+    val rect = this.matrices.transformEachVertex(
+        x.floorToInt(), y.floorToInt(), w.ceilToInt(), h.ceilToInt()
+    )
     return this.scissorStack.peekLast()?.intersection(rect) ?: rect
 }
 

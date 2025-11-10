@@ -78,6 +78,7 @@
     "minecraft.gui.MixinPlayerListHud",
     "minecraft.gui.MixinScoreboard",
     "minecraft.gui.MixinScreen",
+    "minecraft.gui.MixinScreenRect",
     "minecraft.gui.MixinSplashOverlay",
     "minecraft.gui.MixinStringHelper",
     "minecraft.gui.custom.MixinConnectScreen",
