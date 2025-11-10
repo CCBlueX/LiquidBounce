@@ -30,6 +30,7 @@ import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.ScreenRect
 import net.minecraft.client.texture.TextureSetup
+import net.minecraft.util.math.Vec2f
 import org.joml.Matrix3x2f
 
 /**
@@ -44,6 +45,7 @@ fun DrawContext.createBounds(x: Float, y: Float, w: Float, h: Float): ScreenRect
 fun DrawContext.createBounds(box: BoundingBox2f): ScreenRect =
     createBounds(box.xMin, box.yMin, box.width, box.height)
 
+@Suppress("NOTHING_TO_INLINE")
 inline fun DrawContext.drawCustomElement(
     pipeline: RenderPipeline = RenderPipelines.GUI, // PosColor + QUADS
     textureSetup: TextureSetup = TextureSetup.empty(),
@@ -118,4 +120,22 @@ fun DrawContext.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Fl
  */
 fun DrawContext.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Color4b) {
     this.drawQuad(x, y1, x + thickness, y2, color)
+}
+
+fun DrawContext.drawTriangle(
+    p1: Vec2f, p2: Vec2f, p3: Vec2f, color4b: Color4b,
+) {
+    val argb = color4b.toARGB()
+    val minX = minOf(p1.x, p2.x, p3.x)
+    val minY = minOf(p1.y, p2.y, p3.y)
+    val maxX = maxOf(p1.x, p2.x, p3.x)
+    val maxY = maxOf(p1.y, p2.y, p3.y)
+    drawCustomElement(
+        pipeline = RenderPipelines.GUI,
+        bounds = createBounds(minX, minY, maxX - minX, maxY - minY),
+    ) { pose, depth ->
+        vertex(pose, p1.x, p1.y, depth).color(argb)
+        vertex(pose, p2.x, p2.y, depth).color(argb)
+        vertex(pose, p3.x, p3.y, depth).color(argb)
+    }
 }

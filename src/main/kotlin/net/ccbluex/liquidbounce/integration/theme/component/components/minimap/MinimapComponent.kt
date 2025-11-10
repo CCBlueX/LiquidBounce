@@ -42,6 +42,7 @@ import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.ScreenRect
 import net.minecraft.client.texture.TextureSetup
+import net.minecraft.entity.Entity
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec2f
@@ -56,6 +57,14 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
     verticalAlignment = Alignment.ScreenAxisY.TOP,
     verticalOffset = 180,
 )) {
+
+    private val MINIMAP_ENTITY_ORDER = Comparator<Entity> { e1, e2 ->
+        when {
+            e1.y != e2.y -> e1.y.compareTo(e2.y)
+            e1.x != e2.x -> e1.x.compareTo(e2.x)
+            else -> e1.z.compareTo(e2.z)
+        }
+    }
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
@@ -128,7 +137,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
                     if (showEntity) {
                         // FIXME: here
-                        drawEntities(bounds, event.tickDelta, basePos = Vec2f(baseX.toFloat(), baseZ.toFloat()))
+                        drawEntities(event.tickDelta, basePos = Vec2f(baseX.toFloat(), baseZ.toFloat()))
                     }
                 }
             }
@@ -235,7 +244,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
                     val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                     val from = Vec2f(x.toFloat(), y.toFloat())
-                    val to = from.add(Vec2f(1.0F, 1.0F))
+                    val to = from.add(1.0F)
 
                     vertex(pose, from.x, from.y, depth).texture(texPosition.xMin, texPosition.yMin)
                         .color(-1)
@@ -251,11 +260,10 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
     }
 
     private fun DrawContext.drawEntities(
-        bounds: ScreenRect,
         tickDelta: Float,
         basePos: Vec2f,
     ) {
-        for (entity in RenderedEntities) {
+        for (entity in RenderedEntities.sortedWith(MINIMAP_ENTITY_ORDER)) {
             val color = ModuleESP.getColor(entity)
 
             val pos = entity.interpolateCurrentPosition(tickDelta)
@@ -275,12 +283,12 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             matrices.pushMatrix()
 
             matrices.translate(
-                -w / 5.0F * ChunkRenderer.SUN_DIRECTION.x / 16.0F,
-                -w / 5.0F * ChunkRenderer.SUN_DIRECTION.y / 16.0F,
+                -w / 5.0F * ChunkRenderer.SUN_DIRECTION.x() / 16.0F,
+                -w / 5.0F * ChunkRenderer.SUN_DIRECTION.y() / 16.0F,
             )
 
-            drawColoredTriangle(
-                bounds,
+            // Shadow
+            drawTriangle(
                 p1,
                 p2,
                 p3,
@@ -288,22 +296,10 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             )
             matrices.popMatrix()
 
-            drawColoredTriangle(bounds, p1, p2, p3, color)
+            // Entity
+            drawTriangle(p1, p2, p3, color)
 
             matrices.popMatrix()
-        }
-    }
-
-    private fun DrawContext.drawColoredTriangle(
-        bounds: ScreenRect, p1: Vec2f, p2: Vec2f, p3: Vec2f, color4b: Color4b,
-    ) {
-        drawCustomElement(
-            pipeline = ClientRenderPipelines.GUI.Triangles,
-            bounds = bounds,
-        ) { pose, depth ->
-            vertex(pose, p1.x, p1.y, depth).color(color4b)
-            vertex(pose, p2.x, p2.y, depth).color(color4b)
-            vertex(pose, p3.x, p3.y, depth).color(color4b)
         }
     }
 

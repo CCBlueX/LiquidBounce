@@ -38,6 +38,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.RotationAxis
+import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import org.joml.Vector3f
 import java.awt.Color
@@ -325,14 +326,12 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvi
             val maxX = screenPos.x + 5 * size
             val minY = screenPos.y - 10 * size
             val maxY = screenPos.y
-            env.context.drawCustomElement(
-                pipeline = ClientRenderPipelines.GUI.Triangles,
-                bounds = env.context.createBounds(x = minX, y = minY, w = 10 * size, h = 10 * size),
-            ) { pose, depth ->
-                vertex(pose, minX, minY, depth).color(color)
-                vertex(pose, midX, maxY, depth).color(color)
-                vertex(pose, maxX, minY, depth).color(color)
-            }
+            env.context.drawTriangle(
+                Vec2f(minX, minY),
+                Vec2f(midX, maxY),
+                Vec2f(maxX, minY),
+                color,
+            )
         }
     }
 }
