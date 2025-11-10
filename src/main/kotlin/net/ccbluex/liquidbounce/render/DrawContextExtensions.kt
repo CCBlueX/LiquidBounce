@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
@@ -39,6 +40,9 @@ fun DrawContext.createBounds(x: Float, y: Float, w: Float, h: Float): ScreenRect
         .transformEachVertex(this.matrices)
     return this.scissorStack.peekLast()?.intersection(rect) ?: rect
 }
+
+fun DrawContext.createBounds(box: BoundingBox2f): ScreenRect =
+    createBounds(box.xMin, box.yMin, box.width, box.height)
 
 inline fun DrawContext.drawCustomElement(
     pipeline: RenderPipeline = RenderPipelines.GUI, // PosColor + QUADS

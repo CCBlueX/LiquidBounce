@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.SAMPLER_NAMES
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.ScreenRect
 import net.minecraft.client.render.*
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.*
@@ -220,6 +221,15 @@ inline fun Matrix3x2fStack.withPush(block: Matrix3x2fStack.() -> Unit) {
         block()
     } finally {
         popMatrix()
+    }
+}
+
+inline fun DrawContext.ScissorStack.withPush(rect: ScreenRect, block: DrawContext.ScissorStack.() -> Unit) {
+    push(rect)
+    try {
+        block()
+    } finally {
+        pop()
     }
 }
 
@@ -486,12 +496,6 @@ fun WorldRenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3, argb: Int)
         vertex(matrix, p2.x, p2.y, p2.z).color(argb)
         vertex(matrix, p3.x, p3.y, p3.z).color(argb)
     }
-}
-
-fun VertexConsumer.coloredTriangle(matrix: Matrix4f, p1: Vector3fc, p2: Vector3fc, p3: Vector3fc, color4b: Color4b) {
-    vertex(matrix, p1.x(), p1.y(), p1.z()).color(color4b)
-    vertex(matrix, p2.x(), p2.y(), p2.z()).color(color4b)
-    vertex(matrix, p3.x(), p3.y(), p3.z()).color(color4b)
 }
 
 @Suppress("NOTHING_TO_INLINE")
