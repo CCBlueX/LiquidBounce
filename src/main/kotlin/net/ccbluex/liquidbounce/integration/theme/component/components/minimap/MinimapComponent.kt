@@ -136,7 +136,6 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                     }
 
                     if (showEntity) {
-                        // FIXME: here
                         drawEntities(event.tickDelta, basePos = Vec2f(baseX.toFloat(), baseZ.toFloat()))
                     }
                 }
@@ -145,7 +144,6 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             val from = Color4b.BLACK.copy(a = 100)
             val to = Color4b.TRANSPARENT
 
-            // FIXME: here
             drawShadowForBB(boundingBox, bounds, from, to)
 
             val lines = arrayOf(
@@ -166,7 +164,6 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                 Vec2f(boundingBox.xMax, boundingBox.yMax),
             )
 
-            // FIXME: here
             drawCustomElement(
                 pipeline = ClientRenderPipelines.GUI.Lines,
                 bounds = bounds,
