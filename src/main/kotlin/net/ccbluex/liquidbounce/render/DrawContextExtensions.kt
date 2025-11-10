@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.LambdaSimpleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.QuadGuiElementRenderState
+import net.ccbluex.liquidbounce.utils.render.TriangleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
@@ -133,12 +134,12 @@ fun DrawContext.drawTriangle(
     val minY = minOf(p1.y, p2.y, p3.y)
     val maxX = maxOf(p1.x, p2.x, p3.x)
     val maxY = maxOf(p1.y, p2.y, p3.y)
-    drawCustomElement(
-        pipeline = ClientRenderPipelines.GUI.Triangles,
-        bounds = createBounds(minX, minY, maxX - minX, maxY - minY),
-    ) { pose, depth ->
-        vertex(pose, p1.x, p1.y, depth).color(argb)
-        vertex(pose, p2.x, p2.y, depth).color(argb)
-        vertex(pose, p3.x, p3.y, depth).color(argb)
-    }
+    this.state.addSimpleElement(
+        TriangleGuiElementRenderState(
+            p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, argb,
+            Pools.Mat3x2f.borrow().set(this.matrices),
+            this.scissorStack.peekLast(),
+            createBounds(minX, minY, maxX - minX, maxY - minY),
+        )
+    )
 }

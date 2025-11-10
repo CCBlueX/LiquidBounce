@@ -26,7 +26,10 @@ import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.render.TexQuadGuiElementRenderState
 import net.minecraft.client.gl.RenderPipelines
+import net.minecraft.client.gui.render.state.TexturedQuadGuiElementRenderState
 import net.minecraft.client.texture.TextureSetup
 import net.minecraft.text.Text
 import java.awt.Font
@@ -238,24 +241,23 @@ class FontRenderer(
             val uv2 = renderInfo.atlasLocation.uvCoordinatesOnTexture.max
             val argb = color.toARGB()
 
-            environment.context.drawCustomElement(
-                pipeline = RenderPipelines.GUI_TEXTURED,
-                textureSetup = TextureSetup.of(glyph.page.texture.glTextureView),
-                bounds = environment.context.createBounds(x1, y1, x2 - x1, y2 - y1),
-            ) { pose, depth ->
-                vertex(pose, x1, y2, depth)
-                    .texture(uv1.u, uv2.v)
-                    .color(argb)
-                vertex(pose, x2, y2, depth)
-                    .texture(uv2.u, uv2.v)
-                    .color(argb)
-                vertex(pose, x2, y1, depth)
-                    .texture(uv2.u, uv1.v)
-                    .color(argb)
-                vertex(pose, x1, y1, depth)
-                    .texture(uv1.u, uv1.v)
-                    .color(argb)
-            }
+            environment.context.state.addPreparedTextElement(
+                TexQuadGuiElementRenderState(
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    uv1.u,
+                    uv1.v,
+                    uv2.u,
+                    uv2.v,
+                    argb,
+                    TextureSetup.of(glyph.page.texture.glTextureView),
+                    Pools.Mat3x2f.borrow().set(environment.context.matrices),
+                    environment.context.scissorStack.peekLast(),
+                    environment.context.createBounds(x1, y1, x2 - x1, y2 - y1),
+                )
+            )
         }
     }
 
