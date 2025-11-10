@@ -197,7 +197,8 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
             val renderPos = WorldToScreen.calculateScreenPos(worldPos.add(renderOffset)) ?: continue
 
             event.context.drawItemStackList(result.stacks.asList())
-                .center(renderPos)
+                .centerX(renderPos.x)
+                .centerY(renderPos.y)
                 .rectBackground(color = backgroundColor.toARGB())
                 .scale(scale)
                 .rowLength(rowLength)
@@ -213,7 +214,8 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
                     event.context.drawItemStackList(if (Shulker.mergeStacks) mergeMode.merge(stacks) else stacks)
                         .title(stack.name.takeIf { Shulker.showTitle })
-                        .center(renderPos)
+                        .centerX(renderPos.x)
+                        .centerY(renderPos.y)
                         .rectBackground(color = backgroundColor.toARGB())
                         .scale(scale)
                         .rowLength(rowLength)

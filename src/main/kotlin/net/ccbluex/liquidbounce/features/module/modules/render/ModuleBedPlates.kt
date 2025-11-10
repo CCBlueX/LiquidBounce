@@ -176,7 +176,8 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
             event.context.drawItemStackList(blocksAsItemStacks)
                 .rowLength(Int.MAX_VALUE)
                 .scale(scale)
-                .center(screenPos)
+                .centerX(screenPos.x)
+                .centerY(screenPos.y)
                 .rectBackground(color = backgroundColor.toARGB())
                 .itemStackRenderer { textRenderer, index, stack, x, y ->
                     if (index == 0 && showBed) {

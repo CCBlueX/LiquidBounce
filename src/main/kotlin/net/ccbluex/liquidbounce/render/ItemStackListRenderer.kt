@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.block.Block
@@ -42,10 +41,8 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import org.joml.Vector2fc
 import org.joml.Vector2i
-import org.joml.Vector3f
-import org.joml.component1
-import org.joml.component2
 import kotlin.math.abs
 
 private const val SLOT_SIZE = 18
@@ -63,7 +60,8 @@ class ItemStackListRenderer private constructor(
 ) {
     private var title: Text? = null
     private var titleColor: Int = 0xffffffff.toInt()
-    private val center = Vector3f(0f, 0f, 0f)
+    private var centerX = 0F
+    private var centerY = 0F
     private var scale = 1.0F
     private var rowLength = 9
     private var backgroundColor = Int.MIN_VALUE
@@ -82,22 +80,16 @@ class ItemStackListRenderer private constructor(
     }
 
     fun centerX(centerX: Float) = apply {
-        this.center.x = centerX
+        this.centerX = centerX
     }
 
     fun centerY(centerY: Float) = apply {
-        this.center.y = centerY
+        this.centerY = centerY
     }
 
-    @Deprecated("Z-index of 2D rendering is going to be removed since 1.21.6")
-    fun centerZ(centerZ: Float) = apply {
-        this.center.z = centerZ
-    }
-
-    fun center(center: Vec3) = apply {
-        this.center.x = center.x
-        this.center.y = center.y
-        this.center.z = center.z
+    fun center(center: Vector2fc) = apply {
+        this.centerX = center.x()
+        this.centerY = center.y()
     }
 
     /**
@@ -165,7 +157,7 @@ class ItemStackListRenderer private constructor(
             val width = dimensions.x
             val height = dimensions.y
 
-            translate(center.x, center.y)
+            translate(centerX, centerY)
             scale(scale, scale)
             translate(-width * 0.5F, -height * 0.5F)
 
@@ -222,12 +214,11 @@ class ItemStackListRenderer private constructor(
     companion object : EventListener {
         private val planned = ArrayList<ItemStackListRenderer>()
 
-        // y -> x -> z
-        private val comparatorVec3f = Comparator<Vector3f> { o1, o2 ->
+        // y -> x
+        private val comparator = Comparator<ItemStackListRenderer> { o1, o2 ->
             when {
-                o1.y != o2.y -> o1.y.compareTo(o2.y)
-                o1.x != o2.x -> o1.x.compareTo(o2.x)
-                else -> o1.z.compareTo(o2.z)
+                o1.centerY != o2.centerY -> o1.centerY.compareTo(o2.centerY)
+                else -> o1.centerX.compareTo(o2.centerX)
             }
         }
 
@@ -246,8 +237,10 @@ class ItemStackListRenderer private constructor(
                         val a = planned[i]
                         val b = planned[j]
 
-                        val (ax, ay) = a.center
-                        val (bx, by) = b.center
+                        val ax = a.centerX
+                        val ay = a.centerY
+                        val bx = b.centerX
+                        val by = b.centerY
                         val aw = (a.dimensions.x + a.backgroundMargin * 2) * a.scale
                         val ah = (a.dimensions.y + a.backgroundMargin * 2) * a.scale
                         val bw = (b.dimensions.x + b.backgroundMargin * 2) * b.scale
@@ -256,9 +249,9 @@ class ItemStackListRenderer private constructor(
                         val dy = (ah + bh) / 2 - abs(ay - by)
                         if (dx > 0 && dy > 0) {
                             if (dx < dy) {
-                                b.center.x = bx + (if (ax < bx) dx else -dx)
+                                b.centerX = bx + (if (ax < bx) dx else -dx)
                             } else {
-                                b.center.y = by + (if (ay < by) dy else -dy)
+                                b.centerY = by + (if (ay < by) dy else -dy)
                             }
                             moved = true
                         }
@@ -280,7 +273,7 @@ class ItemStackListRenderer private constructor(
                 }
 
                 else -> {
-                    planned.sortWith { o1, o2 -> comparatorVec3f.compare(o1.center, o2.center) }
+                    planned.sortWith(comparator)
                     adjustPlannedPositions()
                     planned.forEach { it.drawNow() }
                     planned.clear()

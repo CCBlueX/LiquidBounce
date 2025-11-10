@@ -92,7 +92,8 @@ object ModuleTNTTimer : ClientModule("TNTTimer", Category.RENDER) {
                 }
 
                 event.context.drawItemStackList(emptyList())
-                    .center(screenPos)
+                    .centerX(screenPos.x)
+                    .centerY(screenPos.y)
                     .title(text)
                     .scale(scale)
                     .draw()

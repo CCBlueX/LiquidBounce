@@ -167,7 +167,6 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
 
         var renderX = ContainerItemView.renderOffset.x.toFloat() - x.toFloat()
         var renderY = ContainerItemView.renderOffset.y.toFloat() - y.toFloat()
-        val renderZ = ContainerItemView.renderOffset.z.toFloat() + 200.0F
 
         if (ContainerItemView.relativeToMouse) {
             renderX += mouseX
@@ -178,7 +177,6 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         drawItemStackList(stacks.unmodifiable() as List<ItemStack>)
             .centerX(renderX)
             .centerY(renderY)
-            .centerZ(renderZ)
             .scale(ContainerItemView.scale)
             .textureBackground()
             .draw(immediately = true)

@@ -41,7 +41,8 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
         }
 
         context.drawItemStackList(nametag.items)
-            .center(pos.copy(y = pos.y - NAMETAG_PADDING * ModuleNametags.scale))
+            .centerX(pos.x)
+            .centerY(pos.y - NAMETAG_PADDING * ModuleNametags.scale)
             .scale(ModuleNametags.scale)
             .itemStackRenderer(currentItemStackRenderer)
             .rectBackground(color = 0)
