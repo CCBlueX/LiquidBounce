@@ -35,8 +35,7 @@ import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.putVec4
 import net.ccbluex.liquidbounce.utils.render.std140Size
 import net.ccbluex.liquidbounce.utils.render.writeStd140
-import net.minecraft.block.enums.CameraSubmersionType
-import net.minecraft.client.render.Camera
+import net.minecraft.client.render.fog.FogData
 
 /**
  * CustomAmbience module
@@ -53,33 +52,36 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
         val layers by int("Layers", 3, 1..14)
     }
 
+    /**
+     * @see FogData
+     */
     object FogConfigurable : ToggleableConfigurable(this, "Fog", true) {
 
-        private val color by color("Color", Color4b(47, 128, 255, 201))
+        val color by color("Color", Color4b(47, 128, 255, 201))
         private val backgroundColor by color("BackgroundColor", Color4b(47, 128, 255, 201))
-        private val fogStart by float("Distance", 0f, -8f..500f)
-        private val density by float("Density", 10f, 0f..100f)
-//        private val fogShape by enumChoice("FogShape", Shape.SPHERE)
+
+        private val environmental by floatRange("Environmental", 0f..0f, 0f..100f)
+        private val renderDistance by floatRange("RenderDistance", 0f..0f, 0f..100f)
+        private val skyEnd by float("SkyEnd", 0f, 0f..100f)
+        private val cloudEnd by float("CloudEnd", 0f, 0f..100f)
 
         /**
-         * [MixinBackgroundRenderer]
+         * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinFogRenderer
+         *
+         * FIXME: redesign
          */
-//        fun modifyFog(camera: Camera, viewDistance: Float, fog: Fog): Fog {
-//            if (!this.running) {
-//                return fog
-//            }
-//
-//            val start = Math.clamp(fogStart, -8f, viewDistance)
-//            val end = Math.clamp(fogStart + density, 0f, viewDistance)
-//
-//            var shape = fog.shape
-//            val type = camera.submersionType
-//            if (type == CameraSubmersionType.NONE) {
-//                shape = fogShape.fogShape
-//            }
-//
-//            return Fog(start, end, shape, color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
-//        }
+        fun modifyFogData(fogData: FogData) {
+            if (!this.running) {
+                return
+            }
+
+            fogData.environmentalStart = this.environmental.start
+            fogData.environmentalEnd = this.environmental.endInclusive
+            fogData.renderDistanceStart = this.renderDistance.start
+            fogData.renderDistanceEnd = this.renderDistance.endInclusive
+            fogData.skyEnd = this.skyEnd
+            fogData.cloudEnd = this.cloudEnd
+        }
 
         fun modifyClearColor(original: Int): Int {
             if (!this.running || backgroundColor.a == 0) {
@@ -88,17 +90,10 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
 
             return backgroundColor.toARGB()
         }
-
-//        @Suppress("unused")
-//        private enum class Shape(override val choiceName: String, val fogShape: FogShape) : NamedChoice {
-//            SPHERE("Sphere", FogShape.SPHERE),
-//            CYLINDER("Cylinder", FogShape.CYLINDER);
-//        }
-
     }
 
     /**
-     * @see LightmapTextureManager
+     * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmapTextureManager
      */
     object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
         val textureView: GpuTextureView = gpuDevice.createTexture(

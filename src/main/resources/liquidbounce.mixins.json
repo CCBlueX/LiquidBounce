@@ -107,6 +107,7 @@
     "minecraft.render.MixinEndCrystalEntityRenderer",
     "minecraft.render.MixinEntityRenderDispatcher",
     "minecraft.render.MixinEntityRenderer",
+    "minecraft.render.MixinFogRenderer",
     "minecraft.render.MixinGameRenderer",
     "minecraft.render.MixinInactivityFpsLimiter",
     "minecraft.render.MixinInGameOverlayRenderer",
