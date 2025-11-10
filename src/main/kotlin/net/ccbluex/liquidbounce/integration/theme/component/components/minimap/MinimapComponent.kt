@@ -146,32 +146,25 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
             drawShadowForBB(boundingBox, bounds, from, to)
 
-            val lines = arrayOf(
+            val lines = floatArrayOf(
                 // Cursor
-                Vec2f(boundingBox.xMin, centerBB.y),
-                Vec2f(boundingBox.xMax, centerBB.y),
-                Vec2f(centerBB.x, boundingBox.yMin),
-                Vec2f(centerBB.x, boundingBox.yMax),
+                boundingBox.xMin, centerBB.y,
+                boundingBox.xMax, centerBB.y,
+                centerBB.x, boundingBox.yMin,
+                centerBB.x, boundingBox.yMax,
                 // Border
-                Vec2f(boundingBox.xMin, boundingBox.yMin),
-                Vec2f(boundingBox.xMax, boundingBox.yMin),
-                Vec2f(boundingBox.xMin, boundingBox.yMax),
-                Vec2f(boundingBox.xMax, boundingBox.yMax),
+                boundingBox.xMin, boundingBox.yMin,
+                boundingBox.xMax, boundingBox.yMin,
+                boundingBox.xMin, boundingBox.yMax,
+                boundingBox.xMax, boundingBox.yMax,
 
-                Vec2f(boundingBox.xMin, boundingBox.yMin),
-                Vec2f(boundingBox.xMin, boundingBox.yMax),
-                Vec2f(boundingBox.xMax, boundingBox.yMin),
-                Vec2f(boundingBox.xMax, boundingBox.yMax),
+                boundingBox.xMin, boundingBox.yMin,
+                boundingBox.xMin, boundingBox.yMax,
+                boundingBox.xMax, boundingBox.yMin,
+                boundingBox.xMax, boundingBox.yMax,
             )
 
-            drawCustomElement(
-                pipeline = ClientRenderPipelines.GUI.Lines,
-                bounds = bounds,
-            ) { pose, depth ->
-                for (pos in lines) {
-                    vertex(pose, pos.x, pos.y, depth).color(Color4b.WHITE)
-                }
-            }
+            drawLines(lines, Color4b.WHITE.toARGB(), bounds)
         }
     }
 

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.LambdaSimpleGuiElementRenderState
+import net.ccbluex.liquidbounce.utils.render.LineGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.QuadGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.TriangleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
@@ -65,6 +66,22 @@ inline fun DrawContext.drawCustomElement(
     )
 )
 
+fun DrawContext.drawLines(
+    points: FloatArray,
+    argb: Int,
+    bounds: ScreenRect,
+) {
+    this.state.addSimpleElement(
+        LineGuiElementRenderState(
+            points,
+            argb,
+            Pools.Mat3x2f.borrow().set(this.matrices),
+            this.scissorStack.peekLast(),
+            bounds,
+        )
+    )
+}
+
 fun DrawContext.drawQuad(
     x1: Float,
     y1: Float,
@@ -96,19 +113,21 @@ fun DrawContext.drawQuad(
     }
     if (outlineColor != null && !outlineColor.isTransparent) {
         val argb = outlineColor.toARGB()
-        drawCustomElement(
-            pipeline = ClientRenderPipelines.GUI.Lines,
-            bounds = bounds,
-        ) { pose, depth ->
-            vertex(pose, x11, y11, depth).color(argb)
-            vertex(pose, x11, y21, depth).color(argb)
-            vertex(pose, x11, y21, depth).color(argb)
-            vertex(pose, x21, y21, depth).color(argb)
-            vertex(pose, x21, y21, depth).color(argb)
-            vertex(pose, x21, y11, depth).color(argb)
-            vertex(pose, x21, y11, depth).color(argb)
-            vertex(pose, x11, y11, depth).color(argb)
-        }
+
+        drawLines(
+            floatArrayOf(
+                x11, y11,
+                x11, y21,
+                x11, y21,
+                x21, y21,
+                x21, y21,
+                x21, y11,
+                x21, y11,
+                x11, y11,
+            ),
+            argb,
+            bounds,
+        )
     }
 }
 
