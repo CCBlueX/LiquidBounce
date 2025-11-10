@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
@@ -35,6 +37,7 @@ import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.player.PlayerEntity;
@@ -148,12 +151,20 @@ public abstract class MixinInGameHud {
         }
     }
 
-    @ModifyReturnValue(method = "shouldShowExperienceBar", at = @At("RETURN"))
-    private boolean hookRenderExperienceBar(boolean original) {
+    @ModifyReturnValue(method = "getCurrentBarType", at = @At("RETURN"))
+    private InGameHud.BarType tweakExpBar(InGameHud.BarType original) {
+        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_EXP_BAR) && original == InGameHud.BarType.EXPERIENCE) {
+            return InGameHud.BarType.EMPTY;
+        }
+        return original;
+    }
+
+    @WrapOperation(method = "renderMainHud", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;hasExperienceBar()Z"))
+    private boolean tweakExpLevelText(ClientPlayerInteractionManager instance, Operation<Boolean> original) {
         if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_EXP_BAR)) {
             return false;
         }
-        return original;
+        return original.call(instance);
     }
 
     @Inject(method = "renderHeldItemTooltip", at = @At("HEAD"), cancellable = true)

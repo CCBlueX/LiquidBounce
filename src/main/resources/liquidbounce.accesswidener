@@ -182,6 +182,7 @@ accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder withSnippet
 
 accessible class net/minecraft/client/gui/render/state/GuiRenderState$Layer
 accessible class net/minecraft/client/gui/render/GuiRenderer$Draw
+accessible class net/minecraft/client/gui/hud/InGameHud$BarType
 
 accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen connect (Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/network/ServerAddress;Lnet/minecraft/client/network/ServerInfo;Lnet/minecraft/client/network/CookieStorage;)V
 accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen setStatus (Lnet/minecraft/text/Text;)V

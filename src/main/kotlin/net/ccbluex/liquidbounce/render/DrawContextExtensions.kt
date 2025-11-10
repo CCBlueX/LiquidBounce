@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.LambdaSimpleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.QuadGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
@@ -32,7 +33,6 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.ScreenRect
 import net.minecraft.client.texture.TextureSetup
 import net.minecraft.util.math.Vec2f
-import org.joml.Matrix3x2f
 
 /**
  * @see net.minecraft.client.gui.render.state.ColoredQuadGuiElementRenderState.createBounds
@@ -57,7 +57,7 @@ inline fun DrawContext.drawCustomElement(
     LambdaSimpleGuiElementRenderState(
         pipeline,
         textureSetup,
-        Matrix3x2f(this.matrices),
+        Pools.Mat3x2f.borrow().set(this.matrices),
         scissorArea,
         bounds,
         verticesSetupHandler
@@ -87,7 +87,7 @@ fun DrawContext.drawQuad(
                 x21,
                 y21,
                 fillColor.toARGB(),
-                Matrix3x2f(this.matrices),
+                Pools.Mat3x2f.borrow().set(this.matrices),
                 this.scissorStack.peekLast(),
                 bounds,
             )
