@@ -19,16 +19,20 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.minecraft.client.gui.render.state.GuiRenderState;
+import net.ccbluex.liquidbounce.utils.collection.Pools;
+import net.ccbluex.liquidbounce.utils.render.LiquidBounceGuiElementRenderState;
+import net.minecraft.client.gui.render.state.*;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
 
@@ -44,10 +48,12 @@ public abstract class MixinGuiRenderState {
     private void clear(CallbackInfo ci) {
         for (GuiRenderState.Layer layer : rootLayers) {
             if (layer.simpleElementRenderStates != null) {
+                layer.simpleElementRenderStates.forEach(liquid_bounce$tryRecycleMatrix3x2f);
                 ARRAY_LIST.recycle((ArrayList) layer.simpleElementRenderStates);
             }
 
             if (layer.preparedTextElementRenderStates != null) {
+                layer.preparedTextElementRenderStates.forEach(liquid_bounce$tryRecycleMatrix3x2f);
                 ARRAY_LIST.recycle((ArrayList) layer.preparedTextElementRenderStates);
             }
 
@@ -64,5 +70,12 @@ public abstract class MixinGuiRenderState {
             }
         }
     }
+
+    @Unique
+    private static final Consumer<GuiElementRenderState> liquid_bounce$tryRecycleMatrix3x2f = element -> {
+        if (element instanceof LiquidBounceGuiElementRenderState t) {
+            Pools.Mat3x2f.recycle(t.pose());
+        }
+    };
 
 }

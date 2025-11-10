@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.render;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.ScreenRect;
-import net.minecraft.client.gui.render.state.SimpleGuiElementRenderState;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.texture.TextureSetup;
 import org.jetbrains.annotations.Nullable;
@@ -45,7 +44,7 @@ public record TexQuadGuiElementRenderState(
     Matrix3x2f pose,
     @Nullable ScreenRect scissorArea,
     @Nullable ScreenRect bounds
-) implements SimpleGuiElementRenderState {
+) implements LiquidBounceGuiElementRenderState {
 
     @Override
     public void setupVertices(VertexConsumer vertices, float depth) {
