@@ -82,12 +82,6 @@ class SprintEvent(
     }
 }
 
-@Nameable("sneakNetwork")
-class SneakNetworkEvent(
-    val directionalInput: DirectionalInput,
-    var sneak: Boolean,
-) : Event()
-
 @Nameable("mouseRotation")
 class MouseRotationEvent(
     var cursorDeltaX: Double,

@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
-import net.ccbluex.liquidbounce.event.events.SneakNetworkEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -31,15 +31,17 @@ import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
+import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
 import net.ccbluex.liquidbounce.utils.client.sendStopSneaking
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.copy
 import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.block.MagmaBlock
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 
@@ -50,12 +52,12 @@ import net.minecraft.util.math.Box
  */
 object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
 
-    var modes = choices("Mode", Vanilla, arrayOf(Legit, Vanilla, Switch)).apply { tagBy(this) }
-    var notDuringMove by boolean("NotDuringMove", false)
+    private val modes = choices("Mode", Vanilla, arrayOf(Legit, Vanilla, Switch)).apply { tagBy(this) }
+    private val notDuringMove by boolean("NotDuringMove", false)
 
     private object Legit : Choice("Legit") {
 
-        var onMagmaBlocksOnly by boolean("OnMagmaBlocksOnly", false)
+        private val onMagmaBlocksOnly by boolean("OnMagmaBlocksOnly", false)
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
@@ -82,12 +84,13 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
             get() = modes
 
         @Suppress("unused")
-        private val sneakNetworkHandler = handler<SneakNetworkEvent> { event ->
-            if (player.moving && notDuringMove) {
+        private val sneakNetworkHandler = handler<PacketEvent> { event ->
+            if ((player.moving && notDuringMove) || event.packet !is PlayerInputC2SPacket) {
                 return@handler
             }
 
-            event.sneak = true
+            event.cancelEvent() // Because the packet is record
+            sendPacketSilently(PlayerInputC2SPacket(event.packet.input.copy(sneak = true)))
         }
 
     }
