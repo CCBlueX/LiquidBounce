@@ -62,16 +62,16 @@ class NametagTextFormatter(private val entity: Entity) {
         val name = entity.displayName!!
         val nameColor = this.nameColor
 
-        val isBaby = (entity as? MobEntity)?.isBaby == true
-        val baseNameString = (if (isBaby) "Baby " else "") + name.string
-
-        val nameText: Text = if (nameColor != null) {
-            baseNameString.asText().withColor(nameColor)
-        } else {
-            baseNameString.asPlainText()
+        if ((entity as? MobEntity)?.isBaby == true) {
+            outputText += "Baby ".asPlainText()
+            outputText += PlainText.SPACE
         }
 
-        outputText += nameText
+        outputText += if (nameColor != null) {
+            name.copy().withColor(nameColor)
+        } else {
+            name
+        }
 
         if (ModuleCombineMobs.running) {
             val count = ModuleCombineMobs.getCombinedCount(entity)
