@@ -131,7 +131,7 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
         }
 
         renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(this, target, partialTicks)
+            targetRenderer.render(target, partialTicks)
         }
 
         val currentRotation = playerRotation ?: return@handler

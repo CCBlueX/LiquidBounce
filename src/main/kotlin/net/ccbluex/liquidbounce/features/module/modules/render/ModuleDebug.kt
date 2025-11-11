@@ -112,43 +112,41 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         private val screenRenderHandler = handler<OverlayRenderEvent> { event ->
             val context = event.context
 
-            renderEnvironmentForGUI(event) {
-                with(context) {
-                    var posX = 300
-                    var posY = 500
+            with(context) {
+                var posX = 300
+                var posY = 500
 
-                    fontRenderer.draw(
-                        fontRenderer.process("Graph"),
-                        posX.toFloat(),
-                        posY.toFloat(),
-                        shadow = true,
-                        scale = 0.3f
+                fontRenderer.draw(
+                    fontRenderer.process("Graph"),
+                    posX.toFloat(),
+                    posY.toFloat(),
+                    shadow = true,
+                    scale = 0.3f
+                )
+
+                curve.xAxis.range.step(0.1f).forEachFloat { x ->
+                    var y = curve.transform(x)
+                    this.drawQuad(
+                        posX + x,
+                        posY - y,
+                        posX + x + 1,
+                        posY - y + 1,
+                        Color4b.GREEN
                     )
+                }
 
-                    curve.xAxis.range.step(0.1f).forEachFloat { x ->
-                        var y = curve.transform(x)
-                        this.drawQuad(
-                            posX + x,
-                            posY - y,
-                            posX + x + 1,
-                            posY - y + 1,
-                            Color4b.GREEN
-                        )
-                    }
+                val points = curve.get()
+                for (point in curve.get()) {
+                    var x = point[0]
+                    var y = point[1]
 
-                    val points = curve.get()
-                    for (point in curve.get()) {
-                        var x = point[0]
-                        var y = point[1]
-
-                        this.drawQuad(
-                            posX + x - 2,
-                            posY - y - 2,
-                            posX + x + 2,
-                            posY - y + 2,
-                            Color4b.WHITE
-                        )
-                    }
+                    this.drawQuad(
+                        posX + x - 2,
+                        posY - y - 2,
+                        posX + x + 2,
+                        posY - y + 2,
+                        Color4b.WHITE
+                    )
                 }
             }
         }
@@ -234,53 +232,53 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             return@handler
         }
 
-        renderEnvironmentForGUI(event) {
-            /**
-             * Separate the debugged owner from its parameter
-             * Structure should be like this:
-             * Owner ->
-             *   Parameter Name: Parameter Value
-             *   Parameter Name: Parameter Value
-             *   Parameter Name: Parameter Value
-             */
-            val textList = mutableListOf<Text>()
+        /**
+         * Separate the debugged owner from its parameter
+         * Structure should be like this:
+         * Owner ->
+         *   Parameter Name: Parameter Value
+         *   Parameter Name: Parameter Value
+         *   Parameter Name: Parameter Value
+         */
+        val textList = mutableListOf<Text>()
 
-            val debuggedOwners = debugParameters.keys.groupBy { it.owner }
+        val debuggedOwners = debugParameters.keys.groupBy { it.owner }
 
-            val currentTime = System.currentTimeMillis()
+        val currentTime = System.currentTimeMillis()
 
-            fun ownerName(owner: DebuggedOwner): Text {
-                return when (owner) {
-                    is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
-                    is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
-                    is EventListener -> listOfNotNull(
-                        owner.parent()?.let { ownerName(it) },
-                        "::".asPlainText(Formatting.GRAY),
-                        owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true),
-                    ).asText()
+        fun ownerName(owner: DebuggedOwner): Text {
+            return when (owner) {
+                is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
+                is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
+                is EventListener -> listOfNotNull(
+                    owner.parent()?.let { ownerName(it) },
+                    "::".asPlainText(Formatting.GRAY),
+                    owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true),
+                ).asText()
 
-                    is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asPlainText(Formatting.GRAY)
-                        ?: owner.toString().asPlainText()
+                is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asPlainText(Formatting.GRAY)
+                    ?: owner.toString().asPlainText()
 
-                    else -> owner.javaClass.simpleName.asPlainText(Formatting.BLUE)
-                }
+                else -> owner.javaClass.simpleName.asPlainText(Formatting.BLUE)
             }
+        }
 
-            debuggedOwners.forEach { (owner, parameter) ->
-                textList += ownerName(owner)
+        debuggedOwners.forEach { (owner, parameter) ->
+            textList += ownerName(owner)
 
-                parameter.forEach { debuggedParameter ->
-                    val parameterName = debuggedParameter.name
-                    val parameterCapture = debugParameters[debuggedParameter] ?: return@forEach
-                    val duration = (currentTime - parameterCapture.time) / 1000
-                    textList += textOf(
-                        "$parameterName: ".asPlainText(Formatting.WHITE),
-                        parameterCapture.value.toString().asPlainText(Formatting.GREEN),
-                        " [${duration}s ago]".asPlainText(Formatting.GRAY),
-                    )
-                }
+            parameter.forEach { debuggedParameter ->
+                val parameterName = debuggedParameter.name
+                val parameterCapture = debugParameters[debuggedParameter] ?: return@forEach
+                val duration = (currentTime - parameterCapture.time) / 1000
+                textList += textOf(
+                    "$parameterName: ".asPlainText(Formatting.WHITE),
+                    parameterCapture.value.toString().asPlainText(Formatting.GREEN),
+                    " [${duration}s ago]".asPlainText(Formatting.GRAY),
+                )
             }
+        }
 
+        with(event.context) {
             // Draw
             fontRenderer.draw(
                 fontRenderer.process("Debugging"),

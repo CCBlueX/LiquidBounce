@@ -28,8 +28,7 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.TexQuadGuiElementRenderState
-import net.minecraft.client.gl.RenderPipelines
-import net.minecraft.client.gui.render.state.TexturedQuadGuiElementRenderState
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.texture.TextureSetup
 import net.minecraft.text.Text
 import java.awt.Font
@@ -78,7 +77,7 @@ class FontRenderer(
         return MinecraftTextProcessor.process(text.sanitizeForeignInput(), defaultColor)
     }
 
-    context(environment: GUIRenderEnvironment)
+    context(ctx: DrawContext)
     override fun draw(
         text: MinecraftTextProcessor.RecyclingProcessedText,
         x0: Float,
@@ -110,7 +109,7 @@ class FontRenderer(
      *
      * @return The resulting x value
      */
-    context(environment: GUIRenderEnvironment)
+    context(ctx: DrawContext)
     @Suppress("CognitiveComplexMethod")
     private fun drawInternal(
         text: ProcessedText,
@@ -210,7 +209,7 @@ class FontRenderer(
         }
     }
 
-    context(environment: GUIRenderEnvironment)
+    context(ctx: DrawContext)
     private fun drawLine(
         x0: Float,
         x1: Float,
@@ -219,10 +218,10 @@ class FontRenderer(
         through: Boolean
     ) {
         val y = if (through) y - this.height * 0.85f + this.ascent else y + 1f
-        environment.context.drawHorizontalLine(x0, x1, y, 1f, color)
+        ctx.drawHorizontalLine(x0, x1, y, 1f, color)
     }
 
-    context(environment: GUIRenderEnvironment)
+    context(ctx: DrawContext)
     private fun drawChar(
         glyph: GlyphDescriptor,
         x: Float,
@@ -241,7 +240,7 @@ class FontRenderer(
             val uv2 = renderInfo.atlasLocation.uvCoordinatesOnTexture.max
             val argb = color.toARGB()
 
-            environment.context.state.addPreparedTextElement(
+            ctx.state.addPreparedTextElement(
                 TexQuadGuiElementRenderState(
                     x1,
                     y1,
@@ -253,9 +252,9 @@ class FontRenderer(
                     uv2.v,
                     argb,
                     TextureSetup.of(glyph.page.texture.glTextureView),
-                    Pools.Mat3x2f.borrow().set(environment.context.matrices),
-                    environment.context.scissorStack.peekLast(),
-                    environment.context.createBounds(x1, y1, x2 - x1, y2 - y1),
+                    Pools.Mat3x2f.borrow().set(ctx.matrices),
+                    ctx.scissorStack.peekLast(),
+                    ctx.createBounds(x1, y1, x2 - x1, y2 - y1),
                 )
             )
         }

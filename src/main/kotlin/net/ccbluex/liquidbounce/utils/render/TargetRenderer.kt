@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
 import net.ccbluex.liquidbounce.utils.math.interpolate
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -50,7 +50,7 @@ import kotlin.math.sin
 /**
  * A target tracker to choose the best enemy to attack
  */
-sealed class TargetRenderer<T: RenderEnvironment>(
+sealed class TargetRenderer<Ctx: Any>(
     module: ClientModule
 ) : ToggleableConfigurable(module, "TargetRendering", true) {
 
@@ -58,14 +58,15 @@ sealed class TargetRenderer<T: RenderEnvironment>(
         doNotIncludeAlways()
     }
 
-    abstract val appearance: ChoiceConfigurable<out TargetRenderAppearance<in T>>
+    abstract val appearance: ChoiceConfigurable<out TargetRenderAppearance<in Ctx>>
 
-    fun render(env: T, entity: Entity, partialTicks: Float) {
+    context(env: Ctx)
+    fun render(entity: Entity, partialTicks: Float) {
         if (!enabled) {
             return
         }
 
-        appearance.activeChoice.render(env, entity, partialTicks)
+        appearance.activeChoice.render(entity, partialTicks)
     }
 
 }
@@ -90,7 +91,8 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         private val size by float("Size", 0.5f, 0.4f..0.7f)
         private val length by int("Length", 25, 15..40)
 
-        override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
+        context(env: WorldRenderEnvironment)
+        override fun render(entity: Entity, partialTicks: Float) {
             env.matrixStack.push()
             mc.gameRenderer.lightmapTextureManager.disable()
 
@@ -177,7 +179,8 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
         private val extraYOffset by float("ExtraYOffset", 0.1f, 0f..1f)
 
-        override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
+        context(env: WorldRenderEnvironment)
+        override fun render(entity: Entity, partialTicks: Float) {
             val box = Box(
                 -size.toDouble(), 0.0, -size.toDouble(),
                 size.toDouble(), height.toDouble(), size.toDouble()
@@ -217,7 +220,8 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
         private val outline = tree(Outline())
 
-        override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
+        context(env: WorldRenderEnvironment)
+        override fun render(entity: Entity, partialTicks: Float) {
             val height = heightMode.activeChoice.getHeight(entity, partialTicks)
             val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
@@ -258,9 +262,10 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
         private val outline = tree(Outline())
 
-        override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
+        context(env: WorldRenderEnvironment)
+        override fun render(entity: Entity, partialTicks: Float) {
             val height = heightMode.activeChoice.getHeight(entity, partialTicks)
-            val pos = entity.interpolateCurrentPosition(partialTicks) + Vec3d(0.0, height, 0.0)
+            val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
 
             val currentHeightMode = heightMode.activeChoice
 
@@ -303,20 +308,21 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
 }
 
-class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvironment>(module) {
-    override val appearance = choices<TargetRenderAppearance<GUIRenderEnvironment>>(module, "Mode") {
+class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<DrawContext>(module) {
+    override val appearance = choices<TargetRenderAppearance<DrawContext>>(module, "Mode") {
         arrayOf(Arrow())
     }
 
     private inner class Arrow : OverlayTargetRenderAppearance("Arrow") {
 
-        override val parent: ChoiceConfigurable<TargetRenderAppearance<GUIRenderEnvironment>>
+        override val parent: ChoiceConfigurable<TargetRenderAppearance<DrawContext>>
             get() = appearance
 
         private val color by color("Color", Color4b.RED)
         private val size by float("Size", 1.5f, 0.5f..20f)
 
-        override fun render(env: GUIRenderEnvironment, entity: Entity, partialTicks: Float) {
+        context(ctx: DrawContext)
+        override fun render(entity: Entity, partialTicks: Float) {
             val pos = entity.interpolateCurrentPosition(partialTicks)
                 .add(0.0, entity.height.toDouble(), 0.0)
 
@@ -326,7 +332,7 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvi
             val maxX = screenPos.x + 5 * size
             val minY = screenPos.y - 10 * size
             val maxY = screenPos.y
-            env.context.drawTriangle(
+            ctx.drawTriangle(
                 Vec2f(minX, minY),
                 Vec2f(midX, maxY),
                 Vec2f(maxX, minY),
@@ -336,12 +342,13 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GUIRenderEnvi
     }
 }
 
-sealed class TargetRenderAppearance<T: RenderEnvironment>(name: String) : Choice(name) {
-    open fun render(env: T, entity: Entity, partialTicks: Float) {}
+sealed class TargetRenderAppearance<Ctx: Any>(name: String) : Choice(name) {
+    context(ctx: Ctx)
+    open fun render(entity: Entity, partialTicks: Float) {}
 }
 
 sealed class WorldTargetRenderAppearance(name: String) : TargetRenderAppearance<WorldRenderEnvironment>(name)
-sealed class OverlayTargetRenderAppearance(name: String) : TargetRenderAppearance<GUIRenderEnvironment>(name)
+sealed class OverlayTargetRenderAppearance(name: String) : TargetRenderAppearance<DrawContext>(name)
 
 sealed class HeightMode(name: String) : Choice(name) {
     abstract fun getHeight(entity: Entity, partialTicks: Float): Double

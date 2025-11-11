@@ -27,14 +27,12 @@ import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.SAMPLER_NAMES
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gui.DrawContext
@@ -44,12 +42,9 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.*
 import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
-import org.joml.Vector2fc
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.joml.Vector4f
-import org.joml.component1
-import org.joml.component2
 import org.lwjgl.opengl.GL11C
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -146,11 +141,6 @@ sealed class RenderEnvironment(val framebuffer: Framebuffer) {
     }
 }
 
-class GUIRenderEnvironment(
-    framebuffer: Framebuffer,
-    val context: DrawContext,
-) : RenderEnvironment(framebuffer)
-
 class WorldRenderEnvironment(
     framebuffer: Framebuffer,
     val matrixStack: MatrixStack,
@@ -190,20 +180,6 @@ inline fun renderEnvironmentForWorld(
     if (environment.isBatchMode) environment.commitBatch()
 
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
-}
-
-@OptIn(ExperimentalContracts::class)
-inline fun renderEnvironmentForGUI(
-    event: OverlayRenderEvent,
-    draw: GUIRenderEnvironment.() -> Unit
-) {
-    contract {
-        callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
-    }
-
-    val environment = GUIRenderEnvironment(event.framebuffer, event.context)
-    draw(environment)
-    if (environment.isBatchMode) environment.commitBatch()
 }
 
 inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {
@@ -579,7 +555,7 @@ fun WorldRenderEnvironment.drawBoxSide(
  * @param vertices The four vectors to draw the quad
  * @param colors The colors for the vertices
  */
-fun WorldRenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>) {
+private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3>, colors: Array<Color4b>) {
     require(vertices.size == colors.size) { "there must be a color for every vertex" }
     require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
     drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
@@ -656,7 +632,7 @@ fun WorldRenderEnvironment.drawGradientSides(
     }
 
     val vertexColors =
-        listOf(
+        arrayOf(
             baseColor,
             topColor,
             topColor,
@@ -664,7 +640,7 @@ fun WorldRenderEnvironment.drawGradientSides(
         )
 
     drawGradientQuad(
-        listOf(
+        arrayOf(
             Vec3(box.minX, 0.0, box.minZ),
             Vec3(box.minX, height, box.minZ),
             Vec3(box.maxX, height, box.minZ),
@@ -673,7 +649,7 @@ fun WorldRenderEnvironment.drawGradientSides(
         vertexColors
     )
     drawGradientQuad(
-        listOf(
+        arrayOf(
             Vec3(box.maxX, 0.0, box.minZ),
             Vec3(box.maxX, height, box.minZ),
             Vec3(box.maxX, height, box.maxZ),
@@ -682,7 +658,7 @@ fun WorldRenderEnvironment.drawGradientSides(
         vertexColors
     )
     drawGradientQuad(
-        listOf(
+        arrayOf(
             Vec3(box.maxX, 0.0, box.maxZ),
             Vec3(box.maxX, height, box.maxZ),
             Vec3(box.minX, height, box.maxZ),
@@ -691,7 +667,7 @@ fun WorldRenderEnvironment.drawGradientSides(
         vertexColors
     )
     drawGradientQuad(
-        listOf(
+        arrayOf(
             Vec3(box.minX, 0.0, box.maxZ),
             Vec3(box.minX, height, box.maxZ),
             Vec3(box.minX, height, box.minZ),

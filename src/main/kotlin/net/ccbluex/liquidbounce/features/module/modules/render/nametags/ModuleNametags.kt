@@ -27,11 +27,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.client.gui.DrawContext
 import org.joml.Vector2fc
 
 /**
@@ -86,12 +85,10 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
             return@handler
         }
 
-        renderEnvironmentForGUI(event) {
-            drawNametags(event.tickDelta)
-        }
+        event.context.drawNametags(event.tickDelta)
     }
 
-    private fun GUIRenderEnvironment.drawNametags(tickDelta: Float) {
+    private fun DrawContext.drawNametags(tickDelta: Float) {
         drawnEnchantmentAreas.clear()
         nametagsToRender.forEach { it.calculateScreenPos(tickDelta) }
 

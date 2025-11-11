@@ -46,8 +46,6 @@ import net.minecraft.entity.Entity
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec2f
-import org.joml.Vector2i
-import org.joml.Vector2ic
 import java.util.EnumSet
 import kotlin.math.ceil
 
@@ -132,7 +130,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                     matrices.translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
 
                     if (showTexture) {
-                        drawMinimapTexture(bounds, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
+                        drawMinimapTexture(bounds, ChunkPos(baseX, baseZ), chunksToRenderAround, viewDistance)
                     }
 
                     if (showEntity) {
@@ -214,7 +212,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
     private fun DrawContext.drawMinimapTexture(
         bounds: ScreenRect,
-        centerPos: Vector2ic,
+        centerPos: ChunkPos,
         chunksToRenderAround: Int,
         viewDistance: Float,
     ) {
@@ -230,7 +228,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                         continue
                     }
 
-                    val chunkPos = ChunkPos(centerPos.x() + x, centerPos.y() + y)
+                    val chunkPos = ChunkPos(centerPos.x + x, centerPos.z + y)
 
                     val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                     val from = Vec2f(x.toFloat(), y.toFloat())

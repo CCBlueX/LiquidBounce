@@ -18,17 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.liquidbounce.features.module.modules.render.nametags.NametagEnchantmentRenderer.drawEntityEnchantments
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.player
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.entity.LivingEntity
 
 private const val NAMETAG_PADDING: Int = 15
 
-internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
+internal fun DrawContext.drawNametag(nametag: Nametag, pos: Vec3) {
     if (NametagShowOptions.ITEMS.isShowing()) {
         val currentItemStackRenderer = if (NametagShowOptions.ITEM_INFO.isShowing()) {
             if (nametag.entity === player) {
@@ -40,7 +42,7 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
             ItemStackListRenderer.SingleItemStackRenderer.OnlyItem
         }
 
-        context.drawItemStackList(nametag.items)
+        drawItemStackList(nametag.items)
             .centerX(pos.x)
             .centerY(pos.y - NAMETAG_PADDING * ModuleNametags.scale)
             .scale(ModuleNametags.scale)
@@ -53,16 +55,16 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
 
     val scale = 1f / (fontSize * 0.15f) * ModuleNametags.scale
 
-    context.matrices.pushMatrix()
-    context.matrices.translate(pos.x, pos.y)
-    context.matrices.scale(scale, scale)
+    matrices.pushMatrix()
+    matrices.translate(pos.x, pos.y)
+    matrices.scale(scale, scale)
 
     val fontRenderer = ModuleNametags.fontRenderer
     val processedText = fontRenderer.process(nametag.text)
     val textWidth = fontRenderer.getStringWidth(processedText, shadow = true)
 
     // Make the model view matrix center the text when rendering
-    context.matrices.translate(-textWidth * 0.5f, -fontRenderer.height * 0.5f)
+    matrices.translate(-textWidth * 0.5f, -fontRenderer.height * 0.5f)
 
     val x1 = -0.1f * fontSize
     val y1 = fontRenderer.height * -0.1f
@@ -70,7 +72,7 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     val y2 = fontRenderer.height * 1.1f
 
     // Background
-    context.drawQuad(
+    drawQuad(
         x1, y1, x2, y2,
         fillColor = Color4b(Int.MIN_VALUE, hasAlpha = true),
         outlineColor = Color4b.BLACK.takeIf { NametagShowOptions.BORDER.isShowing() },
@@ -89,12 +91,12 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
         val worldX = entityPos.x.toFloat()
         val worldY = (entityPos.y + nametag.entity.height + 0.5f).toFloat()
 
-        NametagEnchantmentRenderer.drawEntityEnchantments(
+        drawEntityEnchantments(
             nametag.entity,
             worldX,
             worldY,
         )
     }
 
-    context.matrices.popMatrix()
+    matrices.popMatrix()
 }

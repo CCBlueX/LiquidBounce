@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -38,6 +37,7 @@ import net.minecraft.client.resource.language.I18n
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.DrawContext
 import org.joml.Vector2f
 import org.joml.component1
 import org.joml.component2
@@ -148,8 +148,7 @@ object NametagEnchantmentRenderer {
         val width: Float
     )
 
-    context(env: GUIRenderEnvironment)
-    fun drawEntityEnchantments(
+    fun DrawContext.drawEntityEnchantments(
         entity: LivingEntity,
         worldX: Float,
         worldY: Float,
@@ -250,7 +249,7 @@ object NametagEnchantmentRenderer {
         )
     }
 
-    private fun GUIRenderEnvironment.renderEnchantmentColumn(
+    private fun DrawContext.renderEnchantmentColumn(
         cells: List<EnchantCell>,
         x: Float,
         y: Float,
@@ -270,7 +269,7 @@ object NametagEnchantmentRenderer {
             )
             val bgColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL
 
-            context.drawQuad(rect.x1, rect.y1, rect.x2, rect.y2, fillColor = bgColor)
+            drawQuad(rect.x1, rect.y1, rect.x2, rect.y2, fillColor = bgColor)
 
             val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
             val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
@@ -285,8 +284,7 @@ object NametagEnchantmentRenderer {
         }
     }
 
-    context(environment: GUIRenderEnvironment)
-    private fun drawEnchantmentColumns(
+    private fun DrawContext.drawEnchantmentColumns(
         x: Float,
         y: Float,
         columnData: List<EnchantColumn>
@@ -312,15 +310,14 @@ object NametagEnchantmentRenderer {
         var columnX = x - halfTotalWidth
         columnData.forEach { column ->
             val columnCenterX = columnX + column.width / 2
-            environment.renderEnchantmentColumn(column.cells, columnCenterX, y)
+            renderEnchantmentColumn(column.cells, columnCenterX, y)
             columnX += column.width + COLUMN_SPACING
         }
     }
 
-    context(environment: GUIRenderEnvironment)
-    private fun drawGroupBorder(rect: Rect) {
+    private fun DrawContext.drawGroupBorder(rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
-        environment.context.drawQuad(
+        drawQuad(
             rect.x1, rect.y1,
             rect.x2, rect.y2,
             fillColor = Color4b.BLACK.with(a = 100),

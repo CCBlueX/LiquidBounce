@@ -58,6 +58,7 @@ class Nametag private constructor(
          * Creates a list of items that should be rendered above the name tag. Currently, it is the item in main hand,
          * the item in off-hand (as long as it exists) and the armor items.
          */
+        @JvmStatic
         private fun createItemList(entity: LivingEntity): List<ItemStack> {
             return buildList(6) {
                 this += entity.getEquippedStack(EquipmentSlot.MAINHAND)

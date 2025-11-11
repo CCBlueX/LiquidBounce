@@ -200,7 +200,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         val target = targetTracker.target ?: return@handler
 
         renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(this, target, event.partialTicks)
+            targetRenderer.render(target, event.partialTicks)
         }
     }
 

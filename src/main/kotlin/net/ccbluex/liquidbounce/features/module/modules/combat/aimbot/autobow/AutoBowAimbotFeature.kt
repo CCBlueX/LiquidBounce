@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -90,8 +89,8 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
     private val renderHandler = handler<OverlayRenderEvent> { event ->
         val target = targetTracker.target ?: return@handler
 
-        renderEnvironmentForGUI(event) {
-            targetRenderer.render(this, target, event.tickDelta)
+        with(event.context) {
+            targetRenderer.render(target, event.tickDelta)
         }
     }
 
