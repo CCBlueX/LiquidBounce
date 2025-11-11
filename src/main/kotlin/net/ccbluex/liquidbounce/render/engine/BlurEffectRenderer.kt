@@ -81,9 +81,9 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
                 framebufferWrapper.beginWrite(viewport = true, clear = false)
             }
 
-            callEvent(OverlayRenderEvent(this.overlayFramebuffer, context, tickDelta))
+            callEvent(OverlayRenderEvent(context, tickDelta))
         } else {
-            callEvent(OverlayRenderEvent(mc.framebuffer, context, tickDelta))
+            callEvent(OverlayRenderEvent(context, tickDelta))
         }
     }
 

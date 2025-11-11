@@ -41,7 +41,6 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     GameRenderEvent::class.java,
     WorldRenderEvent::class.java,
     OverlayRenderEvent::class.java,
-    FlipFrameEvent::class.java,
     ScreenRenderEvent::class.java,
     WindowResizeEvent::class.java,
     FramebufferResizeEvent::class.java,
