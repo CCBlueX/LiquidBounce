@@ -23,14 +23,13 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.entity.LivingEntity
 
 private const val NAMETAG_PADDING: Int = 15
 
-internal fun DrawContext.drawNametag(nametag: Nametag, pos: Vec3) {
+internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float) {
     if (NametagShowOptions.ITEMS.isShowing()) {
         val currentItemStackRenderer = if (NametagShowOptions.ITEM_INFO.isShowing()) {
             if (nametag.entity === player) {
@@ -43,8 +42,8 @@ internal fun DrawContext.drawNametag(nametag: Nametag, pos: Vec3) {
         }
 
         drawItemStackList(nametag.items)
-            .centerX(pos.x)
-            .centerY(pos.y - NAMETAG_PADDING * ModuleNametags.scale)
+            .centerX(posX)
+            .centerY(posY - NAMETAG_PADDING * ModuleNametags.scale)
             .scale(ModuleNametags.scale)
             .itemStackRenderer(currentItemStackRenderer)
             .rectBackground(color = 0)
@@ -56,7 +55,7 @@ internal fun DrawContext.drawNametag(nametag: Nametag, pos: Vec3) {
     val scale = 1f / (fontSize * 0.15f) * ModuleNametags.scale
 
     matrices.pushMatrix()
-    matrices.translate(pos.x, pos.y)
+    matrices.translate(posX, posY)
     matrices.scale(scale, scale)
 
     val fontRenderer = ModuleNametags.fontRenderer

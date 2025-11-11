@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -42,11 +41,6 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
     val scale by float("Scale", 2F, 0.25F..4F)
     private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
-
-    internal enum class BatchRenderMode(override val choiceName: String) : NamedChoice {
-        FULL("Full"),
-        EACH("Each"),
-    }
 
     internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
 
@@ -90,22 +84,13 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
     private fun DrawContext.drawNametags(tickDelta: Float) {
         drawnEnchantmentAreas.clear()
-        nametagsToRender.forEach { it.calculateScreenPos(tickDelta) }
 
-        val filteredNameTags = nametagsToRender.filterTo(mutableListOf()) { it.screenPos != null }
-        if (filteredNameTags.isEmpty()) {
-            return
-        }
+        nametagsToRender.filter {
+            it.calculateScreenPos(tickDelta) != null
+        }.forEach { nametagInfo ->
+            val (x, y) = nametagInfo.screenPos!!
 
-        val nametagsCount = filteredNameTags.size.toFloat()
-
-        filteredNameTags.forEachIndexed { index, nametagInfo ->
-            val pos = nametagInfo.screenPos!!
-
-            // We want nametags that are closer to the player to be rendered above nametags that are further away.
-            val renderZ = 0.01f + index / nametagsCount * 1000.0F
-
-            drawNametag(nametagInfo, pos.copy(z = renderZ))
+            drawNametag(nametagInfo, x, y)
         }
     }
 
