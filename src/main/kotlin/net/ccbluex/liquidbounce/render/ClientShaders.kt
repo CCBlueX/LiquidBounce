@@ -82,7 +82,7 @@ object ClientShaders {
     )
 
     private fun newShader(id: String, path: String): Identifier {
-        val k = LiquidBounce.identifier(id)
+        val k = LiquidBounce.identifier("shader/$id")
         shaders.put(
             k,
             LiquidBounce.resourceToString(path),

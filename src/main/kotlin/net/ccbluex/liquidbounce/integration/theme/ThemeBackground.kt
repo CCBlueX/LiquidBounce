@@ -95,6 +95,12 @@ sealed interface ThemeBackground : Closeable {
         private val pipeline: RenderPipeline,
     ) : ThemeBackground {
 
+        private val gpuBuffer = gpuDevice.createBuffer(
+            { "ThemeShaderBackground UBO" },
+            GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
+            std140Size { float + vec2 + vec2 },
+        ).slice()
+
         override fun draw(
             context: DrawContext,
             width: Int,
@@ -125,24 +131,20 @@ sealed interface ThemeBackground : Closeable {
             private const val UNIFORM_NAME = "ThemeBackgroundData"
 
             @JvmStatic
-            private val gpuBuffer = gpuDevice.createBuffer(
-                { "ThemeShaderBackground UBO" },
-                GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
-                std140Size { float + vec2 + vec2 },
-            ).slice()
-
-            @JvmStatic
             fun build(
                 metadata: ThemeMetadata,
                 background: Background,
                 vertexShader: String,
                 fragmentShader: String,
             ): Shader {
-                val vshId = LiquidBounce.identifier("vsh/${background.name.lowercase(Locale.US)}")
-                val fshId = LiquidBounce.identifier("fsh/${background.name.lowercase(Locale.US)}")
+                val bgName = background.name.lowercase(Locale.US)
+                val themeName = metadata.name.lowercase(Locale.US)
+
+                val vshId = LiquidBounce.identifier("shader/vsh/theme-bg-$bgName")
+                val fshId = LiquidBounce.identifier("shader/fsh/theme-bg-$bgName")
 
                 val pipeline = RenderPipeline.Builder()
-                    .withLocation(LiquidBounce.identifier("theme-bg-${metadata.name.lowercase(Locale.US)}"))
+                    .withLocation(LiquidBounce.identifier("pipeline/theme-bg-$themeName"))
                     .withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
                     .withVertexShader(vshId)
                     .withFragmentShader(fshId)
