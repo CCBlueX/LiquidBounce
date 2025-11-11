@@ -80,11 +80,9 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
                 val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
                 framebufferWrapper.beginWrite(viewport = true, clear = false)
             }
-
-            callEvent(OverlayRenderEvent(context, tickDelta))
-        } else {
-            callEvent(OverlayRenderEvent(context, tickDelta))
         }
+
+        callEvent(OverlayRenderEvent(context, tickDelta))
     }
 
     private val GUI_BLUR_UNIFORM_BUFFER = gpuDevice.createBuffer(

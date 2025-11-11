@@ -239,7 +239,7 @@ class FontRenderer(
             val uv2 = renderInfo.atlasLocation.uvCoordinatesOnTexture.max
             val argb = color.toARGB()
 
-            ctx.state.addPreparedTextElement(
+            ctx.state.addSimpleElement(
                 TexQuadGuiElementRenderState(
                     x1,
                     y1,
