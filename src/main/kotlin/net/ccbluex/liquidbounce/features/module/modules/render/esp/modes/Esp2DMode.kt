@@ -27,12 +27,12 @@ import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.aiming.utils.edgePoints
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
 
 object Esp2DMode : EspMode("2D") {
 
@@ -59,18 +59,7 @@ object Esp2DMode : EspMode("2D") {
             val outlineColor = color.with(a = 255)
             val black = Color4b.BLACK
 
-            val corners = arrayOf(
-                Vec3d(box.minX, box.minY, box.minZ),
-                Vec3d(box.minX, box.minY, box.maxZ),
-                Vec3d(box.minX, box.maxY, box.minZ),
-                Vec3d(box.minX, box.maxY, box.maxZ),
-                Vec3d(box.maxX, box.minY, box.minZ),
-                Vec3d(box.maxX, box.minY, box.maxZ),
-                Vec3d(box.maxX, box.maxY, box.minZ),
-                Vec3d(box.maxX, box.maxY, box.maxZ)
-            )
-
-            val projected = corners.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
+            val projected = box.edgePoints.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
             if (projected.isEmpty()) {
                 continue
             }

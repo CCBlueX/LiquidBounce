@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.utils.toVec3d
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.minus
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
@@ -73,9 +72,7 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
         pos: Vec3d,
         cameraPos: Vec3d = mc.gameRenderer.camera.pos,
     ): Vec3? {
-        val relativePos = pos - cameraPos
-
-        val transformedPos = cacheVec3f.set(relativePos)
+        val transformedPos = cacheVec3f.set(pos).sub(cameraPos)
             .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix))
 
         val scaleFactor = mc.window.scaleFactor
@@ -113,4 +110,6 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
 
 }
 
-private fun Vector3f.set(vec3d: Vec3d) = set(vec3d.x, vec3d.y, vec3d.z)
+private inline fun Vector3f.set(vec3d: Vec3d) = set(vec3d.x, vec3d.y, vec3d.z)
+
+private inline fun Vector3f.sub(vec3d: Vec3d) = sub(vec3d.x.toFloat(), vec3d.y.toFloat(), vec3d.z.toFloat())

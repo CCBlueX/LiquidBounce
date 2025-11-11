@@ -44,15 +44,19 @@ private val COUNT_STYLE = Style.EMPTY.withFormatting(Formatting.AQUA, Formatting
 
 private val BOT_STYLE = Style.EMPTY.withFormatting(Formatting.RED, Formatting.BOLD)
 
+private val BOT_TEXT = "Bot".asPlainText(BOT_STYLE)
+
 class NametagTextFormatter(private val entity: Entity) {
     fun format(): Text {
-        val outputText = "".asText()
+        val outputText = mutableListOf<Text>()
 
         if (NametagShowOptions.DISTANCE.isShowing()) {
-            outputText.append(this.distanceText).append(" ")
+            outputText += this.distanceText
+            outputText += PlainText.SPACE
         }
         if (NametagShowOptions.PING.isShowing()) {
-            outputText.append(this.pingText).append(" ")
+            outputText += this.pingText
+            outputText += PlainText.SPACE
         }
 
         val name = entity.displayName!!
@@ -67,25 +71,28 @@ class NametagTextFormatter(private val entity: Entity) {
             baseNameString.asPlainText()
         }
 
-        outputText.append(nameText)
+        outputText += nameText
 
         if (ModuleCombineMobs.running) {
             val count = ModuleCombineMobs.getCombinedCount(entity)
             if (count > 1) {
                 val countText = ("x $count").asPlainText(COUNT_STYLE)
-                outputText.append(" ").append(countText)
+                outputText += PlainText.SPACE
+                outputText += countText
             }
         }
 
         if (NametagShowOptions.HEALTH.isShowing()) {
-            outputText.append(" ").append(this.healthText)
+            outputText += PlainText.SPACE
+            outputText += this.healthText
         }
 
         if (this.isBot) {
-            outputText.append(" ").append("Bot".asPlainText(BOT_STYLE))
+            outputText += PlainText.SPACE
+            outputText += BOT_TEXT
         }
 
-        return outputText
+        return outputText.asText()
     }
 
     private val isBot = ModuleAntiBot.isBot(entity)
