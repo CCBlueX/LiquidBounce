@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.util.Util
 import org.apache.commons.io.output.StringBuilderWriter
 
@@ -52,7 +53,7 @@ internal object SocketEventListener : EventListener {
             error("Event $name is already registered")
         }
 
-        val eventHook = EventHook(this, handler = ::writeToSockets)
+        val eventHook = EventHook(this, priority = READ_FINAL_STATE, handler = ::writeToSockets)
 
         registeredEvents[eventClass] = eventHook
         EventManager.registerEventHook(eventClass, eventHook)
