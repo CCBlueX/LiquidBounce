@@ -32,6 +32,7 @@ import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.util.math.Position
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 
@@ -113,8 +114,8 @@ class WorldRenderEnvironment(
         return Vec3d(pos.x.toDouble() - camera.pos.x, pos.y.toDouble() - camera.pos.y, pos.z.toDouble() - camera.pos.z)
     }
 
-    fun relativeToCamera(pos: Vec3d): Vec3d {
-        return pos.subtract(camera.pos)
+    fun relativeToCamera(pos: Position): Vec3d {
+        return Vec3d(pos.x - camera.pos.x, pos.y - camera.pos.y, pos.z - camera.pos.z)
     }
 
     fun relativeToCamera(pos: Vec3i): Vec3d {

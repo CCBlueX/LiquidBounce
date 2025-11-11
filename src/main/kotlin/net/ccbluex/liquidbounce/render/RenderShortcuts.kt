@@ -106,7 +106,7 @@ inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw: WorldRenderEnvironment.() -> Unit) {
     matrixStack.withPush {
-        translate(pos.x, pos.y, pos.z)
+        translate(relativeToCamera(pos))
         draw()
     }
 }
@@ -115,10 +115,8 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw:
  * Shortcut of `withPositionRelativeToCamera(Vec3d.of(pos))`
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) {
-    val relativePos = relativeToCamera(pos)
-
     matrixStack.withPush {
-        translate(relativePos.x, relativePos.y, relativePos.z)
+        translate(relativeToCamera(pos))
         draw()
     }
 }
