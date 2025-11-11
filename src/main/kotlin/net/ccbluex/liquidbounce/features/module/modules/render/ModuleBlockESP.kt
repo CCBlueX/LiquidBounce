@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.gl.Framebuffer
@@ -130,7 +129,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                     color = color.with(a = 255)
                 }
 
-                withPositionRelativeToCamera(blockPos.toVec3d()) {
+                withPositionRelativeToCamera(blockPos) {
                     drawBox(
                         boundingBox,
                         faceColor = color,
