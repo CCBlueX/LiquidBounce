@@ -16,24 +16,35 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.utils.network
 
-import com.viaversion.viabackwards.protocol.v1_12to1_11_1.Protocol1_12To1_11_1
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
 import com.viaversion.viaversion.api.type.Types
-import com.viaversion.viaversion.protocols.v1_9_1to1_9_3.packet.ServerboundPackets1_9_3
+import com.viaversion.viaversion.protocols.v1_21_4to1_21_5.packet.ServerboundPackets1_21_5
+import com.viaversion.viaversion.protocols.v1_21_5to1_21_6.Protocol1_21_5To1_21_6
+import net.ccbluex.liquidbounce.utils.client.player
 
 /**
- * https://github.com/ViaVersion/ViaFabricPlus/blob/ecd5d188187f2ebaaad8ded0ffe53538911f7898/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/MixinMinecraftClient.java#L124-L130
+ * https://github.com/ViaVersion/ViaFabricPlus/blob/56c4959000e68d77fd415b89af7a95478d825079/src/main/java/com/viaversion/viafabricplus/injection/mixin/features/movement/sprinting_and_sneaking/MixinClientPlayerEntity.java#L251-L264
  */
-object OpenInventorySilentlyPacket : LegacyPacket {
+class PlayerSneakPacket private constructor(val sneaking: Boolean) : LegacyPacket {
 
-    override val protocol = Protocol1_12To1_11_1::class.java
+    override val protocol = Protocol1_21_5To1_21_6::class.java
 
-    override val packetType = ServerboundPackets1_9_3.CLIENT_COMMAND
+    override val packetType = ServerboundPackets1_21_5.PLAYER_COMMAND
 
     override fun write(packetWrapper: PacketWrapper) {
-        packetWrapper.write(Types.VAR_INT, 2) // Open Inventory Achievement
+        packetWrapper.write(Types.VAR_INT, player.id)
+        packetWrapper.write(Types.VAR_INT, if (sneaking) 0 else 1)
+        packetWrapper.write(Types.VAR_INT, 0) // No data
+    }
+
+    companion object {
+        @JvmField
+        val START = PlayerSneakPacket(true)
+        @JvmField
+        val STOP = PlayerSneakPacket(false)
     }
 
 }

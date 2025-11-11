@@ -216,7 +216,7 @@ fun openInventorySilently() {
     }
 
     network.sendPacket(
-        OpenInventorySilentlyPacket(),
+        OpenInventorySilentlyPacket,
         onSuccess = { InventoryManager.isInventoryOpenServerSide = true },
         onFailure = { chat(markAsError("Failed to open inventory using ViaFabricPlus, report to developers!")) }
     )

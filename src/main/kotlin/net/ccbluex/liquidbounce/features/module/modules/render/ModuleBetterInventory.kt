@@ -30,14 +30,12 @@ import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemS
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
-import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.item.ItemStack
 import net.minecraft.screen.slot.Slot
-import net.minecraft.util.math.Vec3d
 
 object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) {
 
@@ -162,7 +160,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
             containerComponent.streamNonEmpty()
         } else {
             containerComponent.stream()
-        }.toArray()
+        }.toList()
 
         if (stacks.isEmpty()) return false
 
@@ -174,8 +172,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
             renderY += mouseY
         }
 
-        @Suppress("UNCHECKED_CAST")
-        drawItemStackList(stacks.unmodifiable() as List<ItemStack>)
+        drawItemStackList(stacks)
             .centerX(renderX)
             .centerY(renderY)
             .scale(ContainerItemView.scale)
