@@ -17,6 +17,8 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("detekt:TooManyFunctions", "NOTHING_TO_INLINE")
+
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
@@ -36,6 +38,7 @@ import net.minecraft.client.gui.ScreenRect
 import net.minecraft.client.texture.TextureSetup
 import net.minecraft.util.math.Vec2f
 import org.joml.Matrix3x2f
+import org.joml.Matrix3x2fStack
 
 /**
  * Primitive version of [ScreenRect.transformEachVertex]
@@ -78,7 +81,26 @@ fun DrawContext.createBounds(x: Float, y: Float, w: Float, h: Float): ScreenRect
 fun DrawContext.createBounds(box: BoundingBox2f): ScreenRect =
     createBounds(box.xMin, box.yMin, box.width, box.height)
 
-@Suppress("NOTHING_TO_INLINE")
+inline fun DrawContext.copyPose(): Matrix3x2f = Pools.Mat3x2f.borrow().set(this.matrices)
+
+inline fun Matrix3x2fStack.withPush(block: Matrix3x2fStack.() -> Unit) {
+    pushMatrix()
+    try {
+        block()
+    } finally {
+        popMatrix()
+    }
+}
+
+inline fun DrawContext.ScissorStack.withPush(rect: ScreenRect, block: DrawContext.ScissorStack.() -> Unit) {
+    push(rect)
+    try {
+        block()
+    } finally {
+        pop()
+    }
+}
+
 inline fun DrawContext.drawCustomElement(
     pipeline: RenderPipeline = RenderPipelines.GUI, // PosColor + QUADS
     textureSetup: TextureSetup = TextureSetup.empty(),
@@ -89,7 +111,7 @@ inline fun DrawContext.drawCustomElement(
     LambdaSimpleGuiElementRenderState(
         pipeline,
         textureSetup,
-        Pools.Mat3x2f.borrow().set(this.matrices),
+        copyPose(),
         scissorArea,
         bounds,
         verticesSetupHandler
@@ -105,7 +127,7 @@ fun DrawContext.drawLines(
         LineGuiElementRenderState(
             points,
             argb,
-            Pools.Mat3x2f.borrow().set(this.matrices),
+            copyPose(),
             this.scissorStack.peekLast(),
             bounds,
         )
@@ -135,7 +157,7 @@ fun DrawContext.drawQuad(
                 x21,
                 y21,
                 fillColor.toARGB(),
-                Pools.Mat3x2f.borrow().set(this.matrices),
+                copyPose(),
                 this.scissorStack.peekLast(),
                 bounds,
             )
@@ -186,7 +208,7 @@ fun DrawContext.drawTriangle(
     this.state.addSimpleElement(
         TriangleGuiElementRenderState(
             p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, argb,
-            Pools.Mat3x2f.borrow().set(this.matrices),
+                copyPose(),
             this.scissorStack.peekLast(),
             createBounds(minX, minY, maxX - minX, maxY - minY),
         )

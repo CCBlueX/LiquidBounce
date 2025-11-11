@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.TexQuadGuiElementRenderState
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.texture.TextureSetup
@@ -252,7 +251,7 @@ class FontRenderer(
                     uv2.v,
                     argb,
                     TextureSetup.of(glyph.page.texture.glTextureView),
-                    Pools.Mat3x2f.borrow().set(ctx.matrices),
+                    ctx.copyPose(),
                     ctx.scissorStack.peekLast(),
                     ctx.createBounds(x1, y1, x2 - x1, y2 - y1),
                 )

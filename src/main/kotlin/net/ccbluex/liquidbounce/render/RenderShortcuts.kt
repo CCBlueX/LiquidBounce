@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 @file:Suppress("detekt:TooManyFunctions")
 
 package net.ccbluex.liquidbounce.render
@@ -25,8 +26,6 @@ import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
-import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
@@ -35,22 +34,16 @@ import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.SAMPLER_NAMES
 import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.ScreenRect
 import net.minecraft.client.render.*
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.*
-import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.joml.Vector4f
 import org.lwjgl.opengl.GL11C
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
-import kotlin.use
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -71,89 +64,6 @@ val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
 @JvmField
 val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-
-/**
- * Data class representing the rendering environment.
- */
-sealed class RenderEnvironment(val framebuffer: Framebuffer) {
-    var isBatchMode: Boolean = false
-        private set
-
-    fun getOrCreateBuffer(pipeline: RenderPipeline): BufferBuilder {
-        return if (isBatchMode) {
-            batchBuffer.computeIfAbsent(pipeline, ClientTessellator::begin)
-        } else {
-            Tessellator.getInstance().begin(
-                pipeline.vertexFormatMode,
-                pipeline.vertexFormat
-            )
-        }
-    }
-
-    fun getOrCreateBuffer(texture: GpuTextureView): BufferBuilder {
-        return if (isBatchMode) {
-            texQuadBatchBuffer.computeIfAbsent(texture, ClientTessellator::begin)
-        } else {
-            Tessellator.getInstance().begin(
-                ClientRenderPipelines.TexQuads.vertexFormatMode,
-                ClientRenderPipelines.TexQuads.vertexFormat
-            )
-        }
-    }
-
-    fun startBatch() {
-        if (isBatchMode) commitBatch()
-        isBatchMode = true
-    }
-
-    fun commitBatch() {
-        require(isBatchMode) {
-            "Current environment is not in batch mode!"
-        }
-
-        batchBuffer.fastIterator().forEach { (pipeline, bufferBuilder) ->
-            bufferBuilder.endNullable()?.let {
-                pipeline.draw(it)
-                ClientTessellator.allocator(pipeline).clear()
-            }
-        }
-        batchBuffer.clear()
-
-        texQuadBatchBuffer.fastIterator().forEach { (gpuTexture, bufferBuilder) ->
-            bufferBuilder.endNullable()?.let {
-                RenderSystem.setShaderTexture(0, gpuTexture) // Sampler0
-                ClientRenderPipelines.TexQuads.draw(it)
-                ClientTessellator.allocator(gpuTexture).clear()
-            }
-        }
-        texQuadBatchBuffer.clear()
-    }
-
-    companion object {
-        @JvmStatic
-        private val batchBuffer = Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()
-
-        /**
-         * For [ClientRenderPipelines.TexQuads] only. Each texture has its buffer builder.
-         */
-        @JvmStatic
-        private val texQuadBatchBuffer = Reference2ReferenceOpenHashMap<GpuTextureView, BufferBuilder>()
-    }
-}
-
-class WorldRenderEnvironment(
-    framebuffer: Framebuffer,
-    val matrixStack: MatrixStack,
-    val camera: Camera,
-) : RenderEnvironment(framebuffer) {
-    fun relativeToCamera(pos: Vec3d): Vec3d {
-        return pos.subtract(camera.pos)
-    }
-
-    fun relativeToCamera(pos: Vec3i): Vec3d {
-        return Vec3d(pos.x.toDouble() - camera.pos.x, pos.y.toDouble() - camera.pos.y, pos.z.toDouble() - camera.pos.z)
-    }
-}
 
 /**
  * Helper function to render an environment with the specified [matrixStack] and [draw] block.
@@ -191,55 +101,14 @@ inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {
     }
 }
 
-inline fun Matrix3x2fStack.withPush(block: Matrix3x2fStack.() -> Unit) {
-    pushMatrix()
-    try {
-        block()
-    } finally {
-        popMatrix()
-    }
-}
-
-inline fun DrawContext.ScissorStack.withPush(rect: ScreenRect, block: DrawContext.ScissorStack.() -> Unit) {
-    push(rect)
-    try {
-        block()
-    } finally {
-        pop()
-    }
-}
-
-/**
- * Extension function to apply a position transformation to the current rendering environment.
- *
- * @param pos The position vector.
- * @param draw The block of code to be executed in the transformed environment.
- */
-inline fun WorldRenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit) {
-    matrixStack.withPush {
-        translate(pos.x, pos.y, pos.z)
-        draw()
-    }
-}
-
-/**
- * Extension function to apply a position transformation to the current rendering environment.
- *
- * @param pos The position vector.
- * @param draw The block of code to be executed in the transformed environment.
- */
-inline fun WorldRenderEnvironment.withPosition(pos: Vec3d, draw: WorldRenderEnvironment.() -> Unit) {
-    matrixStack.withPush {
-        translate(pos.x, pos.y, pos.z)
-        draw()
-    }
-}
-
 /**
  * Shorthand for `withPosition(relativeToCamera(pos))`
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw: WorldRenderEnvironment.() -> Unit) {
-    withPosition(relativeToCamera(pos), draw)
+    matrixStack.withPush {
+        translate(pos.x, pos.y, pos.z)
+        draw()
+    }
 }
 
 /**
@@ -253,7 +122,6 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw:
         draw()
     }
 }
-
 
 /**
  * Disables [GL11C.GL_LINE_SMOOTH] if [HAS_AMD_VEGA_APU].

@@ -190,7 +190,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 .add(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
 
             with(env) {
-                withPosition(relativeToCamera(pos)) {
+                withPositionRelativeToCamera(pos) {
                     drawBox(box, color)
                 }
             }
@@ -227,7 +227,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
             with(env) {
                 startBatch()
-                withPosition(relativeToCamera(pos)) {
+                withPositionRelativeToCamera(pos) {
                     drawGradientCircle(radius, innerRadius, outerColor, innerColor)
                     if (outline.enabled) {
                         drawCircleOutline(radius, outline.color)
@@ -277,7 +277,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
             with(env) {
                 startBatch()
-                withPosition(this.relativeToCamera(pos)) {
+                withPositionRelativeToCamera(pos) {
                     drawGradientCircle(
                         radius,
                         radius,
