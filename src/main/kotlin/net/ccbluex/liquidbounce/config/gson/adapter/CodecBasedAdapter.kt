@@ -27,6 +27,7 @@ import com.google.gson.JsonParseException
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.mojang.serialization.Codec
+import com.mojang.serialization.DataResult
 import com.mojang.serialization.JsonOps
 import net.ccbluex.liquidbounce.utils.client.processContent
 import net.minecraft.component.ComponentChanges
@@ -46,17 +47,21 @@ class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, Jso
     ): T? {
         jsonElement ?: return null
 
-        return codec.parse(JsonOps.INSTANCE, jsonElement).resultOrPartial {
-            throw JsonParseException("Failed to decode json element $jsonElement with $codec, error: $it")
-        }.orElse(null)
+        return when (val parsed = codec.parse(JsonOps.INSTANCE, jsonElement)) {
+            is DataResult.Success -> parsed.value
+            is DataResult.Error ->
+                throw JsonParseException("Failed to encode $jsonElement with $codec, error: ${parsed.message()}")
+        }
     }
 
     override fun serialize(t: T?, type: Type, jsonSerializationContext: JsonSerializationContext): JsonElement? {
         t ?: return JsonNull.INSTANCE
 
-        return codec.encodeStart(JsonOps.INSTANCE, t).resultOrPartial {
-            throw JsonParseException("Failed to encode $t with $codec, error: $it")
-        }.orElse(null)
+        return when (val encoded = codec.encodeStart(JsonOps.INSTANCE, t)) {
+            is DataResult.Success -> encoded.value
+            is DataResult.Error ->
+                throw JsonParseException("Failed to encode $t with $codec, error: ${encoded.message()}")
+        }
     }
 
     companion object {
