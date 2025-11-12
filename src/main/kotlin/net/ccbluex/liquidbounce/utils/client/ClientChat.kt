@@ -154,8 +154,8 @@ fun MutableText.bypassNameProtection(): MutableText = styled {
  * Open a [ChatScreen] with given text,
  * or set the text of current [ChatScreen]
  */
-fun MinecraftClient.openChat(text: String) = send {
-    (currentScreen as? MixinChatScreenAccessor)?.chatField?.setText(text) ?: setScreen(ChatScreen(text))
+fun MinecraftClient.openChat(text: String, draft: Boolean = false) = send {
+    (currentScreen as? MixinChatScreenAccessor)?.chatField?.setText(text) ?: setScreen(ChatScreen(text, draft))
 }
 
 private val defaultMessageMetadata = MessageMetadata()

@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.ccbluex.liquidbounce.utils.kotlin.Priority;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
+import net.minecraft.client.gui.screen.world.LevelLoadingScreen;
 import net.minecraft.client.network.ClientCommonNetworkHandler;
 import net.minecraft.client.network.ClientConnectionState;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -42,6 +42,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkThreadUtils;
+import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
@@ -152,7 +153,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
      */
     @Inject(method = "onTitleClear", at = @At(value = "HEAD"), cancellable = true)
     private void hookOnTitleClear(ClearTitleS2CPacket packet, CallbackInfo ci) {
-        NetworkThreadUtils.forceMainThread(packet, (ClientPlayNetworkHandler) (Object) this, this.client);
+        NetworkThreadUtils.forceMainThread(packet, (ClientPlayPacketListener) this, this.client.getPacketApplyBatcher());
         var event = new TitleEvent.Clear(packet.shouldReset());
         EventManager.INSTANCE.callEvent(event);
         if (event.isCancelled()) {
@@ -231,14 +232,14 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
 
     private ThreadLocal<Rotation> rotationThreadLocal = ThreadLocal.withInitial(() -> null);
 
-    @Inject(method = "onPlayerPositionLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;setPosition(Lnet/minecraft/entity/player/PlayerPosition;Ljava/util/Set;Lnet/minecraft/entity/Entity;Z)Z"))
+    @Inject(method = "onPlayerPositionLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;setPosition(Lnet/minecraft/entity/EntityPosition;Ljava/util/Set;Lnet/minecraft/entity/Entity;Z)Z"))
     private void injectPlayerPositionLook(PlayerPositionLookS2CPacket packet, CallbackInfo ci, @Local PlayerEntity playerEntity) {
         rotationThreadLocal.set(new Rotation(playerEntity.getYaw(), playerEntity.getPitch(), true));
     }
 
     @Inject(method = "onPlayerPositionLook", at = @At("RETURN"))
     private void injectNoRotateSet(PlayerPositionLookS2CPacket packet, CallbackInfo ci, @Local PlayerEntity playerEntity) {
-        if (!ModuleNoRotateSet.INSTANCE.getRunning() || MinecraftClient.getInstance().currentScreen instanceof DownloadingTerrainScreen) {
+        if (!ModuleNoRotateSet.INSTANCE.getRunning() || MinecraftClient.getInstance().currentScreen instanceof LevelLoadingScreen) {
             return;
         }
 

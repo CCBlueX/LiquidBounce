@@ -347,12 +347,13 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
         }
 
         when (val packet = it.packet) {
+            // TODO(1.21.10-port): mc.submit?
             is BlockUpdateS2CPacket -> {
-                mc.renderTaskQueue.add { updatePosOnChange(packet.pos, packet.state) }
+                mc.submit { updatePosOnChange(packet.pos, packet.state) }
             }
 
             is ChunkDeltaUpdateS2CPacket -> {
-                mc.renderTaskQueue.add {
+                mc.submit {
                     packet.visitUpdates { pos, state -> updatePosOnChange(pos, state) }
                 }
             }

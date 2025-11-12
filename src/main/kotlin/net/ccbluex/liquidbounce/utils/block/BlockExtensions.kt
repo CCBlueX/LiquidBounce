@@ -602,7 +602,7 @@ fun doBreak(
 
     if (interaction.updateBlockBreakingProgress(blockPos, direction)) {
         swingMode.swing(Hand.MAIN_HAND)
-        mc.particleManager.addBlockBreakingParticles(blockPos, direction)
+        world.spawnBlockBreakingParticle(blockPos, direction)
     }
 }
 

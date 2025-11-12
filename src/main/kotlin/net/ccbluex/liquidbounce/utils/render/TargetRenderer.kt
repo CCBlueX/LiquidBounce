@@ -98,7 +98,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
             env.matrixStack.translate(mc.gameRenderer.camera.pos.negate())
 
-            val interpolated = entity.pos.interpolate(entity.lastRenderPos(), partialTicks.toDouble())
+            val interpolated = entity.entityPos.interpolate(entity.lastRenderPos(), partialTicks.toDouble())
                 .add(0.2, 1.25, 0.0)
 
             env.matrixStack.translate(interpolated)

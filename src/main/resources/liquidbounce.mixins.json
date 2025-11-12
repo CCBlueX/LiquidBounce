@@ -84,7 +84,7 @@
     "minecraft.gui.MixinStringHelper",
     "minecraft.gui.custom.MixinConnectScreen",
     "minecraft.gui.custom.MixinDisconnectedScreen",
-    "minecraft.gui.custom.MixinDownloadingTerrainScreen",
+    "minecraft.gui.custom.MixinLevelLoadingScreen",
     "minecraft.gui.widget.MixinEntryListWidget",
     "minecraft.gui.widget.MixinTextFieldWidget",
     "minecraft.item.MixinHeldItemRenderer",

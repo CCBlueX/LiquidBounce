@@ -43,6 +43,8 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
+import net.minecraft.client.input.SystemKeycodes
+import java.util.*
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
@@ -85,7 +87,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             this.isDrawingHudFramebuffer = true
             clearOverlay()
 
-            if (MinecraftClient.IS_SYSTEM_MAC) {
+            if (SystemKeycodes.IS_MAC_OS) {
                 RenderSystem.outputColorTextureOverride = this.overlayFramebuffer.colorAttachmentView
                 RenderSystem.outputDepthTextureOverride = this.overlayFramebuffer.depthAttachmentView
             } else {
@@ -110,7 +112,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         this.isDrawingHudFramebuffer = false
 
-        if (MinecraftClient.IS_SYSTEM_MAC) {
+        if (SystemKeycodes.IS_MAC_OS) {
             RenderSystem.outputColorTextureOverride = null
             RenderSystem.outputDepthTextureOverride = null
         } else {
@@ -144,14 +146,16 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     private fun drawOverlayBlit() {
         val shapeIndexBuffer = RenderSystem.getSequentialBuffer(VertexFormat.DrawMode.QUADS)
         val indexBuffer = shapeIndexBuffer.getIndexBuffer(6)
-        val vertexBuffer = RenderSystem.getQuadVertexBuffer()
+//        val vertexBuffer = RenderSystem.getQuadVertexBuffer()
 
         mc.framebuffer.colorAttachmentView!!.createRenderPass(
             { "GUI blur overlay blit pass" },
         ).use { renderPass ->
             renderPass.setPipeline(ClientRenderPipelines.JCEF.Blit)
             RenderSystem.bindDefaultUniforms(renderPass)
-            renderPass.setVertexBuffer(0, vertexBuffer)
+
+            // TODO(1.21.10-port): this probably is wrong
+            // renderPass.setVertexBuffer(0, vertexBuffer)
             renderPass.setIndexBuffer(indexBuffer, shapeIndexBuffer.indexType)
             renderPass.bindSampler("InSampler", overlayFramebuffer.colorAttachmentView)
             renderPass.drawIndexed(0, 0, 6, 1)

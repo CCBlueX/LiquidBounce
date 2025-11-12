@@ -33,6 +33,6 @@ internal enum class TargetRotatePosition(
         target.eyePos
     }),
     CENTER("Center", { target ->
-        target.pos.add(0.0, target.height / 2.0, 0.0)
+        target.entityPos.add(0.0, target.height / 2.0, 0.0)
     })
 }

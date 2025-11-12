@@ -116,8 +116,8 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
                 previousVector = previous.directionVector,
                 targetVector = targetRotation.directionVector,
                 velocityDelta = current.rotationDeltaTo(next).toVec2f(),
-                playerDiff = player.pos.subtract(player.lastPos),
-                targetDiff = target.pos.subtract(target.lastPos),
+                playerDiff = player.entityPos.subtract(player.lastPos),
+                targetDiff = target.entityPos.subtract(target.lastPos),
                 age = fight.ticks,
                 hurtTime = target.hurtTime,
                 distance = player.squaredBoxedDistanceTo(target).toFloat()

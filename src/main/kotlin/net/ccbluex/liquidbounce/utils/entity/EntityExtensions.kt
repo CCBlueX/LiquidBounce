@@ -117,7 +117,7 @@ fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
         val vec3d = source.position
         if (vec3d != null) {
             val vec3d2 = getRotationVector(0f, headYaw)
-            val vec3d3 = vec3d.relativize(pos).copy(y = 0.0).normalize()
+            val vec3d3 = vec3d.relativize(entityPos).copy(y = 0.0).normalize()
             return vec3d3.dotProduct(vec3d2) < 0.0
         }
     }
@@ -189,7 +189,7 @@ fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
 fun ClientPlayerEntity.isCloseToEdge(
     directionalInput: DirectionalInput,
     distance: Double = 0.1,
-    pos: Vec3d = this.pos,
+    pos: Vec3d = this.entityPos,
 ): Boolean {
     val alpha = (getMovementDirectionOfInput(this.yaw, directionalInput) + 90.0F).toRadians()
     val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
@@ -338,7 +338,7 @@ fun Entity.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
 }
 
 fun Entity.squareBoxedDistanceTo(entity: Entity, offsetPos: Vec3d): Double {
-    return this.box.offset(offsetPos - this.pos).squaredBoxedDistanceTo(entity.eyePos)
+    return this.box.offset(offsetPos - this.entityPos).squaredBoxedDistanceTo(entity.eyePos)
 }
 
 fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
@@ -349,7 +349,7 @@ fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
 
 fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3d {
     if (this.age == 0) {
-        return this.pos
+        return this.entityPos
     }
 
     return Vec3d(
@@ -408,7 +408,7 @@ fun getNearestPointOnSide(from: Vec3d, box: Box, side: Direction): Vec3d {
  */
 @Suppress("detekt:all")
 fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreShield: Boolean = false): Float {
-    val world = this.world
+    val world = this.entityWorld
 
     if (this.isAlwaysInvulnerableTo(source)) {
         return 0.0F
@@ -460,16 +460,16 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
 
 fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
     return when (entity) {
-        is EndCrystalEntity -> getDamageFromExplosion(entity.pos, 6f, 12f, 144f)
-        is TntEntity -> getDamageFromExplosion(entity.pos.add(0.0, 0.0625, 0.0), 4f, 8f, 64f)
+        is EndCrystalEntity -> getDamageFromExplosion(entity.entityPos, 6f, 12f, 144f)
+        is TntEntity -> getDamageFromExplosion(entity.entityPos.add(0.0, 0.0625, 0.0), 4f, 8f, 64f)
         is TntMinecartEntity -> {
             val d = 5f
-            getDamageFromExplosion(entity.pos, 4f + d * 1.5f)
+            getDamageFromExplosion(entity.entityPos, 4f + d * 1.5f)
         }
 
         is CreeperEntity -> {
             val f = if (entity.isCharged) 2f else 1f
-            getDamageFromExplosion(entity.pos, entity.explosionRadius * f)
+            getDamageFromExplosion(entity.entityPos, entity.explosionRadius * f)
         }
 
         else -> 0f
@@ -541,7 +541,7 @@ fun LivingEntity.getExposureToExplosion(
             false, // TODO: is this correct?
             entityBoundingBox1.minY,
             mainHandStack,
-            ::canWalkOnFluid,
+            canWalkOnFluid(null),
             this
         )
     } ?: ShapeContext.of(this)
@@ -639,7 +639,7 @@ private fun LivingEntity.getHealthFromScoreboard(): Float? {
 }
 
 fun Entity.getBoundingBoxAt(pos: Vec3d): Box {
-    return boundingBox.offset(pos - this.pos)
+    return boundingBox.offset(pos - this.entityPos)
 }
 
 /**
@@ -658,7 +658,7 @@ fun Entity.doesNotCollideBelow(until: Double = -64.0): Boolean {
 /**
  * Check if the entity box collides with any block in the world at the given [pos].
  */
-fun Entity.doesCollideAt(pos: Vec3d = player.pos): Boolean {
+fun Entity.doesCollideAt(pos: Vec3d = player.entityPos): Boolean {
     return !world.getBlockCollisions(this, getBoundingBoxAt(pos)).all(VoxelShapes.empty()::equals)
 }
 
@@ -666,7 +666,7 @@ fun Entity.doesCollideAt(pos: Vec3d = player.pos): Boolean {
  * Check if the entity is likely falling to the void based on the given position and bounding box.
  */
 fun Entity.wouldFallIntoVoid(pos: Vec3d, voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
-    val offsetBb = boundingBox.offset(pos - this.pos)
+    val offsetBb = boundingBox.offset(pos - this.entityPos)
 
     if (pos.y < voidLevel || offsetBb.minY < voidLevel) {
         return true

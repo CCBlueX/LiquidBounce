@@ -55,7 +55,8 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
                 val color by color("Color", Color4b.GREEN)
 
                 override fun drawHighlightSlot(context: DrawContext, slot: Slot) {
-                    context.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.toARGB())
+                    // TODO(1.21.10-port): DrawContext.drawBorder
+//                    context.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.toARGB())
                 }
             }
 

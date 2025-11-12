@@ -172,7 +172,7 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
     private fun findAndBuildSimulatedPlayers(): List<Pair<AbstractClientPlayerEntity, SimulatedPlayerCache>> {
         return world.players.filter {
             it != player &&
-                Line(player.pos, player.rotationVector).squaredDistanceTo(it.pos) < 10.0 * 10.0
+                Line(player.entityPos, player.rotationVector).squaredDistanceTo(it.entityPos) < 10.0 * 10.0
         }.map {
             Pair(it, PlayerSimulationCache.getSimulationForOtherPlayers(it))
         }

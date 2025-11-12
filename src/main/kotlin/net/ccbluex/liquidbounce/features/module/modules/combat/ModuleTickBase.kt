@@ -107,7 +107,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         }
 
         val nearbyEnemy = world.findEnemy(0f..range.endInclusive) ?: return@tickHandler
-        val currentDistance = player.pos.squaredDistanceTo(nearbyEnemy.pos)
+        val currentDistance = player.entityPos.squaredDistanceTo(nearbyEnemy.entityPos)
         val rangeSq = range.start.sq()..range.endInclusive.sq()
 
         // Find the best tick that is able to hit the target and is not too far away from the player, as well as
@@ -115,7 +115,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         var possibleTicks = tickBuffer
             .withIndex()
             .filter { (_, tick) ->
-                val distSq = tick.position.squaredDistanceTo(nearbyEnemy.pos)
+                val distSq = tick.position.squaredDistanceTo(nearbyEnemy.entityPos)
                 distSq < currentDistance && distSq in rangeSq
             }
 

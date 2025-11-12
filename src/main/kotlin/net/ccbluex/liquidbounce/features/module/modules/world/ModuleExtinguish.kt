@@ -189,7 +189,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
             ),
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = bucket.itemStack,
-            PlayerLocationOnPlacement(position = player.pos),
+            PlayerLocationOnPlacement(position = player.entityPos),
         )
 
         val bestPlacementPlan = findBestBlockPlacementTarget(blockPos, options) ?: return null

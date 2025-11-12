@@ -42,7 +42,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.minecraft.client.gui.screen.DisconnectedScreen
-import net.minecraft.client.gui.screen.DownloadingTerrainScreen
+import net.minecraft.client.gui.screen.world.LevelLoadingScreen
 
 /**
  * Module HUD
@@ -133,7 +133,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
         // Otherwise, open the tab and set its visibility
         val browserTab = open()
-        browserTab.visible = event.screen !is DisconnectedScreen && event.screen !is DownloadingTerrainScreen
+        browserTab.visible = event.screen !is DisconnectedScreen && event.screen !is LevelLoadingScreen
     }
 
     @Suppress("unused")

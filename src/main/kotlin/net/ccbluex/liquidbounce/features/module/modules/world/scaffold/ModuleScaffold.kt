@@ -323,7 +323,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
         val optimalLine = this.currentOptimalLine
 
-        val predictedPos = ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine) ?: player.pos
+        val predictedPos = ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine) ?: player.entityPos
         // Check if the player is probably going to sneak at the predicted position
         val predictedPose =
             if (ScaffoldEagleFeature.enabled && ScaffoldEagleFeature.shouldEagle(DirectionalInput(player.input))) {

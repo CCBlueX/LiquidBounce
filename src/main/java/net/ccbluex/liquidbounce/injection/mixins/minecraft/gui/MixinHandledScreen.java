@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleItemScroller;
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
@@ -31,9 +32,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
-import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -65,12 +64,6 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
 
     @Shadow
     private @Nullable Slot lastClickedSlot;
-
-    @Shadow
-    private int lastClickedButton;
-
-    @Shadow
-    private long lastButtonClickTime;
 
     @Shadow
     protected int x;
@@ -125,27 +118,28 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
             this.cancelNextRelease = true;
 
             this.lastClickedSlot = slot;
-            this.lastButtonClickTime = Util.getMeasuringTimeMs();
-            this.lastClickedButton = GLFW.GLFW_MOUSE_BUTTON_1;
+//            TODO(1.21.10-port): missing fields
+//            this.lastButtonClickTime = Util.getMeasuringTimeMs();
+//            this.lastClickedButton = GLFW.GLFW_MOUSE_BUTTON_1;
 
             ModuleItemScroller.INSTANCE.resetChronometer();
         }
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-    private void hookMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+    private void hookMouseClicked(Click click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
         /*
          * We move the item by itself, we don't need this action by Minecraft
          */
-        if (matchingItemScrollerMoveConditions((int) mouseX, (int) mouseY)) {
+        if (matchingItemScrollerMoveConditions((int) click.x(), (int) click.y())) {
             cir.cancel();
         }
     }
 
     @Unique
     private boolean matchingItemScrollerMoveConditions(int mouseX, int mouseY) {
-        long handle = this.client.getWindow().getHandle();
-        return getSlotAt(mouseX, mouseY) != null && ModuleItemScroller.INSTANCE.canPerformScroll(handle);
+        return getSlotAt(mouseX, mouseY) != null
+            && ModuleItemScroller.INSTANCE.canPerformScroll(this.client.getWindow());
     }
 
 }

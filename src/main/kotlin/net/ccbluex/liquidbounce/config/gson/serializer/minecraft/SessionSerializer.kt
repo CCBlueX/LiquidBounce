@@ -24,6 +24,7 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
 import net.ccbluex.liquidbounce.features.account.SessionWithService
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.session.Session
 import java.lang.reflect.Type
 
@@ -35,7 +36,8 @@ object SessionSerializer : JsonSerializer<Session> {
             addProperty("username", it.username)
             addProperty("uuid", it.uuidOrNull.toString())
             addProperty("service", service.choiceName)
-            addProperty("type", it.accountType.getName())
+            // TODO(1.21.10-port): accountType is removed, it's now replaced in most places with mc.isOfflineDeveloperMode
+            addProperty("type", if (mc.isOfflineDeveloperMode) "legacy" else "msa")
             addProperty("avatar", formatAvatarUrl(it.uuidOrNull, it.username))
             addProperty("online", service.canJoinOnline)
             addProperty("premium", service.canJoinOnline) // todo: deprecated, kept for compatibility

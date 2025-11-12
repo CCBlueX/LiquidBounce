@@ -44,9 +44,9 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalT
         val optimalLine = ModuleScaffold.currentOptimalLine ?: return@handler
         val currentInput = event.directionalInput
 
-        val nearestPointOnLine = optimalLine.getNearestPointTo(player.pos)
+        val nearestPointOnLine = optimalLine.getNearestPointTo(player.entityPos)
 
-        val vecToLine = nearestPointOnLine.subtract(player.pos)
+        val vecToLine = nearestPointOnLine.subtract(player.entityPos)
         val horizontalVelocity = Vec3d(player.velocity.x, 0.0, player.velocity.z)
         val isRunningTowardsLine = vecToLine.dotProduct(horizontalVelocity) > 0.0
 
@@ -57,11 +57,11 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalT
                 MAX_CENTER_DEVIATION
             }
 
-        if (nearestPointOnLine.squaredDistanceTo(player.pos) < maxDeviation * maxDeviation) {
+        if (nearestPointOnLine.squaredDistanceTo(player.entityPos) < maxDeviation * maxDeviation) {
             return@handler
         }
 
-        val dgs = getDegreesRelativeToView(nearestPointOnLine.subtract(player.pos), player.yaw)
+        val dgs = getDegreesRelativeToView(nearestPointOnLine.subtract(player.entityPos), player.yaw)
 
         val newDirectionalInput = getDirectionalInputForDegrees(DirectionalInput.NONE, dgs, deadAngle = 0.0F)
 

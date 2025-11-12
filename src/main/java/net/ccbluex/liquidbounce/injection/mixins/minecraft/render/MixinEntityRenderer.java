@@ -23,18 +23,16 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMobOwners;
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.Frustum;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
+import net.minecraft.client.render.entity.EntityRenderManager;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.state.EntityRenderState;
+import net.minecraft.client.render.state.CameraRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
-import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -49,7 +47,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
 
     @Shadow
     @Final
-    protected EntityRenderDispatcher dispatcher;
+    protected EntityRenderManager dispatcher;
 
     @Shadow
     public abstract TextRenderer getTextRenderer();
@@ -62,18 +60,21 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void renderMobOwners(S state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+    private void renderMobOwners(S state, MatrixStack matrices, OrderedRenderCommandQueue queue, CameraRenderState cameraState, CallbackInfo ci) {
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
         var ownerName = ModuleMobOwners.INSTANCE.getOwnerInfoText(entity);
 
         if (ownerName != null) {
-            renderLabel(entity, ownerName, matrices, vertexConsumers, light);
+            renderLabel(entity, ownerName, matrices, state.light);
         }
     }
 
+    @SuppressWarnings("unused")
     @Unique
-    private void renderLabel(Entity entity, OrderedText text, MatrixStack matrices,
-                             VertexConsumerProvider vertexConsumers, int light) {
+    private void renderLabel(
+        Entity entity, OrderedText text,
+        MatrixStack matrices, int light
+    ) {
         var d = this.dispatcher.getSquaredDistanceToCamera(entity);
 
         if (d > 4096.0) {
@@ -84,23 +85,25 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
 
         matrices.push();
         matrices.translate(0.0D, f, 0.0D);
-        matrices.multiply(this.dispatcher.getRotation());
+        matrices.multiply(this.dispatcher.camera.getRotation());
         matrices.scale(-0.025F, -0.025F, 0.025F);
 
-        Matrix4f matrix4f = matrices.peek().getPositionMatrix();
+//        var matrix4f = matrices.peek().getPositionMatrix();
 
-        var g = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
-        var j = (int) (g * 255.0F) << 24;
-        var textRenderer = this.getTextRenderer();
-        var h = (float) (-textRenderer.getWidth(text) / 2);
+//        var g = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
+//        var j = (int) (g * 255.0F) << 24;
+//        var textRenderer = this.getTextRenderer();
+//        var h = (float) (-textRenderer.getWidth(text) / 2);
 
-        textRenderer.draw(text, h, 0, -1, false, matrix4f, vertexConsumers,
-                TextRenderer.TextLayerType.NORMAL, j, light);
+        // TODO(1.21.10-port): `vertexConsumers` is gone
+//        textRenderer.draw(text, h, 0, -1, false, matrix4f, vertexConsumers,
+//                TextRenderer.TextLayerType.NORMAL, j, light);
+
         matrices.pop();
     }
 
     @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
-    private void disableDuplicateNametagsAndInjectMobOwners(S state, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+    private void disableDuplicateNametagsAndInjectMobOwners(S state, MatrixStack matrices, OrderedRenderCommandQueue queue, CameraRenderState cameraRenderState, CallbackInfo ci) {
         // Don't render nametags
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
         if (ModuleNametags.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity)) {

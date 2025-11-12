@@ -136,7 +136,7 @@ object CriticalsJump : Choice("Jump") {
         val (simulatedPlayerPos, simulatedTargetPos) = if (target is PlayerEntity) {
             predictPlayerPos(target, ticksTillCrit.toInt())
         } else {
-            player.pos to target.pos
+            player.entityPos to target.entityPos
         }
 
         ModuleDebug.debugParameter(ModuleCriticals, "timeToCrit", ticksTillCrit)
@@ -196,7 +196,7 @@ object CriticalsJump : Choice("Jump") {
         for (i in 0 until ticks) {
             // Rotate to the target after some time
             if (i == reactionTime) {
-                simulatedPlayer.yaw = Rotation.lookingAt(point = target.pos, from = simulatedPlayer.pos).yaw
+                simulatedPlayer.yaw = Rotation.lookingAt(point = target.entityPos, from = simulatedPlayer.pos).yaw
             }
 
             simulatedPlayer.tick()

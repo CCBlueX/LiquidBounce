@@ -69,7 +69,7 @@ internal object FastClimb : ToggleableConfigurable(ModuleTerrainSpeed, "FastClim
         val moveHandler = handler<PlayerMoveEvent> {
 
             if (player.isClimbing && mc.options.forwardKey.isPressed) {
-                val startPos = player.pos
+                val startPos = player.entityPos
 
                 val pos = player.blockPos.mutableCopy()
                 for (y in 1..8) {

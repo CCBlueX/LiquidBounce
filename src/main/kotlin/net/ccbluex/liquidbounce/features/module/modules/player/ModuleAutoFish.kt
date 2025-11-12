@@ -128,7 +128,7 @@ object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
         if (packet is PlaySoundS2CPacket && packet.sound.value() in sounds) {
             if (PullTriggerSoundDistance.running) {
                 val soundPosition = Vec3d(packet.x, packet.y, packet.z)
-                val hookToSound = fishHook.pos.squaredDistanceTo(soundPosition)
+                val hookToSound = fishHook.entityPos.squaredDistanceTo(soundPosition)
                 debugParameter("HookToSound") { hookToSound }
 
                 // From my testing, we should see distances around 0.04 - 0.08 (Paper version 1.21.1-132)

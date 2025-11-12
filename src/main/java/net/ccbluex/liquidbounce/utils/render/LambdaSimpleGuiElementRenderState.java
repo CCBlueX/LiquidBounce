@@ -35,7 +35,8 @@ public record LambdaSimpleGuiElementRenderState(
     VerticesSetupHandler verticesSetupHandler
 ) implements LiquidBounceGuiElementRenderState {
     @Override
-    public void setupVertices(VertexConsumer vertices, float depth) {
-        verticesSetupHandler.setupVertices(vertices, this.pose(), depth);
+    public void setupVertices(VertexConsumer vertices) {
+        // TODO(1.21.10-port): depth parameter is gone
+        verticesSetupHandler.setupVertices(vertices, this.pose());
     }
 }

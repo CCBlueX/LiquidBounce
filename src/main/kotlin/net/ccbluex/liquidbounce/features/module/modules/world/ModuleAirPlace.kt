@@ -84,7 +84,8 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
         val targetPos = target.pos.toBlockPos()
         val worldSpaceBox = Box(targetPos)
 
-        val negCameraPos = mc.entityRenderDispatcher.camera.pos.negate()
+        // TODO(1.21.10-port): probably correct 2
+        val negCameraPos = mc.entityRenderDispatcher.camera?.pos?.negate() ?: return@handler
         val viewSpaceBox = worldSpaceBox.offset(negCameraPos)
 
         val fill = if (Preview.outlineOnly) Color4b.TRANSPARENT else Preview.fillColor

@@ -226,7 +226,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
             CommandCenter.state = CenterHandlerState.APPLY_ON_NEXT_EVENT
         }
 
-        startY = player.pos.y
+        startY = player.entityPos.y
         val centerBlockPos = player.blockPos.toCenterPos()
         centerPos = Vector2d(centerBlockPos.x, centerBlockPos.z)
     }
@@ -251,7 +251,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         val dx = abs(player.x - (centerPos?.x ?: 0.0))
         val dz = abs(player.z - (centerPos?.y ?: 0.0))
         val xzChange = DisableOn.XZ_MOVE in disableOn && (dx > 0.5 || dz > 0.5)
-        val speed = player.pos.subtract(player.lastX, player.lastY, player.lastZ).lengthSquared() * 20.0
+        val speed = player.entityPos.subtract(player.lastX, player.lastY, player.lastZ).lengthSquared() * 20.0
         val highSpeed = DisableOn.XZ_SPEED in disableOn && speed >= 5.0
         if (yChange || xzChange || highSpeed) {
             enabled = false
@@ -260,7 +260,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (DisableOn.Y_CHANGE in disableOn && player.pos.y != startY) {
+        if (DisableOn.Y_CHANGE in disableOn && player.entityPos.y != startY) {
             enabled = false
             return@handler
         }

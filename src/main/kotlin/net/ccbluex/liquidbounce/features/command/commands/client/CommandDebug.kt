@@ -132,7 +132,7 @@ object CommandDebug : Command.Factory {
         add("profile", JsonObject().apply {
             addProperty("name", mc.session.username)
             addProperty("uuid", mc.session.uuidOrNull.toString())
-            addProperty("type", mc.session.accountType.toString())
+            addProperty("type", if (mc.isOfflineDeveloperMode) "legacy" else "msa")
         })
 
         add("language", JsonObject().apply {

@@ -188,7 +188,8 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         .write(
             RenderSystem.getModelViewMatrix(),
             Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
-            RenderSystem.getModelOffset(),
+            // TODO(1.21.10-port): is this correct?
+            Vector3f(),
             RenderSystem.getTextureMatrix(),
             RenderSystem.getShaderLineWidth(),
         )
@@ -220,12 +221,12 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         // TODO: render pass extra actions
         renderPass.setPipeline(this)
         val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
-        if (scissorState.method_72091()) {
+        if (scissorState.isEnabled()) {
             renderPass.enableScissor(
-                scissorState.method_72092(),
-                scissorState.method_72093(),
-                scissorState.method_72094(),
-                scissorState.method_72095()
+                scissorState.x,
+                scissorState.y,
+                scissorState.width,
+                scissorState.height
             )
         }
 

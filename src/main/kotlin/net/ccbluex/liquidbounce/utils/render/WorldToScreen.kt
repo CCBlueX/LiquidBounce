@@ -78,8 +78,9 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
         val scaleFactor = mc.window.scaleFactor
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
+        // TODO(1.21.10-port): viewport{Width,Height} got removed, replaced with texture{Width,Height}
         val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
-            .mul(guiScaleMul * mc.framebuffer.viewportWidth, guiScaleMul * mc.framebuffer.viewportHeight, 1.0F)
+            .mul(guiScaleMul * mc.framebuffer.textureWidth, guiScaleMul * mc.framebuffer.textureHeight, 1.0F)
 
         return if (transformedPos.z < 1.0F) Vec3(screenPos.x, screenPos.y, transformedPos.z) else null
     }
@@ -93,8 +94,8 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
         val transformedPos = screenVec.mul(
-            1.0F / (guiScaleMul * mc.framebuffer.viewportWidth),
-            1.0F / (guiScaleMul * mc.framebuffer.viewportHeight),
+            1.0F / (guiScaleMul * mc.framebuffer.textureWidth),
+            1.0F / (guiScaleMul * mc.framebuffer.textureHeight),
             1.0F
         ).sub(1.0F, 1.0F, 0.0F).mul(1.0F, -1.0F, 1.0F)
 

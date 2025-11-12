@@ -62,7 +62,7 @@ fun inputByName(name: String): InputUtil.Key {
  * @return `true` if the key is pressed; otherwise, `false`.
  */
 val InputUtil.Key.isPressed get() =
-    InputUtil.isKeyPressed(mc.window.handle, this.code)
+    InputUtil.isKeyPressed(mc.window, this.code)
 
 /**
  * Reduces a full key name (e.g., "key.keyboard.a") to its minimal form (e.g., "a").

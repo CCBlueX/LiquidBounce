@@ -23,14 +23,14 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
-import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
+import net.minecraft.client.gui.screen.world.LevelLoadingScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.screen.ScreenTexts;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(DownloadingTerrainScreen.class)
-public abstract class MixinDownloadingTerrainScreen extends MixinScreen {
+@Mixin(LevelLoadingScreen.class)
+public abstract class MixinLevelLoadingScreen extends MixinScreen {
 
     @Override
     protected void init(CallbackInfo ci) {

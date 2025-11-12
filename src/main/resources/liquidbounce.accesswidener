@@ -1,6 +1,7 @@
 accessWidener	v1	named
 
 accessible field net/minecraft/entity/AreaEffectCloudEntity potionContentsComponent Lnet/minecraft/component/type/PotionContentsComponent;
+accessible method net/minecraft/block/EntityShapeContext <init> (ZZDLnet/minecraft/item/ItemStack;ZLnet/minecraft/entity/Entity;)V
 
 accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
 mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;

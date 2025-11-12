@@ -203,7 +203,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
                 ),
                 FaceHandlingOptions(CenterTargetPositionFactory),
                 stackToPlaceWith = item.itemStack,
-                PlayerLocationOnPlacement(position = player.pos),
+                PlayerLocationOnPlacement(position = player.entityPos),
             )
 
         val bestPlacementPlan = findBestBlockPlacementTarget(pos, options) ?: return null

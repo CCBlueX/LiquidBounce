@@ -212,15 +212,16 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
             renderEnvironmentForWorld(event.matrixStack) {
                 withPositionRelativeToCamera(pos) {
+                    val rs = mc.entityRenderDispatcher.getRenderer(entity).createRenderState()
+                    // TODO(1.21.10-port): figure out how to use the light stuff
                     mc.entityRenderDispatcher.render(
-                        entity,
+                        rs,
+                        null,
                         0.0,
                         0.0,
-                        0.0,
-                        1f,
+                        1.0,
                         event.matrixStack,
-                        mc.bufferBuilders.entityVertexConsumers,
-                        reducedLight
+                        null
                     )
                 }
             }

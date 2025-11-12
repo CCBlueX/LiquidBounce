@@ -31,7 +31,7 @@ internal object VelocityHypixel : VelocityMode("Hypixel") {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        
+
         if (ModuleFly.enabled) {
             return@handler
         }
@@ -45,8 +45,8 @@ internal object VelocityHypixel : VelocityMode("Hypixel") {
                     return@handler
                 }
             }
-            packet.velocityX = (player.velocity.x * 8000).toInt()
-            packet.velocityZ = (player.velocity.z * 8000).toInt()
+            packet.velocity.x = (player.velocity.x * 8000)
+            packet.velocity.z = (player.velocity.z * 8000)
         }
     }
 

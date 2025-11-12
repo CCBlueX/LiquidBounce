@@ -45,14 +45,16 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.util.SkinTextures
+import net.minecraft.entity.player.PlayerSkinType
+import net.minecraft.entity.player.SkinTextures
+import net.minecraft.util.AssetInfo
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
 object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
     /**
-     * Changes the player model by forcefully modifying [PlayerEntity.getSkinTextures],
+     * Changes the player model by forcefully modifying [net.minecraft.client.network.AbstractClientPlayerEntity.getSkin],
      * as PlayerListEntry is unreliable on some servers.
      */
     private val allowMixinAbstractClientPlayerEntity by boolean("ForceOverride", false)
@@ -104,7 +106,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                 val profile = withContext(Dispatchers.IO) {
                     val uuid = GameProfileRepository().fetchUuidByUsername(username)
                         ?: generateOfflinePlayerUuid(username)
-                    mc.sessionService.fetchProfile(uuid, false)?.profile
+                    mc.apiServices.sessionService.fetchProfile(uuid, false)?.profile
                         ?: GameProfile(uuid, username)
                 }
 
@@ -115,16 +117,16 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         object File : Mode("File") {
             private val image = file("Image")
 
-            private val model by enumChoice("Model", ModelChoice.WIDE)
+            private val skinType by enumChoice("Model", ModelChoice.WIDE)
 
             private val identifier = LiquidBounce.identifier("skin-changer-from-file")
 
             private enum class ModelChoice(
                 override val choiceName: String,
-                val model: SkinTextures.Model,
+                val type: PlayerSkinType,
             ) : NamedChoice {
-                SLIM("Slim", SkinTextures.Model.SLIM),
-                WIDE("Default", SkinTextures.Model.WIDE),
+                SLIM("Slim", PlayerSkinType.SLIM),
+                WIDE("Default", PlayerSkinType.WIDE),
             }
 
             override var skinTextures: Supplier<SkinTextures>? = null
@@ -139,7 +141,13 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                     nativeImage.registerTexture(identifier)
 
                     skinTextures = Supplier {
-                        SkinTextures(identifier, null, null, null, model.model, false)
+                        SkinTextures(
+                            AssetInfo.TextureAssetInfo(identifier),
+                            null,
+                            null,
+                            skinType.type,
+                            false,
+                        )
                     }
                 }
             }

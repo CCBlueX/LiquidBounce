@@ -82,7 +82,7 @@ abstract class NavigationBaseConfigurable<T>(
      * @return Calculated directional input
      */
     private fun calculateDirectionalInput(currentInput: DirectionalInput, goal: Vec3d): DirectionalInput {
-        val degrees = getDegreesRelativeToView(goal.subtract(player.pos), player.yaw)
+        val degrees = getDegreesRelativeToView(goal.subtract(player.entityPos), player.yaw)
         return getDirectionalInputForDegrees(currentInput, degrees, deadAngle = 20.0F)
     }
 

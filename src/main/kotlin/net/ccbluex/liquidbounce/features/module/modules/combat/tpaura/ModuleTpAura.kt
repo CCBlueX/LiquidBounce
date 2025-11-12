@@ -52,7 +52,7 @@ object ModuleTpAura : ClientModule("TpAura", Category.COMBAT, disableOnQuit = tr
 
     @Suppress("unused")
     private val attackRepeatable = tickHandler {
-        val position = desyncPlayerPosition ?: player.pos
+        val position = desyncPlayerPosition ?: player.entityPos
 
         clicker.click {
             val enemy = targetSelector.targets().firstOrNull {

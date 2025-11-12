@@ -62,7 +62,7 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
         val testCondition: (target: Entity) -> Boolean
     ) : NamedChoice {
         ONLY_FACING("OnlyFacing", { target ->
-            target.rotationVector.dotProduct(player.pos - target.pos) < 0
+            target.rotationVector.dotProduct(player.entityPos - target.entityPos) < 0
         }),
         ONLY_ON_GROUND("OnlyOnGround", { _ ->
             player.isOnGround

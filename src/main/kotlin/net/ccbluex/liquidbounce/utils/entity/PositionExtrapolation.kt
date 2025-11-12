@@ -59,7 +59,7 @@ class LinearPositionExtrapolation(
     private val basePosition: Vec3d,
     private val velocity: Vec3d
 ) : PositionExtrapolation {
-    constructor(entity: LivingEntity) : this(entity.pos, entity.pos - entity.lastPos)
+    constructor(entity: LivingEntity) : this(entity.entityPos, entity.entityPos - entity.lastPos)
 
     override fun getPositionInTicks(ticks: Double): Vec3d {
         return basePosition + velocity * ticks
