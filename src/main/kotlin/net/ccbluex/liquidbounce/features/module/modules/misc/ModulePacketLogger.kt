@@ -38,11 +38,11 @@ import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.minecraft.network.packet.Packet
 import net.minecraft.text.MutableText
 import net.minecraft.util.Formatting
+import net.minecraft.util.Identifier
 import okio.appendingSink
 import okio.buffer
 import java.io.File
 import java.lang.reflect.*
-import java.time.Instant
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
@@ -64,11 +64,6 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         if (OutputTarget.FILE in it) {
             createFileIfNeeded()
         }
-    }
-
-    private enum class OutputTarget(override val choiceName: String) : NamedChoice {
-        CHAT("Chat"),
-        FILE("File"),
     }
 
     private val outputDir = ConfigSystem.rootFolder.resolve("packet-logger").apply { mkdirs() }
@@ -116,71 +111,89 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
             return
         }
 
-        val clazz = packet::class.java
-
-        val packetClassName = classNames.computeIfAbsent(clazz, EnvironmentRemapper::remapClass)
-            .substringAfterLast('.')
-
-        if (OutputTarget.CHAT in outputTarget) {
-            val text = "".asText()
-            if (origin == TransferOrigin.INCOMING) {
-                text.append(message("receive").formatted(Formatting.BLUE).bold(true))
-            } else {
-                text.append(message("send").formatted(Formatting.GRAY).bold(true))
-            }
-
-            text.append(" ")
-
-            text.append(highlight(packetClassName).copyable(copyContent = packetClassName))
-
-            val packetName = packetId.toName()
-
-            text.append(regular(" (ID: "))
-            text.append(variable(packetName).copyable(copyContent = packetName))
-            text.append(regular(")"))
-
-            if (clazz.isRecord) {
-                text.append(" (Record)".asPlainText(Formatting.DARK_GRAY))
-            }
-
-            if (canceled) {
-                text.append(" (".asPlainText(Formatting.RED))
-                text.append(message("canceled").formatted(Formatting.RED))
-                text.append(")".asPlainText(Formatting.RED))
-            }
-
-            text.appendFields(clazz, packet)
-
-            chat(text, metadata = MessageMetadata(prefix = false))
+        outputTarget.forEach {
+            it.handle(origin, packet, canceled, packetId)
         }
+    }
 
-        if (OutputTarget.FILE in outputTarget) {
-            val file = outputFile.value ?: return
-            file.appendingSink().buffer().use {
-                it.writeUtf8(System.currentTimeMillis().toString())
-                    .writeByte(','.code)
-                    .writeUtf8(origin.choiceName)
-                    .writeByte(','.code)
-                    .writeUtf8(packetClassName)
-                    .writeByte(','.code)
-                    .writeUtf8(packetId.toString())
-                    .writeByte(','.code)
-                    .writeUtf8(canceled.toString())
-                    .writeByte(','.code)
-                    .writeByte('"'.code)
+    private enum class OutputTarget(override val choiceName: String) : NamedChoice {
+        CHAT("Chat") {
+            override fun handle(origin: TransferOrigin, packet: Packet<*>, canceled: Boolean, packetId: Identifier) {
+                val clazz = packet.javaClass
 
-                collectFields(clazz, packet).forEach { (name, type, value) ->
-                    it.writeUtf8(name)
-                        .writeByte(':'.code)
-                        .writeUtf8(type.toFullString())
-                        .writeByte('='.code)
-                        .writeUtf8(value.toString())
-                        .writeByte(';'.code)
+                val packetClassName = classNames.computeIfAbsent(clazz, EnvironmentRemapper::remapClass)
+                    .substringAfterLast('.')
+
+                val text = "".asText()
+                if (origin == TransferOrigin.INCOMING) {
+                    text.append(message("receive").formatted(Formatting.BLUE).bold(true))
+                } else {
+                    text.append(message("send").formatted(Formatting.GRAY).bold(true))
                 }
 
-                it.writeByte('"'.code).writeByte('\n'.code)
+                text.append(" ")
+
+                text.append(highlight(packetClassName).copyable(copyContent = packetClassName))
+
+                val packetName = packetId.toName()
+
+                text.append(regular(" (ID: "))
+                text.append(variable(packetName).copyable(copyContent = packetName))
+                text.append(regular(")"))
+
+                if (clazz.isRecord) {
+                    text.append(" (Record)".asPlainText(Formatting.DARK_GRAY))
+                }
+
+                if (canceled) {
+                    text.append(" (".asPlainText(Formatting.RED))
+                    text.append(message("canceled").formatted(Formatting.RED))
+                    text.append(")".asPlainText(Formatting.RED))
+                }
+
+                text.appendFields(clazz, packet)
+
+                chat(text, metadata = MessageMetadata(prefix = false))
             }
-        }
+        },
+
+        FILE("File") {
+            override fun handle(origin: TransferOrigin, packet: Packet<*>, canceled: Boolean, packetId: Identifier) {
+                val file = outputFile.value ?: return
+
+                val clazz = packet.javaClass
+
+                val packetClassName = classNames.computeIfAbsent(clazz, EnvironmentRemapper::remapClass)
+                    .substringAfterLast('.')
+
+                file.appendingSink().buffer().use {
+                    it.writeUtf8(System.currentTimeMillis().toString())
+                        .writeByte(','.code)
+                        .writeUtf8(origin.choiceName)
+                        .writeByte(','.code)
+                        .writeUtf8(packetClassName)
+                        .writeByte(','.code)
+                        .writeUtf8(packetId.toString())
+                        .writeByte(','.code)
+                        .writeUtf8(canceled.toString())
+                        .writeByte(','.code)
+                        .writeByte('"'.code)
+
+                    collectFields(clazz, packet).forEach { (name, type, value) ->
+                        it.writeUtf8(name)
+                            .writeByte(':'.code)
+                            .writeUtf8(type.toFullString())
+                            .writeByte('='.code)
+                            .writeUtf8(value.toString())
+                            .writeByte(';'.code)
+                    }
+
+                    it.writeByte('"'.code).writeByte('\n'.code)
+                }
+            }
+        };
+
+        abstract fun handle(origin: TransferOrigin, packet: Packet<*>, canceled: Boolean, packetId: Identifier)
     }
 
     @JvmRecord
