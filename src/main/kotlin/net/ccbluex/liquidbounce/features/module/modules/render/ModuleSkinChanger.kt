@@ -25,12 +25,12 @@ import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.core.HttpClient
+import net.ccbluex.liquidbounce.api.core.HttpException
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.core.renderScope
+import net.ccbluex.liquidbounce.api.thirdparty.PlayerSkinApi
 import net.ccbluex.liquidbounce.authlib.utils.generateOfflinePlayerUuid
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
-import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
@@ -48,15 +48,7 @@ import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.client.session.Session
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.SkinTextures
-import okhttp3.Call
-import okhttp3.MultipartBody
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.RequestBody.Companion.asRequestBody
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
 import okio.IOException
-import java.io.File
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
@@ -167,7 +159,9 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                     SkinTextures.Model.WIDE
                 }
 
-                changeSkin(skinTexture.url, variant)
+                request {
+                    changeSkin(skinTexture.url, variant)
+                }
             }
         }
 
@@ -211,7 +205,9 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                     return
                 }
 
-                uploadSkin(file, model.model)
+                request {
+                    uploadSkin(file, model.model)
+                }
             }
         }
     }
@@ -235,6 +231,16 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         uploadSkinFlow.emit(Unit)
     }
 
+    private inline fun request(block: PlayerSkinApi.() -> Unit) {
+        try {
+            PlayerSkinApi(YggdrasilEnvironment.PROD.environment.servicesHost).block()
+        } catch (e: HttpException) {
+            logger.error("Failed to upload skin: ${e.code} ${e.content}", e)
+        } catch (e: IOException) {
+            logger.error("Failed to upload skin", e)
+        }
+    }
+
     private fun canUploadSkin(): Boolean {
         if (!uploadSkin.get() || mc.session.accountType == Session.AccountType.LEGACY) {
             return false
@@ -256,59 +262,4 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
         return true
     }
-
-    private fun changeSkin(url: String, variant: SkinTextures.Model) {
-        // https://minecraft.wiki/w/Mojang_API#Change_skin
-        val jsonString = publicGson.toJson(ChangeSkinRequestDto(url, variant.variant))
-
-        val body = jsonString.toRequestBody(HttpClient.MediaTypes.JSON)
-
-        uploadSkin(body)
-    }
-
-    private fun uploadSkin(data: File, variant: SkinTextures.Model) {
-        // https://minecraft.wiki/w/Mojang_API#Upload_skin
-        val body = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("variant", variant.variant)
-            .addFormDataPart(
-                name = "file",
-                filename = "skin.png",
-                body = data.asRequestBody(HttpClient.MediaTypes.IMAGE_PNG)
-            )
-            .build()
-
-        uploadSkin(body)
-    }
-
-    private fun uploadSkin(body: RequestBody) {
-        val request = Request.Builder()
-            .url(YggdrasilEnvironment.PROD.environment.servicesHost + "/minecraft/profile/skins")
-            .addHeader("Authorization", "Bearer ${mc.session.accessToken}")
-            .post(body)
-            .build()
-
-        // fire and forget, we don't care responses
-        HttpClient.client.newCall(request).enqueue(object : okhttp3.Callback {
-            override fun onResponse(call: Call, response: Response) {
-                if (!response.isSuccessful) {
-                    logger.warn("Failed to upload skin: ${response.code} ${response.message}")
-                }
-                response.close()
-                logger.info("Successfully uploaded skin")
-            }
-
-            override fun onFailure(call: Call, e: IOException) {
-                logger.error("Failed to upload skin", e)
-            }
-        })
-    }
-
-    private val SkinTextures.Model.variant get() = when (this) {
-        SkinTextures.Model.WIDE -> "classic"
-        SkinTextures.Model.SLIM -> "slim"
-    }
-
-    @JvmRecord
-    private data class ChangeSkinRequestDto(val url: String, val variant: String)
 }
