@@ -114,7 +114,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         @JvmField
         val Blit = newPipeline("jcef_blit") {
             withLocation("pipeline/entity_outline_blit")
-            withVertexShader("core/blit_screen")
+            withVertexShader("core/screenquad")
             withFragmentShader("core/blit_screen")
             withSampler("InSampler")
             withBlend(JCEF_COMPATIBLE_BLEND)
