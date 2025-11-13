@@ -37,6 +37,6 @@ public record LambdaSimpleGuiElementRenderState(
     @Override
     public void setupVertices(VertexConsumer vertices) {
         // TODO(1.21.10-port): depth parameter is gone
-        verticesSetupHandler.setupVertices(vertices, this.pose());
+        verticesSetupHandler.setupVertices(vertices, this.pose(), 1);
     }
 }

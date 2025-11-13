@@ -44,10 +44,10 @@ public record QuadGuiElementRenderState(
     @Override
     public void setupVertices(VertexConsumer vertices) {
         // TODO(1.21.10-port): depth parameter is gone
-//        vertices.vertex(pose, x0, y0, depth).color(argb);
-//        vertices.vertex(pose, x0, y1, depth).color(argb);
-//        vertices.vertex(pose, x1, y1, depth).color(argb);
-//        vertices.vertex(pose, x1, y0, depth).color(argb);
+        vertices.vertex(pose, x0, y0).color(argb);
+        vertices.vertex(pose, x0, y1).color(argb);
+        vertices.vertex(pose, x1, y1).color(argb);
+        vertices.vertex(pose, x1, y0).color(argb);
     }
 
     @Override

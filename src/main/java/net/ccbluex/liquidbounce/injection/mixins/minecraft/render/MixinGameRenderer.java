@@ -135,7 +135,7 @@ public abstract class MixinGameRenderer {
      * Hook world render event
      */
     @Inject(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z"))
-    public void hookWorldRender(RenderTickCounter tickCounter, CallbackInfo ci, @Local(ordinal = 2) Matrix4f matrix4f2) {
+    public void hookWorldRender(RenderTickCounter tickCounter, CallbackInfo ci, @Local(ordinal = 1) Matrix4f matrix4f2) {
         var newMatStack = Pools.MatStack.borrow();
         newMatStack.multiplyPositionMatrix(matrix4f2);
         EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.camera, tickCounter.getTickProgress(false)));
@@ -147,7 +147,7 @@ public abstract class MixinGameRenderer {
         ModuleItemChams.INSTANCE.applyToTexture(this.lightmapTextureManager.getGlTextureView());
     }
 
-    @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", shift = At.Shift.AFTER))
+    @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", shift = At.Shift.AFTER))
     public void drawItemCharms(float tickProgress, boolean sleeping, Matrix4f positionMatrix, CallbackInfo ci) {
         ModuleItemChams.INSTANCE.resetTexture(this.lightmapTextureManager.getGlTextureView());
     }
@@ -170,7 +170,7 @@ public abstract class MixinGameRenderer {
     }
 
     @Inject(method = "bobView", at = @At("HEAD"), cancellable = true)
-    private void injectBobView(MatrixStack matrixStack, float f, CallbackInfo callbackInfo) {
+    private void injectBobView(MatrixStack matrixStack, float tickProgress, CallbackInfo callbackInfo) {
         if (ModuleNoBob.INSTANCE.getRunning() || ModuleTracers.INSTANCE.getRunning()) {
             callbackInfo.cancel();
             return;
@@ -186,12 +186,13 @@ public abstract class MixinGameRenderer {
 
         float additionalBobbing = ModuleDankBobbing.INSTANCE.getMotion();
 
-        float g = playerEntity.distanceMoved - playerEntity.lastDistanceMoved;
-        float h = -(playerEntity.distanceMoved + g * f);
-        float i = MathHelper.lerp(f, playerEntity.lastStrideDistance, playerEntity.strideDistance);
-        matrixStack.translate((MathHelper.sin(h * MathHelper.PI) * i * 0.5F), -Math.abs(MathHelper.cos(h * MathHelper.PI) * i), 0.0D);
-        matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(h * MathHelper.PI) * i * (3.0F + additionalBobbing)));
-        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * i) * 5.0F));
+        final var state = playerEntity.getState();
+
+        float g = state.getReverseLerpedDistanceMoved(tickProgress);
+        float h = state.lerpMovement(tickProgress);
+        matrixStack.translate(MathHelper.sin(g * MathHelper.PI) * h * 0.5f, -Math.abs(MathHelper.cos(g * MathHelper.PI) * h), 0.0f);
+        matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(h * MathHelper.PI) * h * (3.0F + additionalBobbing)));
+        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * h) * 5.0F));
 
         callbackInfo.cancel();
     }
