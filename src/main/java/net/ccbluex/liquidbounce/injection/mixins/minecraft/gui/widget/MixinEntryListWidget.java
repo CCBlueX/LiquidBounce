@@ -22,7 +22,9 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.widget;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.EntryListWidget;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -30,10 +32,11 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(EntryListWidget.class)
 public class MixinEntryListWidget {
 
-    @ModifyExpressionValue(method = "renderWidget",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/widget/EntryListWidget;renderHeader:Z"))
-    private boolean renderBackground(boolean original) {
-        return original && HideAppearance.INSTANCE.isHidingNow();
+    @WrapWithCondition(method = "renderWidget",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/EntryListWidget;drawHeaderAndFooterSeparators(Lnet/minecraft/client/gui/DrawContext;)V"))
+    private boolean renderBackground(EntryListWidget instance, DrawContext context) {
+        // TODO(1.21.10-port): the boolean is gone, IDK what else to do.
+        return HideAppearance.INSTANCE.isHidingNow();
     }
 
 }
