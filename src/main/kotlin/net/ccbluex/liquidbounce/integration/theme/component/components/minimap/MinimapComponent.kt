@@ -238,8 +238,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                     val toX = fromX + 1F
                     val toY = fromY + 1F
 
-                    // TODO(1.21.10-port): convert this to Entry to Matrix4f
-
+                      // TODO(1.21.10-port): convert this to Entry to Matrix4f
 //                    vertex(pose, fromX, fromY, depth).texture(texPosition.xMin, texPosition.yMin)
 //                        .color(-1)
 //                    vertex(pose, fromX, toY, depth).texture(texPosition.xMin, texPosition.yMax)
