@@ -21,9 +21,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory;
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -36,11 +33,9 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.state.LivingEntityRenderState;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
@@ -120,19 +115,20 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         return original;
     }
 
-    @WrapOperation(method = "render(Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;III)V"))
-    private void injectTrueSight(EntityModel instance, MatrixStack matrixStack, VertexConsumer vertexConsumer, int light, int overlay, int color, Operation<Void> original, @Local(argsOnly = true) S livingEntityRenderState) {
-        if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(livingEntityRenderState)) {
-            color = ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
-        }
-
-        var trueSightModule = ModuleTrueSight.INSTANCE;
-        var trueSight = trueSightModule.getRunning() && trueSightModule.getEntities();
-        if (ModuleTrueSight.canRenderEntities(livingEntityRenderState)) {
-            color = trueSight ? trueSightModule.getEntityColor().toARGB() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
-        }
-        original.call(instance, matrixStack, vertexConsumer, light, overlay, color);
-    }
+    // TODO(1.21.10-port): fix injectTrueSight
+//    @WrapOperation(method = "render(Lnet/minecraft/client/render/entity/state/LivingEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/render/state/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/RenderLayer;IIILnet/minecraft/client/texture/Sprite;ILnet/minecraft/client/render/command/ModelCommandRenderer$CrumblingOverlayCommand;)V"))
+//    private void injectTrueSight(OrderedRenderCommandQueue instance, Model model, Object o, MatrixStack matrixStack, RenderLayer renderLayer, int i, int i2, int i3, Sprite sprite, int i, ModelCommandRenderer.CrumblingOverlayCommand crumblingOverlayCommand, Operation<Void> original, @Local(argsOnly = true) S livingEntityRenderState) {
+//        if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(livingEntityRenderState)) {
+//            color = ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
+//        }
+//
+//        var trueSightModule = ModuleTrueSight.INSTANCE;
+//        var trueSight = trueSightModule.getRunning() && trueSightModule.getEntities();
+//        if (ModuleTrueSight.canRenderEntities(livingEntityRenderState)) {
+//            color = trueSight ? trueSightModule.getEntityColor().toARGB() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
+//        }
+//        original.call(instance, model, o, matrixStack, renderLayer, i, i2, i3, sprite, i, crumblingOverlayCommand);
+//    }
 
     @ModifyReturnValue(method = "getRenderLayer", at = @At("RETURN"))
     private RenderLayer injectTrueSight(RenderLayer original, S state, boolean showBody, boolean translucent, boolean showOutline) {
