@@ -34,9 +34,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(KeyBinding.class)
 public class MixinKeyBinding {
 
-    @Inject(method = "<init>(Ljava/lang/String;Lnet/minecraft/client/util/InputUtil$Type;ILjava/lang/String;)V", at = @At("RETURN"), require = 1)
-    private void injectVanillaKeybindRegistering(String translationKey, InputUtil.Type type, int code, String category, CallbackInfo ci) {
-        VanillaTranslationRecognizer.INSTANCE.registerKey(translationKey);
+    @Inject(method = "<init>(Ljava/lang/String;Lnet/minecraft/client/util/InputUtil$Type;ILnet/minecraft/client/option/KeyBinding$Category;)V", at = @At("RETURN"), require = 1)
+    private void injectVanillaKeybindRegistering(String id, InputUtil.Type type, int code, KeyBinding.Category category, CallbackInfo ci) {
+        VanillaTranslationRecognizer.INSTANCE.registerKey(id);
     }
 
     @Inject(method = "setBoundKey", at = @At("RETURN"))
