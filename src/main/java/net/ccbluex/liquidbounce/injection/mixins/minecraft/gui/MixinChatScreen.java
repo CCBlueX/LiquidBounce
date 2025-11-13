@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 import net.ccbluex.liquidbounce.interfaces.ChatHudAddition;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -63,12 +64,12 @@ public abstract class MixinChatScreen extends MixinScreen {
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"))
-    private void hookMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+    private void hookMouseClicked(Click click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
         if (!(ModuleBetterChat.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getRunning())) {
             return;
         }
 
-        int[] activeMessage = getActiveMessage((int)mouseX, (int)mouseY);
+        int[] activeMessage = getActiveMessage((int)click.x(), (int)click.y());
 
         if (activeMessage == null) {
             return;
@@ -91,7 +92,7 @@ public abstract class MixinChatScreen extends MixinScreen {
         if (messageParts.isEmpty())
             return;
 
-        ModuleBetterChat.Copy.copyMessage(messageParts, button);
+        ModuleBetterChat.Copy.copyMessage(messageParts, click.button());
     }
 
     // [0] - y,

@@ -24,14 +24,12 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent;
-import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent;
 import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.FakePlayer;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint;
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
@@ -39,8 +37,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityDimensions;
-import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -62,15 +58,16 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @Shadow
     public abstract SoundCategory getSoundCategory();
 
+    // TODO(1.21.10-port): stride distance is gone, it's probably handled somewhere else in the render states.
     /**
      * Hook player stride event
      */
-    @ModifyVariable(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;strideDistance:F", shift = At.Shift.BEFORE, ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setMovementSpeed(F)V"), to = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z")), index = 1, ordinal = 0, require = 1, allow = 1)
-    private float hookStrideForce(float strideForce) {
-        final PlayerStrideEvent event = new PlayerStrideEvent(strideForce);
-        EventManager.INSTANCE.callEvent(event);
-        return event.getStrideForce();
-    }
+//    @ModifyVariable(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;strideDistance:F", shift = At.Shift.BEFORE, ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setMovementSpeed(F)V"), to = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z")), index = 1, ordinal = 0, require = 1, allow = 1)
+//    private float hookStrideForce(float strideForce) {
+//        final PlayerStrideEvent event = new PlayerStrideEvent(strideForce);
+//        EventManager.INSTANCE.callEvent(event);
+//        return event.getStrideForce();
+//    }
 
     /**
      * Hook safe walk event
@@ -261,19 +258,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @Unique
     private void liquid_bounce$playSoundIfFakePlayer(Entity target, SoundEvent soundEvent) {
         if (target instanceof FakePlayer) {
-            getWorld().playSound(PlayerEntity.class.cast(this), getX(), getY(), getZ(), soundEvent, getSoundCategory(), 1F, 1F);
-        }
-    }
-
-    /**
-     * Sneak height fix
-     * @see net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose
-     */
-    @Inject(method = "getBaseDimensions", at = @At("RETURN"), cancellable = true)
-    private void hookGetBaseDimensions(EntityPose pose, CallbackInfoReturnable<EntityDimensions> cir) {
-        if (pose == EntityPose.CROUCHING) {
-            var dimensions = ModuleNoPose.INSTANCE.modifySneakHeight();  /* If module/setting is not enabled, modifySneakHeight() returns null */
-            if (dimensions != null) cir.setReturnValue(dimensions);
+            getEntityWorld().playSound(PlayerEntity.class.cast(this), getX(), getY(), getZ(), soundEvent, getSoundCategory(), 1F, 1F);
         }
     }
 }

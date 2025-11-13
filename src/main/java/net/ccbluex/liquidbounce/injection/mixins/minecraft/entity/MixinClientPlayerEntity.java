@@ -228,7 +228,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
     /**
      * Hook portal menu module to make opening menus in portals possible
      */
-    @ModifyExpressionValue(method = "tickNausea", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;shouldPause()Z"))
+    @ModifyExpressionValue(method = "tickNausea", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;keepOpenThroughPortal()Z"))
     private boolean hookNetherClosingScreen(boolean original) {
         if (ModulePortalMenu.INSTANCE.getRunning()) {
             return true;
@@ -337,7 +337,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
                 RotationManager.INSTANCE.getCurrentRotation() != null) && bl4;
     }
 
-    @ModifyConstant(method = "canSprint", constant = @Constant(floatValue = 6.0F), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I", ordinal = 0)))
+    @ModifyConstant(method = "canSprint()Z", constant = @Constant(floatValue = 6.0F), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I", ordinal = 0)))
     private float hookSprintIgnoreHunger(float constant) {
         return ModuleSprint.INSTANCE.getShouldIgnoreHunger() ? -1F : constant;
     }
@@ -356,7 +356,8 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return event.getSprint();
     }
 
-    @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isBlind()Z"))
+    // canStartSprinting calls canSprint(boolean) which then checks for blindness
+    @ModifyExpressionValue(method = "canSprint(Z)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasBlindnessEffect()Z"))
     private boolean hookSprintIgnoreBlindness(boolean original) {
         return !ModuleSprint.INSTANCE.getShouldIgnoreBlindness() && original;
     }
