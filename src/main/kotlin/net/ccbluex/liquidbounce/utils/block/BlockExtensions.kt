@@ -219,10 +219,16 @@ inline fun Vec3d.searchBlocksInRadius(
 fun BlockPos.searchBlocksInCuboid(radius: Int): BlockBox =
     this.expendToBlockBox(radius, radius, radius)
 
+data class LayerAndBlockPos(val layer: Int, val posAsLong: Long) {
+    private var _blockPos: BlockPos? = null
+    val blockPos: BlockPos get() = _blockPos ?: BlockPos.fromLong(posAsLong).also { _blockPos = it }
+    fun setTo(blockPos: BlockPos.Mutable): BlockPos.Mutable = blockPos.set(this.posAsLong)
+}
+
 /**
  * Scan blocks outwards from a bed
  */
-fun BlockPos.searchBedLayer(state: BlockState, layers: Int): Sequence<IntLongPair> {
+fun BlockPos.searchBedLayer(state: BlockState, layers: Int): Sequence<LayerAndBlockPos> {
     check(state.isBed) { "This function is only available for Beds" }
 
     val anotherPartDirection = state.anotherBedPartDirection()!!
@@ -248,18 +254,18 @@ fun BlockPos.searchBedLayer(state: BlockState, layers: Int): Sequence<IntLongPai
  * @return The layer to the BlockPos (long value)
  */
 @Suppress("detekt:CognitiveComplexMethod")
-fun BlockPos.searchLayer(layers: Int, vararg directions: Direction): Sequence<IntLongPair> =
+fun BlockPos.searchLayer(layers: Int, vararg directions: Direction): Sequence<LayerAndBlockPos> =
     sequence {
         val longValueOfThis = this@searchLayer.asLong()
         val initialCapacity = layers * layers * directions.size / 2
 
-        val queue = ArrayDeque<IntLongPair>(initialCapacity).apply { add(IntLongPair.of(0, longValueOfThis)) }
+        val queue = ArrayDeque<LayerAndBlockPos>(initialCapacity).apply { add(LayerAndBlockPos(0, longValueOfThis)) }
         val visited = LongOpenHashSet(initialCapacity).apply { add(longValueOfThis) }
 
         while (queue.isNotEmpty()) {
             val next = queue.removeFirst()
-            val layer = next.leftInt()
-            val pos = next.rightLong()
+            val layer = next.layer
+            val pos = next.posAsLong
 
             if (layer > 0) {
                 yield(next)
@@ -271,7 +277,7 @@ fun BlockPos.searchLayer(layers: Int, vararg directions: Direction): Sequence<In
             for (direction in directions) {
                 val newLong = BlockPos.offset(pos, direction)
                 if (visited.add(newLong)) {
-                    queue.add(IntLongPair.of(layer + 1, newLong))
+                    queue.add(LayerAndBlockPos(layer + 1, newLong))
                 }
             }
         }

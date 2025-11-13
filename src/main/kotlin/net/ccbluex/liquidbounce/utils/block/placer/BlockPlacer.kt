@@ -158,7 +158,7 @@ class BlockPlacer(
         // return if no blocks are available
         slotFinder(null) ?: return@handler
 
-        val itemStack = ItemStack(Items.SANDSTONE)
+        val itemStack = Items.SANDSTONE.defaultStack
 
         inaccessible.clear()
         rotationMode.activeChoice.onTickStart()

@@ -20,8 +20,6 @@ package net.ccbluex.liquidbounce.utils.block.bed
 
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.fastutil.component1
-import net.ccbluex.fastutil.component2
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent

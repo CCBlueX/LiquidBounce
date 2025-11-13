@@ -18,9 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import it.unimi.dsi.fastutil.ints.IntLongPair
-import net.ccbluex.fastutil.component1
-import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -29,17 +26,30 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.block.LayerAndBlockPos
+import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.item.PreferBlockHardness
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.item.asItemSlotComparator
 import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.block.BedBlock
 import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.item.BlockItem
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 
 object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD) {
 
@@ -48,56 +58,24 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
     private val isSelfBedMode = choices("SelfBed", 0, ::isSelfBedChoices)
 
     private val placer = tree(BlockPlacer("Place", this, Priority.NOT_IMPORTANT, {
-        val selected = player.inventory.selectedSlot
-        var maxHardness = Float.MIN_VALUE
-        var maxCount = 0
-        var best: HotbarItemSlot? = null
-
-        Slots.OffhandWithHotbar.forEach {
-            if (!it.itemStack.isFullBlock()) {
-                return@forEach
-            }
-
-            val hardness = (it.itemStack.item as BlockItem).block.hardness
-            // -1 is unbreakable
-            if (hardness < maxHardness && hardness != -1f || maxHardness == -1f && hardness != -1f) {
-                return@forEach
-            }
-
-            // prioritize blocks with a higher hardness
-            if (hardness > maxHardness || hardness == -1f && maxHardness != -1f) {
-                best = it
-                maxHardness = hardness
-                return@forEach
-            }
-
-            // prioritize stacks with a higher count
-            val count = it.itemStack.count
-            if (count > maxCount) {
-                best = it
-                maxCount = count
-            }
-
-            best!!
-
-            // prioritize stacks closer to the selected slot
-            val distance1a = (it.hotbarSlot - selected + 9) % 9
-            val distance1b = (selected - it.hotbarSlot + 9) % 9
-            val distance1 = minOf(distance1a, distance1b)
-
-            val distance2a = (best.hotbarSlot - selected + 9) % 9
-            val distance2b = (selected - best.hotbarSlot + 9) % 9
-            val distance2 = minOf(distance2a, distance2b)
-
-            if (distance1 < distance2) {
-                best = it
-            }
-        }
-
-        best
+        Slots.OffhandWithHotbar.filter { it.itemStack.isFullBlock() }.minWithOrNull(COMPARATOR_SLOT)
     }, false))
 
     private val requiresSneak by boolean("RequiresSneak", false)
+
+    private val COMPARATOR_SLOT =
+        ComparatorChain(
+            PreferBlockHardness.STRONG_FIRST.asItemSlotComparator(),
+            PreferStackSize.PREFER_MORE.asItemSlotComparator(),
+            HotbarItemSlot.PREFER_NEARBY,
+        )
+
+    // Layer(ASC) Center Distance(DESC)
+    private val COMPARATOR_PLACEMENT_TARGET =
+        Comparator.comparingInt<LayerAndBlockPos> { it.layer }
+            .thenComparingDouble {
+                -it.blockPos.getCenterDistanceSquaredEyes()
+            }
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
@@ -113,7 +91,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
             return@handler
         }
 
-        placer.slotFinder(null) ?: return@handler
+        val slotToUse = placer.slotFinder(null) ?: return@handler
 
         val eyesPos = player.eyePos
         val rangeSq = placer.range * placer.range
@@ -132,38 +110,58 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
             (blockPos, _) -> blockPos.getSquaredDistance(eyesPos)
         } ?: return@handler
 
-        val mutable = BlockPos.Mutable()
-        val placementPositions = blockPos.searchBedLayer(state, maxLayers).filter { (_, pos) ->
-            mutable.set(pos).toCenterPos().squaredDistanceTo(eyesPos) <= rangeSq
-        }.toCollection(mutableListOf())
+        val itemStack = slotToUse.itemStack
+        val searchOptions = BlockPlacementTargetFindingOptions(
+            BlockOffsetOptions(
+                listOf(BlockPos.ORIGIN),
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+            ),
+            FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = placer.wallRange > 0f),
+            stackToPlaceWith = itemStack,
+            PlayerLocationOnPlacement(position = player.pos),
+        )
+
+        val placementPositions = mutableListOf<LayerAndBlockPos>()
+
+        for (target in blockPos.searchBedLayer(state, maxLayers)) {
+            val pos = target.blockPos
+            if (pos.getCenterDistanceSquaredEyes() > rangeSq) continue
+            if (pos.getState()?.isReplaceable != true) continue
+
+            val placementTarget = findBestBlockPlacementTarget(pos, searchOptions) ?: continue
+            if (placer.canReach(placementTarget.interactedBlockPos, placementTarget.rotation)) {
+                placementPositions.add(target)
+            }
+        }
 
         if (placementPositions.isEmpty()) {
             return@handler
         }
 
         val updatePositions = placementPositions.apply {
-            // Layer(ASC) Center Distance(DESC)
-            sortWith(
-                Comparator.comparingInt<IntLongPair> { it.leftInt() }
-                    .thenComparingDouble {
-                        -mutable.set(it.rightLong()).getSquaredDistance(eyesPos)
-                    }
+            sortWith(COMPARATOR_PLACEMENT_TARGET)
+        }
+
+        debugGeometry("BedLayerPositions") {
+            ModuleDebug.DebugCollection(
+                updatePositions.map {
+                    val box = Box(it.blockPos)
+                    ModuleDebug.DebuggedBox(box, Color4b.BLUE.with(a = 10))
+                }
             )
         }
 
-        debugGeometry("PlacementPosition") {
+        debugGeometry("PlacementPositions") {
             ModuleDebug.DebugCollection(
-                updatePositions.map { (_, pos) ->
-                    ModuleDebug.DebuggedPoint(mutable.set(pos).toCenterPos(), Color4b.RED.with(a = 100))
+                updatePositions.map {
+                    ModuleDebug.DebuggedPoint(it.blockPos.toCenterPos(), Color4b.RED.with(a = 100))
                 }
             )
         }
 
         // Need ordered set (like TreeSet/LinkedHashSet)
         placer.update(
-            updatePositions.mapTo(linkedSetOf()) {
-                BlockPos.fromLong(it.rightLong())
-            }
+            updatePositions.mapTo(linkedSetOf()) { it.blockPos }
         )
     }
 

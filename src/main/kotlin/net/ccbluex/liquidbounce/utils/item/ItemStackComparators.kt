@@ -66,6 +66,28 @@ object PreferFullCubeBlocks : Comparator<ItemStack> {
 
 }
 
+class PreferBlockHardness private constructor(private val strongFirst: Boolean) : Comparator<ItemStack> {
+    private fun score(stack: ItemStack): Float {
+        val item = stack.item
+        if (item !is BlockItem) return Float.NEGATIVE_INFINITY // Non block -> weakest
+        val hardness = item.block.hardness
+        return if (hardness < 0f) Float.POSITIVE_INFINITY else hardness // -1f = unbreakable -> strongest
+    }
+
+    override fun compare(o1: ItemStack, o2: ItemStack): Int {
+        val s1 = score(o1)
+        val s2 = score(o2)
+        return if (strongFirst) s2.compareTo(s1) else s1.compareTo(s2)
+    }
+
+    companion object {
+        @JvmField
+        val WEAK_FIRST = PreferBlockHardness(false)
+        @JvmField
+        val STRONG_FIRST = PreferBlockHardness(true)
+    }
+}
+
 /**
  * This predicate sorts blocks by
  * 1. least slipperiness
