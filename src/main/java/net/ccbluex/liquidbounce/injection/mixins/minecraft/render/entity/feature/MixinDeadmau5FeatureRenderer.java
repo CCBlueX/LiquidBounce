@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(Deadmau5FeatureRenderer.class)
 public class MixinDeadmau5FeatureRenderer {
 
-    @ModifyExpressionValue(method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/client/render/entity/state/PlayerEntityRenderState;FF)V", at = @At(value = "INVOKE", target = "Ljava/lang/String;equals(Ljava/lang/Object;)Z", remap = false))
+    @ModifyExpressionValue(method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;ILnet/minecraft/client/render/entity/state/PlayerEntityRenderState;FF)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;extraEars:Z", remap = false))
     private boolean onRender(boolean original, @Local(argsOnly = true) PlayerEntityRenderState playerEntityRenderState) {
         return original || CosmeticService.INSTANCE.hasCosmetic(((EntityRenderStateAddition) playerEntityRenderState).liquid_bounce$getEntity().getUuid(), CosmeticCategory.DEADMAU5_EARS);
     }
