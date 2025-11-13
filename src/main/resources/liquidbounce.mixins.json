@@ -29,7 +29,6 @@
     "minecraft.client.MixinMinecraftClient",
     "minecraft.client.MixinMouse",
     "minecraft.client.MixinNarratorManager",
-    "minecraft.client.MixinParticleManager",
     "minecraft.client.MixinPlayerInventory",
     "minecraft.client.MixinRawProjectionMatrix",
     "minecraft.client.MixinTextHandler",
