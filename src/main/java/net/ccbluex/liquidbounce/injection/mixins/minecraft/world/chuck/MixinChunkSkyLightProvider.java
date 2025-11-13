@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ChunkSkyLightProvider.class)
 public class MixinChunkSkyLightProvider {
-    @Inject(at = @At("HEAD"), method = "method_51531", cancellable = true)
+    @Inject(at = @At("HEAD"), method = "propagateLightIncrease", cancellable = true)
     private void hookNoBlindSkyLightUpdates(long blockPos, long l, int lightLevel, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.SKYLIGHT_UPDATES)) {
             ci.cancel();
