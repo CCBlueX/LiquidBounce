@@ -140,7 +140,7 @@ class MinimapTextureAtlasManager {
     /**
      * Uploads texture changes to the GPU
      *
-     * @return the [GpuTextureView-] of the texture
+     * @return the [GpuTextureView] of the texture
      */
     fun prepareRendering(): GpuTextureView {
         lock.read {

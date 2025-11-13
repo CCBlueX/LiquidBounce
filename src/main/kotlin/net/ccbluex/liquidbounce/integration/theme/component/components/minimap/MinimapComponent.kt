@@ -134,7 +134,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                     }
 
                     if (showEntity) {
-                        drawEntities(event.tickDelta, basePos = Vec2f(baseX.toFloat(), baseZ.toFloat()))
+                        drawEntities(event.tickDelta, baseX = baseX.toFloat(), baseZ = baseZ.toFloat())
                     }
                 }
             }
@@ -231,16 +231,18 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                     val chunkPos = ChunkPos(centerPos.x + x, centerPos.z + y)
 
                     val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
-                    val from = Vec2f(x.toFloat(), y.toFloat())
-                    val to = from.add(1.0F)
+                    val fromX = x.toFloat()
+                    val fromY = y.toFloat()
+                    val toX = fromX + 1F
+                    val toY = fromY + 1F
 
-                    vertex(pose, from.x, from.y, depth).texture(texPosition.xMin, texPosition.yMin)
+                    vertex(pose, fromX, fromY, depth).texture(texPosition.xMin, texPosition.yMin)
                         .color(-1)
-                    vertex(pose, from.x, to.y, depth).texture(texPosition.xMin, texPosition.yMax)
+                    vertex(pose, fromX, toY, depth).texture(texPosition.xMin, texPosition.yMax)
                         .color(-1)
-                    vertex(pose, to.x, to.y, depth).texture(texPosition.xMax, texPosition.yMax)
+                    vertex(pose, toX, toY, depth).texture(texPosition.xMax, texPosition.yMax)
                         .color(-1)
-                    vertex(pose, to.x, from.y, depth).texture(texPosition.xMax, texPosition.yMin)
+                    vertex(pose, toX, fromY, depth).texture(texPosition.xMax, texPosition.yMin)
                         .color(-1)
                 }
             }
@@ -249,7 +251,8 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
     private fun DrawContext.drawEntities(
         tickDelta: Float,
-        basePos: Vec2f,
+        baseX: Float,
+        baseZ: Float,
     ) {
         for (entity in RenderedEntities.sortedWith(MINIMAP_ENTITY_ORDER)) {
             val color = ModuleESP.getColor(entity)
@@ -258,7 +261,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             val rot = entity.interpolateCurrentRotation(tickDelta)
 
             matrices.pushMatrix()
-            matrices.translate(pos.x.toFloat() / 16.0F - basePos.x, pos.z.toFloat() / 16.0F - basePos.y)
+            matrices.translate(pos.x.toFloat() / 16.0F - baseX, pos.z.toFloat() / 16.0F - baseZ)
             matrices.rotate(rot.yaw.toRadians())
 
             val w = 2.0f
