@@ -8,6 +8,7 @@
   "client": [
     "authlib.MixinMinecraftClient",
     "authlib.MixinYggdrasilMinecraftSessionService",
+    "authlib.MixinYggdrasilMinecraftSessionServiceAccessor",
     "blaze3d.MixinGlStateManager",
     "djl.MixinUtils",
     "lithium.MixinChunkAwareBlockCollisionSweeper",
@@ -147,8 +148,5 @@
   "server": [],
   "injectors": {
     "defaultRequire": 1
-  },
-  "mixins": [
-    "authlib.MixinYggdrasilMinecraftSessionServiceAccessor"
-  ]
+  }
 }
