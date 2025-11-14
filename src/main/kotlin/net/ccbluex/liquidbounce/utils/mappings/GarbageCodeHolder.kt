@@ -137,11 +137,7 @@ object GarbageCodeHolder {
 
         return paired.map {
             val (o2i, i2y) = it
-            val eh = getEntryHandler(i2y.asEntryLike(), o2i.asEntryLike())
-            MethodEntry { ns ->
-                val t = eh(ns)
-                t
-            }
+            MethodEntry(getEntryHandler(i2y.asEntryLike(), o2i.asEntryLike()))
         }
     }
 
