@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
@@ -56,12 +57,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
         }
     }
 
-    @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
-        if (!inGame) {
-            return@handler
-        }
-
+    private fun refresh() {
         entities.clear()
 
         val shouldCheckCombineMobs = ModuleCombineMobs.running
@@ -75,6 +71,19 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
                 entities += entity
             }
         }
+    }
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+        if (inGame) {
+            refresh()
+        }
+
+    }
+
+    @Suppress("unused")
+    private val perspectiveChangeHandler = handler<PerspectiveEvent> {
+        refresh()
     }
 
     @Suppress("unused")
