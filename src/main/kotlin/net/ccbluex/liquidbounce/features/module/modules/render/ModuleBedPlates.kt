@@ -52,6 +52,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII")
 
     private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+    private val outline by boolean("Outline", false)
 
     override val maxLayers by int("MaxLayers", 5, 1..5).onChanged {
         BedBlockTracker.triggerRescan()
@@ -173,12 +174,14 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                 surrounding.map { it.block.createItemStackForRendering(it.count) }
             }
 
+            val outlineColor = if (outline) Color4b(bedState.block.color.mapColor.color) else Color4b.TRANSPARENT
+
             event.context.drawItemStackList(blocksAsItemStacks)
                 .rowLength(Int.MAX_VALUE)
                 .scale(scale)
                 .centerX(screenPos.x)
                 .centerY(screenPos.y)
-                .rectBackground(color = backgroundColor.toARGB())
+                .rectBackground(backgroundColor, outlineColor)
                 .itemStackRenderer { textRenderer, index, stack, x, y ->
                     if (index == 0 && showBed) {
                         // bed

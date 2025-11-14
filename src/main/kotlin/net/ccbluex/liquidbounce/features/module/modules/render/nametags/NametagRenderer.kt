@@ -46,7 +46,7 @@ internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float)
             .centerY(posY - NAMETAG_PADDING * ModuleNametags.scale)
             .scale(ModuleNametags.scale)
             .itemStackRenderer(currentItemStackRenderer)
-            .rectBackground(color = 0)
+            .rectBackground(Color4b.TRANSPARENT)
             .draw(immediately = true)
     }
 

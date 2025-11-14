@@ -64,8 +64,9 @@ class ItemStackListRenderer private constructor(
     private var centerY = 0F
     private var scale = 1.0F
     private var rowLength = 9
-    private var backgroundColor = Int.MIN_VALUE
-    private var backgroundMargin = 2
+    private var backgroundColor = DEFAULT_BG_COLOR
+    private var backgroundOutlineColor = Color4b.TRANSPARENT
+    private var backgroundMargin = 2.0F
     private var useTexture = false
     private var itemStackRenderer = SingleItemStackRenderer.All
 
@@ -105,20 +106,23 @@ class ItemStackListRenderer private constructor(
     }
 
     @JvmOverloads
-    fun rectBackground(color: Int, margin: Int = this.backgroundMargin) = apply {
+    fun rectBackground(color: Color4b, outlineColor: Color4b = Color4b.TRANSPARENT, margin: Float = this.backgroundMargin) = apply {
         this.backgroundColor = color
+        this.backgroundOutlineColor = outlineColor
         this.backgroundMargin = margin
+        this.useTexture = false
     }
 
     fun textureBackground() = apply {
         this.useTexture = true
-        this.backgroundColor = Color4b.TRANSPARENT.toARGB()
-        this.backgroundMargin = 0
+        this.backgroundColor = Color4b.TRANSPARENT
+        this.backgroundOutlineColor = Color4b.TRANSPARENT
+        this.backgroundMargin = 0F
     }
 
     fun background(choice: BackgroundChoice) =
         when (choice) {
-            is BackgroundChoice.Rect -> rectBackground(choice.color.toARGB(), choice.margin)
+            is BackgroundChoice.Rect -> rectBackground(choice.fillColor, choice.outlineColor, choice.margin)
             is BackgroundChoice.Texture -> textureBackground()
         }
 
@@ -127,12 +131,13 @@ class ItemStackListRenderer private constructor(
     }
 
     private fun fillBackground(width: Int, height: Int) {
-        drawContext.fill(
+        drawContext.drawQuad(
             -backgroundMargin,
             -backgroundMargin,
             width + backgroundMargin,
             height + backgroundMargin,
-            backgroundColor
+            backgroundColor,
+            backgroundOutlineColor,
         )
     }
 
@@ -212,6 +217,8 @@ class ItemStackListRenderer private constructor(
     }
 
     companion object : EventListener {
+        private val DEFAULT_BG_COLOR = Color4b(Int.MIN_VALUE, true)
+
         private val planned = ArrayList<ItemStackListRenderer>()
 
         // y -> x
@@ -306,8 +313,9 @@ class ItemStackListRenderer private constructor(
 
     sealed class BackgroundChoice(name: String, override val parent: ChoiceConfigurable<*>) : Choice(name) {
         class Rect(parent: ChoiceConfigurable<*>) : BackgroundChoice("Rect", parent) {
-            val color by color("Color", Color4b(Int.MIN_VALUE, true))
-            val margin by int("Margin", 2, 0..100)
+            val fillColor by color("Color", DEFAULT_BG_COLOR)
+            val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
+            val margin by float("Margin", 2.0F, 0.0F..100.0F)
         }
 
         class Texture(parent: ChoiceConfigurable<*>) : BackgroundChoice("Texture", parent)
