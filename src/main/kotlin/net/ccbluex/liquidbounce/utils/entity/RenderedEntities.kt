@@ -43,6 +43,24 @@ private val entities = ReferenceArrayList<LivingEntity>()
 object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
     private val registry = ReferenceOpenHashSet<EventListener>()
 
+    private val onUpdate = ReferenceArrayList<Pair<EventListener, Runnable>>()
+
+    context(listener: EventListener)
+    fun onUpdate(callback: Runnable) {
+        onUpdate += listener to callback
+    }
+
+    private fun update() {
+        onUpdate.removeIf { (listener, callback) ->
+            if (listener !in registry) {
+                true
+            } else {
+                callback.run()
+                false
+            }
+        }
+    }
+
     override val running: Boolean
         get() = registry.isNotEmpty()
 
@@ -54,6 +72,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
         registry.remove(subscriber)
         if (registry.isEmpty()) {
             entities.clear()
+            update()
         }
     }
 
@@ -71,6 +90,8 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
                 entities += entity
             }
         }
+
+        update()
     }
 
     @Suppress("unused")
@@ -78,7 +99,6 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
         if (inGame) {
             refresh()
         }
-
     }
 
     @Suppress("unused")
@@ -89,5 +109,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
     @Suppress("unused")
     private val worldHandler = handler<WorldChangeEvent> {
         entities.clear()
+        update()
     }
+
 }

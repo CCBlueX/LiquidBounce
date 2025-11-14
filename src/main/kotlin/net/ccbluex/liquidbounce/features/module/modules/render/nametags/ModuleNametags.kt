@@ -19,10 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.event.computedOn
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -56,22 +53,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     val fontRenderer
         get() = FontManager.FONT_RENDERER
 
-    private val nametagsToRender by computedOn<GameTickEvent, MutableList<Nametag>>(
-        initialValue = mutableListOf()
-    ) { _, list ->
-        list.clear()
-        collectAndSortNametagsToRender(list)
-        list
-    }
-
-    private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
-        nametag.entity.squaredDistanceTo(mc.cameraEntity)
-    }
-
-    @Suppress("unused")
-    private val worldChangeHandler = handler<WorldChangeEvent> {
-        nametagsToRender.clear()
-    }
+    private val nametagsToRender = mutableListOf<Nametag>()
 
     override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
@@ -80,6 +62,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
+        RenderedEntities.onUpdate(::collectAndSortNametagsToRender)
     }
 
     @Suppress("unused")
@@ -120,7 +103,8 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
      * Collects all entities that should be rendered, gets the screen position, where the name tag should be displayed,
      * add what should be rendered ([Nametag]). The nametags are sorted in order of rendering.
      */
-    private fun collectAndSortNametagsToRender(list: MutableList<Nametag>) {
+    private fun collectAndSortNametagsToRender() {
+        nametagsToRender.clear()
         val maximumDistanceSquared = maximumDistance.sq()
 
         for (entity in RenderedEntities) {
@@ -128,9 +112,13 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
                 continue
             }
 
-            list += Nametag(entity)
+            nametagsToRender += Nametag(entity)
         }
-        list.sortWith(NAMETAG_COMPARATOR)
+        nametagsToRender.sortWith(NAMETAG_COMPARATOR)
+    }
+
+    private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
+        nametag.entity.squaredDistanceTo(mc.cameraEntity)
     }
 
 }
