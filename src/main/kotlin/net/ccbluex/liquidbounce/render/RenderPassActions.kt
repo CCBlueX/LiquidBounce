@@ -33,7 +33,7 @@ import net.minecraft.client.util.BufferAllocator
 import java.util.OptionalDouble
 import java.util.OptionalInt
 
-private val trianglePosTexVertexBuffer: GpuBuffer =
+internal val trianglePosTexVertexBuffer: GpuBuffer =
     BufferAllocator(VertexFormats.POSITION_TEXTURE.vertexSize * 3).use { allocator ->
         BufferBuilder(allocator, DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE).apply {
             vertex(-1f, -1f, 0f).texture(0f, 0f)

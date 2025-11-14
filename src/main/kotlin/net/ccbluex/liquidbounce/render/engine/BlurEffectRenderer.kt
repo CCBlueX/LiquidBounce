@@ -36,7 +36,8 @@ import net.ccbluex.liquidbounce.render.newRenderPass
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
+import net.ccbluex.liquidbounce.utils.render.clearColor
+import net.ccbluex.liquidbounce.utils.render.clearDepth
 import net.ccbluex.liquidbounce.utils.render.std140Size
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.MinecraftClient
@@ -73,7 +74,8 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         if (ModuleHud.isBlurEffectActive) {
             this.isDrawingHudFramebuffer = true
-            overlayFramebuffer.clearColorAndDepth(0, 1.0)
+            overlayFramebuffer.colorAttachment?.clearColor(0)
+            overlayFramebuffer.depthAttachment?.clearDepth(1.0)
 
             // TODO: GlobalFramebuffer is incompatible with OSX
             if (!MinecraftClient.IS_SYSTEM_MAC) {

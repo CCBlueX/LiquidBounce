@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.util.Identifier
 import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
@@ -88,6 +89,8 @@ class Theme private constructor(val origin: Origin, url: String) :
         field: Configurable? = null
         private set
         get() = requireNotNull(field) { "settings not loaded" }
+
+    private var backgroundId: Identifier? = null
 
     private suspend fun loadComponents() {
         _components = metadata.components.mapNotNull { name ->
@@ -194,6 +197,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         val id = LiquidBounce.identifier("theme-bg-${metadata.name.lowercase(Locale.US)}")
         themeBackgroundTexture = ThemeBackground.Image(id)
         mc.textureManager.registerTexture(id, image)
+        backgroundId = id
         logger.info("Loaded background image for theme ${metadata.name}")
         return true
     }
@@ -222,6 +226,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         themeBackgroundShader?.close()
         themeBackgroundTexture?.close()
         _components?.forEach { EventManager.unregisterEventHandler(it) }
+        backgroundId?.let { mc.textureManager.destroyTexture(it) }
     }
 
     override fun toString() = "Theme(name=${metadata.name}, origin=${origin.choiceName}, url=$baseUrl)"
