@@ -43,7 +43,7 @@ import java.text.DecimalFormat
 class TaskProgressScreen(
     title: String,
     private val taskManager: TaskManager
-) : Screen(Text.literal(title)) {
+) : Screen(title.asPlainText()) {
 
     private val percentFormat = DecimalFormat("0.0")
 
@@ -70,7 +70,7 @@ class TaskProgressScreen(
             title.string.asPlainText(Formatting.GOLD),
             (cx - textRenderer.getWidth(title.string) / 2).toInt(),
             yOffset,
-            0xFFFFFF,
+            -1,
             true
         )
 
@@ -83,13 +83,13 @@ class TaskProgressScreen(
                 line,
                 (cx - textRenderer.getWidth(line) / 2).toInt(),
                 yOffset,
-                0xFFFFFF,
+                -1,
                 false
             )
             yOffset += textRenderer.fontHeight + 2
         }
 
-        var progressBarHeight = 14
+        val progressBarHeight = 14
 
         // Draw progress bar
         poseStack.pushMatrix()
