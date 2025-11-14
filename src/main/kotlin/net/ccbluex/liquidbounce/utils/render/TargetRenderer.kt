@@ -319,6 +319,7 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<DrawContext>(
             get() = appearance
 
         private val color by color("Color", Color4b.RED)
+        private val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
         private val size by float("Size", 1.5f, 0.5f..20f)
 
         context(ctx: DrawContext)
@@ -337,6 +338,7 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<DrawContext>(
                 Vec2f(midX, maxY),
                 Vec2f(maxX, minY),
                 color,
+                outlineColor,
             )
         }
     }

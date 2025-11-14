@@ -106,7 +106,11 @@ class ItemStackListRenderer private constructor(
     }
 
     @JvmOverloads
-    fun rectBackground(color: Color4b, outlineColor: Color4b = Color4b.TRANSPARENT, margin: Float = this.backgroundMargin) = apply {
+    fun rectBackground(
+        color: Color4b,
+        outlineColor: Color4b = Color4b.TRANSPARENT,
+        margin: Float = this.backgroundMargin,
+    ) = apply {
         this.backgroundColor = color
         this.backgroundOutlineColor = outlineColor
         this.backgroundMargin = margin

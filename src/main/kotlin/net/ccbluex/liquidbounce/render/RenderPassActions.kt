@@ -39,7 +39,7 @@ internal val trianglePosTexVertexBuffer: GpuBuffer =
             vertex(-1f, -1f, 0f).texture(0f, 0f)
             vertex(3f, -1f, 0f).texture(2f, 0f)
             vertex(-1f, 3f, 0f).texture(0f, 2f)
-        }.end().createGpuBuffer { "Triangle full screen position texture vertex buffer" }
+        }.end().createGpuBuffer { "Triangle full screen position texture VBO" }
     }
 
 fun RenderPass.drawFullScreenPositionTexture() {

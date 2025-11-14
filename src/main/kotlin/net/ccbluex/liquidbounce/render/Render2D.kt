@@ -198,19 +198,40 @@ fun DrawContext.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Floa
 }
 
 fun DrawContext.drawTriangle(
-    p1: Vec2f, p2: Vec2f, p3: Vec2f, color4b: Color4b,
+    p1: Vec2f, p2: Vec2f, p3: Vec2f,
+    fillColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
 ) {
-    val argb = color4b.toARGB()
     val minX = minOf(p1.x, p2.x, p3.x)
     val minY = minOf(p1.y, p2.y, p3.y)
     val maxX = maxOf(p1.x, p2.x, p3.x)
     val maxY = maxOf(p1.y, p2.y, p3.y)
-    this.state.addSimpleElement(
-        TriangleGuiElementRenderState(
-            p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, argb,
-            copyPose(),
-            this.scissorStack.peekLast(),
-            createBounds(minX, minY, maxX - minX, maxY - minY),
+    val bounds = createBounds(minX, minY, maxX - minX, maxY - minY)
+
+    if (fillColor != null && !fillColor.isTransparent) {
+        this.state.addSimpleElement(
+            TriangleGuiElementRenderState(
+                p1.x, p1.y, p2.x, p2.y, p3.x, p3.y,
+                fillColor.toARGB(),
+                copyPose(),
+                this.scissorStack.peekLast(),
+                bounds,
+            )
         )
-    )
+    }
+
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        drawLines(
+            floatArrayOf(
+                p1.x, p1.y,
+                p2.x, p2.y,
+                p2.x, p2.y,
+                p3.x, p3.y,
+                p1.x, p1.y,
+                p3.x, p3.y,
+            ),
+            outlineColor.toARGB(),
+            bounds,
+        )
+    }
 }
