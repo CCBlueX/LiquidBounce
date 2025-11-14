@@ -64,8 +64,8 @@ class MinimapHeightmapManager {
 
         val currentHeight = heightmap.getHeight(pos.x and 15, pos.z and 15)
 
-        val newHeight = mc.world!!.getChunk(chunkPos.x, chunkPos.z)
-            .calculateHeightIfNeeded(currentHeight, pos, newState)
+        val newHeight = mc.world?.getChunk(chunkPos.x, chunkPos.z)
+            ?.calculateHeightIfNeeded(currentHeight, pos, newState)
 
         return if (newHeight != null) {
             heightmap.setHeight(pos.x and 15, pos.z and 15, newHeight)
