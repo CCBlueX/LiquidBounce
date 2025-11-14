@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
@@ -42,6 +43,24 @@ private val entities = ReferenceArrayList<LivingEntity>()
 object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
     private val registry = ReferenceOpenHashSet<EventListener>()
 
+    private val onUpdate = ReferenceArrayList<Pair<EventListener, Runnable>>()
+
+    context(listener: EventListener)
+    fun onUpdate(callback: Runnable) {
+        onUpdate += listener to callback
+    }
+
+    private fun update() {
+        onUpdate.removeIf { (listener, callback) ->
+            if (listener !in registry) {
+                true
+            } else {
+                callback.run()
+                false
+            }
+        }
+    }
+
     override val running: Boolean
         get() = registry.isNotEmpty()
 
@@ -53,15 +72,11 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
         registry.remove(subscriber)
         if (registry.isEmpty()) {
             entities.clear()
+            update()
         }
     }
 
-    @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
-        if (!inGame) {
-            return@handler
-        }
-
+    private fun refresh() {
         entities.clear()
 
         val shouldCheckCombineMobs = ModuleCombineMobs.running
@@ -75,10 +90,26 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
                 entities += entity
             }
         }
+
+        update()
+    }
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
+        if (inGame) {
+            refresh()
+        }
+    }
+
+    @Suppress("unused")
+    private val perspectiveChangeHandler = handler<PerspectiveEvent> {
+        refresh()
     }
 
     @Suppress("unused")
     private val worldHandler = handler<WorldChangeEvent> {
         entities.clear()
+        update()
     }
+
 }
