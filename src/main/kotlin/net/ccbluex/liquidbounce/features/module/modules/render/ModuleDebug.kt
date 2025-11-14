@@ -177,9 +177,11 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
 
         renderEnvironmentForWorld(matrixStack) {
+            startBatch()
             debuggedGeometry.values.forEach { geometry ->
                 geometry.render(this)
             }
+            commitBatch()
         }
     }
 

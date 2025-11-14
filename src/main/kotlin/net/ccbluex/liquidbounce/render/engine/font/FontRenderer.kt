@@ -128,8 +128,8 @@ class FontRenderer(
         var y = posY + this.ascent * scale
         var color: Color4b? = null
 
-        var strikeThroughStartX: Float? = null
-        var underlineStartX: Float? = null
+        var strikeThroughStartX: Float = Float.NaN
+        var underlineStartX: Float = Float.NaN
 
         val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
 
@@ -157,21 +157,21 @@ class FontRenderer(
 
             if (!underlineStack.isEmpty && underlineStack.topInt() == charIdx) {
                 underlineStack.popInt()
-                drawLine(underlineStartX!!, x, y, color, false)
+                drawLine(underlineStartX, x, y, color, false)
             }
 
             if (!strikethroughStack.isEmpty && strikethroughStack.topInt() == charIdx) {
                 strikethroughStack.popInt()
-                drawLine(strikeThroughStartX!!, x, y, color, true)
+                drawLine(strikeThroughStartX, x, y, color, true)
             }
         }
 
-        if (!underlineStack.isEmpty && underlineStartX != null) {
+        if (!underlineStack.isEmpty && !underlineStartX.isNaN()) {
             underlineStack.popInt()
             drawLine(underlineStartX, x, y, color!!, false)
         }
 
-        if (!strikethroughStack.isEmpty && strikeThroughStartX != null) {
+        if (!strikethroughStack.isEmpty && !strikeThroughStartX.isNaN()) {
             strikethroughStack.popInt()
             drawLine(strikeThroughStartX, x, y, color!!, true)
         }
