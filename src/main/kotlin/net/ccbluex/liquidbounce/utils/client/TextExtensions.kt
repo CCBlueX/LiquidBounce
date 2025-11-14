@@ -21,16 +21,10 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import com.google.common.base.CaseFormat
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonElement
-import com.google.gson.JsonParseException
-import com.mojang.serialization.JsonOps
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.nbt.NbtString
-import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
 import java.util.*
@@ -41,8 +35,6 @@ private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
 fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
-
-private val TEXT_GSON = GsonBuilder().disableHtmlEscaping().create()
 
 inline fun String.asTextContent(): TextContent = PlainTextContent.of(this)
 
@@ -72,17 +64,6 @@ inline fun List<Text>.asText(): Text = TextList.of(this)
 inline fun Array<out Text>.asText(): Text = TextList.of(this.unmodifiable())
 
 inline fun textOf(vararg parts: Text): Text = parts.asText()
-
-inline fun String.asNbtString(): NbtString = NbtString.of(this)
-
-fun Text.toJson(
-    registries: DynamicRegistryManager = mc.world?.registryManager ?: DynamicRegistryManager.EMPTY,
-): JsonElement = TextCodecs.CODEC.encodeStart(registries.getOps(JsonOps.INSTANCE), this)
-    .getOrThrow(::JsonParseException)
-
-fun Text.toJsonString(
-    registries: DynamicRegistryManager = mc.world?.registryManager ?: DynamicRegistryManager.EMPTY,
-): String = TEXT_GSON.toJson(toJson(registries))
 
 fun OrderedText.toText(): Text {
     if (this is Text) return this
