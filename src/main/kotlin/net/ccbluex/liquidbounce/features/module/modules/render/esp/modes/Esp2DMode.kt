@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
-import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
@@ -36,15 +36,27 @@ import net.minecraft.util.math.Vec3d
 
 object Esp2DMode : EspMode("2D") {
 
-    private val outline by boolean("Outline", true)
-    private val border by boolean("Border", true)
+    object Outline: ToggleableConfigurable(this, "Outline", true) {
+        val thickness by int("Thickness", 1, 1..9, "px")
+    }
+    object Border: ToggleableConfigurable(this, "Border", true) {
+        val thickness by int("Thickness", 1, 1..9, "px")
+    }
     private val expand by float("Expand", 0.05f, 0f..0.5f)
     private val fill by boolean("Fill", true)
-    private val healthBar by boolean("HealthBar", true)
+    object HealthBar: ToggleableConfigurable(this, "HealthBar", true) {
+        val spacing by int("Spacing", 2, 0..32, "px")
+    }
+
+    init {
+        tree(Outline)
+        tree(Border)
+        tree(HealthBar)
+    }
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        val entitiesWithBoxes = RenderedEntities.mapToArray { entity ->
+        val entitiesWithBoxes = RenderedEntities.map { entity ->
             val dimensions = entity.getDimensions(entity.pose)
             val d = dimensions.width.toDouble() / 2.0
             val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
@@ -83,6 +95,10 @@ object Esp2DMode : EspMode("2D") {
             var rectWidth = (maxX - minX)
             var rectHeight = (maxY - minY)
 
+            val guiScaleFactor = mc.options.guiScale.value
+            val outlineThickness = Outline.thickness.toFloat() / guiScaleFactor
+            val borderThickness = Border.thickness.toFloat() / guiScaleFactor
+
             with(event.context) {
                 matrices.withPush {
                     translate(minX, minY, minZ)
@@ -91,27 +107,50 @@ object Esp2DMode : EspMode("2D") {
                         fill(0f, 0f, rectWidth, rectHeight, 0f, baseColor)
                     }
 
-                    if (outline) {
-                        if (border) {
-                            drawHorizontalLine(0.0f, rectWidth, 0.0f, 1.5f, black)
-                            drawVerticalLine(0.0f, 0.0f, rectHeight, 1.5f, black)
-                            drawHorizontalLine(0.0f, rectWidth, rectHeight, 1.5f, black)
-                            drawVerticalLine(rectWidth, 0.0f, rectHeight + 1.5f, 1.5f, black)
-
-                            translate(0.5f, 0.5f, 0.0f)
+                    if (Outline.enabled) {
+                        if (Border.enabled) {
+                            drawHorizontalLine(-outlineThickness / 2 - borderThickness,
+                                rectWidth + outlineThickness / 2 + borderThickness,
+                                -outlineThickness / 2 - borderThickness,
+                                outlineThickness + 2 * borderThickness, black)
+                            drawVerticalLine(-outlineThickness / 2 - borderThickness,
+                                -outlineThickness / 2 - borderThickness,
+                                rectHeight + outlineThickness / 2 + borderThickness,
+                                outlineThickness + 2 * borderThickness, black)
+                            drawHorizontalLine(-outlineThickness / 2 - borderThickness,
+                                rectWidth + outlineThickness / 2 + borderThickness,
+                                rectHeight - outlineThickness / 2 - borderThickness,
+                                outlineThickness + 2 * borderThickness, black)
+                            drawVerticalLine(rectWidth - outlineThickness / 2 - borderThickness,
+                                -outlineThickness / 2 - borderThickness,
+                                rectHeight + outlineThickness / 2 + borderThickness,
+                                outlineThickness + 2 * borderThickness, black)
                         }
 
-                        drawHorizontalLine(0.0f, rectWidth, 0.0f, 0.5f, outlineColor)
-                        drawHorizontalLine(0.0f, rectWidth, rectHeight, 0.5f, outlineColor)
-                        drawVerticalLine(0.0f, 0.0f, rectHeight, 0.5f, outlineColor)
-                        drawVerticalLine(rectWidth, 0.0f, rectHeight + 0.5f, 0.5f, outlineColor)
-
-                        if (border) {
-                            translate(-0.5f, -0.5f, 0.0f)
-                        }
+                        drawHorizontalLine(-outlineThickness / 2,
+                            rectWidth + outlineThickness / 2,
+                            -outlineThickness / 2,
+                            outlineThickness, outlineColor)
+                        drawHorizontalLine(-outlineThickness / 2,
+                            rectWidth + outlineThickness / 2,
+                            rectHeight - outlineThickness / 2,
+                            outlineThickness, outlineColor)
+                        drawVerticalLine(-outlineThickness / 2,
+                            -outlineThickness / 2,
+                            rectHeight,
+                            outlineThickness, outlineColor)
+                        drawVerticalLine(rectWidth - outlineThickness / 2,
+                            -outlineThickness / 2,
+                            rectHeight,
+                            outlineThickness, outlineColor)
                     }
 
-                    if (healthBar) {
+                    if (Border.enabled) {
+                        translate(-2 * borderThickness, 0.0f, 0.0f)
+                    }
+                    translate(-HealthBar.spacing.toFloat() / guiScaleFactor - outlineThickness, 0.0f, 0.0f)
+
+                    if (HealthBar.enabled) {
                         val actualHealth = entity.getActualHealth()
                         val maxHealth = entity.maxHealth.coerceAtLeast(1f) // prevent division by zero
                         val healthPercentage = (actualHealth / maxHealth).coerceIn(0f..1f)
@@ -121,12 +160,15 @@ object Esp2DMode : EspMode("2D") {
                             .toARGB()
                         val healthHeight = rectHeight * healthPercentage
 
-                        translate(-3.0f, 0.0f, 0.0f)
-
-                        if (border) {
-                            drawVerticalLine(0.0f, 0.0f, rectHeight + 1.5f, 1.5f, black)
+                        if (Border.enabled) {
+                            drawVerticalLine(-outlineThickness / 2 - borderThickness,
+                                -outlineThickness / 2 - borderThickness,
+                                rectHeight + outlineThickness / 2 + borderThickness,
+                                outlineThickness + 2 * borderThickness, black)
                         }
-                        drawVerticalLine(0.5f, rectHeight + 1f, rectHeight - healthHeight + 0.5f, 0.5f, healthColor)
+                        drawVerticalLine(-outlineThickness / 2,
+                            rectHeight - healthHeight - outlineThickness / 2,
+                            rectHeight + outlineThickness / 2, outlineThickness, healthColor)
                     }
                 }
             }
