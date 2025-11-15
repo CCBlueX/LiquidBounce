@@ -62,7 +62,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
-        RenderedEntities.onUpdate(::collectAndSortNametagsToRender)
+        RenderedEntities.onUpdated(::collectAndSortNametagsToRender)
     }
 
     @Suppress("unused")
