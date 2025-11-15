@@ -80,7 +80,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             return
         }
 
-        if (ModuleHud.isBlurEffectActive) {
+        if (ModuleHud.running && ModuleHud.isBlurEffectActive) {
             this.isDrawingHudFramebuffer = true
             clearOverlay()
 
