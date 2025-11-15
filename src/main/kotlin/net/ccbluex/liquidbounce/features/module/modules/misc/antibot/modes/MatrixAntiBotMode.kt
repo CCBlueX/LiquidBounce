@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -29,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isGameProfileUnique
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
-import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
@@ -40,36 +40,32 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleAntiBot.modes
 
-    private val suspectList = hashSetOf<UUID>()
-    private val botList = hashSetOf<UUID>()
+    private val suspectList = objectHashSetOf<UUID>()
+    private val botList = objectHashSetOf<UUID>()
 
     val packetHandler = handler<PacketEvent> {
-        val packet = it.packet
+        when (val packet = it.packet) {
+            is PlayerListS2CPacket -> {
+                for (entry in packet.playerAdditionEntries) {
+                    val profile = entry.profile ?: continue
 
-        if (packet is PlayerListS2CPacket) {
-            for (entry in packet.playerAdditionEntries) {
-                val profile = entry.profile ?: continue
+                    if (entry.latency < 2 || profile.properties?.isEmpty == false || isGameProfileUnique(profile)) {
+                        continue
+                    }
 
-                if (entry.latency < 2 || profile.properties?.isEmpty == false || isGameProfileUnique(profile)) {
-                    continue
+                    if (isADuplicate(profile)) {
+                        botList.add(entry.profileId)
+                        continue
+                    }
+
+                    suspectList.add(entry.profileId)
                 }
-
-                if (isADuplicate(profile)) {
-                    botList.add(entry.profileId)
-                    continue
-                }
-
-                suspectList.add(entry.profileId)
             }
-        } else if (packet is PlayerRemoveS2CPacket) {
-            for (uuid in packet.profileIds) {
-                if (suspectList.contains(uuid)) {
-                    suspectList.remove(uuid)
-                }
 
-                if (botList.contains(uuid)) {
-                    botList.remove(uuid)
-                }
+            is PlayerRemoveS2CPacket -> {
+                val uuids = packet.profileIds
+                suspectList.removeAll(uuids)
+                botList.removeAll(uuids)
             }
         }
     }
@@ -84,7 +80,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
                 continue
             }
 
-            var armor: Iterable<ItemStack>? = null
+            var armor: Array<ItemStack>? = null
 
             if (!isFullyArmored(entity)) {
                 armor = entity.armorItems
@@ -111,8 +107,8 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
      *
      * With the help of at least 1 tick of waiting time, this function patches this "trick".
      */
-    private fun updatesArmor(entity: PlayerEntity, prevArmor: Iterable<ItemStack>?): Boolean {
-        return prevArmor != entity.armorItems
+    private fun updatesArmor(entity: PlayerEntity, prevArmor: Array<ItemStack>?): Boolean {
+        return !prevArmor.contentEquals(entity.armorItems)
     }
 
     override fun isBot(entity: PlayerEntity): Boolean {

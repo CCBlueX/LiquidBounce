@@ -25,11 +25,9 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProces
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
-import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Formatting
@@ -37,6 +35,7 @@ import net.minecraft.client.resource.language.I18n
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.equippedItems
 import net.minecraft.client.gui.DrawContext
 import org.joml.Vector2f
 import org.joml.component1
@@ -155,7 +154,7 @@ object NametagEnchantmentRenderer {
     ) {
         if (!NametagShowOptions.ENCHANTMENTS.isShowing()) return
 
-        val itemsWithEnchantments = getEntityItemsWithEnchantments(entity)
+        val itemsWithEnchantments = entity.getEntityItemsWithEnchantments()
         if (itemsWithEnchantments.isEmpty()) return
 
         if (isPositionOccluded(worldX, worldY)) {
@@ -213,14 +212,8 @@ object NametagEnchantmentRenderer {
         return cells.asList()
     }
 
-    private fun getEntityItemsWithEnchantments(entity: LivingEntity): List<ItemStack> = listOf(
-        entity.mainHandStack,
-        entity.offHandStack,
-        entity.getEquippedStack(EquipmentSlot.HEAD),
-        entity.getEquippedStack(EquipmentSlot.CHEST),
-        entity.getEquippedStack(EquipmentSlot.LEGS),
-        entity.getEquippedStack(EquipmentSlot.FEET)
-    ).filter { !it.isEmpty && it.getEnchantmentCount() > 0 }
+    private fun LivingEntity.getEntityItemsWithEnchantments(): List<ItemStack> =
+        equippedItems.filter { !it.isEmpty && it.hasEnchantments() }
 
     private fun createCell(
         info: EnchantmentInfo? = null,

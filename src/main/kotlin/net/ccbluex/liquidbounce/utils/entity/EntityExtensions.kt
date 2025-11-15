@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition
 import net.ccbluex.liquidbounce.interfaces.InputAddition
@@ -88,16 +89,19 @@ inline var Input.movementSideways: Float
         (this as InputAddition).`liquid_bounce$setMovementInput`(Vec2f(value, movementForward))
     }
 
-val PlayerEntity.handItems: Iterable<ItemStack>
-    get() = listOf(mainHandStack, offHandStack)
+val LivingEntity.handItems: Array<ItemStack>
+    get() = arrayOf(mainHandStack, offHandStack)
 
-val PlayerEntity.armorItems: Iterable<ItemStack>
-    get() = listOf(
+val LivingEntity.armorItems: Array<ItemStack>
+    get() = arrayOf(
         getEquippedStack(EquipmentSlot.FEET),
         getEquippedStack(EquipmentSlot.LEGS),
         getEquippedStack(EquipmentSlot.CHEST),
         getEquippedStack(EquipmentSlot.HEAD),
     )
+
+val LivingEntity.equippedItems: Array<ItemStack>
+    get() = EquipmentSlot.entries.mapToArray { this.getEquippedStack(it) }
 
 fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
     val entity = source.source
