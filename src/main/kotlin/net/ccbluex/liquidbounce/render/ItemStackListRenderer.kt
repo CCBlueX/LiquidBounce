@@ -201,7 +201,7 @@ class ItemStackListRenderer private constructor(
      * [drawNow] will be called later.
      */
     @JvmOverloads
-    fun draw(immediately: Boolean = false) {
+    fun draw(rearrange: Boolean = false) {
         val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
         var width = size * minOf(stacks.size, rowLength)
         var height = size * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
@@ -213,7 +213,7 @@ class ItemStackListRenderer private constructor(
 
         this.dimensions.set(width, height)
 
-        if (immediately) {
+        if (!rearrange) {
             drawNow()
         } else {
             planned += this

@@ -47,7 +47,7 @@ internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float)
             .scale(ModuleNametags.scale)
             .itemStackRenderer(currentItemStackRenderer)
             .rectBackground(Color4b.TRANSPARENT)
-            .draw(immediately = true)
+            .draw()
     }
 
     val fontSize = FontManager.DEFAULT_FONT_SIZE

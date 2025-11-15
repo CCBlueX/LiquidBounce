@@ -177,7 +177,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
             .centerY(renderY)
             .scale(ContainerItemView.scale)
             .textureBackground()
-            .draw(immediately = true)
+            .draw()
 
         return true
     }

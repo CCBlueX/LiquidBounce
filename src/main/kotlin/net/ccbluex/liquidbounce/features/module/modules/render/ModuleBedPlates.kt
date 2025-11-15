@@ -65,6 +65,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
     private val compact by boolean("Compact", true)
+    private val preventOverlap by boolean("PreventOverlap", true)
     private val filterMode = choices("FilterMode", 0) {
         arrayOf(FilterMode.Predefined, FilterMode.Custom)
     }
@@ -218,7 +219,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                             )
                         }
                     }
-                }.draw()
+                }.draw(preventOverlap)
         }
     }
 

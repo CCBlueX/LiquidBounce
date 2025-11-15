@@ -70,6 +70,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     private val scale by float("Scale", 1.5F, 0.25F..4F)
     private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
     private val rowLength by int("RowLength", 100, 1..100)
+    private val preventOverlap by boolean("PreventOverlap", true)
 
     private val clusterSizeMode = choices("ClusterSizeMode", ClusterSizeMode.Static,
         arrayOf(ClusterSizeMode.Static, ClusterSizeMode.Distance))
@@ -202,7 +203,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                 .rectBackground(backgroundColor)
                 .scale(scale)
                 .rowLength(rowLength)
-                .draw()
+                .draw(preventOverlap)
 
             if (Shulker.enabled) {
                 result.stacks.forEach { stack ->
@@ -219,7 +220,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                         .rectBackground(backgroundColor)
                         .scale(scale)
                         .rowLength(rowLength)
-                        .draw()
+                        .draw(preventOverlap)
                 }
             }
         }
