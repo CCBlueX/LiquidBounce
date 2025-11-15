@@ -46,7 +46,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
     private val onUpdate = ReferenceArrayList<Pair<EventListener, Runnable>>()
 
     context(listener: EventListener)
-    fun onUpdate(callback: Runnable) {
+    fun onUpdated(callback: Runnable) {
         onUpdate += listener to callback
     }
 

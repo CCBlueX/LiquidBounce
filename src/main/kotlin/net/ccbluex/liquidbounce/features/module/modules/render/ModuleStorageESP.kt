@@ -252,14 +252,16 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
                 .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
+            startBatch()
             longLines {
                 for ((blockPos, type) in StorageScanner.iterate()) {
-                    if (!type.enabled || !type.tracers || type.color.a <= 0) continue
+                    if (!type.enabled || !type.tracers || type.color.isTransparent) continue
                     val pos = relativeToCamera(blockPos.toCenterPos()).toVec3()
 
-                    drawLines(type.color.toARGB(), eyeVector, pos, pos)
+                    drawLine(eyeVector, pos, type.color.toARGB())
                 }
             }
+            commitBatch()
         }
     }
 
