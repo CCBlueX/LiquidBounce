@@ -30,9 +30,11 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
     constructor(vec: Position) : this(vec.x, vec.y, vec.z)
     constructor(vec: Vec3i) : this(vec.x.toFloat(), vec.y.toFloat(), vec.z.toFloat())
 
-    fun add(other: Vec3): Vec3 {
-        return Vec3(this.x + other.x, this.y + other.y, this.z + other.z)
+    fun add(x: Float, y: Float, z: Float): Vec3 {
+        return Vec3(this.x + x, this.y + y, this.z + z)
     }
+
+    fun add(other: Vec3): Vec3 = add(other.x, other.y, other.z)
 
     private fun sub(other: Vec3): Vec3 {
         return Vec3(this.x - other.x, this.y - other.y, this.z - other.z)
