@@ -40,12 +40,12 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
     // Makes you sneak until first block placed, so with eagle enabled you won't fall off, when enabled
     private var placedBlocks = 0
 
-    val stateUpdateHandler =
-        handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-            if (mode == EagleMode.INPUT && shouldEagle(it.directionalInput)) {
-                it.sneak = true
-            }
+    @Suppress("unused")
+    val stateUpdateHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { event ->
+        if (mode == EagleMode.INPUT && shouldEagle(event.directionalInput)) {
+            event.sneak = true
         }
+    }
 
     fun shouldEagle(input: DirectionalInput): Boolean {
         if (ScaffoldDownFeature.shouldFallOffBlock()) {
