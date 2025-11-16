@@ -29,7 +29,7 @@ const HashMap_1 = require("@ccbluex/liquidbounce-script-api/java/util/HashMap");
 const ArrayList_1 = require("@ccbluex/liquidbounce-script-api/java/util/ArrayList");
 const JvmClassMappingKt_1 = require("@ccbluex/liquidbounce-script-api/kotlin/jvm/JvmClassMappingKt");
 const Class_1 = require("@ccbluex/liquidbounce-script-api/java/lang/Class");
-const ScriptModule_1 = require("@ccbluex/liquidbounce-script-api/net/ccbluex/liquidbounce/script/bindings/features/ScriptModule");
+const EventKt_1 = require("@ccbluex/liquidbounce-script-api/net/ccbluex/liquidbounce/event/EventKt");
 const ClassPath_1 = require("@ccbluex/liquidbounce-script-api/com/google/common/reflect/ClassPath");
 const ScriptManager_1 = require("@ccbluex/liquidbounce-script-api/net/ccbluex/liquidbounce/script/ScriptManager");
 const LiquidBounce_1 = require("@ccbluex/liquidbounce-script-api/net/ccbluex/liquidbounce/LiquidBounce");
@@ -92,7 +92,8 @@ function generate(path, packageName) {
             .filter((entry) => entry[1] != undefined)
             .map((entry) => (entry[1] instanceof Class_1.Class ? entry[1] : entry[1].class))
             .filter((entry) => entry != undefined);
-        const eventEntries = ReflectionUtil.getDeclaredField(ScriptModule_1.ScriptModule, "LOWERCASE_NAME_EVENT_MAP").entrySet().toArray();
+        const eventEntries = ReflectionUtil.getDeclaredField(EventKt_1.EventKt, "EVENT_NAME_TO_CLASS").entrySet().toArray();
+        Client.displayChatMessage(`found ${eventEntries.length} events`);
         Client.displayChatMessage("looking for all jvm classes");
         const allClassInfos = findAllClassInfos();
         Client.displayChatMessage(`found ${allClassInfos.length} classes, converting to kotlin classes`);
