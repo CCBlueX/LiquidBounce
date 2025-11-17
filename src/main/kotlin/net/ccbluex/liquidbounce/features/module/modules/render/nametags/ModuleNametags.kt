@@ -68,10 +68,8 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     private fun DrawContext.drawNametags(tickDelta: Float) {
         drawnEnchantmentAreas.clear()
 
-        nametagsToRender.filter {
-            it.calculateScreenPos(tickDelta) != null
-        }.forEach { nametagInfo ->
-            val (x, y) = nametagInfo.screenPos!!
+        for (nametagInfo in nametagsToRender) {
+            val (x, y) = nametagInfo.calculateScreenPos(tickDelta) ?: continue
 
             drawNametag(nametagInfo, x, y)
         }

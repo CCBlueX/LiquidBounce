@@ -23,6 +23,9 @@ package net.ccbluex.liquidbounce.utils.math
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.minecraft.util.math.*
 
+inline operator fun Vec2f.component1() = this.x
+inline operator fun Vec2f.component2() = this.y
+
 inline operator fun BlockPos.rangeTo(other: BlockPos): BlockBox = BlockBox.create(this, other)
 
 inline fun BlockPos.Mutable.set(pos: Position): BlockPos.Mutable = set(pos.x, pos.y, pos.z)
