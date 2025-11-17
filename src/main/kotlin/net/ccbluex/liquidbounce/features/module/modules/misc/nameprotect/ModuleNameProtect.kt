@@ -200,7 +200,9 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
 
         val replacements = Pools.StringBuilder.use {
             it.ensureCapacity(originalCharacters.size)
-            originalCharacters.forEach { c -> it.appendCodePoint(c.codePoint) }
+            for (c in originalCharacters) {
+                it.appendCodePoint(c.codePoint)
+            }
             replacementMappings.findReplacements(it)
         }
 

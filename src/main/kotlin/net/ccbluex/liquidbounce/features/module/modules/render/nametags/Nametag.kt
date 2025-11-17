@@ -43,7 +43,7 @@ class Nametag private constructor(
     var screenPos: Vec3? = null
         private set
 
-    constructor(entity: LivingEntity) : this(entity, NametagTextFormatter(entity).format(), createItemList(entity))
+    constructor(entity: LivingEntity) : this(entity, NametagTextFormatter.format(entity), createItemList(entity))
 
     fun calculateScreenPos(tickDelta: Float): Vec3? {
         val nametagPos = entity.interpolateCurrentPosition(tickDelta)
