@@ -65,15 +65,15 @@ object Esp2DMode : EspMode("2D") {
             val pos = entity.interpolateCurrentPosition(event.tickDelta)
             val box = boxNoOffset.offset(pos)
 
-            val color = getColor(entity)
-            val baseColor = color.with(a = 50).toARGB()
-            val outlineColor = color.with(a = 255).toARGB()
-            val black = Color4b.BLACK.toARGB()
-
             val projected = box.edgePoints.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
             if (projected.isEmpty()) {
                 continue
             }
+
+            val color = getColor(entity)
+            val baseColor = color.with(a = 50).toARGB()
+            val outlineColor = color.with(a = 255).toARGB()
+            val black = Color4b.BLACK.toARGB()
 
             val minX = projected.minOf { it.x }
             val maxX = projected.maxOf { it.x }
