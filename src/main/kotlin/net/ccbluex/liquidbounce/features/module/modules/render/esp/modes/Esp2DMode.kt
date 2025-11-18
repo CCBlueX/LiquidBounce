@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -56,7 +57,7 @@ object Esp2DMode : EspMode("2D") {
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        val entitiesWithBoxes = RenderedEntities.map { entity ->
+        val entitiesWithBoxes = RenderedEntities.mapToArray { entity ->
             val dimensions = entity.getDimensions(entity.pose)
             val d = dimensions.width.toDouble() / 2.0
             val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
@@ -143,10 +144,10 @@ object Esp2DMode : EspMode("2D") {
                             -outlineThickness / 2,
                             rectHeight,
                             outlineThickness, outlineColor)
-                    }
 
-                    if (Border.enabled) {
-                        translate(-2 * borderThickness, 0.0f, 0.0f)
+                        if (Border.enabled) {
+                            translate(-2 * borderThickness, 0.0f, 0.0f)
+                        }
                     }
                     translate(-HealthBar.spacing.toFloat() / guiScaleFactor - outlineThickness, 0.0f, 0.0f)
 
