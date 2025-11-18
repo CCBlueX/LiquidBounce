@@ -31,7 +31,9 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.Entity
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.projectile.ArrowEntity
@@ -53,6 +55,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val items by items("Items", ReferenceOpenHashSet())
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     private object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {
         val regularArrows by boolean("RegularArrows", true)
@@ -134,25 +137,31 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
             get() = modes
     }
 
-    fun shouldRender(it: Entity?) : Boolean {
-        if (it is ItemEntity) return filter(it.stack.item, items)
-        if (it is TridentEntity) return showTridents
+    fun shouldRender(entity: Entity?) : Boolean {
+        if (entity == null) return false
 
-        // arrow checks
-        // The server never sends the actual pickupType of arrows fired
-        // from Infinity-enchanted bows to clients. :(
-        // Therefore, those arrows are still rendered as collectible, even though they shouldn't be.
-        // The same applies to tridents thrown and arrows fired by players in Creative mode.
+        val distanceSq = entity.eyePos.cameraDistanceSq()
+        if (distanceSq > maximumDistance.sq()) return false
 
-        // However, it's not completely useless — arrows shot by mobs such as skeletons and pillagers are not rendered.
-        val isArrow = it is ArrowEntity || it is SpectralArrowEntity
-        if (!isArrow || !ShowArrows.enabled || it.pickupType != PickupPermission.ALLOWED) {
-            return false
-        }
+        return when (entity) {
+            is ItemEntity -> filter(entity.stack.item, items)
 
-        return when (it) {
-            is SpectralArrowEntity -> ShowArrows.spectralArrows
-            is ArrowEntity -> if (it.color == -1) ShowArrows.regularArrows else ShowArrows.arrowsWithEffects
+            is TridentEntity -> showTridents
+
+            // arrow checks
+            // The server never sends the actual pickupType of arrows fired
+            // from Infinity-enchanted bows to clients. :(
+            // Therefore, those arrows are still rendered as collectible, even though they shouldn't be.
+            // The same applies to tridents thrown and arrows fired by players in Creative mode.
+
+            // However, it's not completely useless:
+            // arrows shot by mobs such as skeletons and pillagers are not rendered.
+            is ArrowEntity if ShowArrows.running && entity.pickupType == PickupPermission.ALLOWED ->
+                if (entity.color == -1) ShowArrows.regularArrows else ShowArrows.arrowsWithEffects
+
+            is SpectralArrowEntity if ShowArrows.running && entity.pickupType == PickupPermission.ALLOWED ->
+                ShowArrows.spectralArrows
+
             else -> false
         }
     }

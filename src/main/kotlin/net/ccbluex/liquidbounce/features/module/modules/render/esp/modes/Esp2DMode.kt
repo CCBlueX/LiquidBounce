@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
@@ -44,16 +43,15 @@ object Esp2DMode : EspMode("2D") {
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        val entitiesWithBoxes = RenderedEntities.mapToArray { entity ->
+        for (entity in RenderedEntities) {
+            if (!shouldRender(entity)) continue
+
             val dimensions = entity.getDimensions(entity.pose)
             val d = dimensions.width.toDouble() / 2.0
-            val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
+            val boxNoOffset = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
             val pos = entity.interpolateCurrentPosition(event.tickDelta)
-            val boxAtPos = box.offset(pos)
-            entity to boxAtPos
-        }
+            val box = boxNoOffset.offset(pos)
 
-        for ((entity, box) in entitiesWithBoxes) {
             val projected = box.edgePoints.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
             if (projected.isEmpty()) {
                 continue

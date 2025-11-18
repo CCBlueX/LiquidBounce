@@ -36,7 +36,9 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
@@ -65,7 +67,14 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         val color by color("Color", defaultColor)
         val tracers by boolean("Tracers", false)
 
-        fun shouldRender(pos: BlockPos): Boolean = pos !in FeatureChestAura.interactedBlocksSet
+        fun shouldRender(pos: BlockPos): Boolean =
+            this.running
+                && pos !in FeatureChestAura.interactedBlocksSet
+                && pos.cameraDistanceSq() < maximumDistance.sq()
+
+        fun shouldRender(entity: Entity): Boolean =
+            this.running
+                && entity.pos.cameraDistanceSq() < maximumDistance.sq()
 
         object Chest : ChestType("Chest", Color4b(0, 100, 255))
         object EnderChest : ChestType("EnderChest", Color4b(Color.MAGENTA))
@@ -89,6 +98,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     }
 
     private val requiresChestStealer by boolean("RequiresChestStealer", false)
+
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     override fun onEnabled() {
         ChunkScanner.subscribe(StorageScanner)
@@ -160,7 +171,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             for ((pos, type) in StorageScanner.iterate()) {
                 val color = type.color
 
-                if (!type.enabled || color.isTransparent || !type.shouldRender(pos)) {
+                if (color.isTransparent || !type.shouldRender(pos)) {
                     continue
                 }
 
@@ -183,7 +194,9 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             entityBoxes.clear()
 
             for (entity in world.entities) {
-                val type = entity.categorize()?.takeIf { it.enabled && !it.color.isTransparent } ?: continue
+                val type = entity.categorize()?.takeIf {
+                    !it.color.isTransparent && it.shouldRender(entity)
+                } ?: continue
 
                 val dimensions = entity.getDimensions(entity.pose)
                 val d = dimensions.width.toDouble() / 2.0
@@ -201,7 +214,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             get() = modes
 
         @Suppress("unused")
-        val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
+        private val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
             if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
                 || StorageScanner.isEmpty()) {
                 return@handler
@@ -212,7 +225,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 // their outline
                 startBatch()
                 for ((pos, type) in StorageScanner.iterate()) {
-                    if (!type.enabled) continue
+                    if (type.color.isTransparent || !type.shouldRender(pos)) continue
 
                     val state = pos.getState() ?: continue
 
@@ -255,7 +268,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             startBatch()
             longLines {
                 for ((blockPos, type) in StorageScanner.iterate()) {
-                    if (!type.enabled || !type.tracers || type.color.isTransparent) continue
+                    if (!type.tracers || type.color.isTransparent || !type.shouldRender(blockPos)) continue
                     val pos = relativeToCamera(blockPos.toCenterPos()).toVec3()
 
                     drawLine(eyeVector, pos, type.color.toARGB())
