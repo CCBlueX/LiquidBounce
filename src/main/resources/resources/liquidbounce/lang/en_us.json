@@ -529,6 +529,8 @@
   "liquidbounce.module.elytraFly.description": "Makes controlling an elytra easier.",
   "liquidbounce.module.elytraFly.messages.altitudeTooLow": "Warning: Altitude too low for optimal performance. Recommended height: %sY",
   "liquidbounce.module.elytraTarget.description": "Following the target on elytra.",
+  "liquidbounce.module.enderChestBreaker.description": "Automatically breaks ender chests from your inventory.",
+  "liquidbounce.module.enderChestBreaker.messages.offhandConflict": "Offhand module must be disabled to use EnderChestBreaker.",
   "liquidbounce.module.targets.description": "Allows you to manage which entities are considered to be your targets.",
   "liquidbounce.module.extendedFirework.description": "Extends the velocity of firework rocket boost.",
   "liquidbounce.module.esp.description": "Highlights all targets allowing you to see them through walls.",

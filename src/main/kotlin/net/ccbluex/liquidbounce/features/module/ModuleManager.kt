@@ -331,6 +331,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleAntiAFK,
             ModuleAntiExploit,
             ModuleAutoBreak,
+            ModuleEnderChestBreaker,
             ModuleAutoFish,
             ModuleAutoRespawn,
             ModuleAutoWindCharge,

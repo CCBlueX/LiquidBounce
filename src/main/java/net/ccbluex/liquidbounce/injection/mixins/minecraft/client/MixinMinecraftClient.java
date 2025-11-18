@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleMiddleClickAction;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleEnderChestBreaker;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
@@ -139,6 +140,9 @@ public abstract class MixinMinecraftClient {
     @Shadow
     @org.jetbrains.annotations.Nullable
     public ClientWorld world;
+
+    @Shadow
+    protected abstract void doItemUse();
 
     /**
      * Entry point of our hacked client
@@ -416,6 +420,15 @@ public abstract class MixinMinecraftClient {
             if (ModuleAutoBreak.INSTANCE.getEnabled()) {
                 this.handleBlockBreaking(this.options.attackKey.isPressed());
             }
+
+            if (ModuleEnderChestBreaker.INSTANCE.getEnabled()) {
+                if (ModuleEnderChestBreaker.canUseOffhand()) {
+                    this.doItemUse();
+                }
+                else {
+                    this.handleBlockBreaking(this.options.attackKey.isPressed());
+                }
+            }
         }
     }
 
@@ -454,7 +467,7 @@ public abstract class MixinMinecraftClient {
         final BlockHitResult blockHitResult = (BlockHitResult) this.crosshairTarget;
         if (blockHitResult == null) return; // it should never be null
 
-        if (ModuleNoBlockInteract.INSTANCE.getRunning() &&
+        if ((ModuleNoBlockInteract.INSTANCE.getRunning() || ModuleEnderChestBreaker.INSTANCE.getRunning()) &&
                 ModuleNoBlockInteract.INSTANCE.shouldSneak(blockHitResult)) {
 
             ModuleNoBlockInteract.INSTANCE.startSneaking();
