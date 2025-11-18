@@ -312,6 +312,12 @@ val ClientPlayerEntity.lastRotation: Rotation
 val Entity.box: Box
     get() = boundingBox.expand(targetingMargin.toDouble())
 
+val cameraEyePos: Vec3d get() = (mc.cameraEntity ?: player).eyePos
+
+fun Position.cameraDistanceSq() = cameraEyePos.squaredDistanceTo(x, y, z)
+
+fun Vec3i.cameraDistanceSq() = cameraEyePos.squaredDistanceTo(x.toDouble(), y.toDouble(), z.toDouble())
+
 /**
  * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
  */

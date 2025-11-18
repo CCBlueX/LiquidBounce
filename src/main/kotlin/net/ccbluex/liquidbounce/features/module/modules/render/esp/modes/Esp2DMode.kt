@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
@@ -27,12 +26,12 @@ import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.fill
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.aiming.utils.edgePoints
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
 
 object Esp2DMode : EspMode("2D") {
 
@@ -44,33 +43,21 @@ object Esp2DMode : EspMode("2D") {
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        val entitiesWithBoxes = RenderedEntities.mapToArray { entity ->
+        for (entity in RenderedEntities) {
+            if (!shouldRender(entity)) continue
+
             val dimensions = entity.getDimensions(entity.pose)
             val d = dimensions.width.toDouble() / 2.0
-            val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
+            val boxNoOffset = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
             val pos = entity.interpolateCurrentPosition(event.tickDelta)
-            val boxAtPos = box.offset(pos)
-            entity to boxAtPos
-        }
+            val box = boxNoOffset.offset(pos)
 
-        for ((entity, box) in entitiesWithBoxes) {
             val color = getColor(entity)
             val baseColor = color.with(a = 50).toARGB()
             val outlineColor = color.with(a = 255).toARGB()
             val black = Color4b.BLACK.toARGB()
 
-            val corners = arrayOf(
-                Vec3d(box.minX, box.minY, box.minZ),
-                Vec3d(box.minX, box.minY, box.maxZ),
-                Vec3d(box.minX, box.maxY, box.minZ),
-                Vec3d(box.minX, box.maxY, box.maxZ),
-                Vec3d(box.maxX, box.minY, box.minZ),
-                Vec3d(box.maxX, box.minY, box.maxZ),
-                Vec3d(box.maxX, box.maxY, box.minZ),
-                Vec3d(box.maxX, box.maxY, box.maxZ)
-            )
-
-            val projected = corners.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
+            val projected = box.edgePoints.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
             if (projected.isEmpty()) {
                 continue
             }

@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.canSeePointFrom
 import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
+import net.ccbluex.liquidbounce.utils.entity.cameraEyePos
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.copy
@@ -98,12 +99,12 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        val camera = mc.cameraEntity ?: player
+        val cameraEyePos = cameraEyePos
         particles.removeIf { particle ->
-            if (particle.alpha <= 0 || camera.eyePos.squaredDistanceTo(particle.pos) > 30 * 30) {
+            if (particle.alpha <= 0 || cameraEyePos.squaredDistanceTo(particle.pos) > 30 * 30) {
                 true
             } else {
-                particle.update(camera.eyePos)
+                particle.update(cameraEyePos)
                 false
             }
         }

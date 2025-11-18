@@ -39,7 +39,7 @@ import org.joml.Vector2fc
 object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
     val scale by float("Scale", 2F, 0.25F..4F)
-    private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     internal val batchRenderMode by enumChoice("BatchRenderMode", BatchRenderMode.EACH)
 
