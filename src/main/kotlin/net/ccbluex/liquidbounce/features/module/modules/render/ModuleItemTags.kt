@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAn
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
@@ -73,7 +74,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
     private val clusterSizeMode = choices("ClusterSizeMode", ClusterSizeMode.Static,
         arrayOf(ClusterSizeMode.Static, ClusterSizeMode.Distance))
-    private val maximumDistance by float("MaximumDistance", 128F, 1F..256F)
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     private sealed class ClusterSizeMode(name: String) : Choice(name) {
         override val parent: ChoiceConfigurable<*>
@@ -168,12 +169,11 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     private val itemEntities by computedOn<GameTickEvent, ObjectArrayList<ClusteredEntities>>(
         initialValue = ObjectArrayList()
     ) { _, clusteredEntities ->
-        val cameraPos = (mc.cameraEntity ?: player).pos
         val maxDistSquared = maximumDistance.sq()
 
         @Suppress("UNCHECKED_CAST")
         val entities = world.entities.filter {
-            it is ItemEntity && it.squaredDistanceTo(cameraPos) < maxDistSquared && filter(it.stack.item, items)
+            it is ItemEntity && it.eyePos.cameraDistanceSq() < maxDistSquared && filter(it.stack.item, items)
         } as List<ItemEntity>
 
         computeEntityClusters(entities, clusteredEntities)

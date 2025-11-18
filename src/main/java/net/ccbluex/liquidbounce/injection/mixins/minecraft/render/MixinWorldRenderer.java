@@ -135,12 +135,13 @@ public abstract class MixinWorldRenderer {
     private boolean shouldRenderOutline(Entity entity) {
         if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
             return true;
-        } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity)) {
+        } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {
             return true;
         } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof TntEntity) {
             return true;
-        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning() && ModuleStorageESP.categorize(entity) != null) {
-            return true;
+        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
+            var category = ModuleStorageESP.categorize(entity);
+            return category != null && category.shouldRender(entity);
         } else {
             return false;
         }
@@ -153,16 +154,16 @@ public abstract class MixinWorldRenderer {
      */
     @ModifyExpressionValue(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"))
     private int injectTeamColor(int original, @Local Entity entity) {
-        if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning()) {
+        if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning() && EspGlowMode.INSTANCE.shouldRender(livingEntity)) {
             return ModuleESP.INSTANCE.getColor(livingEntity).toARGB();
         } else if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
             return ModuleItemESP.INSTANCE.getColor().toARGB();
         } else if (entity instanceof TntEntity tntEntity && ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp()) {
             return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).toARGB();
         } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
-            var color = ModuleStorageESP.categorize(entity);
-            if (color != null) {
-                return color.getColor().toARGB();
+            var category = ModuleStorageESP.categorize(entity);
+            if (category != null && category.shouldRender(entity)) {
+                return category.getColor().toARGB();
             }
         }
 

@@ -56,12 +56,23 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         this.setFilter(FilterMode.NEAREST)
     }
 
+    private fun clearOverlay() {
+        overlayFramebuffer.colorAttachment?.clearColor(0)
+        overlayFramebuffer.depthAttachment?.clearDepth(1.0)
+    }
+
     private val lastTimeScreenOpened = Chronometer()
     private var wasScreenOpen = false
 
     @Suppress("unused")
     private val resizeHandler = handler<FramebufferResizeEvent> {
-        this.overlayFramebuffer.resize(it.width, it.height)
+        if ((it.width != this.overlayFramebuffer.textureWidth || it.height != this.overlayFramebuffer.textureHeight)) {
+            if (it.width == 0 || it.height == 0) {
+                clearOverlay()
+            } else {
+                this.overlayFramebuffer.resize(it.width, it.height)
+            }
+        }
     }
 
     fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
@@ -69,10 +80,9 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             return
         }
 
-        if (ModuleHud.isBlurEffectActive) {
+        if (ModuleHud.running && ModuleHud.isBlurEffectActive) {
             this.isDrawingHudFramebuffer = true
-            overlayFramebuffer.colorAttachment?.clearColor(0)
-            overlayFramebuffer.depthAttachment?.clearDepth(1.0)
+            clearOverlay()
 
             // TODO: GlobalFramebuffer is incompatible with OSX
             if (!MinecraftClient.IS_SYSTEM_MAC) {

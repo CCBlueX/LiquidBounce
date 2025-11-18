@@ -60,7 +60,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val textShadow by boolean("TextShadow", true)
     private val scale by float("Scale", 1.5f, 0.5f..3.0f)
     private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
-    private val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F, aliases = listOf("MaxDistance"))
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
     private val compact by boolean("Compact", true)
@@ -157,7 +157,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                 continue
             }
 
-            if (distance > maxDistance || i++ > maxCount) {
+            if (distance > maximumDistance || i++ > maxCount) {
                 break // because list beds are sorted by distance (ASC), so we break at first item out of range
             }
 

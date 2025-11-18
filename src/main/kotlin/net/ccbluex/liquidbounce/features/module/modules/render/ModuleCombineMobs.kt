@@ -19,10 +19,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.mob.MobEntity
@@ -42,10 +44,17 @@ object ModuleCombineMobs : ClientModule("CombineMobs", Category.RENDER) {
     @JvmRecord
     private data class CombineKey(val type: EntityType<*>, val babyGroup: Boolean)
 
-    private val renderTracked = HashMap<CombineKey, Long2IntOpenHashMap>()
-    private val nametagTracked = HashMap<CombineKey, Long2IntOpenHashMap>()
+    private val renderTracked = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
+    private val nametagTracked = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
+
+    override fun onEnabled() {
+        RenderedEntities.subscribe(this)
+        RenderedEntities.onUpdated(nametagTracked::clear)
+        super.onEnabled()
+    }
 
     override fun onDisabled() {
+        RenderedEntities.unsubscribe(this)
         renderTracked.clear()
         nametagTracked.clear()
     }
@@ -54,9 +63,8 @@ object ModuleCombineMobs : ClientModule("CombineMobs", Category.RENDER) {
      * On each frame, we start with a clean slate
      */
     @Suppress("unused")
-    val renderGameHandler = handler<GameRenderEvent> {
+    private val renderGameHandler = handler<GameRenderEvent> {
         renderTracked.clear()
-        nametagTracked.clear()
     }
 
     private fun keyFor(mob: MobEntity): CombineKey {
