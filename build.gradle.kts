@@ -23,6 +23,16 @@ import groovy.json.JsonOutput
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import org.gradle.kotlin.dsl.support.listFilesOrdered
 
+buildscript {
+    repositories {
+        maven(url = "https://jitpack.io")
+    }
+    dependencies {
+        classpath("com.github.NextChapterSoftware.gradle-node-plugin:com.github.node-gradle.node.gradle.plugin:FixGradleNode-SNAPSHOT")
+    }
+}
+apply(plugin = "com.github.node-gradle.node")
+
 plugins {
     id("fabric-loom")
     kotlin("jvm")
@@ -41,22 +51,14 @@ base {
 /** Includes non-mod dependency recursively in the JAR file */
 val includeDependency: Configuration by configurations.creating
 
-/** Includes mod in the JAR file */
-val includeModDependency: Configuration by configurations.creating
-
 /** Includes native-only dependency in the JAR file */
 val includeNative: Configuration by configurations.creating
 
 includeDependency.excludeProvidedLibs()
-includeModDependency.excludeProvidedLibs()
 
 configurations {
     include.configure {
-        extendsFrom(includeModDependency)
         extendsFrom(includeNative)
-    }
-    modApi.configure {
-        extendsFrom(includeModDependency)
     }
     runtimeOnly.configure {
         extendsFrom(includeNative)
@@ -129,7 +131,9 @@ dependencies {
     includeDependency("com.github.CCBlueX:mc-authlib:${project.property("mc_authlib_version")}")
 
     // JCEF Support
-    includeModDependency("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
+    val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
+    modApi(mcef)
+    include("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
     includeDependency("net.ccbluex:netty-httpserver:2.4.2")
     // MacOS native (Linux native is included in game)
     includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
