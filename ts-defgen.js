@@ -270,7 +270,6 @@ declare module '../types/net/ccbluex/liquidbounce/script/bindings/features/Scrip
     catch (e) {
         console.error(e);
         Client.displayChatMessage(`Error generating TypeScript definitions: ${e.message}`);
-        e.printStackTrace();
         throw e;
     }
 }
@@ -278,8 +277,11 @@ const packageName = "@ccbluex/liquidbounce-script-api";
 const path = ScriptManager_1.ScriptManager.INSTANCE.root.path;
 // @ts-expect-error
 if (Java.type("java.lang.System").getenv("SCRIPT_TYPEGEN_BUILD")) {
-    generate(path, packageName);
-    mc.close();
+    try {
+        generate(path, packageName);
+    } finally {
+        mc.close();
+    }
 }
 script.registerCommand({
     name: "ts-defgen",
