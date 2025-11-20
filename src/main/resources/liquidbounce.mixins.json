@@ -83,6 +83,7 @@
     "minecraft.gui.custom.MixinDisconnectedScreen",
     "minecraft.gui.custom.MixinDownloadingTerrainScreen",
     "minecraft.gui.widget.MixinEntryListWidget",
+    "minecraft.gui.widget.MixinTextFieldWidget",
     "minecraft.item.MixinHeldItemRenderer",
     "minecraft.item.MixinItem",
     "minecraft.item.MixinItemStack",
