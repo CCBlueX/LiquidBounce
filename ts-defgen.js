@@ -76,10 +76,9 @@ function getName(javaClass) {
     const fullName = javaClass.name;
     return fullName.substring(fullName.lastIndexOf(".") + 1);
 }
-const j2k = JvmClassMappingKt_1.JvmClassMappingKt.getKotlinClass;
 const j2kSafe = it => {
     try {
-        j2k(it);
+        JvmClassMappingKt_1.JvmClassMappingKt.getKotlinClass(it);
     } catch (_) {
         return null;
     }
@@ -102,7 +101,8 @@ function generate(path, packageName) {
             .map((entry) => (entry[1] instanceof Class_1.Class ? entry[1] : entry[1].class))
             .filter((entry) => entry != undefined);
         const eventEntries = ReflectionUtil.getDeclaredField(EventKt_1.EventKt, "EVENT_NAME_TO_CLASS").entrySet().toArray()
-            .map(entry => [entry[0], j2kSafe(entry[1])]);
+            .map(entry => [entry[0], j2kSafe(entry[1])])
+            .filter(entry => entry[1]);
         Client.displayChatMessage(`found ${eventEntries.length} events`);
         Client.displayChatMessage("looking for all jvm classes");
         const allClassInfos = findAllClassInfos();
