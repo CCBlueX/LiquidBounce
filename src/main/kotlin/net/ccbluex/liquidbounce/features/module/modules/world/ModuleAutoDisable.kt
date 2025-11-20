@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import java.util.EnumSet
 
 /**
  * AutoDisable module
@@ -49,7 +50,7 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
         field: MutableSet<ClientModule> = ReferenceOpenHashSet()
 
     private val moduleNames by registryList("Modules", objectHashSetOf<String>(), ValueType.CLIENT_MODULE)
-    private val disableOn by multiEnumChoice<DisableOn>("On", canBeNone = false)
+    private val disableOn by multiEnumChoice<DisableOn>("On", EnumSet.allOf(DisableOn::class.java), canBeNone = false)
 
     fun clear() {
         modules.clear()
