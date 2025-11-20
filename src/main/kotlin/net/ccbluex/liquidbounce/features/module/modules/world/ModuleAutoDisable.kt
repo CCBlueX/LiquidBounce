@@ -19,11 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -46,8 +48,8 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
     val modules: Set<ClientModule>
         field: MutableSet<ClientModule> = ReferenceOpenHashSet()
 
-    private val moduleNames by registryList("Modules", hashSetOf<String>(), ValueType.CLIENT_MODULE)
-    private val disableOn by multiEnumChoice<DisableOn>("On")
+    private val moduleNames by registryList("Modules", objectHashSetOf<String>(), ValueType.CLIENT_MODULE)
+    private val disableOn by multiEnumChoice<DisableOn>("On", canBeNone = false)
 
     fun clear() {
         modules.clear()
@@ -80,15 +82,20 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
     }
 
     @Suppress("unused")
-    val worldChangesHandler = handler<PacketEvent> {
+    private val worldChangesHandler = handler<PacketEvent> {
         if (it.packet is PlayerPositionLookS2CPacket && DisableOn.FLAG in disableOn) {
             disableAndNotify("flag")
         }
     }
 
     @Suppress("unused")
-    val deathHandler = handler<DeathEvent> {
+    private val deathHandler = handler<DeathEvent> {
         if (DisableOn.DEATH in disableOn) disableAndNotify("your death")
+    }
+
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> {
+        if (DisableOn.WORLD_CHANGE in disableOn) disableAndNotify("world change")
     }
 
     private fun disableAndNotify(reason: String) {
@@ -108,6 +115,7 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
 
     private enum class DisableOn(override val choiceName: String) : NamedChoice {
         FLAG("Flag"),
-        DEATH("Death")
+        DEATH("Death"),
+        WORLD_CHANGE("WorldChange"),
     }
 }
