@@ -1,11 +1,11 @@
 {
-  "name": "CraftingInventory",
+  "name": "EnderChestInventory",
   "enabled": false,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "Right",
     "horizontalOffset": 35,
     "verticalAlignment": "Bottom",
-    "verticalOffset": 305
+    "verticalOffset": 170
   }
 }

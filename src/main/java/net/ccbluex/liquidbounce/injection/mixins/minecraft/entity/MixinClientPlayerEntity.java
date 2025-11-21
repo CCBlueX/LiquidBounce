@@ -113,14 +113,14 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         // Call player statistics change event when statistics change
         var statistics = PlayerData.Companion.fromPlayer((ClientPlayerEntity) (Object) this);
         if (lastKnownStatistics == null || !lastKnownStatistics.equals(statistics)) {
-            EventManager.INSTANCE.callEvent(ClientPlayerDataEvent.Companion.fromPlayerStatistics(statistics));
+            EventManager.INSTANCE.callEvent(new ClientPlayerDataEvent(statistics));
         }
         this.lastKnownStatistics = statistics;
 
         // Call player inventory event when inventory changes
         var playerInventory = PlayerInventoryData.Companion.fromPlayer((ClientPlayerEntity) (Object) this);
         if (lastKnownInventory == null || !lastKnownInventory.equals(playerInventory)) {
-            EventManager.INSTANCE.callEvent(ClientPlayerInventoryEvent.Companion.fromPlayerInventory(playerInventory));
+            EventManager.INSTANCE.callEvent(new ClientPlayerInventoryEvent(playerInventory));
         }
         this.lastKnownInventory = playerInventory;
     }

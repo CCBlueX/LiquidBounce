@@ -73,6 +73,7 @@ import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
+import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
@@ -254,6 +255,7 @@ object LiquidBounce : EventListener {
         CombatManager
         FriendManager
         InventoryManager
+        EnderChestInventoryTracker
         WorldToScreen
         ActiveServerList
         ConfigSystem.root(ClientItemGroups)

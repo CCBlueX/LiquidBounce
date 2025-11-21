@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitiz
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
@@ -141,7 +142,8 @@ data class PlayerInventoryData(
             armor = player.armorItems.map(ItemStack::copy),
             main = player.inventory.mainStacks.map(ItemStack::copy),
             crafting = player.playerScreenHandler.craftingInput.heldStacks.map(ItemStack::copy),
-            enderChest = player.enderChestInventory.getHeldStacks().map(ItemStack::copy),
+            /** player.enderChestInventory.getHeldStacks().map(ItemStack::copy) */
+            enderChest = EnderChestInventoryTracker.stacks,
         )
     }
 
