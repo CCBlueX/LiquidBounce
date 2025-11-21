@@ -78,9 +78,9 @@ function getName(javaClass) {
 }
 const j2kSafe = it => {
     try {
-        JvmClassMappingKt_1.JvmClassMappingKt.getKotlinClass(it);
+        return JvmClassMappingKt_1.JvmClassMappingKt.getKotlinClass(it);
     } catch (_) {
-        return null;
+        return undefined;
     }
 }
 
@@ -273,11 +273,8 @@ const packageName = "@ccbluex/liquidbounce-script-api";
 const path = ScriptManager_1.ScriptManager.INSTANCE.root.path;
 // @ts-expect-error
 if (Java.type("java.lang.System").getenv("SCRIPT_TYPEGEN_BUILD")) {
-    try {
-        generate(path, packageName);
-    } finally {
-        mc.close();
-    }
+    generate(path, packageName);
+    mc.close();
 }
 script.registerCommand({
     name: "ts-defgen",

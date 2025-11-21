@@ -23,16 +23,6 @@ import groovy.json.JsonOutput
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import org.gradle.kotlin.dsl.support.listFilesOrdered
 
-buildscript {
-    repositories {
-        maven(url = "https://jitpack.io")
-    }
-    dependencies {
-        classpath("com.github.NextChapterSoftware.gradle-node-plugin:com.github.node-gradle.node.gradle.plugin:FixGradleNode-SNAPSHOT")
-    }
-}
-apply(plugin = "com.github.node-gradle.node")
-
 plugins {
     id("fabric-loom")
     kotlin("jvm")
