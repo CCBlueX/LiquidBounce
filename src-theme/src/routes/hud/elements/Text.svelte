@@ -10,18 +10,20 @@
 
     export let settings: { [name: string]: any };
 
+    const cSettings = settings as HudTextSettings;
+
     listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
         playerData = event.playerData;
         processText();
     });
 
     function processText() {
-        if (!settings.text || !playerData) {
-            processedText = settings.text || '';
+        if (!cSettings.text || !playerData) {
+            processedText = cSettings.text || '';
             return;
         }
 
-        processedText = settings.text.replace(/{(\w+(\.\w+)*)}/g, (match: string, p1: string) => {
+        processedText = cSettings.text.replace(/{(\w+(\.\w+)*)}/g, (match: string, p1: string) => {
             const keys = p1.split(".");
             let value: any = playerData;
 
@@ -53,19 +55,19 @@
 </script>
 
 <div class="text" style="
-    font-family: {settings.font};
-    font-size: {settings.size}px;
-    color: {rgbaToHex(intToRgba(settings.color))};
-    font-weight: {settings.decorations.bold ? 'bold' : 'normal'};
-    font-style: {settings.decorations.italic ? 'italic' : 'normal'};
+    font-family: {cSettings.font};
+    font-size: {cSettings.size}px;
+    color: {rgbaToHex(intToRgba(cSettings.color))};
+    font-weight: {cSettings.decorations.bold ? 'bold' : 'normal'};
+    font-style: {cSettings.decorations.italic ? 'italic' : 'normal'};
     text-decoration:
-      {settings.decorations.underline ? 'underline ' : ''}
-      {settings.decorations.strikethrough ? 'line-through' : ''};
+      {cSettings.decorations.underline ? 'underline ' : ''}
+      {cSettings.decorations.strikethrough ? 'line-through' : ''};
     text-shadow:
-      {settings.shadow.enabled
-        ? `${settings.shadow.offsetX}px ${settings.shadow.offsetY}px ${settings.shadow.blurRadius}px ${rgbaToHex(intToRgba(settings.shadow.color))}`
+      {cSettings.shadow.enabled
+        ? `${cSettings.shadow.offsetX}px ${cSettings.shadow.offsetY}px ${cSettings.shadow.blurRadius}px ${rgbaToHex(intToRgba(cSettings.shadow.color))}`
         : 'none'};
-    filter: {settings.glow.enabled ? `drop-shadow(0px 0px ${settings.glow.radius}px ${rgbaToHex(intToRgba(settings.glow.color))}` : 'none'};
+    filter: {cSettings.glow.enabled ? `drop-shadow(0px 0px ${cSettings.glow.radius}px ${rgbaToHex(intToRgba(cSettings.glow.color))}` : 'none'};
 ">
     {processedText}
 </div>

@@ -6,6 +6,8 @@
 
     export let settings: { [name: string]: any };
 
+    const cSettings = settings as HudScoreboardSettings;
+
     let scoreboard: Scoreboard | null = null;
 
     listen("clientPlayerData", (e: ClientPlayerDataEvent) => {
@@ -16,7 +18,7 @@
 
 {#if scoreboard}
     <div class="scoreboard">
-        {#if scoreboard.header && settings.show.includes('Header')}
+        {#if scoreboard.header && cSettings.show.includes('Header')}
             <div class="header">
                 <TextComponent fontSize={14} allowPreformatting={true} textComponent={scoreboard.header}/>
             </div>
@@ -24,10 +26,10 @@
         <div class="entries">
             {#each scoreboard.entries as {name, score}}
                 <div class="row">
-                    {#if settings.show.includes('Name')}
+                    {#if cSettings.show.includes('Name')}
                         <TextComponent fontSize={14} allowPreformatting={true} textComponent={name}/>
                     {/if}
-                    {#if settings.show.includes('Score')}
+                    {#if cSettings.show.includes('Score')}
                         <TextComponent fontSize={14} allowPreformatting={true} textComponent={score}/>
                     {/if}
                 </div>
