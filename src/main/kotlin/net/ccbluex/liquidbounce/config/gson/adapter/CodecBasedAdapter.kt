@@ -29,8 +29,10 @@ import com.google.gson.JsonSerializer
 import com.mojang.serialization.Codec
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.JsonOps
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.processContent
 import net.minecraft.component.ComponentChanges
+import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.Text
 import net.minecraft.text.TextCodecs
 import java.lang.reflect.Type
@@ -40,6 +42,8 @@ import java.lang.reflect.Type
  */
 class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, JsonDeserializer<T> {
 
+    private val jsonOps get() = (mc.world?.registryManager ?: DynamicRegistryManager.EMPTY).getOps(JsonOps.INSTANCE)
+
     override fun deserialize(
         jsonElement: JsonElement?,
         type: Type,
@@ -47,7 +51,7 @@ class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, Jso
     ): T? {
         jsonElement ?: return null
 
-        return when (val parsed = codec.parse(JsonOps.INSTANCE, jsonElement)) {
+        return when (val parsed = codec.parse(jsonOps, jsonElement)) {
             is DataResult.Success -> parsed.value
             is DataResult.Error ->
                 throw JsonParseException("Failed to encode $jsonElement with $codec, error: ${parsed.message()}")
@@ -57,7 +61,7 @@ class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, Jso
     override fun serialize(t: T?, type: Type, jsonSerializationContext: JsonSerializationContext): JsonElement? {
         t ?: return JsonNull.INSTANCE
 
-        return when (val encoded = codec.encodeStart(JsonOps.INSTANCE, t)) {
+        return when (val encoded = codec.encodeStart(jsonOps, t)) {
             is DataResult.Success -> encoded.value
             is DataResult.Error ->
                 throw JsonParseException("Failed to encode $t with $codec, error: ${encoded.message()}")
