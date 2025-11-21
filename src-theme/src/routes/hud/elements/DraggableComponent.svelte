@@ -69,7 +69,7 @@
     }
 </script>
 
-<div class="draggable-element" style={styleString} bind:this={element}>
+<div class="draggable-element" style={styleString}>
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="contained-element">
         <slot/>
