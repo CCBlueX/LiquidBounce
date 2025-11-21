@@ -118,7 +118,7 @@ dependencies {
     modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}")
 
     // Minecraft Authlib
-    includeDependency("com.github.CCBlueX:mc-authlib:${project.property("mc_authlib_version")}")
+    includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
 
     // JCEF Support
     val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
