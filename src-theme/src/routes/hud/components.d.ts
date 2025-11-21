@@ -22,7 +22,7 @@ interface HudToggleableConfigurable {
 }
 
 interface HudScoreboardSettings {
-    show: ("Header" | "Name" | "Score")[]
+    show: ("Header" | "Name" | "Score")[];
 }
 
 interface HudTextSettings {
