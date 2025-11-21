@@ -76,7 +76,7 @@ class MultiChooseListValue<T : NamedChoice>(
             active.addAll(choices)
         }
 
-        set(active)
+        set(active) { /** Trigger listener callbacks */ }
     }
 
     private fun MutableSet<T>.tryToEnable(name: String) {

@@ -226,12 +226,12 @@ fun closeInventorySilently() {
     network.sendPacket(CloseHandledScreenC2SPacket(0))
 }
 
-fun HandledScreen<*>.getSlotsInContainer() =
+fun HandledScreen<*>.getSlotsInContainer(): List<ContainerItemSlot> =
     this.screenHandler.slots
         .filter { it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }
 
-fun HandledScreen<*>.findItemsInContainer() =
+fun HandledScreen<*>.findItemsInContainer(): List<ContainerItemSlot> =
     this.screenHandler.slots
         .filter { !it.stack.isEmpty && it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }

@@ -22,7 +22,7 @@
 package net.ccbluex.liquidbounce.integration.theme.component
 
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.ComponentsUpdate
+import net.ccbluex.liquidbounce.event.events.ComponentsUpdateEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -64,7 +64,7 @@ object ComponentManager {
     fun updateComponents() {
         // Might be necessary later on.
         // EventManager.callEvent(ComponentsUpdate(null, components))
-        EventManager.callEvent(ComponentsUpdate(ThemeManager.theme.metadata.id, ThemeManager.theme.components))
+        EventManager.callEvent(ComponentsUpdateEvent(ThemeManager.theme.metadata.id, ThemeManager.theme.components))
     }
 
 }

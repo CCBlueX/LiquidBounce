@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.*
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
@@ -73,6 +74,7 @@ import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
+import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
@@ -83,7 +85,7 @@ import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
 import net.minecraft.util.Identifier
 import java.io.InputStream
-import java.util.Locale
+import java.util.*
 import kotlin.time.measureTime
 
 /**
@@ -254,6 +256,7 @@ object LiquidBounce : EventListener {
         CombatManager
         FriendManager
         InventoryManager
+        EnderChestInventoryTracker
         WorldToScreen
         ActiveServerList
         ConfigSystem.root(ClientItemGroups)
