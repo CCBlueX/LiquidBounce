@@ -199,24 +199,32 @@ class ErrorHandler private constructor(
 
         val message = builder.toString().replace("\"", "").replace("'", "")
 
-        return if (needToReport) {
-            TinyFileDialogs.tinyfd_messageBox(
-                title,
-                message,
-                "yesno",
-                "error",
-                true
-            )
-        } else {
-            TinyFileDialogs.tinyfd_messageBox(
-                title,
-                message,
-                "ok",
-                "error",
-                true
-            )
+        return when {
+            !System.getenv("CI").isNullOrEmpty() -> {
+                logger.error(message)
+                false
+            }
 
-            false
+            needToReport -> {
+                TinyFileDialogs.tinyfd_messageBox(
+                    title,
+                    message,
+                    "yesno",
+                    "error",
+                    true
+                )
+            }
+            else -> {
+                TinyFileDialogs.tinyfd_messageBox(
+                    title,
+                    message,
+                    "ok",
+                    "error",
+                    true
+                )
+
+                false
+            }
         }
     }
 }
