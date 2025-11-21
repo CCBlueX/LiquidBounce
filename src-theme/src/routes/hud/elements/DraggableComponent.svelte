@@ -20,10 +20,7 @@
 <script lang="ts">
     import {type Alignment, HorizontalAlignment, VerticalAlignment} from "../../../integration/types.js";
 
-    export let name: string;
-    export let id: string;
     export let alignment: Alignment;
-    let element: HTMLElement | undefined;
 
     $: styleString = generateStyleString(alignment);
 
@@ -80,8 +77,6 @@
 </div>
 
 <style lang="scss">
-  @import "../../../colors";
-
   .draggable-element {
     position: relative;
   }
