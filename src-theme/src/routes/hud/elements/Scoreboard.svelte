@@ -4,6 +4,8 @@
     import TextComponent from "../../menu/common/TextComponent.svelte";
     import type {ClientPlayerDataEvent} from "../../../integration/events";
 
+    export let settings: { [name: string]: any };
+
     let scoreboard: Scoreboard | null = null;
 
     listen("clientPlayerData", (e: ClientPlayerDataEvent) => {
@@ -14,7 +16,7 @@
 
 {#if scoreboard}
     <div class="scoreboard">
-        {#if scoreboard.header}
+        {#if scoreboard.header && settings.show.indexOf('Header') !== -1}
             <div class="header">
                 <TextComponent fontSize={14} allowPreformatting={true} textComponent={scoreboard.header}/>
             </div>
@@ -22,8 +24,12 @@
         <div class="entries">
             {#each scoreboard.entries as {name, score}}
                 <div class="row">
-                    <TextComponent fontSize={14} allowPreformatting={true} textComponent={name}/>
-                    <TextComponent fontSize={14} allowPreformatting={true} textComponent={score}/>
+                    {#if settings.show.indexOf('Name') !== -1}
+                        <TextComponent fontSize={14} allowPreformatting={true} textComponent={name}/>
+                    {/if}
+                    {#if settings.show.indexOf('Score') !== -1}
+                        <TextComponent fontSize={14} allowPreformatting={true} textComponent={score}/>
+                    {/if}
                 </div>
             {/each}
         </div>

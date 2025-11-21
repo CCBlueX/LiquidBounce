@@ -8,5 +8,14 @@
     "verticalAlignment": "CenterTranslated",
     "verticalOffset": 0
   },
+  "values": [
+    {
+      "type": "MULTI_CHOOSE",
+      "name": "Show",
+      "value": ["Header", "Name", "Score"],
+      "choices": ["Header", "Name", "Score"],
+      "canBeNone": false
+    }
+  ],
   "tweaks": ["DISABLE_SCOREBOARD"]
 }
