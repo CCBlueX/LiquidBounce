@@ -35,7 +35,24 @@ import java.util.Map;
 public abstract class MixinTextureSetup {
 
     @Unique
+    private static final Map<GpuTextureView, TextureSetup> $textureSetupCache$withoutGlTexture = new Reference2ObjectOpenHashMap<>();
+
+    @Unique
     private static final Map<GpuTextureView, Map<GpuTextureView, TextureSetup>> $textureSetupCache = new Reference2ObjectArrayMap<>();
+
+    @WrapOperation(
+        method = "withoutGlTexture(Lcom/mojang/blaze3d/textures/GpuTextureView;)Lnet/minecraft/client/texture/TextureSetup;",
+        at = @At(value = "NEW", target = "(Lcom/mojang/blaze3d/textures/GpuTextureView;Lcom/mojang/blaze3d/textures/GpuTextureView;Lcom/mojang/blaze3d/textures/GpuTextureView;)Lnet/minecraft/client/texture/TextureSetup;")
+    )
+    private static TextureSetup cacheInit0(
+        GpuTextureView gpuTextureView, GpuTextureView gpuTextureView2,
+        GpuTextureView gpuTextureView3, Operation<TextureSetup> original) {
+        // original call
+        // return new TextureSetup(texture, null, null);
+        assert gpuTextureView2 == null;
+        assert gpuTextureView3 == null;
+        return $textureSetupCache$withoutGlTexture.computeIfAbsent(gpuTextureView, k -> original.call(k, null, null));
+    }
 
     /**
      * Cache the TextureSetup for the given GpuTextureView.
@@ -44,10 +61,11 @@ public abstract class MixinTextureSetup {
         method = "of(Lcom/mojang/blaze3d/textures/GpuTextureView;)Lnet/minecraft/client/texture/TextureSetup;",
         at = @At(value = "NEW", target = "(Lcom/mojang/blaze3d/textures/GpuTextureView;Lcom/mojang/blaze3d/textures/GpuTextureView;Lcom/mojang/blaze3d/textures/GpuTextureView;)Lnet/minecraft/client/texture/TextureSetup;")
     )
-    private static TextureSetup cacheInit(GpuTextureView gpuTextureView, GpuTextureView gpuTextureView2,
+    private static TextureSetup cacheInit1(
+        GpuTextureView gpuTextureView, GpuTextureView gpuTextureView2,
         GpuTextureView gpuTextureView3, Operation<TextureSetup> original) {
         // original call
-        // return new TextureSetup(texture, (GpuTextureView)null, MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().getGlTextureView());
+        // return new TextureSetup(texture, null, MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().getGlTextureView());
         assert gpuTextureView2 == null;
         return $textureSetupCache.computeIfAbsent(gpuTextureView3, k -> new Reference2ObjectOpenHashMap<>())
             .computeIfAbsent(gpuTextureView, k -> original.call(k, null, gpuTextureView3));

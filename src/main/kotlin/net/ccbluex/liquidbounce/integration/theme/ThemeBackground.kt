@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.integration.theme
 
 import com.mojang.blaze3d.buffers.GpuBuffer
+import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
 import com.mojang.blaze3d.vertex.VertexFormat
@@ -36,7 +37,7 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.util.Identifier
 import java.io.Closeable
-import java.util.Locale
+import java.util.*
 
 sealed interface ThemeBackground : Closeable {
 
@@ -92,11 +93,12 @@ sealed interface ThemeBackground : Closeable {
      * @param pipeline the shader render pipeline
      */
     class Shader private constructor(
+        private val metadata: ThemeMetadata,
         private val pipeline: RenderPipeline,
     ) : ThemeBackground {
 
         private val gpuBuffer = gpuDevice.createBuffer(
-            { "ThemeShaderBackground UBO" },
+            { "ThemeShaderBackground UBO - ${metadata.name}" },
             GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
             std140Size { float + vec2 + vec2 },
         ).slice()
@@ -120,6 +122,7 @@ sealed interface ThemeBackground : Closeable {
                 pass.setUniform(UNIFORM_NAME, gpuBuffer)
                 pass.drawFullScreenPositionTexture()
             }
+
             return true
         }
 
@@ -148,6 +151,7 @@ sealed interface ThemeBackground : Closeable {
                     .withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
                     .withVertexShader(vshId)
                     .withFragmentShader(fshId)
+                    .withBlend(BlendFunction.TRANSLUCENT)
                     .withUniform(UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
                     .withoutBlend()
                     .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
@@ -161,7 +165,7 @@ sealed interface ThemeBackground : Closeable {
                     }
                 }
 
-                return Shader(pipeline)
+                return Shader(metadata, pipeline)
             }
         }
     }
