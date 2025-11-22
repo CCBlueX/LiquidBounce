@@ -1,4 +1,4 @@
-#version 330
+#version 410
 
 uniform sampler2D Sampler0;
 // see mc position_tex_color.fsh
