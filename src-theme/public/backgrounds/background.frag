@@ -1,4 +1,4 @@
-#version 330
+#version 410
 
 // Uniforms
 layout(std140) uniform ThemeBackgroundData {
