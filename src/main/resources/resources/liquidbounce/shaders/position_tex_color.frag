@@ -1,4 +1,4 @@
-#version 330
+#version 410
 
 uniform sampler2D Sampler0;
 uniform vec4 ColorModulator;
