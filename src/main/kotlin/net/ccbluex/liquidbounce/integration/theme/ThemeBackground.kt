@@ -23,18 +23,24 @@ import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
+import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.blaze3d.textures.TextureFormat
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.render.copyPose
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
-import net.ccbluex.liquidbounce.render.newRenderPass
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.std140Size
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.render.state.TexturedQuadGuiElementRenderState
 import net.minecraft.client.render.VertexFormats
+import net.minecraft.client.texture.TextureSetup
 import net.minecraft.util.Identifier
 import java.io.Closeable
 import java.util.*
@@ -103,6 +109,9 @@ sealed interface ThemeBackground : Closeable {
             std140Size { float + vec2 + vec2 },
         ).slice()
 
+        private var background: GpuTexture? = null
+        private var backgroundView: GpuTextureView? = null
+
         override fun draw(
             context: DrawContext,
             width: Int,
@@ -111,23 +120,73 @@ sealed interface ThemeBackground : Closeable {
             mouseY: Int,
             delta: Float
         ): Boolean {
+            val framebufferWidth = mc.window.framebufferWidth
+            val framebufferHeight = mc.window.framebufferHeight
+
             gpuBuffer.writeStd140 {
                 putFloat((System.currentTimeMillis() - mc.startTime) / 1000F)
                 putVec2(mouseX.toFloat(), mouseY.toFloat())
-                putVec2(mc.window.framebufferWidth.toFloat(), mc.window.framebufferHeight.toFloat())
+                putVec2(framebufferWidth.toFloat(), framebufferHeight.toFloat())
             }
 
-            newRenderPass().use { pass ->
-                pass.setPipeline(pipeline)
-                pass.setUniform(UNIFORM_NAME, gpuBuffer)
-                pass.drawFullScreenPositionTexture()
-            }
+            val backgroundView = resizeIfNeeded(framebufferWidth, framebufferHeight)
+
+            gpuDevice
+                .createCommandEncoder()
+                .createRenderPass(
+                    { "ThemeShaderBackground Pass - ${metadata.name}" },
+                    backgroundView,
+                    OptionalInt.empty()
+                ).use { pass ->
+                    pass.setPipeline(pipeline)
+                    pass.setUniform(UNIFORM_NAME, gpuBuffer)
+                    pass.drawFullScreenPositionTexture()
+                }
+
+            context.state
+                .addSimpleElement(
+                    TexturedQuadGuiElementRenderState(
+                        RenderPipelines.GUI_TEXTURED,
+                        TextureSetup.withoutGlTexture(backgroundView),
+                        context.copyPose(),
+                        0,
+                        0,
+                        width,
+                        height,
+                        0f,
+                        1f,
+                        1f,
+                        0f,
+                        -1,
+                        null, // Always no scissor
+                    )
+                )
 
             return true
         }
 
-        @Suppress("EmptyFunctionBlock")
         override fun close() {
+            gpuBuffer.buffer.close()
+            backgroundView?.close()
+            background?.close()
+        }
+
+        private fun resizeIfNeeded(
+            framebufferWidth: Int,
+            framebufferHeight: Int,
+        ): GpuTextureView {
+            if (background == null || background!!.getWidth(0) != framebufferWidth || background!!.getHeight(0) != framebufferHeight) {
+                background?.close()
+                background = gpuDevice.createTexture(
+                    "ThemeShaderBackground Texture - ${metadata.name} ($framebufferWidth x $framebufferHeight)",
+                    GpuTexture.USAGE_RENDER_ATTACHMENT,
+                    TextureFormat.RGBA8, framebufferWidth, framebufferHeight,
+                    1, 1,
+                )
+                backgroundView?.close()
+                backgroundView = background!!.asView()
+            }
+            return backgroundView!!
         }
 
         companion object {
