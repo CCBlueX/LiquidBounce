@@ -121,7 +121,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
             }
 
         fun update() {
-            // FIXME: incorrect shader
+            // FIXME: incorrect lightmapTextureManager state (enable/disable)
             gpuDevice.createCommandEncoder()
                 .createRenderPass(
                     { "$name pass" },

@@ -28,12 +28,14 @@ import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.registry.entry.RegistryEntry;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -84,12 +86,18 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
         }
     }
 
-    @Inject(method = "enable", at = @At("HEAD"), cancellable = true)
-    private void hookSpoof(CallbackInfo ci) {
-        if (liquid_bounce$customLightMap) {
-            RenderSystem.setShaderTexture(2, ModuleCustomAmbience.CustomLightColor.INSTANCE.getTextureView());
-            ci.cancel();
-        }
+    @ModifyArg(
+        method = "enable",
+        at = @At(
+            value = "INVOKE",
+            target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderTexture(ILcom/mojang/blaze3d/textures/GpuTextureView;)V"
+        ),
+        index = 1
+    )
+    private @Nullable GpuTextureView hookSpoof(@Nullable GpuTextureView texture) {
+        return liquid_bounce$customLightMap
+            ? ModuleCustomAmbience.CustomLightColor.INSTANCE.getTextureView()
+            : texture;
     }
 
     @Override

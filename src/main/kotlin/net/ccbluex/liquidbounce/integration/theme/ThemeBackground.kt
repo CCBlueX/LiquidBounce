@@ -175,7 +175,10 @@ sealed interface ThemeBackground : Closeable {
             framebufferWidth: Int,
             framebufferHeight: Int,
         ): GpuTextureView {
-            if (background == null || background!!.getWidth(0) != framebufferWidth || background!!.getHeight(0) != framebufferHeight) {
+            if (background == null ||
+                background!!.getWidth(0) != framebufferWidth ||
+                background!!.getHeight(0) != framebufferHeight
+            ) {
                 background?.close()
                 background = gpuDevice.createTexture(
                     "ThemeShaderBackground Texture - ${metadata.name} ($framebufferWidth x $framebufferHeight)",
