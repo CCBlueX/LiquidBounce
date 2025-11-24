@@ -45,7 +45,7 @@ import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
  * Sprints automatically.
  */
 
-object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT, state = true) {
+object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
 
     private enum class SprintMode(override val choiceName: String) : NamedChoice {
         LEGIT("Legit"),
@@ -164,6 +164,6 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT, state = true) {
     private enum class StopOn(override val choiceName: String) : NamedChoice {
         GROUND("Ground"),
         AIR("Air"),
-        CHEST("Chest")
+        CHEST("Chest"),
     }
 }
