@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.utils.combat
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -103,10 +102,10 @@ open class TargetSelector(
         default = objectLinkedSetOf(TargetPriority.TYPE, defaultPriority),
         canBeNone = false,
     ).onChanged { set ->
-        comparator = ComparatorChain(comparisonFunctions = set.mapToArray { it.comparator })
+        comparator = ComparatorChain(comparisonFunctions = set.toTypedArray())
     }
 
-    private var comparator: Comparator<in LivingEntity> = TargetPriority.TYPE.comparator
+    private var comparator: Comparator<in LivingEntity> = TargetPriority.TYPE
 
     /**
      * Counts available targets.
@@ -183,41 +182,60 @@ open class TargetSelector(
 
 }
 
-enum class TargetPriority(override val choiceName: String, val comparator: Comparator<in LivingEntity>) : NamedChoice {
+enum class TargetPriority(override val choiceName: String) : NamedChoice, Comparator<LivingEntity> {
     /**
      * Lowest health first
      */
-    HEALTH("Health", Comparator.comparingDouble { it.getActualHealth().toDouble() }),
+    HEALTH("Health") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o1.getActualHealth() compareTo o2.getActualHealth()
+    },
 
     /**
      * Closest to you first
      */
-    DISTANCE("Distance", Comparator.comparingDouble(player::squaredBoxedDistanceTo)),
+    DISTANCE("Distance") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o1.squaredBoxedDistanceTo(player) compareTo o2.squaredBoxedDistanceTo(player)
+    },
 
     /**
      * Closest to your crosshair first
      */
-    DIRECTION("Direction", Comparator.comparingDouble { RotationUtil.crosshairAngleToEntity(it).toDouble() }),
+    DIRECTION("Direction") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            RotationUtil.crosshairAngleToEntity(o1) compareTo RotationUtil.crosshairAngleToEntity(o2)
+    },
 
     /**
      * With the lowest hurt time first
      */
-    HURT_TIME("HurtTime", Comparator.comparingInt { it.hurtTime }),
+    HURT_TIME("HurtTime") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o1.hurtTime compareTo o2.hurtTime
+    },
 
     /**
      * Oldest entity first
      */
-    AGE("Age", Comparator.comparingInt { -it.age }),
+    AGE("Age") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o2.age compareTo o1.age
+    },
 
     /**
      * Player first
      */
-    TYPE("Type", Comparator.comparingInt { entity ->
-        when (entity) {
-            is PlayerEntity -> 0
-            is HostileEntity -> 1
-            is Angerable if entity.angryAt == player.uuid -> 2
-            else -> Int.MAX_VALUE
-        }
-    })
+    TYPE("Type") {
+        private fun weight(entity: LivingEntity): Int =
+            when (entity) {
+                is PlayerEntity -> 0
+                is HostileEntity -> 1
+                is Angerable if entity.angryAt == player.uuid -> 2
+                else -> Int.MAX_VALUE
+            }
+
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            weight(o1) compareTo weight(o2)
+    },
 }
