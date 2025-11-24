@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {createEventDispatcher} from "svelte";
+    import {createEventDispatcher, onDestroy} from "svelte";
     import type {ModuleSetting, MultiChooseSetting,} from "../../../integration/types";
     import {slide} from "svelte/transition";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
@@ -24,7 +24,7 @@
             if (filtered.length === 0 && !cSetting.canBeNone) {
                 // Doesn't remove the element because in this case the value will be empty
                 // And indicate the value
-                errorValue = v
+                errorValue = v;
                 clearTimeout(timeoutId);
                 timeoutId = setTimeout(() => errorValue = null, 300);
 
@@ -33,7 +33,7 @@
 
             cSetting.value = filtered;
         } else {
-            cSetting.value = [...cSetting.value, v]
+            cSetting.value = [...cSetting.value, v];
         }
 
         setting = {...cSetting};
@@ -47,6 +47,8 @@
     function toggleExpanded() {
         expanded = !expanded;
     }
+
+    onDestroy(() => clearTimeout(timeoutId));
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -65,9 +67,7 @@
                         class="choice"
                         class:active={cSetting.value.includes(choice)}
                         class:error={errorValue === choice}
-                        on:click={() => {
-                            handleChange(choice)
-                        }}
+                        on:click={() => handleChange(choice)}
                 >
                     {$spaceSeperatedNames ? convertToSpacedString(choice) : choice}
                 </div>
