@@ -33,8 +33,8 @@ object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER) {
     private val enableFirstPOV by boolean("EnableFirstPOV", default = false)
     private val resetOnPerspectiveChange by boolean("ResetOnPerspectiveChange", default = true)
 
-    private val factorH by float("Horizontal Factor", 0.9f, 0f..1f)
-    private val factorV by float("Vertical Factor", 0.93f, 0f..1f)
+    private val factorH by float("HorizontalFactor", 0.9f, 0f..1f)
+    private val factorV by float("VerticalFactor", 0.93f, 0f..1f)
 
     var smoothPos: Vec3d = Vec3d.ZERO
         private set
