@@ -144,6 +144,7 @@ export interface ChooseSetting extends Setting<string> {
 export interface MultiChooseSetting extends Setting<string[]> {
     choices: string[];
     canBeNone: boolean;
+    isOrderSensitive: boolean;
 }
 
 export interface ListSetting extends Setting<string[]> {

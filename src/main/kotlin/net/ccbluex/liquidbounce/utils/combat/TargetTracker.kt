@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.utils.combat
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.RangedValue
@@ -28,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.Angerable
 import net.minecraft.entity.mob.HostileEntity
@@ -93,7 +96,17 @@ open class TargetSelector(
     private val range = rangeValue.register(this)
     private val fov by float("FOV", 180f, 0f..180f)
     private val hurtTime by int("HurtTime", 10, 0..10)
-    private val priority by enumChoice("Priority", defaultPriority)
+
+    @Suppress("unused", "UnusedPrivateProperty")
+    private val priority by multiEnumChoice(
+        name = "Priority",
+        default = objectLinkedSetOf(TargetPriority.TYPE, defaultPriority),
+        canBeNone = false,
+    ).onChanged { set ->
+        comparator = ComparatorChain(comparisonFunctions = set.mapToArray { it.comparator })
+    }
+
+    private var comparator: Comparator<in LivingEntity> = TargetPriority.TYPE.comparator
 
     /**
      * Counts available targets.
@@ -118,13 +131,7 @@ open class TargetSelector(
             return entities
         }
 
-        entities.sortWith(
-            if (priority == TargetPriority.DISTANCE) {
-                COMPARATOR_BY_TYPE.thenComparing(TargetPriority.DISTANCE.comparator)
-            } else {
-                COMPARATOR_BY_TYPE.thenComparing(priority.comparator).thenComparing(TargetPriority.DISTANCE.comparator)
-            }
-        )
+        entities.sortWith(this.comparator)
 
         // Update max distance squared
         closestSquaredEnemyDistance = entities.minOf { it.squaredBoxedDistanceTo(player) }
@@ -176,15 +183,6 @@ open class TargetSelector(
 
 }
 
-private val COMPARATOR_BY_TYPE: Comparator<LivingEntity> = Comparator.comparingInt { entity ->
-    when (entity) {
-        is PlayerEntity -> 0
-        is HostileEntity -> 1
-        is Angerable if entity.angryAt == player.uuid -> 2
-        else -> Int.MAX_VALUE
-    }
-}
-
 enum class TargetPriority(override val choiceName: String, val comparator: Comparator<in LivingEntity>) : NamedChoice {
     /**
      * Lowest health first
@@ -194,7 +192,7 @@ enum class TargetPriority(override val choiceName: String, val comparator: Compa
     /**
      * Closest to you first
      */
-    DISTANCE("Distance", Comparator.comparingDouble { it.squaredBoxedDistanceTo(player) }),
+    DISTANCE("Distance", Comparator.comparingDouble(player::squaredBoxedDistanceTo)),
 
     /**
      * Closest to your crosshair first
@@ -210,4 +208,16 @@ enum class TargetPriority(override val choiceName: String, val comparator: Compa
      * Oldest entity first
      */
     AGE("Age", Comparator.comparingInt { -it.age }),
+
+    /**
+     * Player first
+     */
+    TYPE("Type", Comparator.comparingInt { entity ->
+        when (entity) {
+            is PlayerEntity -> 0
+            is HostileEntity -> 1
+            is Angerable if entity.angryAt == player.uuid -> 2
+            else -> Int.MAX_VALUE
+        }
+    })
 }
