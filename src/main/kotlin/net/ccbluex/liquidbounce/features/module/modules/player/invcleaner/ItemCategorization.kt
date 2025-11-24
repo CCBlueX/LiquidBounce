@@ -93,6 +93,9 @@ enum class ItemSortChoice(
 ) : NamedChoice {
     SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
     WEAPON("Weapon", ItemCategory(ItemType.WEAPON, 0)),
+    MACE("Mace", ItemCategory(ItemType.MACE, 0), {
+        it.item is MaceItem
+    }),
     BOW("Bow", ItemCategory(ItemType.BOW, 0)),
     CROSSBOW("Crossbow", ItemCategory(ItemType.CROSSBOW, 0)),
     AXE("Axe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_AXE), { it.isAxe }),
