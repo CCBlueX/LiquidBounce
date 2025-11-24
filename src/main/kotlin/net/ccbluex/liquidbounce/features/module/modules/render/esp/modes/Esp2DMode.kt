@@ -37,15 +37,15 @@ import net.minecraft.util.math.Box
 object Esp2DMode : EspMode("2D") {
 
     object Outline: ToggleableConfigurable(this, "Outline", true) {
-        val thickness by int("Thickness", 1, 1..9, "px")
+        val thickness by float("Thickness", 1f, 1f..9f, "px")
     }
     object Border: ToggleableConfigurable(this, "Border", true) {
-        val thickness by int("Thickness", 1, 1..9, "px")
+        val thickness by float("Thickness", 1f, 1f..9f, "px")
     }
     private val expand by float("Expand", 0.05f, 0f..0.5f)
     private val fill by boolean("Fill", true)
     object HealthBar: ToggleableConfigurable(this, "HealthBar", true) {
-        val spacing by int("Spacing", 2, 0..32, "px")
+        val spacing by float("Spacing", 2f, 0f..32f, "px")
     }
 
     init {
@@ -84,8 +84,8 @@ object Esp2DMode : EspMode("2D") {
             var rectHeight = (maxY - minY)
 
             val guiScaleFactor = mc.options.guiScale.value
-            val outlineThickness = Outline.thickness.toFloat() / guiScaleFactor
-            val borderThickness = Border.thickness.toFloat() / guiScaleFactor
+            val outlineThickness = Outline.thickness / guiScaleFactor
+            val borderThickness = Border.thickness / guiScaleFactor
 
             with(event.context) {
                 matrices.withPush {
