@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -44,7 +43,7 @@ import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -63,7 +62,6 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.projectile.FishingBobberEntity
 import net.minecraft.item.Items
-import net.minecraft.registry.Registries
 import net.minecraft.util.math.Vec3d
 import java.util.function.BooleanSupplier
 import java.util.function.Function
@@ -88,7 +86,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val ignores by multiEnumChoice<Ignore>("Ignore")
     private val holdingItemsForIgnore by items(
         "HoldingItemsForIgnore",
-        objectRBTreeSetOf(Registries.ITEM.asComparator(), Items.BOW, Items.CROSSBOW, Items.TRIDENT, Items.FIRE_CHARGE, Items.ENDER_PEARL)
+        itemSortedSetOf(Items.BOW, Items.CROSSBOW, Items.TRIDENT, Items.FIRE_CHARGE, Items.ENDER_PEARL)
     )
     private val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE))
     private val pointTracker = tree(PointTracker(this))

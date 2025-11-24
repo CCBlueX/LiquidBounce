@@ -43,7 +43,9 @@ object ModuleNoEntityInteract : ClientModule("NoEntityInteract", Category.PLAYER
     }
 
     private fun defaultHoldingItems(): SequencedSet<Item> {
-        val set = itemSortedSetOf(Items.AIR, Items.SHEARS, Items.TNT, Items.WATER_BUCKET, Items.LAVA_BUCKET, Items.COBWEB)
+        val set = itemSortedSetOf(
+            Items.AIR, Items.SHEARS, Items.TNT, Items.WATER_BUCKET, Items.LAVA_BUCKET, Items.COBWEB
+        )
         Registries.ITEM.filterTo(set) { it.defaultStack.isMiningTool }
         return set
     }
