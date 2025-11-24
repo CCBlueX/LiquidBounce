@@ -31,6 +31,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isAxe
@@ -151,7 +153,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         val clicker = tree(Clicker(this, mc.options.useKey, null))
         internal val holdingItemsForIgnore by items(
             "HoldingItemsForIgnore",
-            default = ReferenceOpenHashSet.of(
+            default = itemSortedSetOf(
                 Items.WATER_BUCKET,
                 Items.LAVA_BUCKET,
                 Items.ENDER_PEARL,
@@ -161,7 +163,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         )
         internal val blocksForIgnore by blocks(
             "BlocksForIgnore",
-            default = Registries.BLOCK.filterTo(ReferenceOpenHashSet()) {
+            default = Registries.BLOCK.filterTo(blockSortedSetOf()) {
                 it is DoorBlock || it is FenceGateBlock || it is TrapdoorBlock
             },
         )

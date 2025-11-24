@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -35,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
@@ -154,7 +154,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
     }
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val blocks by blocks("Blocks", referenceHashSetOf())
+    private val blocks by blocks("Blocks", blockSortedSetOf())
 
     private object SilkTouchHandler : ToggleableConfigurable(
         this, "SilkTouchHandler", enabled = false
@@ -162,7 +162,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         private val filter by enumChoice("Filter", Filter.WHITELIST)
         private val blocks by blocks(
             "Blocks",
-            referenceHashSetOf(Blocks.ENDER_CHEST, Blocks.GLOWSTONE, Blocks.SEA_LANTERN, Blocks.TURTLE_EGG),
+            blockSortedSetOf(Blocks.ENDER_CHEST, Blocks.GLOWSTONE, Blocks.SEA_LANTERN, Blocks.TURTLE_EGG),
         )
 
         fun test(blockState: BlockState, itemStack: ItemStack): Boolean =

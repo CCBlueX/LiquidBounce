@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.google.common.collect.Ordering
-import com.google.common.collect.Sets
 import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.fastutil.synchronized
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -61,7 +62,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
 
     private val protBlocks by blocks(
         "ProtectionBlocks",
-        Sets.newConcurrentHashSet<Block>().apply { add(Blocks.EMERALD_BLOCK) },
+        blockSortedSetOf(Blocks.EMERALD_BLOCK).synchronized(),
     ).onChange {
         if (running) {
             onDisabled()

@@ -68,7 +68,7 @@ interface NamedChoice {
     companion object {
         @JvmName("of")
         @JvmStatic
-        fun String.asNamedChoice(): NamedChoice = object : NamedChoice {
+        fun String.asNamedChoice(): NamedChoice = object : NamedChoice, Comparable<NamedChoice> {
             override val choiceName get() = this@asNamedChoice
 
             override fun equals(other: Any?): Boolean =
@@ -82,6 +82,8 @@ interface NamedChoice {
             override fun hashCode(): Int = this.choiceName.hashCode()
 
             override fun toString(): String = this.choiceName
+
+            override fun compareTo(other: NamedChoice): Int = this.choiceName.compareTo(other.choiceName)
         }
     }
 }

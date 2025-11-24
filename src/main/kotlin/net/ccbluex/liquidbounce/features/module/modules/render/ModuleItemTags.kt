@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAn
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
@@ -65,7 +66,7 @@ import net.minecraft.util.math.Vec3d
 object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val items by items("Items", ReferenceOpenHashSet())
+    private val items by items("Items", itemSortedSetOf())
 
     private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
     private val scale by float("Scale", 1.5F, 0.25F..4F)

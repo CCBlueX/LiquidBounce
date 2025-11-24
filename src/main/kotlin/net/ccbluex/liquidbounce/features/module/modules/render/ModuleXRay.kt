@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks.*
@@ -179,7 +179,7 @@ object ModuleXRay : ClientModule("XRay", Category.RENDER) {
     // Set of blocks that will not be excluded
     val blocks: MutableSet<Block> by blocks(
         "Blocks",
-        ReferenceOpenHashSet(defaultBlocks)
+        blockSortedSetOf(blocks = defaultBlocks)
     ).onChanged(::valueChangedReload)
 
     /**

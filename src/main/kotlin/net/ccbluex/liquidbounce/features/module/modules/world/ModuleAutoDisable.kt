@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
-import net.ccbluex.fastutil.objectHashSetOf
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.events.DeathEvent
@@ -49,7 +49,7 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
     val modules: Set<ClientModule>
         field: MutableSet<ClientModule> = ReferenceOpenHashSet()
 
-    private val moduleNames by registryList("Modules", objectHashSetOf<String>(), ValueType.CLIENT_MODULE)
+    private val moduleNames by registryList("Modules", objectRBTreeSetOf<String>(), ValueType.CLIENT_MODULE)
     private val disableOn by multiEnumChoice<DisableOn>("On", EnumSet.allOf(DisableOn::class.java), canBeNone = false)
 
     fun clear() {
