@@ -42,8 +42,8 @@ enum class KillAuraRequirements(
     override fun getAsBoolean(): Boolean =
         when (this) {
             CLICK -> mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
-            WEAPON -> player.inventory.mainHandStack.isWeapon()
-            VANILLA_NAME -> player.inventory.mainHandStack.customName == null
+            WEAPON -> player.mainHandStack.isWeapon()
+            VANILLA_NAME -> player.mainHandStack.customName == null
             NOT_BREAKING -> mc.interactionManager?.isBreakingBlock == false
         }
 }

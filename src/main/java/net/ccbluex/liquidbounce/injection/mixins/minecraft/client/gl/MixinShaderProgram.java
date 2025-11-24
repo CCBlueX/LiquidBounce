@@ -20,23 +20,25 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.gl;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.render.Fog;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.util.Window;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+
+import static net.ccbluex.liquidbounce.utils.render.RenderExtensionsKt.SAMPLER_NAMES;
 
 @Mixin(ShaderProgram.class)
 public abstract class MixinShaderProgram {
 
   @Shadow
-  public abstract void addSamplerTexture(String name, int texture);
+  public abstract void addSamplerTexture(String name, GpuTexture texture);
 
   @Shadow
   @Nullable
@@ -75,23 +77,26 @@ public abstract class MixinShaderProgram {
   @Nullable
   public GlUniform lineWidth;
 
-  @Unique
-  private static final String[] SAMPLER_NAMES = new String[12];
-  static {
-      for (int i = 0; i < 12; i++) {
-          SAMPLER_NAMES[i] = "Sampler" + i;
-      }
-  }
+  @Shadow
+  @Nullable
+  public GlUniform modelOffset;
+  @Shadow
+  @Nullable
+  public GlUniform light0Direction;
+  @Shadow
+  @Nullable
+  public GlUniform light1Direction;
 
   /**
    * @author MukjepScarlet
    * @reason Mojang's super code creates tons of byte[] and String: `"Sampler" + i`
    */
   @Overwrite
-  public void initializeUniforms(VertexFormat.DrawMode drawMode, Matrix4f viewMatrix, Matrix4f projectionMatrix, Window window) {
-    for (int i = 0; i < 12; i++) {
-      int j = RenderSystem.getShaderTexture(i);
-      this.addSamplerTexture(SAMPLER_NAMES[i], j);
+
+  public void initializeUniforms(VertexFormat.DrawMode drawMode, Matrix4f viewMatrix, Matrix4f projectionMatrix, float screenWidth, float screenHeight) {
+    for(int i = 0; i < 12; ++i) {
+      GpuTexture gpuTexture = RenderSystem.getShaderTexture(i);
+      this.addSamplerTexture(SAMPLER_NAMES[i], gpuTexture);
     }
 
     if (this.modelViewMat != null) {
@@ -135,15 +140,26 @@ public abstract class MixinShaderProgram {
       this.gameTime.set(RenderSystem.getShaderGameTime());
     }
 
+    if (this.modelOffset != null) {
+      this.modelOffset.set(RenderSystem.getModelOffset());
+    }
+
     if (this.screenSize != null) {
-      this.screenSize.set((float)window.getFramebufferWidth(), (float)window.getFramebufferHeight());
+      this.screenSize.set(screenWidth, screenHeight);
     }
 
     if (this.lineWidth != null && (drawMode == VertexFormat.DrawMode.LINES || drawMode == VertexFormat.DrawMode.LINE_STRIP)) {
       this.lineWidth.set(RenderSystem.getShaderLineWidth());
     }
 
-    RenderSystem.setupShaderLights((ShaderProgram) (Object) this);
-  }
+    Vector3f[] vector3fs = RenderSystem.getShaderLights();
+    if (this.light0Direction != null) {
+      this.light0Direction.set(vector3fs[0]);
+    }
 
+    if (this.light1Direction != null) {
+      this.light1Direction.set(vector3fs[1]);
+    }
+
+  }
 }

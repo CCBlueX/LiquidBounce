@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.ItemStack
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
@@ -76,7 +77,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
 
-        val offsets = if (!ScaffoldTellyFeature.isTellyBridging || ModuleFreeze.running) {
+        val offsets = if (ModuleFreeze.running) {
             FULL_INVESTIGATION_OFFSETS
         } else if (ScaffoldDownFeature.shouldGoDown) {
             INVESTIGATE_DOWN_OFFSETS
@@ -92,7 +93,10 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
                 offsets,
                 priorityComparator,
             ),
-            FaceHandlingOptions(facePositionFactory),
+            FaceHandlingOptions(
+                facePositionFactory,
+                considerFacingAwayFaces = ScaffoldDownFeature.shouldGoDown
+            ),
             stackToPlaceWith = bestStack,
             PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose),
         )
@@ -121,6 +125,22 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         }
 
         return super.getRotations(target)
+    }
+
+    override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
+        val crosshairTarget = super.getCrosshairTarget(target ?: return null, rotation)
+
+        // Prefer a visible hit result
+        if (crosshairTarget != null && target.doesCrosshairTargetFullFillRequirements(crosshairTarget)) {
+            return crosshairTarget
+        }
+
+        // Allow a non-visible hit result
+        if (ScaffoldDownFeature.shouldGoDown) {
+            return target.blockHitResult
+        }
+
+        return null
     }
 
     private fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose, optimalLine: Line?):

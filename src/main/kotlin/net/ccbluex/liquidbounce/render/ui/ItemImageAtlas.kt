@@ -22,17 +22,18 @@ package net.ccbluex.liquidbounce.render.ui
 
 import com.mojang.blaze3d.systems.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.common.GlobalFramebuffer
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.utils.client.ceilToInt
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.math.Rect2i
@@ -40,11 +41,11 @@ import net.minecraft.item.Item
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
 import net.minecraft.util.Identifier
+import net.minecraft.util.Util
 import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
-import org.joml.Vector2i
 import java.awt.image.BufferedImage
-import kotlin.math.ceil
+import java.util.concurrent.CompletableFuture
 import kotlin.math.sqrt
 
 private const val NATIVE_ITEM_SIZE: Int = 16
@@ -65,41 +66,20 @@ private class Atlas(
 object ItemImageAtlas : EventListener {
 
     private var atlas: Atlas? = null
+    private var updateFuture: CompletableFuture<*>? = null
 
-    fun updateAtlas(drawContext: DrawContext) {
-        if (this.atlas != null) {
-            return
+    fun updateAtlas(drawContext: DrawContext): Boolean {
+        if (this.atlas != null || this.updateFuture != null) {
+            return false
         }
 
-        val renderer = ItemFramebufferRenderer(
-            Registries.ITEM,
-            4
-        )
+        updateFuture = ItemTextureRenderer(items = Registries.ITEM, scale = 4)
+            .render(drawContext).thenAcceptAsync({
+                atlas = it
+                updateFuture = null
+            }, mc)
 
-        val items = renderer.render(drawContext)
-
-        val image = renderer.getImage().toBufferedImage()
-
-        renderer.deleteFramebuffer()
-
-        this.atlas = Atlas(items, image, findAliases())
-    }
-
-    private fun findAliases(): Map<Identifier, Identifier> {
-        val map = hashMapOf<Identifier, Identifier>()
-
-        Registries.BLOCK.forEach {
-            val pickUpState = it.getPickStack(mc.world!!, BlockPos.ORIGIN, it.defaultState, false)
-
-            if (pickUpState.item != it) {
-                val blockId = Registries.BLOCK.getId(it)
-                val itemId = Registries.ITEM.getId(pickUpState.item)
-
-                map[blockId] = itemId
-            }
-        }
-
-        return map
+        return true
     }
 
     @Suppress("unused")
@@ -127,74 +107,79 @@ object ItemImageAtlas : EventListener {
     }
 }
 
-private class ItemFramebufferRenderer(
+private class ItemTextureRenderer(
     val items: Registry<Item>,
     val scale: Int,
 ) : MinecraftShortcuts {
-    private val itemsPerDimension = ceil(sqrt(items.size().toDouble())).toInt()
+    private val itemsPerDimension = sqrt(items.size().toDouble()).ceilToInt()
+    private val itemPixelSize = NATIVE_ITEM_SIZE * scale
+    private val textureSize = itemPixelSize * itemsPerDimension
 
-    private val framebuffer: Framebuffer = SimpleFramebuffer(
-        NATIVE_ITEM_SIZE * scale * itemsPerDimension,
-        NATIVE_ITEM_SIZE * scale * itemsPerDimension,
-        true
-    ).apply {
-        setClearColor(0.0f, 0.0f, 0.0f, 0.0f)
-    }
-
-    private val itemPixelSizeOnFramebuffer = NATIVE_ITEM_SIZE * scale
-
-    fun render(ctx: DrawContext): Map<Item, Rect2i> {
-        this.framebuffer.beginWrite(true)
-
-        ctx.matrices.push()
-
-        ctx.matrices.loadIdentity()
-
-        ctx.matrices.scale(scale.toFloat(), scale.toFloat(), 1.0f)
+    fun render(ctx: DrawContext): CompletableFuture<Atlas> {
+        mc.framebuffer.resize(textureSize, textureSize)
+        mc.framebuffer.clearColorAndDepth(0, 1.0)
 
         val projectionMatrix = RenderSystem.getProjectionMatrix()
-
-        val matrix4f = Matrix4f().setOrtho(
-            0.0f,
-            this.framebuffer.textureWidth.toFloat(),
-            this.framebuffer.textureHeight.toFloat(),
-            0.0f,
-            1000.0f,
-            21000.0f
+        val matrix = Matrix4f().setOrtho(
+            0f,
+            textureSize.toFloat(),
+            textureSize.toFloat(),
+            0f,
+            1000f,
+            21000f
         )
 
-        RenderSystem.setProjectionMatrix(matrix4f, ProjectionType.ORTHOGRAPHIC)
-        GlobalFramebuffer.push(framebuffer)
+        RenderSystem.setProjectionMatrix(matrix, ProjectionType.ORTHOGRAPHIC)
+        ctx.matrices.push()
+        ctx.matrices.loadIdentity()
+        ctx.matrices.scale(scale.toFloat(), scale.toFloat(), 1f)
 
-        val map = Reference2ObjectOpenHashMap<Item, Rect2i>(items.size())
-        this.items.forEachIndexed { idx, item ->
-            val fromX = (idx % this.itemsPerDimension) * NATIVE_ITEM_SIZE
-            val fromY = (idx / this.itemsPerDimension) * NATIVE_ITEM_SIZE
+        val itemMap = Reference2ObjectOpenHashMap<Item, Rect2i>(items.size())
 
-            ctx.drawItem(item.defaultStack, fromX, fromY)
-
-            map[item] = Rect2i(
-                fromX * this.scale,
-                fromY * this.scale,
-                this.itemPixelSizeOnFramebuffer,
-                this.itemPixelSizeOnFramebuffer
-            )
+        items.forEachIndexed { idx, item ->
+            val x = (idx % itemsPerDimension) * NATIVE_ITEM_SIZE
+            val y = (idx / itemsPerDimension) * NATIVE_ITEM_SIZE
+            ctx.drawItem(item.defaultStack, x, y)
+            itemMap[item] = Rect2i(x * scale, y * scale, itemPixelSize, itemPixelSize)
         }
 
         ctx.matrices.pop()
 
-        GlobalFramebuffer.pop()
-        mc.framebuffer.beginWrite(true)
-
         RenderSystem.setProjectionMatrix(projectionMatrix, ProjectionType.ORTHOGRAPHIC)
 
-        return map
+        return mc.framebuffer.colorAttachment!!.toNativeImage()
+            .thenApply {
+                mc.framebuffer.resize(mc.window.framebufferWidth, mc.window.framebufferHeight)
+                mc.framebuffer.clearColorAndDepth(0, 1.0)
+                it
+            }.thenApplyAsync(NativeImage::toBufferedImage, Util.getIoWorkerExecutor())
+            .thenApply { image ->
+                logger.info("Loaded ${image.width} x ${image.height} item atlas")
+
+                Atlas(itemMap, image, findAliases())
+            }
     }
 
-    fun getImage(): NativeImage = framebuffer.toNativeImage()
+    private fun findAliases(): Map<Identifier, Identifier> {
+        val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
 
-    fun deleteFramebuffer() {
-        this.framebuffer.delete()
+        Registries.BLOCK.forEach {
+            val pickUpState = it.getPickStack(
+                mc.world!!,
+                BlockPos.ORIGIN,
+                it.defaultState,
+                false
+            )
+
+            if (pickUpState.item != it) {
+                val blockId = Registries.BLOCK.getId(it)
+                val itemId = Registries.ITEM.getId(pickUpState.item)
+
+                map[blockId] = itemId
+            }
+        }
+
+        return map
     }
 
 }

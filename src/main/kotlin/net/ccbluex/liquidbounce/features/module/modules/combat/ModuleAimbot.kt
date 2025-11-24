@@ -49,14 +49,12 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.entity.Entity
-import net.minecraft.util.math.MathHelper
 
 /**
  * Aimbot module
  *
  * Automatically faces selected entities around you.
  */
-@Suppress("MagicNumber")
 object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("AimAssist", "AutoAim")) {
 
     private val range = float("Range", 4.2f, 1f..8f)
@@ -157,13 +155,13 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
         playerRotation?.let { rotation ->
             rotation.pitch += f
             rotation.yaw += g
-            rotation.pitch = MathHelper.clamp(rotation.pitch, -90.0f, 90.0f)
+            rotation.pitch = Math.clamp(rotation.pitch, -90.0f, 90.0f)
         }
 
         targetRotation?.let { rotation ->
             rotation.pitch += f
             rotation.yaw += g
-            rotation.pitch = MathHelper.clamp(rotation.pitch, -90.0f, 90.0f)
+            rotation.pitch = Math.clamp(rotation.pitch, -90.0f, 90.0f)
         }
     }
 

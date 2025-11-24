@@ -32,6 +32,8 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.entity.movementForward
+import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
@@ -191,7 +193,7 @@ class CheckScreenTitleConfigurable(
     }
 }
 
-fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
+fun hasInventorySpace() = player.inventory.mainStacks.any { it.isEmpty }
 
 fun findEmptyStorageSlotsInInventory(): List<ItemSlot> {
     return (Slots.Inventory + Slots.Hotbar).filter { it.itemStack.isEmpty }
@@ -224,12 +226,12 @@ fun closeInventorySilently() {
     network.sendPacket(CloseHandledScreenC2SPacket(0))
 }
 
-fun HandledScreen<*>.getSlotsInContainer() =
+fun HandledScreen<*>.getSlotsInContainer(): List<ContainerItemSlot> =
     this.screenHandler.slots
         .filter { it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }
 
-fun HandledScreen<*>.findItemsInContainer() =
+fun HandledScreen<*>.findItemsInContainer(): List<ContainerItemSlot> =
     this.screenHandler.slots
         .filter { !it.stack.isEmpty && it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }

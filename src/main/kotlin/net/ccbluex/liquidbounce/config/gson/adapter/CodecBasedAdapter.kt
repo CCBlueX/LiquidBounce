@@ -28,7 +28,10 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.mojang.serialization.Codec
 import com.mojang.serialization.JsonOps
+import net.ccbluex.liquidbounce.utils.client.processContent
 import net.minecraft.component.ComponentChanges
+import net.minecraft.text.Text
+import net.minecraft.text.TextCodecs
 import java.lang.reflect.Type
 
 /**
@@ -60,6 +63,14 @@ class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, Jso
         /** For ItemStack */
         @JvmField
         val COMPONENT_CHANGES = CodecBasedAdapter(ComponentChanges.CODEC)
+
+        @JvmField
+        val TEXT = CodecBasedAdapter(TextCodecs.CODEC)
+
+        @JvmField
+        val PROCESSED_TEXT = JsonSerializer<Text> { src, t, ctx ->
+            src?.processContent()?.let { TEXT.serialize(it, t, ctx) } ?: JsonNull.INSTANCE
+        }
     }
 
 }

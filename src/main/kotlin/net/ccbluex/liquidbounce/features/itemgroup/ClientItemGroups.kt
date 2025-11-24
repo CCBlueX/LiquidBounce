@@ -27,8 +27,10 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.item.createItem
+import net.minecraft.component.ComponentChanges
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.nbt.NbtOps
 
 /**
  * LiquidBounce Creative Item Groups with useful items and blocks
@@ -54,6 +56,15 @@ object ClientItemGroups : Configurable("tabs") {
         mc.execute {
             chat("§aAdded container to creative inventory")
         }
+    }
+
+    fun storeAsContainerItem(componentChanges: ComponentChanges) {
+        storeAsContainerItem(
+            ComponentChanges.CODEC.encodeStart(
+                NbtOps.INSTANCE,
+                componentChanges
+            ).orThrow as NbtCompound
+        )
     }
 
     fun containersAsItemStacks(): List<ItemStack> {

@@ -24,12 +24,12 @@ import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
@@ -271,9 +271,10 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             PreferFullCubeBlocks,
             PreferWalkableBlocks,
             PreferAverageHardBlocks(neutralRange = true),
-            PreferStackSize.LESS,
+            PreferStackSize.PREFER_MORE,
             PreferAverageHardBlocks(neutralRange = false),
         )
+    @JvmField
     val BLOCK_COMPARATOR_FOR_INVENTORY =
         ComparatorChain(
             PreferFavourableBlocks,
@@ -281,7 +282,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             PreferFullCubeBlocks,
             PreferWalkableBlocks,
             PreferAverageHardBlocks(neutralRange = true),
-            PreferStackSize.MORE,
+            PreferStackSize.PREFER_FEWER,
             PreferAverageHardBlocks(neutralRange = false),
         )
 
@@ -620,20 +621,15 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         return true
     }
 
-    internal fun getTargetedPosition(blockPos: BlockPos): BlockPos {
-        if (isTowering || wasTowering) {
-            return towerMode.activeChoice.getTargetedPosition(blockPos)
-        }
-
-        if (ScaffoldDownFeature.running && ScaffoldDownFeature.shouldGoDown) {
-            return blockPos.add(0, -2, 0)
-        }
-
-        if (ScaffoldCeilingFeature.canConstructCeiling() && ScaffoldCeilingFeature.enabled) {
-            return blockPos.add(0, 3, 0)
-        }
-
-        return sameYMode.getTargetedBlockPos(blockPos)
+    internal fun getTargetedPosition(blockPos: BlockPos) = when {
+        isTowering || wasTowering -> towerMode.activeChoice.getTargetedPosition(blockPos)
+        ScaffoldDownFeature.running && ScaffoldDownFeature.shouldGoDown ->
+            blockPos.add(0, -2, 0)
+        ScaffoldCeilingFeature.running && ScaffoldCeilingFeature.canConstructCeiling() ->
+            blockPos.add(0, 3, 0)
+        player.input.playerInput.jump && (!player.moving || player.horizontalCollision) ->
+            blockPos.add(0, -1, 0)
+        else -> sameYMode.getTargetedBlockPos(blockPos)
             ?: blockPos.add(0, -1, 0)
     }
 

@@ -18,24 +18,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import com.mojang.blaze3d.platform.GlStateManager
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.entity.LivingEntity
+import org.joml.Vector2f
 
 private const val NAMETAG_PADDING: Int = 15
 
-private val currentItemStackRenderer
-    get() = if (NametagShowOptions.ITEM_INFO.isShowing()) {
-        ItemStackListRenderer.SingleItemStackRenderer
-    } else {
-        ItemStackListRenderer.SingleItemStackRenderer.OnlyItem
-    }
-
 internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     if (NametagShowOptions.ITEMS.isShowing()) {
+        val currentItemStackRenderer = if (NametagShowOptions.ITEM_INFO.isShowing()) {
+            if (nametag.entity === player) {
+                ItemStackListRenderer.SingleItemStackRenderer.All
+            } else {
+                ItemStackListRenderer.SingleItemStackRenderer.ForOtherPlayer
+            }
+        } else {
+            ItemStackListRenderer.SingleItemStackRenderer.OnlyItem
+        }
+
         context.drawItemStackList(nametag.items)
             .center(pos.copy(y = pos.y - NAMETAG_PADDING * ModuleNametags.scale))
             .scale(ModuleNametags.scale)
@@ -48,34 +53,36 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
 
     val scale = 1f / (fontSize * 0.15f) * ModuleNametags.scale
 
+    if (ModuleNametags.batchRenderMode == ModuleNametags.BatchRenderMode.EACH) startBatch()
+
     matrixStack.push()
-    matrixStack.translate(pos.x, pos.y, pos.z)
+    matrixStack.translate(pos.x, pos.y, 0f)
     matrixStack.scale(scale, scale, 1f)
 
-    startBatch()
-
-    GlStateManager._enableBlend()
-
-    val x =
-        ModuleNametags.fontRenderer.draw(
-            ModuleNametags.fontRenderer.process(nametag.text),
-            0f,
-            0f,
-            shadow = true,
-            z = 0.001f,
-        )
+    val fontRenderer = ModuleNametags.fontRenderer
+    val processedText = fontRenderer.process(nametag.text)
+    val textWidth = fontRenderer.getStringWidth(processedText, shadow = true)
 
     // Make the model view matrix center the text when rendering
-    matrixStack.translate(-x * 0.5f, -ModuleNametags.fontRenderer.height * 0.5f, 0f)
+    matrixStack.translate(-textWidth * 0.5f, -fontRenderer.height * 0.5f, 0f)
 
-    val q1 = Vec3(-0.1f * fontSize, ModuleNametags.fontRenderer.height * -0.1f, 0f)
-    val q2 = Vec3(x + 0.2f * fontSize, ModuleNametags.fontRenderer.height * 1.1f, 0f)
+    val q1 = Vector2f(-0.1f * fontSize, fontRenderer.height * -0.1f)
+    val q2 = Vector2f(textWidth + 0.2f * fontSize, fontRenderer.height * 1.1f)
 
-    drawColoredQuad(q1, q2, Int.MIN_VALUE)
+    // Background
+    drawQuad(
+        q1, q2, z = 0f,
+        fillColor = Color4b(Int.MIN_VALUE, hasAlpha = true),
+        outlineColor = Color4b.BLACK.takeIf { NametagShowOptions.BORDER.isShowing() },
+    )
 
-    if (NametagShowOptions.BORDER.isShowing()) {
-        drawColoredQuadOutlines(q1, q2, Color4b.BLACK.toARGB())
-    }
+    // Text
+    fontRenderer.draw(
+        processedText,
+        x0 = 0f, y0 = 0f,
+        shadow = true,
+        z = 0.001f,
+    )
 
     // Draw enchantments directly for the entity (regardless of whether items are shown)
     if (NametagShowOptions.ENCHANTMENTS.isShowing() && nametag.entity is LivingEntity) {
@@ -84,18 +91,13 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
         val worldY = (entityPos.y + nametag.entity.height + 0.5f).toFloat()
 
         NametagEnchantmentRenderer.drawEntityEnchantments(
-            this@drawNametag,
             nametag.entity,
             worldX,
             worldY,
         )
     }
 
-    commitBatch()
-
-    ModuleNametags.fontRenderer.commit(this@drawNametag)
-
-    GlStateManager._disableBlend()
-
     matrixStack.pop()
+
+    if (ModuleNametags.batchRenderMode == ModuleNametags.BatchRenderMode.EACH) commitBatch()
 }

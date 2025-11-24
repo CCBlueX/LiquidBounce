@@ -29,30 +29,30 @@ import java.awt.Dimension
 
 class DynamicAtlasAllocatorTest {
     fun validateTree(allocator: DynamicAtlasAllocator, slice: AtlasSlice) {
-        for (child in slice.childeren) {
+        for (child in slice.children) {
             assertSame(slice, child.parent)
 
             validateTree(allocator, child)
         }
 
-        if (slice.childeren.isNotEmpty()) {
+        if (slice.children.isNotEmpty()) {
             // Validate that all of the children combined are the same size as the parent
-            //
-            // assertEquals(slice.width * slice.height, slice.childeren.sumOf { it.width * it.height })
+
+            assertEquals(slice.width * slice.height, slice.children.sumOf { it.width * it.height })
         }
 
         // Validate that none of the children intersect with each other
-        for (i in slice.childeren.indices) {
-            for (j in i + 1 until slice.childeren.size) {
-                val a = slice.childeren[i]
-                val b = slice.childeren[j]
+        for (i in slice.children.indices) {
+            for (j in i + 1 until slice.children.size) {
+                val a = slice.children[i]
+                val b = slice.children[j]
 
                 assert(a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y)
             }
         }
 
         // Validate that all of the children are within the parent
-        for (child in slice.childeren) {
+        for (child in slice.children) {
             assertTrue(child.x >= slice.x)
             assertTrue(child.y >= slice.y)
             assertTrue(child.x + child.width <= slice.x + slice.width)
@@ -61,7 +61,7 @@ class DynamicAtlasAllocatorTest {
 
         val isAllocated = allocator.availableSlices.contains(slice)
 
-        slice.childeren.forEach { checkSliceAllocation(allocator, it, isAllocated) }
+        slice.children.forEach { checkSliceAllocation(allocator, it, isAllocated) }
     }
 
     fun checkSliceAllocation(allocator: DynamicAtlasAllocator, slice: AtlasSlice, isParentAllocated: Boolean) {
@@ -69,13 +69,13 @@ class DynamicAtlasAllocatorTest {
             assertFalse(allocator.availableSlices.contains(slice))
             assertFalse(slice.isAllocated)
 
-            slice.childeren.forEach {
+            slice.children.forEach {
                 checkSliceAllocation(allocator, it, true)
             }
         } else {
             val isAllocated = allocator.availableSlices.contains(slice)
 
-            slice.childeren.forEach {
+            slice.children.forEach {
                 checkSliceAllocation(allocator, it, isAllocated)
             }
         }

@@ -114,13 +114,11 @@ object CommandClientThemeSubcommand {
                     .append(regular(" from "))
                     .append(variable(theme.origin.choiceName))
                 ).onClick(
-                    ClickEvent(
-                        ClickEvent.Action.SUGGEST_COMMAND,
+                    ClickEvent.SuggestCommand(
                         ".client theme set ${theme.metadata.id}"
                     )
                 ).onHover(
-                    HoverEvent(
-                        HoverEvent.Action.SHOW_TEXT,
+                    HoverEvent.ShowText(
                         variable("Click to set theme \"${theme.metadata.name}\".")
                     )
                 )

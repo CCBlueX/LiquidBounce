@@ -20,8 +20,10 @@
 package net.ccbluex.liquidbounce.event
 
 import kotlinx.coroutines.*
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
+import net.minecraft.util.crash.CrashException
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.Continuation
@@ -42,11 +44,13 @@ val EventListener.eventListenerScope: CoroutineScope
     get() = eventListenerScopeHolder.computeIfAbsent(this) {
         CoroutineScope(
             SupervisorJob() // Prevent exception canceling
-                + CoroutineExceptionHandler { ctx, throwable -> // logging
-                if (throwable is EventListenerNotListeningException) {
-                    logger.debug("{} is not listening, job cancelled", throwable.eventListener)
-                } else {
-                    logger.error("Exception occurred in CoroutineScope of $it", throwable)
+                + CoroutineExceptionHandler { _, throwable -> // logging
+                when (throwable) {
+                    is EventListenerNotListeningException ->
+                        logger.debug("{} is not listening, job cancelled", throwable.eventListener)
+                    is CrashException ->
+                        ErrorHandler.fatal(throwable, additionalMessage = "CoroutineScope of $it")
+                    else -> logger.error("Exception occurred in CoroutineScope of $it", throwable)
                 }
             }
                 + CoroutineName(it.toString()) // Name

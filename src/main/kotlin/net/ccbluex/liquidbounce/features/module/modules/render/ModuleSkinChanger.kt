@@ -42,11 +42,10 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.registerTexture
+import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.minecraft.client.network.PlayerListEntry
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.SkinTextures
-import net.minecraft.util.Identifier
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
@@ -118,6 +117,8 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
             private val model by enumChoice("Model", ModelChoice.WIDE)
 
+            private val identifier = LiquidBounce.identifier("skin-changer-from-file")
+
             private enum class ModelChoice(
                 override val choiceName: String,
                 val model: SkinTextures.Model,
@@ -130,20 +131,15 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
             init {
                 image.asStateFlow().filter { it.isFile }.debounceUntilInGame { file ->
-                    val id = Identifier.of(
-                        LiquidBounce.CLIENT_NAME.lowercase(),
-                        "skin-changer-from-file"
-                    )
-
                     // New texture will replace the old one
                     val nativeImage = withContext(Dispatchers.IO) {
                         NativeImage.read(file.inputStream())
                     }
 
-                    nativeImage.registerTexture(id)
+                    nativeImage.registerTexture(identifier)
 
                     skinTextures = Supplier {
-                        SkinTextures(id, null, null, null, model.model, false)
+                        SkinTextures(identifier, null, null, null, model.model, false)
                     }
                 }
             }

@@ -97,7 +97,7 @@ class TrajectoryInfoRenderer(
             entity: Entity,
             trajectoryInfo: TrajectoryInfo,
             rotation: Rotation,
-            partialTicks: Float = mc.renderTickCounter.getTickDelta(true)
+            partialTicks: Float = mc.renderTickCounter.getTickProgress(true)
         ): TrajectoryInfoRenderer {
             val yawRadians = rotation.yaw / 180f * Math.PI.toFloat()
             val pitchRadians = rotation.pitch / 180f * Math.PI.toFloat()

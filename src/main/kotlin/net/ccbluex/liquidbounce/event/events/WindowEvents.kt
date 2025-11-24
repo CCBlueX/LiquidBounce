@@ -31,7 +31,7 @@ import net.minecraft.client.util.InputUtil
 class WindowResizeEvent(val width: Int, val height: Int) : Event()
 
 @Nameable("frameBufferResize")
-class FrameBufferResizeEvent(val width: Int, val height: Int) : Event()
+class FramebufferResizeEvent(val width: Int, val height: Int) : Event()
 
 @Nameable("mouseButton")
 class MouseButtonEvent(

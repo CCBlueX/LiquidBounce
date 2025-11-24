@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.PlainText
 import net.minecraft.client.network.PlayerListEntry
-import net.minecraft.text.Text
 
 /**
  * ModuleBetterTab
@@ -119,7 +119,7 @@ enum class Sorting(
     VANILLA("Vanilla", null),
     PING("Ping", Comparator.comparingInt { it.latency }),
     LENGTH("NameLength", Comparator.comparingInt { it.profile.name.length }),
-    SCORE_LENGTH("DisplayNameLength", Comparator.comparingInt { (it.displayName ?: Text.empty()).string.length }),
+    SCORE_LENGTH("DisplayNameLength", Comparator.comparingInt { (it.displayName ?: PlainText.EMPTY).string.length }),
     ALPHABETICAL("Alphabetical", Comparator.comparing { it.profile.name }),
     REVERSE_ALPHABETICAL("ReverseAlphabetical", Comparator.comparing({ it.profile.name }, Comparator.reverseOrder())),
     NONE("None", { _, _ -> 0 })

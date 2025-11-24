@@ -18,73 +18,40 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.ShieldItem
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.util.Hand
 
 /**
  * This module allows the user to block with swords. This makes sense to be used on servers with ViaVersion.
  */
 object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = listOf("OldBlocking")) {
 
-    val onlyVisual by boolean("OnlyVisual", false)
     val hideShieldSlot by boolean("HideShieldSlot", false).doNotIncludeAlways()
     private val alwaysHideShield by boolean("AlwaysHideShield", false).doNotIncludeAlways()
 
+    @JvmStatic
+    val PlayerEntity.isBlockingWithOffhandShield
+        get() = isUsingItem && offHandStack.item is ShieldItem && activeItem === offHandStack
+
     @JvmOverloads
     fun shouldHideOffhand(
-        player: PlayerEntity = this.player,
         offHandStack: ItemStack = player.offHandStack,
-        mainHandStack: ItemStack = player.mainHandStack,
-    ) = (running || KillAuraAutoBlock.blockVisual) && offHandStack.item is ShieldItem
-        && (mainHandStack.isSword || player === this.player && running && alwaysHideShield)
-
-    @Suppress("UNUSED")
-    private val packetHandler = sequenceHandler<PacketEvent> { event ->
-        if (onlyVisual) {
-            return@sequenceHandler
+        mainHandStack: ItemStack = player.mainHandStack
+    ): Boolean {
+        if (!running && !KillAuraAutoBlock.blockVisual) {
+            return false
         }
 
-        // If we are already on the old combat protocol, we don't need to do anything
-        if (isOlderThanOrEqual1_8) {
-            return@sequenceHandler
+        if (offHandStack.item !is ShieldItem) {
+            return false
         }
 
-        val packet = event.packet
-
-        if (packet is PlayerInteractItemC2SPacket) {
-            val hand = packet.hand
-            val itemInHand = player.getStackInHand(hand) // or activeItem
-
-            if (hand == Hand.MAIN_HAND && itemInHand.isSword) {
-                val offHandItem = player.getStackInHand(Hand.OFF_HAND)
-                if (offHandItem?.item !is ShieldItem) {
-                    // Until "now" we should get a shield from the server
-                    waitTicks(1)
-                    interaction.sendSequencedPacket(world) { sequence ->
-                        // This time we use a new sequence
-                        PlayerInteractItemC2SPacket(
-                            Hand.OFF_HAND, sequence,
-                            player.yaw, player.pitch
-                        )
-                    }
-                } else {
-                    event.cancelEvent()
-                    // We use the old sequence
-                    network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, packet.sequence,
-                        player.yaw, player.pitch))
-                }
-            }
-        }
+        return mainHandStack.isSword || alwaysHideShield
     }
+
 }

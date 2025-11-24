@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.prevPos
+import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
@@ -101,7 +101,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
                 continue
             }
 
-            val nextTickFireballPosition = entity.pos + entity.pos - entity.prevPos
+            val nextTickFireballPosition = entity.pos + entity.pos - entity.lastPos
 
             val entityBox = entity.dimensions.getBoxAt(nextTickFireballPosition)
             val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyePos)
@@ -134,7 +134,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
             return false
         }
 
-        val fireballVelocity = entity.pos - entity.prevPos
+        val fireballVelocity = entity.pos - entity.lastPos
 
         // If the fireball is not moving the player can obviously not be hit. Additionally the code below only works if
         // the fireball is moving.

@@ -26,7 +26,8 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
+import net.ccbluex.liquidbounce.utils.client.sendStopSneaking
 
 internal class NoSlowSneakingSwitch(override val parent: ChoiceConfigurable<*>) : Choice("Switch") {
     private val timingMode by enumChoice("Timing", TimingMode.PRE_POST)
@@ -35,20 +36,16 @@ internal class NoSlowSneakingSwitch(override val parent: ChoiceConfigurable<*>) 
     private val networkTickHandler = handler<PlayerNetworkMovementTickEvent> { event ->
         when (timingMode) {
             TimingMode.PRE_POST -> when (event.state) {
-                EventState.PRE -> {
-                    network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-                }
-                EventState.POST -> {
-                    network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
-                }
+                EventState.PRE -> sendStartSneaking()
+                EventState.POST -> sendStopSneaking()
             }
             TimingMode.PRE_TICK -> if (event.state == EventState.PRE) {
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                sendStartSneaking()
+                sendStopSneaking()
             }
             TimingMode.POST_TICK -> if (event.state == EventState.POST) {
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-                network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                sendStartSneaking()
+                sendStopSneaking()
             }
         }
     }

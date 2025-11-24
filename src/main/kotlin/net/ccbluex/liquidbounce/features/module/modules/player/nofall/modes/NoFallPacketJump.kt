@@ -52,7 +52,7 @@ internal object NoFallPacketJump : NoFallMode("PacketJump") {
             falling = false
             network.sendPacket(packetType.generatePacket().apply {
                 x = player.lastX
-                y = player.lastBaseY + 1.0E-9
+                y = player.lastYClient + 1.0E-9
                 z = player.lastZ
                 onGround = false
             })

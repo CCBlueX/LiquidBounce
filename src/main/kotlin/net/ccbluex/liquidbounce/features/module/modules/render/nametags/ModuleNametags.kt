@@ -18,10 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.liquidbounce.event.computedOn
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -32,36 +30,30 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.sq
 import org.joml.Vector2fc
-import kotlin.math.abs
 
 /**
  * Nametags module
  *
  * Makes player name tags more visible and adds useful information.
  */
-@Suppress("MagicNumber")
 object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
     val scale by float("Scale", 2F, 0.25F..4F)
-    private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
+    internal val batchRenderMode by enumChoice("BatchRenderMode", BatchRenderMode.EACH)
+
+    internal enum class BatchRenderMode(override val choiceName: String) : NamedChoice {
+        FULL("Full"),
+        EACH("Each"),
+    }
 
     internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
 
     val fontRenderer
         get() = FontManager.FONT_RENDERER
 
-    private val nametagsToRender by computedOn<GameTickEvent, MutableList<Nametag>>(
-        initialValue = mutableListOf()
-    ) { _, list ->
-        list.clear()
-        collectAndSortNametagsToRender(list)
-        list
-    }
-
-    @Suppress("unused")
-    private val worldChangeHandler = handler<WorldChangeEvent> {
-        nametagsToRender.clear()
-    }
+    private val nametagsToRender = mutableListOf<Nametag>()
 
     override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
@@ -70,6 +62,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
+        RenderedEntities.onUpdated(::collectAndSortNametagsToRender)
     }
 
     @Suppress("unused")
@@ -85,34 +78,33 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
     private fun GUIRenderEnvironment.drawNametags(tickDelta: Float) {
         drawnEnchantmentAreas.clear()
-        nametagsToRender.forEach { it.calculatePosition(tickDelta) }
+        nametagsToRender.forEach { it.calculateScreenPos(tickDelta) }
 
-        val filteredNameTags = nametagsToRender.filterTo(mutableListOf()) { it.position != null }
+        val filteredNameTags = nametagsToRender.filterTo(mutableListOf()) { it.screenPos != null }
         if (filteredNameTags.isEmpty()) {
             return
         }
 
         val nametagsCount = filteredNameTags.size.toFloat()
 
-        filteredNameTags.sortBy { tag ->
-            tag.entity.squaredDistanceTo(mc.cameraEntity)
-        }
-
+        if (batchRenderMode == BatchRenderMode.FULL) startBatch()
         filteredNameTags.forEachIndexed { index, nametagInfo ->
-            val pos = nametagInfo.position!!
+            val pos = nametagInfo.screenPos!!
 
             // We want nametags that are closer to the player to be rendered above nametags that are further away.
             val renderZ = 0.01f + index / nametagsCount * 1000.0F
 
             drawNametag(nametagInfo, pos.copy(z = renderZ))
         }
+        if (batchRenderMode == BatchRenderMode.FULL) commitBatch()
     }
 
     /**
      * Collects all entities that should be rendered, gets the screen position, where the name tag should be displayed,
      * add what should be rendered ([Nametag]). The nametags are sorted in order of rendering.
      */
-    private fun collectAndSortNametagsToRender(list: MutableList<Nametag>) {
+    private fun collectAndSortNametagsToRender() {
+        nametagsToRender.clear()
         val maximumDistanceSquared = maximumDistance.sq()
 
         for (entity in RenderedEntities) {
@@ -120,8 +112,13 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
                 continue
             }
 
-            list += Nametag(entity)
+            nametagsToRender += Nametag(entity)
         }
+        nametagsToRender.sortWith(NAMETAG_COMPARATOR)
+    }
+
+    private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
+        nametag.entity.squaredDistanceTo(mc.cameraEntity)
     }
 
 }

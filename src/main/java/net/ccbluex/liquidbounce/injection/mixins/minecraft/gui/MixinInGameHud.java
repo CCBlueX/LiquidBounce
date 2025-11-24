@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.additions.DrawContextAddition;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
@@ -80,7 +81,11 @@ public abstract class MixinInGameHud {
      */
     @Inject(method = "renderMainHud", at = @At("HEAD"))
     private void hookRenderEventStart(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
-        BlurEffectRenderer.INSTANCE.startOverlayDrawing(context, tickCounter.getTickDelta(false));
+        if (HideAppearance.INSTANCE.isHidingNow()) {
+            return;
+        }
+
+        BlurEffectRenderer.INSTANCE.startOverlayDrawing(context, tickCounter.getTickProgress(false));
 
         // Draw after overlay event
         var component = ComponentManager.getComponentWithTweak(ComponentTweak.TWEAK_HOTBAR);
@@ -222,14 +227,14 @@ public abstract class MixinInGameHud {
         var offset = 98;
         var bounds = component.getAlignment().getBounds(0, 0);
 
-        int center = (int) bounds.getXMin();
-        var y = bounds.getYMin() - 12;
+        int center = (int) bounds.xMin();
+        var y = bounds.yMin() - 12;
 
         int l = 1;
         for (int m = 0; m < 9; ++m) {
             var x = center - offset + m * itemWidth;
             this.renderHotbarItem(context, (int) x, (int) y, tickCounter, playerEntity,
-                    playerEntity.getInventory().main.get(m), l++);
+                    playerEntity.getInventory().getMainStacks().get(m), l++);
         }
 
         var offHandStack = playerEntity.getOffHandStack();

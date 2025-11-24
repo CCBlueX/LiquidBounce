@@ -28,10 +28,8 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleN
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.getActualHealth
-import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
-import net.ccbluex.liquidbounce.utils.entity.netherPosition
-import net.ccbluex.liquidbounce.utils.entity.ping
+import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
@@ -123,7 +121,7 @@ data class PlayerData(
             player.ping,
             player.statusEffects.toList(),
             player.mainHandStack,
-            if (shouldHideOffhand(player = player) && hideShieldSlot) ItemStack.EMPTY else player.offHandStack,
+            if (player == mc.player && shouldHideOffhand() && hideShieldSlot) ItemStack.EMPTY else player.offHandStack,
             player.armorItems.toList(),
             if (mc.player === player) ScoreboardData.fromScoreboard(player.scoreboard) else null
         )
@@ -141,10 +139,11 @@ data class PlayerInventoryData(
     companion object {
         @JvmStatic
         fun fromPlayer(player: PlayerEntity) = PlayerInventoryData(
-            armor = player.inventory.armor.map(ItemStack::copy),
-            main = player.inventory.main.map(ItemStack::copy),
+            armor = player.armorItems.map(ItemStack::copy),
+            main = player.inventory.mainStacks.map(ItemStack::copy),
             crafting = player.playerScreenHandler.craftingInput.heldStacks.map(ItemStack::copy),
-            enderChest = player.enderChestInventory.getHeldStacks().map(ItemStack::copy),
+            /** player.enderChestInventory.getHeldStacks().map(ItemStack::copy) */
+            enderChest = EnderChestInventoryTracker.stacks,
         )
     }
 

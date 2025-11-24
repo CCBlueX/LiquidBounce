@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.render.engine.type
 
 import net.minecraft.text.TextColor
-import org.lwjgl.opengl.GL20
 import java.awt.Color
 
 @JvmRecord
@@ -85,11 +84,36 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
                     (rgb shr 16) and 0xFF,
                     (rgb shr 8) and 0xFF,
                     rgb and 0xFF,
-                    255
+                    0xFF
                 )
             }
         }
 
+        /**
+         * Create a color from HSB values.
+         *
+         * @param hue The hue value (0.0 to 1.0)
+         * @param saturation The saturation value (0.0 to 1.0)
+         * @param brightness The brightness value (0.0 to 1.0)
+         * @param alpha The alpha value (0.0 to 1.0)
+         * @return The color
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun ofHSB(
+            hue: Float,
+            saturation: Float,
+            brightness: Float,
+            alpha: Float = 1f,
+        ): Color4b {
+            val rgb = Color.HSBtoRGB(hue, saturation, brightness)
+            return Color4b(
+                r = (rgb shr 16) and 0xFF,
+                g = (rgb shr 8) and 0xFF,
+                b = rgb and 0xFF,
+                a = (alpha * 255).toInt(),
+            )
+        }
     }
 
     constructor(color: Color) : this(color.red, color.green, color.blue, color.alpha)
@@ -98,7 +122,7 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
         r = (hex shr 16) and 0xFF,
         g = (hex shr 8) and 0xFF,
         b = hex and 0xFF,
-        a = if (hasAlpha) (hex shr 24) and 0xFF else 255
+        a = if (hasAlpha) (hex shr 24) and 0xFF else 0xFF
     )
 
     val isTransparent: Boolean
@@ -117,8 +141,6 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
 
     fun toARGB() = (a shl 24) or (r shl 16) or (g shl 8) or b
 
-    fun toABGR() = (a shl 24) or (b shl 16) or (g shl 8) or r
-
     fun fade(fade: Float): Color4b {
         return if (fade >= 1.0f) {
             this
@@ -130,10 +152,6 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
     fun darker() = Color4b(darkerChannel(r), darkerChannel(g), darkerChannel(b), a)
 
     private fun darkerChannel(value: Int) = (value * 0.7).toInt().coerceAtLeast(0)
-
-    fun putToUniform(pointer: Int) {
-        GL20.glUniform4f(pointer, r / 255f, g / 255f, b / 255f, a / 255f)
-    }
 
     /**
      * Interpolates this color with another color using the given percentage.

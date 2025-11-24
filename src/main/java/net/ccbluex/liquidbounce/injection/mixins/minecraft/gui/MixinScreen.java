@@ -106,8 +106,9 @@ public abstract class MixinScreen implements ScreenAddition {
 
     /**
      * Allows the execution of {@link RunnableClickEvent}.
+     * (default branch in switch pattern matching)
      */
-    @Inject(method = "handleTextClick", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", ordinal = 2, shift = At.Shift.BEFORE, remap = false), cancellable = true)
+    @Inject(method = "handleTextClick", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", ordinal = 1, shift = At.Shift.BEFORE, remap = false), cancellable = true)
     private void hookExecuteClickEvents(Style style, CallbackInfoReturnable<Boolean> cir, @Local ClickEvent clickEvent) {
         if (clickEvent instanceof RunnableClickEvent runnableClickEvent) {
             runnableClickEvent.run();

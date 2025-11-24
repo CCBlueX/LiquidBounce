@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.item.BowItem
 import net.minecraft.item.Items

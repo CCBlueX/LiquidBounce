@@ -37,12 +37,15 @@ data class Rotation(
 ) {
 
     companion object {
+        @JvmField
         val ZERO = Rotation(0f, 0f)
 
+        @JvmStatic
         fun lookingAt(point: Vec3d, from: Vec3d): Rotation {
             return fromRotationVec(point.subtract(from))
         }
 
+        @JvmStatic
         fun fromRotationVec(lookVec: Vec3d): Rotation {
             val diffX = lookVec.x
             val diffY = lookVec.y

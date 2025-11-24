@@ -69,7 +69,7 @@ class ItemStackListRenderer private constructor(
     private var backgroundColor = Int.MIN_VALUE
     private var backgroundMargin = 2
     private var useTexture = false
-    private var itemStackRenderer: SingleItemStackRenderer = SingleItemStackRenderer
+    private var itemStackRenderer = SingleItemStackRenderer.All
 
     // Unscaled, without margin
     private val dimensions = Vector2i()
@@ -161,41 +161,37 @@ class ItemStackListRenderer private constructor(
 
         val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
 
-        val matrices = drawContext.matrices
+        drawContext.matrices.withPush {
+            val width = dimensions.x
+            val height = dimensions.y
 
-        val width = dimensions.x
-        val height = dimensions.y
+            translate(center.x, center.y, center.z)
+            scale(scale, scale, 1.0F)
+            translate(-width * 0.5F, -height * 0.5F, 0.0F)
 
-        matrices.push()
-
-        matrices.translate(center.x, center.y, center.z)
-        matrices.scale(scale, scale, 1.0F)
-        matrices.translate(-width * 0.5F, -height * 0.5F, 0.0F)
-
-        if (!this.useTexture) {
-            fillBackground(width, height)
-        }
-
-        if (title != null) {
-            drawContext.drawCenteredTextWithShadow(textRenderer, title, width / 2, 0, titleColor)
-            matrices.translate(0F, textRenderer.fontHeight + 2F, 0F)
-        }
-
-        // render stacks
-        for ((i, stack) in stacks.withIndex()) {
-            val leftX = i % rowLength * size
-            val topY = i / rowLength * size
-            if (this.useTexture) {
-                drawSlotTexture(leftX, topY)
+            if (!useTexture) {
+                fillBackground(width, height)
             }
 
-            val diff = if (this.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
-            with(itemStackRenderer) {
-                drawContext.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
+            if (title != null) {
+                drawContext.drawCenteredTextWithShadow(textRenderer, title, width / 2, 0, titleColor)
+                translate(0F, textRenderer.fontHeight + 2F, 0F)
+            }
+
+            // render stacks
+            for ((i, stack) in stacks.withIndex()) {
+                val leftX = i % rowLength * size
+                val topY = i / rowLength * size
+                if (useTexture) {
+                    drawSlotTexture(leftX, topY)
+                }
+
+                val diff = if (useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
+                with(itemStackRenderer) {
+                    drawContext.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
+                }
             }
         }
-
-        matrices.pop()
     }
 
     /**
@@ -335,23 +331,21 @@ class ItemStackListRenderer private constructor(
     fun interface SingleItemStackRenderer {
         fun DrawContext.drawItemStack(textRenderer: TextRenderer, index: Int, stack: ItemStack, x: Int, y: Int)
 
-        companion object : SingleItemStackRenderer {
+        companion object {
 
             @JvmField
             val OnlyItem = SingleItemStackRenderer { _, _, stack, x, y ->
                 drawItem(stack, x, y)
             }
 
-            override fun DrawContext.drawItemStack(
-                textRenderer: TextRenderer,
-                index: Int,
-                stack: ItemStack,
-                x: Int,
-                y: Int,
-            ) {
+            @JvmField
+            val All = SingleItemStackRenderer { textRenderer, _, stack, x, y ->
                 drawItem(stack, x, y)
                 drawStackOverlay(textRenderer, stack, x, y)
             }
+
+            @JvmField
+            val ForOtherPlayer = of(drawItemBar = true, drawStackCount = true, drawCooldownProgress = false)
 
             @JvmStatic
             fun of(
@@ -359,16 +353,14 @@ class ItemStackListRenderer private constructor(
                 drawStackCount: Boolean = true,
                 drawCooldownProgress: Boolean = true,
             ): SingleItemStackRenderer {
-                if (!drawItemBar && !drawStackCount && !drawCooldownProgress) return OnlyItem
-                if (drawItemBar && drawStackCount && drawCooldownProgress) return this
-
                 return SingleItemStackRenderer { textRenderer, index, stack, x, y ->
+                    if (stack.isEmpty) return@SingleItemStackRenderer
                     drawItem(stack, x, y)
-                    matrices.push()
-                    if (drawItemBar) drawItemBar(stack, x, y)
-                    if (drawStackCount) drawStackCount(textRenderer, stack, x, y, null)
-                    if (drawCooldownProgress) drawCooldownProgress(stack, x, y)
-                    matrices.pop()
+                    matrices.withPush {
+                        if (drawItemBar) drawItemBar(stack, x, y)
+                        if (drawStackCount) drawStackCount(textRenderer, stack, x, y, null)
+                        if (drawCooldownProgress) drawCooldownProgress(stack, x, y)
+                    }
                 }
             }
         }

@@ -23,23 +23,22 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.liquidbounce.features.item.inventoryAsCompound
+import net.ccbluex.liquidbounce.features.item.inventoryAsComponents
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.component.ComponentChanges
 import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
-import kotlin.jvm.optionals.getOrNull
+import net.minecraft.registry.Registries
 
 // GET /api/v1/container
-@Suppress("UNUSED_PARAMETER")
-fun getContainerInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
+fun getContainerInfo() = httpOk(JsonObject().apply {
     val screenHandler = mc.currentScreen
 
     if (screenHandler is GenericContainerScreen) {
@@ -60,9 +59,8 @@ fun getContainerInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
 })
 
 // POST /api/v1/container/give
-@Suppress("UNUSED_PARAMETER")
-fun postGiveItem(requestObject: RequestObject): FullHttpResponse {
-    if (!interaction.hasCreativeInventory()) {
+fun postGiveItem(): FullHttpResponse {
+    if (!player.isCreative) {
         return httpForbidden("Must be in creative mode")
     }
 
@@ -78,10 +76,10 @@ fun postGiveItem(requestObject: RequestObject): FullHttpResponse {
         return httpForbidden("Not a simple inventory")
     }
 
-    val compoundList = inventory.inventoryAsCompound(screenHandler.title)
+    val componentChangesList = inventory.inventoryAsComponents(screenHandler.title)
 
-    for (compound in compoundList) {
-        val errResponse = giveItem(compound)
+    for (components in componentChangesList) {
+        val errResponse = giveItem(components)
 
         if (errResponse != null) {
             return errResponse
@@ -91,15 +89,8 @@ fun postGiveItem(requestObject: RequestObject): FullHttpResponse {
     return httpNoContent()
 }
 
-private fun giveItem(compound: NbtCompound): FullHttpResponse? {
-    val chestItemNbt = NbtCompound().apply {
-        putString("id", "minecraft:chest")
-        putByte("Count", 1)
-        put("tag", compound)
-    }
-
-    val itemStack = ItemStack.fromNbt(mc.world!!.registryManager, chestItemNbt).getOrNull()
-        ?: return httpForbidden("Invalid item")
+private fun giveItem(components: ComponentChanges): FullHttpResponse? {
+    val itemStack = ItemStack(Registries.ITEM.getEntry(Items.CHEST), 1, components)
 
     val emptySlot = player.inventory.emptySlot
 
@@ -116,8 +107,7 @@ private fun giveItem(compound: NbtCompound): FullHttpResponse? {
 }
 
 // POST /api/v1/container/store
-@Suppress("UNUSED_PARAMETER")
-fun postStoreItem(requestObject: RequestObject): FullHttpResponse {
+fun postStoreItem(): FullHttpResponse {
     val screenHandler = mc.currentScreen
 
     return if (screenHandler is GenericContainerScreen) {
@@ -127,8 +117,8 @@ fun postStoreItem(requestObject: RequestObject): FullHttpResponse {
             return httpForbidden("Not a simple inventory")
         }
 
-        val compoundList = inventory.inventoryAsCompound(screenHandler.title)
-        compoundList.forEach(ClientItemGroups::storeAsContainerItem)
+        val components = inventory.inventoryAsComponents(screenHandler.title)
+        components.forEach(ClientItemGroups::storeAsContainerItem)
 
         httpNoContent()
     } else {

@@ -95,7 +95,7 @@ public class MixinSplashOverlay {
 
         // TODO: Draw as SVG instead of PNG
         context.drawTexture(
-                RenderLayerExtensions::getSmoothTextureLayer,
+                RenderLayerExtensions.SMOOTH_TEXTURE_LAYER,
                 ClientLogoTexture.CLIENT_LOGO,
                 x,
                 y,

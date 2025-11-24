@@ -48,7 +48,7 @@ object CommandItemRename : Command.Factory {
                     .build()
             )
             .handler {
-                if (!interaction.hasCreativeInventory()) {
+                if (!player.isCreative) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
@@ -65,7 +65,7 @@ object CommandItemRename : Command.Factory {
                         chat(regular(command.result("nameReset")), command)
                     }
                     else -> {
-                        itemStack!!.set<Text>(DataComponentTypes.CUSTOM_NAME, name.translateColorCodes().asText())
+                        itemStack!!.set(DataComponentTypes.CUSTOM_NAME, name.translateColorCodes().asPlainText())
                         chat(regular(command.result("renamedItem", itemStack.item.name, variable(name))), command)
                     }
                 }

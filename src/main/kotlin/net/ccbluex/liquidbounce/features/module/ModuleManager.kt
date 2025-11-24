@@ -271,6 +271,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleMiddleClickAction,
             ModuleInventoryTracker,
             ModuleNameProtect,
+            ModuleTextFieldProtect,
             ModuleNotifier,
             ModuleSpammer,
             ModuleAutoAccount,

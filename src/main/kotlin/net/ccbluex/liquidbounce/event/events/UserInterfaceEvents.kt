@@ -38,19 +38,11 @@ class FpsLimitEvent(var fps: Int) : Event()
 
 @Nameable("clientPlayerData")
 @Suppress("unused")
-class ClientPlayerDataEvent(val playerData: PlayerData) : Event(), WebSocketEvent {
-    companion object {
-        fun fromPlayerStatistics(stats: PlayerData) = ClientPlayerDataEvent(stats)
-    }
-}
+class ClientPlayerDataEvent(val playerData: PlayerData) : Event(), WebSocketEvent
 
 @Nameable("clientPlayerInventory")
 @Suppress("unused")
-class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event(), WebSocketEvent {
-    companion object {
-        fun fromPlayerInventory(inventory: PlayerInventoryData) = ClientPlayerInventoryEvent(inventory)
-    }
-}
+class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event(), WebSocketEvent
 
 sealed class TitleEvent : CancellableEvent(), WebSocketEvent {
     sealed class TextContent : TitleEvent() {

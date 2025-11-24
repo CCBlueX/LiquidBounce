@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
+import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -53,7 +54,7 @@ object ChunkRenderer {
         return textureAtlasManager.getOrNotLoadedTexture(chunkPos)
     }
 
-    fun prepareRendering(): Int {
+    fun prepareRendering(): GpuTexture {
         return textureAtlasManager.prepareRendering()
     }
 
@@ -103,7 +104,7 @@ object ChunkRenderer {
             Vector2i(1, -1),
         )
 
-        private val AIR_COLOR = Color(255, 207, 179).rgb
+        private val AIR_COLOR = Color(179, 207, 255).rgb
 
         private fun getColor(x: Int, z: Int): Int {
             try {
@@ -153,6 +154,19 @@ object ChunkRenderer {
             }
         }
 
+        /**
+         * [0] -> (0, 0)
+         * [1] -> (0, 15)
+         * [2] -> (15, 0)
+         * [3] -> (15, 15)
+         */
+        private val borderOffsets = arrayOf(
+            Vector2i(0, 0),
+            Vector2i(0, 15),
+            Vector2i(15, 0),
+            Vector2i(15, 15),
+        )
+
         override fun chunkUpdate(chunk: WorldChunk) {
             val chunkPos = chunk.pos
             val x = chunkPos.x
@@ -160,10 +174,10 @@ object ChunkRenderer {
 
             val chunkBordersToUpdate =
                 arrayOf(
-                    Triple(ChunkPos(x + 1, z), Vector2i(0, 0), Vector2i(0, 15)),
-                    Triple(ChunkPos(x - 1, z), Vector2i(15, 0), Vector2i(15, 15)),
-                    Triple(ChunkPos(x, z + 1), Vector2i(0, 0), Vector2i(15, 0)),
-                    Triple(ChunkPos(x, z - 1), Vector2i(0, 15), Vector2i(15, 15)),
+                    Triple(ChunkPos(x + 1, z), borderOffsets[0], borderOffsets[1]),
+                    Triple(ChunkPos(x - 1, z), borderOffsets[2], borderOffsets[3]),
+                    Triple(ChunkPos(x, z + 1), borderOffsets[0], borderOffsets[2]),
+                    Triple(ChunkPos(x, z - 1), borderOffsets[1], borderOffsets[3]),
                 )
 
             heightmapManager.updateChunk(chunkPos)

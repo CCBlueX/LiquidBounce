@@ -18,7 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
-import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.opengl.GlStateManager
+import net.ccbluex.liquidbounce.utils.client.PlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -29,9 +30,8 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.screen.PlayerScreenHandler
 import net.minecraft.screen.slot.Slot
-import net.minecraft.text.Text
 
-class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Text.empty()) {
+class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(PlainText.EMPTY) {
 
     val handler: PlayerScreenHandler?
         get() = player()?.playerScreenHandler
@@ -50,7 +50,7 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
         super.render(context, mouseX, mouseY, delta)
 
         val handler = handler ?: return
-        RenderSystem.disableDepthTest()
+        GlStateManager._disableDepthTest()
         context.matrices.push()
         context.matrices.translate(x.toFloat(), y.toFloat(), 0.0f)
         var hoveredSlot: Slot? = null
@@ -79,7 +79,7 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
         }
 
         context.matrices.pop()
-        RenderSystem.enableDepthTest()
+        GlStateManager._enableDepthTest()
 
         if (cursorStack.isEmpty && hoveredSlot != null && hoveredSlot.hasStack()) {
             val hoveredItemStack = hoveredSlot.stack
@@ -105,7 +105,7 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
 
     private fun drawBackground(context: DrawContext, mouseX: Int, mouseY: Int) {
         context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x, y,
-            0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
+            0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256)
         player()?.let { player ->
             drawEntity(
                 context, x + 26, y + 8, x + 75, y + 78,
@@ -122,7 +122,7 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
         if (slot.stack.isEmpty && slot.isEnabled) {
             val identifier = slot.backgroundSprite
             if (identifier != null) {
-                context.drawGuiTexture(RenderLayer::getGuiTextured, identifier, slot.x, slot.y, 16, 16);
+                context.drawGuiTexture(RenderLayer::getGuiTextured, identifier, slot.x, slot.y, 16, 16)
                 spriteDrawn = true
             }
         }

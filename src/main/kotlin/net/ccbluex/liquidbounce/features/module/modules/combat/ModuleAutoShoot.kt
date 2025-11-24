@@ -46,8 +46,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.entity.LivingEntity
+import net.minecraft.item.EggItem
 import net.minecraft.item.Item
-import net.minecraft.item.Items
+import net.minecraft.item.SnowballItem
 import java.util.function.Function
 
 /**
@@ -208,7 +209,9 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         ANYTHING("Anything");
 
         override fun invoke(): HotbarItemSlot? = when (this) {
-            EGG_AND_SNOWBALL -> Slots.OffhandWithHotbar.findClosestSlot(Items.EGG, Items.SNOWBALL)
+            EGG_AND_SNOWBALL -> Slots.OffhandWithHotbar.findClosestSlot {
+                it.item is EggItem || it.item is SnowballItem
+            }
             ANYTHING -> when {
                 !player.mainHandStack.isEmpty -> Slots.Hotbar[player.inventory.selectedSlot]
                 !player.offHandStack.isEmpty -> OffHandSlot
@@ -256,7 +259,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
                 return when (gravityType) {
                     AUTO -> {
                         when (item) {
-                            Items.EGG, Items.SNOWBALL -> PROJECTILE
+                            is EggItem, is SnowballItem -> PROJECTILE
                             else -> LINEAR
                         }
                     }

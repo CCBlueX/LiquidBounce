@@ -21,10 +21,7 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.doubles.DoubleIterable
-import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet
-import it.unimi.dsi.fastutil.ints.IntSet
 import net.ccbluex.fastutil.forEachDouble
-import net.ccbluex.fastutil.mapToIntArray
 import java.util.*
 import java.util.stream.Stream
 
@@ -114,10 +111,6 @@ inline fun <reified T : Enum<T>> Iterable<T>.toEnumSet(): EnumSet<T> =
 
 inline fun <reified T : Enum<T>> emptyEnumSet(): EnumSet<T> =
     EnumSet.noneOf(T::class.java)
-
-inline fun <T> Collection<T>.mapIntSet(transform: (T) -> Int): IntSet {
-    return IntLinkedOpenHashSet(mapToIntArray(transform))
-}
 
 /**
  * Inserts a new element into a sorted list while maintaining the order.

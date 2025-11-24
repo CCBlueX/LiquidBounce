@@ -83,6 +83,7 @@ fun getServers(requestObject: RequestObject) = runCatching {
 @Suppress("UNUSED_PARAMETER")
 fun postConnect(requestObject: RequestObject): FullHttpResponse {
     data class ServerConnectRequest(val address: String)
+
     val serverConnectRequest = requestObject.asJson<ServerConnectRequest>()
     val serverInfo = serverList.getByAddress(serverConnectRequest.address)
         ?: ServerInfo("Unknown Server", serverConnectRequest.address, ServerInfo.ServerType.OTHER)
@@ -99,6 +100,7 @@ fun postConnect(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun putAddServer(requestObject: RequestObject): FullHttpResponse {
     data class ServerAddRequest(val name: String, val address: String, val resourcePackPolicy: String? = null)
+
     val serverAddRequest = requestObject.asJson<ServerAddRequest>()
 
     if (!ServerAddress.isValid(serverAddRequest.address)) {
@@ -120,6 +122,7 @@ fun putAddServer(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun deleteServer(requestObject: RequestObject): FullHttpResponse {
     data class ServerRemoveRequest(val id: Int)
+
     val serverRemoveRequest = requestObject.asJson<ServerRemoveRequest>()
     val serverInfo = serverList.get(serverRemoveRequest.id)
 
@@ -138,6 +141,7 @@ fun putEditServer(requestObject: RequestObject): FullHttpResponse {
         val address: String,
         val resourcePackPolicy: String? = null
     )
+
     val serverEditRequest = requestObject.asJson<ServerEditRequest>()
     val serverInfo = serverList.get(serverEditRequest.id)
 
@@ -155,6 +159,7 @@ fun putEditServer(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postSwapServers(requestObject: RequestObject): FullHttpResponse {
     data class ServerSwapRequest(val from: Int, val to: Int)
+
     val serverSwapRequest = requestObject.asJson<ServerSwapRequest>()
 
     serverList.swapEntries(serverSwapRequest.from, serverSwapRequest.to)
@@ -166,6 +171,7 @@ fun postSwapServers(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postOrderServers(requestObject: RequestObject): FullHttpResponse {
     data class ServerOrderRequest(val order: List<Int>)
+
     val serverOrderRequest = requestObject.asJson<ServerOrderRequest>()
 
     serverOrderRequest.order.map { serverList.get(it) }

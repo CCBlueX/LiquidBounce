@@ -22,7 +22,10 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSl
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.item.asItemSlotComparator
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Hand
 import java.util.*
@@ -65,12 +68,10 @@ sealed interface ItemSlot {
         }
 
         @JvmField
-        val PREFER_FEWER_ITEM: Comparator<ItemSlot> = Comparator<ItemSlot> { left, right ->
-            left.itemStack.count.compareTo(right.itemStack.count)
-        }
+        val PREFER_FEWER_ITEM: Comparator<ItemSlot> = PreferStackSize.PREFER_FEWER.asItemSlotComparator()
 
         @JvmField
-        val PREFER_MORE_ITEM: Comparator<ItemSlot> = PREFER_FEWER_ITEM.reversed()
+        val PREFER_MORE_ITEM: Comparator<ItemSlot> = PreferStackSize.PREFER_MORE.asItemSlotComparator()
     }
 }
 
@@ -229,14 +230,15 @@ class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot {
     override fun toString(): String = "ItemSlot/Inventory(inventorySlot=$inventorySlot)"
 }
 
-class ArmorItemSlot(private val armorType: Int) : ItemSlot {
+class ArmorItemSlot(private val equipmentSlot: EquipmentSlot) : ItemSlot {
     override val itemStack: ItemStack
-        get() = player.inventory.armor[this.armorType]
+        get() = player.getEquippedStack(equipmentSlot)
 
     override val slotType: ItemSlotType
         get() = ItemSlotType.ARMOR
 
-    override fun getIdForServer(screen: HandledScreen<*>?) = if (screen == null) 8 - this.armorType else null
+    override fun getIdForServer(screen: HandledScreen<*>?) =
+        if (screen == null) 8 - this.equipmentSlot.entitySlotId else null
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -244,11 +246,11 @@ class ArmorItemSlot(private val armorType: Int) : ItemSlot {
 
         other as ArmorItemSlot
 
-        return armorType == other.armorType
+        return equipmentSlot == other.equipmentSlot
     }
 
     override fun hashCode(): Int {
-        return Objects.hash(this.javaClass, this.armorType)
+        return Objects.hash(this.javaClass, this.equipmentSlot)
     }
 }
 

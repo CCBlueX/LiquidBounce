@@ -32,10 +32,13 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
+import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.BlockPos
 
@@ -67,6 +70,8 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         )
     }
 
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
     private object Box : Choice("Box") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
@@ -74,21 +79,24 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         private val outline by boolean("Outline", true)
 
         @Suppress("unused")
-        val renderHandler = handler<WorldRenderEvent> { event ->
+        private val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
-            drawBoxMode(matrixStack, this.outline, false)
+            drawBoxMode(mc.framebuffer, matrixStack, this.outline, false)
         }
 
-        fun drawBoxMode(matrixStack: MatrixStack, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
-            val colorMode = colorMode.activeChoice
-
+        fun drawBoxMode(
+            framebuffer: Framebuffer,
+            matrixStack: MatrixStack,
+            drawOutline: Boolean,
+            fullAlpha: Boolean,
+        ): Boolean {
             var dirty = false
 
-            renderEnvironmentForWorld(matrixStack) {
+            renderEnvironmentForWorld(matrixStack, framebuffer) {
                 dirty = drawInternal(
                     BlockTracker.allPositions(),
-                    colorMode,
+                    colorMode.activeChoice,
                     fullAlpha,
                     drawOutline
                 )
@@ -106,7 +114,13 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             var dirty = false
 
             startBatch()
+            val maxDistanceSq = maximumDistance.sq()
             for (blockPos in blocks) {
+                val distanceSq = blockPos.cameraDistanceSq()
+                if (distanceSq > maxDistanceSq) {
+                    continue
+                }
+
                 val blockState = blockPos.getState() ?: continue
 
                 if (blockState.isAir) {
@@ -152,7 +166,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 return@handler
             }
 
-            val dirty = Box.drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
+            val dirty = Box.drawBoxMode(
+                event.framebuffer,
+                event.matrixStack,
+                drawOutline = false,
+                fullAlpha = true
+            )
 
             if (dirty) {
                 event.markDirty()
@@ -171,7 +190,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 return@handler
             }
 
-            val dirty = Box.drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
+            val dirty = Box.drawBoxMode(
+                event.framebuffer,
+                event.matrixStack,
+                drawOutline = false,
+                fullAlpha = true
+            )
 
             if (dirty) {
                 event.markDirty()

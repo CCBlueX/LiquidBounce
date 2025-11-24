@@ -32,7 +32,7 @@ internal object NoFallVulcan : NoFallMode("Vulcan277") {
         val packet = it.packet
         if (packet is PlayerMoveC2SPacket && player.fallDistance > 7.0) {
             packet.onGround = true
-            player.fallDistance = 0f
+            player.fallDistance = 0.0
             player.velocity.y = 0.0
         }
     }

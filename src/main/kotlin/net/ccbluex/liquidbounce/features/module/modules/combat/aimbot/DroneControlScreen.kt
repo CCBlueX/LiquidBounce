@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toDegrees
@@ -53,7 +53,7 @@ private const val DRAG_BUTTON = 0
 private const val ZOOM_STEP_BASE = 1.25
 
 @Suppress("detekt.TooManyFunctions")
-class DroneControlScreen : Screen("BowAimbot Control Panel".asText()) {
+class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
 
     var cameraPos = player.eyePos.add(0.0, 10.0, 0.0)
     var cameraRotation = Vec2f(MathHelper.wrapDegrees(player.yaw), player.pitch.coerceIn(-90.0F, 90.0F))

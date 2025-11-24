@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -37,20 +38,22 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec2f
-import net.minecraft.util.math.Vec3d
 import org.joml.AxisAngle4f
 import org.joml.Matrix4f
 import org.joml.Quaternionf
 import org.joml.Vector2i
+import org.joml.Vector2ic
+import org.joml.Vector3f
 import org.lwjgl.opengl.GL11
+import java.util.EnumSet
 import kotlin.math.ceil
 
 object MinimapComponent : NativeComponent("Minimap", false, Alignment(
@@ -62,6 +65,15 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
+    private val show by multiEnumChoice("Show", EnumSet.allOf(Show::class.java), canBeNone = false)
+
+    private enum class Show(override val choiceName: String) : NamedChoice {
+        TEXTURE("Texture"),
+        ENTITY("Entity"),
+    }
+
+    private inline val showTexture get() = Show.TEXTURE in show
+    private inline val showEntity get() = Show.ENTITY in show
 
     init {
         ChunkRenderer
@@ -121,33 +133,27 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         matStack.translate(-playerOffX, -playerOffZ, 0.0)
 
         renderEnvironmentForGUI(event) {
-            val glId = ChunkRenderer.prepareRendering()
-
-            RenderSystem.bindTexture(glId)
-
-            RenderSystem.setShaderTexture(0, glId)
-
-            startBatch()
-            drawCustomMesh(
-                VertexFormat.DrawMode.QUADS,
-                VertexInputType.PosTexColor,
-            ) { matrix ->
-                buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
-            }
-            commitBatch()
-
-            startBatch()
-            drawCustomMesh(
-                VertexFormat.DrawMode.TRIANGLES,
-                VertexInputType.PosColor,
-            ) {
-                for (renderedEntity in RenderedEntities) {
-                    drawEntityOnMinimap(
-                        matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
-                    )
+            if (showTexture) {
+                val gpuTexture = ChunkRenderer.prepareRendering()
+                startBatch()
+                RenderSystem.setShaderTexture(0, gpuTexture)
+                drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
+                    buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
                 }
+                commitBatch()
             }
-            commitBatch()
+
+            if (showEntity) {
+                startBatch()
+                drawCustomMesh(ClientRenderPipelines.Triangles) {
+                    for (renderedEntity in RenderedEntities) {
+                        drawEntityOnMinimap(
+                            matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
+                        )
+                    }
+                }
+                commitBatch()
+            }
         }
 
         matStack.pop()
@@ -247,18 +253,18 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
     private fun VertexConsumer.buildMinimapMesh(
         matrix: Matrix4f,
-        centerPos: Vector2i,
+        centerPos: Vector2ic,
         chunksToRenderAround: Int,
         viewDistance: Float,
     ) {
         for (x in -chunksToRenderAround..chunksToRenderAround) {
             for (y in -chunksToRenderAround..chunksToRenderAround) {
                 // Don't render too much
-                if (x * x + y * y > (viewDistance + 3) * (viewDistance + 3)) {
+                if (x * x + y * y > (viewDistance + 3).sq()) {
                     continue
                 }
 
-                val chunkPos = ChunkPos(centerPos.x + x, centerPos.y + y)
+                val chunkPos = ChunkPos(centerPos.x() + x, centerPos.y() + y)
 
                 val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                 val from = Vec2f(x.toFloat(), y.toFloat())
@@ -291,12 +297,12 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         matStack.translate(pos.x / 16.0 - basePos.x, pos.z / 16.0 - basePos.y, 0.0)
         val rotation = Quaternionf(AxisAngle4f((rot.yaw).toRadians(), 0.0F, 0.0F, 1.0F))
 
-        val w = 2.0
-        val h = w * 1.618
+        val w = 2.0f
+        val h = w * 1.618f
 
-        val p1 = Vec3d(-w * 0.5 / 16.0, -h * 0.5 / 16.0, 0.0)
-        val p2 = Vec3d(0.0, h * 0.5 / 16.0, 0.0)
-        val p3 = Vec3d(w * 0.5 / 16.0, -h * 0.5 / 16.0, 0.0)
+        val p1 = Vector3f(-w * 0.5f / 16.0f, -h * 0.5f / 16.0f, 0.0f)
+        val p2 = Vector3f(0.0f, h * 0.5f / 16.0f, 0.0f)
+        val p3 = Vector3f(w * 0.5f / 16.0f, -h * 0.5f / 16.0f, 0.0f)
 
         matStack.multiply(rotation)
 

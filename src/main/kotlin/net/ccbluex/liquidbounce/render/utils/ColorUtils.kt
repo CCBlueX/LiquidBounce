@@ -39,16 +39,21 @@ object ColorUtils {
 }
 
 fun rainbow(): Color4b {
-    val currentColor = Color(Color.HSBtoRGB((System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F, 1F, 1F))
-
-    return Color4b(currentColor)
+    return Color4b.ofHSB(
+        hue = (System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F,
+        saturation = 1F,
+        brightness = 1F,
+    )
 }
 
 fun shiftHue(color4b: Color4b, shift: Int): Color4b {
     val hsb = Color.RGBtoHSB(color4b.r, color4b.g, color4b.b, null)
-    val shiftedColor = Color(Color.HSBtoRGB((hsb[0] + shift.toFloat() / 360) % 1F, hsb[1], hsb[2]))
-
-    return Color4b(shiftedColor).with(a = color4b.a)
+    return Color4b.ofHSB(
+        hue = (hsb[0] + shift.toFloat() / 360) % 1F,
+        saturation = hsb[1],
+        brightness = hsb[2],
+        alpha = color4b.a / 255F,
+    )
 }
 
 fun interpolateHue(primaryColor: Color4b, otherColor: Color4b, percentageOther: Float): Color4b {

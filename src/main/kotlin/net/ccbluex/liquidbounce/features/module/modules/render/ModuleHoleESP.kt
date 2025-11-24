@@ -125,30 +125,28 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
             val hDistance = horizontalDistance
 
             renderEnvironmentForWorld(event.matrixStack) {
-                withDisabledCull {
-                    HoleTracker.holes.forEach {
-                        val positions = it.positions
+                HoleTracker.holes.forEach {
+                    val positions = it.positions
 
-                        val valOutOfRange = abs(pos.y - positions.minY) > vDistance
-                        val xzOutOfRange = abs(pos.x - positions.minX) > hDistance ||
-                            abs(pos.z - positions.minZ) > hDistance
-                        if (valOutOfRange || xzOutOfRange) {
-                            return@forEach
-                        }
+                    val valOutOfRange = abs(pos.y - positions.minY) > vDistance
+                    val xzOutOfRange = abs(pos.x - positions.minX) > hDistance ||
+                        abs(pos.z - positions.minZ) > hDistance
+                    if (valOutOfRange || xzOutOfRange) {
+                        return@forEach
+                    }
 
-                        val fade = calculateFade(positions.from)
-                        val baseColor = it.color().with(a = 50).fade(fade)
-                        val transparentColor = baseColor.with(a = 0)
-                        val box = positions.box
-                        withPositionRelativeToCamera(positions.from) {
-                            drawBoxSide(
-                                box,
-                                Direction.DOWN,
-                                baseColor,
-                                if (outline) baseColor.with(a = 100).fade(fade) else null,
-                            )
-                            drawGradientSides(glowHeight, baseColor, transparentColor, box)
-                        }
+                    val fade = calculateFade(positions.from)
+                    val baseColor = it.color().with(a = 50).fade(fade)
+                    val transparentColor = baseColor.with(a = 0)
+                    val box = positions.box
+                    withPositionRelativeToCamera(positions.from) {
+                        drawBoxSide(
+                            box,
+                            Direction.DOWN,
+                            baseColor,
+                            if (outline) baseColor.with(a = 100).fade(fade) else null,
+                        )
+                        drawGradientSides(glowHeight, baseColor, transparentColor, box)
                     }
                 }
             }

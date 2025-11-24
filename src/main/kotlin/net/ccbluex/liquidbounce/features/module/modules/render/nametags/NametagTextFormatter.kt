@@ -20,8 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
+import net.ccbluex.liquidbounce.utils.client.PlainText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
@@ -33,15 +34,19 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
 import kotlin.math.roundToInt
 
-@Suppress("MagicNumber")
+private val COUNT_STYLE = Style.EMPTY.withFormatting(Formatting.AQUA, Formatting.BOLD)
+
+private val BOT_STYLE = Style.EMPTY.withFormatting(Formatting.RED, Formatting.BOLD)
+
 class NametagTextFormatter(private val entity: Entity) {
     fun format(): Text {
-        val outputText = Text.empty()
+        val outputText = "".asText()
 
         if (NametagShowOptions.DISTANCE.isShowing()) {
             outputText.append(this.distanceText).append(" ")
@@ -59,7 +64,7 @@ class NametagTextFormatter(private val entity: Entity) {
         val nameText: Text = if (nameColor != null) {
             baseNameString.asText().withColor(nameColor)
         } else {
-            baseNameString.asText()
+            baseNameString.asPlainText()
         }
 
         outputText.append(nameText)
@@ -67,7 +72,7 @@ class NametagTextFormatter(private val entity: Entity) {
         if (ModuleCombineMobs.running) {
             val count = ModuleCombineMobs.getCombinedCount(entity)
             if (count > 1) {
-                val countText = ("x $count").asText().formatted(Formatting.AQUA).bold(true)
+                val countText = ("x $count").asPlainText(COUNT_STYLE)
                 outputText.append(" ").append(countText)
             }
         }
@@ -77,7 +82,7 @@ class NametagTextFormatter(private val entity: Entity) {
         }
 
         if (this.isBot) {
-            outputText.append(" ").append("Bot".asText().formatted().bold(true).withColor(Formatting.RED))
+            outputText.append(" ").append("Bot".asPlainText(BOT_STYLE))
         }
 
         return outputText
@@ -102,7 +107,7 @@ class NametagTextFormatter(private val entity: Entity) {
         get() {
             val playerDistanceRounded = player.distanceTo(entity).roundToInt()
 
-            return "${playerDistanceRounded}m".asText().formatted(Formatting.GRAY)
+            return "${playerDistanceRounded}m".asPlainText(Formatting.GRAY)
         }
 
     private fun getPing(entity: Entity): Int? {
@@ -111,7 +116,7 @@ class NametagTextFormatter(private val entity: Entity) {
 
     private val pingText: Text
         get() {
-            val playerPing = getPing(entity) ?: return Text.of("")
+            val playerPing = getPing(entity) ?: return PlainText.EMPTY
 
             val coloringBasedOnPing = when {
                 playerPing > 200 -> Formatting.RED
@@ -121,7 +126,7 @@ class NametagTextFormatter(private val entity: Entity) {
 
             return regular(" [")
                 .append(
-                    (playerPing.toString() + "ms").asText().formatted(coloringBasedOnPing)
+                    (playerPing.toString() + "ms").asPlainText(coloringBasedOnPing)
                 )
                 .append(regular("]"))
         }
@@ -129,7 +134,7 @@ class NametagTextFormatter(private val entity: Entity) {
     private val healthText: Text
         get() {
             if (entity !is LivingEntity) {
-                return regular("")
+                return PlainText.EMPTY
             }
 
             val actualHealth = (entity.getActualHealth() +
@@ -141,7 +146,7 @@ class NametagTextFormatter(private val entity: Entity) {
                 else -> Formatting.RED
             }
 
-            return "$actualHealth HP".asText().formatted(healthColor)
+            return "$actualHealth HP".asPlainText(healthColor)
 
         }
 }

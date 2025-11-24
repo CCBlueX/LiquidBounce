@@ -19,28 +19,27 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
-import net.ccbluex.liquidbounce.render.shader.CanvasShader
+import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.vertex.VertexFormat
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
+import net.ccbluex.liquidbounce.render.newRenderPass
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gl.UniformType
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.RenderLayer
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.util.Identifier
 import java.io.Closeable
+import java.util.Locale
 
 sealed interface ThemeBackground : Closeable {
-
-    companion object {
-        @JvmStatic
-        fun shader(shader: CanvasShader) = ShaderThemeBackground(shader)
-        @JvmStatic
-        fun image(imageId: Identifier) = ImageThemeBackground(imageId)
-        @JvmStatic
-        fun none() = MinecraftThemeBackground
-    }
 
     /**
      * Returns false to let Minecraft render its default wallpaper.
      */
-    object MinecraftThemeBackground : ThemeBackground {
+    object Minecraft : ThemeBackground {
         override fun draw(
             context: DrawContext,
             width: Int,
@@ -58,7 +57,7 @@ sealed interface ThemeBackground : Closeable {
      * Background implementation that renders a static image texture.
      * @param imageId The Minecraft resource identifier for the image
      */
-    class ImageThemeBackground(private val imageId: Identifier) : ThemeBackground {
+    class Image(private val imageId: Identifier) : ThemeBackground {
 
         override fun draw(
             context: DrawContext,
@@ -86,9 +85,11 @@ sealed interface ThemeBackground : Closeable {
 
     /**
      * Background implementation that renders using a custom shader.
-     * @param shader The canvas shader to use for rendering
+     * @param pipeline the shader render pipeline
      */
-    class ShaderThemeBackground(private val shader: CanvasShader) : ThemeBackground {
+    class Shader private constructor(
+        private val pipeline: RenderPipeline,
+    ) : ThemeBackground {
 
         override fun draw(
             context: DrawContext,
@@ -98,12 +99,61 @@ sealed interface ThemeBackground : Closeable {
             mouseY: Int,
             delta: Float
         ): Boolean {
-            shader.draw(mouseX, mouseY, delta)
+            newRenderPass().use { pass ->
+                pass.setPipeline(pipeline)
+                pass.setUniform(UNIFORM_TIME, (System.currentTimeMillis() - mc.startTime) / 1000F)
+                pass.setUniform(UNIFORM_MOUSE, mouseX.toFloat(), mouseY.toFloat())
+                pass.setUniform(
+                    UNIFORM_RESOLUTION,
+                    mc.window.framebufferWidth.toFloat(),
+                    mc.window.framebufferHeight.toFloat(),
+                )
+
+                pass.drawFullScreenPositionTexture()
+            }
             return true
         }
 
+        @Suppress("EmptyFunctionBlock")
         override fun close() {
-            shader.close()
+        }
+
+        companion object {
+            private const val UNIFORM_TIME = "time"
+            private const val UNIFORM_MOUSE = "mouse"
+            private const val UNIFORM_RESOLUTION = "resolution"
+
+            @JvmStatic
+            fun build(
+                metadata: ThemeMetadata,
+                background: Background,
+                vertexShader: String,
+                fragmentShader: String,
+            ): Shader {
+                val vshId = LiquidBounce.identifier("vsh/${background.name.lowercase(Locale.US)}")
+                val fshId = LiquidBounce.identifier("fsh/${background.name.lowercase(Locale.US)}")
+
+                val pipeline = RenderPipeline.Builder()
+                    .withLocation(LiquidBounce.identifier("theme-bg-${metadata.name.lowercase(Locale.US)}"))
+                    .withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
+                    .withVertexShader(vshId)
+                    .withFragmentShader(fshId)
+                    .withUniform(UNIFORM_TIME, UniformType.FLOAT)
+                    .withUniform(UNIFORM_MOUSE, UniformType.VEC2)
+                    .withUniform(UNIFORM_RESOLUTION, UniformType.VEC2)
+                    .withoutBlend()
+                    .build()
+
+                gpuDevice.precompilePipeline(pipeline) { id, _ ->
+                    when (id) {
+                        vshId -> vertexShader
+                        fshId -> fragmentShader
+                        else -> error("Unknown shader id: $id")
+                    }
+                }
+
+                return Shader(pipeline)
+            }
         }
     }
 

@@ -26,7 +26,6 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import org.joml.Vector2f
-import java.math.BigDecimal
 import java.math.RoundingMode
 
 inline fun Float.toRadians() = this * MathHelper.RADIANS_PER_DEGREE
@@ -80,9 +79,14 @@ fun Box.getFace(direction: Direction): AlignedFace {
  *
  * For example ```roundToNDecimalPlaces(1234.567,decimalPlaces=1)``` will
  * return ```1234.6```.
+ *
+ * @see https://stackoverflow.com/a/2808648/9140494
+ * @return The rounded value
  */
-fun Double.roundToDecimalPlaces(decimalPlaces: Int = 1): Double {
-    return BigDecimal(this).setScale(decimalPlaces, RoundingMode.HALF_UP).toDouble()
-}
+fun Double.roundToDecimalPlaces(decimalPlaces: Int = 1): Double =
+    toBigDecimal().setScale(decimalPlaces, RoundingMode.HALF_UP).toDouble()
 
-infix fun Float.vector2f(other: Float) = Vector2f(this, other)
+fun Float.roundToDecimalPlaces(decimalPlaces: Int = 1): Float =
+    toBigDecimal().setScale(decimalPlaces, RoundingMode.HALF_UP).toFloat()
+
+inline infix fun Float.vector2f(other: Float) = Vector2f(this, other)
