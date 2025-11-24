@@ -59,6 +59,7 @@ enum class ItemType(
     ARMOR(true, allocationPriority = Priority.IMPORTANT_FOR_PLAYER_LIFE),
     SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
     WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
+    MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
@@ -234,6 +235,8 @@ class ItemCategorization(
                     itemStack.isPlayerArmor -> add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
 
                     itemStack.isSword -> add(SwordItemFacet(slot))
+
+                    itemStack.item is MaceItem -> add(MaceItemFacet(slot))
 
                     itemStack.isMiningTool -> add(MiningToolItemFacet(slot))
 
