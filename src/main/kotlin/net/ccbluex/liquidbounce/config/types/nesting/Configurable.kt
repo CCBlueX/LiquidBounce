@@ -229,7 +229,7 @@ open class Configurable(
         this@Configurable.inner.add(this)
     }
 
-    internal inline fun <T : MutableSet<E>, reified E> registryList(
+    internal inline fun <T : SequencedSet<E>, reified E> registryList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
@@ -329,27 +329,27 @@ open class Configurable(
 
     fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR3_D)
 
-    fun <C : MutableSet<Block>> blocks(name: String, default: C) =
+    fun <C : SequencedSet<Block>> blocks(name: String, default: C) =
         registryList(name, default, ValueType.BLOCK)
 
     fun item(name: String, default: Item) = value(name, default, ValueType.ITEM)
 
-    fun <C : MutableSet<Item>> items(name: String, default: C) =
+    fun <C : SequencedSet<Item>> items(name: String, default: C) =
         registryList(name, default, ValueType.ITEM)
 
-    fun <C : MutableSet<SoundEvent>> sounds(name: String, default: C) =
+    fun <C : SequencedSet<SoundEvent>> sounds(name: String, default: C) =
         registryList(name, default, ValueType.SOUND)
 
-    fun <C : MutableSet<StatusEffect>> statusEffects(name: String, default: C) =
+    fun <C : SequencedSet<StatusEffect>> statusEffects(name: String, default: C) =
         registryList(name, default, ValueType.STATUS_EFFECT)
 
-    fun <C : MutableSet<Identifier>> clientPackets(name: String, default: C) =
+    fun <C : SequencedSet<Identifier>> clientPackets(name: String, default: C) =
         registryList(name, default, ValueType.CLIENT_PACKET)
 
-    fun <C : MutableSet<Identifier>> serverPackets(name: String, default: C) =
+    fun <C : SequencedSet<Identifier>> serverPackets(name: String, default: C) =
         registryList(name, default, ValueType.SERVER_PACKET)
 
-    fun <C : MutableSet<EntityType<*>>> entityTypes(name: String, default: C) =
+    fun <C : SequencedSet<EntityType<*>>> entityTypes(name: String, default: C) =
         registryList(name, default, ValueType.ENTITY_TYPE)
 
     @Suppress("LongParameterList")
@@ -550,7 +550,7 @@ open class Configurable(
             }
 
             ValueType.MULTI_CHOOSE -> {
-                val value = valueObject["value"].asJsonArray.mapTo(hashSetOf()) { it.asString.asNamedChoice() }
+                val value = valueObject["value"].asJsonArray.mapTo(sortedSetOf()) { it.asString.asNamedChoice() }
                 val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
                 val canBeNone = when (val json = valueObject["canBeNone"]) {
                     null, is JsonNull -> true // default = true

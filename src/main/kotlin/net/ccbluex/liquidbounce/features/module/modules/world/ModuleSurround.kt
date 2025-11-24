@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.placer.CrystalDestroyFeature
 import net.ccbluex.liquidbounce.utils.block.placer.placeInstantOnBlockUpdate
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.entity.getFeetBlockPos
 import net.ccbluex.liquidbounce.utils.entity.isInHole
@@ -62,7 +63,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
     /**
      * The blocks the surround normal utilizes.
      */
-    private val DEFAULT_BLOCKS = hashSetOf(Blocks.OBSIDIAN, Blocks.ENDER_CHEST, Blocks.CRYING_OBSIDIAN)
+    private val DEFAULT_BLOCKS = arrayOf(Blocks.OBSIDIAN, Blocks.ENDER_CHEST, Blocks.CRYING_OBSIDIAN)
 
     private val features by multiEnumChoice("Features",
         Features.EXTEND,
@@ -109,7 +110,6 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
          * X = obsidian
          * p = the players hitbox
          */
-        @Suppress("SpellCheckingInspection", "GrazieInspection")
         object ExtraLayer : ToggleableConfigurable(this, "ExtraLayer", true) {
 
             /**
@@ -204,7 +204,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
     }
 
     private val filter by enumChoice("Filter", Filter.WHITELIST)
-    private val blocks by blocks("Blocks", DEFAULT_BLOCKS)
+    private val blocks by blocks("Blocks", blockSortedSetOf(blocks = DEFAULT_BLOCKS))
     private val placer = tree(BlockPlacer(
         "Placing",
         this,

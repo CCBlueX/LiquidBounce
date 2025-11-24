@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
@@ -105,7 +106,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
         }
 
         object Custom : FilterMode("Custom") {
-            private val blocks by blocks("Blocks", ReferenceOpenHashSet())
+            private val blocks by blocks("Blocks", blockSortedSetOf())
             private val filter by enumChoice("Filter", Filter.BLACKLIST)
 
             override fun test(block: Block): Boolean {

@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.Blocks
@@ -39,7 +39,7 @@ object ScaffoldBlockItemSelection : Configurable("BlockItemSelection") {
      */
     private val disallowedBlocksToPlace by blocks(
         name = "Disallowed",
-        default = ReferenceOpenHashSet.of(
+        default = blockSortedSetOf(
             Blocks.TNT,
             Blocks.COBWEB,
             Blocks.NETHER_PORTAL,
@@ -51,7 +51,7 @@ object ScaffoldBlockItemSelection : Configurable("BlockItemSelection") {
      */
     private val unfavorableBlocksToPlace by blocks(
         name = "Unfavorable",
-        default = ReferenceOpenHashSet.of(
+        default = blockSortedSetOf(
             Blocks.CRAFTING_TABLE,
             Blocks.JIGSAW,
             Blocks.SMITHING_TABLE,

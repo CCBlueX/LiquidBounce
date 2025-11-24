@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -31,6 +30,7 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -54,7 +54,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         get() = "liquidbounce.module.itemEsp"
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val items by items("Items", ReferenceOpenHashSet())
+    private val items by items("Items", itemSortedSetOf())
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     private object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {

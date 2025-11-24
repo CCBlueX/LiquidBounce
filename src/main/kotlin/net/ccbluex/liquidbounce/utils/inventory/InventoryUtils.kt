@@ -23,7 +23,7 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -35,6 +35,8 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
@@ -133,7 +135,8 @@ class CheckScreenHandlerTypeConfigurable(
 ) : ToggleableConfigurable(parent, "CheckScreenHandlerType", enabled = true) {
     private val types by registryList(
         "Types",
-        hashSetOf(
+        objectRBTreeSetOf(
+            Registries.SCREEN_HANDLER.asComparator(),
             ScreenHandlerType.GENERIC_9X3, ScreenHandlerType.GENERIC_9X6, ScreenHandlerType.SHULKER_BOX,
         ),
         ValueType.SCREEN_HANDLER
@@ -271,8 +274,8 @@ fun interactItem(
     return result
 }
 
-internal fun findBlocksEndingWith(vararg targets: String): MutableSet<Block> =
-    Registries.BLOCK.filterTo(ReferenceOpenHashSet()) { block ->
+internal fun findBlocksEndingWith(vararg targets: String): SortedSet<Block> =
+    Registries.BLOCK.filterTo(blockSortedSetOf()) { block ->
         targets.any { Registries.BLOCK.getId(block).path.endsWith(it.lowercase()) }
     }
 
