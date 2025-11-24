@@ -30,8 +30,8 @@ import net.minecraft.util.math.Vec3d
  * Makes your camera move smoother.
  */
 object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER) {
-    private val enableFirstPOV by boolean("Enable First Pov", default = false)
-    private val resetOnPerspectiveChange by boolean("Reset on Perspective Change", default = true)
+    private val enableFirstPOV by boolean("EnableFirstPOV", default = false)
+    private val resetOnPerspectiveChange by boolean("ResetOnPerspectiveChange", default = true)
 
     private val factorH by float("Horizontal Factor", 0.9f, 0f..1f)
     private val factorV by float("Vertical Factor", 0.93f, 0f..1f)
