@@ -43,7 +43,7 @@ class Nametag private constructor(
 
     constructor(entity: LivingEntity) : this(
         entity,
-        NametagTextFormatter(entity).format(),
+        NametagTextFormatter.format(entity),
         NametagEquipment.createItemList(entity),
     )
 

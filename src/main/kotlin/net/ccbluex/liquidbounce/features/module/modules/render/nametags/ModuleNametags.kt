@@ -40,6 +40,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
 
     init {
+        tree(NametagTextFormatter)
         tree(NametagEquipment)
     }
 

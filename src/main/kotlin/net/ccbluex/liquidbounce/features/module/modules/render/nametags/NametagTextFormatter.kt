@@ -18,11 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.utils.client.PlainText
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.joinToText
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
@@ -38,118 +42,123 @@ import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
+import java.util.function.Function
 import kotlin.math.roundToInt
 
 private val COUNT_STYLE = Style.EMPTY.withFormatting(Formatting.AQUA, Formatting.BOLD)
 
 private val BOT_STYLE = Style.EMPTY.withFormatting(Formatting.RED, Formatting.BOLD)
 
-class NametagTextFormatter(private val entity: Entity) {
-    fun format(): Text {
-        val outputText = "".asText()
+private val BABY_TEXT = "Baby ".asPlainText()
 
-        if (NametagShowOptions.DISTANCE.isShowing()) {
-            outputText.append(this.distanceText).append(" ")
-        }
-        if (NametagShowOptions.PING.isShowing()) {
-            outputText.append(this.pingText).append(" ")
-        }
+private val BOT_TEXT = "Bot".asPlainText(BOT_STYLE)
 
-        val name = entity.displayName!!
-        val nameColor = this.nameColor
+internal object NametagTextFormatter : Configurable("Text") {
 
-        val isBaby = (entity as? MobEntity)?.isBaby == true
-        val baseNameString = (if (isBaby) "Baby " else "") + name.string
+    private val parts by multiEnumChoice(
+        "Parts",
+        ObjectLinkedOpenHashSet(Part.entries),
+        canBeNone = false
+    )
 
-        val nameText: Text = if (nameColor != null) {
-            baseNameString.asText().withColor(nameColor)
-        } else {
-            baseNameString.asPlainText()
-        }
-
-        outputText.append(nameText)
-
-        if (ModuleCombineMobs.running) {
-            val count = ModuleCombineMobs.getCombinedCount(entity)
-            if (count > 1) {
-                val countText = ("x $count").asPlainText(COUNT_STYLE)
-                outputText.append(" ").append(countText)
+    private enum class Part(override val choiceName: String) : NamedChoice, Function<Entity, Text?> {
+        DISTANCE("Distance") {
+            override fun apply(t: Entity): Text {
+                val playerDistanceRounded = player.distanceTo(t).roundToInt()
+                return "${playerDistanceRounded}m".asPlainText(Formatting.GRAY)
             }
-        }
+        },
 
-        if (NametagShowOptions.HEALTH.isShowing()) {
-            outputText.append(" ").append(this.healthText)
-        }
+        PING("Ping") {
+            override fun apply(t: Entity): Text? {
+                val entity = t as? PlayerEntity ?: return null
 
-        if (this.isBot) {
-            outputText.append(" ").append("Bot".asPlainText(BOT_STYLE))
-        }
+                val playerPing = entity.ping
 
-        return outputText
+                val coloringBasedOnPing = when {
+                    playerPing > 200 -> Formatting.RED
+                    playerPing > 100 -> Formatting.YELLOW
+                    else -> Formatting.GREEN
+                }
+
+                return regular(" [")
+                    .append(
+                        (playerPing.toString() + "ms").asPlainText(coloringBasedOnPing)
+                    )
+                    .append(regular("]"))
+            }
+        },
+
+        NAME("Name") {
+            override fun apply(entity: Entity): Text = buildList(4) {
+                val name = entity.displayName!!
+                val nameColor = entity.nameColor
+
+                if ((entity as? MobEntity)?.isBaby == true) {
+                    this += BABY_TEXT
+                }
+
+                this += if (nameColor != null) {
+                    name.copy().withColor(nameColor)
+                } else {
+                    name
+                }
+
+                if (ModuleCombineMobs.running) {
+                    val count = ModuleCombineMobs.getCombinedCount(entity)
+                    if (count > 1) {
+                        val countText = ("x $count").asPlainText(COUNT_STYLE)
+                        this += PlainText.SPACE
+                        this += countText
+                    }
+                }
+            }.asText()
+        },
+
+        HEALTH("Health") {
+            override fun apply(t: Entity): Text? {
+                val entity = t as? LivingEntity ?: return null
+
+                val actualHealth = (entity.getActualHealth() +
+                    if (entity.hasHealthScoreboard()) 0f else entity.absorptionAmount).toInt()
+
+                val healthColor = when {
+                    actualHealth >= 14 -> Formatting.GREEN
+                    actualHealth >= 8 -> Formatting.YELLOW
+                    else -> Formatting.RED
+                }
+
+                return "$actualHealth HP".asPlainText(healthColor)
+            }
+        },
+
+        BOT_MARK("BotMark") {
+            override fun apply(t: Entity): Text? {
+                return if (t.isBot) BOT_TEXT else null
+            }
+        },
     }
 
-    private val isBot = ModuleAntiBot.isBot(entity)
-
-    private val nameColor: TextColor?
-        get() {
-            val tagColor = EntityTaggingManager.getTag(this.entity).color
-
-            return when {
-                isBot -> Formatting.DARK_AQUA.toTextColor()
-                entity.isInvisible -> Formatting.GOLD.toTextColor()
-                entity.isSneaking -> Formatting.DARK_RED.toTextColor()
-                tagColor != null -> tagColor.toTextColor()
-                else -> null
-            }
-        }
-
-    private val distanceText: Text
-        get() {
-            val playerDistanceRounded = player.distanceTo(entity).roundToInt()
-
-            return "${playerDistanceRounded}m".asPlainText(Formatting.GRAY)
-        }
-
-    private fun getPing(entity: Entity): Int? {
-        return (entity as? PlayerEntity)?.ping
+    fun format(entity: Entity): Text {
+        return parts.mapNotNull { it.apply(entity) }.joinToText(PlainText.SPACE)
     }
 
-    private val pingText: Text
-        get() {
-            val playerPing = getPing(entity) ?: return PlainText.EMPTY
-
-            val coloringBasedOnPing = when {
-                playerPing > 200 -> Formatting.RED
-                playerPing > 100 -> Formatting.YELLOW
-                else -> Formatting.GREEN
-            }
-
-            return regular(" [")
-                .append(
-                    (playerPing.toString() + "ms").asPlainText(coloringBasedOnPing)
-                )
-                .append(regular("]"))
-        }
-
-    private val healthText: Text
-        get() {
-            if (entity !is LivingEntity) {
-                return PlainText.EMPTY
-            }
-
-            val actualHealth = (entity.getActualHealth() +
-                if (entity.hasHealthScoreboard()) 0f else entity.absorptionAmount).toInt()
-
-            val healthColor = when {
-                actualHealth >= 14 -> Formatting.GREEN
-                actualHealth >= 8 -> Formatting.YELLOW
-                else -> Formatting.RED
-            }
-
-            return "$actualHealth HP".asPlainText(healthColor)
-
-        }
 }
+
+private val Entity.isBot get() = ModuleAntiBot.isBot(this)
+
+private val Entity.nameColor: TextColor?
+    get() {
+        val tagColor = EntityTaggingManager.getTag(this).color
+
+        return when {
+            isBot -> Formatting.DARK_AQUA.toTextColor()
+            isInvisible -> Formatting.GOLD.toTextColor()
+            isSneaking -> Formatting.DARK_RED.toTextColor()
+            tagColor != null -> tagColor.toTextColor()
+            else -> null
+        }
+    }
 
 private fun Formatting.toTextColor(): TextColor {
     return TextColor.fromFormatting(this)!!
