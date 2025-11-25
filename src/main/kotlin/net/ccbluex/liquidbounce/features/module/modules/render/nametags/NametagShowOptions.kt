@@ -15,8 +15,6 @@ internal enum class NametagShowOptions(
     HEALTH("Health"),
     DISTANCE("Distance"),
     PING("Ping"),
-    ITEMS("Items"),
-    ITEM_INFO("ItemInfo"),
     ENCHANTMENTS("Enchantments"),
     BORDER("Border");
 
@@ -33,6 +31,7 @@ internal object NametagEquipment : ToggleableConfigurable(ModuleNametags, "Equip
         ),
     )
     private val skipEmptySlot by boolean("SkipEmptySlot", true)
+    val showInfo by boolean("ShowInfo", true)
 
     /**
      * Creates a list of items that should be rendered above the name tag.
