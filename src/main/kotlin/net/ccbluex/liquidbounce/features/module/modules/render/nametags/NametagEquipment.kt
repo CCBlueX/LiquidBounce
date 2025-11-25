@@ -21,9 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 
@@ -32,8 +30,8 @@ internal object NametagEquipment : Configurable("Equipment") {
     private val slots by multiEnumChoice(
         "Slots",
         objectLinkedSetOf(
-            NEquipmentSlot.MAINHAND, NEquipmentSlot.HEAD, NEquipmentSlot.CHEST,
-            NEquipmentSlot.LEGS, NEquipmentSlot.FEET, NEquipmentSlot.OFFHAND,
+            EquipmentSlotChoice.MAINHAND, EquipmentSlotChoice.HEAD, EquipmentSlotChoice.CHEST,
+            EquipmentSlotChoice.LEGS, EquipmentSlotChoice.FEET, EquipmentSlotChoice.OFFHAND,
         ),
         canBeNone = true
     )
@@ -53,19 +51,5 @@ internal object NametagEquipment : Configurable("Equipment") {
         } else {
             stacks.asList()
         }
-    }
-
-    private enum class NEquipmentSlot(
-        override val choiceName: String,
-        val slot: EquipmentSlot,
-    ) : NamedChoice {
-        MAINHAND("Mainhand", EquipmentSlot.MAINHAND),
-        OFFHAND("Offhand", EquipmentSlot.OFFHAND),
-        FEET("Feet", EquipmentSlot.FEET),
-        LEGS("Legs", EquipmentSlot.LEGS),
-        CHEST("Chest", EquipmentSlot.CHEST),
-        HEAD("Head", EquipmentSlot.HEAD),
-        BODY("Body", EquipmentSlot.BODY),
-        SADDLE("Saddle", EquipmentSlot.SADDLE),
     }
 }
