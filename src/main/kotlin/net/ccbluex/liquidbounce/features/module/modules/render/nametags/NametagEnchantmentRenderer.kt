@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
@@ -37,7 +38,6 @@ import net.minecraft.util.Formatting
 import net.minecraft.client.resource.language.I18n
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
-import net.ccbluex.liquidbounce.utils.client.mc
 import org.joml.Vector2f
 import org.joml.component1
 import org.joml.component2
@@ -119,7 +119,7 @@ private data class EnchantmentInfo(
     val isCurse: Boolean = false
 )
 
-object NametagEnchantmentRenderer {
+internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNametags, "Enchantment", true) {
     private const val MAX_ENCHANTMENTS_PER_ITEM = 10
     private const val FIXED_SCALE = 0.6f
     private const val LINE_HEIGHT = 14f
@@ -154,8 +154,6 @@ object NametagEnchantmentRenderer {
         worldX: Float,
         worldY: Float,
     ) {
-        if (!NametagShowOptions.ENCHANTMENTS.isShowing()) return
-
         val itemsWithEnchantments = getEntityItemsWithEnchantments(entity)
         if (itemsWithEnchantments.isEmpty()) return
 

@@ -73,7 +73,7 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     drawQuad(
         q1, q2, z = 0f,
         fillColor = Color4b(Int.MIN_VALUE, hasAlpha = true),
-        outlineColor = Color4b.BLACK.takeIf { NametagShowOptions.BORDER.isShowing() },
+        outlineColor = Color4b.BLACK.takeIf { ModuleNametags.border },
     )
 
     // Text
@@ -85,7 +85,7 @@ internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
     )
 
     // Draw enchantments directly for the entity (regardless of whether items are shown)
-    if (NametagShowOptions.ENCHANTMENTS.isShowing() && nametag.entity is LivingEntity) {
+    if (NametagEnchantmentRenderer.running && nametag.entity is LivingEntity) {
         val entityPos = nametag.entity.pos
         val worldX = entityPos.x.toFloat()
         val worldY = (entityPos.y + nametag.entity.height + 0.5f).toFloat()

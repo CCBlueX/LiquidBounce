@@ -37,14 +37,15 @@ import org.joml.Vector2fc
  * Makes player name tags more visible and adds useful information.
  */
 object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
-    internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
 
     init {
         tree(NametagTextFormatter)
         tree(NametagEquipment)
+        tree(NametagEnchantmentRenderer)
     }
 
-    val scale by float("Scale", 2F, 0.25F..4F)
+    internal val scale by float("Scale", 2F, 0.25F..4F)
+    internal val border by boolean("Border", true)
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     internal val batchRenderMode by enumChoice("BatchRenderMode", BatchRenderMode.EACH)
