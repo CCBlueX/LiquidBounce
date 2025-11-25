@@ -63,7 +63,9 @@ internal object NametagTextFormatter : Configurable("Text") {
 
     private enum class Part(override val choiceName: String) : NamedChoice, Function<Entity, Text?> {
         DISTANCE("Distance") {
-            override fun apply(t: Entity): Text {
+            override fun apply(t: Entity): Text? {
+                if (t === player) return null
+
                 val playerDistanceRounded = player.distanceTo(t).roundToInt()
                 return "${playerDistanceRounded}m".asPlainText(Formatting.GRAY)
             }
