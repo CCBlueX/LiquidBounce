@@ -1,7 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher, onDestroy} from "svelte";
     import type {ModuleSetting, MultiChooseSetting,} from "../../../integration/types";
-    import {slide} from "svelte/transition";
+    import {fade, slide} from "svelte/transition";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import ExpandArrow from "./common/ExpandArrow.svelte";
     import {setItem} from "../../../integration/persistent_storage";
@@ -96,8 +96,8 @@
                         on:mouseleave={() => hoveringChoice = -1}
                 >
                     <!-- Move left -->
-                    {#if cSetting.isOrderSensitive && i !== 0 && isEnabled(choice)}
-                        <span class="choice-action" class:hidden={hoveringChoice !== i} on:click={() => moveEnabledChoice(i, i - 1)}>
+                    {#if cSetting.isOrderSensitive && i !== 0 && isEnabled(choice) && hoveringChoice === i}
+                        <span class="choice-action" on:click={() => moveEnabledChoice(i, i - 1)} transition:fade={{duration: 200}}>
                             &lt;
                         </span>
                     {/if}
@@ -108,8 +108,8 @@
                     </span>
 
                     <!-- Move right -->
-                    {#if cSetting.isOrderSensitive&& i !== choices.length - 1 && isEnabled(choice) && isEnabled(choices[i + 1])}
-                        <span class="choice-action" class:hidden={hoveringChoice !== i} on:click={() => moveEnabledChoice(i, i + 1)}>
+                    {#if cSetting.isOrderSensitive && i !== choices.length - 1 && isEnabled(choice) && isEnabled(choices[i + 1]) && hoveringChoice === i}
+                        <span class="choice-action" on:click={() => moveEnabledChoice(i, i + 1)} transition:fade={{duration: 200}}>
                             &gt;
                         </span>
                     {/if}
@@ -161,14 +161,9 @@
 
     .choice-action {
       color: $clickgui-text-dimmed-color;
-      transition: width 200ms ease-in-out;
 
       &:hover {
         color: $accent-color;
-      }
-
-      &.hidden {
-        width: 0;
       }
     }
   }
