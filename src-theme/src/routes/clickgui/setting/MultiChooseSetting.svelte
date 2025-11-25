@@ -5,6 +5,8 @@
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import ExpandArrow from "./common/ExpandArrow.svelte";
     import {setItem} from "../../../integration/persistent_storage";
+    import {flip} from "svelte/animate";
+    import {swap} from "../../../integration/util";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -17,8 +19,31 @@
 
     const dispatch = createEventDispatcher();
 
-    function handleChange(v: string) {
-        if (cSetting.value.includes(v)) {
+    const isEnabled = (choice: string) => cSetting.value.includes(choice);
+
+    $: choices = (() => {
+        if (cSetting.isOrderSensitive) {
+            return [...cSetting.value, ...cSetting.choices.filter(it => !isEnabled(it))];
+        } else {
+            return cSetting.value;
+        }
+    })();
+
+    let hoveringChoice = -1;
+
+    const moveEnabledChoice = (i: number, j: number) => {
+        swap(cSetting.value, i, j);
+        cSetting.value = cSetting.value;
+        fireChange();
+    }
+
+    const fireChange = () => {
+        setting = {...cSetting};
+        dispatch("change");
+    };
+
+    const handleChange = (v: string) => {
+        if (isEnabled(v)) {
             const filtered = cSetting.value.filter(item => item !== v);
 
             if (filtered.length === 0 && !cSetting.canBeNone) {
@@ -36,9 +61,8 @@
             cSetting.value = [...cSetting.value, v];
         }
 
-        setting = {...cSetting};
-        dispatch("change");
-    }
+        fireChange();
+    };
 
     let expanded = localStorage.getItem(thisPath) === "true";
 
@@ -62,14 +86,33 @@
 
     {#if expanded}
         <div class="choices" transition:slide|global={{duration: 200, axis: "y"}}>
-            {#each cSetting.choices as choice}
+            {#each choices as choice, i (choice)}
                 <div
                         class="choice"
-                        class:active={cSetting.value.includes(choice)}
+                        class:active={isEnabled(choice)}
                         class:error={errorValue === choice}
-                        on:click={() => handleChange(choice)}
+                        animate:flip={{duration: 200}}
+                        on:mouseenter={() => hoveringChoice = i}
+                        on:mouseleave={() => hoveringChoice = -1}
                 >
-                    {$spaceSeperatedNames ? convertToSpacedString(choice) : choice}
+                    <!-- Move left -->
+                    {#if cSetting.isOrderSensitive && i !== 0 && isEnabled(choice)}
+                        <span class="choice-action" class:hidden={hoveringChoice !== i} on:click={() => moveEnabledChoice(i, i - 1)}>
+                            &lt;
+                        </span>
+                    {/if}
+
+                    <!-- Toggle -->
+                    <span class="choice-name" on:click={() => handleChange(choice)}>
+                        {$spaceSeperatedNames ? convertToSpacedString(choice) : choice}
+                    </span>
+
+                    <!-- Move right -->
+                    {#if cSetting.isOrderSensitive&& i !== choices.length - 1 && isEnabled(choice) && isEnabled(choices[i + 1])}
+                        <span class="choice-action" class:hidden={hoveringChoice !== i} on:click={() => moveEnabledChoice(i, i + 1)}>
+                            &gt;
+                        </span>
+                    {/if}
                 </div>
             {/each}
         </div>
@@ -111,7 +154,22 @@
 
     &.active {
       background-color: rgba($accent-color, 0.1);
-      color: $accent-color;
+      .choice-name {
+        color: $accent-color;
+      }
+    }
+
+    .choice-action {
+      color: $clickgui-text-dimmed-color;
+      transition: width 200ms ease-in-out;
+
+      &:hover {
+        color: $accent-color;
+      }
+
+      &.hidden {
+        width: 0;
+      }
     }
   }
 

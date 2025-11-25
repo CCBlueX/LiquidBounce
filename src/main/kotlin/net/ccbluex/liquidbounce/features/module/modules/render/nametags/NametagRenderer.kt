@@ -30,7 +30,7 @@ import org.joml.Vector2f
 private const val NAMETAG_PADDING: Int = 15
 
 internal fun GUIRenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
-    if (NametagShowOptions.ITEMS.isShowing()) {
+    if (NametagShowOptions.ITEMS.isShowing() && nametag.items.isNotEmpty()) {
         val currentItemStackRenderer = if (NametagShowOptions.ITEM_INFO.isShowing()) {
             if (nametag.entity === player) {
                 ItemStackListRenderer.SingleItemStackRenderer.All
