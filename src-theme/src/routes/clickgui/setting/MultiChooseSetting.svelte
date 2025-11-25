@@ -25,7 +25,7 @@
         if (cSetting.isOrderSensitive) {
             return [...cSetting.value, ...cSetting.choices.filter(it => !isEnabled(it))];
         } else {
-            return cSetting.value;
+            return cSetting.choices;
         }
     })();
 

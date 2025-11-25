@@ -184,6 +184,22 @@ open class TargetSelector(
 
 enum class TargetPriority(override val choiceName: String) : NamedChoice, Comparator<LivingEntity> {
     /**
+     * Player first
+     */
+    TYPE("Type") {
+        private fun weight(entity: LivingEntity): Int =
+            when (entity) {
+                is PlayerEntity -> 0
+                is HostileEntity -> 1
+                is Angerable if entity.angryAt == player.uuid -> 2
+                else -> Int.MAX_VALUE
+            }
+
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            weight(o1) compareTo weight(o2)
+    },
+
+    /**
      * Lowest health first
      */
     HEALTH("Health") {
@@ -221,21 +237,5 @@ enum class TargetPriority(override val choiceName: String) : NamedChoice, Compar
     AGE("Age") {
         override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
             o2.age compareTo o1.age
-    },
-
-    /**
-     * Player first
-     */
-    TYPE("Type") {
-        private fun weight(entity: LivingEntity): Int =
-            when (entity) {
-                is PlayerEntity -> 0
-                is HostileEntity -> 1
-                is Angerable if entity.angryAt == player.uuid -> 2
-                else -> Int.MAX_VALUE
-            }
-
-        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
-            weight(o1) compareTo weight(o2)
     },
 }
