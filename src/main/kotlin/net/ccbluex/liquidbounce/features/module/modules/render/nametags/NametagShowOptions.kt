@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
@@ -21,7 +21,7 @@ internal enum class NametagShowOptions(
     fun isShowing() = this in ModuleNametags.show
 }
 
-internal object NametagEquipment : ToggleableConfigurable(ModuleNametags, "Equipment", true) {
+internal object NametagEquipment : Configurable("Equipment") {
 
     private val slots by multiEnumChoice(
         "Slots",
@@ -29,6 +29,7 @@ internal object NametagEquipment : ToggleableConfigurable(ModuleNametags, "Equip
             NEquipmentSlot.MAINHAND, NEquipmentSlot.HEAD, NEquipmentSlot.CHEST,
             NEquipmentSlot.LEGS, NEquipmentSlot.FEET, NEquipmentSlot.OFFHAND,
         ),
+        canBeNone = true
     )
     private val skipEmptySlot by boolean("SkipEmptySlot", true)
     val showInfo by boolean("ShowInfo", true)
