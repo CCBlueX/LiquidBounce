@@ -1,7 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher, onDestroy} from "svelte";
     import type {ModuleSetting, MultiChooseSetting,} from "../../../integration/types";
-    import {fade, slide} from "svelte/transition";
+    import {slide} from "svelte/transition";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import ExpandArrow from "./common/ExpandArrow.svelte";
     import {setItem} from "../../../integration/persistent_storage";
@@ -21,6 +21,11 @@
 
     const isEnabled = (choice: string) => cSetting.value.includes(choice);
 
+    const getEnabledIndex = (choice: string) => {
+        if (!cSetting.isOrderSensitive || !isEnabled(choice)) return -1;
+        return cSetting.value.indexOf(choice);
+    }
+
     $: choices = (() => {
         if (cSetting.isOrderSensitive) {
             return [...cSetting.value, ...cSetting.choices.filter(it => !isEnabled(it))];
@@ -31,8 +36,16 @@
 
     let hoveringChoice = -1;
 
-    const moveEnabledChoice = (i: number, j: number) => {
-        swap(cSetting.value, i, j);
+    const moveEnabledChoice = (index: number, direction: number) => {
+        if (!cSetting.isOrderSensitive) return;
+
+        const enabledCount = cSetting.value.length;
+        if (index < 0 || index >= enabledCount) return;
+
+        const newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= enabledCount) return;
+
+        swap(cSetting.value, index, newIndex);
         cSetting.value = cSetting.value;
         fireChange();
     }
@@ -58,6 +71,7 @@
 
             cSetting.value = filtered;
         } else {
+            // Append enabled value to tail
             cSetting.value = [...cSetting.value, v];
         }
 
@@ -87,20 +101,26 @@
     {#if expanded}
         <div class="choices" transition:slide|global={{duration: 200, axis: "y"}}>
             {#each choices as choice, i (choice)}
+                {@const enabledIndex = getEnabledIndex(choice)}
+                {@const showLeftArrow = cSetting.isOrderSensitive && enabledIndex > 0 && hoveringChoice === i}
+                {@const showRightArrow = cSetting.isOrderSensitive && enabledIndex >= 0 && enabledIndex < cSetting.value.length - 1 && hoveringChoice === i}
                 <div
                         class="choice"
                         class:active={isEnabled(choice)}
                         class:error={errorValue === choice}
+                        class:order-sensitive={cSetting.isOrderSensitive}
                         animate:flip={{duration: 200}}
                         on:mouseenter={() => hoveringChoice = i}
                         on:mouseleave={() => hoveringChoice = -1}
                 >
                     <!-- Move left -->
-                    {#if cSetting.isOrderSensitive && i !== 0 && isEnabled(choice) && hoveringChoice === i}
-                        <span class="choice-action" on:click={() => moveEnabledChoice(i, i - 1)} transition:fade={{duration: 200}}>
-                            &lt;
-                        </span>
-                    {/if}
+                    <span 
+                        class="choice-action move-left" 
+                        class:visible={showLeftArrow}
+                        on:click|stopPropagation={() => moveEnabledChoice(enabledIndex, -1)} 
+                    >
+                        ◀
+                    </span>
 
                     <!-- Toggle -->
                     <span class="choice-name" on:click={() => handleChange(choice)}>
@@ -108,11 +128,13 @@
                     </span>
 
                     <!-- Move right -->
-                    {#if cSetting.isOrderSensitive && i !== choices.length - 1 && isEnabled(choice) && isEnabled(choices[i + 1]) && hoveringChoice === i}
-                        <span class="choice-action" on:click={() => moveEnabledChoice(i, i + 1)} transition:fade={{duration: 200}}>
-                            &gt;
-                        </span>
-                    {/if}
+                    <span 
+                        class="choice-action move-right" 
+                        class:visible={showRightArrow}
+                        on:click|stopPropagation={() => moveEnabledChoice(enabledIndex, 1)} 
+                    >
+                        ▶
+                    </span>
                 </div>
             {/each}
         </div>
@@ -140,8 +162,12 @@
     padding: 3px 6px;
     cursor: pointer;
     font-weight: 500;
-    transition: ease color 0.2s;
+    transition: ease color 0.2s, ease background-color 0.2s;
     overflow-wrap: anywhere;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
 
     &:hover {
       color: $clickgui-text-color;
@@ -159,11 +185,37 @@
       }
     }
 
+    &:not(.order-sensitive) {
+      gap: 0;
+
+      .choice-action {
+        display: none;
+      }
+    }
+
     .choice-action {
       color: $clickgui-text-dimmed-color;
+      font-size: 10px;
+      cursor: pointer;
+      padding: 1px 2px;
+      border-radius: 2px;
+      transition: ease color 0.2s, ease background-color 0.2s, ease width 0.2s, ease opacity 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 0;
+      height: 14px;
+      opacity: 0;
+      overflow: hidden;
+
+      &.visible {
+        width: 14px;
+        opacity: 1;
+      }
 
       &:hover {
         color: $accent-color;
+        background-color: rgba($accent-color, 0.1);
       }
     }
   }
