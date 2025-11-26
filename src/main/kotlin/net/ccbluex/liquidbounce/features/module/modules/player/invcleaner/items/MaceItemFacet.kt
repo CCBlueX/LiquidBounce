@@ -74,9 +74,10 @@ class MaceItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
             val dmg = if (fallDistance <= 3.0) {
                 4.0 * fallDistance
             } else {
-                (if (fallDistance <= 8.0)
+                (if (fallDistance <= 8.0) {
                     12.0 + 2.0 * (fallDistance - 3.0)
-                else 22.0 + fallDistance - 8.0)
+                }
+                else { 22.0 + fallDistance - 8.0 })
             }
             // TODO: doesn't account for getSmashDamagePerFallenBlock
             return dmg.toFloat()
