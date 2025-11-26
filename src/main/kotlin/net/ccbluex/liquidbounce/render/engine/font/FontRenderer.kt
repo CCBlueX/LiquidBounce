@@ -250,7 +250,7 @@ class FontRenderer(
                     uv2.u,
                     uv2.v,
                     argb,
-                    TextureSetup.of(glyph.page.texture.glTextureView),
+                    TextureSetup.withoutGlTexture(glyph.page.texture.glTextureView),
                     ctx.copyPose(),
                     ctx.scissorStack.peekLast(),
                     ctx.createBounds(x1, y1, x2 - x1, y2 - y1),

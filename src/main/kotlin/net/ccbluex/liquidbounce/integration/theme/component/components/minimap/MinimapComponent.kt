@@ -218,7 +218,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
     ) {
         drawCustomElement(
             pipeline = RenderPipelines.GUI_TEXTURED,
-            textureSetup = TextureSetup.of(ChunkRenderer.prepareRendering()),
+            textureSetup = TextureSetup.withoutGlTexture(ChunkRenderer.prepareRendering()),
             bounds = bounds,
         ) { pose, depth ->
             for (x in -chunksToRenderAround..chunksToRenderAround) {
