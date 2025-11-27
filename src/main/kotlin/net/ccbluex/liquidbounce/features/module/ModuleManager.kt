@@ -325,6 +325,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleSpider,
             ModuleTargetStrafe,
             ModuleAnchor,
+            ModuleGrimVelocity,
 
             // Player
             ModuleAntiVoid,
