@@ -75,6 +75,8 @@ open class Clicker<T>(
             fill()
         }
 
+    private val clickOnHurt by boolean("ClickOnHurt", false)
+
     init {
         itemCooldown?.let(this::tree)
     }
@@ -129,7 +131,15 @@ open class Clicker<T>(
     }
 
     private fun isEnforcedClick(tick: Int = 0): Boolean {
+        val clickOnHurt = this@Clicker.clickOnHurt &&
+            (player.hurtTime >= 6 && !player.isOnGround || player.hurtTime >= 8)
         val hasCooldown = player.hasCooldown
+
+        debugParameter("ClickOnHurt") { clickOnHurt }
+        if (clickOnHurt) {
+            return true
+        }
+
         debugParameter("HasCooldown") { hasCooldown }
         if (hasCooldown && itemCooldown?.isCooldownPassed(tick) == true) {
             return true
