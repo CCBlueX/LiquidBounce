@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.ProjectionMatrix2
@@ -55,7 +54,6 @@ import net.minecraft.util.Util
 import net.minecraft.util.math.BlockPos
 import java.awt.image.BufferedImage
 import java.util.concurrent.CompletableFuture
-import javax.imageio.ImageIO
 import kotlin.math.sqrt
 
 private const val NATIVE_ITEM_SIZE: Int = 16
@@ -167,7 +165,10 @@ private class ItemTextureRenderer(
         RenderSystem.outputColorTextureOverride = this.itemAtlasTextureView
         RenderSystem.outputDepthTextureOverride = this.itemAtlasDepthTextureView
         RenderSystem.backupProjectionMatrix()
-        RenderSystem.setProjectionMatrix(this.itemsProjectionMatrix.set(textureSize.toFloat(), textureSize.toFloat()), ProjectionType.ORTHOGRAPHIC)
+        RenderSystem.setProjectionMatrix(
+            this.itemsProjectionMatrix.set(textureSize.toFloat(), textureSize.toFloat()),
+            ProjectionType.ORTHOGRAPHIC,
+        )
 
         mc.gameRenderer.diffuseLighting.setShaderLights(DiffuseLighting.Type.ITEMS_3D)
         val matrixStack = MatrixStack()
@@ -212,7 +213,11 @@ private class ItemTextureRenderer(
         itemPixelSize: Int,
     ) {
         matrices.push()
-        matrices.translate(scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F, scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F, 0.0f)
+        matrices.translate(
+            scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F,
+            scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F,
+            0.0f,
+        )
         matrices.scale(itemPixelSize.toFloat(), -itemPixelSize.toFloat(), itemPixelSize.toFloat())
         mc.gameRenderer.diffuseLighting.setShaderLights(
             if (state.isSideLit) DiffuseLighting.Type.ITEMS_3D else DiffuseLighting.Type.ITEMS_FLAT
