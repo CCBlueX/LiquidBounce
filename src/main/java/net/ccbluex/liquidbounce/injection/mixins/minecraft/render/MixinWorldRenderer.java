@@ -134,7 +134,7 @@ public abstract class MixinWorldRenderer {
 //        } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof TntEntity) {
 //            return true;
 //        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
-            var category = ModuleStorageESP.categorize(entity);
+//            var category = ModuleStorageESP.categorize(entity);
 //            return category != null && category.shouldRender(entity);
 //        } else {
 //            return false;

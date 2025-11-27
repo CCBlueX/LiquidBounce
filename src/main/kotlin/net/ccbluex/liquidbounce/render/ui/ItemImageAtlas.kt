@@ -189,7 +189,7 @@ private class ItemTextureRenderer(
         scaledY: Int,
         itemPixelSize: Int,
     ) {
-        matrices.push()
+		matrices.push()
         matrices.translate(
             scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F,
             scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F,
@@ -200,9 +200,20 @@ private class ItemTextureRenderer(
             if (state.isSideLit) DiffuseLighting.Type.ITEMS_3D else DiffuseLighting.Type.ITEMS_FLAT
         )
 
-        state.render(matrices, vertexConsumers, 15728880, OverlayTexture.DEFAULT_UV)
-        vertexConsumers.draw()
-        matrices.pop()
+        // TODO(1.21.10-port): the scissor is present in GuiRenderer's function but idk if we need it
+//		RenderSystem.enableScissorForRenderTypeDraws(x, itemAtlasTexture.getHeight(0) - y - scale, scale, scale)
+        // TODO(1.21.10-port): seems like only gameRenderer makes a render command queue
+        // use `OrderedRenderCommandQueueImpl`'s constructor if we need to make a new one
+		state.render(
+            matrices,
+            mc.gameRenderer.entityRenderCommandQueue,
+            15728880,
+            OverlayTexture.DEFAULT_UV,
+            0
+        )
+		vertexConsumers.draw()
+//		RenderSystem.disableScissorForRenderTypeDraws()
+		matrices.pop()
     }
 
 }
