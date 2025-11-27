@@ -37,7 +37,6 @@ import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.ProjectionMatrix2
-import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.item.KeyedItemRenderState
 import net.minecraft.client.util.BufferAllocator
 import net.minecraft.client.util.math.MatrixStack
@@ -190,9 +189,10 @@ private class ItemTextureRenderer(
         itemPixelSize: Int,
     ) {
 		matrices.push()
+        val tlY = scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F
         matrices.translate(
             scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F,
-            scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F,
+            tlY,
             0.0f,
         )
         matrices.scale(itemPixelSize.toFloat(), -itemPixelSize.toFloat(), itemPixelSize.toFloat())
@@ -211,8 +211,7 @@ private class ItemTextureRenderer(
             OverlayTexture.DEFAULT_UV,
             0
         )
-		vertexConsumers.draw()
-//		RenderSystem.disableScissorForRenderTypeDraws()
+		RenderSystem.disableScissorForRenderTypeDraws()
 		matrices.pop()
     }
 
