@@ -52,7 +52,10 @@ internal object SocketEventListener : EventListener {
             error("Event $name is already registered")
         }
 
-        val eventHook = EventHook(this, handler = ::writeToSockets)
+        val eventHook = newEventHook(
+            priority = Short.MIN_VALUE, // Make sure to read final state
+            handler = ::writeToSockets,
+        )
 
         registeredEvents[eventClass] = eventHook
         EventManager.registerEventHook(eventClass, eventHook)

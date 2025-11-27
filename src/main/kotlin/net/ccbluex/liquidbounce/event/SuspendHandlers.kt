@@ -100,7 +100,7 @@ suspend inline fun <reified T : Event> EventListener.waitMatches(
             continuation.resumeWith(result)
         }
     }
-    eventHook = EventHook(this, handler = { event ->
+    eventHook = newEventHook(priority) { event ->
         try {
             if (predicate(event)) {
                 resumeAndUnregister(Result.success(event))
@@ -108,7 +108,7 @@ suspend inline fun <reified T : Event> EventListener.waitMatches(
         } catch (e: Throwable) {
             resumeAndUnregister(Result.failure(e))
         }
-    }, priority)
+    }
     continuation.invokeOnCancellation {
         EventManager.unregisterEventHook(eventClass, eventHook)
     }
