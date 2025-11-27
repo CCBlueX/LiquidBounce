@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.kotlin.optional
@@ -119,17 +120,15 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
             }
 
         fun update() {
-            gpuDevice.createCommandEncoder()
-                .createRenderPass(
-                    { "$name pass" },
-                    this.textureView,
-                    optional(-1),
-                ).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.Blend)
-                    pass.bindSampler("texture0", this.textureView)
-                    pass.setUniform("BlendData", UBO)
-                    pass.drawFullScreenPositionTexture()
-                }
+            textureView.createRenderPass(
+                { "$name Pass" },
+                clearColor = optional(-1),
+            ).use { pass ->
+                pass.setPipeline(ClientRenderPipelines.Blend)
+                pass.bindSampler("texture0", this.textureView)
+                pass.setUniform("BlendData", UBO)
+                pass.drawFullScreenPositionTexture()
+            }
         }
     }
 

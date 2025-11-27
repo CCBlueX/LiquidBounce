@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.kotlin.optional
@@ -77,10 +78,9 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
             putInt(layers)
         }
 
-        gpuDevice.createCommandEncoder().createRenderPass(
+        textureView.createRenderPass(
             { "$name Pass" },
-            textureView,
-            optional(-1),
+            clearColor = optional(-1),
         ).use { pass ->
             pass.setPipeline(ClientRenderPipelines.ItemChams)
 

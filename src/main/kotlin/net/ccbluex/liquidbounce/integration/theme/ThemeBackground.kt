@@ -28,6 +28,7 @@ import com.mojang.blaze3d.textures.TextureFormat
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.copyPose
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -130,17 +131,13 @@ sealed interface ThemeBackground : Closeable {
 
             val backgroundView = resizeIfNeeded(framebufferWidth, framebufferHeight)
 
-            gpuDevice
-                .createCommandEncoder()
-                .createRenderPass(
-                    { "ThemeShaderBackground Pass - ${metadata.name}" },
-                    backgroundView,
-                    OptionalInt.empty()
-                ).use { pass ->
-                    pass.setPipeline(pipeline)
-                    pass.setUniform(UNIFORM_NAME, uboSlice)
-                    pass.drawFullScreenPositionTexture()
-                }
+            backgroundView.createRenderPass(
+                { "ThemeShaderBackground Pass - ${metadata.name}" }
+            ).use { pass ->
+                pass.setPipeline(pipeline)
+                pass.setUniform(UNIFORM_NAME, uboSlice)
+                pass.drawFullScreenPositionTexture()
+            }
 
             context.state
                 .addSimpleElement(

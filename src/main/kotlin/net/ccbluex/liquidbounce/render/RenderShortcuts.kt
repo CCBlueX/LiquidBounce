@@ -200,7 +200,7 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         indexType = buffer.drawParameters.indexType
     }
 
-    newRenderPass(env.framebuffer).use { renderPass ->
+    env.framebuffer.createRenderPass().use { renderPass ->
         // TODO: render pass extra actions
         renderPass.setPipeline(this)
         val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()

@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.buffer.MinecraftFramebuffer
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
-import net.ccbluex.liquidbounce.render.newRenderPass
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -120,7 +120,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             putFloat(ModuleHud.Blur.alphaBlendRange.endInclusive)
         }
 
-        newRenderPass(mc.framebuffer).use { pass ->
+        mc.framebuffer.createRenderPass().use { pass ->
             pass.setPipeline(ClientRenderPipelines.GuiBlur)
             pass.bindSampler("texture0", mc.framebuffer.colorAttachmentView)
             pass.bindSampler("overlay", overlayFramebuffer.colorAttachmentView)
@@ -141,10 +141,8 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         val indexBuffer = shapeIndexBuffer.getIndexBuffer(6)
         val vertexBuffer = RenderSystem.getQuadVertexBuffer()
 
-        gpuDevice.createCommandEncoder().createRenderPass(
+        mc.framebuffer.colorAttachmentView!!.createRenderPass(
             { "GUI blur overlay blit pass" },
-            mc.framebuffer.colorAttachmentView,
-            OptionalInt.empty()
         ).use { renderPass ->
             renderPass.setPipeline(ClientRenderPipelines.JCEF.Blit)
             RenderSystem.bindDefaultUniforms(renderPass)

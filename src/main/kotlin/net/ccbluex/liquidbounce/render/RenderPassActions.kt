@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.systems.RenderPass
+import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.createGpuBuffer
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.render.BufferBuilder
@@ -32,6 +32,7 @@ import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.BufferAllocator
 import java.util.OptionalDouble
 import java.util.OptionalInt
+import java.util.function.Supplier
 
 internal val trianglePosTexVertexBuffer: GpuBuffer =
     BufferAllocator(VertexFormats.POSITION_TEXTURE.vertexSize * 3).use { allocator ->
@@ -47,15 +48,40 @@ fun RenderPass.drawFullScreenPositionTexture() {
     draw(0, 3)
 }
 
-@JvmOverloads
-internal fun newRenderPass(framebuffer: Framebuffer = mc.framebuffer): RenderPass {
-    return gpuDevice
-        .createCommandEncoder()
-        .createRenderPass(
-            { LiquidBounce.CLIENT_NAME + " Pass" },
-            framebuffer.colorAttachmentView,
-            OptionalInt.empty(),
-            framebuffer.depthAttachmentView.takeIf { framebuffer.useDepthAttachment },
-            OptionalDouble.empty()
-        )
-}
+private val RENDER_PASS_DEFAULT_LABEL = Supplier { LiquidBounce.CLIENT_NAME + " RenderPass" }
+
+fun Framebuffer.createRenderPass(
+    labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
+    clearColor: OptionalInt = OptionalInt.empty(),
+    clearDepth: OptionalDouble = OptionalDouble.empty(),
+    useDepthAttachment: Boolean = true,
+): RenderPass = newRenderPass(
+    labelGetter,
+    colorAttachmentView!!,
+    clearColor,
+    depthAttachmentView.takeIf { this.useDepthAttachment && useDepthAttachment },
+    clearDepth,
+)
+
+/**
+ * Color-only RenderPass.
+ */
+fun GpuTextureView.createRenderPass(
+    labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
+    clearColor: OptionalInt = OptionalInt.empty(),
+): RenderPass = newRenderPass(labelGetter, colorAttachment = this, clearColor)
+
+@Suppress("NOTHING_TO_INLINE")
+private inline fun newRenderPass(
+    labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
+    colorAttachment: GpuTextureView,
+    clearColor: OptionalInt = OptionalInt.empty(),
+    depthAttachment: GpuTextureView? = null,
+    clearDepth: OptionalDouble = OptionalDouble.empty(),
+): RenderPass = gpuDevice.createCommandEncoder().createRenderPass(
+    labelGetter,
+    colorAttachment,
+    clearColor,
+    depthAttachment,
+    clearDepth,
+)
