@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
@@ -32,8 +31,8 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.render.asView
+import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.putVec4
-import net.ccbluex.liquidbounce.utils.render.std140Size
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.render.fog.FogData
 
@@ -106,10 +105,9 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
             setTextureFilter(FilterMode.LINEAR, false)
         }.asView()
 
-        private val UBO = gpuDevice.createBuffer(
-            { "$name UBO" },
-            GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
-            std140Size { vec4 },
+        private val UBO = gpuDevice.createUbo(
+            labelGetter = { "$name UBO" },
+            std140Size = { vec4 },
         ).slice()
 
         @Suppress("unused")

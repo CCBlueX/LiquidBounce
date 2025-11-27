@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -28,8 +27,8 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.render.clearColor
+import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.putVec4
-import net.ccbluex.liquidbounce.utils.render.std140Size
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 
 /**
@@ -52,10 +51,9 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
 
     private var edited = false
 
-    private val UBO = gpuDevice.createBuffer(
-        { "$name UBO" },
-        GpuBuffer.USAGE_MAP_WRITE or GpuBuffer.USAGE_UNIFORM,
-        std140Size {
+    private val UBO = gpuDevice.createUbo(
+        labelGetter = { "$name UBO" },
+        std140Size = {
             int
             float
             vec4

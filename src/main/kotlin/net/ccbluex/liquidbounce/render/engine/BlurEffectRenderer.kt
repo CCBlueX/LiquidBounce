@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
-import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.vertex.VertexFormat
@@ -38,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.ccbluex.liquidbounce.utils.render.clearDepth
-import net.ccbluex.liquidbounce.utils.render.std140Size
+import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.SimpleFramebuffer
@@ -97,10 +96,9 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         callEvent(OverlayRenderEvent(context, tickDelta))
     }
 
-    private val GUI_BLUR_UNIFORM_BUFFER = gpuDevice.createBuffer(
-        { "GUI blur UBO" },
-        GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
-        std140Size { float + float + float },
+    private val GUI_BLUR_UNIFORM_BUFFER = gpuDevice.createUbo(
+        labelGetter = { "GUI blur UBO" },
+        std140Size = { float + float + float },
     ).slice()
 
     fun endOverlayDrawing() {

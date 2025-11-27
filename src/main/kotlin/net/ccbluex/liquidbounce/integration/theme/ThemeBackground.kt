@@ -19,7 +19,6 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
-import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
@@ -33,7 +32,7 @@ import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.asView
-import net.ccbluex.liquidbounce.utils.render.std140Size
+import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gl.UniformType
@@ -103,11 +102,11 @@ sealed interface ThemeBackground : Closeable {
         private val pipeline: RenderPipeline,
     ) : ThemeBackground {
 
-        private val gpuBuffer = gpuDevice.createBuffer(
-            { "ThemeShaderBackground UBO - ${metadata.name}" },
-            GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
-            std140Size { float + vec2 + vec2 },
-        ).slice()
+        private val ubo = gpuDevice.createUbo(
+            labelGetter = { "ThemeShaderBackground UBO - ${metadata.name}" }
+        ) { float + vec2 + vec2 }
+
+        private val uboSlice = ubo.slice()
 
         private var background: GpuTexture? = null
         private var backgroundView: GpuTextureView? = null
@@ -123,7 +122,7 @@ sealed interface ThemeBackground : Closeable {
             val framebufferWidth = mc.window.framebufferWidth
             val framebufferHeight = mc.window.framebufferHeight
 
-            gpuBuffer.writeStd140 {
+            uboSlice.writeStd140 {
                 putFloat((System.currentTimeMillis() - mc.startTime) / 1000F)
                 putVec2(mouseX.toFloat(), mouseY.toFloat())
                 putVec2(framebufferWidth.toFloat(), framebufferHeight.toFloat())
@@ -139,7 +138,7 @@ sealed interface ThemeBackground : Closeable {
                     OptionalInt.empty()
                 ).use { pass ->
                     pass.setPipeline(pipeline)
-                    pass.setUniform(UNIFORM_NAME, gpuBuffer)
+                    pass.setUniform(UNIFORM_NAME, uboSlice)
                     pass.drawFullScreenPositionTexture()
                 }
 
@@ -166,7 +165,7 @@ sealed interface ThemeBackground : Closeable {
         }
 
         override fun close() {
-            gpuBuffer.buffer.close()
+            ubo.close()
             backgroundView?.close()
             background?.close()
         }

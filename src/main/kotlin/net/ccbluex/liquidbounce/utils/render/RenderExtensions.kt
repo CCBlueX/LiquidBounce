@@ -24,6 +24,7 @@ import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.buffers.Std140SizeCalculator
+import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -73,6 +74,25 @@ inline fun GpuBuffer.mapBuffer(read: Boolean, write: Boolean): GpuBuffer.MappedV
 inline fun GpuBufferSlice.mapBuffer(read: Boolean, write: Boolean): GpuBuffer.MappedView =
     gpuDevice.createCommandEncoder().mapBuffer(this, read, write)
 
+fun GpuTexture.copyFully(
+    labelGetter: Supplier<String>? = null,
+    usage: Int = 0,
+): GpuTexture {
+    val dest = gpuDevice.createTexture(
+        labelGetter,
+        GpuTexture.USAGE_COPY_DST or usage,
+        format,
+        getWidth(0), getHeight(0),
+        depthOrLayers, mipLevels,
+    )
+
+    for (mipLevel in 0 until mipLevels) {
+        dest.copyFrom(this, mipLevel)
+    }
+
+    return dest
+}
+
 @Suppress("LongParameterList")
 inline fun GpuTexture.copyFrom(
     source: GpuTexture,
@@ -81,10 +101,10 @@ inline fun GpuTexture.copyFrom(
     intoY: Int = 0,
     sourceX: Int = 0,
     sourceY: Int = 0,
-    width: Int = source.getWidth(0),
-    height: Int = source.getHeight(0),
+    width: Int = source.getWidth(mipLevel),
+    height: Int = source.getHeight(mipLevel),
 ) = gpuDevice.createCommandEncoder().copyTextureToTexture(
-    this, source, mipLevel, intoX, intoY, sourceX, sourceY, width, height
+    source, this, mipLevel, intoX, intoY, sourceX, sourceY, width, height
 )
 
 fun GpuTexture.saveToFile(file: File): CompletableFuture<*> =
@@ -231,6 +251,16 @@ value class KStd140SizeCalculator(val j: Std140SizeCalculator) {
 
 inline fun std140Size(block: KStd140SizeCalculator.() -> Unit): Int =
     KStd140SizeCalculator(Std140SizeCalculator()).apply(block).get()
+
+inline fun GpuDevice.createUbo(
+    labelGetter: Supplier<String>? = null,
+    std140Size: KStd140SizeCalculator.() -> Unit,
+): GpuBuffer =
+    createBuffer(
+        labelGetter,
+        GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
+        std140Size(std140Size)
+    )
 
 inline fun ByteBuffer.writeStd140(): Std140Builder = Std140Builder.intoBuffer(this)
 
