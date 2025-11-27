@@ -79,7 +79,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     }
 
     fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
-        if (ItemImageAtlas.updateAtlas(context)) {
+        if (ItemImageAtlas.updateAtlas()) {
             return
         }
 
