@@ -93,14 +93,16 @@ class MaceItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
 
             val speedAdjustedDamage = attackDamage * attackSpeed * probabilityAdjustmentFactor.toFloat()
             val additionalFactor = DAMAGE_ESTIMATOR.estimateValue(a.itemStack)
+            val bonusAttackDamage = getBonusAttackDamage(ASSUMED_FALL_DISTANCE)
+            val total = speedAdjustedDamage + additionalFactor + bonusAttackDamage
 
-            return speedAdjustedDamage + additionalFactor +
-                getBonusAttackDamage(ASSUMED_FALL_DISTANCE)
+            return total
         }
     }
 
     override fun compareTo(other: ItemFacet): Int {
         if (other !is MaceItemFacet) return 1
-        return COMPARATOR.compare(this, other)
+        val cmp = COMPARATOR.compare(this, other)
+        return cmp
     }
 }
