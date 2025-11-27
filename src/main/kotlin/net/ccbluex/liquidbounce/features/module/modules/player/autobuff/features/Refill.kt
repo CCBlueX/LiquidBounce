@@ -23,15 +23,74 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.feature
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.text.Text
 
 object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
+
+    private object AutoOpenInventory : ToggleableConfigurable(this, "AutoOpenInventory", true)
+    private object AutoCloseInventory : ToggleableConfigurable(this, "AutoCloseInventory", true) {
+        val wait by intRange("Wait", 1..2, 1..20, "ticks")
+    }
+
+    // Variable to prevent AutoClose when no items were refilled.
+    private var stealAnythingInTheCurrentScreenSession = false;
+
+    init {
+        tree(AutoOpenInventory)
+        tree(AutoCloseInventory)
+    }
+
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
+        // Find valid items in the hotbar
+        val validItemsInHotbar = findValidItems(Slots.Hotbar)
+        // Find valid items in the inventory
+        val validItemsInInventory = findValidItems(Slots.Inventory)
+
+        if (mc.currentScreen != null) {
+            player.sendMessage(Text.of {  "Should close: ${AutoCloseInventory.enabled &&
+                mc.currentScreen is InventoryScreen} $stealAnythingInTheCurrentScreenSession ${(validItemsInInventory.isEmpty() || !findEmptyHotbarSlot())}" }, false)
+            if (AutoCloseInventory.enabled &&
+                mc.currentScreen is InventoryScreen &&
+                stealAnythingInTheCurrentScreenSession &&
+                (validItemsInInventory.isEmpty() || !findEmptyHotbarSlot())
+            ) {
+                waitTicks(AutoCloseInventory.wait.random())
+
+                // again, the current screen might change while the module is waiting
+                if (mc.currentScreen != null) {
+                    player.closeHandledScreen()
+                }
+            }
+        } else {
+            if (validItemsInHotbar.isEmpty() && validItemsInInventory.isNotEmpty() &&
+                findEmptyHotbarSlot()
+            ) {
+                waitTicks(1)
+
+                // again, the current screen might change while the module is waiting
+                if (mc.currentScreen == null) {
+                    mc.setScreen(InventoryScreen(player))
+                }
+            }
+
+            player.sendMessage(Text.of {  "Set to false $stealAnythingInTheCurrentScreenSession" }, false)
+            // Reset variable due to inventory was closed.
+            stealAnythingInTheCurrentScreenSession = false
+        }
+    }
 
     fun execute(event: ScheduleInventoryActionEvent) {
         // Check if we have space in the hotbar
@@ -39,13 +98,8 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
             return
         }
 
-        val validFeatures = ModuleAutoBuff.activeFeatures
-
         // Find valid items in the inventory
-        val validItems = Slots.Inventory.filter {
-            val itemStack = it.itemStack
-            validFeatures.any { f -> f.isValidItem(itemStack, false) }
-        }
+        val validItems = findValidItems(Slots.Inventory)
 
         // Check if we have any valid items
         if (validItems.isEmpty()) {
@@ -58,6 +112,9 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
                 inventoryConstraints, InventoryAction.Click.performQuickMove(slot = slot),
                 Priority.IMPORTANT_FOR_USAGE_1
             )
+
+            stealAnythingInTheCurrentScreenSession = true
+            player.sendMessage(Text.of {  "Stolen $stealAnythingInTheCurrentScreenSession" }, false)
         }
     }
 
@@ -65,4 +122,12 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
         return Slots.OffhandWithHotbar.findSlot { it.isEmpty } != null
     }
 
+    private fun findValidItems(container: SlotGroup<out ItemSlot>): List<ItemSlot> {
+        val validFeatures = ModuleAutoBuff.activeFeatures
+
+        return container.filter {
+            val itemStack = it.itemStack
+            validFeatures.any { f -> f.isValidItem(itemStack, false) }
+        }
+    }
 }
