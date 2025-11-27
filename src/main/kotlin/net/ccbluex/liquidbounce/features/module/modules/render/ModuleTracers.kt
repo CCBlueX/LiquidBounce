@@ -101,7 +101,7 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
                 startBatch()
                 val maxDistanceSq = maximumDistance.sq()
                 for (entity in RenderedEntities) {
-                    val distanceSq = entity.pos.cameraDistanceSq().toFloat()
+                    val distanceSq = entity.entityPos.cameraDistanceSq().toFloat()
                     if (distanceSq > maxDistanceSq) {
                         continue
                     }

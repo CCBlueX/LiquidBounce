@@ -74,7 +74,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         fun shouldRender(entity: Entity): Boolean =
             this.running
-                && entity.pos.cameraDistanceSq() < maximumDistance.sq()
+                && entity.entityPos.cameraDistanceSq() < maximumDistance.sq()
 
         object Chest : ChestType("Chest", Color4b(0, 100, 255))
         object EnderChest : ChestType("EnderChest", Color4b(Color.MAGENTA))
