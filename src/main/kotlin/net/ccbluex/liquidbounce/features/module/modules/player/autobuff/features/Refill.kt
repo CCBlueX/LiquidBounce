@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.text.Text
 
 object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
 
@@ -60,8 +59,6 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
         val validItemsInInventory = findValidItems(Slots.Inventory)
 
         if (mc.currentScreen != null) {
-            player.sendMessage(Text.of {  "Should close: ${AutoCloseInventory.enabled &&
-                mc.currentScreen is InventoryScreen} $stealAnythingInTheCurrentScreenSession ${(validItemsInInventory.isEmpty() || !findEmptyHotbarSlot())}" }, false)
             if (AutoCloseInventory.enabled &&
                 mc.currentScreen is InventoryScreen &&
                 stealAnythingInTheCurrentScreenSession &&
@@ -86,7 +83,6 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
                 }
             }
 
-            player.sendMessage(Text.of {  "Set to false $stealAnythingInTheCurrentScreenSession" }, false)
             // Reset variable due to inventory was closed.
             stealAnythingInTheCurrentScreenSession = false
         }
@@ -114,7 +110,6 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
             )
 
             stealAnythingInTheCurrentScreenSession = true
-            player.sendMessage(Text.of {  "Stolen $stealAnythingInTheCurrentScreenSession" }, false)
         }
     }
 
