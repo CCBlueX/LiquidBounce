@@ -217,17 +217,18 @@ private class ItemTextureRenderer(
 }
 
 private fun findBlockToItemAliases(): Map<Identifier, Identifier> {
+    val world = mc.world ?: return emptyMap()
     val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
 
     Registries.BLOCK.forEach {
         val pickUpState = it.getPickStack(
-            mc.world!!,
+            world,
             BlockPos.ORIGIN,
             it.defaultState,
             false
         )
 
-        if (pickUpState.item != it) {
+        if (pickUpState.item !== it.asItem()) {
             val blockId = Registries.BLOCK.getId(it)
             val itemId = Registries.ITEM.getId(pickUpState.item)
 
