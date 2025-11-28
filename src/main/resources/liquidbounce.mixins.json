@@ -151,6 +151,7 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "minecraft.client.MixinReloadableResourceManagerImpl"
+    "minecraft.client.MixinReloadableResourceManagerImpl",
+    "sodium.MixinLateDriverScanner"
   ]
 }
