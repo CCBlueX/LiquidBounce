@@ -50,6 +50,7 @@ fun RenderPass.drawFullScreenPositionTexture() {
 
 private val RENDER_PASS_DEFAULT_LABEL = Supplier { LiquidBounce.CLIENT_NAME + " RenderPass" }
 
+@JvmOverloads
 fun Framebuffer.createRenderPass(
     labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
     clearColor: OptionalInt = OptionalInt.empty(),
@@ -66,6 +67,7 @@ fun Framebuffer.createRenderPass(
 /**
  * Color-only RenderPass.
  */
+@JvmOverloads
 fun GpuTextureView.createRenderPass(
     labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
     clearColor: OptionalInt = OptionalInt.empty(),

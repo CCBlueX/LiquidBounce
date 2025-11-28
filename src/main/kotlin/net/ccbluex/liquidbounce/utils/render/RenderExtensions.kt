@@ -74,6 +74,7 @@ inline fun GpuBuffer.mapBuffer(read: Boolean, write: Boolean): GpuBuffer.MappedV
 inline fun GpuBufferSlice.mapBuffer(read: Boolean, write: Boolean): GpuBuffer.MappedView =
     gpuDevice.createCommandEncoder().mapBuffer(this, read, write)
 
+@JvmOverloads
 fun GpuTexture.copyFully(
     labelGetter: Supplier<String>? = null,
     usage: Int = 0,
@@ -115,30 +116,31 @@ fun GpuTexture.saveToFile(file: File): CompletableFuture<*> =
 /**
  * @see ScreenshotRecorder.takeScreenshot
  */
-fun GpuTexture.toNativeImage(): CompletableFuture<NativeImage> {
+@JvmOverloads
+fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> {
     val future = CompletableFuture<NativeImage>()
-    val i = this.getWidth(0)
-    val j = this.getHeight(0)
+    val width = this.getWidth(mipLevel)
+    val height = this.getHeight(mipLevel)
     val pixelSize = this.format.pixelSize()
     val gpuBuffer = gpuDevice.createBuffer(
-        { "Screenshot buffer" },
+        { "PixelBuffer - " + (this.label ?: "Anonymous") },
         GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
-        i * j * pixelSize
+        width * height * pixelSize
     )
 
     gpuDevice.createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, {
         gpuBuffer.mapBuffer(read = true, write = false).use { mappedView ->
-            val nativeImage = NativeImage(i, j, false)
-            for (k in 0..<j) {
-                for (l in 0..<i) {
-                    val m = mappedView.data().getInt((l + k * i) * pixelSize)
-                    nativeImage.setColor(l, j - k - 1, m)
+            val nativeImage = NativeImage(width, height, false)
+            for (y in 0..<height) {
+                for (x in 0..<width) {
+                    val m = mappedView.data().getInt((x + y * width) * pixelSize)
+                    nativeImage.setColor(x, height - y - 1, m)
                 }
             }
             future.complete(nativeImage)
         }
         gpuBuffer.close()
-    }, 0)
+    }, mipLevel)
 
     return future
 }
