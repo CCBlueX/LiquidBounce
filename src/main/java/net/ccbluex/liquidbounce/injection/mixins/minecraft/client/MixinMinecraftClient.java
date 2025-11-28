@@ -42,10 +42,9 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
-import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
-import net.minecraft.client.gui.screen.Overlay;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.gui.screen.*;
+import net.minecraft.client.gui.screen.ingame.CraftingScreen;
+import net.minecraft.client.gui.screen.option.LanguageOptionsScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
@@ -460,5 +459,17 @@ public abstract class MixinMinecraftClient {
             ModuleNoBlockInteract.INSTANCE.startSneaking();
             ci.cancel();
         }
+    }
+
+    @Inject(method = "setOverlay", at = @At("HEAD"), cancellable = true)
+    private void lazyLanguageLoader$$setOverlay(Overlay overlay, CallbackInfo ci) {
+        if (overlay instanceof SplashOverlay && lazyLanguageLoader$$verifyScreen(currentScreen)) {
+            ci.cancel();
+        }
+    }
+
+    @Unique
+    private boolean lazyLanguageLoader$$verifyScreen(Screen screen) {
+        return screen instanceof LanguageOptionsScreen || screen instanceof CraftingScreen;
     }
 }

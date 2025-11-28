@@ -74,6 +74,7 @@
     "minecraft.gui.MixinHandledScreen",
     "minecraft.gui.MixinInGameHud",
     "minecraft.gui.MixinInGameHudAccessor",
+    "minecraft.gui.MixinLanguageOptionsScreen",
     "minecraft.gui.MixinPlayerListHud",
     "minecraft.gui.MixinScoreboard",
     "minecraft.gui.MixinScreen",
@@ -148,5 +149,8 @@
   "server": [],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "mixins": [
+    "minecraft.client.MixinReloadableResourceManagerImpl"
+  ]
 }
