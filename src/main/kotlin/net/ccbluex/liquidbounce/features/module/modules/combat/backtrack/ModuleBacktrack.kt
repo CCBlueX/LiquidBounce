@@ -157,11 +157,15 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
             position?.setPos(pos)
 
             // Is the target's actual position closer than its tracked position?
-            if (target!!.squareBoxedDistanceTo(player, pos!!) < target!!.squaredBoxedDistanceTo(player)) {
-                // Process all packets. We want to be able to hit the enemy, not the opposite.
-                processPackets(true)
-                // And stop right here. No need to cancel further packets.
-                return@handler
+            try {
+                if (target!!.squareBoxedDistanceTo(player, pos!!) < target!!.squaredBoxedDistanceTo(player)) {
+                    // Process all packets. We want to be able to hit the enemy, not the opposite.
+                    processPackets(true)
+                    // And stop right here. No need to cancel further packets.
+                    return@handler
+                }
+            } catch (e: Exception) {
+
             }
         }
 
