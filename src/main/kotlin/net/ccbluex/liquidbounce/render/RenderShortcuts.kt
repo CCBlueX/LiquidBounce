@@ -26,11 +26,13 @@ import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.SAMPLER_NAMES
 import net.minecraft.client.gl.Framebuffer
@@ -42,6 +44,8 @@ import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.joml.Vector4f
 import org.lwjgl.opengl.GL11C
+import java.util.OptionalDouble
+import java.util.OptionalInt
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -200,6 +204,18 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         indexType = buffer.drawParameters.indexType
     }
 
+//    val colorTexture = RenderSystem.outputColorTextureOverride
+//        ?: env.framebuffer.colorAttachmentView
+//    val depthTexture = RenderSystem.outputDepthTextureOverride
+//        ?: env.framebuffer.depthAttachmentView.takeIf { env.framebuffer.useDepthAttachment }
+//
+//    gpuDevice.createCommandEncoder().createRenderPass(
+//        { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
+//        colorTexture,
+//        OptionalInt.empty(),
+//        depthTexture,
+//        OptionalDouble.empty(),
+//    ).use { renderPass ->
     env.framebuffer.createRenderPass().use { renderPass ->
         // TODO: render pass extra actions
         renderPass.setPipeline(this)

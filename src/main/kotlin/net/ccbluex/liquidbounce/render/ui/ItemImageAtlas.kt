@@ -127,6 +127,7 @@ private class ItemTextureRenderer(
         true,
     )
     private val bufferAllocator = BufferAllocator(0xC0000)
+    private val vertexConsumers = VertexConsumerProvider.immediate(this.bufferAllocator)
 
     private val itemsProjectionMatrix = ProjectionMatrix2("items", -1000.0F, 1000.0F, true)
 
@@ -207,7 +208,6 @@ private class ItemTextureRenderer(
         mc.gameRenderer.diffuseLighting.setShaderLights(
             if (state.isSideLit) DiffuseLighting.Type.ITEMS_3D else DiffuseLighting.Type.ITEMS_FLAT
         )
-        val vertexConsumers = VertexConsumerProvider.immediate(this.bufferAllocator)
 
         state.render(matrices, vertexConsumers, 15728880, OverlayTexture.DEFAULT_UV)
         vertexConsumers.draw()
