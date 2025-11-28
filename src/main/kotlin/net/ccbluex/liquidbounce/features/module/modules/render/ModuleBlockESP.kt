@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.fastutil.synchronized
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
@@ -40,6 +39,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.BlockPos
+import java.util.concurrent.ConcurrentSkipListSet
 
 /**
  * BlockESP module
@@ -52,7 +52,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
     private val modes = choices("Mode", Glow, arrayOf(Box, Glow, Outline))
     private val targets by blocks(
         "Targets",
-        findBlocksEndingWith("_BED", "DRAGON_EGG").synchronized()
+        ConcurrentSkipListSet(findBlocksEndingWith("_BED", "DRAGON_EGG"))
     ).onChange {
         if (running) {
             onDisabled()
