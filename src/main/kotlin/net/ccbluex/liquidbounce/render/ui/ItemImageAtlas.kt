@@ -22,20 +22,20 @@ package net.ccbluex.liquidbounce.render.ui
 
 import com.mojang.blaze3d.systems.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.TextureFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.render.buffer.MinecraftFramebuffer
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.ProjectionMatrix2
@@ -123,27 +123,12 @@ private class ItemTextureRenderer(
     private val itemPixelSize = NATIVE_ITEM_SIZE * scale
     private val textureSize = itemPixelSize * itemsPerDimension
 
-    private val itemAtlasTexture = gpuDevice.createTexture(
-        "ItemImageAtlas Texture",
-        GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_TEXTURE_BINDING or GpuTexture.USAGE_COPY_SRC,
-        TextureFormat.RGBA8,
+    private val itemAtlasFramebuffer = SimpleFramebuffer(
+        "ItemImageAtlas Framebuffer",
         textureSize,
         textureSize,
-        1,
-        1,
+        true,
     )
-    private val itemAtlasTextureView = itemAtlasTexture.asView()
-    private val itemAtlasDepthTexture = gpuDevice.createTexture(
-        "ItemImageAtlas Depth Texture",
-        GpuTexture.USAGE_RENDER_ATTACHMENT,
-        TextureFormat.DEPTH32,
-        textureSize,
-        textureSize,
-        1,
-        1,
-    )
-    private val itemAtlasDepthTextureView = itemAtlasDepthTexture.asView()
-
     private val bufferAllocator = BufferAllocator(0xC0000)
 
     private val itemsProjectionMatrix = ProjectionMatrix2("items", -1000.0F, 1000.0F, true)
@@ -151,10 +136,7 @@ private class ItemTextureRenderer(
     private fun close() {
         itemsProjectionMatrix.close()
         bufferAllocator.close()
-        itemAtlasTextureView.close()
-        itemAtlasDepthTextureView.close()
-        itemAtlasTexture.close()
-        itemAtlasDepthTexture.close()
+        itemAtlasFramebuffer.delete()
     }
 
     /**
@@ -162,8 +144,13 @@ private class ItemTextureRenderer(
      * From 1.21.5 DrawContext code
      */
     fun render(): CompletableFuture<Atlas> {
-        RenderSystem.outputColorTextureOverride = this.itemAtlasTextureView
-        RenderSystem.outputDepthTextureOverride = this.itemAtlasDepthTextureView
+        if (MinecraftClient.IS_SYSTEM_MAC) {
+            RenderSystem.outputColorTextureOverride = itemAtlasFramebuffer.colorAttachmentView
+            RenderSystem.outputDepthTextureOverride = itemAtlasFramebuffer.depthAttachmentView
+        } else {
+            val framebufferWrapper = MinecraftFramebuffer(itemAtlasFramebuffer)
+            framebufferWrapper.beginWrite(viewport = true, clear = false)
+        }
         RenderSystem.backupProjectionMatrix()
         RenderSystem.setProjectionMatrix(
             this.itemsProjectionMatrix.set(textureSize.toFloat(), textureSize.toFloat()),
@@ -185,10 +172,14 @@ private class ItemTextureRenderer(
         }
 
         RenderSystem.restoreProjectionMatrix()
-        RenderSystem.outputColorTextureOverride = null
-        RenderSystem.outputDepthTextureOverride = null
+        if (MinecraftClient.IS_SYSTEM_MAC) {
+            RenderSystem.outputColorTextureOverride = null
+            RenderSystem.outputDepthTextureOverride = null
+        } else {
+            MinecraftFramebuffer(itemAtlasFramebuffer).end()
+        }
 
-        return this.itemAtlasTexture.toNativeImage()
+        return itemAtlasFramebuffer.colorAttachment!!.toNativeImage()
             .thenApplyAsync(NativeImage::toBufferedImage, Util.getIoWorkerExecutor())
             .thenApply { image ->
                 logger.info("Loaded ${image.width} x ${image.height} item atlas")

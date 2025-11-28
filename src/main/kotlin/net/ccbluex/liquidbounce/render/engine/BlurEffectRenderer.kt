@@ -43,7 +43,6 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
-import java.util.*
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
@@ -86,8 +85,11 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             this.isDrawingHudFramebuffer = true
             clearOverlay()
 
-            // TODO: GlobalFramebuffer is incompatible with OSX
-            if (!MinecraftClient.IS_SYSTEM_MAC) {
+            if (MinecraftClient.IS_SYSTEM_MAC) {
+                RenderSystem.outputColorTextureOverride = this.overlayFramebuffer.colorAttachmentView
+                RenderSystem.outputDepthTextureOverride = this.overlayFramebuffer.depthAttachmentView
+            } else {
+                // TODO: GlobalFramebuffer is incompatible with OSX
                 val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
                 framebufferWrapper.beginWrite(viewport = true, clear = false)
             }
@@ -108,7 +110,10 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         this.isDrawingHudFramebuffer = false
 
-        if (!MinecraftClient.IS_SYSTEM_MAC) {
+        if (MinecraftClient.IS_SYSTEM_MAC) {
+            RenderSystem.outputColorTextureOverride = null
+            RenderSystem.outputDepthTextureOverride = null
+        } else {
             val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
             framebufferWrapper.end()
         }
