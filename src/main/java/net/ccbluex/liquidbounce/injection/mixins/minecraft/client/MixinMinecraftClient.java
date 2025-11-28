@@ -461,6 +461,9 @@ public abstract class MixinMinecraftClient {
         }
     }
 
+    /*
+     * Code From https://github.com/ChachyDev/lazy-language-loader/
+     */
     @Inject(method = "setOverlay", at = @At("HEAD"), cancellable = true)
     private void lazyLanguageLoader$$setOverlay(Overlay overlay, CallbackInfo ci) {
         if (overlay instanceof SplashOverlay && lazyLanguageLoader$$verifyScreen(currentScreen)) {
@@ -468,6 +471,9 @@ public abstract class MixinMinecraftClient {
         }
     }
 
+    /*
+     * Code From https://github.com/ChachyDev/lazy-language-loader/
+     */
     @Unique
     private boolean lazyLanguageLoader$$verifyScreen(Screen screen) {
         return screen instanceof LanguageOptionsScreen || screen instanceof CraftingScreen;
