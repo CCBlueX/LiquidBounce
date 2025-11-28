@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.joinToText
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -72,6 +72,9 @@ internal object NametagTextFormatter : Configurable("Text") {
         },
 
         PING("Ping") {
+            private val leftBracket = "[".asPlainText(Formatting.GRAY)
+            private val rightBracket = "]".asPlainText(Formatting.GRAY)
+
             override fun apply(t: Entity): Text? {
                 val entity = t as? PlayerEntity ?: return null
 
@@ -83,11 +86,11 @@ internal object NametagTextFormatter : Configurable("Text") {
                     else -> Formatting.GREEN
                 }
 
-                return regular(" [")
-                    .append(
-                        (playerPing.toString() + "ms").asPlainText(coloringBasedOnPing)
-                    )
-                    .append(regular("]"))
+                return textOf(
+                    leftBracket,
+                    "${playerPing}ms".asPlainText(coloringBasedOnPing),
+                    rightBracket,
+                )
             }
         },
 
