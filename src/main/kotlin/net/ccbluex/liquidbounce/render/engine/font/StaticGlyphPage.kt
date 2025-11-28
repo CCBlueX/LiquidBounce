@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import java.awt.Dimension
@@ -108,11 +109,10 @@ class StaticGlyphPage(
                     it.fontGlyph.font to createGlyphFromGenerationInfo(it, placementPlan.atlasDimension)
                 }
 
-            val nativeImage = atlas.toNativeImage()
-            val texture = NativeImageBackedTexture(null, nativeImage)
-
             return StaticGlyphPage(
-                texture,
+                atlas.toNativeImage().asTexture {
+                    "StaticGlyphPage ${placementPlan.atlasDimension.width}x${placementPlan.atlasDimension.height}"
+                },
                 glyphs,
             )
         }

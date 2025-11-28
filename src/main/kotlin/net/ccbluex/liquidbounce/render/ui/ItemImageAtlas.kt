@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
-import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.render.DiffuseLighting
@@ -41,7 +40,6 @@ import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.ProjectionMatrix2
 import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.item.KeyedItemRenderState
-import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.BufferAllocator
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.client.util.math.Rect2i
@@ -50,7 +48,6 @@ import net.minecraft.item.ItemDisplayContext
 import net.minecraft.registry.Registries
 import net.minecraft.registry.Registry
 import net.minecraft.util.Identifier
-import net.minecraft.util.Util
 import net.minecraft.util.math.BlockPos
 import java.awt.image.BufferedImage
 import java.util.concurrent.CompletableFuture
@@ -179,18 +176,15 @@ private class ItemTextureRenderer(
             MinecraftFramebuffer(itemAtlasFramebuffer).end()
         }
 
-        return itemAtlasFramebuffer.colorAttachment!!.toNativeImage()
-            .thenApplyAsync(NativeImage::toBufferedImage, Util.getIoWorkerExecutor())
+        return itemAtlasFramebuffer.colorAttachment!!.toBufferedImage()
             .thenApply { image ->
                 logger.info("Loaded ${image.width} x ${image.height} item atlas")
 
+                this.close()
 //                ImageIO.write(image, "png", java.io.File("Debug_ItemAtlas.png"))
 
                 Atlas(itemMap, image, findBlockToItemAliases())
-            }.thenApplyAsync({
-                this.close()
-                it
-            }, mc)
+            }
     }
 
     /**

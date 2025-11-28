@@ -38,6 +38,7 @@ import net.minecraft.client.util.ScreenshotRecorder
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
 import net.minecraft.util.Util
+import net.minecraft.util.math.ColorHelper
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
@@ -133,11 +134,40 @@ fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> 
             val nativeImage = NativeImage(width, height, false)
             for (y in 0..<height) {
                 for (x in 0..<width) {
-                    val m = mappedView.data().getInt((x + y * width) * pixelSize)
-                    nativeImage.setColor(x, height - y - 1, m)
+                    val abgr = mappedView.data().getInt((x + y * width) * pixelSize)
+                    nativeImage.setColor(x, height - y - 1, abgr)
                 }
             }
             future.complete(nativeImage)
+        }
+        gpuBuffer.close()
+    }, mipLevel)
+
+    return future
+}
+
+@JvmOverloads
+fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedImage> {
+    val future = CompletableFuture<BufferedImage>()
+    val width = this.getWidth(mipLevel)
+    val height = this.getHeight(mipLevel)
+    val pixelSize = this.format.pixelSize()
+    val gpuBuffer = gpuDevice.createBuffer(
+        { "PixelBuffer - " + (this.label ?: "Anonymous") },
+        GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
+        width * height * pixelSize
+    )
+
+    gpuDevice.createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, {
+        gpuBuffer.mapBuffer(read = true, write = false).use { mappedView ->
+            val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+            for (y in 0..<height) {
+                for (x in 0..<width) {
+                    val abgr = mappedView.data().getInt((x + y * width) * pixelSize)
+                    bufferedImage.setRGB(x, height - y - 1, ColorHelper.fromAbgr(abgr))
+                }
+            }
+            future.complete(bufferedImage)
         }
         gpuBuffer.close()
     }, mipLevel)
@@ -176,7 +206,6 @@ fun NativeImage.toBufferedImage(): BufferedImage {
 fun BufferedImage.toNativeImage(): NativeImage {
     val nativeImage = NativeImage(NativeImage.Format.RGBA, this.width, this.height, false)
 
-    // Fuck Minecraft native image
     for (x in 0 until this.width) {
         for (y in 0 until this.height) {
             nativeImage.setColorArgb(x, y, this.getRGB(x, y))
