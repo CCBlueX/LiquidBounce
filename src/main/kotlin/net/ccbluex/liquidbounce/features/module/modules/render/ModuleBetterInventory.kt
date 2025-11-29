@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.additions.drawBorder
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
@@ -55,8 +56,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
                 val color by color("Color", Color4b.GREEN)
 
                 override fun drawHighlightSlot(context: DrawContext, slot: Slot) {
-                    // TODO(1.21.10-port): DrawContext.drawBorder
-//                    context.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.toARGB())
+                    context.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.toARGB())
                 }
             }
 
