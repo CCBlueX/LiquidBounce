@@ -181,34 +181,30 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             pipeline = RenderPipelines.GUI,
             bounds = bounds,
         ) { pose, depth ->
-            val z = depth // - 1.0F
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax).color(from)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
 
-            // TODO(1.21.10-port): convert this to Entry to Matrix4f
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset).color(from)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset).color(to)
 
-//            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax, z).color(from)
-//            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width, z).color(to)
-//            vertex(pose, boundingBox.xMax, boundingBox.yMax + width, z).color(to)
-//            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
-//
-//            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset, z).color(from)
-//            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
-//            vertex(pose, boundingBox.xMax + width, boundingBox.yMax, z).color(to)
-//            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset, z).color(to)
-//
-//            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
-//            vertex(pose, boundingBox.xMax, boundingBox.yMax + width, z).color(to)
-//            vertex(pose, boundingBox.xMax + width, boundingBox.yMax + width, z).color(to)
-//            vertex(pose, boundingBox.xMax + width, boundingBox.yMax, z).color(to)
-//
-//            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax, z).color(to)
-//            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax + width, z).color(to)
-//            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width, z).color(to)
-//            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax, z).color(from)
-//
-//            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset - width, z).color(to)
-//            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset, z).color(from)
-//            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset, z).color(to)
-//            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset - width, z).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax).color(to)
+
+            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax).color(to)
+            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax).color(from)
+
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset - width).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset).color(from)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset - width).color(to)
         }
     }
 
@@ -238,15 +234,14 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                     val toX = fromX + 1F
                     val toY = fromY + 1F
 
-                      // TODO(1.21.10-port): convert this to Entry to Matrix4f
-//                    vertex(pose, fromX, fromY, depth).texture(texPosition.xMin, texPosition.yMin)
-//                        .color(-1)
-//                    vertex(pose, fromX, toY, depth).texture(texPosition.xMin, texPosition.yMax)
-//                        .color(-1)
-//                    vertex(pose, toX, toY, depth).texture(texPosition.xMax, texPosition.yMax)
-//                        .color(-1)
-//                    vertex(pose, toX, fromY, depth).texture(texPosition.xMax, texPosition.yMin)
-//                        .color(-1)
+                    vertex(pose, fromX, fromY).texture(texPosition.xMin, texPosition.yMin)
+                        .color(-1)
+                    vertex(pose, fromX, toY).texture(texPosition.xMin, texPosition.yMax)
+                        .color(-1)
+                    vertex(pose, toX, toY).texture(texPosition.xMax, texPosition.yMax)
+                        .color(-1)
+                    vertex(pose, toX, fromY).texture(texPosition.xMax, texPosition.yMin)
+                        .color(-1)
                 }
             }
         }
