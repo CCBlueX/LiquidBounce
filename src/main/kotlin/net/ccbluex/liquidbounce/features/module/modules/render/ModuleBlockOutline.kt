@@ -107,7 +107,11 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
         }
 
         // TODO(1.21.10-port): this is probably correct
-        val translatedPosition = renderPosition.offset(mc.entityRenderDispatcher.camera?.pos?.negate() ?: return@handler)
+        val translatedPosition = renderPosition.offset(
+            mc.entityRenderDispatcher
+                .camera?.pos
+                ?.negate() ?: return@handler
+        )
         renderEnvironmentForWorld(event.matrixStack) {
             if (sideOnly) {
                 drawBoxSide(
