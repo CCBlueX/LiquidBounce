@@ -125,7 +125,6 @@ private class ItemTextureRenderer(
         true,
     )
     private val bufferAllocator = BufferAllocator(0xC0000)
-    private val vertexConsumers = VertexConsumerProvider.immediate(this.bufferAllocator)
 
     private val itemsProjectionMatrix = ProjectionMatrix2("items", -1000.0F, 1000.0F, true)
 
