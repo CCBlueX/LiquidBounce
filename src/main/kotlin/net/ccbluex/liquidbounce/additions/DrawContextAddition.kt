@@ -22,10 +22,7 @@ package net.ccbluex.liquidbounce.additions
 
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.item.ItemStack
-import net.minecraft.util.Identifier
-import java.util.function.Function
 
 /**
  * Addition to [net.minecraft.client.gui.DrawContext].
