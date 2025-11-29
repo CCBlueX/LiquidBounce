@@ -131,6 +131,7 @@
     "minecraft.render.entity.MixinEntityRenderState",
     "minecraft.render.entity.feature.MixinDeadmau5FeatureRenderer",
     "minecraft.render.entity.feature.MixinFeatureRenderer",
+    "minecraft.render.fog.MixinBlindnessEffectFogModifier",
     "minecraft.text.MixinChatHudLine",
     "minecraft.text.MixinChatHudLineVisible",
     "minecraft.text.MixinMutableText",
