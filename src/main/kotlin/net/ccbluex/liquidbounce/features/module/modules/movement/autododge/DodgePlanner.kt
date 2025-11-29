@@ -146,7 +146,10 @@ class DodgePlanner(
         val isJumpEffective = effectiveVelocity > 0.11
 
         val rotation =
-            Rotation.lookingAt(point = player.entityPos + optimalDodgePosRelativeToPlayer, from = player.eyePos).normalize()
+            Rotation.lookingAt(
+                point = player.entityPos + optimalDodgePosRelativeToPlayer,
+                from = player.eyePos
+            ).normalize()
 
         return DodgePlan(
             directionalInput = DirectionalInput.FORWARDS,

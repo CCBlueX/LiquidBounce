@@ -54,7 +54,8 @@ import kotlin.time.Duration.Companion.seconds
 object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
     /**
-     * Changes the player model by forcefully modifying [net.minecraft.client.network.AbstractClientPlayerEntity.getSkin],
+     * Changes the player model by forcefully modifying
+     * [net.minecraft.client.network.AbstractClientPlayerEntity.getSkin],
      * as PlayerListEntry is unreliable on some servers.
      */
     private val allowMixinAbstractClientPlayerEntity by boolean("ForceOverride", false)
@@ -104,7 +105,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
             private suspend fun textureSupplier(username: String): Supplier<SkinTextures> {
                 val profile = withContext(Dispatchers.IO) {
-                    val uuid = GameProfileRepository().fetchUuidByUsername(username)
+                    val uuid = GameProfileRepository.Default.fetchUuidByUsername(username)
                         ?: generateOfflinePlayerUuid(username)
                     mc.apiServices.sessionService.fetchProfile(uuid, false)?.profile
                         ?: GameProfile(uuid, username)
