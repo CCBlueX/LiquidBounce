@@ -180,7 +180,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         drawCustomElement(
             pipeline = RenderPipelines.GUI,
             bounds = bounds,
-        ) { pose, depth ->
+        ) { pose ->
             vertex(pose, boundingBox.xMin + offset, boundingBox.yMax).color(from)
             vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width).color(to)
             vertex(pose, boundingBox.xMax, boundingBox.yMax + width).color(to)
@@ -218,7 +218,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             pipeline = RenderPipelines.GUI_TEXTURED,
             textureSetup = TextureSetup.withoutGlTexture(ChunkRenderer.prepareRendering()),
             bounds = bounds,
-        ) { pose, depth ->
+        ) { pose ->
             for (x in -chunksToRenderAround..chunksToRenderAround) {
                 for (y in -chunksToRenderAround..chunksToRenderAround) {
                     // Don't render too much

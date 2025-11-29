@@ -60,7 +60,6 @@ public record LineGuiElementRenderState(
 
     @Override
     public void setupVertices(VertexConsumer vertices) {
-        // TODO(1.21.10-port): depth parameter is gone
         for (int i = 0; i < points.length; i += 2) {
             float x = points[i];
             float y = points[i + 1];

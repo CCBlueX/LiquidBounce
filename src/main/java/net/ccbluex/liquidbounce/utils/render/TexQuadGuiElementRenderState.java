@@ -47,12 +47,10 @@ public record TexQuadGuiElementRenderState(
 ) implements LiquidBounceGuiElementRenderState {
     @Override
     public void setupVertices(VertexConsumer vertices) {
-        // TODO(1.21.10-port): depth parameter is gone
-
-//        vertices.vertex(pose, x0, y0, depth).texture(u1, v1).color(argb);
-//        vertices.vertex(pose, x0, y1, depth).texture(u1, v2).color(argb);
-//        vertices.vertex(pose, x1, y1, depth).texture(u2, v2).color(argb);
-//        vertices.vertex(pose, x1, y0, depth).texture(u2, v1).color(argb);
+        vertices.vertex(pose, x0, y0).texture(u1, v1).color(argb);
+        vertices.vertex(pose, x0, y1).texture(u1, v2).color(argb);
+        vertices.vertex(pose, x1, y1).texture(u2, v2).color(argb);
+        vertices.vertex(pose, x1, y0).texture(u2, v1).color(argb);
     }
 
     @Override
