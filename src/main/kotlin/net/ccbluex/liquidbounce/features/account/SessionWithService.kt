@@ -45,4 +45,4 @@ class SessionWithService(
 /**
  * Checks if the session is online by checking the account type and if we have a valid access token.
  */
-fun Session.couldBeOnline() = accessToken.isNotBlank() && accessToken.length > 3
+fun Session.couldBeOnline() = accessToken.startsWith("eyJra") && accessToken.length >= 13
