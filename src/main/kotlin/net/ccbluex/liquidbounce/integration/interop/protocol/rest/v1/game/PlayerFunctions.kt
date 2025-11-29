@@ -108,7 +108,7 @@ data class PlayerData(
             player.blockPos,
             player.velocity,
             player.inventory.selectedSlot,
-            if (mc.player === player) interaction.currentGameMode else GameMode.DEFAULT,
+            player.gameMode ?: GameMode.DEFAULT,
             player.health.fixNaN(),
             player.getActualHealth().fixNaN(),
             player.maxHealth.fixNaN(),
@@ -126,9 +126,9 @@ data class PlayerData(
             player.mainHandStack,
             if (player == mc.player && shouldHideOffhand() && hideShieldSlot) ItemStack.EMPTY else player.offHandStack,
             player.armorItems.toList(),
-            if (mc.player === player) ScoreboardData.fromScoreboard(
+            ScoreboardData.fromScoreboard(
                 player.entityWorld.scoreboard
-            ) else null
+            )
         )
     }
 
