@@ -52,7 +52,9 @@ object ImmediateMode : TpAuraChoice("Immediate") {
         }
 
         val playerPosition = player.entityPos
-        val enemyPosition = targetSelector.targets().minByOrNull { it.squaredBoxedDistanceTo(playerPosition) }?.entityPos
+        val enemyPosition = targetSelector.targets()
+            .minByOrNull { it.squaredBoxedDistanceTo(playerPosition) }
+            ?.entityPos
             ?: return@tickHandler
 
         travel(enemyPosition)
