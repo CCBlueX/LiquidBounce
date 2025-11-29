@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.minecraft.client.gl.SimpleFramebuffer
@@ -45,7 +46,6 @@ import net.minecraft.client.util.math.Rect2i
 import net.minecraft.item.Item
 import net.minecraft.item.ItemDisplayContext
 import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import java.awt.image.BufferedImage
@@ -61,7 +61,7 @@ private class Atlas(
      * Contains aliases. For example `minecraft:blue_wall_banner` -> `minecraft:wall_banner` which is necessary since
      * `minecraft:blue_wall_banner` has no texture.
      */
-    val aliasMap: Map<Identifier, Identifier>
+    val aliasMap: Map<Identifier, Identifier>,
 )
 
 /**
@@ -77,8 +77,9 @@ object ItemImageAtlas : EventListener {
             return false
         }
 
+        val items = Registries.ITEM
         updateFuture =
-            ItemTextureRenderer(items = Registries.ITEM, scale = 4).render().thenAccept {
+            ItemTextureRenderer(items = items, count = items.size(), scale = 4).render().thenAccept {
                 atlas = it
                 updateFuture = null
             }
@@ -112,10 +113,11 @@ object ItemImageAtlas : EventListener {
 }
 
 private class ItemTextureRenderer(
-    val items: Registry<Item>,
+    val items: Iterable<Item>,
+    val count: Int,
     val scale: Int,
 ) : MinecraftShortcuts {
-    private val itemsPerDimension = sqrt(items.size().toDouble()).ceilToInt()
+    private val itemsPerDimension = sqrt(count.toDouble()).ceilToInt()
     private val itemPixelSize = NATIVE_ITEM_SIZE * scale
     private val textureSize = itemPixelSize * itemsPerDimension
 
@@ -150,10 +152,9 @@ private class ItemTextureRenderer(
             ProjectionType.ORTHOGRAPHIC,
         )
 
-        mc.gameRenderer.diffuseLighting.setShaderLights(DiffuseLighting.Type.ITEMS_3D)
-        val matrixStack = MatrixStack()
+        val matrixStack = Pools.MatStack.borrow()
         val keyedItemRenderState = KeyedItemRenderState()
-        val itemMap = Reference2ObjectOpenHashMap<Item, Rect2i>(items.size())
+        val itemMap = Reference2ObjectOpenHashMap<Item, Rect2i>(count)
         items.forEachIndexed { idx, item ->
             val x = (idx % itemsPerDimension) * itemPixelSize
             val y = (idx / itemsPerDimension) * itemPixelSize
@@ -163,6 +164,8 @@ private class ItemTextureRenderer(
             this.prepareItemInitially(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
             itemMap[item] = Rect2i(x, y, itemPixelSize, itemPixelSize)
         }
+        keyedItemRenderState.clear()
+        Pools.MatStack.recycle(matrixStack)
 
         RenderSystem.restoreProjectionMatrix()
         RenderSystem.outputColorTextureOverride = null
