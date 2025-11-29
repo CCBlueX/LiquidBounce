@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.render.buffer
 import net.ccbluex.liquidbounce.common.GlobalFramebuffer
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.gl.GlResourceManager
+import net.minecraft.client.gl.GlCommandEncoder
 import net.minecraft.client.texture.GlTexture
 
 /**
@@ -50,12 +50,12 @@ class MinecraftFramebuffer(val framebuffer: Framebuffer) : AbstractFramebuffer()
     companion object {
         @JvmStatic
         private fun getFramebufferIdFromFramebuffer(framebuffer: Framebuffer): Int {
-            val resourceManager = gpuDevice.createCommandEncoder() as GlResourceManager
+            val resourceManager = gpuDevice.createCommandEncoder() as GlCommandEncoder
             val colorAttachment = framebuffer.getColorAttachment() as GlTexture
             val depthAttachment = framebuffer.getDepthAttachment()
 
             return colorAttachment.getOrCreateFramebuffer(
-                resourceManager.backend.framebufferManager,
+                resourceManager.backend.bufferManager,
                 depthAttachment
             )
         }

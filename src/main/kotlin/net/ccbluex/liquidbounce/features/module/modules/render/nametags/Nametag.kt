@@ -47,11 +47,12 @@ class Nametag private constructor(
         NametagEquipment.createItemList(entity),
     )
 
-    fun calculateScreenPos(tickDelta: Float) {
+    fun calculateScreenPos(tickDelta: Float): Vec3? {
         val nametagPos = entity.interpolateCurrentPosition(tickDelta)
             .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
 
         screenPos = WorldToScreen.calculateScreenPos(nametagPos)
+        return screenPos
     }
 
 }

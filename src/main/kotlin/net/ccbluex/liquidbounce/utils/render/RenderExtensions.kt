@@ -20,10 +20,14 @@
 @file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 package net.ccbluex.liquidbounce.utils.render
 
-import com.mojang.blaze3d.buffers.BufferType
-import com.mojang.blaze3d.buffers.BufferUsage
 import com.mojang.blaze3d.buffers.GpuBuffer
+import com.mojang.blaze3d.buffers.GpuBufferSlice
+import com.mojang.blaze3d.buffers.Std140Builder
+import com.mojang.blaze3d.buffers.Std140SizeCalculator
+import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.GpuTextureView
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.Framebuffer
@@ -34,9 +38,11 @@ import net.minecraft.client.util.ScreenshotRecorder
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
 import net.minecraft.util.Util
+import net.minecraft.util.math.ColorHelper
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
+import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
 import java.util.function.Supplier
 
@@ -60,6 +66,35 @@ inline fun GpuTexture.clearDepth(depth: Double) =
 inline fun Framebuffer.clearColorAndDepth(color: Int, depth: Double) =
     gpuDevice.createCommandEncoder().clearColorAndDepthTextures(colorAttachment, color, depthAttachment, depth)
 
+inline fun GpuTexture.asView(): GpuTextureView =
+    gpuDevice.createTextureView(this)
+
+inline fun GpuBuffer.mapBuffer(read: Boolean, write: Boolean): GpuBuffer.MappedView =
+    gpuDevice.createCommandEncoder().mapBuffer(this, read, write)
+
+inline fun GpuBufferSlice.mapBuffer(read: Boolean, write: Boolean): GpuBuffer.MappedView =
+    gpuDevice.createCommandEncoder().mapBuffer(this, read, write)
+
+@JvmOverloads
+fun GpuTexture.copyFully(
+    labelGetter: Supplier<String>? = null,
+    usage: Int = 0,
+): GpuTexture {
+    val dest = gpuDevice.createTexture(
+        labelGetter,
+        GpuTexture.USAGE_COPY_DST or usage,
+        format,
+        getWidth(0), getHeight(0),
+        depthOrLayers, mipLevels,
+    )
+
+    for (mipLevel in 0 until mipLevels) {
+        dest.copyFrom(this, mipLevel)
+    }
+
+    return dest
+}
+
 @Suppress("LongParameterList")
 inline fun GpuTexture.copyFrom(
     source: GpuTexture,
@@ -68,10 +103,10 @@ inline fun GpuTexture.copyFrom(
     intoY: Int = 0,
     sourceX: Int = 0,
     sourceY: Int = 0,
-    width: Int = source.getWidth(0),
-    height: Int = source.getHeight(0),
+    width: Int = source.getWidth(mipLevel),
+    height: Int = source.getHeight(mipLevel),
 ) = gpuDevice.createCommandEncoder().copyTextureToTexture(
-    this, source, mipLevel, intoX, intoY, sourceX, sourceY, width, height
+    source, this, mipLevel, intoX, intoY, sourceX, sourceY, width, height
 )
 
 fun GpuTexture.saveToFile(file: File): CompletableFuture<*> =
@@ -82,31 +117,60 @@ fun GpuTexture.saveToFile(file: File): CompletableFuture<*> =
 /**
  * @see ScreenshotRecorder.takeScreenshot
  */
-fun GpuTexture.toNativeImage(): CompletableFuture<NativeImage> {
+@JvmOverloads
+fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> {
     val future = CompletableFuture<NativeImage>()
-    val i = this.getWidth(0)
-    val j = this.getHeight(0)
+    val width = this.getWidth(mipLevel)
+    val height = this.getHeight(mipLevel)
     val pixelSize = this.format.pixelSize()
-    val gpuBuffer = gpuDevice
-        .createBuffer(
-            { "Screenshot buffer" },
-            BufferType.PIXEL_PACK,
-            BufferUsage.STATIC_READ,
-            i * j * pixelSize
-        )
+    val gpuBuffer = gpuDevice.createBuffer(
+        { "PixelBuffer - " + (this.label ?: "Anonymous") },
+        GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
+        width * height * pixelSize
+    )
+
     gpuDevice.createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, {
-        gpuDevice.createCommandEncoder().readBuffer(gpuBuffer).use { readView ->
-            val nativeImage = NativeImage(i, j, false)
-            for (k in 0..<j) {
-                for (l in 0..<i) {
-                    val m = readView.data().getInt((l + k * i) * pixelSize)
-                    nativeImage.setColor(l, j - k - 1, m)
+        gpuBuffer.mapBuffer(read = true, write = false).use { mappedView ->
+            val nativeImage = NativeImage(width, height, false)
+            for (y in 0..<height) {
+                for (x in 0..<width) {
+                    val abgr = mappedView.data().getInt((x + y * width) * pixelSize)
+                    nativeImage.setColor(x, height - y - 1, abgr)
                 }
             }
             future.complete(nativeImage)
         }
         gpuBuffer.close()
-    }, 0)
+    }, mipLevel)
+
+    return future
+}
+
+@JvmOverloads
+fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedImage> {
+    val future = CompletableFuture<BufferedImage>()
+    val width = this.getWidth(mipLevel)
+    val height = this.getHeight(mipLevel)
+    val pixelSize = this.format.pixelSize()
+    val gpuBuffer = gpuDevice.createBuffer(
+        { "PixelBuffer - " + (this.label ?: "Anonymous") },
+        GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
+        width * height * pixelSize
+    )
+
+    gpuDevice.createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, {
+        gpuBuffer.mapBuffer(read = true, write = false).use { mappedView ->
+            val bufferedImage = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+            for (y in 0..<height) {
+                for (x in 0..<width) {
+                    val abgr = mappedView.data().getInt((x + y * width) * pixelSize)
+                    bufferedImage.setRGB(x, height - y - 1, ColorHelper.fromAbgr(abgr))
+                }
+            }
+            future.complete(bufferedImage)
+        }
+        gpuBuffer.close()
+    }, mipLevel)
 
     return future
 }
@@ -117,7 +181,7 @@ fun NativeImageBackedTexture.uploadRect(
     width: Int, height: Int,
 ) = gpuDevice.createCommandEncoder().writeToTexture(
     this.glTexture, this.image!!,
-    mipLevel,
+    mipLevel, 0,
     x, y,
     width, height,
     x, y,
@@ -142,7 +206,6 @@ fun NativeImage.toBufferedImage(): BufferedImage {
 fun BufferedImage.toNativeImage(): NativeImage {
     val nativeImage = NativeImage(NativeImage.Format.RGBA, this.width, this.height, false)
 
-    // Fuck Minecraft native image
     for (x in 0 until this.width) {
         for (y in 0 until this.height) {
             nativeImage.setColorArgb(x, y, this.getRGB(x, y))
@@ -166,8 +229,78 @@ inline fun NativeImage.asTexture(nameSupplier: Supplier<String>? = null) =
 fun BuiltBuffer.createGpuBuffer(labelGetter: Supplier<String>? = null): GpuBuffer = use {
     gpuDevice.createBuffer(
         labelGetter,
-        BufferType.VERTICES,
-        BufferUsage.STATIC_WRITE,
+        GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_COPY_DST,
         it.buffer
     )
 }
+
+@JvmInline
+value class KStd140SizeCalculator(val j: Std140SizeCalculator) {
+    inline val float: Unit
+        get() {
+            j.putFloat()
+        }
+    inline val int: Unit
+        get() {
+            j.putInt()
+        }
+    inline val vec2: Unit
+        get() {
+            j.putVec2()
+        }
+    inline val ivec2: Unit
+        get() {
+            j.putIVec2()
+        }
+    inline val vec3: Unit
+        get() {
+            j.putVec3()
+        }
+    inline val ivec3: Unit
+        get() {
+            j.putIVec3()
+        }
+    inline val vec4: Unit
+        get() {
+            j.putIVec4()
+        }
+    inline val mat4f: Unit
+        get() {
+            j.putMat4f()
+        }
+
+    inline fun align(alignedSize: Int) {
+        j.align(alignedSize)
+    }
+
+    inline operator fun Unit.plus(other: Unit) {
+        // NOOP
+    }
+
+    inline fun get() = j.get()
+}
+
+inline fun std140Size(block: KStd140SizeCalculator.() -> Unit): Int =
+    KStd140SizeCalculator(Std140SizeCalculator()).apply(block).get()
+
+inline fun GpuDevice.createUbo(
+    labelGetter: Supplier<String>? = null,
+    std140Size: KStd140SizeCalculator.() -> Unit,
+): GpuBuffer =
+    createBuffer(
+        labelGetter,
+        GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
+        std140Size(std140Size)
+    )
+
+inline fun ByteBuffer.writeStd140(): Std140Builder = Std140Builder.intoBuffer(this)
+
+inline fun GpuBufferSlice.writeStd140(action: Std140Builder.() -> Unit): GpuBufferSlice =
+    this.mapBuffer(read = false, write = true).use {
+        it.data().writeStd140().apply(action)
+
+        this
+    }
+
+inline fun Std140Builder.putVec4(color: Color4b): Std140Builder =
+    putVec4(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)

@@ -11,15 +11,18 @@ out vec4 fragColor;
 uniform sampler2D texture0;
 
 uniform sampler2D image;
-uniform int useImage;
 
-uniform float alpha;
-uniform vec4 blendColor;
+layout(std140) uniform ItemChamsData {
+    int useImage;
 
-uniform float sampleMul;
-uniform vec4 glowColor;
-uniform float falloff;
-uniform int layerCount;
+    float alpha;
+    vec4 blendColor;
+
+    float sampleMul;
+    vec4 glowColor;
+    float falloff;
+    int layerCount;
+};
 
 vec4 getFinalColor(vec4 color) {
     if (blendColor.a == 0.0) {

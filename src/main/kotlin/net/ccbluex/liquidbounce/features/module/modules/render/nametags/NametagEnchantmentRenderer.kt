@@ -22,13 +22,11 @@ import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
-import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
@@ -38,6 +36,8 @@ import net.minecraft.util.Formatting
 import net.minecraft.client.resource.language.I18n
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.DrawContext
 import org.joml.Vector2f
 import org.joml.component1
 import org.joml.component2
@@ -159,8 +159,7 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
         val width: Float
     )
 
-    context(env: GUIRenderEnvironment)
-    fun drawEntityEnchantments(
+    fun DrawContext.drawEntityEnchantments(
         entity: LivingEntity,
         worldX: Float,
         worldY: Float,
@@ -255,7 +254,7 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
         )
     }
 
-    private fun GUIRenderEnvironment.renderEnchantmentColumn(
+    private fun DrawContext.renderEnchantmentColumn(
         cells: List<EnchantCell>,
         x: Float,
         y: Float,
@@ -275,7 +274,7 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
             )
             val bgColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL
 
-            drawCellBackground(rect, bgColor)
+            drawQuad(rect.x1, rect.y1, rect.x2, rect.y2, fillColor = bgColor)
 
             val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
             val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
@@ -285,24 +284,12 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
                 textX,
                 textY,
                 shadow = true,
-                z = 0.001f,
                 scale = FIXED_SCALE
             )
         }
     }
 
-    context(environment: GUIRenderEnvironment)
-    private fun drawCellBackground(
-        rect: Rect,
-        color: Color4b
-    ) {
-        val leftTop = Vector2f(rect.x1, rect.y1)
-        val rightBottom = Vector2f(rect.x2, rect.y2)
-        environment.drawQuad(leftTop, rightBottom, 0F, fillColor = color)
-    }
-
-    context(environment: GUIRenderEnvironment)
-    private fun drawEnchantmentColumns(
+    private fun DrawContext.drawEnchantmentColumns(
         x: Float,
         y: Float,
         columnData: List<EnchantColumn>
@@ -328,20 +315,16 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
         var columnX = x - halfTotalWidth
         columnData.forEach { column ->
             val columnCenterX = columnX + column.width / 2
-            environment.renderEnchantmentColumn(column.cells, columnCenterX, y)
+            renderEnchantmentColumn(column.cells, columnCenterX, y)
             columnX += column.width + COLUMN_SPACING
         }
     }
 
-    context(environment: GUIRenderEnvironment)
-    private fun drawGroupBorder(rect: Rect) {
+    private fun DrawContext.drawGroupBorder(rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
-        val leftTop = Vector2f(rect.x1, rect.y1)
-        val rightBottom = Vector2f(rect.x2, rect.y2)
-        environment.drawQuad(
-            leftTop,
-            rightBottom,
-            z = 0F,
+        drawQuad(
+            rect.x1, rect.y1,
+            rect.x2, rect.y2,
             fillColor = Color4b.BLACK.with(a = 100),
             outlineColor = Color4b.RED,
         )

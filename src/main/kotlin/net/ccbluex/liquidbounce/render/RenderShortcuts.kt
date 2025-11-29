@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 @file:Suppress("detekt:TooManyFunctions")
 
 package net.ccbluex.liquidbounce.render
@@ -23,37 +24,30 @@ package net.ccbluex.liquidbounce.render
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
-import net.ccbluex.fastutil.fastIterator
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinDrawContextAccessor
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.SAMPLER_NAMES
 import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.*
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.*
-import org.joml.Matrix3x2fStack
 import org.joml.Matrix4f
-import org.joml.Vector2fc
 import org.joml.Vector3f
 import org.joml.Vector3fc
-import org.joml.component1
-import org.joml.component2
+import org.joml.Vector4f
 import org.lwjgl.opengl.GL11C
-import kotlin.collections.component1
-import kotlin.collections.component2
+import java.util.OptionalDouble
+import java.util.OptionalInt
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
-import kotlin.use
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -74,97 +68,6 @@ val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
 @JvmField
 val EMPTY_BOX = Box(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
-
-/**
- * Data class representing the rendering environment.
- *
- * @property matrixStack The matrix stack for rendering.
- */
-sealed class RenderEnvironment(val framebuffer: Framebuffer, val matrixStack: MatrixStack) {
-    var isBatchMode: Boolean = false
-        private set
-
-    fun getOrCreateBuffer(pipeline: RenderPipeline): BufferBuilder {
-        return if (isBatchMode) {
-            batchBuffer.computeIfAbsent(pipeline, ClientTessellator::begin)
-        } else {
-            Tessellator.getInstance().begin(
-                pipeline.vertexFormatMode,
-                pipeline.vertexFormat
-            )
-        }
-    }
-
-    fun getOrCreateBuffer(texture: GpuTexture): BufferBuilder {
-        return if (isBatchMode) {
-            texQuadBatchBuffer.computeIfAbsent(texture, ClientTessellator::begin)
-        } else {
-            Tessellator.getInstance().begin(
-                ClientRenderPipelines.TexQuads.vertexFormatMode,
-                ClientRenderPipelines.TexQuads.vertexFormat
-            )
-        }
-    }
-
-    fun startBatch() {
-        if (isBatchMode) commitBatch()
-        isBatchMode = true
-    }
-
-    fun commitBatch() {
-        require(isBatchMode) {
-            "Current environment is not in batch mode!"
-        }
-
-        batchBuffer.fastIterator().forEach { (pipeline, bufferBuilder) ->
-            bufferBuilder.endNullable()?.let {
-                pipeline.draw(it)
-                ClientTessellator.allocator(pipeline).clear()
-            }
-        }
-        batchBuffer.clear()
-
-        texQuadBatchBuffer.fastIterator().forEach { (gpuTexture, bufferBuilder) ->
-            bufferBuilder.endNullable()?.let {
-                RenderSystem.setShaderTexture(0, gpuTexture) // Sampler0
-                ClientRenderPipelines.TexQuads.draw(it)
-                ClientTessellator.allocator(gpuTexture).clear()
-            }
-        }
-        texQuadBatchBuffer.clear()
-    }
-
-    companion object {
-        @JvmStatic
-        private val batchBuffer = Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()
-
-        /**
-         * For [ClientRenderPipelines.TexQuads] only. Each texture has its buffer builder.
-         */
-        @JvmStatic
-        private val texQuadBatchBuffer = Reference2ReferenceOpenHashMap<GpuTexture, BufferBuilder>()
-    }
-}
-
-class GUIRenderEnvironment(
-    framebuffer: Framebuffer,
-    val context: DrawContext,
-    matrixStack: MatrixStack,
-) : RenderEnvironment(framebuffer, matrixStack)
-
-class WorldRenderEnvironment(
-    framebuffer: Framebuffer,
-    matrixStack: MatrixStack,
-    val camera: Camera,
-) : RenderEnvironment(framebuffer, matrixStack) {
-    fun relativeToCamera(pos: Vec3d): Vec3d {
-        return pos.subtract(camera.pos)
-    }
-
-    fun relativeToCamera(pos: Vec3i): Vec3d {
-        return Vec3d(pos.x.toDouble() - camera.pos.x, pos.y.toDouble() - camera.pos.y, pos.z.toDouble() - camera.pos.z)
-    }
-}
 
 /**
  * Helper function to render an environment with the specified [matrixStack] and [draw] block.
@@ -193,20 +96,6 @@ inline fun renderEnvironmentForWorld(
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
-@OptIn(ExperimentalContracts::class)
-inline fun renderEnvironmentForGUI(
-    event: OverlayRenderEvent,
-    draw: GUIRenderEnvironment.() -> Unit
-) {
-    contract {
-        callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
-    }
-
-    val environment = GUIRenderEnvironment(event.framebuffer, event.context, event.context.matrices)
-    draw(environment)
-    if (environment.isBatchMode) environment.commitBatch()
-}
-
 inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {
     push()
     try {
@@ -216,60 +105,25 @@ inline fun MatrixStack.withPush(block: MatrixStack.() -> Unit) {
     }
 }
 
-inline fun Matrix3x2fStack.withPush(block: Matrix3x2fStack.() -> Unit) {
-    pushMatrix()
-    try {
-        block()
-    } finally {
-        popMatrix()
-    }
-}
-
-/**
- * Extension function to apply a position transformation to the current rendering environment.
- *
- * @param pos The position vector.
- * @param draw The block of code to be executed in the transformed environment.
- */
-inline fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit) {
-    matrixStack.withPush {
-        translate(pos.x, pos.y, pos.z)
-        draw()
-    }
-}
-
-/**
- * Extension function to apply a position transformation to the current rendering environment.
- *
- * @param pos The position vector.
- * @param draw The block of code to be executed in the transformed environment.
- */
-inline fun <T : RenderEnvironment> T.withPosition(pos: Vec3d, draw: T.() -> Unit) {
-    matrixStack.withPush {
-        translate(pos.x, pos.y, pos.z)
-        draw()
-    }
-}
-
 /**
  * Shorthand for `withPosition(relativeToCamera(pos))`
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw: WorldRenderEnvironment.() -> Unit) {
-    withPosition(relativeToCamera(pos), draw)
+    matrixStack.withPush {
+        translate(relativeToCamera(pos))
+        draw()
+    }
 }
 
 /**
  * Shortcut of `withPositionRelativeToCamera(Vec3d.of(pos))`
  */
 inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw: WorldRenderEnvironment.() -> Unit) {
-    val relativePos = relativeToCamera(pos)
-
     matrixStack.withPush {
-        translate(relativePos.x, relativePos.y, relativePos.z)
+        translate(relativeToCamera(pos))
         draw()
     }
 }
-
 
 /**
  * Disables [GL11C.GL_LINE_SMOOTH] if [HAS_AMD_VEGA_APU].
@@ -288,7 +142,7 @@ inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) 
     }
 }
 
-inline fun RenderEnvironment.drawCustomMesh(
+inline fun WorldRenderEnvironment.drawCustomMesh(
     pipeline: RenderPipeline,
     drawer: VertexConsumer.(Matrix4f) -> Unit
 ) {
@@ -305,8 +159,8 @@ inline fun RenderEnvironment.drawCustomMesh(
     }
 }
 
-private inline fun RenderEnvironment.drawTexQuads(
-    texture: GpuTexture,
+private inline fun WorldRenderEnvironment.drawTexQuads(
+    texture: GpuTextureView,
     drawer: VertexConsumer.(Matrix4f) -> Unit
 ) {
     val matrix = matrixStack.peek().positionMatrix
@@ -330,6 +184,14 @@ private inline fun RenderEnvironment.drawTexQuads(
 context(env: RenderEnvironment)
 @Suppress("detekt:all")
 fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
+    val gpuBufferSlice = RenderSystem.getDynamicUniforms()
+        .write(
+            RenderSystem.getModelViewMatrix(),
+            Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
+            RenderSystem.getModelOffset(),
+            RenderSystem.getTextureMatrix(),
+            RenderSystem.getShaderLineWidth(),
+        )
     val gpuBuffer = vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
     val gpuBuffer2: GpuBuffer
     val indexType: VertexFormat.IndexType
@@ -342,13 +204,34 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         indexType = buffer.drawParameters.indexType
     }
 
-    newRenderPass(env.framebuffer).use { renderPass ->
+//    val colorTexture = RenderSystem.outputColorTextureOverride
+//        ?: env.framebuffer.colorAttachmentView
+//    val depthTexture = RenderSystem.outputDepthTextureOverride
+//        ?: env.framebuffer.depthAttachmentView.takeIf { env.framebuffer.useDepthAttachment }
+//
+//    gpuDevice.createCommandEncoder().createRenderPass(
+//        { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
+//        colorTexture,
+//        OptionalInt.empty(),
+//        depthTexture,
+//        OptionalDouble.empty(),
+//    ).use { renderPass ->
+    env.framebuffer.createRenderPass().use { renderPass ->
         // TODO: render pass extra actions
         renderPass.setPipeline(this)
-        renderPass.setVertexBuffer(0, gpuBuffer)
-        if (RenderSystem.SCISSOR_STATE.isEnabled) {
-            renderPass.enableScissor(RenderSystem.SCISSOR_STATE)
+        val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
+        if (scissorState.method_72091()) {
+            renderPass.enableScissor(
+                scissorState.method_72092(),
+                scissorState.method_72093(),
+                scissorState.method_72094(),
+                scissorState.method_72095()
+            )
         }
+
+        RenderSystem.bindDefaultUniforms(renderPass)
+        renderPass.setUniform("DynamicTransforms", gpuBufferSlice)
+        renderPass.setVertexBuffer(0, gpuBuffer)
 
         for (i in 0..11) {
             val gpuTexture = RenderSystem.getShaderTexture(i)
@@ -358,14 +241,14 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         }
 
         renderPass.setIndexBuffer(gpuBuffer2, indexType)
-        renderPass.drawIndexed(0, buffer.drawParameters.indexCount)
+        renderPass.drawIndexed(0, 0, buffer.drawParameters.indexCount, 1)
     }
 }
 
 /**
  * Draws a line with endpoint [p1] and [p2] and color [argb].
  */
-fun RenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
+fun WorldRenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
     drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
         vertex(matrix, p1.x, p1.y, p1.z).color(argb)
         vertex(matrix, p2.x, p2.y, p2.z).color(argb)
@@ -376,7 +259,7 @@ fun RenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
  *
  * @param lines The vectors representing the lines.
  */
-fun RenderEnvironment.drawLines(argb: Int, vararg lines: Vec3) {
+fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3) {
     drawLines(
         lines,
         pipeline = ClientRenderPipelines.Lines,
@@ -389,7 +272,7 @@ fun RenderEnvironment.drawLines(argb: Int, vararg lines: Vec3) {
  *
  * @param positions The vectors representing the line strip.
  */
-fun RenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3) {
+fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3) {
     drawLines(
         positions,
         pipeline = ClientRenderPipelines.LineStrip,
@@ -403,7 +286,7 @@ fun RenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3) {
  * @param lines The vectors representing the lines.
  * @param pipeline The render pipeline for the lines.
  */
-private fun RenderEnvironment.drawLines(
+private fun WorldRenderEnvironment.drawLines(
     lines: Array<out Vec3>,
     pipeline: RenderPipeline,
     argb: Int,
@@ -420,7 +303,7 @@ private fun RenderEnvironment.drawLines(
     }
 }
 
-fun RenderEnvironment.drawSquareTexture(
+fun WorldRenderEnvironment.drawSquareTexture(
     size: Float,
     argb: Int,
 ) = drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
@@ -441,15 +324,15 @@ fun RenderEnvironment.drawSquareTexture(
         .color(argb)
 }
 
-fun RenderEnvironment.drawTextureQuad(
-    texture: GpuTexture,
+fun WorldRenderEnvironment.drawTextureQuad(
+    textureView: GpuTextureView,
     pos1: Vector3fc,
     uv1: UV2f = UV2f(0f, 0f),
     pos2: Vector3fc,
     uv2: UV2f = UV2f(1f, 1f),
     argb: Int,
 ) {
-    drawTexQuads(texture) { matrix ->
+    drawTexQuads(textureView) { matrix ->
         vertex(matrix, pos1.x(), pos2.y(), pos1.z())
             .texture(uv1.u, uv2.v)
             .color(argb)
@@ -465,51 +348,12 @@ fun RenderEnvironment.drawTextureQuad(
     }
 }
 
-fun RenderEnvironment.drawQuad(
-    pos1: Vector2fc,
-    pos2: Vector2fc,
-    z: Float,
-    fillColor: Color4b? = Color4b.TRANSPARENT,
-    outlineColor: Color4b? = Color4b.TRANSPARENT,
-) {
-    val (x1, y1) = pos1
-    val (x2, y2) = pos2
-    if (fillColor != null && !fillColor.isTransparent) {
-        val argb = fillColor.toARGB()
-        drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
-            vertex(matrix, x1, y1, z).color(argb)
-            vertex(matrix, x1, y2, z).color(argb)
-            vertex(matrix, x2, y2, z).color(argb)
-            vertex(matrix, x2, y1, z).color(argb)
-        }
-    }
-    if (outlineColor != null && !outlineColor.isTransparent) {
-        val argb = outlineColor.toARGB()
-        drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
-            vertex(matrix, x1, y1, z).color(argb)
-            vertex(matrix, x1, y2, z).color(argb)
-            vertex(matrix, x1, y2, z).color(argb)
-            vertex(matrix, x2, y2, z).color(argb)
-            vertex(matrix, x2, y2, z).color(argb)
-            vertex(matrix, x2, y1, z).color(argb)
-            vertex(matrix, x2, y1, z).color(argb)
-            vertex(matrix, x1, y1, z).color(argb)
-        }
-    }
-}
-
-fun RenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3, argb: Int) {
+fun WorldRenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3, argb: Int) {
     drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
         vertex(matrix, p1.x, p1.y, p1.z).color(argb)
         vertex(matrix, p2.x, p2.y, p2.z).color(argb)
         vertex(matrix, p3.x, p3.y, p3.z).color(argb)
     }
-}
-
-fun VertexConsumer.coloredTriangle(matrix: Matrix4f, p1: Vector3fc, p2: Vector3fc, p3: Vector3fc, color4b: Color4b) {
-    vertex(matrix, p1.x(), p1.y(), p1.z()).color(color4b)
-    vertex(matrix, p2.x(), p2.y(), p2.z()).color(color4b)
-    vertex(matrix, p3.x(), p3.y(), p3.z()).color(color4b)
 }
 
 @Suppress("NOTHING_TO_INLINE")
@@ -521,7 +365,7 @@ inline fun VertexConsumer.color(color: Color4b): VertexConsumer = color(color.to
  * @param box The bounding box of the box.
  */
 @Suppress("CognitiveComplexMethod")
-private fun RenderEnvironment.drawBox(
+private fun WorldRenderEnvironment.drawBox(
     box: Box,
     pipeline: RenderPipeline,
     useOutlineVertices: Boolean = false,
@@ -555,7 +399,7 @@ private fun RenderEnvironment.drawBox(
 /**
  * Function to draw a colored [box].
  */
-fun RenderEnvironment.drawBox(
+fun WorldRenderEnvironment.drawBox(
     box: Box,
     faceColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
@@ -574,7 +418,7 @@ fun RenderEnvironment.drawBox(
 /**
  * Function to draw a colored [box] with specified [side].
  */
-fun RenderEnvironment.drawBoxSide(
+fun WorldRenderEnvironment.drawBoxSide(
     box: Box,
     side: Direction,
     faceColor: Color4b? = Color4b.TRANSPARENT,
@@ -593,7 +437,7 @@ fun RenderEnvironment.drawBoxSide(
  * @param vertices The four vectors to draw the quad
  * @param colors The colors for the vertices
  */
-fun RenderEnvironment.drawGradientQuad(vertices: List<Vec3>, colors: List<Color4b>) {
+private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3>, colors: Array<Color4b>) {
     require(vertices.size == colors.size) { "there must be a color for every vertex" }
     require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
     drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
@@ -620,7 +464,7 @@ private val circlePoints: Array<Vector3fc> = Array(CIRCLE_RES + 1) {
  * @param outerColor4b The color of the outer edges
  * @param innerColor4b The color of the inner edges
  */
-fun RenderEnvironment.drawGradientCircle(
+fun WorldRenderEnvironment.drawGradientCircle(
     outerRadius: Float,
     innerRadius: Float,
     outerColor4b: Color4b,
@@ -648,7 +492,7 @@ fun RenderEnvironment.drawGradientCircle(
  * @param radius The radius
  * @param color4b The color
  */
-fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) =
+fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) =
     drawCustomMesh(ClientRenderPipelines.LineStrip) { matrix ->
         val point = Vector3f()
         for (p in circlePoints) {
@@ -659,7 +503,7 @@ fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) =
         }
     }
 
-fun RenderEnvironment.drawGradientSides(
+fun WorldRenderEnvironment.drawGradientSides(
     height: Double,
     baseColor: Color4b,
     topColor: Color4b,
@@ -670,7 +514,7 @@ fun RenderEnvironment.drawGradientSides(
     }
 
     val vertexColors =
-        listOf(
+        arrayOf(
             baseColor,
             topColor,
             topColor,
@@ -678,7 +522,7 @@ fun RenderEnvironment.drawGradientSides(
         )
 
     drawGradientQuad(
-        listOf(
+        arrayOf(
             Vec3(box.minX, 0.0, box.minZ),
             Vec3(box.minX, height, box.minZ),
             Vec3(box.maxX, height, box.minZ),
@@ -687,7 +531,7 @@ fun RenderEnvironment.drawGradientSides(
         vertexColors
     )
     drawGradientQuad(
-        listOf(
+        arrayOf(
             Vec3(box.maxX, 0.0, box.minZ),
             Vec3(box.maxX, height, box.minZ),
             Vec3(box.maxX, height, box.maxZ),
@@ -696,7 +540,7 @@ fun RenderEnvironment.drawGradientSides(
         vertexColors
     )
     drawGradientQuad(
-        listOf(
+        arrayOf(
             Vec3(box.maxX, 0.0, box.maxZ),
             Vec3(box.maxX, height, box.maxZ),
             Vec3(box.minX, height, box.maxZ),
@@ -705,7 +549,7 @@ fun RenderEnvironment.drawGradientSides(
         vertexColors
     )
     drawGradientQuad(
-        listOf(
+        arrayOf(
             Vec3(box.minX, 0.0, box.maxZ),
             Vec3(box.minX, height, box.maxZ),
             Vec3(box.minX, height, box.minZ),
@@ -713,48 +557,4 @@ fun RenderEnvironment.drawGradientSides(
         ),
         vertexColors
     )
-}
-
-/**
- * Float version of [DrawContext.fill]
- */
-@Suppress("LongParameterList")
-fun DrawContext.fill(x1: Float, y1: Float, x2: Float, y2: Float, z: Float, color: Int) {
-    val layer = RenderLayer.getGui()
-    var x1 = x1
-    var y1 = y1
-    var x2 = x2
-    var y2 = y2
-    val matrix4f = this.matrices.peek().getPositionMatrix()
-    if (x1 < x2) {
-        val i = x1
-        x1 = x2
-        x2 = i
-    }
-
-    if (y1 < y2) {
-        val i = y1
-        y1 = y2
-        y2 = i
-    }
-
-    val vertexConsumer: VertexConsumer = (this as MixinDrawContextAccessor).vertexConsumers.getBuffer(layer)
-    vertexConsumer.vertex(matrix4f, x1, y1, z).color(color)
-    vertexConsumer.vertex(matrix4f, x1, y2, z).color(color)
-    vertexConsumer.vertex(matrix4f, x2, y2, z).color(color)
-    vertexConsumer.vertex(matrix4f, x2, y1, z).color(color)
-}
-
-/**
- * Float version of [DrawContext.drawHorizontalLine]
- */
-fun DrawContext.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Float, color: Int) {
-    this.fill(x1, y, x2, y + thickness, 0f, color)
-}
-
-/**
- * Float version of [DrawContext.drawVerticalLine]
- */
-fun DrawContext.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Int) {
-    this.fill(x, y1, x + thickness, y2, 0f, color)
 }

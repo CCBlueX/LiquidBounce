@@ -22,14 +22,14 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.ccbluex.liquidbounce.common.ClientLogoTexture;
-import net.ccbluex.liquidbounce.common.RenderLayerExtensions;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.SplashOverlay;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ColorHelper;
@@ -39,7 +39,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.function.Function;
 import java.util.function.IntSupplier;
 
 /**
@@ -61,8 +60,8 @@ public class MixinSplashOverlay {
         EventManager.INSTANCE.callEvent(new ScreenRenderEvent(context, delta));
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIFFIIIIIII)V"))
-    private boolean drawMojangLogo(DrawContext instance, Function<Identifier, RenderLayer> renderLayers, Identifier sprite, int x, int y, float u, float v, int width, int height, int regionWidth, int regionHeight, int textureWidth, int textureHeight, int color) {
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIFFIIIIIII)V"))
+    private boolean drawMojangLogo(DrawContext instance, RenderPipeline renderPipeline, Identifier sprite, int x, int y, float u, float v, int width, int height, int regionWidth, int regionHeight, int textureWidth, int textureHeight, int color) {
         return HideAppearance.INSTANCE.isHidingNow();
     }
 
@@ -95,7 +94,7 @@ public class MixinSplashOverlay {
 
         // TODO: Draw as SVG instead of PNG
         context.drawTexture(
-                RenderLayerExtensions.SMOOTH_TEXTURE_LAYER,
+            ClientRenderPipelines.JCEF.SMOOTH_TEXTURE,
                 ClientLogoTexture.CLIENT_LOGO,
                 x,
                 y,

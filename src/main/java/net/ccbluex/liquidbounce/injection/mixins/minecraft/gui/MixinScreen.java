@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.additions.ScreenAddition;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
@@ -33,14 +32,12 @@ import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.ClickEvent;
-import net.minecraft.text.Style;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 
@@ -108,11 +105,11 @@ public abstract class MixinScreen implements ScreenAddition {
      * Allows the execution of {@link RunnableClickEvent}.
      * (default branch in switch pattern matching)
      */
-    @Inject(method = "handleTextClick", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", ordinal = 1, shift = At.Shift.BEFORE, remap = false), cancellable = true)
-    private void hookExecuteClickEvents(Style style, CallbackInfoReturnable<Boolean> cir, @Local ClickEvent clickEvent) {
+    @Inject(method = "handleBasicClickEvent", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", ordinal = 0, shift = At.Shift.BEFORE, remap = false), cancellable = true)
+    private static void hookExecuteClickEvents(ClickEvent clickEvent, MinecraftClient client, Screen screenAfterRun, CallbackInfo ci) {
         if (clickEvent instanceof RunnableClickEvent runnableClickEvent) {
             runnableClickEvent.run();
-            cir.setReturnValue(true);
+            ci.cancel();
         }
     }
 

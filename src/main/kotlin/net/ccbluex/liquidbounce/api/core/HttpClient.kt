@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
-import com.google.gson.JsonElement
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +25,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
@@ -41,8 +39,6 @@ import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.coroutines.executeAsync
-import okio.Buffer
-import okio.BufferedSink
 import okio.BufferedSource
 import okio.sink
 import java.io.File
@@ -228,23 +224,6 @@ fun BufferedSource.utf8Lines(): Iterator<String> =
  */
 fun Response.toFile(file: File) = use { response ->
     file.sink().use(response.body.source()::readAll)
-}
-
-/**
- * Creates request body from JSON.
- */
-fun JsonElement.toRequestBody(): RequestBody {
-    val buffer = Buffer()
-    buffer.outputStream().writer(Charsets.UTF_8).use {
-        accessibleInteropGson.toJson(this, it)
-    }
-    return object : RequestBody() {
-        override fun contentType() = HttpClient.MediaTypes.JSON
-        override fun contentLength(): Long = buffer.size
-        override fun writeTo(sink: BufferedSink) {
-            sink.writeAll(buffer.copy())
-        }
-    }
 }
 
 fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)

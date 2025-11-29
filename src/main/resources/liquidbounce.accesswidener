@@ -2,8 +2,6 @@ accessWidener	v1	named
 
 accessible field net/minecraft/entity/AreaEffectCloudEntity potionContentsComponent Lnet/minecraft/component/type/PotionContentsComponent;
 
-accessible class net/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier
-
 accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
 mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
 accessible field net/minecraft/client/MinecraftClient authenticationService Lcom/mojang/authlib/yggdrasil/YggdrasilAuthenticationService;
@@ -31,7 +29,6 @@ accessible field net/minecraft/client/network/ClientPlayerEntity lastYawClient F
 accessible field net/minecraft/client/network/ClientPlayerEntity lastPitchClient F # 1.21.4 lastPitch
 accessible field net/minecraft/client/network/ClientPlayerEntity lastOnGround Z
 accessible field net/minecraft/client/network/ClientPlayerEntity inSneakingPose Z
-accessible field net/minecraft/client/network/ClientPlayerEntity lastSneaking Z
 accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
 accessible field net/minecraft/client/network/ClientPlayerEntity ticksSinceLastPositionPacketSent I
 accessible field net/minecraft/client/network/ClientPlayerEntity usingItem Z
@@ -97,8 +94,6 @@ accessible field net/minecraft/world/chunk/WorldChunk loadedToWorld Z
 accessible field net/minecraft/client/world/ClientChunkManager$ClientChunkMap chunks Ljava/util/concurrent/atomic/AtomicReferenceArray;
 
 accessible field net/minecraft/client/render/WorldRenderer blockBreakingProgressions Lit/unimi/dsi/fastutil/longs/Long2ObjectMap;
-
-accessible field net/minecraft/entity/projectile/ProjectileEntity ownerUuid Ljava/util/UUID;
 
 accessible method net/minecraft/entity/LivingEntity getJumpVelocity ()F
 accessible method net/minecraft/entity/LivingEntity computeFallDamage (DF)I
@@ -185,6 +180,10 @@ accessible field net/minecraft/client/render/WorldRenderer entityOutlineFramebuf
 accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder <init> ()V
 accessible method com/mojang/blaze3d/pipeline/RenderPipeline$Builder withSnippet (Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;)V
 
+accessible class net/minecraft/client/gui/render/state/GuiRenderState$Layer
+accessible class net/minecraft/client/gui/render/GuiRenderer$Draw
+accessible class net/minecraft/client/gui/hud/InGameHud$BarType
+
 accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen connect (Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/network/ServerAddress;Lnet/minecraft/client/network/ServerInfo;Lnet/minecraft/client/network/CookieStorage;)V
 accessible method net/minecraft/client/gui/screen/multiplayer/ConnectScreen setStatus (Lnet/minecraft/text/Text;)V
 
@@ -196,5 +195,5 @@ accessible field net/minecraft/client/gl/GlGpuBuffer id I
 accessible field com/mojang/blaze3d/opengl/GlStateManager readFbo I
 accessible field com/mojang/blaze3d/opengl/GlStateManager writeFbo I
 
-accessible method net/minecraft/client/gl/GlResourceManager getBackend ()Lnet/minecraft/client/gl/GlBackend;
+accessible method net/minecraft/client/gl/GlCommandEncoder getBackend ()Lnet/minecraft/client/gl/GlBackend;
 accessible field net/minecraft/client/render/GameRenderer pool Lnet/minecraft/client/util/Pool;

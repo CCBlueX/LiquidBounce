@@ -85,12 +85,7 @@ class ScriptChoice(choiceObject: Map<String, Any>, override val parent: ChoiceCo
 
         EventManager.registerEventHook(
             clazz,
-            EventHook(
-                this,
-                {
-                    callEvent(eventName, it)
-                }
-            )
+            newEventHook { callEvent(eventName, it) }
         )
     }
 }

@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.entity.EquipmentSlot
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.*
 import net.minecraft.item.equipment.ArmorMaterials
@@ -340,6 +341,9 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         }),
         ATTRIBUTES("Attributes", { suspected ->
             !attributesSet.contains(suspected.id)
+        }),
+        ILLEGAL_SCALE("IllegalScale", { suspected ->
+            suspected.attributes.getValue(EntityAttributes.SCALE) != 1.0
         })
     }
 }

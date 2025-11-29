@@ -20,21 +20,22 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinBackgroundRenderer
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.setUniform
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.kotlin.optional
-import net.minecraft.block.enums.CameraSubmersionType
-import net.minecraft.client.render.Camera
-import net.minecraft.client.render.Fog
-import net.minecraft.client.render.FogShape
+import net.ccbluex.liquidbounce.utils.render.asView
+import net.ccbluex.liquidbounce.utils.render.createUbo
+import net.ccbluex.liquidbounce.utils.render.putVec4
+import net.ccbluex.liquidbounce.utils.render.writeStd140
+import net.minecraft.client.render.fog.FogData
 
 /**
  * CustomAmbience module
@@ -51,32 +52,35 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
         val layers by int("Layers", 3, 1..14)
     }
 
+    /**
+     * @see FogData
+     */
     object FogConfigurable : ToggleableConfigurable(this, "Fog", true) {
 
-        private val color by color("Color", Color4b(47, 128, 255, 201))
+        val color by color("Color", Color4b(47, 128, 255, 201))
         private val backgroundColor by color("BackgroundColor", Color4b(47, 128, 255, 201))
-        private val fogStart by float("Distance", 0f, -8f..500f)
-        private val density by float("Density", 10f, 0f..100f)
-        private val fogShape by enumChoice("FogShape", Shape.SPHERE)
+
+        private val environmental by floatRange("Environmental", 0f..0f, 0f..100f)
+        private val renderDistance by floatRange("RenderDistance", 0f..0f, 0f..100f)
+        private val skyEnd by float("SkyEnd", 0f, 0f..100f)
+        private val cloudEnd by float("CloudEnd", 0f, 0f..100f)
 
         /**
-         * [MixinBackgroundRenderer]
+         * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinFogRenderer
+         *
+         * FIXME: redesign
          */
-        fun modifyFog(camera: Camera, viewDistance: Float, fog: Fog): Fog {
+        fun modifyFogData(fogData: FogData) {
             if (!this.running) {
-                return fog
+                return
             }
 
-            val start = Math.clamp(fogStart, -8f, viewDistance)
-            val end = Math.clamp(fogStart + density, 0f, viewDistance)
-
-            var shape = fog.shape
-            val type = camera.submersionType
-            if (type == CameraSubmersionType.NONE) {
-                shape = fogShape.fogShape
-            }
-
-            return Fog(start, end, shape, color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
+            fogData.environmentalStart = this.environmental.start
+            fogData.environmentalEnd = this.environmental.endInclusive
+            fogData.renderDistanceStart = this.renderDistance.start
+            fogData.renderDistanceEnd = this.renderDistance.endInclusive
+            fogData.skyEnd = this.skyEnd
+            fogData.cloudEnd = this.cloudEnd
         }
 
         fun modifyClearColor(original: Int): Int {
@@ -86,35 +90,45 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
 
             return backgroundColor.toARGB()
         }
-
-        @Suppress("unused")
-        private enum class Shape(override val choiceName: String, val fogShape: FogShape) : NamedChoice {
-            SPHERE("Sphere", FogShape.SPHERE),
-            CYLINDER("Cylinder", FogShape.CYLINDER);
-        }
-
     }
 
+    /**
+     * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmapTextureManager
+     */
     object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
-        private val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
-
-        val texture: GpuTexture = gpuDevice.createTexture(
+        val textureView: GpuTextureView = gpuDevice.createTexture(
             "Custom Light Texture",
+            GpuTexture.USAGE_TEXTURE_BINDING or GpuTexture.USAGE_RENDER_ATTACHMENT,
             TextureFormat.RGBA8,
             16, 16,
-            1,
+            1, 1,
         ).apply {
             setTextureFilter(FilterMode.LINEAR, false)
-        }
+        }.asView()
+
+        private val UBO = gpuDevice.createUbo(
+            labelGetter = { "$name UBO" },
+            std140Size = { vec4 },
+        ).slice()
+
+        @Suppress("unused")
+        private val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
+            .onChanged {
+                UBO.writeStd140 {
+                    putVec4(it)
+                }
+            }
 
         fun update() {
-            gpuDevice.createCommandEncoder()
-                .createRenderPass(this.texture, optional(-1)).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.Blend)
-                    pass.bindSampler("texture0", this.texture)
-                    pass.setUniform("mixColor", lightColor)
-                    pass.drawFullScreenPositionTexture()
-                }
+            textureView.createRenderPass(
+                { "$name Pass" },
+                clearColor = optional(-1),
+            ).use { pass ->
+                pass.setPipeline(ClientRenderPipelines.Blend)
+                pass.bindSampler("texture0", this.textureView)
+                pass.setUniform("BlendData", UBO)
+                pass.drawFullScreenPositionTexture()
+            }
         }
     }
 

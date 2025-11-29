@@ -107,7 +107,7 @@ dependencies {
     modApi("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
 
     // Mod menu
-    modApi("com.terraformersmc:modmenu:${project.property("mod_menu_version")}")
+    modApi("maven.modrinth:modmenu:${project.property("mod_menu_version")}")
 
     // Recommended mods (on IDE)
     modApi("maven.modrinth:sodium:${project.property("sodium_version")}")

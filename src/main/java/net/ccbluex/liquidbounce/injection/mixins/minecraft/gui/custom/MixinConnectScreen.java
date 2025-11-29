@@ -70,24 +70,24 @@ public abstract class MixinConnectScreen extends MixinScreen {
         /*
          * Make a text demonstration of the connection status
          * This is useful for debugging the connection trace
-         * 
+         *
          * Looks like this: Client <> Proxy <> Server
-         * 
+         *
          * For client it should show the actual client IP
          * For Proxy it should show the proxy IP
          * For Server it should show the server IP
          */
-        
+
         var clientConnection = this.connection;
         var serverAddress = this.serverAddress;
-        
+
         if (clientConnection == null || this.serverAddress == null || HideAppearance.INSTANCE.isHidingNow()) {
             return;
         }
 
         var connectionDetails = getConnectionDetails(clientConnection, serverAddress);
         context.drawCenteredTextWithShadow(this.textRenderer, connectionDetails, this.width / 2,
-                this.height / 2 - 60, 0xFFFFFF);
+            this.height / 2 - 60, -1);
     }
 
 

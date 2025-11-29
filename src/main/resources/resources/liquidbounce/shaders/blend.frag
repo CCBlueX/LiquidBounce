@@ -4,7 +4,9 @@ in vec2 texCoord0;
 out vec4 fragColor;
 
 uniform sampler2D texture0;
-uniform vec4 mixColor;
+layout(std140) uniform BlendData {
+    vec4 mixColor;
+};
 
 void main() {
     vec4 color = textureLod(texture0, texCoord0.xy, 0.0);

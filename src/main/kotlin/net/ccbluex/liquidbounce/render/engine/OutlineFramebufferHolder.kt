@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
-import net.ccbluex.liquidbounce.render.newRenderPass
 import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.SimpleFramebuffer
@@ -41,6 +41,7 @@ object OutlineFramebufferHolder : MinecraftShortcuts {
     )
 
     private val outlineTexture get() = framebuffer.colorAttachment!!
+    private val outlineTextureView get() = framebuffer.colorAttachmentView!!
 
     @JvmStatic
     fun prepare(): Framebuffer {
@@ -63,9 +64,9 @@ object OutlineFramebufferHolder : MinecraftShortcuts {
         if (isDirty) {
             isDirty = false
 
-            newRenderPass(target).use { pass ->
+            target.createRenderPass().use { pass ->
                 pass.setPipeline(ClientRenderPipelines.Outline)
-                pass.bindSampler("texture0", outlineTexture)
+                pass.bindSampler("texture0", outlineTextureView)
                 pass.drawFullScreenPositionTexture()
             }
         }

@@ -30,18 +30,19 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.buffer.MinecraftFramebuffer
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
-import net.ccbluex.liquidbounce.render.newRenderPass
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.ccbluex.liquidbounce.utils.render.clearDepth
+import net.ccbluex.liquidbounce.utils.render.createUbo
+import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
-import java.util.*
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
@@ -76,7 +77,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     }
 
     fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
-        if (ItemImageAtlas.updateAtlas(context)) {
+        if (ItemImageAtlas.updateAtlas()) {
             return
         }
 
@@ -84,17 +85,23 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             this.isDrawingHudFramebuffer = true
             clearOverlay()
 
-            // TODO: GlobalFramebuffer is incompatible with OSX
-            if (!MinecraftClient.IS_SYSTEM_MAC) {
+            if (MinecraftClient.IS_SYSTEM_MAC) {
+                RenderSystem.outputColorTextureOverride = this.overlayFramebuffer.colorAttachmentView
+                RenderSystem.outputDepthTextureOverride = this.overlayFramebuffer.depthAttachmentView
+            } else {
+                // TODO: GlobalFramebuffer is incompatible with OSX
                 val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
                 framebufferWrapper.beginWrite(viewport = true, clear = false)
             }
-
-            callEvent(OverlayRenderEvent(this.overlayFramebuffer, context, tickDelta))
-        } else {
-            callEvent(OverlayRenderEvent(mc.framebuffer, context, tickDelta))
         }
+
+        callEvent(OverlayRenderEvent(context, tickDelta))
     }
+
+    private val GUI_BLUR_UNIFORM_BUFFER = gpuDevice.createUbo(
+        labelGetter = { "GUI blur UBO" },
+        std140Size = { float + float + float },
+    ).slice()
 
     fun endOverlayDrawing() {
         if (!this.isDrawingHudFramebuffer) {
@@ -103,19 +110,26 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         this.isDrawingHudFramebuffer = false
 
-        if (!MinecraftClient.IS_SYSTEM_MAC) {
+        if (MinecraftClient.IS_SYSTEM_MAC) {
+            RenderSystem.outputColorTextureOverride = null
+            RenderSystem.outputDepthTextureOverride = null
+        } else {
             val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
             framebufferWrapper.end()
         }
 
         // Draw blur areas
-        newRenderPass(mc.framebuffer).use { pass ->
+        GUI_BLUR_UNIFORM_BUFFER.writeStd140 {
+            putFloat(getBlurRadius())
+            putFloat(ModuleHud.Blur.alphaBlendRange.start)
+            putFloat(ModuleHud.Blur.alphaBlendRange.endInclusive)
+        }
+
+        mc.framebuffer.createRenderPass().use { pass ->
             pass.setPipeline(ClientRenderPipelines.GuiBlur)
-            pass.bindSampler("texture0", mc.framebuffer.colorAttachment)
-            pass.bindSampler("overlay", overlayFramebuffer.colorAttachment)
-            pass.setUniform("radius", getBlurRadius())
-            pass.setUniform("alphaBlendMin", ModuleHud.Blur.alphaBlendRange.start)
-            pass.setUniform("alphaBlendMax", ModuleHud.Blur.alphaBlendRange.endInclusive)
+            pass.bindSampler("texture0", mc.framebuffer.colorAttachmentView)
+            pass.bindSampler("overlay", overlayFramebuffer.colorAttachmentView)
+            pass.setUniform("BlurData", GUI_BLUR_UNIFORM_BUFFER)
             pass.drawFullScreenPositionTexture()
         }
 
@@ -132,15 +146,15 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         val indexBuffer = shapeIndexBuffer.getIndexBuffer(6)
         val vertexBuffer = RenderSystem.getQuadVertexBuffer()
 
-        gpuDevice.createCommandEncoder().createRenderPass(
-            mc.framebuffer.colorAttachment,
-            OptionalInt.empty()
+        mc.framebuffer.colorAttachmentView!!.createRenderPass(
+            { "GUI blur overlay blit pass" },
         ).use { renderPass ->
             renderPass.setPipeline(ClientRenderPipelines.JCEF.Blit)
+            RenderSystem.bindDefaultUniforms(renderPass)
             renderPass.setVertexBuffer(0, vertexBuffer)
             renderPass.setIndexBuffer(indexBuffer, shapeIndexBuffer.indexType)
-            renderPass.bindSampler("InSampler", overlayFramebuffer.colorAttachment)
-            renderPass.drawIndexed(0, 6)
+            renderPass.bindSampler("InSampler", overlayFramebuffer.colorAttachmentView)
+            renderPass.drawIndexed(0, 0, 6, 1)
         }
     }
 

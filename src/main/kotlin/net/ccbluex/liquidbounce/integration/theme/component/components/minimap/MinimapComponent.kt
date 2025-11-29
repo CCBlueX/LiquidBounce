@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,7 +30,6 @@ import net.ccbluex.liquidbounce.integration.theme.component.components.NativeCom
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -40,19 +38,14 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.Alignment
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.entity.LivingEntity
+import net.minecraft.client.gl.RenderPipelines
+import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.ScreenRect
+import net.minecraft.client.texture.TextureSetup
+import net.minecraft.entity.Entity
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec2f
-import org.joml.AxisAngle4f
-import org.joml.Matrix4f
-import org.joml.Quaternionf
-import org.joml.Vector2i
-import org.joml.Vector2ic
-import org.joml.Vector3f
-import org.lwjgl.opengl.GL11
 import java.util.EnumSet
 import kotlin.math.ceil
 
@@ -62,6 +55,14 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
     verticalAlignment = Alignment.ScreenAxisY.TOP,
     verticalOffset = 180,
 )) {
+
+    private val MINIMAP_ENTITY_ORDER = Comparator<Entity> { e1, e2 ->
+        when {
+            e1.y != e2.y -> e1.y.compareTo(e2.y)
+            e1.x != e2.x -> e1.x.compareTo(e2.x)
+            else -> e1.z.compareTo(e2.z)
+        }
+    }
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
@@ -96,22 +97,16 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
             return@handler
         }
 
-        val matStack = event.context.matrices
-
         val playerPos = player.interpolateCurrentPosition(event.tickDelta)
         val playerRotation = player.interpolateCurrentRotation(event.tickDelta)
 
         val minimapSize = size
 
         val boundingBox = alignment.getBounds(minimapSize.toFloat(), minimapSize.toFloat())
-        val scaleFactor = mc.window.scaleFactor
 
-        GL11.glEnable(GL11.GL_SCISSOR_TEST)
-        GL11.glScissor(
-            (boundingBox.xMin * scaleFactor).toInt(),
-            mc.framebuffer.viewportHeight - ((boundingBox.yMin + minimapSize) * scaleFactor).toInt(),
-            (minimapSize * scaleFactor).toInt(),
-            (minimapSize * scaleFactor).toInt(),
+        val centerBB = Vec2f(
+            boundingBox.xMin + (boundingBox.xMax - boundingBox.xMin) * 0.5F,
+            boundingBox.yMin + (boundingBox.yMax - boundingBox.yMin) * 0.5F
         )
 
         val baseX = (playerPos.x / 16.0).toInt()
@@ -124,206 +119,179 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
 
         val scale = minimapSize / (2.0F * viewDistance)
 
-        matStack.push()
+        with(event.context) {
+            val bounds = createBounds(boundingBox)
+            scissorStack.withPush(bounds) {
+                matrices.withPush {
+                    matrices.translate(boundingBox.xMin + minimapSize * 0.5F, boundingBox.yMin + minimapSize * 0.5F)
+                    matrices.scale(scale, scale)
 
-        matStack.translate(boundingBox.xMin + minimapSize * 0.5, boundingBox.yMin + minimapSize * 0.5, 0.0)
-        matStack.scale(scale, scale, scale)
+                    matrices.rotate(-(playerRotation.yaw + 180.0F).toRadians())
+                    matrices.translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
 
-        matStack.multiply(Quaternionf(AxisAngle4f(-(playerRotation.yaw + 180.0F).toRadians(), 0.0F, 0.0F, 1.0F)))
-        matStack.translate(-playerOffX, -playerOffZ, 0.0)
+                    if (showTexture) {
+                        drawMinimapTexture(bounds, ChunkPos(baseX, baseZ), chunksToRenderAround, viewDistance)
+                    }
 
-        renderEnvironmentForGUI(event) {
-            if (showTexture) {
-                val gpuTexture = ChunkRenderer.prepareRendering()
-                startBatch()
-                RenderSystem.setShaderTexture(0, gpuTexture)
-                drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
-                    buildMinimapMesh(matrix, Vector2i(baseX, baseZ), chunksToRenderAround, viewDistance)
-                }
-                commitBatch()
-            }
-
-            if (showEntity) {
-                startBatch()
-                drawCustomMesh(ClientRenderPipelines.Triangles) {
-                    for (renderedEntity in RenderedEntities) {
-                        drawEntityOnMinimap(
-                            matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
-                        )
+                    if (showEntity) {
+                        drawEntities(event.tickDelta, baseX = baseX.toFloat(), baseZ = baseZ.toFloat())
                     }
                 }
-                commitBatch()
             }
-        }
 
-        matStack.pop()
-
-        val centerBB = Vec2f(
-            boundingBox.xMin + (boundingBox.xMax - boundingBox.xMin) * 0.5F,
-            boundingBox.yMin + (boundingBox.yMax - boundingBox.yMin) * 0.5F
-        )
-        GL11.glDisable(GL11.GL_SCISSOR_TEST)
-
-        renderEnvironmentForGUI(event) {
-            startBatch()
             val from = Color4b.BLACK.copy(a = 100)
             val to = Color4b.TRANSPARENT
 
-            drawShadowForBB(boundingBox, from, to)
-            drawLines(
-                argb = Color4b.WHITE.toARGB(),
+            drawShadowForBB(boundingBox, bounds, from, to)
+
+            val lines = floatArrayOf(
                 // Cursor
-                Vec3(boundingBox.xMin, centerBB.y, 0.0F),
-                Vec3(boundingBox.xMax, centerBB.y, 0.0F),
-                Vec3(centerBB.x, boundingBox.yMin, 0.0F),
-                Vec3(centerBB.x, boundingBox.yMax, 0.0F),
+                boundingBox.xMin, centerBB.y,
+                boundingBox.xMax, centerBB.y,
+                centerBB.x, boundingBox.yMin,
+                centerBB.x, boundingBox.yMax,
                 // Border
-                Vec3(boundingBox.xMin, boundingBox.yMin, 0.0F),
-                Vec3(boundingBox.xMax, boundingBox.yMin, 0.0F),
-                Vec3(boundingBox.xMin, boundingBox.yMax, 0.0F),
-                Vec3(boundingBox.xMax, boundingBox.yMax, 0.0F),
+                boundingBox.xMin, boundingBox.yMin,
+                boundingBox.xMax, boundingBox.yMin,
+                boundingBox.xMin, boundingBox.yMax,
+                boundingBox.xMax, boundingBox.yMax,
 
-                Vec3(boundingBox.xMin, boundingBox.yMin, 0.0F),
-                Vec3(boundingBox.xMin, boundingBox.yMax, 0.0F),
-                Vec3(boundingBox.xMax, boundingBox.yMin, 0.0F),
-                Vec3(boundingBox.xMax, boundingBox.yMax, 0.0F),
+                boundingBox.xMin, boundingBox.yMin,
+                boundingBox.xMin, boundingBox.yMax,
+                boundingBox.xMax, boundingBox.yMin,
+                boundingBox.xMax, boundingBox.yMax,
             )
-            commitBatch()
+
+            drawLines(lines, Color4b.WHITE.toARGB(), bounds)
         }
-
     }
 
-    private fun RenderEnvironment.drawShadowForBB(
-        boundingBox: BoundingBox2f, from: Color4b, to: Color4b, offset: Float = 3.0F, width: Float = 3.0F
+    private fun DrawContext.drawShadowForBB(
+        boundingBox: BoundingBox2f,
+        bounds: ScreenRect,
+        from: Color4b,
+        to: Color4b,
+        offset: Float = 3.0F,
+        width: Float = 3.0F,
     ) {
-        drawGradientQuad(
-            listOf(
-                Vec3(boundingBox.xMin + offset, boundingBox.yMax, -1.0F),
-                Vec3(boundingBox.xMin + offset, boundingBox.yMax + width, -1.0F),
-                Vec3(boundingBox.xMax, boundingBox.yMax + width, -1.0F),
-                Vec3(boundingBox.xMax, boundingBox.yMax, -1.0F),
+        val from = from.toARGB()
+        val to = to.toARGB()
 
-                Vec3(boundingBox.xMax, boundingBox.yMin + offset, -1.0F),
-                Vec3(boundingBox.xMax, boundingBox.yMax, -1.0F),
-                Vec3(boundingBox.xMax + width, boundingBox.yMax, -1.0F),
-                Vec3(boundingBox.xMax + width, boundingBox.yMin + offset, -1.0F),
+        drawCustomElement(
+            pipeline = RenderPipelines.GUI,
+            bounds = bounds,
+        ) { pose, depth ->
+            val z = depth // - 1.0F
 
-                Vec3(boundingBox.xMax, boundingBox.yMax, -1.0F),
-                Vec3(boundingBox.xMax, boundingBox.yMax + width, -1.0F),
-                Vec3(boundingBox.xMax + width, boundingBox.yMax + width, -1.0F),
-                Vec3(boundingBox.xMax + width, boundingBox.yMax, -1.0F),
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax, z).color(from)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width, z).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax + width, z).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
 
-                Vec3(boundingBox.xMin + offset - width, boundingBox.yMax, -1.0F),
-                Vec3(boundingBox.xMin + offset - width, boundingBox.yMax + width, -1.0F),
-                Vec3(boundingBox.xMin + offset, boundingBox.yMax + width, -1.0F),
-                Vec3(boundingBox.xMin + offset, boundingBox.yMax, -1.0F),
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset, z).color(from)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax, z).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset, z).color(to)
 
-                Vec3(boundingBox.xMax, boundingBox.yMin + offset - width, -1.0F),
-                Vec3(boundingBox.xMax, boundingBox.yMin + offset, -1.0F),
-                Vec3(boundingBox.xMax + width, boundingBox.yMin + offset, -1.0F),
-                Vec3(boundingBox.xMax + width, boundingBox.yMin + offset - width, -1.0F),
-            ), listOf(
-                from,
-                to,
-                to,
-                from,
+            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax + width, z).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax + width, z).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax, z).color(to)
 
-                from,
-                from,
-                to,
-                to,
+            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax, z).color(to)
+            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax + width, z).color(to)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width, z).color(to)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax, z).color(from)
 
-                from,
-                to,
-                to,
-                to,
-
-                to,
-                to,
-                to,
-                from,
-
-                to,
-                from,
-                to,
-                to,
-            )
-        )
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset - width, z).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset, z).color(from)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset, z).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset - width, z).color(to)
+        }
     }
 
-    private fun VertexConsumer.buildMinimapMesh(
-        matrix: Matrix4f,
-        centerPos: Vector2ic,
+    private fun DrawContext.drawMinimapTexture(
+        bounds: ScreenRect,
+        centerPos: ChunkPos,
         chunksToRenderAround: Int,
         viewDistance: Float,
     ) {
-        for (x in -chunksToRenderAround..chunksToRenderAround) {
-            for (y in -chunksToRenderAround..chunksToRenderAround) {
-                // Don't render too much
-                if (x * x + y * y > (viewDistance + 3).sq()) {
-                    continue
+        drawCustomElement(
+            pipeline = RenderPipelines.GUI_TEXTURED,
+            textureSetup = TextureSetup.withoutGlTexture(ChunkRenderer.prepareRendering()),
+            bounds = bounds,
+        ) { pose, depth ->
+            for (x in -chunksToRenderAround..chunksToRenderAround) {
+                for (y in -chunksToRenderAround..chunksToRenderAround) {
+                    // Don't render too much
+                    if (x * x + y * y > (viewDistance + 3).sq()) {
+                        continue
+                    }
+
+                    val chunkPos = ChunkPos(centerPos.x + x, centerPos.z + y)
+
+                    val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
+                    val fromX = x.toFloat()
+                    val fromY = y.toFloat()
+                    val toX = fromX + 1F
+                    val toY = fromY + 1F
+
+                    vertex(pose, fromX, fromY, depth).texture(texPosition.xMin, texPosition.yMin)
+                        .color(-1)
+                    vertex(pose, fromX, toY, depth).texture(texPosition.xMin, texPosition.yMax)
+                        .color(-1)
+                    vertex(pose, toX, toY, depth).texture(texPosition.xMax, texPosition.yMax)
+                        .color(-1)
+                    vertex(pose, toX, fromY, depth).texture(texPosition.xMax, texPosition.yMin)
+                        .color(-1)
                 }
-
-                val chunkPos = ChunkPos(centerPos.x() + x, centerPos.y() + y)
-
-                val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
-                val from = Vec2f(x.toFloat(), y.toFloat())
-                val to = from.add(Vec2f(1.0F, 1.0F))
-
-                vertex(matrix, from.x, from.y, 0.0F).texture(texPosition.xMin, texPosition.yMin)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F)
-                vertex(matrix, from.x, to.y, 0.0F).texture(texPosition.xMin, texPosition.yMax)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F)
-                vertex(matrix, to.x, to.y, 0.0F).texture(texPosition.xMax, texPosition.yMax)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F)
-                vertex(matrix, to.x, from.y, 0.0F).texture(texPosition.xMax, texPosition.yMin)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F)
             }
         }
     }
 
-    private fun VertexConsumer.drawEntityOnMinimap(
-        matStack: MatrixStack,
-        entity: LivingEntity,
-        partialTicks: Float,
-        basePos: Vec2f,
+    private fun DrawContext.drawEntities(
+        tickDelta: Float,
+        baseX: Float,
+        baseZ: Float,
     ) {
-        val color = ModuleESP.getColor(entity)
+        for (entity in RenderedEntities.sortedWith(MINIMAP_ENTITY_ORDER)) {
+            val color = ModuleESP.getColor(entity)
 
-        val pos = entity.interpolateCurrentPosition(partialTicks)
-        val rot = entity.interpolateCurrentRotation(partialTicks)
+            val pos = entity.interpolateCurrentPosition(tickDelta)
+            val rot = entity.interpolateCurrentRotation(tickDelta)
 
-        matStack.push()
-        matStack.translate(pos.x / 16.0 - basePos.x, pos.z / 16.0 - basePos.y, 0.0)
-        val rotation = Quaternionf(AxisAngle4f((rot.yaw).toRadians(), 0.0F, 0.0F, 1.0F))
+            matrices.pushMatrix()
+            matrices.translate(pos.x.toFloat() / 16.0F - baseX, pos.z.toFloat() / 16.0F - baseZ)
+            matrices.rotate(rot.yaw.toRadians())
 
-        val w = 2.0f
-        val h = w * 1.618f
+            val w = 2.0f
+            val h = w * 1.618f
 
-        val p1 = Vector3f(-w * 0.5f / 16.0f, -h * 0.5f / 16.0f, 0.0f)
-        val p2 = Vector3f(0.0f, h * 0.5f / 16.0f, 0.0f)
-        val p3 = Vector3f(w * 0.5f / 16.0f, -h * 0.5f / 16.0f, 0.0f)
+            val p1 = Vec2f(-w * 0.5f / 16.0f, -h * 0.5f / 16.0f)
+            val p2 = Vec2f(0.0f, h * 0.5f / 16.0f)
+            val p3 = Vec2f(w * 0.5f / 16.0f, -h * 0.5f / 16.0f)
 
-        matStack.multiply(rotation)
+            matrices.pushMatrix()
 
-        matStack.push()
+            matrices.translate(
+                -w / 5.0F * ChunkRenderer.SUN_DIRECTION.x() / 16.0F,
+                -w / 5.0F * ChunkRenderer.SUN_DIRECTION.y() / 16.0F,
+            )
 
-        matStack.translate(/* x = */ -w / 5.0 * ChunkRenderer.SUN_DIRECTION.x / 16.0,/* y = */
-            -w / 5.0 * ChunkRenderer.SUN_DIRECTION.y / 16.0,/* z = */
-            0.0
-        )
-        coloredTriangle(
-            matStack.peek().positionMatrix,
-            p1,
-            p2,
-            p3,
-            Color4b((color.r * 0.1).toInt(), (color.g * 0.1).toInt(), (color.b * 0.1).toInt(), 200)
-        )
-        matStack.pop()
+            // Shadow
+            drawTriangle(
+                p1,
+                p2,
+                p3,
+                Color4b((color.r * 0.1).toInt(), (color.g * 0.1).toInt(), (color.b * 0.1).toInt(), 200)
+            )
+            matrices.popMatrix()
 
-        coloredTriangle(matStack.peek().positionMatrix, p1, p2, p3, color)
+            // Entity
+            drawTriangle(p1, p2, p3, color)
 
-        matStack.pop()
+            matrices.popMatrix()
+        }
     }
 
 }

@@ -32,39 +32,6 @@ import java.util.function.Function
  */
 interface DrawContextAddition {
 
-
-    /**
-     * drawTexture with floats
-     */
-    @Suppress("LongParameterList")
-    fun `liquid_bounce$drawTexture`(
-        renderLayers: Function<Identifier, RenderLayer>,
-        texture: Identifier,
-        x: Float,
-        y: Float,
-        width: Int,
-        height: Int,
-    )
-
-    /**
-     * drawTexturedQuad with floats
-     */
-    @Suppress("LongParameterList")
-    fun `liquid_bounce$drawTexturedQuad`(
-        renderLayers: Function<Identifier, RenderLayer>,
-        texture: Identifier,
-        x1: Float,
-        x2: Float,
-        y1: Float,
-        y2: Float,
-        u1: Float,
-        u2: Float,
-        v1: Float,
-        v2: Float,
-        color: Int,
-    )
-
-
     fun `liquidbounce$drawItemBar`(stack: ItemStack, x: Int, y: Int)
 
     fun `liquidbounce$drawStackCount`(

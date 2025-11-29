@@ -21,7 +21,7 @@
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.GpuTextureView
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
@@ -140,12 +140,12 @@ class MinimapTextureAtlasManager {
     /**
      * Uploads texture changes to the GPU
      *
-     * @return the [GpuTexture] of the texture
+     * @return the [GpuTextureView] of the texture
      */
-    fun prepareRendering(): GpuTexture {
+    fun prepareRendering(): GpuTextureView {
         lock.read {
             if (this.dirtyAtlasPositions.isEmpty()) {
-                return this.texture.glTexture
+                return this.texture.glTextureView
             }
 
             val dirtyChunks = this.dirtyAtlasPositions.size
@@ -160,7 +160,7 @@ class MinimapTextureAtlasManager {
             this.dirtyAtlasPositions.clear()
         }
 
-        return this.texture.glTexture
+        return this.texture.glTextureView
     }
 
     private fun uploadFullTexture() {
