@@ -37,6 +37,7 @@ import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.ProjectionMatrix2
+import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.item.KeyedItemRenderState
 import net.minecraft.client.util.BufferAllocator
 import net.minecraft.client.util.math.MatrixStack
@@ -125,6 +126,7 @@ private class ItemTextureRenderer(
         true,
     )
     private val bufferAllocator = BufferAllocator(0xC0000)
+    private val vertexConsumers = VertexConsumerProvider.immediate(this.bufferAllocator)
 
     private val itemsProjectionMatrix = ProjectionMatrix2("items", -1000.0F, 1000.0F, true)
 
@@ -187,11 +189,12 @@ private class ItemTextureRenderer(
         scaledY: Int,
         itemPixelSize: Int,
     ) {
-		matrices.push()
-        val tlY = scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F
+        matrices.push()
+        val x = scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F
+        val y = scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F
         matrices.translate(
-            scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F,
-            tlY,
+            x,
+            y,
             0.0f,
         )
         matrices.scale(itemPixelSize.toFloat(), -itemPixelSize.toFloat(), itemPixelSize.toFloat())
@@ -199,19 +202,14 @@ private class ItemTextureRenderer(
             if (state.isSideLit) DiffuseLighting.Type.ITEMS_3D else DiffuseLighting.Type.ITEMS_FLAT
         )
 
-        // TODO(1.21.10-port): the scissor is present in GuiRenderer's function but idk if we need it
-//		RenderSystem.enableScissorForRenderTypeDraws(x, itemAtlasTexture.getHeight(0) - y - scale, scale, scale)
-        // TODO(1.21.10-port): seems like only gameRenderer makes a render command queue
-        // use `OrderedRenderCommandQueueImpl`'s constructor if we need to make a new one
-		state.render(
-            matrices,
-            mc.gameRenderer.entityRenderCommandQueue,
-            15728880,
-            OverlayTexture.DEFAULT_UV,
-            0
+        RenderSystem.enableScissorForRenderTypeDraws(x.toInt(),
+            (this.itemAtlasFramebuffer.textureHeight - y - scale).toInt(),
+            scale, scale
         )
-		RenderSystem.disableScissorForRenderTypeDraws()
-		matrices.pop()
+        state.render(matrices, mc.gameRenderer.entityRenderCommandQueue, 15728880, OverlayTexture.DEFAULT_UV, 0)
+        vertexConsumers.draw()
+        RenderSystem.disableScissorForRenderTypeDraws()
+        matrices.pop()
     }
 
 }
