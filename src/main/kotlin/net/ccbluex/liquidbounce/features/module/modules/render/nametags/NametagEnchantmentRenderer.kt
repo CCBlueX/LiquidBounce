@@ -36,7 +36,7 @@ import net.minecraft.util.Formatting
 import net.minecraft.client.resource.language.I18n
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.minecraft.client.gui.DrawContext
 import org.joml.Vector2f
 import org.joml.component1
@@ -114,6 +114,7 @@ private object EnchantmentDisplayHelper {
     private fun isCurse(enchantment: RegistryKey<Enchantment>): Boolean = enchantment in knownCurses
 }
 
+@JvmRecord
 private data class EnchantmentInfo(
     val displayName: String,
     val isCurse: Boolean = false

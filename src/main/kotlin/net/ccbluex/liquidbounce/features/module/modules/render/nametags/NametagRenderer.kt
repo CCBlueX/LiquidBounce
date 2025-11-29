@@ -31,7 +31,7 @@ private const val NAMETAG_PADDING: Int = 15
 
 internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float) {
     if (nametag.items.any { !it.isEmpty }) {
-        val currentItemStackRenderer = if (NametagShowOptions.showInfo) {
+        val currentItemStackRenderer = if (NametagEquipment.showInfo) {
             if (nametag.entity === player) {
                 ItemStackListRenderer.SingleItemStackRenderer.All
             } else {
