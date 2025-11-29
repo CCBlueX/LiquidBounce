@@ -28,12 +28,11 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.render.buffer.MinecraftFramebuffer
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
-import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
@@ -142,13 +141,9 @@ private class ItemTextureRenderer(
      * From 1.21.5 DrawContext code
      */
     fun render(): CompletableFuture<Atlas> {
-        if (MinecraftClient.IS_SYSTEM_MAC) {
-            RenderSystem.outputColorTextureOverride = itemAtlasFramebuffer.colorAttachmentView
-            RenderSystem.outputDepthTextureOverride = itemAtlasFramebuffer.depthAttachmentView
-        } else {
-            val framebufferWrapper = MinecraftFramebuffer(itemAtlasFramebuffer)
-            framebufferWrapper.beginWrite(viewport = true, clear = false)
-        }
+        itemAtlasFramebuffer.clearColorAndDepth(0, 1.0)
+        RenderSystem.outputColorTextureOverride = itemAtlasFramebuffer.colorAttachmentView
+        RenderSystem.outputDepthTextureOverride = itemAtlasFramebuffer.depthAttachmentView
         RenderSystem.backupProjectionMatrix()
         RenderSystem.setProjectionMatrix(
             this.itemsProjectionMatrix.set(textureSize.toFloat(), textureSize.toFloat()),
@@ -170,12 +165,8 @@ private class ItemTextureRenderer(
         }
 
         RenderSystem.restoreProjectionMatrix()
-        if (MinecraftClient.IS_SYSTEM_MAC) {
-            RenderSystem.outputColorTextureOverride = null
-            RenderSystem.outputDepthTextureOverride = null
-        } else {
-            MinecraftFramebuffer(itemAtlasFramebuffer).end()
-        }
+        RenderSystem.outputColorTextureOverride = null
+        RenderSystem.outputDepthTextureOverride = null
 
         return itemAtlasFramebuffer.colorAttachment!!.toBufferedImage()
             .thenApply { image ->
