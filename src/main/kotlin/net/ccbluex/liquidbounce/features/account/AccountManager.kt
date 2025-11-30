@@ -306,7 +306,6 @@ object AccountManager : Configurable("Accounts"), EventListener {
         mc.apiServices = mc.apiServices.with(
             initialSession.sessionService ?: mc.apiServices.sessionService
         )
-//        mc.apiServices.sessionService = initialSession.sessionService
         mc.profileKeys = initialSession.profileKeys
 
         EventManager.callEvent(SessionEvent(mc.session))
