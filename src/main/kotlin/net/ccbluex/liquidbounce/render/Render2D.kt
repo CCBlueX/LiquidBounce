@@ -238,7 +238,8 @@ fun DrawContext.drawTriangle(
     }
 }
 
-fun DrawContext.drawTexQuad(
+@Suppress("LongParameterList")
+inline fun DrawContext.drawTexQuad(
     texture: GpuTextureView,
     x0: Float,
     y0: Float,

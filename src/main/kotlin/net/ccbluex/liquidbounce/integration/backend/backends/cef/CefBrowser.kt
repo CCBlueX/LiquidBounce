@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
-import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.*
@@ -29,10 +27,7 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputListener
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
-import net.ccbluex.liquidbounce.mcef.cef.MCEFRenderer
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.render.asView
-import net.minecraft.client.texture.AbstractTexture
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
@@ -210,35 +205,6 @@ class CefBrowser(
             logger.warn("Browser $this viewport size mismatch: " +
                 "expected $scaledWidth x $scaledHeight, but got $width x $height. ")
             invalidate()
-        }
-    }
-
-    private class CefBrowserTexture(val mcefBrowserRenderer: MCEFRenderer) : AbstractTexture() {
-        override fun getGlTexture(): GpuTexture? {
-            if (mcefBrowserRenderer.texture !== this.glTexture) {
-                this.glTexture = mcefBrowserRenderer.texture
-                this.glTextureView = this.glTexture!!.asView()
-            }
-
-            return super.getGlTexture()
-        }
-
-        override fun getGlTextureView(): GpuTextureView? {
-            this.getGlTexture()
-
-            return super.getGlTextureView()
-        }
-
-        override fun setClamp(clamp: Boolean) {
-            this.getGlTexture()
-
-            super.setClamp(clamp)
-        }
-
-        override fun setFilter(bilinear: Boolean, mipmap: Boolean) {
-            this.getGlTexture()
-
-            super.setFilter(bilinear, mipmap)
         }
     }
 
