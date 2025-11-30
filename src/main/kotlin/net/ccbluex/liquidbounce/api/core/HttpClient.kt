@@ -18,11 +18,7 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.authlib.Authlib
 import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
@@ -203,16 +199,22 @@ enum class HttpMethod {
  * If [T] is one of following types, it should be closed after using:
  * [InputStream] / [BufferedSource] / [Reader]
  */
-inline fun <reified T> Response.parse(): T {
+suspend inline fun <reified T> Response.parse(): T {
     return when (T::class.java) {
         String::class.java -> body.string() as T
         Unit::class.java -> close() as T
         InputStream::class.java -> body.byteStream() as T
         BufferedSource::class.java -> body.source() as T
         Reader::class.java -> body.charStream() as T
-        NativeImageBackedTexture::class.java -> body.byteStream().toNativeImage().asTexture {
-            "NetworkImage ${request.url}"
-        } as T
+        NativeImageBackedTexture::class.java -> {
+            val nativeImage = body.byteStream().toNativeImage()
+
+            withContext(Dispatchers.Minecraft) {
+                nativeImage.asTexture {
+                    "NetworkImage ${request.url}"
+                }
+            } as T
+        }
         else -> body.charStream().readJson<T>()
     }
 }
