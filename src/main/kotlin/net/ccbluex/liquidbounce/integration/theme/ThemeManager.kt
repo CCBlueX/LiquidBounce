@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
+import net.minecraft.resource.SynchronousResourceReloader
 import java.io.File
 
 object ThemeManager : Configurable("theme") {
@@ -92,6 +93,10 @@ object ThemeManager : Configurable("theme") {
 
             return@onChange enabled
         }
+
+    internal val reloader = SynchronousResourceReloader { resourceManager ->
+        themes.forEach { it.reload(resourceManager) }
+    }
 
     init {
         ConfigSystem.root(this)

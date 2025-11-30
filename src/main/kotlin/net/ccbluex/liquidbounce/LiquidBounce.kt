@@ -439,12 +439,14 @@ object LiquidBounce : EventListener {
             if (resourceManager is ReloadableResourceManagerImpl) {
                 resourceManager.registerReloader(clientInitializer)
                 resourceManager.registerReloader(ClientRenderPipelines)
+                resourceManager.registerReloader(ThemeManager.reloader)
             } else {
                 logger.warn("Failed to register resource reloader!")
 
                 // Run resource reloader directly as fallback
                 clientInitializer.reload(resourceManager)
                 ClientRenderPipelines.reload(resourceManager)
+                ThemeManager.reloader.reload(resourceManager)
             }
         }.onFailure {
             ErrorHandler.fatal(it, additionalMessage = "Client start")

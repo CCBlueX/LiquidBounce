@@ -29,6 +29,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.render.VertexFormats
@@ -236,6 +237,7 @@ object ClientRenderPipelines : SynchronousResourceReloader {
                 ClientShaders[identifier] ?: error("Unknown identifier: $identifier")
             }
         }
+        logger.info("Loaded ${renderPipelines.size} Render Pipelines.")
     }
 
 }

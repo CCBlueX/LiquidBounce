@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.Jso
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.texture.NativeImageBackedTexture
-import net.minecraft.util.Identifier
+import net.minecraft.resource.ResourceManager
+import net.minecraft.resource.SynchronousResourceReloader
 import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
@@ -57,7 +57,7 @@ class Theme private constructor(val origin: Origin, url: String) :
                 "${AuthMiddleware.AUTH_COOKIE_NAME}=${AuthMiddleware.AUTH_CODE}"
             )
             .build()
-    ), Closeable {
+    ), Closeable, SynchronousResourceReloader {
 
     enum class Origin(override val choiceName: String, val external: Boolean) : NamedChoice {
         RESOURCE("resource", false),
@@ -89,8 +89,6 @@ class Theme private constructor(val origin: Origin, url: String) :
         field: Configurable? = null
         private set
         get() = requireNotNull(field) { "settings not loaded" }
-
-    private var backgroundId: Identifier? = null
 
     private suspend fun loadComponents() {
         _components = metadata.components.mapNotNull { name ->
@@ -194,10 +192,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             get<NativeImageBackedTexture>("/backgrounds/${background.name}.png")
         }.getOrNull() ?: return false
 
-        val id = LiquidBounce.identifier("theme-bg-${metadata.name.lowercase(Locale.US)}")
-        themeBackgroundTexture = ThemeBackground.Image(id)
-        mc.textureManager.registerTexture(id, image)
-        backgroundId = id
+        themeBackgroundTexture = ThemeBackground.Image(image)
         logger.info("Loaded background image for theme ${metadata.name}")
         return true
     }
@@ -222,11 +217,16 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     fun isOverlaySupported(name: String?) = name != null && metadata.overlays.contains(name)
 
+    override fun reload(manager: ResourceManager) {
+        themeBackgroundShader?.onResourceReload()
+        themeBackgroundTexture?.onResourceReload()
+        logger.info("Reloaded theme '${metadata.name}'")
+    }
+
     override fun close() {
         themeBackgroundShader?.close()
         themeBackgroundTexture?.close()
         _components?.forEach { EventManager.unregisterEventHandler(it) }
-        backgroundId?.let { mc.textureManager.destroyTexture(it) }
     }
 
     override fun toString() = "Theme(name=${metadata.name}, origin=${origin.choiceName}, url=$baseUrl)"
