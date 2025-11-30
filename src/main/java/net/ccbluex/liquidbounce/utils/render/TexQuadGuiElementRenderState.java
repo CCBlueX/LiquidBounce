@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.utils.render;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.ScreenRect;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.texture.TextureSetup;
@@ -40,6 +39,7 @@ public record TexQuadGuiElementRenderState(
     float u2,
     float v2,
     int argb,
+    RenderPipeline pipeline,
     TextureSetup textureSetup,
     Matrix3x2f pose,
     @Nullable ScreenRect scissorArea,
@@ -52,11 +52,6 @@ public record TexQuadGuiElementRenderState(
         vertices.vertex(pose, x0, y1, depth).texture(u1, v2).color(argb);
         vertices.vertex(pose, x1, y1, depth).texture(u2, v2).color(argb);
         vertices.vertex(pose, x1, y0, depth).texture(u2, v1).color(argb);
-    }
-
-    @Override
-    public RenderPipeline pipeline() {
-        return RenderPipelines.GUI_TEXTURED;
     }
 
 }

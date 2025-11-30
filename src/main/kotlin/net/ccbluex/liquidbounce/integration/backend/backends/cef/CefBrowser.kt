@@ -110,8 +110,6 @@ class CefBrowser(
         }
     }
 
-    private val textureId = LiquidBounce.identifier("browser/tab/${mcefBrowser.hashCode()}")
-
     override var url: String
         get() = mcefBrowser.url
         set(value) {
@@ -125,17 +123,12 @@ class CefBrowser(
             }
 
             return BrowserTexture(
-                mcefBrowser.renderer.texture!!,
-                textureId,
+                mcefBrowser.renderer.texture!!.asView(),
                 viewport.height,
                 viewport.width,
                 mcefBrowser.renderer.isBGRA
             )
         }
-
-    init {
-        mc.textureManager.registerTexture(textureId, CefBrowserTexture(mcefBrowser.renderer))
-    }
 
     override fun forceReload() {
         mcefBrowser.reloadIgnoreCache()
@@ -158,7 +151,6 @@ class CefBrowser(
         inputListener?.close()
         backend.removeBrowser(this)
         mcefBrowser.close()
-        mc.textureManager.destroyTexture(textureId)
     }
 
     override fun update(width: Int, height: Int) {
