@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.*
+import kotlinx.coroutines.future.asCompletableFuture
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.ioScope
@@ -77,6 +78,7 @@ import net.ccbluex.liquidbounce.utils.input.InputTracker
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.resource.ReloadableResourceManagerImpl
@@ -86,6 +88,8 @@ import net.minecraft.resource.SynchronousResourceReloader
 import net.minecraft.util.Identifier
 import java.io.InputStream
 import java.util.*
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 import kotlin.time.measureTime
 
 /**
@@ -183,9 +187,17 @@ object LiquidBounce : EventListener {
      *
      * The thread should be the main render thread.
      */
-    private fun initializeClient() {
+    private fun initializeClient(
+        workerDispatcher: CoroutineDispatcher,
+        renderThreadDispatcher: CoroutineDispatcher,
+    ): CompletableFuture<Unit> = CoroutineScope(
+        renderThreadDispatcher + CoroutineName("$CLIENT_NAME Initializer") +
+            CoroutineExceptionHandler { ctx, throwable ->
+                ErrorHandler.fatal(throwable, additionalMessage = ctx[CoroutineName]?.name)
+            }
+    ).launch {
         if (isInitialized) {
-            return
+            return@launch
         }
 
         // Ensure we are on the render thread
@@ -193,10 +205,10 @@ object LiquidBounce : EventListener {
 
         // Initialize managers and features
         Client
-        initializeManagers()
+        initializeManagers(workerDispatcher, renderThreadDispatcher)
         initializeFeatures()
-        initializeResources()
-        prepareGuiStage()
+        initializeResources(workerDispatcher)
+        prepareGuiStage(renderThreadDispatcher)
 
         // Register shutdown hook in case [ClientShutdownEvent] is not called
         Runtime.getRuntime().addShutdownHook(Thread(::shutdownClient))
@@ -221,13 +233,24 @@ object LiquidBounce : EventListener {
         ConfigSystem.loadAll()
 
         isInitialized = true
-        logger.info("Client has been successfully initialized.")
-    }
+        logger.info("$CLIENT_NAME has been successfully initialized.")
+    }.asCompletableFuture()
 
     /**
      * Initializes managers for Event Listener registration.
      */
-    private fun initializeManagers() {
+    private suspend fun initializeManagers(
+        workerDispatcher: CoroutineDispatcher,
+        renderThreadDispatcher: CoroutineDispatcher,
+    ) = withContext(renderThreadDispatcher) {
+        // Script system
+        val scriptEngineJob = launch(workerDispatcher) {
+            EnvironmentRemapper
+            runCatching(ScriptManager::initializeEngine).onFailure { error ->
+                logger.error("[ScriptAPI] Failed to initialize script engine.", error)
+            }
+        }
+
         // Config
         ConfigSystem
 
@@ -241,12 +264,6 @@ object LiquidBounce : EventListener {
         CommandManager
         ProxyManager
         AccountManager
-
-        // Script system
-        EnvironmentRemapper
-        runCatching(ScriptManager::initializeEngine).onFailure { error ->
-            logger.error("[ScriptAPI] Failed to initialize script engine.", error)
-        }
 
         // Utility managers
         RotationManager
@@ -267,6 +284,8 @@ object LiquidBounce : EventListener {
         PostRotationExecutor
         ServerObserver
         ItemImageAtlas
+
+        scriptEngineJob.join()
     }
 
     /**
@@ -288,7 +307,9 @@ object LiquidBounce : EventListener {
      * such as translations, cosmetics, player heads, configs and so on,
      * which do not rely on the main thread.
      */
-    private fun initializeResources() = runBlocking(Dispatchers.IO + CoroutineName("Resource Initializer")) {
+    private suspend fun initializeResources(
+        dispatcher: CoroutineDispatcher,
+    ) = withContext(dispatcher) {
         logger.info("Initializing API...")
         // Lookup API config
         ApiConfig.config
@@ -335,13 +356,18 @@ object LiquidBounce : EventListener {
         }
 
         logger.info("API initialization done.")
+
     }
 
     /**
      * Prepares the GUI stage of the client.
      * This will load [ThemeManager], as well as the [BrowserBackendManager] and [ClientInteropServer].
      */
-    private fun prepareGuiStage() = runBlocking(CoroutineName("GUI Initializer")) {
+    private suspend fun prepareGuiStage(
+        dispatcher: CoroutineDispatcher
+    ) = withContext(dispatcher) {
+        RenderSystem.assertOnRenderThread()
+
         BrowserBackendManager.init()
         ClientInteropServer.start()
         ThemeManager.init()
@@ -435,16 +461,18 @@ object LiquidBounce : EventListener {
 
             // Register resource reloader
             val resourceManager = mc.resourceManager
-            val clientInitializer = ClientInitializer()
             if (resourceManager is ReloadableResourceManagerImpl) {
-                resourceManager.registerReloader(clientInitializer)
+                resourceManager.registerReloader(ClientResourceReloader)
                 resourceManager.registerReloader(ClientRenderPipelines)
                 resourceManager.registerReloader(ThemeManager.reloader)
             } else {
                 logger.warn("Failed to register resource reloader!")
 
                 // Run resource reloader directly as fallback
-                clientInitializer.reload(resourceManager)
+                initializeClient(
+                    workerDispatcher = Dispatchers.Default,
+                    renderThreadDispatcher = Dispatchers.Minecraft,
+                ).join()
                 ClientRenderPipelines.reload(resourceManager)
                 ThemeManager.reloader.reload(resourceManager)
             }
@@ -472,14 +500,26 @@ object LiquidBounce : EventListener {
      * @see SynchronousResourceReloader
      * @see ResourceReloader
      */
-    class ClientInitializer : SynchronousResourceReloader {
-        override fun reload(manager: ResourceManager) {
-            runCatching(::initializeClient).onSuccess {
-                logger.info("$CLIENT_NAME has been successfully initialized.")
-            }.onFailure {
-                ErrorHandler.fatal(it, additionalMessage = "Client resource reloader")
-            }
+    private object ClientResourceReloader : ResourceReloader {
+        override fun reload(
+            synchronizer: ResourceReloader.Synchronizer,
+            manager: ResourceManager,
+            prepareExecutor: Executor,
+            applyExecutor: Executor,
+        ): CompletableFuture<Void> {
+            return synchronizer.whenPrepared(net.minecraft.util.Unit.INSTANCE)
+                .thenCompose {
+                    val prepareDispatcher = prepareExecutor.asCoroutineDispatcher()
+                    val applyDispatcher = applyExecutor.asCoroutineDispatcher()
+                    @Suppress("UNCHECKED_CAST") // Kotlin Unit to Java Void
+                    initializeClient(
+                        workerDispatcher = prepareDispatcher,
+                        renderThreadDispatcher = applyDispatcher,
+                    ) as CompletableFuture<Void>
+                }
         }
+
+        override fun getName() = CLIENT_NAME
     }
 
     /**
