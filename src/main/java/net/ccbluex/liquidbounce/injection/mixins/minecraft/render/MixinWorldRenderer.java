@@ -20,18 +20,21 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.render.engine.OutlineFramebufferHolder;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.state.WorldRenderState;
 import net.minecraft.client.util.Handle;
 import net.minecraft.client.util.ObjectAllocator;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.profiler.Profiler;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Final;
@@ -46,6 +49,13 @@ public abstract class MixinWorldRenderer {
     @Shadow
     @Final
     private MinecraftClient client;
+
+    @Shadow
+    @Nullable
+    public abstract Framebuffer getEntityOutlinesFramebuffer();
+
+    @Shadow
+    protected abstract boolean canDrawEntityOutlines();
 
     @Inject(method = "render", at = @At("HEAD"))
     private void onRender(ObjectAllocator allocator, RenderTickCounter tickCounter, boolean renderBlockOutline, Camera camera, Matrix4f positionMatrix, Matrix4f matrix4f, Matrix4f projectionMatrix, GpuBufferSlice fogBuffer, Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
@@ -73,99 +83,26 @@ public abstract class MixinWorldRenderer {
         OutlineFramebufferHolder.drawIfDirty(this.client.getFramebuffer());
     }
 
-    // TODO(1.21.10-port): rendering got moved somewhere else
-//    @Unique
-//    private boolean isRenderingChams = false;
+    @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V", shift = At.Shift.BEFORE))
+    private void onRenderGlow(GpuBufferSlice gpuBufferSlice, WorldRenderState worldRenderState, Profiler profiler, Matrix4f matrix4f, Handle handle, Handle handle2, boolean bl, Frustum frustum, Handle handle3, Handle handle4, CallbackInfo ci) {
+        var entityOutlineFb = getEntityOutlinesFramebuffer();
+        if (!this.canDrawEntityOutlines() || entityOutlineFb == null) {
+            return;
+        }
 
-//    @Inject(method = "renderEntity", at = @At("HEAD"))
-//    private void injectChamsForEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-//        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity)) {
-//            glEnable(GL_POLYGON_OFFSET_FILL);
-//            glPolygonOffset(1f, -1000000F);
-//
-//            this.isRenderingChams = true;
-//        }
-//    }
-//
-//    @Inject(method = "renderEntity", at = @At("RETURN"))
-//    private void injectChamsForEntityPost(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-//        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity) && this.isRenderingChams) {
-//            glPolygonOffset(1f, 1000000F);
-//            glDisable(GL_POLYGON_OFFSET_FILL);
-//
-//            this.isRenderingChams = false;
-//        }
-//    }
-
-//    @Redirect(method = "getEntitiesToRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z"))
-//    private boolean hookFreeCamRenderPlayerFromAllPerspectives(LivingEntity instance) {
-//        return ModuleFreeCam.INSTANCE.renderPlayerFromAllPerspectives(instance);
-//    }
-//
-//    @ModifyExpressionValue(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;hasOutline(Lnet/minecraft/entity/Entity;)Z"))
-//    private boolean injectHasOutline(boolean original, @Local Entity entity) {
-//        return original || shouldRenderOutline(entity);
-//    }
-//
-//    @ModifyExpressionValue(method = "getEntitiesToRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;hasOutline(Lnet/minecraft/entity/Entity;)Z"))
-//    private boolean injectHasOutline2(boolean original, @Local Entity entity) {
-//        return original || shouldRenderOutline(entity);
-//    }
-
-//    @Unique
-//    private boolean shouldRenderOutline(Entity entity) {
-//        if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
-//            return true;
-//        } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {
-//            return true;
-//        } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof TntEntity) {
-//            return true;
-//        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
-//            var category = ModuleStorageESP.categorize(entity);
-//            return category != null && category.shouldRender(entity);
-//        } else {
-//            return false;
-//        }
-//    }
-
-    /**
-     * Inject ESP color as glow color
-     *
-     * @author 1zuna
-     */
-//    @ModifyExpressionValue(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"))
-//    private int injectTeamColor(int original, @Local Entity entity) {
-//        if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning() && EspGlowMode.INSTANCE.shouldRender(livingEntity)) {
-//            return ModuleESP.INSTANCE.getColor(livingEntity).toARGB();
-//        } else if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
-//            return ModuleItemESP.INSTANCE.getColor().toARGB();
-//        } else if (entity instanceof TntEntity tntEntity && ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp()) {
-//            return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).toARGB();
-//        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
-//            var category = ModuleStorageESP.categorize(entity);
-//            if (category != null && category.shouldRender(entity)) {
-//                return category.getColor().toARGB();
-//            }
-//        }
-//
-//        return original;
-//    }
-
-    // TODO(1.21.10-port): fix onRenderGlow
-//    @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V", shift = At.Shift.BEFORE))
-//    private void onRenderGlow(GpuBufferSlice gpuBufferSlice, WorldRenderState worldRenderState, Profiler profiler, Matrix4f matrix4f, Handle handle, Handle handle2, boolean bl, Frustum frustum, Handle handle3, Handle handle4, CallbackInfo ci) {
-//        var entityOutlineFb = getEntityOutlinesFramebuffer();
-//        if (!this.canDrawEntityOutlines() || entityOutlineFb == null) {
-//            return;
-//        }
-//
-//        var matrixStack = Pools.MatStack.borrow();
-//        entityOutlineFb.blitToScreen();
-//        var event = new DrawOutlinesEvent(entityOutlineFb, matrixStack, camera, renderTickCounter.getTickProgress(false), DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW);
-//        EventManager.INSTANCE.callEvent(event);
-//        OutlineFlag.drawOutline |= event.getDirtyFlag();
-//        Pools.MatStack.recycle(matrixStack);
-//    }
+        var matrixStack = Pools.MatStack.borrow();
+        entityOutlineFb.blitToScreen();
+        final var mc = MinecraftClient.getInstance();
+        final var camera = mc.gameRenderer.getCamera();
+        var event = new DrawOutlinesEvent(
+            entityOutlineFb, matrixStack,
+            camera, mc.getRenderTickCounter().getTickProgress(false),
+            DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
+        );
+        EventManager.INSTANCE.callEvent(event);
+        OutlineFlag.drawOutline |= event.getDirtyFlag();
+        Pools.MatStack.recycle(matrixStack);
+    }
 
 
     // TODO(1.21.10-port): fix this too lol

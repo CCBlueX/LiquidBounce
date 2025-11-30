@@ -20,9 +20,10 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import net.ccbluex.liquidbounce.common.OutlineFlag;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
-import net.minecraft.client.MinecraftClient;
+//import net.ccbluex.liquidbounce.common.OutlineFlag;
+//import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
+//import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
+//import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.block.entity.BlockEntityRenderManager;
 import net.minecraft.client.render.block.entity.state.BlockEntityRenderState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -46,7 +47,8 @@ public class MixinBlockEntityRenderDispatcher {
     ) {
 //        TODO(1.21.10-port): fix StorageESP Glow
 //        if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
-//            var type = ModuleStorageESP.categorize(blockEntity);
+//            final var e = ((EntityRenderStateAddition) blockEntity).liquid_bounce$getEntity();
+//            var type = ModuleStorageESP.categorize(e);
 //
 //            if (type != null && type.shouldRender(blockEntity.pos)) {
 //                var color = type.getColor();
@@ -54,9 +56,9 @@ public class MixinBlockEntityRenderDispatcher {
 //                if (!color.isTransparent()) {
 //                    var outlineVertexConsumerProvider = MinecraftClient.getInstance().getBufferBuilders()
 //                            .getOutlineVertexConsumers();
-//                    outlineVertexConsumerProvider.setColor(color.r(), color.g(), color.b(), 255);
+//                    outlineVertexConsumerProvider.setColor(color.toARGB());
 //                    OutlineFlag.drawOutline = true;
-//                    return outlineVertexConsumerProvider;
+//                    return state;
 //                }
 //            }
 //        }

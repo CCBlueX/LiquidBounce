@@ -22,7 +22,9 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMobOwners;
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
+import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
@@ -65,7 +67,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
         var ownerName = ModuleMobOwners.INSTANCE.getOwnerInfoText(entity);
 
         if (ownerName != null) {
-            renderLabel(entity, ownerName, matrices, state.light);
+            renderLabel(entity, ownerName, matrices, queue, state.light);
         }
     }
 
@@ -73,7 +75,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     @Unique
     private void renderLabel(
         Entity entity, OrderedText text,
-        MatrixStack matrices, int light
+        MatrixStack matrices, OrderedRenderCommandQueue queue, int light
     ) {
         var d = this.dispatcher.getSquaredDistanceToCamera(entity);
 
@@ -88,17 +90,19 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
         matrices.multiply(this.dispatcher.camera.getRotation());
         matrices.scale(-0.025F, -0.025F, 0.025F);
 
-//        var matrix4f = matrices.peek().getPositionMatrix();
+        var matrix4f = matrices.peek().getPositionMatrix();
 
-//        var g = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
-//        var j = (int) (g * 255.0F) << 24;
-//        var textRenderer = this.getTextRenderer();
-//        var h = (float) (-textRenderer.getWidth(text) / 2);
-
-        // TODO(1.21.10-port): `vertexConsumers` is gone
-//        textRenderer.draw(text, h, 0, -1, false, matrix4f, vertexConsumers,
-//                TextRenderer.TextLayerType.NORMAL, j, light);
-
+        var g = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
+        var j = (int) (g * 255.0F) << 24;
+        var textRenderer = this.getTextRenderer();
+        var h = (float) (-textRenderer.getWidth(text) / 2);
+        queue.submitText(
+            matrices, h,
+            0, text,
+            true, TextRenderer.TextLayerType.NORMAL,
+            light, -1,
+            Color4b.BLACK.toARGB(), -1
+        );
         matrices.pop();
     }
 

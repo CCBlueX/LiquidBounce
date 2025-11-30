@@ -36,8 +36,6 @@ import java.util.List;
 @Mixin(ItemRenderer.class)
 public abstract class MixinItemRenderer {
 
-    // TODO(1.21.10-port): is renderBakedItemQuads the right method?
-
     /**
      * FIXME: Hides player's shield (third-person).
      */

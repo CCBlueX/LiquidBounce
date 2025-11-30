@@ -56,7 +56,6 @@ public abstract class MixinEntityRenderDispatcher {
         var moduleHitBox = ModuleHitbox.INSTANCE;
         if ($entity != null && moduleHitBox.getRunning() && CombatExtensionsKt.shouldBeAttacked($entity)) {
             var expansion = moduleHitBox.getSize();
-            // TODO(1.21.10-port): this probably isn't correct either.
             return new EntityHitboxAndView(
                 hbv.viewX(),
                 hbv.viewY(),
