@@ -47,6 +47,14 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
     private var isDrawingHudFramebuffer = false
 
+    /**
+     * Whether the first draw has been completed yet.
+     *
+     * This fixes a bug where the blur effect would cause the
+     * item renderer to not render any textures.
+     */
+    private var hasCompletedFirstDraw = false
+
     private val overlayFramebuffer = SimpleFramebuffer(
         "BlurOverlay",
         mc.window.framebufferWidth,
@@ -76,7 +84,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     }
 
     fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
-        if (ModuleHud.running && ModuleHud.isBlurEffectActive) {
+        if (ModuleHud.running && ModuleHud.isBlurEffectActive && hasCompletedFirstDraw) {
             this.isDrawingHudFramebuffer = true
             clearOverlay()
 
@@ -91,6 +99,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         }
 
         callEvent(OverlayRenderEvent(context, tickDelta))
+        hasCompletedFirstDraw = true
     }
 
     private val GUI_BLUR_UNIFORM_BUFFER = gpuDevice.createUbo(
