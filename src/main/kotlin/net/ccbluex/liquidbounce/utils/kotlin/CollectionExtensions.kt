@@ -32,9 +32,6 @@ fun <T> Array<out T>?.unmodifiable(): List<T> =
         else -> ObjectImmutableList(this)
     }
 
-inline fun <T> Comparator<in T>.max(a: T, b: T): T = if (compare(a, b) > 0) a else b
-inline fun <T> Comparator<in T>.min(a: T, b: T): T = if (compare(a, b) < 0) a else b
-
 inline fun <reified K : Enum<K>, V> enumMapOf(): EnumMap<K, V> = EnumMap(K::class.java)
 
 @JvmName("enumMapOfBuilder")

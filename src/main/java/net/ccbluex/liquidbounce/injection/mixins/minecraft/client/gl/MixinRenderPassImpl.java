@@ -21,14 +21,11 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.gl;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.systems.ScissorState;
 import com.mojang.blaze3d.textures.GpuTexture;
-import net.ccbluex.fastutil.Pool;
 import net.minecraft.client.gl.RenderPassImpl;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -36,6 +33,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+
+import static net.ccbluex.liquidbounce.utils.client.GenericPools.HASH_MAP;
+import static net.ccbluex.liquidbounce.utils.client.GenericPools.HASH_SET;
 
 /**
  * Purpose: reusing objects for less GC.
@@ -50,10 +50,6 @@ public abstract class MixinRenderPassImpl {
 
     @Shadow
     @Final
-    protected ScissorState scissorState;
-
-    @Shadow
-    @Final
     protected HashMap<String, Object> simpleUniforms;
 
     @Shadow
@@ -64,45 +60,22 @@ public abstract class MixinRenderPassImpl {
     @Final
     protected Set<String> setSimpleUniforms;
 
-    @Shadow
-    @Final
-    protected Set<String> setSamplers;
-
-    @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "()Lcom/mojang/blaze3d/systems/ScissorState;"))
-    private ScissorState reuseScissorState(Operation<ScissorState> original) {
-        return POOL_SCISSOR_STATE.borrow();
-    }
-
     @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "()Ljava/util/HashMap;"))
     private HashMap reuseHashMap(Operation<HashMap> original) {
-        return POOL_HASH_MAP.borrow();
+        return HASH_MAP.borrow();
     }
 
     @WrapOperation(method = "<init>", at = @At(value = "NEW", target = "()Ljava/util/HashSet;"))
     private HashSet reuseSet(Operation<HashSet> original) {
-        return POOL_HASH_SET.borrow();
+        return HASH_SET.borrow();
     }
 
-    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/GlResourceManager;closePass()V"))
+    @Inject(method = "close", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/GlCommandEncoder;closePass()V"))
     private void recycleStuffs(CallbackInfo ci) {
-        POOL_SCISSOR_STATE.recycle(this.scissorState);
-        POOL_HASH_MAP.recycle(this.simpleUniforms);
-        POOL_HASH_MAP.recycle(this.samplerUniforms);
-        POOL_HASH_SET.recycle((HashSet) this.setSimpleUniforms);
-        POOL_HASH_SET.recycle((HashSet) this.setSamplers);
+        HASH_MAP.recycle(this.simpleUniforms);
+        HASH_MAP.recycle(this.samplerUniforms);
+        HASH_SET.recycle((HashSet) this.setSimpleUniforms);
     }
-
-    @Unique
-    private static final ScissorState DEFAULT_SCISSOR_STATE = new ScissorState();
-
-    @Unique
-    private static final Pool<ScissorState> POOL_SCISSOR_STATE = Pool.create(ScissorState::new, it -> it.copyFrom(DEFAULT_SCISSOR_STATE));
-
-    @Unique
-    private static final Pool<HashMap> POOL_HASH_MAP = Pool.create(HashMap::new, HashMap::clear);
-
-    @Unique
-    private static final Pool<HashSet> POOL_HASH_SET = Pool.create(HashSet::new, HashSet::clear);
 
 
 }

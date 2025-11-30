@@ -50,7 +50,6 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     InputHandleEvent::class.java,
     MovementInputEvent::class.java,
     SprintEvent::class.java,
-    SneakNetworkEvent::class.java,
     KeyEvent::class.java,
     MouseRotationEvent::class.java,
     KeybindChangeEvent::class.java,

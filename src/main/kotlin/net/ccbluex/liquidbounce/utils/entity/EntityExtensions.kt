@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition
 import net.ccbluex.liquidbounce.interfaces.InputAddition
@@ -88,16 +89,19 @@ inline var Input.movementSideways: Float
         (this as InputAddition).`liquid_bounce$setMovementInput`(Vec2f(value, movementForward))
     }
 
-val PlayerEntity.handItems: Iterable<ItemStack>
-    get() = listOf(mainHandStack, offHandStack)
+val LivingEntity.handItems: Array<ItemStack>
+    get() = arrayOf(mainHandStack, offHandStack)
 
-val PlayerEntity.armorItems: Iterable<ItemStack>
-    get() = listOf(
+val LivingEntity.armorItems: Array<ItemStack>
+    get() = arrayOf(
         getEquippedStack(EquipmentSlot.FEET),
         getEquippedStack(EquipmentSlot.LEGS),
         getEquippedStack(EquipmentSlot.CHEST),
         getEquippedStack(EquipmentSlot.HEAD),
     )
+
+val LivingEntity.equippedItems: Array<ItemStack>
+    get() = EquipmentSlot.entries.mapToArray { this.getEquippedStack(it) }
 
 fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
     val entity = source.source
@@ -615,16 +619,15 @@ fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
     return health
 }
 
+private val HEALTH_KEYWORDS = listOf("❤", "HP", "Health", "Здоровья", "Здоровье")
+
 fun LivingEntity.hasHealthScoreboard(): Boolean {
     if (this == player) return false
 
     val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME) ?: return false
     val displayName = objective.displayName?.string ?: return false
 
-    return (displayName.let { name ->
-        listOf("❤", "HP", "Health", "Здоровья", "Здоровье")
-            .any { name.contains(it) }
-    })
+    return HEALTH_KEYWORDS.any { displayName.contains(it) }
 }
 
 private fun LivingEntity.getHealthFromScoreboard(): Float? {

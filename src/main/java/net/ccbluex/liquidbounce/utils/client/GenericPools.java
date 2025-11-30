@@ -16,10 +16,26 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
 
-import net.minecraft.client.util.Handle
+package net.ccbluex.liquidbounce.utils.client;
 
-class ImmutableHandle<T>(val value: T) : Handle<T> {
-    override fun get() = value
+import net.ccbluex.fastutil.Pool;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+
+/**
+ * This should only be used in render thread!
+ */
+@SuppressWarnings("rawtypes")
+public final class GenericPools {
+    private GenericPools() {
+    }
+
+    public static final Pool<ArrayList> ARRAY_LIST = Pool.create(ArrayList::new, ArrayList::clear);
+
+    public static final Pool<HashMap> HASH_MAP = Pool.create(HashMap::new, HashMap::clear);
+
+    public static final Pool<HashSet> HASH_SET = Pool.create(HashSet::new, HashSet::clear);
 }

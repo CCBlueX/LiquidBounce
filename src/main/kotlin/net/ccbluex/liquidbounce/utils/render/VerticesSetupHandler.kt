@@ -15,20 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
+package net.ccbluex.liquidbounce.utils.render
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.VertexConsumerProvider;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+import net.minecraft.client.render.VertexConsumer
+import org.joml.Matrix3x2f
 
-@Mixin(DrawContext.class)
-public interface MixinDrawContextAccessor {
-
-    @Accessor("vertexConsumers")
-    VertexConsumerProvider.Immediate getVertexConsumers();
-
+/**
+ * @see LambdaSimpleGuiElementRenderState
+ */
+fun interface VerticesSetupHandler {
+    fun VertexConsumer.setupVertices(pose: Matrix3x2f, depth: Float)
 }

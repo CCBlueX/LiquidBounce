@@ -89,7 +89,8 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
 
             event.context.drawItemStackList(containerScreen.getSlotsInContainer().mapToArray { it.itemStack })
                 .title(containerScreen.title.takeIf { showTitle })
-                .center(pos)
+                .centerX(pos.x)
+                .centerY(pos.y)
                 .scale(scale)
                 .background(background.activeChoice)
                 .draw()

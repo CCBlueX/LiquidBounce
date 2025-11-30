@@ -99,7 +99,7 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
         val target = targetTracker.target ?: return@handler
 
         renderEnvironmentForWorld(it.matrixStack) {
-            targetRenderer.render(this, target, it.partialTicks)
+            targetRenderer.render(target, it.partialTicks)
         }
     }
 

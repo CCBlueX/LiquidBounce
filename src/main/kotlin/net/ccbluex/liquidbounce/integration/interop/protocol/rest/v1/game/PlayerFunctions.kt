@@ -21,11 +21,13 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.interopGson
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.hideShieldSlot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.shouldHideOffhand
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinInGameHudAccessor
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.*
@@ -63,6 +65,7 @@ fun getPlayerInventory(requestObject: RequestObject) = nullableResponse(mc.playe
 @Suppress("UNUSED_PARAMETER")
 fun getCrosshairData(requestObject: RequestObject) = nullableResponse(mc.crosshairTarget)
 
+@JvmRecord
 data class PlayerData(
     val username: String,
     val uuid: String,
@@ -129,6 +132,7 @@ data class PlayerData(
 
 }
 
+@JvmRecord
 data class PlayerInventoryData(
     val armor: List<ItemStack>,
     val main: List<ItemStack>,
@@ -147,32 +151,13 @@ data class PlayerInventoryData(
         )
     }
 
-    private infix fun List<ItemStack>.eq(other: List<ItemStack>) =
-        this.size == other.size && this.indices.all { ItemStack.areEqual(this[it], other[it]) }
-
-    override fun hashCode(): Int {
-        var result = armor.hashCode()
-        result = 31 * result + main.hashCode()
-        result = 31 * result + crafting.hashCode()
-        result = 31 * result + enderChest.hashCode()
-        return result
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as PlayerInventoryData
-
-        return armor eq other.armor && main eq other.main &&
-            crafting eq other.crafting && enderChest eq other.enderChest
-    }
-
 }
 
-data class SidebarEntry(val name: Text, val score: Text)
+@JvmRecord
+data class ScoreboardData(val header: Text, val entries: List<SidebarEntry?>) {
 
-data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
+    @JvmRecord
+    data class SidebarEntry(val name: Text, val score: Text)
 
     companion object {
 
@@ -180,13 +165,16 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
          * Creates a [ScoreboardData] from the [player]'s scoreboard
          *
          * Taken from the Minecraft source code
+         *
+         * @see net.minecraft.client.gui.hud.InGameHud.renderScoreboardSidebar
          */
         @JvmStatic
         fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {
             scoreboard ?: return null
-            val player = mc.player ?: return null
 
-            val team = scoreboard.getScoreHolderTeam(player.nameForScoreboard)
+            val team = mc.player?.let { player ->
+                scoreboard.getScoreHolderTeam(player.nameForScoreboard)
+            }
 
             val objective = team?.let {
                 ScoreboardDisplaySlot.fromFormatting(team.color)?.let { scoreboard.getObjectiveForSlot(it) }
@@ -195,46 +183,21 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
             val objectiveScoreboard: Scoreboard = objective.scoreboard
             val numberFormat: NumberFormat = objective.getNumberFormatOr(StyledNumberFormat.RED)
 
-            val entryComparator = Comparator
-                .comparing { scoreboardEntry: ScoreboardEntry -> scoreboardEntry.value() }
-                .reversed()
-                .thenComparing({ it.owner() }, String.CASE_INSENSITIVE_ORDER)
-
             val sidebarEntries = objectiveScoreboard.getScoreboardEntries(objective)
-                .stream()
                 .filter { score: ScoreboardEntry -> !score.hidden() }
-                .sorted(entryComparator)
-                .limit(15L)
-                .map { scoreboardEntry: ScoreboardEntry ->
+                .sortedWith(MixinInGameHudAccessor.getScoreboardEntryComparator())
+                .take(15)
+                .mapToArray { scoreboardEntry: ScoreboardEntry ->
                     val team = objectiveScoreboard.getScoreHolderTeam(scoreboardEntry.owner())
                     val entryName = scoreboardEntry.name()
                     val entryWithDecoration: Text = Team.decorateName(team, entryName)
                     val entryValue: Text = scoreboardEntry.formatted(numberFormat)
 
                     SidebarEntry(entryWithDecoration.sanitizeForeignInput(), entryValue.sanitizeForeignInput())
-                }
-                .toArray { arrayOfNulls<SidebarEntry>(it) }
+                }.asList()
 
             return ScoreboardData(objective.displayName.sanitizeForeignInput(), sidebarEntries)
         }
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as ScoreboardData
-
-        if (header != other.header) return false
-        if (!entries.contentEquals(other.entries)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = header.hashCode()
-        result = 31 * result + entries.contentHashCode()
-        return result
     }
 
 }

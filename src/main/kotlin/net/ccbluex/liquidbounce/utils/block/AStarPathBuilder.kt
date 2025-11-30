@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.fastutil.Pool.Companion.use
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.collection.Pools
@@ -27,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3i
 import java.util.Comparator
-import java.util.TreeSet
 
 private class Node(val position: Vec3i, var parent: Node? = null) {
     var g = 0
@@ -94,7 +94,7 @@ interface AStarPathBuilder {
         val endNode = Node(end)
 
         // Node::f won't be modified after added
-        val openList = TreeSet(NODE_COMPARATOR).apply { add(startNode) }
+        val openList = objectRBTreeSetOf(NODE_COMPARATOR).apply { add(startNode) }
         val closedList = hashSetOf<Node>()
 
         var iterations = 0

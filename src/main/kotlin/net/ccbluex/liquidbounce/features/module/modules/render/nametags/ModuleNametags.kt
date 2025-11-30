@@ -18,17 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.client.gui.DrawContext
 import org.joml.Vector2fc
 
 /**
@@ -40,13 +38,6 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
     val scale by float("Scale", 2F, 0.25F..4F)
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
-
-    internal val batchRenderMode by enumChoice("BatchRenderMode", BatchRenderMode.EACH)
-
-    internal enum class BatchRenderMode(override val choiceName: String) : NamedChoice {
-        FULL("Full"),
-        EACH("Each"),
-    }
 
     internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
 
@@ -71,32 +62,17 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
             return@handler
         }
 
-        renderEnvironmentForGUI(event) {
-            drawNametags(event.tickDelta)
-        }
+        event.context.drawNametags(event.tickDelta)
     }
 
-    private fun GUIRenderEnvironment.drawNametags(tickDelta: Float) {
+    private fun DrawContext.drawNametags(tickDelta: Float) {
         drawnEnchantmentAreas.clear()
-        nametagsToRender.forEach { it.calculateScreenPos(tickDelta) }
 
-        val filteredNameTags = nametagsToRender.filterTo(mutableListOf()) { it.screenPos != null }
-        if (filteredNameTags.isEmpty()) {
-            return
+        for (nametagInfo in nametagsToRender) {
+            val (x, y) = nametagInfo.calculateScreenPos(tickDelta) ?: continue
+
+            drawNametag(nametagInfo, x, y)
         }
-
-        val nametagsCount = filteredNameTags.size.toFloat()
-
-        if (batchRenderMode == BatchRenderMode.FULL) startBatch()
-        filteredNameTags.forEachIndexed { index, nametagInfo ->
-            val pos = nametagInfo.screenPos!!
-
-            // We want nametags that are closer to the player to be rendered above nametags that are further away.
-            val renderZ = 0.01f + index / nametagsCount * 1000.0F
-
-            drawNametag(nametagInfo, pos.copy(z = renderZ))
-        }
-        if (batchRenderMode == BatchRenderMode.FULL) commitBatch()
     }
 
     /**

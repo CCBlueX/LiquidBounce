@@ -32,8 +32,6 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.entity.movementForward
-import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
@@ -54,6 +52,7 @@ import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
+import net.minecraft.util.math.Vec2f
 import java.util.*
 import java.util.function.Predicate
 
@@ -124,7 +123,7 @@ enum class InventoryRequirements(
     OPEN_INVENTORY("InventoryOpen");
 
     override fun test(action: InventoryAction): Boolean = when (this) {
-        NO_MOVEMENT -> player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f && !player.jumping
+        NO_MOVEMENT -> player.input.movementInput == Vec2f.ZERO && !player.jumping
         NO_ROTATION -> RotationManager.rotationMatchesPreviousRotation()
         OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
     }
@@ -144,7 +143,7 @@ class CheckScreenHandlerTypeConfigurable(
     private val filter by enumChoice("Filter", Filter.WHITELIST)
 
     fun isValid(screen: HandledScreen<*>): Boolean {
-        return !enabled || filter(screen.screenHandler.typeOrNull, types)
+        return !running || filter(screen.screenHandler.typeOrNull, types)
     }
 }
 
@@ -163,7 +162,7 @@ class CheckScreenTitleConfigurable(
     private val filter by enumChoice("Filter", Filter.WHITELIST)
 
     fun isValid(screen: Screen): Boolean {
-        if (!enabled) return true
+        if (!running) return true
 
         val titleString = screen.title.string
         val matches = titles.any {
@@ -219,7 +218,7 @@ fun openInventorySilently() {
     }
 
     network.sendPacket(
-        OpenInventorySilentlyPacket(),
+        OpenInventorySilentlyPacket,
         onSuccess = { InventoryManager.isInventoryOpenServerSide = true },
         onFailure = { chat(markAsError("Failed to open inventory using ViaFabricPlus, report to developers!")) }
     )

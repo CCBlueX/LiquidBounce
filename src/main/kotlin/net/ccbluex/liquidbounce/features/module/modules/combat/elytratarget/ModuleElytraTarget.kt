@@ -81,7 +81,7 @@ object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
             ?: return@handler
 
         renderEnvironmentForWorld(event.matrixStack) {
-            targetRenderer.render(this, target, event.partialTicks)
+            targetRenderer.render(target, event.partialTicks)
         }
     }
 

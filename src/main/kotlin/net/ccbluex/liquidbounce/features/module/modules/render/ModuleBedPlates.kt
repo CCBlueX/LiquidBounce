@@ -53,6 +53,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII")
 
     private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+    private val outline by boolean("Outline", false)
 
     override val maxLayers by int("MaxLayers", 5, 1..5).onChanged {
         BedBlockTracker.triggerRescan()
@@ -65,6 +66,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
     private val compact by boolean("Compact", true)
+    private val preventOverlap by boolean("PreventOverlap", true)
     private val filterMode = choices("FilterMode", 0) {
         arrayOf(FilterMode.Predefined, FilterMode.Custom)
     }
@@ -174,11 +176,14 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                 surrounding.map { it.block.createItemStackForRendering(it.count) }
             }
 
+            val outlineColor = if (outline) Color4b(bedState.block.color.mapColor.color) else Color4b.TRANSPARENT
+
             event.context.drawItemStackList(blocksAsItemStacks)
                 .rowLength(Int.MAX_VALUE)
                 .scale(scale)
-                .center(screenPos)
-                .rectBackground(color = backgroundColor.toARGB())
+                .centerX(screenPos.x)
+                .centerY(screenPos.y)
+                .rectBackground(backgroundColor, outlineColor)
                 .itemStackRenderer { textRenderer, index, stack, x, y ->
                     if (index == 0 && showBed) {
                         // bed
@@ -199,7 +204,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                         drawItem(stack, x, y)
                         val countString = stack.count.toString()
                         matrices.withPush {
-                            translate(0.0F, 0.0F, 200.0F)
+                            translate(0.0F, 0.0F)
                             // draw layer text
                             if (!compact) {
                                 drawText(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, textShadow)
@@ -215,7 +220,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                             )
                         }
                     }
-                }.draw()
+                }.draw(preventOverlap)
         }
     }
 

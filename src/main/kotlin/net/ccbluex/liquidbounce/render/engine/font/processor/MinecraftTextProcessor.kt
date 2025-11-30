@@ -33,6 +33,7 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
 
     private val defaultRng = Random(Random.nextLong())
 
+    @JvmField
     val TEXT_POOL = Pool(
         initializer = { RecyclingProcessedText(ArrayList(), IntArrayList(), IntArrayList()) }
     ) {
@@ -42,9 +43,9 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
     }
 
     class RecyclingProcessedText(
-        override var chars: ArrayList<ProcessedText.ProcessedChar>,
-        override var underlines: IntArrayList,
-        override var strikeThroughs: IntArrayList,
+        override val chars: ArrayList<ProcessedText.ProcessedChar>,
+        override val underlines: IntArrayList,
+        override val strikeThroughs: IntArrayList,
     ) : ProcessedText
 
     override fun process(
