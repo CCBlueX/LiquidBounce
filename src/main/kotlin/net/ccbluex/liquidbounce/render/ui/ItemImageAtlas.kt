@@ -213,8 +213,12 @@ private class ItemTextureRenderer(
             if (state.isSideLit) DiffuseLighting.Type.ITEMS_3D else DiffuseLighting.Type.ITEMS_FLAT
         )
 
+        RenderSystem.enableScissorForRenderTypeDraws(
+            scaledX, textureSize - scaledY - itemPixelSize, itemPixelSize, itemPixelSize
+        )
         state.render(matrices, vertexConsumers, 15728880, OverlayTexture.DEFAULT_UV)
         vertexConsumers.draw()
+        RenderSystem.disableScissorForRenderTypeDraws()
         matrices.pop()
     }
 
