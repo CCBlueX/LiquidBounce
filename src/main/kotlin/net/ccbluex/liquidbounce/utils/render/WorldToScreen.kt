@@ -78,7 +78,6 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
         val scaleFactor = mc.window.scaleFactor
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
-        // TODO(1.21.10-port): viewport{Width,Height} got removed, replaced with texture{Width,Height}
         val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
             .mul(guiScaleMul * mc.framebuffer.textureWidth, guiScaleMul * mc.framebuffer.textureHeight, 1.0F)
 
