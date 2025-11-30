@@ -236,6 +236,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleKick,
             ModuleMoreCarry,
             ModuleMultiActions,
+            ModuleNewChunks,
             ModuleNameCollector,
             ModuleNoPitchLimit,
             ModulePingSpoof,
