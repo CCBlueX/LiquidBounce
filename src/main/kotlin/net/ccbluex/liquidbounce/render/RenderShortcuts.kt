@@ -434,7 +434,7 @@ fun WorldRenderEnvironment.drawBoxSide(
 /**
  * Function to draw a flat plane on the XZ axis with an optional outline.
  */
-fun RenderEnvironment.drawPlane(
+fun WorldRenderEnvironment.drawPlane(
     sizeX: Float,
     sizeZ: Float,
     fillColor: Color4b? = Color4b.TRANSPARENT,
