@@ -24,6 +24,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.authlib.Authlib
+import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
@@ -89,11 +91,7 @@ object HttpClient {
         val OCTET_STREAM = "application/octet-stream".toMediaType()
     }
 
-    /**
-     * Client default [OkHttpClient]
-     */
-    @get:JvmStatic
-    val client: OkHttpClient = OkHttpClient.Builder()
+    private val defaultClient = OkHttpClient.Builder()
         .dispatcher(Dispatcher(Util.getDownloadWorkerExecutor().service))
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
@@ -101,25 +99,43 @@ object HttpClient {
         .followRedirects(true)
         .followSslRedirects(true)
         .cache(Cache(ConfigSystem.rootFolder.resolve("http-cache"), 128L shl 20))
-        .addInterceptor { chain ->
-            val request = chain.request()
-            try {
-                val response = chain.proceed(request)
-
-                if (response.isSuccessful) {
-                    response
-                } else {
-                    // Response is not successful (code is not 2xx)
-                    throw HttpException(enumValueOf(request.method),
-                                        request.url.toString(), response.code, response.body.string())
-                }
-            } catch (e: IOException) {
-                // Failed to request
-                logger.error("Failed to execute request ${request.method} ${request.url})", e)
-                throw e
-            }
+        .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
+        .build().also {
+            McefFileUtils.setOkHttpClient(it)
+            Authlib.client = it
         }
-        .build().also(McefFileUtils::setOkHttpClient)
+
+    /**
+     * This interceptor rejects all non-2xx responses
+     */
+    private val clientHttpApiInterceptor = Interceptor { chain ->
+        val request = chain.request()
+        try {
+            val response = chain.proceed(request)
+
+            if (response.isSuccessful) {
+                response
+            } else {
+                // Response is not successful (code is not 2xx)
+                throw HttpException(
+                    enumValueOf(request.method),
+                    request.url.toString(), response.code, response.body.string()
+                )
+            }
+        } catch (e: IOException) {
+            // Failed to request
+            logger.error("Failed to execute request ${request.method} ${request.url})", e)
+            throw e
+        }
+    }
+
+    /**
+     * API client
+     */
+    @get:JvmStatic
+    val client = defaultClient.newBuilder()
+        .addInterceptor(clientHttpApiInterceptor)
+        .build()
 
     @Suppress("LongParameterList")
     suspend fun request(

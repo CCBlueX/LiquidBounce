@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
@@ -123,10 +124,10 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
             ClientRenderPipelines.JCEF.BLURRED_TEXTURE
         }
 
-        context.drawTexture(
-            pipeline, texture.identifier, x.toInt(), y.toInt(),
-            0f, 0f, width.toInt(),
-            height.toInt(), width.toInt(), height.toInt()
+        context.drawTexQuad(
+            texture.view,
+            x0 = x, y0 = y, x1 = x + width, y1 = y + height,
+            pipeline = pipeline,
         )
     }
 

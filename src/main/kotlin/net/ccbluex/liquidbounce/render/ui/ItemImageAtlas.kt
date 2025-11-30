@@ -24,13 +24,16 @@ import com.mojang.blaze3d.systems.ProjectionType
 import com.mojang.blaze3d.systems.RenderSystem
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
+import kotlinx.coroutines.future.await
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
@@ -45,10 +48,12 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.client.util.math.Rect2i
 import net.minecraft.item.Item
 import net.minecraft.item.ItemDisplayContext
+import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 import java.awt.image.BufferedImage
+import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import kotlin.math.sqrt
 
@@ -70,26 +75,14 @@ private class Atlas(
 object ItemImageAtlas : EventListener {
 
     private var atlas: Atlas? = null
-    private var updateFuture: CompletableFuture<*>? = null
-
-    fun updateAtlas(): Boolean {
-        if (this.atlas != null || this.updateFuture != null) {
-            return false
-        }
-
-        val items = Registries.ITEM
-        updateFuture =
-            ItemTextureRenderer(items = items, count = items.size(), scale = 4).render().thenAccept {
-                atlas = it
-                updateFuture = null
-            }
-
-        return true
-    }
 
     @Suppress("unused")
-    private val resourceReloadHandler = handler<ResourceReloadEvent> {
-        this.atlas = null
+    private val resourceReloadHandler = suspendHandler<ResourceReloadEvent>(
+        behavior = SuspendHandlerBehavior.CancelPrevious,
+    ) {
+        tickUntil { inGame }
+        val items = Registries.ITEM
+        atlas = ItemTextureRenderer(items = items, count = items.size(), scale = 4).render().await()
     }
 
     val isAtlasAvailable
@@ -158,10 +151,19 @@ private class ItemTextureRenderer(
         items.forEachIndexed { idx, item ->
             val x = (idx % itemsPerDimension) * itemPixelSize
             val y = (idx / itemsPerDimension) * itemPixelSize
-            val stack = item.defaultStack
-            mc.itemModelManager.clearAndUpdate(keyedItemRenderState, stack, ItemDisplayContext.GUI, world, player, 0)
+            if (item !== Items.AIR) {
+                val stack = item.defaultStack
+                mc.itemModelManager.clearAndUpdate(
+                    keyedItemRenderState,
+                    stack,
+                    ItemDisplayContext.GUI,
+                    world,
+                    player,
+                    0
+                )
 
-            this.prepareItemInitially(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
+                this.prepareItemInitially(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
+            }
             itemMap[item] = Rect2i(x, y, itemPixelSize, itemPixelSize)
         }
         keyedItemRenderState.clear()
@@ -179,6 +181,10 @@ private class ItemTextureRenderer(
 //                ImageIO.write(image, "png", java.io.File("Debug_ItemAtlas.png"))
 
                 Atlas(itemMap, image, findBlockToItemAliases())
+            }.whenComplete { _, throwable ->
+                if (throwable != null && throwable !is CancellationException) {
+                    logger.error("Failed to load item atlas", throwable)
+                }
             }
     }
 
@@ -205,9 +211,8 @@ private class ItemTextureRenderer(
             if (state.isSideLit) DiffuseLighting.Type.ITEMS_3D else DiffuseLighting.Type.ITEMS_FLAT
         )
 
-        RenderSystem.enableScissorForRenderTypeDraws(x.toInt(),
-            (this.itemAtlasFramebuffer.textureHeight - y - scale).toInt(),
-            scale, scale
+        RenderSystem.enableScissorForRenderTypeDraws(
+            scaledX, textureSize - scaledY - itemPixelSize, itemPixelSize, itemPixelSize
         )
         state.render(matrices, mc.gameRenderer.entityRenderCommandQueue, 15728880, OverlayTexture.DEFAULT_UV, 0)
         vertexConsumers.draw()
@@ -215,27 +220,27 @@ private class ItemTextureRenderer(
         matrices.pop()
     }
 
-}
+    private fun findBlockToItemAliases(): Map<Identifier, Identifier> {
+        val world = mc.world ?: return emptyMap()
+        val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
 
-private fun findBlockToItemAliases(): Map<Identifier, Identifier> {
-    val world = mc.world ?: return emptyMap()
-    val map = Object2ObjectOpenHashMap<Identifier, Identifier>()
+        Registries.BLOCK.forEach {
+            val pickUpState = it.getPickStack(
+                world,
+                BlockPos.ORIGIN,
+                it.defaultState,
+                false
+            )
 
-    Registries.BLOCK.forEach {
-        val pickUpState = it.getPickStack(
-            world,
-            BlockPos.ORIGIN,
-            it.defaultState,
-            false
-        )
+            if (pickUpState.item !== it.asItem()) {
+                val blockId = Registries.BLOCK.getId(it)
+                val itemId = Registries.ITEM.getId(pickUpState.item)
 
-        if (pickUpState.item !== it.asItem()) {
-            val blockId = Registries.BLOCK.getId(it)
-            val itemId = Registries.ITEM.getId(pickUpState.item)
-
-            map[blockId] = itemId
+                map[blockId] = itemId
+            }
         }
+
+        return map
     }
 
-    return map
 }

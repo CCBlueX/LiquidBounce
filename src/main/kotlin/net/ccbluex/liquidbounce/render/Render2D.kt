@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.LambdaSimpleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.LineGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.QuadGuiElementRenderState
+import net.ccbluex.liquidbounce.utils.render.TexQuadGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.TriangleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
 import net.minecraft.client.gl.RenderPipelines
@@ -234,4 +236,38 @@ fun DrawContext.drawTriangle(
             bounds,
         )
     }
+}
+
+@Suppress("LongParameterList")
+inline fun DrawContext.drawTexQuad(
+    texture: GpuTextureView,
+    x0: Float,
+    y0: Float,
+    x1: Float,
+    y1: Float,
+    u1: Float = 0f,
+    v1: Float = 0f,
+    u2: Float = 1f,
+    v2: Float = 1f,
+    argb: Int = -1,
+    pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
+) {
+    this.state.addSimpleElement(
+        TexQuadGuiElementRenderState(
+            x0,
+            y0,
+            x1,
+            y1,
+            u1,
+            v1,
+            u2,
+            v2,
+            argb,
+            pipeline,
+            TextureSetup.withoutGlTexture(texture),
+            copyPose(),
+            this.scissorStack.peekLast(),
+            createBounds(x0, y0, x1 - x0, y1 - y0),
+        )
+    )
 }

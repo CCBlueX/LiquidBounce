@@ -26,9 +26,7 @@ import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.render.TexQuadGuiElementRenderState
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.texture.TextureSetup
 import net.minecraft.text.Text
 import java.awt.Font
 import kotlin.math.max
@@ -231,30 +229,18 @@ class FontRenderer(
         val renderInfo = glyph.renderInfo
         // We don't need to render whitespaces.
         if (renderInfo.atlasLocation != null && !color.isTransparent) {
-            val x1 = x + renderInfo.glyphBounds.xMin * scale
-            val y1 = y + renderInfo.glyphBounds.yMin * scale
-            val x2 = x + (renderInfo.glyphBounds.xMin + renderInfo.atlasLocation.atlasWidth) * scale
-            val y2 = y + (renderInfo.glyphBounds.yMin + renderInfo.atlasLocation.atlasHeight) * scale
+            val x0 = x + renderInfo.glyphBounds.xMin * scale
+            val y0 = y + renderInfo.glyphBounds.yMin * scale
+            val x1 = x + (renderInfo.glyphBounds.xMin + renderInfo.atlasLocation.atlasWidth) * scale
+            val y1 = y + (renderInfo.glyphBounds.yMin + renderInfo.atlasLocation.atlasHeight) * scale
             val uv1 = renderInfo.atlasLocation.uvCoordinatesOnTexture.min
             val uv2 = renderInfo.atlasLocation.uvCoordinatesOnTexture.max
             val argb = color.toARGB()
 
-            ctx.state.addPreparedTextElement(
-                TexQuadGuiElementRenderState(
-                    x1,
-                    y1,
-                    x2,
-                    y2,
-                    uv1.u,
-                    uv1.v,
-                    uv2.u,
-                    uv2.v,
-                    argb,
-                    TextureSetup.withoutGlTexture(glyph.page.texture.glTextureView),
-                    ctx.copyPose(),
-                    ctx.scissorStack.peekLast(),
-                    ctx.createBounds(x1, y1, x2 - x1, y2 - y1),
-                )
+            ctx.drawTexQuad(
+                glyph.page.texture.glTextureView,
+                x0 = x0, y0 = y0, x1 = x1, y1 = y1,
+                u1 = uv1.u, v1 = uv1.v, u2 = uv2.u, v2 = uv2.v, argb = argb,
             )
         }
     }
