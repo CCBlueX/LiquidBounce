@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.render.VertexFormats
-import net.minecraft.resource.ResourceManager
 import net.minecraft.util.Identifier
 
 object ClientRenderPipelines {
@@ -230,7 +229,7 @@ object ClientRenderPipelines {
     /**
      * Precompile
      */
-    fun reload(manager: ResourceManager) {
+    fun precompile() {
         JCEF
         GUI
 

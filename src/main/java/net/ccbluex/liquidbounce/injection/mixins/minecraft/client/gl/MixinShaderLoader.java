@@ -33,7 +33,7 @@ public abstract class MixinShaderLoader {
 
     @Inject(method = "apply(Lnet/minecraft/client/gl/ShaderLoader$Definitions;Lnet/minecraft/resource/ResourceManager;Lnet/minecraft/util/profiler/Profiler;)V", at = @At("TAIL"))
     private void reloadClientPipelines(CallbackInfo info, @Local(argsOnly = true) ResourceManager resourceManager) {
-        ClientRenderPipelines.INSTANCE.reload(resourceManager);
+        ClientRenderPipelines.INSTANCE.precompile();
     }
 
 }
