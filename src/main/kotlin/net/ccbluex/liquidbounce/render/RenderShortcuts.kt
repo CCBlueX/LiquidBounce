@@ -188,7 +188,6 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         .write(
             RenderSystem.getModelViewMatrix(),
             Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
-            // TODO(1.21.10-port): is this correct?
             Vector3f(),
             RenderSystem.getTextureMatrix(),
             RenderSystem.getShaderLineWidth(),

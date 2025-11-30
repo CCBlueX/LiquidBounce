@@ -347,7 +347,6 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
         }
 
         when (val packet = it.packet) {
-            // TODO(1.21.10-port): mc.submit?
             is BlockUpdateS2CPacket -> {
                 mc.submit { updatePosOnChange(packet.pos, packet.state) }
             }
