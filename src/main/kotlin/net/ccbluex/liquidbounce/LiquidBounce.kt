@@ -60,7 +60,6 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientShaders
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
@@ -83,7 +82,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.resource.ReloadableResourceManagerImpl
-import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
 import net.minecraft.util.Identifier
@@ -505,10 +503,10 @@ object LiquidBounce : EventListener {
      */
     private object ClientResourceReloader : ResourceReloader {
         override fun reload(
-            synchronizer: ResourceReloader.Synchronizer,
-            manager: ResourceManager,
+            store: ResourceReloader.Store,
             prepareExecutor: Executor,
-            applyExecutor: Executor,
+            synchronizer: ResourceReloader.Synchronizer,
+            applyExecutor: Executor
         ): CompletableFuture<Void> {
             return synchronizer.whenPrepared(net.minecraft.util.Unit.INSTANCE)
                 .thenCompose {
