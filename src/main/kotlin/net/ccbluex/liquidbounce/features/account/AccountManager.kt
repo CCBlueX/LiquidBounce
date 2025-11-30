@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.with
 import net.minecraft.client.session.ProfileKeys
 import java.net.Proxy
 import java.util.*
@@ -94,8 +95,11 @@ object AccountManager : Configurable("Accounts"), EventListener {
         }.getOrDefault(ProfileKeys.MISSING)
 
         mc.session = session
-        // TODO(1.21.10-port): apiServices is a record & idk
-//        mc.apiServices.sessionService = service.createMinecraftSessionService()
+        mc.apiServices = mc.apiServices.with(
+            service.createMinecraftSessionService(),
+            service.servicesKeySet,
+            service.createProfileRepository(),
+        )
         mc.profileKeys = profileKeys
 
         EventManager.callEvent(SessionEvent(session))
@@ -299,7 +303,9 @@ object AccountManager : Configurable("Accounts"), EventListener {
     fun restoreInitial() {
         val initialSession = initialSession
         mc.session = initialSession.session
-        // TODO(1.21.10-port): api services thing
+        mc.apiServices = mc.apiServices.with(
+            initialSession.sessionService ?: mc.apiServices.sessionService
+        )
 //        mc.apiServices.sessionService = initialSession.sessionService
         mc.profileKeys = initialSession.profileKeys
 

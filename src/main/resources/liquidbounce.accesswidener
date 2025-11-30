@@ -6,6 +6,8 @@ mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client
 accessible field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/session/ProfileKeys;
 mutable field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/session/ProfileKeys;
 accessible field net/minecraft/client/MinecraftClient attackCooldown I
+accessible field net/minecraft/client/MinecraftClient apiServices Lnet/minecraft/util/ApiServices;
+mutable field net/minecraft/client/MinecraftClient apiServices Lnet/minecraft/util/ApiServices;
 
 accessible method net/minecraft/entity/LivingEntity tickActiveItemStack ()V
 
