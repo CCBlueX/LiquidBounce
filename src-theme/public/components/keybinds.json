@@ -1,6 +1,6 @@
 {
   "name": "KeyBinds",
-  "enabled": false,
+  "enabled": true,
   "singleton": true,
   "alignment": {
     "horizontalAlignment": "Left",
