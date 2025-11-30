@@ -2,7 +2,7 @@
  * Plain PosTex
  * No ProjMat/ModelViewMat
  */
-#version 410
+#version 330 core
 
 in vec3 Position;
 in vec2 UV0;
