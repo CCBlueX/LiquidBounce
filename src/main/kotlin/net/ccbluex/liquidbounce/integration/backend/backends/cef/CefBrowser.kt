@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.*
@@ -123,10 +122,10 @@ class CefBrowser(
             }
 
             return BrowserTexture(
-                mcefBrowser.renderer.texture!!.asView(),
+                mcefBrowser.renderer.textureView!!,
                 viewport.height,
                 viewport.width,
-                mcefBrowser.renderer.isBGRA
+                mcefBrowser.renderer.isBGRA,
             )
         }
 

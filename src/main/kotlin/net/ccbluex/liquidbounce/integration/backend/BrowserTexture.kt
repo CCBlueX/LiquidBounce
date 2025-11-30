@@ -29,6 +29,7 @@ import com.mojang.blaze3d.textures.GpuTextureView
  * @param height The height of the texture.
  * @param bgra Whether the texture is in BGRA format (true) or RGBA format (false).
  */
+@JvmRecord
 data class BrowserTexture(
     val view: GpuTextureView,
     val width: Int,
