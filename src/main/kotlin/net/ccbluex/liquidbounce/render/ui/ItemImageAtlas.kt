@@ -45,6 +45,7 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.client.util.math.Rect2i
 import net.minecraft.item.Item
 import net.minecraft.item.ItemDisplayContext
+import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
@@ -158,10 +159,19 @@ private class ItemTextureRenderer(
         items.forEachIndexed { idx, item ->
             val x = (idx % itemsPerDimension) * itemPixelSize
             val y = (idx / itemsPerDimension) * itemPixelSize
-            val stack = item.defaultStack
-            mc.itemModelManager.clearAndUpdate(keyedItemRenderState, stack, ItemDisplayContext.GUI, world, player, 0)
+            if (item !== Items.AIR) {
+                val stack = item.defaultStack
+                mc.itemModelManager.clearAndUpdate(
+                    keyedItemRenderState,
+                    stack,
+                    ItemDisplayContext.GUI,
+                    world,
+                    player,
+                    0
+                )
 
-            this.prepareItemInitially(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
+                this.prepareItemInitially(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
+            }
             itemMap[item] = Rect2i(x, y, itemPixelSize, itemPixelSize)
         }
         keyedItemRenderState.clear()
