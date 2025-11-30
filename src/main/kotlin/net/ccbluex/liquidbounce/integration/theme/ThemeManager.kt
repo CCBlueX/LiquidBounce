@@ -96,6 +96,7 @@ object ThemeManager : Configurable("theme") {
 
     internal val reloader = SynchronousResourceReloader { resourceManager ->
         themes.forEach { it.reload(resourceManager) }
+        logger.info("Reloaded ${themes.size} themes.")
     }
 
     init {

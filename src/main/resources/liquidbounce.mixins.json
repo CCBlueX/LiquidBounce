@@ -41,6 +41,7 @@
     "minecraft.client.gl.MixinFramebuffer",
     "minecraft.client.gl.MixinGlDebug",
     "minecraft.client.gl.MixinRenderPassImpl",
+    "minecraft.client.gl.MixinShaderLoader",
     "minecraft.client.network.MixinCommonNetworkHandler",
     "minecraft.client.network.message.MixinMessageHandler",
     "minecraft.client.option.MixinServerListAccessor",

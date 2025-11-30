@@ -170,7 +170,9 @@ class Theme private constructor(val origin: Origin, url: String) :
             background,
             vertexShader,
             fragmentShader,
-        )
+        ).also {
+            it.onResourceReload()
+        }
 
         logger.info("Compiled shader background for theme ${metadata.name}")
         return true
@@ -192,7 +194,9 @@ class Theme private constructor(val origin: Origin, url: String) :
             get<NativeImageBackedTexture>("/backgrounds/${background.name}.png")
         }.getOrNull() ?: return false
 
-        themeBackgroundTexture = ThemeBackground.Image(image)
+        themeBackgroundTexture = ThemeBackground.Image(image).also {
+            it.onResourceReload()
+        }
         logger.info("Loaded background image for theme ${metadata.name}")
         return true
     }
@@ -220,7 +224,7 @@ class Theme private constructor(val origin: Origin, url: String) :
     override fun reload(manager: ResourceManager) {
         themeBackgroundShader?.onResourceReload()
         themeBackgroundTexture?.onResourceReload()
-        logger.info("Reloaded theme '${metadata.name}'")
+        logger.info("Reloaded theme '${metadata.name}'.")
     }
 
     override fun close() {

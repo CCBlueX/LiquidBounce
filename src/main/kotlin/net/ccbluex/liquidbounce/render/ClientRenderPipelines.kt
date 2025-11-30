@@ -34,10 +34,9 @@ import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.resource.ResourceManager
-import net.minecraft.resource.SynchronousResourceReloader
 import net.minecraft.util.Identifier
 
-object ClientRenderPipelines : SynchronousResourceReloader {
+object ClientRenderPipelines {
 
     private val renderPipelines = Object2ObjectOpenHashMap<Identifier, RenderPipeline>()
 
@@ -231,11 +230,12 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     /**
      * Precompile
      */
-    override fun reload(manager: ResourceManager) {
+    fun reload(manager: ResourceManager) {
+        JCEF
+        GUI
+
         renderPipelines.fastIterator().forEach { (_, pipeline) ->
-            gpuDevice.precompilePipeline(pipeline) { identifier, _ ->
-                ClientShaders[identifier] ?: error("Unknown identifier: $identifier")
-            }
+            gpuDevice.precompilePipeline(pipeline, ClientShaders)
         }
         logger.info("Loaded ${renderPipelines.size} Render Pipelines.")
     }

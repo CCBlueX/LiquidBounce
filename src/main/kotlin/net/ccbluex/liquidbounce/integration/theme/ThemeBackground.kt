@@ -200,8 +200,8 @@ sealed interface ThemeBackground : Closeable {
                 val bgName = background.name.lowercase(Locale.US)
                 val themeName = metadata.name.lowercase(Locale.US)
 
-                val vshId = LiquidBounce.identifier("shader/vsh/theme-bg-$bgName")
-                val fshId = LiquidBounce.identifier("shader/fsh/theme-bg-$bgName")
+                val vshId = LiquidBounce.identifier("shader/vsh/theme-bg-$themeName-$bgName")
+                val fshId = LiquidBounce.identifier("shader/fsh/theme-bg-$themeName-$bgName")
 
                 val pipeline = RenderPipeline.Builder()
                     .withLocation(LiquidBounce.identifier("pipeline/theme-bg-$themeName"))

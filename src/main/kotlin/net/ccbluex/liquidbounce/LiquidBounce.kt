@@ -61,6 +61,7 @@ import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.ClientShaders
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
@@ -316,6 +317,10 @@ object LiquidBounce : EventListener {
 
         supervisorScope {
             launch {
+                // Load shaders as string
+                ClientShaders
+            }
+            launch {
                 // Load translations
                 LanguageManager.loadDefault()
             }
@@ -463,7 +468,6 @@ object LiquidBounce : EventListener {
             val resourceManager = mc.resourceManager
             if (resourceManager is ReloadableResourceManagerImpl) {
                 resourceManager.registerReloader(ClientResourceReloader)
-                resourceManager.registerReloader(ClientRenderPipelines)
                 resourceManager.registerReloader(ThemeManager.reloader)
             } else {
                 logger.warn("Failed to register resource reloader!")
@@ -473,7 +477,6 @@ object LiquidBounce : EventListener {
                     workerDispatcher = Dispatchers.Default,
                     renderThreadDispatcher = Dispatchers.Minecraft,
                 ).join()
-                ClientRenderPipelines.reload(resourceManager)
                 ThemeManager.reloader.reload(resourceManager)
             }
         }.onFailure {

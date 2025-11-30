@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.buffer.MinecraftFramebuffer
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
-import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.clearColor
@@ -77,10 +76,6 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     }
 
     fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
-        if (ItemImageAtlas.updateAtlas()) {
-            return
-        }
-
         if (ModuleHud.running && ModuleHud.isBlurEffectActive) {
             this.isDrawingHudFramebuffer = true
             clearOverlay()
