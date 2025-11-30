@@ -73,6 +73,13 @@ object HttpClient {
         " (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, " +
         "${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${System.getProperty("os.name")})"
 
+    /**
+     * Unfortunately, Lunar Client uses OkHttp 4.12.0 which does not have Headers.EMPTY
+     */
+    @Deprecated("Use Headers.EMPTY instead when Lunar Client updates OkHttp to 5.10 or newer.")
+    @JvmField
+    val EMPTY_HEADERS = Headers.Builder().build()
+
     object MediaTypes {
         @JvmField
         val JSON = "application/json; charset=utf-8".toMediaType()
