@@ -36,8 +36,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.function.Supplier;
-
 @Mixin(GuiRenderer.class)
 public abstract class MixinGuiRenderer {
 
@@ -93,12 +91,9 @@ public abstract class MixinGuiRenderer {
     }
 
     @Inject(
-        method = "render(Ljava/util/function/Supplier;Lnet/minecraft/client/gl/Framebuffer;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lcom/mojang/blaze3d/buffers/GpuBufferSlice;Lcom/mojang/blaze3d/buffers/GpuBuffer;Lcom/mojang/blaze3d/vertex/VertexFormat$IndexType;II)V",
-        at = @At("RETURN")
+        method = "renderPreparedDraws", at = @At("RETURN")
     )
-    private void afterRenderBlurOverlay(Supplier<String> nameSupplier, Framebuffer framebuffer,
-        GpuBufferSlice fogBuffer, GpuBufferSlice dynamicTransformsBuffer, GpuBuffer buffer,
-        VertexFormat.IndexType indexType, int from, int _to, CallbackInfo ci) {
+    private void afterRenderBlurOverlay(GpuBufferSlice fogBuffer, CallbackInfo ci) {
         BlurEffectRenderer.INSTANCE.blitBlurOverlay();
     }
 
