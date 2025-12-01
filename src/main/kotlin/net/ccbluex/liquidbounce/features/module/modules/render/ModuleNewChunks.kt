@@ -110,7 +110,7 @@ object ModuleNewChunks : ClientModule("NewChunks", Category.RENDER) {
         val maxDist = renderDistanceChunks.toDouble() * 16.0
         val renderDistSq = maxDist * maxDist
 
-        val drawY = if (autoY) player.y else renderY.toDouble()
+        val drawY = if (autoY) player.y - 100.0 else renderY.toDouble()
 
         renderEnvironmentForWorld(event.matrixStack) {
             for ((chunk, isNew) in chunks) {
