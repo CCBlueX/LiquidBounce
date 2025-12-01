@@ -120,7 +120,7 @@ object ClientRenderPipelines {
             withDepthWrite(false)
             withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             withColorWrite(true, false)
-            withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
+            withVertexFormat(VertexFormats.EMPTY, VertexFormat.DrawMode.TRIANGLES)
         }
     }
 
