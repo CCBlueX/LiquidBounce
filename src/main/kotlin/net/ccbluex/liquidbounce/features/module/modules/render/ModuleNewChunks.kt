@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.exploit
+package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -36,6 +36,7 @@ import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.Vec3d
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.iterator
 import kotlin.math.abs
 import kotlin.math.max
 
