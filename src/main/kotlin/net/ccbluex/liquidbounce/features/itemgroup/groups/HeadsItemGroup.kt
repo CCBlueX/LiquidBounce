@@ -18,6 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.itemgroup.groups
 
+import com.google.common.collect.ImmutableMultimap
+import com.mojang.authlib.GameProfile
+import com.mojang.authlib.properties.Property
+import com.mojang.authlib.properties.PropertyMap
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.ioScope
@@ -54,11 +58,19 @@ data class Head(val name: String, val uuid: UUID, val value: String) {
                 )
             )
         )
-        builder.add(
-            DataComponentTypes.PROFILE,
-            ProfileComponent.ofDynamic(uuid)
+
+        val profile = GameProfile(
+            uuid,
+            name,
+            PropertyMap(
+                ImmutableMultimap.of("textures", Property("textures", value))
+            ),
         )
 
+        builder.add(
+            DataComponentTypes.PROFILE,
+            ProfileComponent.ofStatic(profile),
+        )
 
         return ItemStack(Registries.ITEM.getEntry(Items.PLAYER_HEAD), 1, builder.build())
     }
