@@ -33,8 +33,7 @@ import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.ccbluex.liquidbounce.utils.render.clearColor
-import net.ccbluex.liquidbounce.utils.render.clearDepth
+import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gl.SimpleFramebuffer
@@ -60,8 +59,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     }
 
     private fun clearOverlay() {
-        overlayFramebuffer.colorAttachment?.clearColor(0)
-        overlayFramebuffer.depthAttachment?.clearDepth(1.0)
+        overlayFramebuffer.clearColorAndDepth()
     }
 
     private val lastTimeScreenOpened = Chronometer()

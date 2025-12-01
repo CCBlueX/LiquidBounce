@@ -76,14 +76,25 @@ inline fun withOutputTextureOverride(
     }
 }
 
-inline fun GpuTexture.clearColor(color: Int) =
+inline fun GpuTexture.clearColor(color: Int = 0) =
     gpuDevice.createCommandEncoder().clearColorTexture(this, color)
 
-inline fun GpuTexture.clearDepth(depth: Double) =
+inline fun GpuTexture.clearDepth(depth: Double = 1.0) =
     gpuDevice.createCommandEncoder().clearDepthTexture(this, depth)
 
-inline fun Framebuffer.clearColorAndDepth(color: Int, depth: Double) =
-    gpuDevice.createCommandEncoder().clearColorAndDepthTextures(colorAttachment, color, depthAttachment, depth)
+inline fun Framebuffer.clearColorAndDepth(color: Int = 0, depth: Double = 1.0) {
+    val colorAttachment = colorAttachment
+    val depthAttachment = depthAttachment.takeIf { useDepthAttachment }
+
+    when {
+        colorAttachment != null && depthAttachment != null ->
+            gpuDevice.createCommandEncoder().clearColorAndDepthTextures(
+                colorAttachment, color, depthAttachment, depth
+            )
+        colorAttachment != null -> colorAttachment.clearColor(color)
+        depthAttachment != null -> depthAttachment.clearDepth(depth)
+    }
+}
 
 inline fun GpuTexture.asView(): GpuTextureView =
     gpuDevice.createTextureView(this)
