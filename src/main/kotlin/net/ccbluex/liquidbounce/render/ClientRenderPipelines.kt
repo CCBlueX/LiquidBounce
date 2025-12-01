@@ -110,9 +110,11 @@ object ClientRenderPipelines {
             withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
         }
 
+        /**
+         * @see RenderPipelines.ENTITY_OUTLINE_BLIT
+         */
         @JvmField
         val Blit = newPipeline("jcef_blit") {
-            withLocation("pipeline/entity_outline_blit")
             withVertexShader("core/screenquad")
             withFragmentShader("core/blit_screen")
             withSampler("InSampler")
