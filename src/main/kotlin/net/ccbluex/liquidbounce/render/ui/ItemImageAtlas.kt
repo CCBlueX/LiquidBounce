@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
+import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
@@ -137,41 +138,39 @@ private class ItemTextureRenderer(
      */
     fun render(): CompletableFuture<Atlas> {
         itemAtlasFramebuffer.clearColorAndDepth(0, 1.0)
-        RenderSystem.outputColorTextureOverride = itemAtlasFramebuffer.colorAttachmentView
-        RenderSystem.outputDepthTextureOverride = itemAtlasFramebuffer.depthAttachmentView
         RenderSystem.backupProjectionMatrix()
         RenderSystem.setProjectionMatrix(
             this.itemsProjectionMatrix.set(textureSize.toFloat(), textureSize.toFloat()),
             ProjectionType.ORTHOGRAPHIC,
         )
-
-        val matrixStack = Pools.MatStack.borrow()
-        val keyedItemRenderState = KeyedItemRenderState()
         val itemMap = Reference2ObjectOpenHashMap<Item, Rect2i>(count)
-        items.forEachIndexed { idx, item ->
-            val x = (idx % itemsPerDimension) * itemPixelSize
-            val y = (idx / itemsPerDimension) * itemPixelSize
-            if (item !== Items.AIR) {
-                val stack = item.defaultStack
-                mc.itemModelManager.clearAndUpdate(
-                    keyedItemRenderState,
-                    stack,
-                    ItemDisplayContext.GUI,
-                    world,
-                    player,
-                    0
-                )
 
-                this.prepareItemInitially(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
+        withOutputTextureOverride(itemAtlasFramebuffer.colorAttachmentView, itemAtlasFramebuffer.depthAttachmentView) {
+            val matrixStack = Pools.MatStack.borrow()
+            val keyedItemRenderState = KeyedItemRenderState()
+            items.forEachIndexed { idx, item ->
+                val x = (idx % itemsPerDimension) * itemPixelSize
+                val y = (idx / itemsPerDimension) * itemPixelSize
+                if (item !== Items.AIR) {
+                    val stack = item.defaultStack
+                    mc.itemModelManager.clearAndUpdate(
+                        keyedItemRenderState,
+                        stack,
+                        ItemDisplayContext.GUI,
+                        world,
+                        player,
+                        0
+                    )
+
+                    this.prepareItemInitially(keyedItemRenderState, matrixStack, x, y, itemPixelSize)
+                }
+                itemMap[item] = Rect2i(x, y, itemPixelSize, itemPixelSize)
             }
-            itemMap[item] = Rect2i(x, y, itemPixelSize, itemPixelSize)
-        }
-        keyedItemRenderState.clear()
-        Pools.MatStack.recycle(matrixStack)
+            keyedItemRenderState.clear()
+            Pools.MatStack.recycle(matrixStack)
 
-        RenderSystem.restoreProjectionMatrix()
-        RenderSystem.outputColorTextureOverride = null
-        RenderSystem.outputDepthTextureOverride = null
+            RenderSystem.restoreProjectionMatrix()
+        }
 
         return itemAtlasFramebuffer.colorAttachment!!.toBufferedImage()
             .thenApply { image ->

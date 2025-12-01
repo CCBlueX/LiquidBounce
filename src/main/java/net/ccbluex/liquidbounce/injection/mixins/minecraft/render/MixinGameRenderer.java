@@ -29,14 +29,12 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoEntityInt
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
 import net.ccbluex.liquidbounce.interfaces.LightmapTextureManagerAddition;
-import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingKt;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.Camera;
@@ -198,18 +196,6 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "onResized", at = @At("HEAD"))
     private void hookBlurEffectResize(int width, int height, CallbackInfo ci) {
-    }
-
-    @Inject(method = "render", at = @At(value = "RETURN"))
-    private void hookBlurEffectEnd(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
-        BlurEffectRenderer.INSTANCE.endOverlayDrawing();
-    }
-
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V"))
-    private void hookBlurEffectEndAlternative(CallbackInfo ci) {
-        if (!(client.currentScreen instanceof ChatScreen)) {
-            BlurEffectRenderer.INSTANCE.endOverlayDrawing();
-        }
     }
 
     @Inject(method = "showFloatingItem", at = @At("HEAD"), cancellable = true)
