@@ -18,11 +18,7 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.authlib.Authlib
 import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
@@ -32,9 +28,8 @@ import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.texture.NativeImage
 import net.minecraft.util.Util
 import net.minecraft.util.crash.CrashException
 import okhttp3.*
@@ -76,6 +71,13 @@ object HttpClient {
     val DEFAULT_AGENT = "${LiquidBounce.CLIENT_NAME}/${LiquidBounce.clientVersion}" +
         " (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, " +
         "${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${System.getProperty("os.name")})"
+
+    /**
+     * Unfortunately, Lunar Client uses OkHttp 4.12.0 which does not have Headers.EMPTY
+     */
+    @Deprecated("Use Headers.EMPTY instead when Lunar Client updates OkHttp to 5.10 or newer.")
+    @JvmField
+    val EMPTY_HEADERS = Headers.Builder().build()
 
     object MediaTypes {
         @JvmField
@@ -210,9 +212,7 @@ inline fun <reified T> Response.parse(): T {
         InputStream::class.java -> body.byteStream() as T
         BufferedSource::class.java -> body.source() as T
         Reader::class.java -> body.charStream() as T
-        NativeImageBackedTexture::class.java -> body.byteStream().toNativeImage().asTexture {
-            "NetworkImage ${request.url}"
-        } as T
+        NativeImage::class.java -> body.byteStream().toNativeImage() as T
         else -> body.charStream().readJson<T>()
     }
 }

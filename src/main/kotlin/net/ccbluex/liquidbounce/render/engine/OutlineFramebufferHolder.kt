@@ -50,7 +50,7 @@ object OutlineFramebufferHolder : MinecraftShortcuts {
         if (width != framebuffer.textureWidth || height != framebuffer.textureHeight) {
             framebuffer.resize(width, height)
         } else {
-            outlineTexture.clearColor(0)
+            outlineTexture.clearColor()
         }
 
         return framebuffer

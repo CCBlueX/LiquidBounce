@@ -21,36 +21,38 @@ package net.ccbluex.liquidbounce.render.engine
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.vertex.VertexFormat
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.buffer.MinecraftFramebuffer
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.ccbluex.liquidbounce.utils.render.clearColor
-import net.ccbluex.liquidbounce.utils.render.clearDepth
+import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.writeStd140
-import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.SimpleFramebuffer
-import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.input.SystemKeycodes
 import java.util.*
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
-    private var isDrawingHudFramebuffer = false
+    var isDrawingHudFramebuffer = false
+        set(value) {
+            if (value) {
+                clearOverlay()
+            }
+            field = value
+        }
 
-    private val overlayFramebuffer = SimpleFramebuffer(
-        "BlurOverlay",
+    val overlayFramebuffer = SimpleFramebuffer(
+        "${LiquidBounce.CLIENT_NAME} BlurOverlay",
         mc.window.framebufferWidth,
         mc.window.framebufferHeight,
         true
@@ -59,8 +61,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     }
 
     private fun clearOverlay() {
-        overlayFramebuffer.colorAttachment?.clearColor(0)
-        overlayFramebuffer.depthAttachment?.clearDepth(1.0)
+        overlayFramebuffer.clearColorAndDepth()
     }
 
     private val lastTimeScreenOpened = Chronometer()
@@ -77,43 +78,19 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         }
     }
 
-    fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
-        if (ModuleHud.running && ModuleHud.isBlurEffectActive) {
-            this.isDrawingHudFramebuffer = true
-            clearOverlay()
-
-            if (SystemKeycodes.IS_MAC_OS) {
-                RenderSystem.outputColorTextureOverride = this.overlayFramebuffer.colorAttachmentView
-                RenderSystem.outputDepthTextureOverride = this.overlayFramebuffer.depthAttachmentView
-            } else {
-                // TODO: GlobalFramebuffer is incompatible with OSX
-                val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
-                framebufferWrapper.beginWrite(viewport = true, clear = false)
-            }
-        }
-
-        callEvent(OverlayRenderEvent(context, tickDelta))
-    }
-
     private val GUI_BLUR_UNIFORM_BUFFER = gpuDevice.createUbo(
         labelGetter = { "GUI blur UBO" },
         std140Size = { float + float + float },
     ).slice()
 
-    fun endOverlayDrawing() {
-        if (!this.isDrawingHudFramebuffer) {
+    fun shouldDrawBlur(): Boolean = inGame && mc.currentScreen == null &&
+        ModuleHud.running && ModuleHud.isBlurEffectActive
+
+    fun blitBlurOverlay() {
+        if (!isDrawingHudFramebuffer) {
             return
         }
-
-        this.isDrawingHudFramebuffer = false
-
-        if (SystemKeycodes.IS_MAC_OS) {
-            RenderSystem.outputColorTextureOverride = null
-            RenderSystem.outputDepthTextureOverride = null
-        } else {
-            val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
-            framebufferWrapper.end()
-        }
+        isDrawingHudFramebuffer = false
 
         // Draw blur areas
         GUI_BLUR_UNIFORM_BUFFER.writeStd140 {
