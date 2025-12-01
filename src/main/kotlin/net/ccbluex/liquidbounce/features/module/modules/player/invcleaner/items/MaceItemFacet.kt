@@ -39,11 +39,11 @@ import kotlin.math.pow
  * or something.
  */
 class MaceItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
-    override val category: ItemCategory
-        get() = ItemCategory(ItemType.MACE, 0)
+    override val category: ItemCategory = ItemCategory(ItemType.MACE, 0)
 
     companion object {
-        const val P = 0.9919069797821398 // 0.85.pow(1 / 20.0)
+        /** `0.85.pow(1 / 20.0)` */
+        const val P = 0.9919069797821398
         const val ASSUMED_FALL_DISTANCE = 15.0
         /**
          * Estimates damage for different enchantments. Note that sharpness is already considered by
@@ -74,11 +74,10 @@ class MaceItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
         private fun getBonusAttackDamage(fallDistance: Double): Float {
             val dmg = if (fallDistance <= 3.0) {
                 4.0 * fallDistance
+            } else if (fallDistance <= 8.0) {
+                12.0 + 2.0 * (fallDistance - 3.0)
             } else {
-                (if (fallDistance <= 8.0) {
-                    12.0 + 2.0 * (fallDistance - 3.0)
-                }
-                else { 22.0 + fallDistance - 8.0 })
+                22.0 + fallDistance - 8.0
             }
             // TODO: doesn't account for getSmashDamagePerFallenBlock
             return dmg.toFloat()
