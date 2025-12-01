@@ -25,6 +25,7 @@ import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.buffers.Std140SizeCalculator
 import com.mojang.blaze3d.systems.GpuDevice
+import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -50,21 +51,50 @@ import java.util.function.Supplier
  * Avoiding String contract
  */
 @JvmField
-val SAMPLER_NAMES = Array(12) { "Sampler$it" }
+val SAMPLER_NAMES = Array(RenderSystem.TEXTURE_COUNT) { "Sampler$it" }
 
 fun MatrixStack.reset() {
     while (!isEmpty) pop()
     loadIdentity()
 }
 
-inline fun GpuTexture.clearColor(color: Int) =
+inline fun withOutputTextureOverride(
+    color: GpuTextureView? = null,
+    depth: GpuTextureView? = null,
+    block: () -> Unit,
+) {
+    val oldColor = RenderSystem.outputColorTextureOverride
+    val oldDepth = RenderSystem.outputDepthTextureOverride
+
+    try {
+        RenderSystem.outputColorTextureOverride = color
+        RenderSystem.outputDepthTextureOverride = depth
+        block()
+    } finally {
+        RenderSystem.outputColorTextureOverride = oldColor
+        RenderSystem.outputDepthTextureOverride = oldDepth
+    }
+}
+
+inline fun GpuTexture.clearColor(color: Int = 0) =
     gpuDevice.createCommandEncoder().clearColorTexture(this, color)
 
-inline fun GpuTexture.clearDepth(depth: Double) =
+inline fun GpuTexture.clearDepth(depth: Double = 1.0) =
     gpuDevice.createCommandEncoder().clearDepthTexture(this, depth)
 
-inline fun Framebuffer.clearColorAndDepth(color: Int, depth: Double) =
-    gpuDevice.createCommandEncoder().clearColorAndDepthTextures(colorAttachment, color, depthAttachment, depth)
+inline fun Framebuffer.clearColorAndDepth(color: Int = 0, depth: Double = 1.0) {
+    val colorAttachment = colorAttachment
+    val depthAttachment = depthAttachment.takeIf { useDepthAttachment }
+
+    when {
+        colorAttachment != null && depthAttachment != null ->
+            gpuDevice.createCommandEncoder().clearColorAndDepthTextures(
+                colorAttachment, color, depthAttachment, depth
+            )
+        colorAttachment != null -> colorAttachment.clearColor(color)
+        depthAttachment != null -> depthAttachment.clearDepth(depth)
+    }
+}
 
 inline fun GpuTexture.asView(): GpuTextureView =
     gpuDevice.createTextureView(this)

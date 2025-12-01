@@ -32,13 +32,14 @@ import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.VertexFormats
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.texture.NativeImage
 import net.minecraft.util.Identifier
 import java.io.Closeable
 import java.util.*
@@ -66,7 +67,12 @@ sealed interface ThemeBackground : Closeable {
      * Background implementation that renders a static image texture.
      * @param texture The image texture
      */
-    class Image(private val texture: NativeImageBackedTexture) : ThemeBackground {
+    class Image(
+        private val metadata: ThemeMetadata,
+        image: NativeImage,
+    ) : ThemeBackground {
+
+        private val texture = image.asTexture { "ThemeBackground/Image - ${metadata.name}" }
 
         override fun draw(
             context: DrawContext,
@@ -176,7 +182,7 @@ sealed interface ThemeBackground : Closeable {
             ) {
                 background?.close()
                 background = gpuDevice.createTexture(
-                    "ThemeShaderBackground Texture - ${metadata.name} ($framebufferWidth x $framebufferHeight)",
+                    "ThemeBackground/Shader - ${metadata.name} ($framebufferWidth x $framebufferHeight)",
                     GpuTexture.USAGE_RENDER_ATTACHMENT,
                     TextureFormat.RGBA8, framebufferWidth, framebufferHeight,
                     1, 1,

@@ -24,6 +24,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
@@ -33,7 +34,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.integration.theme.component.Component;
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager;
 import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak;
-import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -81,7 +81,7 @@ public abstract class MixinInGameHud {
             return;
         }
 
-        BlurEffectRenderer.INSTANCE.startOverlayDrawing(context, tickCounter.getTickProgress(false));
+        EventManager.INSTANCE.callEvent(new OverlayRenderEvent(context, tickCounter.getTickProgress(false)));
 
         // Draw after overlay event
         var component = ComponentManager.getComponentWithTweak(ComponentTweak.TWEAK_HOTBAR);

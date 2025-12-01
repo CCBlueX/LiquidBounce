@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.integration.theme
 
 import io.netty.handler.codec.http.HttpHeaderNames
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -33,7 +35,8 @@ import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.Jso
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.minecraft.client.texture.NativeImage
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.SynchronousResourceReloader
 import okhttp3.Headers
@@ -165,13 +168,15 @@ class Theme private constructor(val origin: Origin, url: String) :
             get<String>("/backgrounds/${background.name.lowercase(Locale.US)}.frag")
         }.getOrNull() ?: return false
 
-        themeBackgroundShader = ThemeBackground.Shader.build(
-            metadata,
-            background,
-            vertexShader,
-            fragmentShader,
-        ).also {
-            it.onResourceReload()
+        withContext(Dispatchers.Minecraft) {
+            themeBackgroundShader = ThemeBackground.Shader.build(
+                metadata,
+                background,
+                vertexShader,
+                fragmentShader,
+            ).also {
+                it.onResourceReload()
+            }
         }
 
         logger.info("Compiled shader background for theme ${metadata.name}")
@@ -191,11 +196,13 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
 
         val image = runCatching {
-            get<NativeImageBackedTexture>("/backgrounds/${background.name}.png")
+            get<NativeImage>("/backgrounds/${background.name}.png")
         }.getOrNull() ?: return false
 
-        themeBackgroundTexture = ThemeBackground.Image(image).also {
-            it.onResourceReload()
+        withContext(Dispatchers.Minecraft) {
+            themeBackgroundTexture = ThemeBackground.Image(metadata, image).also {
+                it.onResourceReload()
+            }
         }
         logger.info("Loaded background image for theme ${metadata.name}")
         return true

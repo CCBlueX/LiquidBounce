@@ -23,12 +23,18 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gui.render.GuiRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GuiRenderer.class)
 public abstract class MixinGuiRenderer {
@@ -69,6 +75,26 @@ public abstract class MixinGuiRenderer {
         }
 
         original.call(instance, gpuBuffer, indexType);
+    }
+
+    @WrapOperation(
+        method = "renderPreparedDraws",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getFramebuffer()Lnet/minecraft/client/gl/Framebuffer;")
+    )
+    private Framebuffer injectBlurRenderTarget(MinecraftClient instance, Operation<Framebuffer> original) {
+        BlurEffectRenderer blurEffectRenderer = BlurEffectRenderer.INSTANCE;
+        if (blurEffectRenderer.shouldDrawBlur()) {
+            blurEffectRenderer.setDrawingHudFramebuffer(true);
+            return blurEffectRenderer.getOverlayFramebuffer();
+        }
+        return original.call(instance);
+    }
+
+    @Inject(
+        method = "renderPreparedDraws", at = @At("RETURN")
+    )
+    private void afterRenderBlurOverlay(GpuBufferSlice fogBuffer, CallbackInfo ci) {
+        BlurEffectRenderer.INSTANCE.blitBlurOverlay();
     }
 
 }

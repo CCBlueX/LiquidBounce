@@ -8,7 +8,6 @@
   "client": [
     "authlib.MixinMinecraftClient",
     "authlib.MixinYggdrasilMinecraftSessionService",
-    "blaze3d.MixinGlStateManager",
     "djl.MixinUtils",
     "lithium.MixinChunkAwareBlockCollisionSweeper",
     "minecraft.block.MixinBlock",
