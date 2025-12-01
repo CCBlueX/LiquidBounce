@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -66,7 +66,7 @@ object ModuleNewChunks : ClientModule("NewChunks", Category.RENDER) {
     override fun onDisabled() = reset()
 
     @Suppress("unused")
-    private val disconnectHandler = handler<DisconnectEvent> {
+    private val worldChangeHandler = handler<WorldChangeEvent> {
         reset()
     }
 
