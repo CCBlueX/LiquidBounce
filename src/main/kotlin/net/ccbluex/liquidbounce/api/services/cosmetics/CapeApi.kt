@@ -20,12 +20,12 @@ package net.ccbluex.liquidbounce.api.services.cosmetics
 
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.texture.NativeImage
 
 object CapeApi : BaseApi(config.apiEndpointV1) {
     /**
-     * Request a cape by name and return the cape texture as [NativeImageBackedTexture].
+     * Request a cape by name and return the cape texture as [NativeImage].
      */
     suspend fun getCape(name: String) =
-        get<NativeImageBackedTexture>("/cape/name/$name")
+        get<NativeImage>("/cape/name/$name")
 }

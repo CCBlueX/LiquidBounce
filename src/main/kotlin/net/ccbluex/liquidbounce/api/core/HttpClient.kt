@@ -28,9 +28,8 @@ import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.texture.NativeImage
 import net.minecraft.util.Util
 import net.minecraft.util.crash.CrashException
 import okhttp3.*
@@ -206,22 +205,14 @@ enum class HttpMethod {
  * If [T] is one of following types, it should be closed after using:
  * [InputStream] / [BufferedSource] / [Reader]
  */
-suspend inline fun <reified T> Response.parse(): T {
+inline fun <reified T> Response.parse(): T {
     return when (T::class.java) {
         String::class.java -> body.string() as T
         Unit::class.java -> close() as T
         InputStream::class.java -> body.byteStream() as T
         BufferedSource::class.java -> body.source() as T
         Reader::class.java -> body.charStream() as T
-        NativeImageBackedTexture::class.java -> {
-            val nativeImage = body.byteStream().toNativeImage()
-
-            withContext(Dispatchers.Minecraft) {
-                nativeImage.asTexture {
-                    "NetworkImage ${request.url}"
-                }
-            } as T
-        }
+        NativeImage::class.java -> body.byteStream().toNativeImage() as T
         else -> body.charStream().readJson<T>()
     }
 }
