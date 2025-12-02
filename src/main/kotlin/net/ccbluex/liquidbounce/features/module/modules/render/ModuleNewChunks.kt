@@ -36,7 +36,6 @@ import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.Vec3d
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.iterator
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -47,7 +46,7 @@ import kotlin.math.max
  */
 object ModuleNewChunks : ClientModule("NewChunks", Category.RENDER) {
 
-    private val renderDistanceChunks by int("RenderDistanceChunks", 32, 4..128)
+    private val renderDistance by int("RenderDistance", 32, 4..128, "chunks")
     private val renderY by float("RenderY", 0.0f, -64.0f..320.0f)
     private val autoY by boolean("AutoY", false)
 
@@ -107,15 +106,15 @@ object ModuleNewChunks : ClientModule("NewChunks", Category.RENDER) {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         if (chunks.isEmpty()) return@handler
 
-        val maxDist = renderDistanceChunks.toDouble() * 16.0
+        val maxDist = renderDistance.toDouble() * 16.0
         val renderDistSq = maxDist * maxDist
 
         val drawY = if (autoY) player.y - 100.0 else renderY.toDouble()
 
         renderEnvironmentForWorld(event.matrixStack) {
             for ((chunk, isNew) in chunks) {
-                val chunkX = chunk.x shl 4
-                val chunkZ = chunk.z shl 4
+                val chunkX = chunk.startX
+                val chunkZ = chunk.startZ
 
                 if (player.squaredDistanceTo(chunkX + 8.0, player.y, chunkZ + 8.0) > renderDistSq) {
                     continue
