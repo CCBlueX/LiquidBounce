@@ -98,6 +98,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.input.InputBind
+import net.ccbluex.liquidbounce.utils.input.toModifierOrNull
 import org.lwjgl.glfw.GLFW
 
 private val modules = ObjectRBTreeSet<ClientModule>(VALUE_NAME_ORDER)
@@ -118,15 +119,18 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> { event ->
         when (event.action) {
             GLFW.GLFW_PRESS -> if (mc.currentScreen == null) {
-                    filter { m -> m.bind.matchesKey(event.keyCode, event.scanCode) }
-                    .forEach { m ->
-                        m.enabled = !m.enabled || m.bind.action == InputBind.BindAction.HOLD
-                    }
+                filter { m ->
+                    m.bind.matchesKey(event.keyCode, event.scanCode) && m.bind.matchesModifiers(event.mods)
+                }.forEach { m ->
+                    m.enabled = !m.enabled || m.bind.action == InputBind.BindAction.HOLD
                 }
+            }
             GLFW.GLFW_RELEASE ->
                 filter { m ->
-                    m.bind.matchesKey(event.keyCode, event.scanCode) &&
-                        m.bind.action == InputBind.BindAction.HOLD
+                    m.bind.action == InputBind.BindAction.HOLD && (
+                        m.bind.matchesKey(event.keyCode, event.scanCode)
+                            || event.key.toModifierOrNull().let { it in m.bind.modifiers && !it!!.isAnyPressed }
+                        )
                 }.forEach { m ->
                     m.enabled = false
                 }
@@ -137,14 +141,17 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
         when (event.action) {
             GLFW.GLFW_PRESS -> if (mc.currentScreen == null) {
-                filter { m -> m.bind.matchesMouse(event.button) }
+                filter { m -> m.bind.matchesMouse(event.button) && m.bind.matchesModifiers(event.mods) }
                     .forEach { m ->
                         m.enabled = !m.running || m.bind.action == InputBind.BindAction.HOLD
                     }
             }
             GLFW.GLFW_RELEASE ->
                 filter { m ->
-                    m.bind.matchesMouse(event.button) && m.bind.action == InputBind.BindAction.HOLD
+                    m.bind.action == InputBind.BindAction.HOLD && (
+                        m.bind.matchesMouse(event.button)
+                            || event.key.toModifierOrNull().let { it in m.bind.modifiers && !it!!.isAnyPressed }
+                        )
                 }.forEach { m -> m.enabled = false }
         }
     }

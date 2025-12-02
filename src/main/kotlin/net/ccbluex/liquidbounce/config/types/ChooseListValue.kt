@@ -21,9 +21,11 @@ package net.ccbluex.liquidbounce.config.types
 
 import com.google.gson.Gson
 import com.google.gson.JsonElement
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import java.util.SortedMap
 
 class ChooseListValue<T : NamedChoice>(
     name: String,
@@ -66,6 +68,11 @@ interface NamedChoice {
     val choiceName: String
 
     companion object {
+        inline fun <reified T> makeLookupTable(): SortedMap<String, T> where T : NamedChoice, T : Enum<T> =
+            T::class.java.enumConstants.associateByTo(
+                Object2ObjectRBTreeMap<String, T>(String.CASE_INSENSITIVE_ORDER)
+            ) { it.choiceName }
+
         @JvmName("of")
         @JvmStatic
         fun String.asNamedChoice(): NamedChoice = object : NamedChoice, Comparable<NamedChoice> {

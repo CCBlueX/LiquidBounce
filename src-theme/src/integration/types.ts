@@ -172,8 +172,13 @@ export interface TogglableSetting extends Setting<ModuleSetting[]> {
 
 export interface InputBind {
     boundKey: string;
-    action: "Toggle" | "Hold";
+    action: BindAction;
+    modifiers: BindModifier[];
 }
+
+export type BindAction = "Toggle" | "Hold";
+
+export type BindModifier = "Shift" | "Control" | "Alt" | "Super";
 
 export interface PersistentStorageItem {
     key: string;
