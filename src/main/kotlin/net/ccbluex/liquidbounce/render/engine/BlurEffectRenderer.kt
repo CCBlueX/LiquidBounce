@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.render.engine
 
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
@@ -29,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.createRenderPass
-import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -102,7 +100,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             pass.bindSampler("texture0", mc.framebuffer.colorAttachmentView)
             pass.bindSampler("overlay", overlayFramebuffer.colorAttachmentView)
             pass.setUniform("BlurData", GUI_BLUR_UNIFORM_BUFFER)
-            pass.drawFullScreenPositionTexture()
+            pass.draw(0, 3)
         }
 
         // overlayFramebuffer ---blit--> mc.framebuffer

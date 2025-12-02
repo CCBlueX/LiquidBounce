@@ -208,9 +208,9 @@ object ClientRenderPipelines {
 
     @JvmField
     val GuiBlur = newPipeline("blur") {
-        withVertexShader(ClientShaders.SOBEL_VSH_ID)
+        withVertexShader("core/screenquad")
         withFragmentShader(ClientShaders.BLUR_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
+        withVertexFormat(VertexFormats.EMPTY, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withSampler("overlay")
         withUniform("BlurData", UniformType.UNIFORM_BUFFER)

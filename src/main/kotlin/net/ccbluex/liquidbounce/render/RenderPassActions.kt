@@ -43,6 +43,7 @@ internal val trianglePosTexVertexBuffer: GpuBuffer =
         }.end().createGpuBuffer { "Triangle full screen position texture VBO" }
     }
 
+@Deprecated("Use vertex shader core/screenquad instead (since 1.21.10)")
 fun RenderPass.drawFullScreenPositionTexture() {
     setVertexBuffer(0, trianglePosTexVertexBuffer)
     draw(0, 3)
