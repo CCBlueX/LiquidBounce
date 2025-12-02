@@ -178,7 +178,7 @@ class VirtualScreenEvent(
 class ServerPingedEvent(val server: ServerInfo) : Event(), WebSocketEvent
 
 @Nameable("componentsUpdate")
-class ComponentsUpdate(val id: String? = null, val components: List<Component>) : Event(), WebSocketEvent {
+class ComponentsUpdateEvent(val id: String? = null, val components: List<Component>) : Event(), WebSocketEvent {
     override val serializer get() = accessibleInteropGson
 }
 
@@ -189,7 +189,7 @@ object RotationUpdateEvent : Event()
 object ResourceReloadEvent : Event()
 
 @Nameable("scaleFactorChange")
-class ScaleFactorChangeEvent(val scaleFactor: Double) : Event(), WebSocketEvent
+class ScaleFactorChangeEvent(val scaleFactor: Int) : Event(), WebSocketEvent
 
 @Nameable("scheduleInventoryAction")
 class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Chain> = mutableListOf()) : Event() {

@@ -38,7 +38,7 @@ fun formatAvatarUrl(uuid: UUID?, username: String): String {
  *
  * @param baseUrl The base URL of the API
  */
-abstract class BaseApi(protected val baseUrl: String, val defaultHeaders: Headers = Headers.EMPTY) {
+abstract class BaseApi(protected val baseUrl: String, val defaultHeaders: Headers = HttpClient.EMPTY_HEADERS) {
 
     /**
      * Makes a request and parses the response to the specified type

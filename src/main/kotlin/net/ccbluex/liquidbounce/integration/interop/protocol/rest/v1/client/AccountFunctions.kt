@@ -51,7 +51,7 @@ fun getAccounts(requestObject: RequestObject): FullHttpResponse {
             addProperty("uuid", profile.uuid.toString())
             addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
             add("bans", interopGson.toJsonTree(account.bans))
-            addProperty("type", account.type)
+            addProperty("type", account.type.commonName)
             addProperty("favorite", account.favorite)
         })
     }
@@ -222,7 +222,8 @@ fun deleteAccount(requestObject: RequestObject): FullHttpResponse {
         addProperty("username", profile.username)
         addProperty("uuid", profile.uuid.toString())
         addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
-        addProperty("type", account.type)
+
+        addProperty("type", account.type.commonName)
     })
 }
 

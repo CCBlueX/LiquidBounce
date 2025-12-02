@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 
 import com.mojang.authlib.GameProfile
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -51,7 +52,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
     /**
      * Stores all fake players.
      */
-    private val fakePlayers = ArrayList<FakePlayer>()
+    private val fakePlayers = ReferenceOpenHashSet<FakePlayer>()
 
     private var recording = false
     private val snapshots = ArrayList<PosPoseSnapshot>()
@@ -111,7 +112,9 @@ object CommandFakePlayer : Command.Factory, EventListener {
 
                 val name = args.getOrNull(0)?.toString() ?: "FakePlayer"
 
-                val playersToRemove = fakePlayers.filter { fakePlayer -> fakePlayer.name.string == name }
+                val playersToRemove = fakePlayers.filterTo(ReferenceOpenHashSet()) {
+                    it.name.string.equals(name, ignoreCase = true)
+                }
 
                 if (playersToRemove.isEmpty()) {
                     mc.inGameHud.chatHud.removeMessage("CFakePlayer#info")
@@ -141,7 +144,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
                     )
                 }
 
-                fakePlayers.removeAll(playersToRemove.toSet())
+                fakePlayers.removeAll(playersToRemove)
             }
             .build()
     }
@@ -237,7 +240,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
                     nameArg
                 ),
             ).apply {
-                onRemoval = { fakePlayers.remove(this) }
+                onRemoval = Runnable { fakePlayers.remove(this) }
             }
         } else {
             fakePlayer = FakePlayer(
@@ -247,7 +250,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
                     nameArg
                 )
             ).apply {
-                onRemoval = { fakePlayers.remove(this) }
+                onRemoval = Runnable { fakePlayers.remove(this) }
             }
         }
 

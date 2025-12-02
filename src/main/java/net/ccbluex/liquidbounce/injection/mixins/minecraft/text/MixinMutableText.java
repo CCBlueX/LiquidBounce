@@ -40,13 +40,12 @@ public abstract class MixinMutableText {
      */
     @Overwrite
     public MutableText append(String text) {
-        if (text.isEmpty()) {
-            return (MutableText) (Object) this;
-        } else if (text.equals(" ")) {
-            return this.append(PlainText.SPACE);
-        } else {
-            return this.append(new PlainText(PlainTextContent.of(text)));
-        }
+        return switch (text) {
+            case "" -> (MutableText) (Object) this;
+            case " " -> this.append(PlainText.SPACE);
+            case "\n" -> this.append(PlainText.NEW_LINE);
+            default -> this.append(new PlainText(PlainTextContent.of(text)));
+        };
     }
 
 }

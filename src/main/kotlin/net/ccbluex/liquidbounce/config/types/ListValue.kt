@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
+import java.util.SequencedSet
 
 open class ListValue<T : MutableCollection<E>, E>(
     name: String,
@@ -130,7 +131,7 @@ open class ItemListValue<T : MutableSet<E>, E>(
 
 }
 
-class RegistryListValue<T : MutableSet<E>, E>(
+class RegistryListValue<T : SequencedSet<E>, E>(
     name: String,
     value: T,
     innerValueType: ValueType = ValueType.INVALID,

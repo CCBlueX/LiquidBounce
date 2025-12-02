@@ -276,7 +276,8 @@ object AccountManager : Configurable("Accounts"), EventListener {
             error("Altening API Token is empty!")
         }
 
-        val account = AlteningAccount.generateAccount(apiToken).also { accounts += it }
+        val account = AlteningAccount.generateAccount(apiToken)
+        accounts += account
 
         // Store configurable
         ConfigSystem.store(this@AccountManager)
@@ -348,25 +349,31 @@ object AccountManager : Configurable("Accounts"), EventListener {
         }
 
         // Create a new cracked account
-        accounts += SessionAccount(token).also { it.refresh() }.apply {
-            val profile = this.profile
-
-            if (profile == null) {
-                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
-                return
-            }
-
-            // Check if an account already exists
-            if (accounts.any { it.profile?.username.equals(profile.username, true) }) {
-                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Account already exists!"))
-                return
-            }
-
-            // Store configurable
-            ConfigSystem.store(this@AccountManager)
-
-            EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
+        val account = SessionAccount(token)
+        try {
+            account.refresh()
+        } catch (exception: Exception) {
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = exception.message ?: "Unknown error"))
+            return
         }
+
+        val profile = account.profile
+
+        if (profile == null) {
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+            return
+        }
+
+        // Check if an account already exists
+        if (accounts.any { it.profile?.username.equals(profile.username, true) }) {
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Account already exists!"))
+            return
+        }
+
+        // Store configurable
+        accounts += account
+        ConfigSystem.store(this@AccountManager)
+        EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
     }
 
 }

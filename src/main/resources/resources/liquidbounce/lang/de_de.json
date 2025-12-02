@@ -650,5 +650,7 @@
   "liquidbounce.command.translate.result.sameText": "Das Übersetzungsergebnis ist identisch mit dem Originaltext, bitte überprüfe die Parameter.",
   "liquidbounce.module.translation.description": "Einrichten eines automatischen Übersetzers für den Client.",
   "liquidbounce.module.betterTitle.description": "Verbesserungen am Titel und Untertitel.",
-  "liquidbounce.module.potionSpoof.description": "Erlaubt dem Spieler, Effekte zu erhalten, ohne einen Trank zu benutzen."
+  "liquidbounce.module.potionSpoof.description": "Erlaubt dem Spieler, Effekte zu erhalten, ohne einen Trank zu benutzen.",
+  "liquidbounce.module.newChunks.description": "Hebt Chunks hervor, die wahrscheinlich neu generiert wurden."
+
 }

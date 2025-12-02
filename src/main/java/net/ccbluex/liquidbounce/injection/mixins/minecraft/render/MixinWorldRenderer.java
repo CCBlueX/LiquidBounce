@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
@@ -41,6 +42,7 @@ import net.minecraft.entity.TntEntity;
 import net.minecraft.util.profiler.Profiler;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -64,7 +66,7 @@ public abstract class MixinWorldRenderer {
     public abstract @Nullable Framebuffer getEntityOutlinesFramebuffer();
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void onRender(ObjectAllocator allocator, RenderTickCounter tickCounter, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, Matrix4f positionMatrix, Matrix4f projectionMatrix, CallbackInfo ci) {
+    private void onRender(ObjectAllocator allocator, RenderTickCounter tickCounter, boolean renderBlockOutline, Camera camera, Matrix4f positionMatrix, Matrix4f projectionMatrix, GpuBufferSlice fog, Vector4f fogColor, boolean shouldRenderSky, CallbackInfo ci) {
         var matrixStack = Pools.MatStack.borrow();
         // Apply camera transformation to fix outline positioning
         matrixStack.peek().getPositionMatrix().mul(positionMatrix);
@@ -85,11 +87,11 @@ public abstract class MixinWorldRenderer {
 
     // this method is a lambda
     @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
-    private void onDrawOutlines(Fog fog, RenderTickCounter renderTickCounter, Camera camera, Profiler profiler, Matrix4f matrix4f, Matrix4f matrix4f2, Handle handle, Handle handle2, boolean bl, Frustum frustum, Handle handle3, Handle handle4, CallbackInfo ci) {
+    private void onDrawOutlines(GpuBufferSlice gpuBufferSlice, RenderTickCounter renderTickCounter, Camera camera, Profiler profiler, Matrix4f matrix4f, Handle handle, Handle handle2, boolean bl, Frustum frustum, Handle handle3, Handle handle4, CallbackInfo ci) {
         OutlineFramebufferHolder.drawIfDirty(this.client.getFramebuffer());
     }
 
-    @Inject(method = "drawEntityOutlinesFramebuffer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/Framebuffer;drawBlit(Lcom/mojang/blaze3d/textures/GpuTexture;)V"))
+    @Inject(method = "drawEntityOutlinesFramebuffer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/Framebuffer;drawBlit(Lcom/mojang/blaze3d/textures/GpuTextureView;)V"))
     private void onDrawEntityOutlinesFramebuffer(CallbackInfo info) {
     }
 
@@ -135,12 +137,13 @@ public abstract class MixinWorldRenderer {
     private boolean shouldRenderOutline(Entity entity) {
         if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
             return true;
-        } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity)) {
+        } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {
             return true;
         } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof TntEntity) {
             return true;
-        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning() && ModuleStorageESP.categorize(entity) != null) {
-            return true;
+        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
+            var category = ModuleStorageESP.categorize(entity);
+            return category != null && category.shouldRender(entity);
         } else {
             return false;
         }
@@ -153,16 +156,16 @@ public abstract class MixinWorldRenderer {
      */
     @ModifyExpressionValue(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"))
     private int injectTeamColor(int original, @Local Entity entity) {
-        if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning()) {
+        if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning() && EspGlowMode.INSTANCE.shouldRender(livingEntity)) {
             return ModuleESP.INSTANCE.getColor(livingEntity).toARGB();
         } else if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
             return ModuleItemESP.INSTANCE.getColor().toARGB();
         } else if (entity instanceof TntEntity tntEntity && ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp()) {
             return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).toARGB();
         } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
-            var color = ModuleStorageESP.categorize(entity);
-            if (color != null) {
-                return color.getColor().toARGB();
+            var category = ModuleStorageESP.categorize(entity);
+            if (category != null && category.shouldRender(entity)) {
+                return category.getColor().toARGB();
             }
         }
 
@@ -170,7 +173,7 @@ public abstract class MixinWorldRenderer {
     }
 
     @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V", shift = At.Shift.BEFORE))
-    private void onRenderGlow(Fog fog, RenderTickCounter renderTickCounter, Camera camera, Profiler profiler, Matrix4f matrix4f, Matrix4f matrix4f2, Handle handle, Handle handle2, boolean bl, Frustum frustum, Handle handle3, Handle handle4, CallbackInfo ci) {
+    private void onRenderGlow(GpuBufferSlice gpuBufferSlice, RenderTickCounter renderTickCounter, Camera camera, Profiler profiler, Matrix4f matrix4f, Handle handle, Handle handle2, boolean bl, Frustum frustum, Handle handle3, Handle handle4, CallbackInfo ci) {
         var entityOutlineFb = getEntityOutlinesFramebuffer();
         if (!this.canDrawEntityOutlines() || entityOutlineFb == null) {
             return;

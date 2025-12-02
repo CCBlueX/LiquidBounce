@@ -23,7 +23,7 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -32,9 +32,9 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.entity.movementForward
-import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
@@ -52,6 +52,7 @@ import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
+import net.minecraft.util.math.Vec2f
 import java.util.*
 import java.util.function.Predicate
 
@@ -122,7 +123,7 @@ enum class InventoryRequirements(
     OPEN_INVENTORY("InventoryOpen");
 
     override fun test(action: InventoryAction): Boolean = when (this) {
-        NO_MOVEMENT -> player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f && !player.jumping
+        NO_MOVEMENT -> player.input.movementInput == Vec2f.ZERO && !player.jumping
         NO_ROTATION -> RotationManager.rotationMatchesPreviousRotation()
         OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
     }
@@ -133,7 +134,8 @@ class CheckScreenHandlerTypeConfigurable(
 ) : ToggleableConfigurable(parent, "CheckScreenHandlerType", enabled = true) {
     private val types by registryList(
         "Types",
-        hashSetOf(
+        objectRBTreeSetOf(
+            Registries.SCREEN_HANDLER.asComparator(),
             ScreenHandlerType.GENERIC_9X3, ScreenHandlerType.GENERIC_9X6, ScreenHandlerType.SHULKER_BOX,
         ),
         ValueType.SCREEN_HANDLER
@@ -141,7 +143,7 @@ class CheckScreenHandlerTypeConfigurable(
     private val filter by enumChoice("Filter", Filter.WHITELIST)
 
     fun isValid(screen: HandledScreen<*>): Boolean {
-        return !enabled || filter(screen.screenHandler.typeOrNull, types)
+        return !running || filter(screen.screenHandler.typeOrNull, types)
     }
 }
 
@@ -160,7 +162,7 @@ class CheckScreenTitleConfigurable(
     private val filter by enumChoice("Filter", Filter.WHITELIST)
 
     fun isValid(screen: Screen): Boolean {
-        if (!enabled) return true
+        if (!running) return true
 
         val titleString = screen.title.string
         val matches = titles.any {
@@ -216,7 +218,7 @@ fun openInventorySilently() {
     }
 
     network.sendPacket(
-        OpenInventorySilentlyPacket(),
+        OpenInventorySilentlyPacket,
         onSuccess = { InventoryManager.isInventoryOpenServerSide = true },
         onFailure = { chat(markAsError("Failed to open inventory using ViaFabricPlus, report to developers!")) }
     )
@@ -226,12 +228,12 @@ fun closeInventorySilently() {
     network.sendPacket(CloseHandledScreenC2SPacket(0))
 }
 
-fun HandledScreen<*>.getSlotsInContainer() =
+fun HandledScreen<*>.getSlotsInContainer(): List<ContainerItemSlot> =
     this.screenHandler.slots
         .filter { it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }
 
-fun HandledScreen<*>.findItemsInContainer() =
+fun HandledScreen<*>.findItemsInContainer(): List<ContainerItemSlot> =
     this.screenHandler.slots
         .filter { !it.stack.isEmpty && it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }
@@ -271,8 +273,8 @@ fun interactItem(
     return result
 }
 
-internal fun findBlocksEndingWith(vararg targets: String): MutableSet<Block> =
-    Registries.BLOCK.filterTo(ReferenceOpenHashSet()) { block ->
+internal fun findBlocksEndingWith(vararg targets: String): SortedSet<Block> =
+    Registries.BLOCK.filterTo(blockSortedSetOf()) { block ->
         targets.any { Registries.BLOCK.getId(block).path.endsWith(it.lowercase()) }
     }
 

@@ -51,7 +51,7 @@ public class MixinBlockEntityRenderDispatcher {
             if (type != null && type.shouldRender(blockEntity.getPos())) {
                 var color = type.getColor();
 
-                if (color.a() > 0) {
+                if (!color.isTransparent()) {
                     var outlineVertexConsumerProvider = MinecraftClient.getInstance().getBufferBuilders()
                             .getOutlineVertexConsumers();
                     outlineVertexConsumerProvider.setColor(color.r(), color.g(), color.b(), 255);

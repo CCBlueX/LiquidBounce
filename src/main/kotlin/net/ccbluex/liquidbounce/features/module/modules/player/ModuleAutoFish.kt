@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -26,10 +27,12 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.entity.equipmentSlot
 import net.minecraft.item.FishingRodItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
+import net.minecraft.registry.Registries
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
 import net.minecraft.util.math.Vec3d
@@ -54,8 +57,9 @@ object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
      * we might want to add it here.
      */
     val sounds by sounds(
-        "Sounds", mutableSetOf(
-            SoundEvents.ENTITY_FISHING_BOBBER_SPLASH
+        "Sounds", objectRBTreeSetOf(
+            Registries.SOUND_EVENT.asComparator(),
+            SoundEvents.ENTITY_FISHING_BOBBER_SPLASH,
         )
     )
 

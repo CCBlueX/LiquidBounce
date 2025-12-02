@@ -43,13 +43,14 @@ class Nametag private constructor(
     var screenPos: Vec3? = null
         private set
 
-    constructor(entity: LivingEntity) : this(entity, NametagTextFormatter(entity).format(), createItemList(entity))
+    constructor(entity: LivingEntity) : this(entity, NametagTextFormatter.format(entity), createItemList(entity))
 
-    fun calculateScreenPos(tickDelta: Float) {
+    fun calculateScreenPos(tickDelta: Float): Vec3? {
         val nametagPos = entity.interpolateCurrentPosition(tickDelta)
             .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
 
         screenPos = WorldToScreen.calculateScreenPos(nametagPos)
+        return screenPos
     }
 
     companion object {
@@ -58,6 +59,7 @@ class Nametag private constructor(
          * Creates a list of items that should be rendered above the name tag. Currently, it is the item in main hand,
          * the item in off-hand (as long as it exists) and the armor items.
          */
+        @JvmStatic
         private fun createItemList(entity: LivingEntity): List<ItemStack> {
             return buildList(6) {
                 this += entity.getEquippedStack(EquipmentSlot.MAINHAND)

@@ -22,8 +22,6 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
-import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Contains all classes of events. Used to create lookup tables ahead of time
@@ -52,7 +50,6 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     InputHandleEvent::class.java,
     MovementInputEvent::class.java,
     SprintEvent::class.java,
-    SneakNetworkEvent::class.java,
     KeyEvent::class.java,
     MouseRotationEvent::class.java,
     KeybindChangeEvent::class.java,
@@ -121,7 +118,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     BlockCountChangeEvent::class.java,
     BedStateChangeEvent::class.java,
     GameModeChangeEvent::class.java,
-    ComponentsUpdate::class.java,
+    ComponentsUpdateEvent::class.java,
     ResourceReloadEvent::class.java,
     ProxyCheckResultEvent::class.java,
     ScaleFactorChangeEvent::class.java,
@@ -155,10 +152,10 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
  */
 object EventManager {
 
-    private val registry: Map<Class<out Event>, CopyOnWriteArrayList<EventHook<in Event>>> =
+    private val registry: Map<Class<out Event>, EventHookRegistry<in Event>> =
         ALL_EVENT_CLASSES.associateWithTo(
             Reference2ObjectOpenHashMap(ALL_EVENT_CLASSES.size)
-        ) { CopyOnWriteArrayList() }
+        ) { EventHookRegistry() }
 
     init {
         CoroutineTicker
@@ -174,10 +171,7 @@ object EventManager {
         @Suppress("UNCHECKED_CAST")
         val hook = eventHook as EventHook<in Event>
 
-        if (!handlers.contains(hook)) {
-            // `handlers` is sorted descending by EventHook.priority
-            handlers.sortedInsert(hook) { -it.priority }
-        }
+        handlers.addIfAbsent(hook)
 
         return eventHook
     }
@@ -192,7 +186,7 @@ object EventManager {
 
     fun unregisterEventHandler(eventListener: EventListener) {
         registry.values.forEach {
-            it.removeIf { it.handlerClass == eventListener }
+            it.remove(eventListener)
         }
     }
 

@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.math.iterator
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
@@ -67,7 +66,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
             renderEnvironmentForWorld(matrixStack) {
                 startBatch()
                 fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: Box, colorFactor: Float) {
-                    withPositionRelativeToCamera(blockPos.toVec3d()) {
+                    withPositionRelativeToCamera(blockPos) {
                         drawBox(
                             box,
                             color.fade(colorFactor),

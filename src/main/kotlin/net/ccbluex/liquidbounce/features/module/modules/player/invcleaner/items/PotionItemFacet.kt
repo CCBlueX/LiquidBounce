@@ -81,10 +81,9 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 }
             }
 
-            val tier1 = tierOfPotionType(o1.itemStack.item as PotionItem)
-            val tier2 = tierOfPotionType(o2.itemStack.item as PotionItem)
-
-            tier1.compareTo(tier2)
+            compareValuesBy(o1, o2) { o ->
+                tierOfPotionType(o.itemStack.item as PotionItem)
+            }
         }
 
         /**

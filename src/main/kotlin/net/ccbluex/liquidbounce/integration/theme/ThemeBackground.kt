@@ -19,20 +19,30 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
+import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.platform.DepthTestFunction
+import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.blaze3d.textures.TextureFormat
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
-import net.ccbluex.liquidbounce.render.newRenderPass
+import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.asTexture
+import net.ccbluex.liquidbounce.utils.render.asView
+import net.ccbluex.liquidbounce.utils.render.createUbo
+import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.client.render.VertexFormats
+import net.minecraft.client.texture.NativeImage
 import net.minecraft.util.Identifier
 import java.io.Closeable
-import java.util.Locale
+import java.util.*
 
 sealed interface ThemeBackground : Closeable {
 
@@ -55,9 +65,14 @@ sealed interface ThemeBackground : Closeable {
 
     /**
      * Background implementation that renders a static image texture.
-     * @param imageId The Minecraft resource identifier for the image
+     * @param texture The image texture
      */
-    class Image(private val imageId: Identifier) : ThemeBackground {
+    class Image(
+        private val metadata: ThemeMetadata,
+        image: NativeImage,
+    ) : ThemeBackground {
+
+        private val texture = image.asTexture { "ThemeBackground/Image - ${metadata.name}" }
 
         override fun draw(
             context: DrawContext,
@@ -67,19 +82,17 @@ sealed interface ThemeBackground : Closeable {
             mouseY: Int,
             delta: Float
         ): Boolean {
-            context.drawTexture(
-                RenderLayer::getGuiTextured,
-                imageId,
-                0, 0,
-                0f, 0f,
-                width, height,
-                width, height
+            context.drawTexQuad(
+                texture.glTextureView,
+                x0 = 0f, y0 = 0f,
+                x1 = width.toFloat(), y1 = height.toFloat(),
             )
+
             return true
         }
 
         override fun close() {
-            mc.textureManager.destroyTexture(imageId)
+            texture.close()
         }
     }
 
@@ -88,8 +101,22 @@ sealed interface ThemeBackground : Closeable {
      * @param pipeline the shader render pipeline
      */
     class Shader private constructor(
+        private val metadata: ThemeMetadata,
         private val pipeline: RenderPipeline,
+        private val vshId: Identifier,
+        private val fshId: Identifier,
+        private val vertexShader: String,
+        private val fragmentShader: String,
     ) : ThemeBackground {
+
+        private val ubo = gpuDevice.createUbo(
+            labelGetter = { "ThemeShaderBackground UBO - ${metadata.name}" }
+        ) { float + vec2 + vec2 }
+
+        private val uboSlice = ubo.slice()
+
+        private var background: GpuTexture? = null
+        private var backgroundView: GpuTextureView? = null
 
         override fun draw(
             context: DrawContext,
@@ -99,29 +126,75 @@ sealed interface ThemeBackground : Closeable {
             mouseY: Int,
             delta: Float
         ): Boolean {
-            newRenderPass().use { pass ->
-                pass.setPipeline(pipeline)
-                pass.setUniform(UNIFORM_TIME, (System.currentTimeMillis() - mc.startTime) / 1000F)
-                pass.setUniform(UNIFORM_MOUSE, mouseX.toFloat(), mouseY.toFloat())
-                pass.setUniform(
-                    UNIFORM_RESOLUTION,
-                    mc.window.framebufferWidth.toFloat(),
-                    mc.window.framebufferHeight.toFloat(),
-                )
+            val framebufferWidth = mc.window.framebufferWidth
+            val framebufferHeight = mc.window.framebufferHeight
 
+            uboSlice.writeStd140 {
+                putFloat((System.currentTimeMillis() - mc.startTime) / 1000F)
+                putVec2(mouseX.toFloat(), mouseY.toFloat())
+                putVec2(framebufferWidth.toFloat(), framebufferHeight.toFloat())
+            }
+
+            val backgroundView = resizeIfNeeded(framebufferWidth, framebufferHeight)
+
+            backgroundView.createRenderPass(
+                { "ThemeShaderBackground Pass - ${metadata.name}" }
+            ).use { pass ->
+                pass.setPipeline(pipeline)
+                pass.setUniform(UNIFORM_NAME, uboSlice)
                 pass.drawFullScreenPositionTexture()
             }
+
+            context.drawTexQuad(
+                backgroundView,
+                x0 = 0f, y0 = 0f,
+                x1 = width.toFloat(), y1 = height.toFloat(),
+                u1 = 0f, v1 = 1f,
+                u2 = 1f, v2 = 0f,
+            )
+
             return true
         }
 
-        @Suppress("EmptyFunctionBlock")
         override fun close() {
+            ubo.close()
+            backgroundView?.close()
+            background?.close()
+        }
+
+        override fun onResourceReload() {
+            gpuDevice.precompilePipeline(pipeline) { id, _ ->
+                when (id) {
+                    vshId -> vertexShader
+                    fshId -> fragmentShader
+                    else -> error("Unknown shader id: $id")
+                }
+            }
+        }
+
+        private fun resizeIfNeeded(
+            framebufferWidth: Int,
+            framebufferHeight: Int,
+        ): GpuTextureView {
+            if (background == null ||
+                background!!.getWidth(0) != framebufferWidth ||
+                background!!.getHeight(0) != framebufferHeight
+            ) {
+                background?.close()
+                background = gpuDevice.createTexture(
+                    "ThemeBackground/Shader - ${metadata.name} ($framebufferWidth x $framebufferHeight)",
+                    GpuTexture.USAGE_RENDER_ATTACHMENT,
+                    TextureFormat.RGBA8, framebufferWidth, framebufferHeight,
+                    1, 1,
+                )
+                backgroundView?.close()
+                backgroundView = background!!.asView()
+            }
+            return backgroundView!!
         }
 
         companion object {
-            private const val UNIFORM_TIME = "time"
-            private const val UNIFORM_MOUSE = "mouse"
-            private const val UNIFORM_RESOLUTION = "resolution"
+            private const val UNIFORM_NAME = "ThemeBackgroundData"
 
             @JvmStatic
             fun build(
@@ -130,29 +203,24 @@ sealed interface ThemeBackground : Closeable {
                 vertexShader: String,
                 fragmentShader: String,
             ): Shader {
-                val vshId = LiquidBounce.identifier("vsh/${background.name.lowercase(Locale.US)}")
-                val fshId = LiquidBounce.identifier("fsh/${background.name.lowercase(Locale.US)}")
+                val bgName = background.name.lowercase(Locale.US)
+                val themeName = metadata.name.lowercase(Locale.US)
+
+                val vshId = LiquidBounce.identifier("shader/vsh/theme-bg-$themeName-$bgName")
+                val fshId = LiquidBounce.identifier("shader/fsh/theme-bg-$themeName-$bgName")
 
                 val pipeline = RenderPipeline.Builder()
-                    .withLocation(LiquidBounce.identifier("theme-bg-${metadata.name.lowercase(Locale.US)}"))
+                    .withLocation(LiquidBounce.identifier("pipeline/theme-bg-$themeName"))
                     .withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
                     .withVertexShader(vshId)
                     .withFragmentShader(fshId)
-                    .withUniform(UNIFORM_TIME, UniformType.FLOAT)
-                    .withUniform(UNIFORM_MOUSE, UniformType.VEC2)
-                    .withUniform(UNIFORM_RESOLUTION, UniformType.VEC2)
+                    .withBlend(BlendFunction.TRANSLUCENT)
+                    .withUniform(UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
                     .withoutBlend()
+                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
                     .build()
 
-                gpuDevice.precompilePipeline(pipeline) { id, _ ->
-                    when (id) {
-                        vshId -> vertexShader
-                        fshId -> fragmentShader
-                        else -> error("Unknown shader id: $id")
-                    }
-                }
-
-                return Shader(pipeline)
+                return Shader(metadata, pipeline, vshId, fshId, vertexShader, fragmentShader)
             }
         }
     }
@@ -176,4 +244,9 @@ sealed interface ThemeBackground : Closeable {
         mouseY: Int,
         delta: Float
     ): Boolean
+
+    /**
+     * Called when resources are reloaded.
+     */
+    fun onResourceReload() {}
 }

@@ -189,13 +189,13 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
             return mode == Modes.TRIGGER
         }
 
-        if (pearl.ownerUuid == player.uuid) {
+        if (pearl.owner === player) {
             return false
         }
 
         return when(mode) {
             Modes.TRIGGER -> pearl.owner!!.shouldBeAttacked()
-            Modes.TARGET -> ModuleKillAura.targetTracker.target?.uuid == pearl.ownerUuid
+            Modes.TARGET -> ModuleKillAura.targetTracker.target === pearl.owner
         }
     }
 

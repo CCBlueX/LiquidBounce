@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
+import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
+import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.network.SequencedPacketCreator
@@ -35,7 +37,6 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -48,11 +49,15 @@ import org.apache.commons.lang3.mutable.MutableObject
 import java.util.*
 
 internal fun sendStartSneaking() {
-    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+    if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) return
+
+    network.sendPacket(PlayerSneakPacket.START)
 }
 
 internal fun sendStopSneaking() {
-    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+    if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) return
+
+    network.sendPacket(PlayerSneakPacket.STOP)
 }
 
 @Suppress("LongParameterList")

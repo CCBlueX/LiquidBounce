@@ -108,7 +108,7 @@ object CommandDebug : Command.Factory {
         })
 
         add("minecraft", JsonObject().apply {
-            addProperty("version", SharedConstants.getGameVersion().name)
+            addProperty("version", SharedConstants.getGameVersion().name())
             addProperty("protocol", SharedConstants.getProtocolVersion())
         })
 

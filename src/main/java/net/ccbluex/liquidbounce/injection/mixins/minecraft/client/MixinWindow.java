@@ -93,7 +93,7 @@ public class MixinWindow {
     }
 
     @Inject(method = "setScaleFactor", at = @At("RETURN"))
-    public void hookScaleFactor(double scaleFactor, CallbackInfo ci) {
+    public void hookScaleFactor(int scaleFactor, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new ScaleFactorChangeEvent(scaleFactor));
     }
 

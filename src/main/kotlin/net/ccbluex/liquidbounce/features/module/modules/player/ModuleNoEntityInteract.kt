@@ -19,27 +19,33 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.minecraft.entity.EntityType
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.util.hit.EntityHitResult
+import java.util.SequencedSet
 
 /**
  * Skip crosshair entity targets.
  */
 object ModuleNoEntityInteract : ClientModule("NoEntityInteract", Category.PLAYER) {
 
-    private fun defaultEntityTypes(): MutableSet<EntityType<*>> {
-        return hashSetOf(EntityType.VILLAGER, EntityType.ARMOR_STAND)
+    private fun defaultEntityTypes(): SequencedSet<EntityType<*>> {
+        return objectRBTreeSetOf(Registries.ENTITY_TYPE.asComparator(), EntityType.VILLAGER, EntityType.ARMOR_STAND)
     }
 
-    private fun defaultHoldingItems(): MutableSet<Item> {
-        val set = hashSetOf(Items.AIR, Items.SHEARS, Items.TNT, Items.WATER_BUCKET, Items.LAVA_BUCKET, Items.COBWEB)
+    private fun defaultHoldingItems(): SequencedSet<Item> {
+        val set = itemSortedSetOf(
+            Items.AIR, Items.SHEARS, Items.TNT, Items.WATER_BUCKET, Items.LAVA_BUCKET, Items.COBWEB
+        )
         Registries.ITEM.filterTo(set) { it.defaultStack.isMiningTool }
         return set
     }

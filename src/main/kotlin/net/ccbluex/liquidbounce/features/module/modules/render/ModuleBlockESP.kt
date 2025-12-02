@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.google.common.collect.Sets
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
@@ -32,13 +31,15 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
-import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.BlockPos
+import java.util.concurrent.ConcurrentSkipListSet
 
 /**
  * BlockESP module
@@ -51,7 +52,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
     private val modes = choices("Mode", Glow, arrayOf(Box, Glow, Outline))
     private val targets by blocks(
         "Targets",
-        Sets.newConcurrentHashSet(findBlocksEndingWith("_BED", "DRAGON_EGG"))
+        ConcurrentSkipListSet(findBlocksEndingWith("_BED", "DRAGON_EGG"))
     ).onChange {
         if (running) {
             onDisabled()
@@ -68,6 +69,8 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         )
     }
 
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
     private object Box : Choice("Box") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
@@ -75,7 +78,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         private val outline by boolean("Outline", true)
 
         @Suppress("unused")
-        val renderHandler = handler<WorldRenderEvent> { event ->
+        private val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
             drawBoxMode(mc.framebuffer, matrixStack, this.outline, false)
@@ -110,7 +113,13 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             var dirty = false
 
             startBatch()
+            val maxDistanceSq = maximumDistance.sq()
             for (blockPos in blocks) {
+                val distanceSq = blockPos.cameraDistanceSq()
+                if (distanceSq > maxDistanceSq) {
+                    continue
+                }
+
                 val blockState = blockPos.getState() ?: continue
 
                 if (blockState.isAir) {
@@ -130,7 +139,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                     color = color.with(a = 255)
                 }
 
-                withPositionRelativeToCamera(blockPos.toVec3d()) {
+                withPositionRelativeToCamera(blockPos) {
                     drawBox(
                         boundingBox,
                         faceColor = color,

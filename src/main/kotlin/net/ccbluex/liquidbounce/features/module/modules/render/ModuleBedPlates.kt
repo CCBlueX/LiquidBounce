@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
@@ -52,6 +53,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII")
 
     private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+    private val outline by boolean("Outline", false)
 
     override val maxLayers by int("MaxLayers", 5, 1..5).onChanged {
         BedBlockTracker.triggerRescan()
@@ -60,10 +62,11 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val textShadow by boolean("TextShadow", true)
     private val scale by float("Scale", 1.5f, 0.5f..3.0f)
     private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
-    private val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F, aliases = listOf("MaxDistance"))
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
     private val compact by boolean("Compact", true)
+    private val preventOverlap by boolean("PreventOverlap", true)
     private val filterMode = choices("FilterMode", 0) {
         arrayOf(FilterMode.Predefined, FilterMode.Custom)
     }
@@ -105,7 +108,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
         }
 
         object Custom : FilterMode("Custom") {
-            private val blocks by blocks("Blocks", ReferenceOpenHashSet())
+            private val blocks by blocks("Blocks", blockSortedSetOf())
             private val filter by enumChoice("Filter", Filter.BLACKLIST)
 
             override fun test(block: Block): Boolean {
@@ -157,7 +160,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                 continue
             }
 
-            if (distance > maxDistance || i++ > maxCount) {
+            if (distance > maximumDistance || i++ > maxCount) {
                 break // because list beds are sorted by distance (ASC), so we break at first item out of range
             }
 
@@ -173,11 +176,14 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                 surrounding.map { it.block.createItemStackForRendering(it.count) }
             }
 
+            val outlineColor = if (outline) Color4b(bedState.block.color.mapColor.color) else Color4b.TRANSPARENT
+
             event.context.drawItemStackList(blocksAsItemStacks)
                 .rowLength(Int.MAX_VALUE)
                 .scale(scale)
-                .center(screenPos)
-                .rectBackground(color = backgroundColor.toARGB())
+                .centerX(screenPos.x)
+                .centerY(screenPos.y)
+                .rectBackground(backgroundColor, outlineColor)
                 .itemStackRenderer { textRenderer, index, stack, x, y ->
                     if (index == 0 && showBed) {
                         // bed
@@ -198,7 +204,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                         drawItem(stack, x, y)
                         val countString = stack.count.toString()
                         matrices.withPush {
-                            translate(0.0F, 0.0F, 200.0F)
+                            translate(0.0F, 0.0F)
                             // draw layer text
                             if (!compact) {
                                 drawText(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, textShadow)
@@ -214,7 +220,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                             )
                         }
                     }
-                }.draw()
+                }.draw(preventOverlap)
         }
     }
 

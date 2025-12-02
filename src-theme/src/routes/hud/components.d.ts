@@ -16,10 +16,34 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
 
-import net.minecraft.client.util.Handle
+interface HudToggleableConfigurable {
+    enabled: boolean;
+}
 
-class ImmutableHandle<T>(val value: T) : Handle<T> {
-    override fun get() = value
+interface HudScoreboardSettings {
+    show: ("Header" | "Name" | "Score")[];
+}
+
+interface HudTextSettings {
+    text: string;
+    color: number;
+    font: string;
+    size: number;
+    decorations: HudToggleableConfigurable & {
+        bold: boolean;
+        italic: boolean;
+        underline: boolean;
+        strikethrough: boolean;
+    };
+    shadow: HudToggleableConfigurable & {
+        offsetX: number;
+        offsetY: number;
+        blurRadius: number;
+        color: number;
+    };
+    glow: HudToggleableConfigurable & {
+        radius: number;
+        color: number;
+    };
 }

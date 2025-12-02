@@ -129,9 +129,9 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                         else -> showAt.apply(renderer, result).calcScreenPosWithOffset()
                     } ?: return@forEachIndexed
 
-                context.matrices.push()
-                context.matrices.translate(screenPos.x, screenPos.y, screenPos.z)
-                context.matrices.scale(scale, scale, 1.0F)
+                context.matrices.pushMatrix()
+                context.matrices.translate(screenPos.x, screenPos.y)
+                context.matrices.scale(scale, scale)
 
                 val text = durationUnit.apply(result.positions.size).asText()
                 if (ownerName && renderer.owner !== player) {
@@ -152,7 +152,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                 )
                 y += mc.textRenderer.fontHeight + 1
 
-                context.matrices.pop()
+                context.matrices.popMatrix()
             }
         }
     }

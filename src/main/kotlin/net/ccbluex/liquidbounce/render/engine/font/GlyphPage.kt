@@ -45,6 +45,11 @@ data class BoundingBox2f(val xMin: Float, val yMin: Float, val xMax: Float, val 
         return x in xMin..xMax && y in yMin..yMax
     }
 
+    val width: Float
+        get() = xMax - xMin
+
+    val height: Float
+        get() = yMax - yMin
 }
 
 @JvmRecord
@@ -127,8 +132,7 @@ abstract class GlyphPage {
         @JvmStatic
         protected val fontRendererContext = FontRenderContext(AffineTransform(), true, true)
 
-        @JvmStatic
-        protected val DEFAULT_PADDING: Int = 1
+        protected const val DEFAULT_PADDING: Int = 1
 
         /**
          * Used for the Font Atlas generation

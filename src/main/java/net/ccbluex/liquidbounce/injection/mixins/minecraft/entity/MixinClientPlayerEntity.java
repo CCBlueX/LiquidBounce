@@ -113,14 +113,14 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         // Call player statistics change event when statistics change
         var statistics = PlayerData.Companion.fromPlayer((ClientPlayerEntity) (Object) this);
         if (lastKnownStatistics == null || !lastKnownStatistics.equals(statistics)) {
-            EventManager.INSTANCE.callEvent(ClientPlayerDataEvent.Companion.fromPlayerStatistics(statistics));
+            EventManager.INSTANCE.callEvent(new ClientPlayerDataEvent(statistics));
         }
         this.lastKnownStatistics = statistics;
 
         // Call player inventory event when inventory changes
         var playerInventory = PlayerInventoryData.Companion.fromPlayer((ClientPlayerEntity) (Object) this);
         if (lastKnownInventory == null || !lastKnownInventory.equals(playerInventory)) {
-            EventManager.INSTANCE.callEvent(ClientPlayerInventoryEvent.Companion.fromPlayerInventory(playerInventory));
+            EventManager.INSTANCE.callEvent(new ClientPlayerInventoryEvent(playerInventory));
         }
         this.lastKnownInventory = playerInventory;
     }
@@ -389,16 +389,6 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         var event = new SprintEvent(new DirectionalInput(input), original, SprintEvent.Source.NETWORK);
         EventManager.INSTANCE.callEvent(event);
         return event.getSprint();
-    }
-
-    @ModifyExpressionValue(method = "sendSneakingPacket", at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSneaking()Z")
-    )
-    private boolean hookNetworkSneak(boolean original) {
-        var event = new SneakNetworkEvent(new DirectionalInput(input), original);
-        EventManager.INSTANCE.callEvent(event);
-        return event.getSneak();
     }
 
     @WrapWithCondition(method = "closeScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))

@@ -40,15 +40,13 @@ class MinimapHeightmapManager {
     }
 
     private fun getHeightmap(chunkPos: ChunkPos): HeightmapForChunk {
-        return heightmaps.getOrPut(chunkPos, ::HeightmapForChunk)
+        return heightmaps.computeIfAbsent(chunkPos) { HeightmapForChunk() }
     }
 
     fun updateChunk(chunkPos: ChunkPos) {
         val chunk = mc.world?.getChunk(chunkPos.x, chunkPos.z) ?: return
 
-        val heightmap = HeightmapForChunk()
-
-        heightmaps[chunkPos] = heightmap
+        val heightmap = getHeightmap(chunkPos)
 
         for (x in 0..15) {
             for (z in 0..15) {
@@ -66,8 +64,8 @@ class MinimapHeightmapManager {
 
         val currentHeight = heightmap.getHeight(pos.x and 15, pos.z and 15)
 
-        val newHeight = mc.world!!.getChunk(chunkPos.x, chunkPos.z)
-            .calculateHeightIfNeeded(currentHeight, pos, newState)
+        val newHeight = mc.world?.getChunk(chunkPos.x, chunkPos.z)
+            ?.calculateHeightIfNeeded(currentHeight, pos, newState)
 
         return if (newHeight != null) {
             heightmap.setHeight(pos.x and 15, pos.z and 15, newHeight)

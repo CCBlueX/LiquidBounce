@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -43,7 +44,7 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3d?>(ModuleAutoFarm, "Au
             rangeSquared = it.sq()
         }
 
-        private val items by items("Items", hashSetOf())
+        private val items by items("Items", itemSortedSetOf())
         private val filter by enumChoice("Filter", Filter.BLACKLIST)
 
         fun shouldPickUp(itemEntity: ItemEntity): Boolean {

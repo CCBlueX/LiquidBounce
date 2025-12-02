@@ -26,7 +26,7 @@ import org.gradle.kotlin.dsl.support.listFilesOrdered
 plugins {
     id("fabric-loom")
     kotlin("jvm")
-    id("com.gorylenko.gradle-git-properties") version "2.5.3"
+    id("com.gorylenko.gradle-git-properties") version "2.5.4"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.node-gradle.node") version "7.1.0"
     id("org.jetbrains.dokka") version "2.1.0"
@@ -41,22 +41,14 @@ base {
 /** Includes non-mod dependency recursively in the JAR file */
 val includeDependency: Configuration by configurations.creating
 
-/** Includes mod in the JAR file */
-val includeModDependency: Configuration by configurations.creating
-
 /** Includes native-only dependency in the JAR file */
 val includeNative: Configuration by configurations.creating
 
 includeDependency.excludeProvidedLibs()
-includeModDependency.excludeProvidedLibs()
 
 configurations {
     include.configure {
-        extendsFrom(includeModDependency)
         extendsFrom(includeNative)
-    }
-    modApi.configure {
-        extendsFrom(includeModDependency)
     }
     runtimeOnly.configure {
         extendsFrom(includeNative)
@@ -115,7 +107,7 @@ dependencies {
     modApi("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
 
     // Mod menu
-    modApi("com.terraformersmc:modmenu:${project.property("mod_menu_version")}")
+    modApi("maven.modrinth:modmenu:${project.property("mod_menu_version")}")
 
     // Recommended mods (on IDE)
     modApi("maven.modrinth:sodium:${project.property("sodium_version")}")
@@ -126,10 +118,12 @@ dependencies {
     modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}")
 
     // Minecraft Authlib
-    includeDependency("com.github.CCBlueX:mc-authlib:${project.property("mc_authlib_version")}")
+    includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
 
     // JCEF Support
-    includeModDependency("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
+    val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
+    modApi(mcef)
+    include("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
     includeDependency("net.ccbluex:netty-httpserver:2.4.2")
     // MacOS native (Linux native is included in game)
     includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")

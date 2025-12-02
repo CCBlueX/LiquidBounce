@@ -27,14 +27,17 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.MathHelper
-import java.awt.Color
+import kotlin.math.sqrt
 
 /**
  * Tracers module
@@ -61,6 +64,8 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
 
         override fun getColor(param: LivingEntity): Color4b = throw NotImplementedError()
     }
+
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
@@ -89,19 +94,24 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
 
         renderEnvironmentForWorld(matrixStack) {
             val eyeVector = Vec3(0.0, 0.0, 1.0)
-                .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-                .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
+                .rotatePitch(-camera.pitch.toRadians())
+                .rotateYaw(-camera.yaw.toRadians())
 
             longLines {
+                startBatch()
+                val maxDistanceSq = maximumDistance.sq()
                 for (entity in RenderedEntities) {
+                    val distanceSq = entity.pos.cameraDistanceSq().toFloat()
+                    if (distanceSq > maxDistanceSq) {
+                        continue
+                    }
+
                     val color = if (useDistanceColor) {
-                        val dist = player.distanceTo(entity) * 2.0F
-                        Color4b(
-                            Color.getHSBColor(
-                                (dist.coerceAtMost(viewDistance) / viewDistance) * (120.0f / 360.0f),
-                                1.0f,
-                                1.0f
-                            )
+                        val dist = sqrt(distanceSq) * 2.0F
+                        Color4b.ofHSB(
+                            (dist.coerceAtMost(viewDistance) / viewDistance) * (120.0f / 360.0f),
+                            1.0f,
+                            1.0f,
                         )
                     } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
                         Color4b.BLUE
@@ -114,9 +124,10 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
                     drawLines(
                         argb = color.toARGB(),
                         eyeVector, pos,
-                        pos, pos + Vec3(0f, entity.height, 0f)
+                        pos, pos.add(0f, entity.height, 0f)
                     )
                 }
+                commitBatch()
             }
         }
 

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.minecraft.block.Blocks
 import net.minecraft.util.math.BlockPos
@@ -33,7 +34,7 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
 
     private val disableOnYChange by boolean("DisableOnYChange", true)
     private val filter by enumChoice("Filter", Filter.WHITELIST)
-    private val blocks by blocks("Blocks", hashSetOf(Blocks.OBSIDIAN))
+    private val blocks by blocks("Blocks", blockSortedSetOf(Blocks.OBSIDIAN))
     private val platformSize by int("Size", 3, 1..6)
 
     private var startY = 0.0

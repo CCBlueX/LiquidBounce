@@ -207,10 +207,10 @@ public abstract class MixinMinecraftClient {
             if (protocolVersion != null) {
                 titleBuilder.append(protocolVersion.getName());
             } else {
-                titleBuilder.append(SharedConstants.getGameVersion().getName());
+                titleBuilder.append(SharedConstants.getGameVersion().name());
             }
         } else {
-            titleBuilder.append(SharedConstants.getGameVersion().getName());
+            titleBuilder.append(SharedConstants.getGameVersion().name());
         }
 
         // For debugging purposes, will be removed until we have a stable release

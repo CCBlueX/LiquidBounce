@@ -19,11 +19,13 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.shaders.ShaderType
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.minecraft.util.Identifier
+import java.util.function.BiFunction
 
-object ClientShaders {
+object ClientShaders : BiFunction<Identifier, ShaderType, String?> {
 
     private val shaders = Object2ObjectOpenHashMap<Identifier, String>()
 
@@ -82,7 +84,7 @@ object ClientShaders {
     )
 
     private fun newShader(id: String, path: String): Identifier {
-        val k = LiquidBounce.identifier(id)
+        val k = LiquidBounce.identifier("shader/$id")
         shaders.put(
             k,
             LiquidBounce.resourceToString(path),
@@ -90,6 +92,8 @@ object ClientShaders {
         return k
     }
 
-    operator fun get(id: Identifier): String? = shaders[id]
+    override fun apply(identifier: Identifier, type: ShaderType): String? {
+        return shaders[identifier] ?: error("Unknown identifier: $identifier")
+    }
 
 }
