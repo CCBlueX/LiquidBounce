@@ -392,7 +392,10 @@ export enum VerticalAlignment {
     CENTER_TRANSLATED = "CenterTranslated",
 }
 
+export type OS = "linux" | "solaris" | "windows" | "mac" | "unknown";
+
 export interface ClientInfo {
+    os: OS;
     gameVersion: string;
     clientVersion: string;
     clientName: string;

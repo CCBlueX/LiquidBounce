@@ -38,6 +38,7 @@ import java.util.*
 // GET /api/v1/client/info
 @Suppress("UNUSED_PARAMETER")
 fun getClientInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
+    addProperty("os", Util.getOperatingSystem().getName())
     addProperty("gameVersion", mc.gameVersion)
     addProperty("clientVersion", LiquidBounce.clientVersion)
     addProperty("clientName", LiquidBounce.CLIENT_NAME)
