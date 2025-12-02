@@ -165,7 +165,7 @@ data class InputBind(
         /**
          * Check if any one modifier key is pressed.
          */
-        val isAnyPressed: Boolean get() = this.keyCodes.any { InputUtil.isKeyPressed(mc.window.handle, it) }
+        val isAnyPressed: Boolean get() = this.keyCodes.any { InputUtil.isKeyPressed(mc.window, it) }
 
         /**
          * Performs the platform (OS) specified render name of a modifier.
