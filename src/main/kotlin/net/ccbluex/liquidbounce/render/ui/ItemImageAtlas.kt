@@ -43,6 +43,8 @@ import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.ProjectionMatrix2
 import net.minecraft.client.render.VertexConsumerProvider
+import net.minecraft.client.render.command.OrderedRenderCommandQueueImpl
+import net.minecraft.client.render.command.RenderDispatcher
 import net.minecraft.client.render.item.KeyedItemRenderState
 import net.minecraft.client.util.BufferAllocator
 import net.minecraft.client.util.math.MatrixStack
@@ -123,6 +125,17 @@ private class ItemTextureRenderer(
     )
     private val bufferAllocator = BufferAllocator(0xC0000)
     private val vertexConsumers = VertexConsumerProvider.immediate(this.bufferAllocator)
+    private val commandQueue = OrderedRenderCommandQueueImpl()
+    // Note: no operation -> use shared one or skip it
+    private val renderDispatcher = RenderDispatcher(
+        this.commandQueue,
+        mc.blockRenderManager, // No operation
+        vertexConsumers,
+        mc.atlasManager, // No operation
+        null, // No operation
+        null, // No operation
+        mc.textRenderer, // No operation
+    )
 
     private val itemsProjectionMatrix = ProjectionMatrix2("items", -1000.0F, 1000.0F, true)
 
@@ -130,6 +143,8 @@ private class ItemTextureRenderer(
         itemsProjectionMatrix.close()
         bufferAllocator.close()
         itemAtlasFramebuffer.delete()
+        commandQueue.clear()
+        renderDispatcher.close()
     }
 
     /**
@@ -168,9 +183,9 @@ private class ItemTextureRenderer(
             }
             keyedItemRenderState.clear()
             Pools.MatStack.recycle(matrixStack)
-
-            RenderSystem.restoreProjectionMatrix()
         }
+
+        RenderSystem.restoreProjectionMatrix()
 
         return itemAtlasFramebuffer.colorAttachment!!.toBufferedImage()
             .thenApply { image ->
@@ -198,11 +213,9 @@ private class ItemTextureRenderer(
         itemPixelSize: Int,
     ) {
         matrices.push()
-        val x = scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F
-        val y = scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F
         matrices.translate(
-            x,
-            y,
+            scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F,
+            scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F,
             0.0f,
         )
         matrices.scale(itemPixelSize.toFloat(), -itemPixelSize.toFloat(), itemPixelSize.toFloat())
@@ -213,7 +226,8 @@ private class ItemTextureRenderer(
         RenderSystem.enableScissorForRenderTypeDraws(
             scaledX, textureSize - scaledY - itemPixelSize, itemPixelSize, itemPixelSize
         )
-        state.render(matrices, mc.gameRenderer.entityRenderCommandQueue, 15728880, OverlayTexture.DEFAULT_UV, 0)
+        state.render(matrices, this.commandQueue, 15728880, OverlayTexture.DEFAULT_UV, 0)
+        renderDispatcher.render()
         vertexConsumers.draw()
         RenderSystem.disableScissorForRenderTypeDraws()
         matrices.pop()
