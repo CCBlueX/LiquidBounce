@@ -99,3 +99,16 @@ val availableMouseKeys: Set<String>
 val availableInputKeys: Set<String> = availableKeyboardKeys + availableMouseKeys + "none"
 
 fun ActionResult.shouldSwingHand() = this is ActionResult.Success && this.swingSource == ActionResult.SwingSource.CLIENT
+
+/**
+ * Try to parse the key into [InputBind.Modifier] instance.
+ *
+ * @return null if it's not a valid modifier.
+ */
+fun InputUtil.Key.toModifierOrNull(): InputBind.Modifier? {
+    return if (this.category == InputUtil.Type.KEYSYM) {
+        InputBind.Modifier.KEY_CODE_LOOKUP[this.code]
+    } else {
+        null
+    }
+}

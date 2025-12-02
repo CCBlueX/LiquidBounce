@@ -128,7 +128,7 @@ object CommandExecutor : EventListener {
         MinecraftDispatcher + SupervisorJob() + coroutineExceptionHandler
     )
 
-    private fun handleExceptions(e: Throwable) {
+    internal fun handleExceptions(e: Throwable) {
         when (e) {
             is CommandException -> {
                 mc.inGameHud.chatHud.removeMessage("CommandManager#error")

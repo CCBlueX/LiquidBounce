@@ -432,6 +432,43 @@ fun WorldRenderEnvironment.drawBoxSide(
 )
 
 /**
+ * Function to draw a flat plane on the XZ axis with an optional outline.
+ */
+fun WorldRenderEnvironment.drawPlane(
+    sizeX: Float,
+    sizeZ: Float,
+    fillColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT
+) {
+    if (fillColor != null && !fillColor.isTransparent) {
+        val argb = fillColor.toARGB()
+        drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
+            vertex(matrix, 0f, 0f, 0f).color(argb)
+            vertex(matrix, 0f, 0f, sizeZ).color(argb)
+            vertex(matrix, sizeX, 0f, sizeZ).color(argb)
+            vertex(matrix, sizeX, 0f, 0f).color(argb)
+        }
+    }
+
+    if (outlineColor != null && !outlineColor.isTransparent) {
+        val argb = outlineColor.toARGB()
+        drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
+            vertex(matrix, 0f, 0f, 0f).color(argb)
+            vertex(matrix, 0f, 0f, sizeZ).color(argb)
+
+            vertex(matrix, 0f, 0f, sizeZ).color(argb)
+            vertex(matrix, sizeX, 0f, sizeZ).color(argb)
+
+            vertex(matrix, sizeX, 0f, sizeZ).color(argb)
+            vertex(matrix, sizeX, 0f, 0f).color(argb)
+
+            vertex(matrix, sizeX, 0f, 0f).color(argb)
+            vertex(matrix, 0f, 0f, 0f).color(argb)
+        }
+    }
+}
+
+/**
  * Function to render a gradient quad using specified [vertices] and [colors]
  *
  * @param vertices The four vectors to draw the quad

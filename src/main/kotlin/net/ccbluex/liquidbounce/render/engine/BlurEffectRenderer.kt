@@ -81,7 +81,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         std140Size = { float + float + float },
     ).slice()
 
-    fun shouldDrawBlur(): Boolean = inGame && mc.currentScreen == null &&
+    fun shouldDrawBlur(): Boolean = inGame && (mc.currentScreen == null || mc.currentScreen is ChatScreen) &&
         ModuleHud.running && ModuleHud.isBlurEffectActive
 
     fun blitBlurOverlay() {

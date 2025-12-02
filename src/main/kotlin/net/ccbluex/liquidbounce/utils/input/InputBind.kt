@@ -18,11 +18,16 @@
  */
 package net.ccbluex.liquidbounce.utils.input
 
+import it.unimi.dsi.fastutil.ints.Int2ReferenceMap
+import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap
+import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.client.util.InputUtil
+import net.minecraft.util.Util
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -36,6 +41,7 @@ import org.lwjgl.glfw.GLFW
 data class InputBind(
     val boundKey: InputUtil.Key,
     val action: BindAction,
+    val modifiers: Set<Modifier>,
 ) {
 
     /**
@@ -45,14 +51,16 @@ data class InputBind(
      * @param code The key or button code.
      * @param action The action to bind to this key.
      */
-    constructor(type: InputUtil.Type, code: Int, action: BindAction) : this(type.createFromCode(code), action)
+    constructor(type: InputUtil.Type, code: Int, action: BindAction) :
+        this(type.createFromCode(code), action, emptySet())
 
     /**
      * Constructor to create a binding using a key name.
      *
      * @param name The name of the key, which will be translated to an InputUtil.Key.
      */
-    constructor(name: String) : this(inputByName(name), BindAction.TOGGLE)
+    constructor(name: String) :
+        this(inputByName(name), BindAction.TOGGLE, emptySet())
 
     /**
      * Retrieves the name of the key in uppercase format, excluding the category prefixes.
@@ -103,6 +111,16 @@ data class InputBind(
     }
 
     /**
+     * Determines if the given modifiers match the required modifiers.
+     *
+     * @param mods The bits of modifiers.
+     * @see org.lwjgl.glfw.GLFW
+     */
+    fun matchesModifiers(mods: Int): Boolean {
+        return this.modifiers.all { it.isActive(mods) }
+    }
+
+    /**
      * Handles the event. Returns the new state, assumes the original state is `false`.
      *
      * @param event The [KeyboardKeyEvent] to handle.
@@ -115,12 +133,9 @@ data class InputBind(
         }
 
         val eventAction = event.action
-        return when {
-            eventAction == GLFW.GLFW_PRESS && mc.currentScreen == null -> {
-                !currentState || action == BindAction.HOLD
-            }
-
-            eventAction == GLFW.GLFW_RELEASE -> false
+        return when (eventAction) {
+            GLFW.GLFW_PRESS if mc.currentScreen == null -> !currentState || action == BindAction.HOLD
+            GLFW.GLFW_RELEASE -> false
             else -> currentState
         }
     }
@@ -136,9 +151,69 @@ data class InputBind(
         HOLD("Hold")
     }
 
+    enum class Modifier(override val choiceName: String, val bitMask: Int, vararg val keyCodes: Int): NamedChoice {
+        SHIFT("Shift", GLFW.GLFW_MOD_SHIFT, InputUtil.GLFW_KEY_LEFT_SHIFT, InputUtil.GLFW_KEY_RIGHT_SHIFT),
+        CONTROL("Control", GLFW.GLFW_MOD_CONTROL, InputUtil.GLFW_KEY_LEFT_CONTROL, InputUtil.GLFW_KEY_RIGHT_CONTROL),
+        ALT("Alt", GLFW.GLFW_MOD_ALT, InputUtil.GLFW_KEY_LEFT_ALT, InputUtil.GLFW_KEY_RIGHT_ALT),
+        SUPER("Super", GLFW.GLFW_MOD_SUPER, InputUtil.GLFW_KEY_LEFT_SUPER, InputUtil.GLFW_KEY_RIGHT_SUPER);
+
+        /**
+         * Check if self is active in [modifiers] value.
+         */
+        fun isActive(modifiers: Int) = modifiers and this.bitMask != 0
+
+        /**
+         * Check if any one modifier key is pressed.
+         */
+        val isAnyPressed: Boolean get() = this.keyCodes.any { InputUtil.isKeyPressed(mc.window.handle, it) }
+
+        /**
+         * Performs the platform (OS) specified render name of a modifier.
+         */
+        val platformRenderName: String get() = when (Util.getOperatingSystem()) {
+            Util.OperatingSystem.OSX -> when (this) {
+                CONTROL -> "Ctrl"
+                SUPER -> "\u229e"
+                else -> choiceName
+            }
+            Util.OperatingSystem.WINDOWS -> when (this) {
+                SHIFT -> "\u21e7"
+                CONTROL -> "^"
+                ALT -> "\u2325"
+                SUPER -> "\u2318"
+                // else -> choiceName
+            }
+            else -> choiceName
+        }
+
+        companion object {
+            @JvmStatic
+            private val LOOKUP_TABLE = NamedChoice.makeLookupTable<Modifier>()
+
+            @JvmField
+            internal val KEY_CODE_LOOKUP: Int2ReferenceMap<Modifier> = run {
+                val map = Int2ReferenceOpenHashMap<Modifier>()
+                for (modifier in Modifier.entries) {
+                    for (keyCode in modifier.keyCodes) {
+                        map.put(keyCode, modifier)
+                    }
+                }
+                map.unmodifiable()
+            }
+
+            @JvmStatic
+            fun of(string: String?): Modifier? = LOOKUP_TABLE[string]
+
+            @JvmStatic
+            fun fromRawValue(modifiers: Int) = entries.filterTo(emptyEnumSet()) {
+                it.isActive(modifiers)
+            }
+        }
+    }
+
     companion object {
         @JvmField
-        val UNBOUND = InputBind(InputUtil.UNKNOWN_KEY, BindAction.TOGGLE)
+        val UNBOUND = InputBind(InputUtil.UNKNOWN_KEY, BindAction.TOGGLE, emptySet())
     }
 
 }
@@ -152,7 +227,8 @@ fun Value<InputBind>.bind(name: String) = set(get().copy(boundKey = inputByName(
 /**
  * Binds to the given input type and code.
  */
-fun Value<InputBind>.bind(key: InputUtil.Key) = set(get().copy(boundKey = key))
+fun Value<InputBind>.bind(key: InputUtil.Key, action: InputBind.BindAction) =
+    set(get().copy(boundKey = key, action = action))
 
 /**
  * Unbinds the key by setting it to UNKNOWN_KEY.

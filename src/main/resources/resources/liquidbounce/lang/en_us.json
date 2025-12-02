@@ -774,6 +774,7 @@
   "liquidbounce.module.guiCloser.description": "Closes GUIs if their title matches specified patterns.",
   "liquidbounce.module.yggdrasilSignatureFix.description": "Disables Authlib Yggdrasil signature check, may fix missing skins on some servers.",
   "liquidbounce.module.reportHelper.description": "Automatically starts a report and confirms it for you.",
-  "liquidbounce.module.protectionZones.description": "Allows you to see areas protected by protection blocks and suggests optimal placement spots."
+  "liquidbounce.module.protectionZones.description": "Allows you to see areas protected by protection blocks and suggests optimal placement spots.",
+  "liquidbounce.module.newChunks.description": "Highlights chunks that are likely newly generated."
 
 }
