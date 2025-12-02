@@ -20,7 +20,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -74,11 +75,13 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
      * This is useful for cancelling FreeCam on certain events.
      * For example, when the player takes damage.
      */
-    private object CancelOn : Configurable("CancelOn") {
-        val damage by boolean("Damage", true)
-        val move by boolean("Move", true)
-        val liquid by boolean("Liquid", true)
+    private enum class CancelOn(override val choiceName: String) : NamedChoice {
+        DAMAGE("Damage"),
+        MOVE("Move"),
+        LIQUID("Liquid"),
     }
+
+    private val cancelOn by multiEnumChoice("CancelOn", emptyEnumSet<CancelOn>())
 
     /**
      * Navigation configuration for the FreeCam module
@@ -116,7 +119,6 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
 
     init {
         tree(CameraInteract)
-        tree(CancelOn)
         tree(Navigation)
     }
 
@@ -220,7 +222,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
     private val healthHandler = handler<HealthUpdateEvent> { event ->
         val tookDamage = event.health < event.previousHealth
 
-        if (CancelOn.damage && tookDamage) {
+        if (CancelOn.DAMAGE in cancelOn && tookDamage) {
             this.enabled = false
         }
     }
@@ -228,14 +230,14 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
     @Suppress("unused")
     private val moveHandler = handler<PlayerMoveEvent> { event ->
         // Don't check movement.y because it's gravity / falling motion
-        if (CancelOn.move && (event.movement.y > 0 || event.movement.z > 0)) {
+        if (CancelOn.MOVE in cancelOn && (event.movement.y > 0 || event.movement.z > 0)) {
             this.enabled = false
         }
     }
 
     @Suppress("unused")
     private val tickHandler = handler<PlayerTickEvent> { event ->
-        if (CancelOn.liquid && player.isInFluid) {
+        if (CancelOn.LIQUID in cancelOn && player.isInFluid) {
             this.enabled = false
         }
     }
