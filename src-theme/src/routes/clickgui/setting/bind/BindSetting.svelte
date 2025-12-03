@@ -5,7 +5,7 @@
     import {getPrintableKeyName} from "../../../../integration/rest";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../../integration/events";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
-    import Dropdown from "../common/Dropdown.svelte";
+    import CycleButton from "../common/CycleButton.svelte";
 
     export let setting: ModuleSetting;
 
@@ -110,7 +110,7 @@
     </button>
 
     {#if cSetting.value.boundKey !== UNKNOWN_KEY}
-        <Dropdown name={null} options={["Toggle", "Hold"]} bind:value={cSetting.value.action}
+        <CycleButton name={null} options={["Toggle", "Hold"]} bind:value={cSetting.value.action}
                   on:change={handleActionChange}/>
     {/if}
 </div>
