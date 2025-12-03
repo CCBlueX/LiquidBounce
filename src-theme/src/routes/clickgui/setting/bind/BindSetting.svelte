@@ -1,11 +1,11 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import type {BindSetting, ModuleSetting} from "../../../integration/types";
-    import {listen} from "../../../integration/ws";
-    import {getPrintableKeyName} from "../../../integration/rest";
-    import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import Dropdown from "./common/Dropdown.svelte";
+    import type {BindSetting, ModuleSetting, Screen} from "../../../../integration/types";
+    import {listen} from "../../../../integration/ws";
+    import {getPrintableKeyName} from "../../../../integration/rest";
+    import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../../integration/events";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
+    import Dropdown from "../common/Dropdown.svelte";
 
     export let setting: ModuleSetting;
 
@@ -28,9 +28,11 @@
         }
     }
 
+    const isClickGuiScreen = (screen: Screen | undefined) =>
+        !(screen === undefined || !screen.class.startsWith("net.ccbluex.liquidbounce") || screen.title !== "ClickGUI" && screen.title !== "VS-CLICKGUI");
+
     listen("keyboardKey", async (e: KeyboardKeyEvent) => {
-        if (e.screen === undefined || !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
-            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")) {
+        if (!isClickGuiScreen(e.screen)) {
             return;
         }
 
@@ -52,8 +54,7 @@
     });
 
     listen("mouseButton", async (e: MouseButtonEvent) => {
-        if (e.screen === undefined || !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
-            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")) {
+        if (!isClickGuiScreen(e.screen)) {
             return;
         }
 
@@ -115,10 +116,10 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
+  @use "../../../../colors" as *;
 
   .setting {
-    padding: 7px 0px;
+    padding: 7px 0;
     display: grid;
     grid-template-columns: 1fr;
     column-gap: 5px;

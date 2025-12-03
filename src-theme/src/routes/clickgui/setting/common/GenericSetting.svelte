@@ -12,7 +12,7 @@
     import ColorSetting from "../ColorSetting.svelte";
     import TextSetting from "../TextSetting.svelte";
     import {slide} from "svelte/transition";
-    import BindSetting from "../BindSetting.svelte";
+    import BindSetting from "../bind/BindSetting.svelte";
     import VectorSetting from "../VectorSetting.svelte";
     import KeySetting from "../KeySetting.svelte";
     import MultiChooseSetting from "../MultiChooseSetting.svelte";
