@@ -1,6 +1,6 @@
 name: 🐞 Bug report
 description: Create a report to help us improve
-title: "[BUG] Description"
+title: "[BUG]"
 
 body:
   - type: markdown
@@ -12,6 +12,7 @@ body:
         - Write a descriptive title for your issue. Avoid generic or vague titles such as "Something's not working" or "A couple of problems".
         - Keep your issue focused on one single problem. If you have multiple bug reports, please create separate issues for each of them.
         - Provide as much context as possible in the details section. Include screenshots, screen recordings, links, references, or anything else you may consider relevant.
+        - Do not submit meaningless content (such as spam, duplicate information, etc.). Such issues will not be accepted, and severe cases may result in restricted commenting privileges on the repository due to spam.
 
   - type: dropdown
     attributes:
@@ -23,11 +24,12 @@ body:
         - Both
     validations:
       required: true
+
   - type: input
     attributes:
       label: LiquidBounce Build/Version
       description: Which version of LiquidBounce does this bug affect?
-      placeholder: e.g. 0.33.0
+      placeholder: e.g. 0.35.0
     validations:
       required: true
 
@@ -51,7 +53,7 @@ body:
     attributes:
       label: Minecraft Version
       description: Which Minecraft-Version and protocol version does this bug affect?
-      placeholder: e.g. 1.21.4 + 1.8.9 protocol
+      placeholder: e.g. 1.21.8 + 1.8.9 protocol
     validations:
       required: true
 
@@ -86,6 +88,6 @@ body:
   - type: textarea
     attributes:
       label: Screenshots
-      description: If applicable, add screenshots to help explain your problem.
+      description: If applicable, add screenshots to help explain your problem. You can directly paste a picture and GitHub will process it.
     validations:
       required: false
