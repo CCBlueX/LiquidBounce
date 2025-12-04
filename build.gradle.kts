@@ -55,40 +55,42 @@ configurations {
     }
 }
 
-repositories {
-    mavenCentral()
-    mavenLocal()
-    maven {
-        name = "CCBlueX"
-        url = uri("https://maven.ccbluex.net/releases")
-    }
-    maven {
-        name = "Fabric"
-        url = uri("https://maven.fabricmc.net/")
-    }
-    maven {
-        name = "Jitpack"
-        url = uri("https://jitpack.io")
-    }
-    maven {
-        name = "TerraformersMC"
-        url = uri("https://maven.terraformersmc.com/")
-    }
-    maven {
-        name = "ViaVersion"
-        url = uri("https://repo.viaversion.com/")
-    }
-    maven {
-        name = "modrinth"
-        url = uri("https://api.modrinth.com/maven")
-    }
-    maven {
-        name = "OpenCollab Snapshots"
-        url = uri("https://repo.opencollab.dev/maven-snapshots/")
-    }
-    maven {
-        name = "Lenni0451"
-        url = uri("https://maven.lenni0451.net/everything")
+allprojects {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven {
+            name = "CCBlueX"
+            url = uri("https://maven.ccbluex.net/releases")
+        }
+        maven {
+            name = "Fabric"
+            url = uri("https://maven.fabricmc.net/")
+        }
+        maven {
+            name = "Jitpack"
+            url = uri("https://jitpack.io")
+        }
+        maven {
+            name = "TerraformersMC"
+            url = uri("https://maven.terraformersmc.com/")
+        }
+        maven {
+            name = "ViaVersion"
+            url = uri("https://repo.viaversion.com/")
+        }
+        maven {
+            name = "modrinth"
+            url = uri("https://api.modrinth.com/maven")
+        }
+        maven {
+            name = "OpenCollab Snapshots"
+            url = uri("https://repo.opencollab.dev/maven-snapshots/")
+        }
+        maven {
+            name = "Lenni0451"
+            url = uri("https://maven.lenni0451.net/everything")
+        }
     }
 }
 
@@ -120,10 +122,14 @@ dependencies {
     // Minecraft Authlib
     includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
 
+    // Multi module
+    api(project(":liquid-bounce-inbuilt-annotations"))
+    include(project(":liquid-bounce-inbuilt-annotations"))
+
     // JCEF Support
     val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
     modApi(mcef)
-    include("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
+    include(mcef)
     includeDependency("net.ccbluex:netty-httpserver:2.4.2")
     // MacOS native (Linux native is included in game)
     includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")

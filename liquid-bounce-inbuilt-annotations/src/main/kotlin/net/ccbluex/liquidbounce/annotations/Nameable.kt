@@ -16,6 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
 
-annotation class Nameable(val name: String)
+package net.ccbluex.liquidbounce.annotations
+
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Nameable(
+    val name: String
+)
