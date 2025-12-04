@@ -476,8 +476,11 @@ object LiquidBounce : EventListener {
                 initializeClient(
                     workerDispatcher = Dispatchers.Default,
                     renderThreadDispatcher = Dispatchers.Minecraft,
-                ).join()
-                ThemeManager.reloader.reload(resourceManager)
+                ).thenRun {
+                    ThemeManager.reloader.reload(resourceManager)
+                }.exceptionally {
+                    ErrorHandler.fatal(it, additionalMessage = "Client start/resource reloader(fallback)")
+                }
             }
         }.onFailure {
             ErrorHandler.fatal(it, additionalMessage = "Client start")
