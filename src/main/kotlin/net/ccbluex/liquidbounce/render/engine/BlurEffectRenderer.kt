@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.createRenderPass
@@ -81,7 +82,10 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         std140Size = { float + float + float },
     ).slice()
 
-    fun shouldDrawBlur(): Boolean = inGame && (mc.currentScreen == null || mc.currentScreen is ChatScreen) &&
+    private fun hasNoFullScreen(): Boolean =
+        mc.currentScreen == null || mc.currentScreen is ChatScreen || FeatureSilentScreen.shouldHide
+
+    fun shouldDrawBlur(): Boolean = inGame && hasNoFullScreen() &&
         ModuleHud.running && ModuleHud.isBlurEffectActive
 
     fun blitBlurOverlay() {
@@ -131,7 +135,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     }
 
     fun getBlurRadiusFactor(): Float {
-        val isScreenOpen = mc.currentScreen != null && mc.currentScreen !is ChatScreen
+        val isScreenOpen = !hasNoFullScreen()
 
         if (isScreenOpen && !wasScreenOpen) {
             lastTimeScreenOpened.reset()

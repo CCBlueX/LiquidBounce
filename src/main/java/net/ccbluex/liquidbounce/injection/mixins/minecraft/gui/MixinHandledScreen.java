@@ -90,13 +90,6 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
         }
     }
 
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void cancelRenderByChestStealer(CallbackInfo ci) {
-        if (FeatureSilentScreen.getShouldHide()) {
-            ci.cancel();
-        }
-    }
-
     // Before `if (itemStack.isEmpty() && slot.isEnabled()) {`
     @Inject(method = "drawSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z", ordinal = 5))
     private void drawSlotOutline(DrawContext context, Slot slot, CallbackInfo ci) {
