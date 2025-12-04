@@ -29,6 +29,13 @@ import net.minecraft.entity.LivingEntity
 
 private const val NAMETAG_PADDING: Int = 15
 
+private const val FONT_SIZE = FontManager.DEFAULT_FONT_SIZE
+private const val BASE_SCALE_FACTOR = 1f / (FONT_SIZE * 0.15f)
+private const val BACKGROUND_X_OFFSET = 0.1f * FONT_SIZE
+private const val BACKGROUND_Y_OFFSET_TOP = -0.1f
+private const val BACKGROUND_Y_OFFSET_BOTTOM = 1.1f
+private const val BACKGROUND_X_PADDING = 0.2f * FONT_SIZE
+
 internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float) {
     if (NametagShowOptions.ITEMS.isShowing()) {
         val currentItemStackRenderer = if (NametagShowOptions.ITEM_INFO.isShowing()) {
@@ -50,9 +57,7 @@ internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float)
             .draw()
     }
 
-    val fontSize = FontManager.DEFAULT_FONT_SIZE
-
-    val scale = 1f / (fontSize * 0.15f) * ModuleNametags.scale
+    val scale = BASE_SCALE_FACTOR * ModuleNametags.scale
 
     matrices.pushMatrix()
     matrices.translate(posX, posY)
@@ -65,10 +70,10 @@ internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float)
     // Make the model view matrix center the text when rendering
     matrices.translate(-textWidth * 0.5f, -fontRenderer.height * 0.5f)
 
-    val x1 = -0.1f * fontSize
-    val y1 = fontRenderer.height * -0.1f
-    val x2 = textWidth + 0.2f * fontSize
-    val y2 = fontRenderer.height * 1.1f
+    val x1 = -BACKGROUND_X_OFFSET
+    val y1 = fontRenderer.height * BACKGROUND_Y_OFFSET_TOP
+    val x2 = textWidth + BACKGROUND_X_PADDING
+    val y2 = fontRenderer.height * BACKGROUND_Y_OFFSET_BOTTOM
 
     // Background
     drawQuad(
