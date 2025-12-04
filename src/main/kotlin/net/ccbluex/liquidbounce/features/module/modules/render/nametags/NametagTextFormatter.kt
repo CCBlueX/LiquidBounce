@@ -77,9 +77,8 @@ object NametagTextFormatter {
         if (ModuleCombineMobs.running) {
             val count = ModuleCombineMobs.getCombinedCount(entity)
             if (count > 1) {
-                val countText = ("x $count").asPlainText(COUNT_STYLE)
                 outputText += PlainText.SPACE
-                outputText += countText
+                outputText += ("x $count").asPlainText(COUNT_STYLE)
             }
         }
 
