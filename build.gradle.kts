@@ -26,6 +26,7 @@ import org.gradle.kotlin.dsl.support.listFilesOrdered
 plugins {
     id("fabric-loom")
     kotlin("jvm")
+    id("com.google.devtools.ksp") version "2.3.3"
     id("com.gorylenko.gradle-git-properties") version "2.5.4"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.node-gradle.node") version "7.1.0"
@@ -125,6 +126,7 @@ dependencies {
     // Multi module
     api(project(":liquid-bounce-inbuilt-annotations"))
     include(project(":liquid-bounce-inbuilt-annotations"))
+    ksp(project(":liquid-bounce-ksp"))
 
     // JCEF Support
     val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"

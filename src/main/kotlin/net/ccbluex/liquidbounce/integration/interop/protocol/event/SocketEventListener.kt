@@ -29,7 +29,7 @@ import org.apache.commons.io.output.StringBuilderWriter
 
 internal object SocketEventListener : EventListener {
 
-    private val events = ALL_EVENT_CLASSES
+    private val events = EventManager.allEventClasses
         .filter { WebSocketEvent::class.java.isAssignableFrom(it) }
         .associateBy { it.eventName }
 
@@ -70,11 +70,11 @@ internal object SocketEventListener : EventListener {
         EventManager.unregisterEventHook(eventClass, eventHook)
     }
 
-    private fun writeToSockets(event: Event) = Util.getMainWorkerExecutor().execute {
+    private fun <E : Event> writeToSockets(event: E) = Util.getMainWorkerExecutor().execute {
         val json = writeBuffer.get().runCatching {
             JsonWriter(this).use { writer ->
                 writer.beginObject()
-                writer.name("name").value(event.javaClass.eventName)
+                writer.name("name").value(event.eventName)
                 writer.name("event")
                 (event as WebSocketEvent).serializer.toJson(event, event.javaClass, writer)
                 writer.endObject()
