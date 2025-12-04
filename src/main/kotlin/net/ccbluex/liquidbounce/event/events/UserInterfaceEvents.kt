@@ -25,22 +25,22 @@ import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.InbuiltEvent
 import net.minecraft.text.Text
 
-@Nameable("fps")
+@InbuiltEvent("fps")
 @Suppress("unused")
 class FpsChangeEvent(val fps: Int) : Event(), WebSocketEvent
 
-@Nameable("fpsLimit")
+@InbuiltEvent("fpsLimit")
 @Suppress("unused")
 class FpsLimitEvent(var fps: Int) : Event()
 
-@Nameable("clientPlayerData")
+@InbuiltEvent("clientPlayerData")
 @Suppress("unused")
 class ClientPlayerDataEvent(val playerData: PlayerData) : Event(), WebSocketEvent
 
-@Nameable("clientPlayerInventory")
+@InbuiltEvent("clientPlayerInventory")
 @Suppress("unused")
 class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event(), WebSocketEvent
 
@@ -49,15 +49,15 @@ sealed class TitleEvent : CancellableEvent(), WebSocketEvent {
         abstract var text: Text?
     }
 
-    @Nameable("title")
+    @InbuiltEvent("title")
     class Title(override var text: Text?) : TextContent()
 
-    @Nameable("subtitle")
+    @InbuiltEvent("subtitle")
     class Subtitle(override var text: Text?) : TextContent()
 
-    @Nameable("titleFade")
+    @InbuiltEvent("titleFade")
     class Fade(var fadeInTicks: Int, var stayTicks: Int, var fadeOutTicks: Int) : TitleEvent()
 
-    @Nameable("clearTitle")
+    @InbuiltEvent("clearTitle")
     class Clear(var reset: Boolean) : TitleEvent()
 }

@@ -1,0 +1,10 @@
+[versions]
+# KSP
+# https://github.com/google/ksp/releases
+ksp = "2.3.3"
+
+[libraries]
+ksp-symbolProcessingApi = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
+
+[plugins]
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

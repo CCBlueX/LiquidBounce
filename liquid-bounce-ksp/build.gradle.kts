@@ -23,7 +23,7 @@ plugins {
 
 dependencies {
     implementation(project(":liquid-bounce-inbuilt-annotations"))
-    implementation("com.google.devtools.ksp:symbol-processing-api:2.3.3")
+    implementation(libs.ksp.symbolProcessingApi)
 }
 
 kotlin {

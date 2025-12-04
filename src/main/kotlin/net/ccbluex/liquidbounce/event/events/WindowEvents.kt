@@ -23,17 +23,17 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
-import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.annotations.InbuiltEvent
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil
 
-@Nameable("windowResize")
+@InbuiltEvent("windowResize")
 class WindowResizeEvent(val width: Int, val height: Int) : Event()
 
-@Nameable("frameBufferResize")
+@InbuiltEvent("frameBufferResize")
 class FramebufferResizeEvent(val width: Int, val height: Int) : Event()
 
-@Nameable("mouseButton")
+@InbuiltEvent("mouseButton")
 class MouseButtonEvent(
     val key: InputUtil.Key,
     val button: Int,
@@ -42,16 +42,16 @@ class MouseButtonEvent(
     val screen: Screen? = null
 ) : Event(), WebSocketEvent
 
-@Nameable("mouseScroll")
+@InbuiltEvent("mouseScroll")
 class MouseScrollEvent(val horizontal: Double, val vertical: Double) : Event()
 
-@Nameable("mouseScrollInHotbar")
+@InbuiltEvent("mouseScrollInHotbar")
 class MouseScrollInHotbarEvent(val speed: Int) : CancellableEvent()
 
-@Nameable("mouseCursor")
+@InbuiltEvent("mouseCursor")
 class MouseCursorEvent(val x: Double, val y: Double) : Event()
 
-@Nameable("keyboardKey")
+@InbuiltEvent("keyboardKey")
 class KeyboardKeyEvent(
     val key: InputUtil.Key,
     val keyCode: Int,
@@ -61,5 +61,5 @@ class KeyboardKeyEvent(
     val screen: Screen? = null
 ) : Event(), WebSocketEvent
 
-@Nameable("keyboardChar")
+@InbuiltEvent("keyboardChar")
 class KeyboardCharEvent(val codePoint: Int, val modifiers: Int) : Event(), WebSocketEvent

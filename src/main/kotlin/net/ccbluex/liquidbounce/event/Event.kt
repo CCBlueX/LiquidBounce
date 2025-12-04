@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.event
 
 import it.unimi.dsi.fastutil.objects.Object2ReferenceRBTreeMap
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
-import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.event.EventTypeRegistry.ALL_EVENT_CLASSES
 
 /**

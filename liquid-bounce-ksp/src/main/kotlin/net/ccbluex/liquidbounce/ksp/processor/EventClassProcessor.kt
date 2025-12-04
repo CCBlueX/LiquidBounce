@@ -28,9 +28,7 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import net.ccbluex.liquidbounce.annotations.Nameable
-
-typealias InbuiltEvent = Nameable
+import net.ccbluex.liquidbounce.annotations.InbuiltEvent
 
 class EventClassProcessor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
 
