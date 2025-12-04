@@ -21,6 +21,8 @@ plugins {
     kotlin("jvm")
 }
 
+version = rootProject.version
+
 kotlin {
     jvmToolchain(8)
 }
