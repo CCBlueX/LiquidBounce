@@ -153,7 +153,7 @@ open class Configurable(
         return output.toTypedArray()
     }
 
-    fun getContainedValuesRecursivelyInternal(output: MutableList<Value<*>>) {
+    protected fun getContainedValuesRecursivelyInternal(output: MutableList<Value<*>>) {
         for (currentValue in this.inner) {
             if (currentValue is ToggleableConfigurable) {
                 output.add(currentValue)
@@ -392,14 +392,25 @@ open class Configurable(
         choices: EnumSet<T> = EnumSet.allOf(T::class.java),
         canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, default, choices as Set<T>, canBeNone)
+        multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = false)
+
+    inline fun <reified T> multiEnumChoice(
+        name: String,
+        default: SequencedSet<T>,
+        choices: EnumSet<T> = EnumSet.allOf(T::class.java),
+        canBeNone: Boolean = true,
+    ) where T : Enum<T>, T : NamedChoice =
+        multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = true)
 
     fun <T : NamedChoice> multiEnumChoice(
         name: String,
         default: MutableSet<T>,
         choices: Set<T>,
         canBeNone: Boolean,
-    ) = MultiChooseListValue(name, default, choices, canBeNone).apply { this@Configurable.inner.add(this) }
+        isOrderSensitive: Boolean,
+    ) = MultiChooseListValue(name, default, choices, canBeNone, isOrderSensitive).apply {
+        this@Configurable.inner.add(this)
+    }
 
     inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
         where T : Enum<T>, T : NamedChoice = enumChoice(name, default, EnumSet.allOf(T::class.java))
@@ -550,15 +561,21 @@ open class Configurable(
             }
 
             ValueType.MULTI_CHOOSE -> {
-                val value = valueObject["value"].asJsonArray.mapTo(sortedSetOf()) { it.asString.asNamedChoice() }
-                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
-                val canBeNone = when (val json = valueObject["canBeNone"]) {
-                    null, is JsonNull -> true // default = true
+                fun parseBoolean(key: String, default: Boolean) = when (val json = valueObject[key]) {
+                    null, is JsonNull -> default
                     is JsonPrimitive, is JsonArray -> json.asBoolean
-                    else -> error("Unexpected JSON (${json.javaClass}): $json, should be boolean")
+                    else -> error("Unexpected JSON value (${json.javaClass}): $json, should be boolean")
                 }
 
-                multiEnumChoice(name, value, choices, canBeNone)
+                val canBeNone = parseBoolean(key = "canBeNone", default = true)
+                val isOrderSensitive = parseBoolean(key = "isOrderSensitive", default = false)
+
+                val value = valueObject["value"].asJsonArray.mapTo(
+                    if (isOrderSensitive) sortedSetOf() else linkedSetOf()
+                ) { it.asString.asNamedChoice() }
+                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
+
+                multiEnumChoice(name, default = value, choices, canBeNone, isOrderSensitive)
             }
 
             else -> error("Unsupported type: $type")

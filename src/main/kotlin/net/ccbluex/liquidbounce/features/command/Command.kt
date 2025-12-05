@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.MutableText
+import net.minecraft.text.Text
 import java.util.*
 
 @Suppress("LongParameterList")
@@ -125,7 +126,7 @@ class Command(
      */
     fun printStyledComponent(
         key: String,
-        textComponent: MutableText? = null,
+        textComponent: Text? = null,
         copyContent: String? = null,
         formatting: (MutableText) -> MutableText = ::regular,
         hover: HoverEvent? = HoverEvent.ShowText(translation("liquidbounce.tooltip.clickToCopy"))
