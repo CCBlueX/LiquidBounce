@@ -1,12 +1,10 @@
 <script lang="ts">
-    import {createEventDispatcher, onDestroy} from "svelte";
+    import {createEventDispatcher} from "svelte";
     import type {ModuleSetting, MultiChooseSetting,} from "../../../integration/types";
     import {slide} from "svelte/transition";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import ExpandArrow from "./common/ExpandArrow.svelte";
     import {setItem} from "../../../integration/persistent_storage";
-    import {flip} from "svelte/animate";
-    import {swap} from "../../../integration/util";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -19,50 +17,14 @@
 
     const dispatch = createEventDispatcher();
 
-    const isEnabled = (choice: string) => cSetting.value.includes(choice);
-
-    const getEnabledIndex = (choice: string) => {
-        if (!cSetting.isOrderSensitive || !isEnabled(choice)) return -1;
-        return cSetting.value.indexOf(choice);
-    }
-
-    $: choices = (() => {
-        if (cSetting.isOrderSensitive) {
-            return [...cSetting.value, ...cSetting.choices.filter(it => !isEnabled(it))];
-        } else {
-            return cSetting.choices;
-        }
-    })();
-
-    let hoveringChoice = -1;
-
-    const moveEnabledChoice = (index: number, direction: number) => {
-        if (!cSetting.isOrderSensitive) return;
-
-        const enabledCount = cSetting.value.length;
-        if (index < 0 || index >= enabledCount) return;
-
-        const newIndex = index + direction;
-        if (newIndex < 0 || newIndex >= enabledCount) return;
-
-        swap(cSetting.value, index, newIndex);
-        cSetting.value = cSetting.value;
-        fireChange();
-    }
-
-    const fireChange = () => {
-        setting = {...cSetting};
-        dispatch("change");
-    };
-
-    const handleChange = (v: string) => {
-        if (isEnabled(v)) {
+    function handleChange(v: string) {
+        if (cSetting.value.includes(v)) {
             const filtered = cSetting.value.filter(item => item !== v);
 
             if (filtered.length === 0 && !cSetting.canBeNone) {
                 // Doesn't remove the element because in this case the value will be empty
                 // And indicate the value
-                errorValue = v;
+                errorValue = v
                 clearTimeout(timeoutId);
                 timeoutId = setTimeout(() => errorValue = null, 300);
 
@@ -71,12 +33,12 @@
 
             cSetting.value = filtered;
         } else {
-            // Append enabled value to tail
-            cSetting.value = [...cSetting.value, v];
+            cSetting.value = [...cSetting.value, v]
         }
 
-        fireChange();
-    };
+        setting = {...cSetting};
+        dispatch("change");
+    }
 
     let expanded = localStorage.getItem(thisPath) === "true";
 
@@ -85,8 +47,6 @@
     function toggleExpanded() {
         expanded = !expanded;
     }
-
-    onDestroy(() => clearTimeout(timeoutId));
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -100,41 +60,16 @@
 
     {#if expanded}
         <div class="choices" transition:slide|global={{duration: 200, axis: "y"}}>
-            {#each choices as choice, i (choice)}
-                {@const enabledIndex = getEnabledIndex(choice)}
-                {@const showLeftArrow = cSetting.isOrderSensitive && enabledIndex > 0 && hoveringChoice === i}
-                {@const showRightArrow = cSetting.isOrderSensitive && enabledIndex >= 0 && enabledIndex < cSetting.value.length - 1 && hoveringChoice === i}
+            {#each cSetting.choices as choice (choice)}
                 <div
                         class="choice"
-                        class:active={isEnabled(choice)}
+                        class:active={cSetting.value.includes(choice)}
                         class:error={errorValue === choice}
-                        class:order-sensitive={cSetting.isOrderSensitive}
-                        animate:flip={{duration: 200}}
-                        on:mouseenter={() => hoveringChoice = i}
-                        on:mouseleave={() => hoveringChoice = -1}
+                        on:click={() => {
+                            handleChange(choice)
+                        }}
                 >
-                    <!-- Move left -->
-                    <span 
-                        class="choice-action move-left" 
-                        class:visible={showLeftArrow}
-                        on:click|stopPropagation={() => moveEnabledChoice(enabledIndex, -1)} 
-                    >
-                        ◀
-                    </span>
-
-                    <!-- Toggle -->
-                    <span class="choice-name" on:click={() => handleChange(choice)}>
-                        {$spaceSeperatedNames ? convertToSpacedString(choice) : choice}
-                    </span>
-
-                    <!-- Move right -->
-                    <span 
-                        class="choice-action move-right" 
-                        class:visible={showRightArrow}
-                        on:click|stopPropagation={() => moveEnabledChoice(enabledIndex, 1)} 
-                    >
-                        ▶
-                    </span>
+                    {$spaceSeperatedNames ? convertToSpacedString(choice) : choice}
                 </div>
             {/each}
         </div>
@@ -162,12 +97,8 @@
     padding: 3px 6px;
     cursor: pointer;
     font-weight: 500;
-    transition: ease color 0.2s, ease background-color 0.2s;
+    transition: ease color 0.2s;
     overflow-wrap: anywhere;
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
 
     &:hover {
       color: $clickgui-text-color;
@@ -180,43 +111,7 @@
 
     &.active {
       background-color: rgba($accent-color, 0.1);
-      .choice-name {
-        color: $accent-color;
-      }
-    }
-
-    &:not(.order-sensitive) {
-      gap: 0;
-
-      .choice-action {
-        display: none;
-      }
-    }
-
-    .choice-action {
-      color: $clickgui-text-dimmed-color;
-      font-size: 10px;
-      cursor: pointer;
-      padding: 1px 2px;
-      border-radius: 2px;
-      transition: ease color 0.2s, ease background-color 0.2s, ease width 0.2s, ease opacity 0.2s;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 0;
-      height: 14px;
-      opacity: 0;
-      overflow: hidden;
-
-      &.visible {
-        width: 14px;
-        opacity: 1;
-      }
-
-      &:hover {
-        color: $accent-color;
-        background-color: rgba($accent-color, 0.1);
-      }
+      color: $accent-color;
     }
   }
 
