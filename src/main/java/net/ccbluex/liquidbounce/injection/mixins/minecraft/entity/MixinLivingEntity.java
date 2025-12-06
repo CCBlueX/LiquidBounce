@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleElytraMotion;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
 import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
