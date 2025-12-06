@@ -232,20 +232,19 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
 /**
  * Joins a list of [Text] into a single [Text] with the given [separator].
  */
-fun List<Text>.joinToText(separator: Text): MutableText {
-    val result = "".asText()
+fun Collection<Text>.joinToText(separator: Text): Text {
     if (isEmpty()) {
-        return result
+        return PlainText.EMPTY
     }
 
-    with(iterator()) {
-        result += next()
-        while (hasNext()) {
-            result += separator
-            result += next()
+    val iterator = iterator()
+    return Array(this.size * 2 - 1) { i ->
+        if (i % 2 == 0) {
+            iterator.next()
+        } else {
+            separator
         }
-    }
-    return result
+    }.asText()
 }
 
 val TextColor.bypassesNameProtection: Boolean

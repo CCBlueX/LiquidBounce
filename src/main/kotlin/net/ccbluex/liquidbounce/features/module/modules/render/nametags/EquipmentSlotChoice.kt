@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2025 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,24 +17,21 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-pluginManagement {
-    repositories {
-        maven {
-            name = "Fabric"
-            url = uri("https://maven.fabricmc.net/")
-        }
-        gradlePluginPortal()
-        mavenCentral()
-    }
+package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-    plugins {
-        val loom_version: String by settings
-        val kotlin_version: String by settings
-        id("fabric-loom") version loom_version
-        kotlin("jvm") version kotlin_version
-    }
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.minecraft.entity.EquipmentSlot
+
+enum class EquipmentSlotChoice(
+    override val choiceName: String,
+    val slot: EquipmentSlot,
+) : NamedChoice {
+    MAINHAND("Mainhand", EquipmentSlot.MAINHAND),
+    OFFHAND("Offhand", EquipmentSlot.OFFHAND),
+    FEET("Feet", EquipmentSlot.FEET),
+    LEGS("Legs", EquipmentSlot.LEGS),
+    CHEST("Chest", EquipmentSlot.CHEST),
+    HEAD("Head", EquipmentSlot.HEAD),
+    BODY("Body", EquipmentSlot.BODY),
+    SADDLE("Saddle", EquipmentSlot.SADDLE),
 }
-
-rootProject.name = "LiquidBounce"
-
-include(":liquid-bounce-inbuilt-annotations")

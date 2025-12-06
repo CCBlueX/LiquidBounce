@@ -17,39 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-interface HudToggleableConfigurable {
-    enabled: boolean;
+plugins {
+    kotlin("jvm")
 }
 
-interface HudArrayListSettings {
-    showTags: boolean;
-    itemAlignment: "Left" | "Right";
-    order: "Ascending" | "Descending";
-}
+version = rootProject.version
 
-interface HudScoreboardSettings {
-    show: ("Header" | "Name" | "Score")[];
-}
-
-interface HudTextSettings {
-    text: string;
-    color: number;
-    font: string;
-    size: number;
-    decorations: HudToggleableConfigurable & {
-        bold: boolean;
-        italic: boolean;
-        underline: boolean;
-        strikethrough: boolean;
-    };
-    shadow: HudToggleableConfigurable & {
-        offsetX: number;
-        offsetY: number;
-        blurRadius: number;
-        color: number;
-    };
-    glow: HudToggleableConfigurable & {
-        radius: number;
-        color: number;
-    };
+kotlin {
+    jvmToolchain(8)
 }

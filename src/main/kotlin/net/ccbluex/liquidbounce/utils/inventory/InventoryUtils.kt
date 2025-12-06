@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
+import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.block.Block
@@ -52,7 +53,6 @@ import net.minecraft.screen.ScreenHandlerType
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
-import net.minecraft.util.math.Vec2f
 import java.util.*
 import java.util.function.Predicate
 
@@ -123,7 +123,7 @@ enum class InventoryRequirements(
     OPEN_INVENTORY("InventoryOpen");
 
     override fun test(action: InventoryAction): Boolean = when (this) {
-        NO_MOVEMENT -> player.input.movementInput == Vec2f.ZERO && !player.jumping
+        NO_MOVEMENT -> player.input.movementInput.isLikelyZero && !player.jumping
         NO_ROTATION -> RotationManager.rotationMatchesPreviousRotation()
         OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
     }

@@ -27,7 +27,10 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityType
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.decoration.ArmorStandEntity
 import net.minecraft.entity.mob.MobEntity
+import net.minecraft.entity.vehicle.AbstractMinecartEntity
 
 /**
  * Combine Mobs
@@ -44,57 +47,56 @@ object ModuleCombineMobs : ClientModule("CombineMobs", Category.RENDER) {
     @JvmRecord
     private data class CombineKey(val type: EntityType<*>, val babyGroup: Boolean)
 
-    private val renderTracked = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
-    private val nametagTracked = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
+    private val renderTracker = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
+    private val nametagTracker = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
+
+    private val combineArmorStands by boolean("CombineArmorStands", false)
+    private val combineMinecarts by boolean("CombineMinecarts", false)
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
-        RenderedEntities.onUpdated(nametagTracked::clear)
+        RenderedEntities.onUpdated(nametagTracker::clear)
         super.onEnabled()
     }
 
     override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
-        renderTracked.clear()
-        nametagTracked.clear()
+        renderTracker.clear()
+        nametagTracker.clear()
     }
 
-    /**
-     * On each frame, we start with a clean slate
-     */
     @Suppress("unused")
     private val renderGameHandler = handler<GameRenderEvent> {
-        renderTracked.clear()
+        renderTracker.clear()
     }
 
-    private fun keyFor(mob: MobEntity): CombineKey {
+    private fun keyFor(mob: Entity): CombineKey {
+        if (mob !is LivingEntity) {
+            return CombineKey(mob.type, false)
+        }
         val babyGroup = mob.isBaby
         return CombineKey(mob.type, babyGroup)
     }
 
     @JvmOverloads
     fun trackEntity(entity: Entity, forNametag: Boolean = false): Boolean {
-        val mob = entity as? MobEntity ?: return false
-        val target = if (forNametag) nametagTracked else renderTracked
+        val canCombine = entity is MobEntity ||
+            (entity is ArmorStandEntity && combineArmorStands) ||
+            (entity is AbstractMinecartEntity && combineMinecarts)
+        if (!canCombine) return false
 
-        val key = keyFor(mob)
-        val pos = mob.blockPos.asLong()
-
-        val posMap = target.getOrPut(key, ::Long2IntOpenHashMap)
-        val count = posMap.addTo(pos, 1)
-
-        return count > 0
+        return (if (forNametag) nametagTracker else renderTracker)
+            .getOrPut(keyFor(entity), ::Long2IntOpenHashMap)
+            .addTo(entity.blockPos.asLong(), 1) > 0
     }
 
     fun getCombinedCount(entity: Entity): Int {
-        val mob = entity as? MobEntity ?: return 1
+        val key = keyFor(entity)
+        val pos = entity.blockPos.asLong()
 
-        val key = keyFor(mob)
-        val pos = mob.blockPos.asLong()
-
-        val count = renderTracked[key]?.getOrDefault(pos, 0) ?: 0
+        val count = renderTracker[key]?.getOrDefault(pos, 0) ?: 0
         if (count > 0) return count
 
-        return nametagTracked[key]?.getOrDefault(pos, 1) ?: 1
+        return nametagTracker[key]?.getOrDefault(pos, 1) ?: 1
     }
 }
