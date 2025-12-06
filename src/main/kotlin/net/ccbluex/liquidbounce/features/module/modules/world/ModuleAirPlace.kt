@@ -52,11 +52,12 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
         val fillColor by color("Color", Color4b(69, 119, 255, 104))
         val outlineColor by color("OutlineColor", Color4b.WHITE)
     }
-    
+
     val liquidPlace by boolean("Place in Liquids", false)
 
     object CustomRange : ToggleableConfigurable(this, "CustomRange", false) {
-        val range = float("Range", 4.0f, 1.0f..5.0f)
+        private val rangeBounds = 1.0f..5.0f
+        val range = float("Range", 4.0f, rangeBounds)
 
         object ScrollAdjust : ToggleableConfigurable(this, "ScrollAdjust", true) {
             val modifierKey by key("Modifier", GLFW.GLFW_KEY_LEFT_ALT)
@@ -68,7 +69,7 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
                 if (modifierKey != InputUtil.UNKNOWN_KEY && !modifierKey.isPressed) return@handler
                 val delta = event.vertical.toFloat() * sensitivity
                 val newValue = range.get() + delta
-                range.set(newValue.coerceIn(1.0f..5.0f))
+                range.set(newValue.coerceIn(rangeBounds))
             }
 
             @Suppress("unused")
