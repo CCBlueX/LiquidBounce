@@ -25,6 +25,7 @@ import net.minecraft.util.math.*
 
 inline operator fun Vec2f.component1() = this.x
 inline operator fun Vec2f.component2() = this.y
+inline fun Vec2f.copy(x: Float = this.x, y: Float = this.y) = Vec2f(x, y)
 
 inline operator fun BlockPos.rangeTo(other: BlockPos): BlockBox = BlockBox.create(this, other)
 

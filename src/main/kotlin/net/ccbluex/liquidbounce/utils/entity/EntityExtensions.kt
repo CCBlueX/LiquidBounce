@@ -80,13 +80,13 @@ val Entity.isInsideWaterOrBubbleColumn: Boolean
 inline var Input.movementForward: Float
     get() = movementInput.y
     set(value) {
-        (this as InputAddition).`liquid_bounce$setMovementInput`(Vec2f(movementSideways, value))
+        (this as InputAddition).`liquid_bounce$setMovementInput`(movementInput.copy(y = value))
     }
 
 inline var Input.movementSideways: Float
     get() = movementInput.x
     set(value) {
-        (this as InputAddition).`liquid_bounce$setMovementInput`(Vec2f(value, movementForward))
+        (this as InputAddition).`liquid_bounce$setMovementInput`(movementInput.copy(x = value))
     }
 
 val LivingEntity.handItems: Array<ItemStack>
