@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleElytraMotion
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.CriticalsSelectionMode
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsConfigurable.KillAuraRotationTiming.ON_TICK
@@ -92,7 +93,11 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
     private val scanExtraRange by floatRange("ScanExtraRange", 2.0f..3.0f, 0.0f..7.0f).onChanged { range ->
         currentScanExtraRange = range.random()
     }
+    private val elytraScanExtraRange by floatRange("ElytraScanExtraRange", 45.0f..50.0f, 0.0f..100.0f).onChanged { range ->
+        currentElytraScanExtraRange = range.random()
+    }
     private var currentScanExtraRange: Float = scanExtraRange.random()
+    private var currentElytraScanExtraRange: Float = elytraScanExtraRange.random()
 
     // Target
     val targetTracker = tree(KillAuraTargetTracker)
@@ -251,6 +256,15 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
         val isFacingEnemy = facingEnemy(toEntity = target, rotation = rotation,
             range = range.toDouble(),
             wallsRange = wallRange.toDouble()) || ModuleElytraTarget.canIgnoreKillAuraRotations
+        val isFacingEnemyDist = facingEnemy(toEntity=target, rotation=rotation,
+            range=ModuleElytraMotion.distance.toDouble());
+
+
+        if (ModuleElytraMotion.running) {
+            if (player.isGliding() && isFacingEnemyDist) {
+                player.setVelocity(0.0, 0.0, 0.0);
+            }
+        }
 
         ModuleDebug.debugParameter(ModuleKillAura, "Is Facing Enemy", isFacingEnemy)
         ModuleDebug.debugParameter(ModuleKillAura, "Rotation", rotation)
@@ -311,9 +325,12 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
     private fun updateTarget() {
         // Calculate maximum range based on enemy distance
-        val maximumRange = if (targetTracker.closestSquaredEnemyDistance > range.sq()) {
+        val maximumRange = if (targetTracker.closestSquaredEnemyDistance > range.sq() && !player.isGliding()) {
             range + currentScanExtraRange
-        } else {
+        } else if (targetTracker.closestSquaredEnemyDistance > range.sq() && player.isGliding()) {
+            range + currentElytraScanExtraRange
+        }
+        else {
             range
         }
 

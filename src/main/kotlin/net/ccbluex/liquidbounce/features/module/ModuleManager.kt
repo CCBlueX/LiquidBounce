@@ -276,6 +276,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleItemScroller,
             ModuleBetterChat,
             ModuleElytraTarget,
+            ModuleElytraMotion,
             ModuleMiddleClickAction,
             ModuleInventoryTracker,
             ModuleNameProtect,

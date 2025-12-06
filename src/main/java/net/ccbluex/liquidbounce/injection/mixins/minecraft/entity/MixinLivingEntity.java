@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleElytraMotion;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
 import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
@@ -340,6 +341,30 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
         previousIsGliding = gliding;
     }
+
+    /*@Inject(method = "travelGliding", at = @At("HEAD"), cancellable = true)
+    private void hookTravelGliding(net.minecraft.util.math.Vec3d movementInput,CallbackInfoReturnable<Boolean> cir) {
+
+        if (ModuleElytraMotion.INSTANCE.getRunning()) {
+            var player = (ClientPlayerEntity) (Object) this;
+            double d0 = 0.08D;
+            double d1 = Math.sqrt(vector3d1.x * vector3d1.x + vector3d1.z * vector3d1.z);
+
+            float f1 = MathHelper.cos(f);
+            Vec3d vector3d = player.getVelocity().add(0.0D, d0 * (-1.0D + (double)f1 * 0.75D), 0.0D);
+
+            if (player.isGliding() && Aura.target != null && this.getDistanceMotion(Aura.target) <= (double)Manager.FUNCTION_MANAGER.elytraMotion.distancie.getValue().floatValue()) {
+                boolean shouldPredictElytra = Aura.target.isElytraFlying() && Manager.FUNCTION_MANAGER.elyrtaPredict.state && Aura.ticks_elytra <= 0;
+                if (!shouldPredictElytra) {
+                    player.setVelocity(net.minecraft.util.math.Vec3d.mul(0.9900000095367432D, 0.0D, 0.9900000095367432D));
+                } else {
+                    player.setVelocity(net.minecraft.util.math.Vec3d.mul(0.9900000095367432D, 0.9800000190734863D, 0.9900000095367432D));
+                }
+            }
+        }
+
+        this.setMotion(vector3d.mul(0.9900000095367432D, 0.9800000190734863D, 0.9900000095367432D));
+    }*/
 
     @Inject(method = "setHealth", at = @At("HEAD"))
     private void hookSetHealth(float health, CallbackInfo callbackInfo) {
