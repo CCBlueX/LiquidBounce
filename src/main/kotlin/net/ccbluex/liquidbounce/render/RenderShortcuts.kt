@@ -28,7 +28,6 @@ import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
@@ -42,9 +41,12 @@ import net.minecraft.util.math.*
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector3fc
+import org.joml.Vector4f
 import org.lwjgl.opengl.GL11C
 import java.util.OptionalDouble
 import java.util.OptionalInt
+import java.util.function.IntFunction
+import java.util.function.Supplier
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -158,19 +160,37 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
     }
 }
 
+fun RenderEnvironment.draw(pipeline: RenderPipeline, builtBuffer: BuiltBuffer) = drawMesh(
+    pipeline,
+    builtBuffer,
+    this.framebuffer,
+    this.shaderColor.toVector4f(),
+    this.shaderLineWidth,
+    { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
+    { this.shaderTextures[it] ?: RenderSystem.getShaderTexture(it) },
+)
+
 /**
  * copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
  * @see RenderLayer.MultiPhase.draw
  */
 @Suppress("detekt:all")
-fun RenderEnvironment.draw(pipeline: RenderPipeline, builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
+fun drawMesh(
+    pipeline: RenderPipeline,
+    builtBuffer: BuiltBuffer,
+    framebuffer: Framebuffer = mc.framebuffer,
+    shaderColor: Vector4f = Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
+    shaderLineWidth: Float = RenderSystem.getShaderLineWidth(),
+    renderPassLabelGetter: Supplier<String>? = null,
+    shaderTextureProvider: IntFunction<GpuTextureView?> = IntFunction(RenderSystem::getShaderTexture),
+) = builtBuffer.use { buffer ->
     val gpuBufferSlice = RenderSystem.getDynamicUniforms()
         .write(
             RenderSystem.getModelViewMatrix(),
-            this.shaderColor.toVector4f(),
+            shaderColor,
             Vector3f(),
             RenderSystem.getTextureMatrix(),
-            this.shaderLineWidth,
+            shaderLineWidth,
         )
     val gpuBuffer = pipeline.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
     val gpuBuffer2: GpuBuffer
@@ -185,12 +205,12 @@ fun RenderEnvironment.draw(pipeline: RenderPipeline, builtBuffer: BuiltBuffer) =
     }
 
     val colorTexture = RenderSystem.outputColorTextureOverride
-        ?: this.framebuffer.colorAttachmentView
+        ?: framebuffer.colorAttachmentView
     val depthTexture = RenderSystem.outputDepthTextureOverride
-        ?: this.framebuffer.depthAttachmentView.takeIf { this.framebuffer.useDepthAttachment }
+        ?: framebuffer.depthAttachmentView.takeIf { framebuffer.useDepthAttachment }
 
     gpuDevice.createCommandEncoder().createRenderPass(
-        { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
+        renderPassLabelGetter,
         colorTexture,
         OptionalInt.empty(),
         depthTexture,
@@ -198,7 +218,7 @@ fun RenderEnvironment.draw(pipeline: RenderPipeline, builtBuffer: BuiltBuffer) =
     ).use { renderPass ->
         renderPass.setPipeline(pipeline)
         val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
-        if (scissorState.isEnabled()) {
+        if (scissorState.isEnabled) {
             renderPass.enableScissor(
                 scissorState.x,
                 scissorState.y,
@@ -212,7 +232,7 @@ fun RenderEnvironment.draw(pipeline: RenderPipeline, builtBuffer: BuiltBuffer) =
         renderPass.setVertexBuffer(0, gpuBuffer)
 
         for (i in 0 until RenderSystem.TEXTURE_COUNT) {
-            val gpuTexture = this.shaderTextures[i] ?: RenderSystem.getShaderTexture(i)
+            val gpuTexture = shaderTextureProvider.apply(i)
             if (gpuTexture != null) {
                 renderPass.bindSampler(SAMPLER_NAMES[i], gpuTexture)
             }
