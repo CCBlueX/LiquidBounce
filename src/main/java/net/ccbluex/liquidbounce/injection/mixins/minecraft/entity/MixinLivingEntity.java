@@ -342,7 +342,6 @@ public abstract class MixinLivingEntity extends MixinEntity {
         previousIsGliding = gliding;
     }
 
-
     @Inject(method = "setHealth", at = @At("HEAD"))
     private void hookSetHealth(float health, CallbackInfo callbackInfo) {
         var oldHealth = this.getHealth();
