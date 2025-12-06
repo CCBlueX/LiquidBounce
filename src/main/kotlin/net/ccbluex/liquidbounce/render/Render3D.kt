@@ -26,6 +26,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTextureView
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.render.BufferBuilder
@@ -38,8 +39,15 @@ import net.minecraft.util.math.Vec3i
 
 /**
  * Context representing the rendering environment.
+ *
+ * @param framebuffer The render target framebuffer.
  */
 sealed class RenderEnvironment(val framebuffer: Framebuffer) {
+
+    val shaderTextures = arrayOfNulls<GpuTextureView>(RenderSystem.TEXTURE_COUNT)
+    var shaderColor = Color4b.WHITE
+    var shaderLineWidth = 1.0F
+
     var isBatchMode: Boolean = false
         private set
 
@@ -47,21 +55,7 @@ sealed class RenderEnvironment(val framebuffer: Framebuffer) {
         return if (isBatchMode) {
             batchBuffer.computeIfAbsent(pipeline, ClientTessellator::begin)
         } else {
-            Tessellator.getInstance().begin(
-                pipeline.vertexFormatMode,
-                pipeline.vertexFormat
-            )
-        }
-    }
-
-    fun getOrCreateBuffer(texture: GpuTextureView): BufferBuilder {
-        return if (isBatchMode) {
-            texQuadBatchBuffer.computeIfAbsent(texture, ClientTessellator::begin)
-        } else {
-            Tessellator.getInstance().begin(
-                ClientRenderPipelines.TexQuads.vertexFormatMode,
-                ClientRenderPipelines.TexQuads.vertexFormat
-            )
+            Tessellator.getInstance().begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
         }
     }
 
@@ -77,31 +71,16 @@ sealed class RenderEnvironment(val framebuffer: Framebuffer) {
 
         batchBuffer.fastIterator().forEach { (pipeline, bufferBuilder) ->
             bufferBuilder.endNullable()?.let {
-                pipeline.draw(it)
+                draw(pipeline, it)
                 ClientTessellator.allocator(pipeline).clear()
             }
         }
         batchBuffer.clear()
-
-        texQuadBatchBuffer.fastIterator().forEach { (gpuTexture, bufferBuilder) ->
-            bufferBuilder.endNullable()?.let {
-                RenderSystem.setShaderTexture(0, gpuTexture) // Sampler0
-                ClientRenderPipelines.TexQuads.draw(it)
-                ClientTessellator.allocator(gpuTexture).clear()
-            }
-        }
-        texQuadBatchBuffer.clear()
     }
 
     companion object {
         @JvmStatic
         private val batchBuffer = Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()
-
-        /**
-         * For [ClientRenderPipelines.TexQuads] only. Each texture has its buffer builder.
-         */
-        @JvmStatic
-        private val texQuadBatchBuffer = Reference2ReferenceOpenHashMap<GpuTextureView, BufferBuilder>()
     }
 }
 

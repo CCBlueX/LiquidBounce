@@ -42,7 +42,6 @@ import net.minecraft.util.math.*
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector3fc
-import org.joml.Vector4f
 import org.lwjgl.opengl.GL11C
 import java.util.OptionalDouble
 import java.util.OptionalInt
@@ -154,25 +153,7 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
 
     if (!isBatchMode) {
         buffer.endNullable()?.let {
-            pipeline.draw(it)
-        }
-    }
-}
-
-private inline fun WorldRenderEnvironment.drawTexQuads(
-    texture: GpuTextureView,
-    drawer: VertexConsumer.(Matrix4f) -> Unit
-) {
-    val matrix = matrixStack.peek().positionMatrix
-
-    val buffer = getOrCreateBuffer(texture)
-
-    drawer(buffer, matrix)
-
-    if (!isBatchMode) {
-        buffer.endNullable()?.let {
-            RenderSystem.setShaderTexture(0, texture)
-            ClientRenderPipelines.TexQuads.draw(it)
+            draw(pipeline, it)
         }
     }
 }
@@ -181,18 +162,17 @@ private inline fun WorldRenderEnvironment.drawTexQuads(
  * copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
  * @see RenderLayer.MultiPhase.draw
  */
-context(env: RenderEnvironment)
 @Suppress("detekt:all")
-fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
+fun RenderEnvironment.draw(pipeline: RenderPipeline, builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
     val gpuBufferSlice = RenderSystem.getDynamicUniforms()
         .write(
             RenderSystem.getModelViewMatrix(),
-            Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
+            this.shaderColor.toVector4f(),
             RenderSystem.getModelOffset(),
             RenderSystem.getTextureMatrix(),
-            RenderSystem.getShaderLineWidth(),
+            this.shaderLineWidth,
         )
-    val gpuBuffer = vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
+    val gpuBuffer = pipeline.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
     val gpuBuffer2: GpuBuffer
     val indexType: VertexFormat.IndexType
     if (buffer.sortedBuffer == null) {
@@ -200,25 +180,23 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount)
         indexType = shapeIndexBuffer.indexType
     } else {
-        gpuBuffer2 = vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
+        gpuBuffer2 = pipeline.vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
         indexType = buffer.drawParameters.indexType
     }
 
-//    val colorTexture = RenderSystem.outputColorTextureOverride
-//        ?: env.framebuffer.colorAttachmentView
-//    val depthTexture = RenderSystem.outputDepthTextureOverride
-//        ?: env.framebuffer.depthAttachmentView.takeIf { env.framebuffer.useDepthAttachment }
-//
-//    gpuDevice.createCommandEncoder().createRenderPass(
-//        { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
-//        colorTexture,
-//        OptionalInt.empty(),
-//        depthTexture,
-//        OptionalDouble.empty(),
-//    ).use { renderPass ->
-    env.framebuffer.createRenderPass().use { renderPass ->
-        // TODO: render pass extra actions
-        renderPass.setPipeline(this)
+    val colorTexture = RenderSystem.outputColorTextureOverride
+        ?: this.framebuffer.colorAttachmentView
+    val depthTexture = RenderSystem.outputDepthTextureOverride
+        ?: this.framebuffer.depthAttachmentView.takeIf { this.framebuffer.useDepthAttachment }
+
+    gpuDevice.createCommandEncoder().createRenderPass(
+        { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
+        colorTexture,
+        OptionalInt.empty(),
+        depthTexture,
+        OptionalDouble.empty(),
+    ).use { renderPass ->
+        renderPass.setPipeline(pipeline)
         val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
         if (scissorState.method_72091()) {
             renderPass.enableScissor(
@@ -233,8 +211,8 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         renderPass.setUniform("DynamicTransforms", gpuBufferSlice)
         renderPass.setVertexBuffer(0, gpuBuffer)
 
-        for (i in 0..11) {
-            val gpuTexture = RenderSystem.getShaderTexture(i)
+        for (i in 0 until RenderSystem.TEXTURE_COUNT) {
+            val gpuTexture = this.shaderTextures[i] ?: RenderSystem.getShaderTexture(i)
             if (gpuTexture != null) {
                 renderPass.bindSampler(SAMPLER_NAMES[i], gpuTexture)
             }
@@ -322,30 +300,6 @@ fun WorldRenderEnvironment.drawSquareTexture(
     vertex(matrix, 0.0f, 0.0f, 0.0f)
         .texture(1.0f, 0.0f)
         .color(argb)
-}
-
-fun WorldRenderEnvironment.drawTextureQuad(
-    textureView: GpuTextureView,
-    pos1: Vector3fc,
-    uv1: UV2f = UV2f(0f, 0f),
-    pos2: Vector3fc,
-    uv2: UV2f = UV2f(1f, 1f),
-    argb: Int,
-) {
-    drawTexQuads(textureView) { matrix ->
-        vertex(matrix, pos1.x(), pos2.y(), pos1.z())
-            .texture(uv1.u, uv2.v)
-            .color(argb)
-        vertex(matrix, pos2.x(), pos2.y(), pos2.z())
-            .texture(uv2.u, uv2.v)
-            .color(argb)
-        vertex(matrix, pos2.x(), pos1.y(), pos2.z())
-            .texture(uv2.u, uv1.v)
-            .color(argb)
-        vertex(matrix, pos1.x(), pos1.y(), pos1.z())
-            .texture(uv1.u, uv1.v)
-            .color(argb)
-    }
 }
 
 fun WorldRenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3, argb: Int) {
