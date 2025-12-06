@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce
 import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.asCompletableFuture
+import kotlinx.coroutines.future.future
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.ioScope
@@ -192,13 +193,10 @@ object LiquidBounce : EventListener {
         workerDispatcher: CoroutineDispatcher,
         renderThreadDispatcher: CoroutineDispatcher,
     ): CompletableFuture<Unit> = CoroutineScope(
-        renderThreadDispatcher + CoroutineName("$CLIENT_NAME Initializer") +
-            CoroutineExceptionHandler { ctx, throwable ->
-                ErrorHandler.fatal(throwable, additionalMessage = ctx[CoroutineName]?.name)
-            }
-    ).launch {
+        renderThreadDispatcher + CoroutineName("$CLIENT_NAME Initializer")
+    ).future {
         if (isInitialized) {
-            return@launch
+            return@future
         }
 
         // Ensure we are on the render thread
@@ -235,7 +233,9 @@ object LiquidBounce : EventListener {
 
         isInitialized = true
         logger.info("$CLIENT_NAME has been successfully initialized.")
-    }.asCompletableFuture()
+    }.exceptionally { throwable ->
+        ErrorHandler.fatal(throwable, additionalMessage = "$CLIENT_NAME initializer")
+    }
 
     /**
      * Initializes managers for Event Listener registration.
@@ -478,8 +478,6 @@ object LiquidBounce : EventListener {
                     renderThreadDispatcher = Dispatchers.Minecraft,
                 ).thenRun {
                     ThemeManager.reloader.reload(resourceManager)
-                }.exceptionally {
-                    ErrorHandler.fatal(it, additionalMessage = "Client start/resource reloader(fallback)")
                 }
             }
         }.onFailure {

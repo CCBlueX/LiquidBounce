@@ -45,7 +45,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
 
     val packetHandler = handler<PacketEvent> {
         when (val packet = it.packet) {
-            is PlayerListS2CPacket -> {
+            is PlayerListS2CPacket -> mc.execute {
                 for (entry in packet.playerAdditionEntries) {
                     val profile = entry.profile ?: continue
 
@@ -62,7 +62,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
                 }
             }
 
-            is PlayerRemoveS2CPacket -> {
+            is PlayerRemoveS2CPacket -> mc.execute {
                 val uuids = packet.profileIds
                 suspectList.removeAll(uuids)
                 botList.removeAll(uuids)
