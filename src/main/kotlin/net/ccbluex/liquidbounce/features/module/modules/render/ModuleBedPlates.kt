@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import kotlinx.coroutines.Dispatchers
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.additions.drawStackCount
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
@@ -71,6 +72,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
         arrayOf(FilterMode.Predefined, FilterMode.Custom)
     }
     private val ignoreSelfBed = choices("IgnoreSelfBed", 0, ::isSelfBedChoices)
+    private val ignoreAdjacent by boolean("IgnoreAdjacent", false)
 
     private sealed class FilterMode(name: String) : Choice(name), Predicate<Block> {
         final override val parent: ChoiceConfigurable<*>
@@ -156,12 +158,22 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
         var i = 0
         for ((bedState, distance) in beds) {
-            if (ignoreSelfBed.activeChoice.isSelfBed(bedState.block, bedState.trackedBlockPos)) {
+            val currPos = bedState.trackedBlockPos
+            if (ignoreSelfBed.activeChoice.isSelfBed(bedState.block, currPos)) {
                 continue
             }
 
-            if (distance > maximumDistance || i++ > maxCount) {
+            if (distance > maximumDistance || i > maxCount) {
                 break // because list beds are sorted by distance (ASC), so we break at first item out of range
+            }
+
+            if (ignoreAdjacent &&
+                beds.any {
+                    val pos = it.bedState.trackedBlockPos
+                    pos != currPos && pos.getManhattanDistance(currPos) <= 1
+                }
+            ) {
+                continue
             }
 
             val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
@@ -169,11 +181,16 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                 .filter { filterMode.activeChoice.test(it.block) }
 
             val blocksAsItemStacks = if (showBed) {
-                val list = ArrayList<ItemStack>(surrounding.size + 1) // Add bed itself at first
-                list.add(bedState.block.asItem().defaultStack)
-                surrounding.mapTo(list) { it.block.createItemStackForRendering(it.count) }
+                val bedItemStack = bedState.block.asItem().defaultStack
+                if (surrounding.isEmpty()) {
+                    listOf(bedItemStack)
+                } else {
+                    val list = ArrayList<ItemStack>(surrounding.size + 1)
+                    list.add(bedItemStack) // Add bed itself at first
+                    surrounding.mapTo(list) { it.block.createItemStackForRendering(it.count) }
+                }
             } else {
-                surrounding.map { it.block.createItemStackForRendering(it.count) }
+                surrounding.mapToArray { it.block.createItemStackForRendering(it.count) }.asList()
             }
 
             val outlineColor = if (outline) Color4b(bedState.block.color.mapColor.color) else Color4b.TRANSPARENT
@@ -221,6 +238,8 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                         }
                     }
                 }.draw(preventOverlap)
+
+            i++
         }
     }
 
