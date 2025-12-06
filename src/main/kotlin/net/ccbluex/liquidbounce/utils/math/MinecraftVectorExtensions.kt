@@ -56,6 +56,9 @@ inline operator fun Vec3d.times(scalar: Double): Vec3d = multiply(scalar)
 val Vec3d.isLikelyZero: Boolean
     get() = MathHelper.approximatelyEquals(this.lengthSquared(), 1.0E-6)
 
+val Vec2f.isLikelyZero: Boolean
+    get() = MathHelper.approximatelyEquals(this.lengthSquared(), 1.0E-6F)
+
 inline fun Vec3d.interpolate(start: Vec3d, multiple: Double) =
     Vec3d(
         this.x.interpolate(start.x, multiple),
