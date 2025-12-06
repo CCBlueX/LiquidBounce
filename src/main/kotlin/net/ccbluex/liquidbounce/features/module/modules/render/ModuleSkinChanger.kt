@@ -42,12 +42,14 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.registerTexture
+import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.network.PlayerListEntry
-import net.minecraft.client.texture.NativeImage
 import net.minecraft.entity.player.PlayerSkinType
 import net.minecraft.entity.player.SkinTextures
 import net.minecraft.util.AssetInfo
+import net.minecraft.util.Identifier
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
@@ -115,12 +117,16 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             }
         }
 
-        object File : Mode("File") {
+        object File : Mode("File"), AssetInfo.TextureAsset {
             private val image = file("Image")
 
             private val skinType by enumChoice("Model", ModelChoice.WIDE)
 
             private val identifier = LiquidBounce.identifier("skin-changer-from-file")
+
+            override fun id() = identifier
+
+            override fun texturePath() = identifier
 
             private enum class ModelChoice(
                 override val choiceName: String,
@@ -130,25 +136,25 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                 WIDE("Default", PlayerSkinType.WIDE),
             }
 
-            override var skinTextures: Supplier<SkinTextures>? = null
+            override val skinTextures = Supplier {
+                SkinTextures(
+                    this, // body
+                    null, // cape
+                    null, // elytra
+                    skinType.type,
+                    false,
+                )
+            }
 
             init {
                 image.asStateFlow().filter { it.isFile }.debounceUntilInGame { file ->
                     // New texture will replace the old one
                     val nativeImage = withContext(Dispatchers.IO) {
-                        NativeImage.read(file.inputStream())
+                        file.inputStream().toNativeImage()
                     }
 
-                    nativeImage.registerTexture(identifier)
-
-                    skinTextures = Supplier {
-                        SkinTextures(
-                            AssetInfo.TextureAssetInfo(identifier),
-                            null,
-                            null,
-                            skinType.type,
-                            false,
-                        )
+                    withContext(Dispatchers.Minecraft) {
+                        nativeImage.registerTexture(identifier)
                     }
                 }
             }
