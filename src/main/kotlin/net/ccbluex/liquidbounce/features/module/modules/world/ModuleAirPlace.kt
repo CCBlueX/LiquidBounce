@@ -19,24 +19,26 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
+import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
+import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
+import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.item.isConsumable
-import net.ccbluex.liquidbounce.utils.item.isFood
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.item.ArmorStandItem
-import net.minecraft.item.BlockItem
-import net.minecraft.item.ItemStack
-import net.minecraft.item.SpawnEggItem
+import net.minecraft.client.util.InputUtil
+import net.minecraft.item.*
 import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
+import org.lwjgl.glfw.GLFW
 
 /**
  * AirPlace module
@@ -45,68 +47,125 @@ import net.minecraft.util.math.Vec3d
  */
 object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
 
-    private object Preview : ToggleableConfigurable(this, "Preview", true) {
+    object Preview : ToggleableConfigurable(this, "Preview", true) {
         val outlineOnly by boolean("OutlineOnly", false)
         val fillColor by color("Color", Color4b(69, 119, 255, 104))
         val outlineColor by color("OutlineColor", Color4b.WHITE)
     }
+    
+    val liquidPlace by boolean("Place in Liquids", false)
+
+    object CustomRange : ToggleableConfigurable(this, "CustomRange", false) {
+        val range = float("Range", 4.0f, 1.0f..5.0f)
+
+        object ScrollAdjust : ToggleableConfigurable(this, "ScrollAdjust", true) {
+            val modifierKey by key("Modifier", GLFW.GLFW_KEY_LEFT_ALT)
+            val sensitivity by float("Sensitivity", 0.5f, 0.1f..1.0f)
+
+            @Suppress("unused")
+            private val rangeChangeHandler = handler<MouseScrollEvent> { event ->
+                if (!running) return@handler
+                if (modifierKey != InputUtil.UNKNOWN_KEY && !modifierKey.isPressed) return@handler
+                val delta = event.vertical.toFloat() * sensitivity
+                val newValue = range.get() + delta
+                range.set(newValue.coerceIn(1.0f..5.0f))
+            }
+
+            @Suppress("unused")
+            private val hotbarScrollHandler = handler<MouseScrollInHotbarEvent> {
+                if (running && (modifierKey == InputUtil.UNKNOWN_KEY || modifierKey.isPressed)) {
+                    it.cancelEvent()
+                }
+            }
+        }
+
+        init {
+            tree(ScrollAdjust)
+        }
+
+    }
 
     init {
-        tree(Preview)
+        treeAll(Preview, CustomRange)
     }
 
+    private inline val BlockHitResult.isAirOrFluid: Boolean
+        get() = world.getBlockState(blockPos).isAir ||
+            (liquidPlace && !world.getFluidState(blockPos).isEmpty && !ModuleLiquidPlace.running)
 
-    private inline val Vec3d.isBlockAir: Boolean
-        get() = world.getBlockState(toBlockPos()).isAir
 
-    // ---------- Utils ----------
-    private fun isAirPlaceableItem(stack: ItemStack): Boolean {
-        if (stack.isEmpty || stack.isFood || stack.isConsumable) return false
-        val item = stack.item
-        return item is BlockItem || item is SpawnEggItem || item is ArmorStandItem
-    }
-
-    private fun playerHasAllowedItems(): Boolean {
-        val mainHand = player.mainHandStack
-        val offHand = player.offHandStack
-        return isAirPlaceableItem(mainHand) || isAirPlaceableItem(offHand)
-    }
-
-    // ---------- Render ----------
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> { event ->
-        if (!Preview.running) return@handler
-
-        val target = mc.crosshairTarget ?: return@handler
-        if (!target.pos.isBlockAir) return@handler
-        if (!playerHasAllowedItems()) return@handler
-
-        val targetPos = target.pos.toBlockPos()
-        val worldSpaceBox = Box(targetPos)
-
-        val negCameraPos = mc.entityRenderDispatcher.camera.pos.negate()
-        val viewSpaceBox = worldSpaceBox.offset(negCameraPos)
-
-        val fill = if (Preview.outlineOnly) Color4b.TRANSPARENT else Preview.fillColor
-        val outline = Preview.outlineColor
-
-        renderEnvironmentForWorld(event.matrixStack) {
-            drawBox(viewSpaceBox, fill, outline)
+    private fun ItemStack.isAirPlaceableAt(hit: BlockHitResult): Boolean {
+        if (isEmpty || isConsumable) return false
+        return when (val i = item) {
+            is BlockItem -> i.block.defaultState.canPlaceAt(world, hit.blockPos)
+            is SpawnEggItem, is ArmorStandItem, is FireworkRocketItem -> true
+            else -> false
         }
     }
 
-    // ---------- Place ----------
-    @Suppress("unused")
-    private val placeHandler = handler<PlayerInteractedItemEvent> { event ->
-        val target = mc.crosshairTarget ?: return@handler
-        if (!target.pos.isBlockAir) return@handler
-        if (!playerHasAllowedItems()) return@handler
+    private fun canPlayerPlaceAt(hit: BlockHitResult): Boolean {
+        val main = player.mainHandStack
+        if (main.isAirPlaceableAt(hit)) return true
 
-        val hand = event.hand
-        if (target !is BlockHitResult) return@handler
-        val actionResult = interaction.interactBlock(player, hand, target)
-        if (actionResult.isAccepted) player.swingHand(hand)
-
+        val off = player.offHandStack
+        return off.isAirPlaceableAt(hit)
     }
 
+
+    private fun getValidHitResult(): BlockHitResult? {
+        val hitResult = mc.crosshairTarget as? BlockHitResult ?: return null
+        if (player.isSpectator) return null
+        if (!hitResult.isAirOrFluid) return null
+        if (!canPlayerPlaceAt(hitResult)) return null
+
+
+        if (CustomRange.running) {
+            val distance = CustomRange.range.get().toDouble()
+            val playerEye = player.eyePos
+            val direction = hitResult.pos.subtract(playerEye).normalize()
+            val targetPosVec = playerEye.add(direction.multiply(distance))
+
+            val targetBlockPos = targetPosVec.toBlockPos()
+            val adjustedPosVec = Vec3d(
+                targetBlockPos.x + 0.5,
+                targetBlockPos.y.toDouble(),
+                targetBlockPos.z + 0.5
+            )
+
+            return BlockHitResult(
+                adjustedPosVec,
+                hitResult.side,
+                targetBlockPos,
+                false
+            )
+        }
+
+        return hitResult
+    }
+
+
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
+        if (!Preview.running) return@handler
+        val hitResult = getValidHitResult() ?: return@handler
+
+        renderEnvironmentForWorld(event.matrixStack) {
+            withPositionRelativeToCamera(hitResult.blockPos) {
+                drawBox(
+                    FULL_BOX,
+                    if (Preview.outlineOnly) Color4b.TRANSPARENT else Preview.fillColor,
+                    Preview.outlineColor
+                )
+            }
+        }
+    }
+
+    @Suppress("unused")
+    private val placeHandler = handler<PlayerInteractItemEvent> { event ->
+        val hitResult = getValidHitResult() ?: return@handler
+
+        val actionResult = interaction.interactBlock(player, event.hand, hitResult)
+        if (actionResult.isAccepted) player.swingHand(event.hand)
+        event.cancelEvent()
+    }
 }

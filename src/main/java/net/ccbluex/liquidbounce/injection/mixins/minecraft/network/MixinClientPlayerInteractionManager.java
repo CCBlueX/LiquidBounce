@@ -96,7 +96,7 @@ public abstract class MixinClientPlayerInteractionManager {
 
     @Inject(method = "interactItem", at = @At("HEAD"), cancellable = true)
     private void hookItemInteractAtHead(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        final PlayerInteractItemEvent cancelEvent = new PlayerInteractItemEvent();
+        final PlayerInteractItemEvent cancelEvent = new PlayerInteractItemEvent(player, hand);
         EventManager.INSTANCE.callEvent(cancelEvent);
         if (cancelEvent.isCancelled()) {
             cir.setReturnValue(ActionResult.PASS);
