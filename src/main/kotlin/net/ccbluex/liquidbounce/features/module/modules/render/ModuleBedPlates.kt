@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
+import net.ccbluex.liquidbounce.utils.block.bed.SurroundingBlock
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
@@ -119,68 +120,32 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
         }
     }
 
-    private data class BedStateAndDistance(
+    private data class BedStateRenderState(
         @JvmField val bedState: BedState,
         @JvmField var distance: Double,
-    ) : Comparable<BedStateAndDistance> {
-        override fun compareTo(other: BedStateAndDistance): Int {
+        @JvmField var surrounding: List<SurroundingBlock>,
+        @JvmField var itemStacksForRender: List<ItemStack>,
+    ) : Comparable<BedStateRenderState> {
+        constructor(bedState: BedState) : this(bedState, 0.0, emptyList(), emptyList())
+
+        override fun compareTo(other: BedStateRenderState): Int {
             return distance.compareTo(other.distance)
         }
     }
 
-    private val beds = ArrayList<BedStateAndDistance>()
+    private val beds = ArrayList<BedStateRenderState>()
 
     private fun updateAndSortBeds() {
         val cameraPos = (mc.cameraEntity ?: mc.player ?: return).pos
-        beds.forEach {
-            it.distance = it.bedState.pos.distanceTo(cameraPos)
-        }
-        beds.sort()
-    }
+        beds.forEach { renderState ->
+            val bedState = renderState.bedState
+            renderState.distance = bedState.pos.distanceTo(cameraPos)
 
-    @Suppress("unused")
-    // Run on render thread because the scanner runs async
-    private val bedStateChangeHandler = suspendHandler<BedStateChangeEvent>(Dispatchers.Minecraft) { event ->
-        beds.clear()
-        beds.ensureCapacity(event.bedStates.size)
-        event.bedStates.mapTo(beds) { BedStateAndDistance(it, 0.0) }
-        updateAndSortBeds()
-    }
-
-    @Suppress("unused")
-    private val tickHandler = handler<GameTickEvent> {
-        updateAndSortBeds()
-    }
-
-    @Suppress("unused")
-    private val renderHandler = handler<OverlayRenderEvent> { event ->
-        beds.sort()
-
-        var i = 0
-        for ((bedState, distance) in beds) {
-            val currPos = bedState.trackedBlockPos
-            if (ignoreSelfBed.activeChoice.isSelfBed(bedState.block, currPos)) {
-                continue
-            }
-
-            if (distance > maximumDistance || i > maxCount) {
-                break // because list beds are sorted by distance (ASC), so we break at first item out of range
-            }
-
-            if (ignoreAdjacent &&
-                beds.any {
-                    val pos = it.bedState.trackedBlockPos
-                    pos != currPos && pos.getManhattanDistance(currPos) <= 1
-                }
-            ) {
-                continue
-            }
-
-            val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
             val surrounding = (if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks)
                 .filter { filterMode.activeChoice.test(it.block) }
+            renderState.surrounding = surrounding
 
-            val blocksAsItemStacks = if (showBed) {
+            renderState.itemStacksForRender = if (showBed) {
                 val bedItemStack = bedState.block.asItem().defaultStack
                 if (surrounding.isEmpty()) {
                     listOf(bedItemStack)
@@ -192,10 +157,51 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
             } else {
                 surrounding.mapToArray { it.block.createItemStackForRendering(it.count) }.asList()
             }
+        }
+        beds.sort()
+    }
+
+    @Suppress("unused")
+    // Run on render thread because the scanner runs async
+    private val bedStateChangeHandler = suspendHandler<BedStateChangeEvent>(Dispatchers.Minecraft) { event ->
+        beds.clear()
+        beds.ensureCapacity(event.bedStates.size)
+        event.bedStates.mapTo(beds, ::BedStateRenderState)
+        updateAndSortBeds()
+    }
+
+    @Suppress("unused")
+    private val tickHandler = handler<GameTickEvent> {
+        updateAndSortBeds()
+    }
+
+    @Suppress("unused")
+    private val renderHandler = handler<OverlayRenderEvent> { event ->
+        fun isAdjacentAndNotEquals(pos1: BlockPos, pos2: BlockPos): Boolean {
+            return pos1 != pos2 && pos1.getManhattanDistance(pos2) <= 1
+        }
+
+        beds.sort()
+
+        var i = 0
+        for ((bedState, distance, surrounding, itemStacksForRender) in beds) {
+            val currPos = bedState.trackedBlockPos
+
+            if (distance > maximumDistance || i > maxCount) {
+                break // because list beds are sorted by distance (ASC), so we break at first item out of range
+            }
+
+            if (ignoreSelfBed.activeChoice.isSelfBed(bedState.block, currPos) ||
+                ignoreAdjacent && beds.any { isAdjacentAndNotEquals(it.bedState.trackedBlockPos, currPos) }
+            ) {
+                continue
+            }
+
+            val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
 
             val outlineColor = if (outline) Color4b(bedState.block.color.mapColor.color) else Color4b.TRANSPARENT
 
-            event.context.drawItemStackList(blocksAsItemStacks)
+            event.context.drawItemStackList(itemStacksForRender)
                 .rowLength(Int.MAX_VALUE)
                 .scale(scale)
                 .centerX(screenPos.x)
