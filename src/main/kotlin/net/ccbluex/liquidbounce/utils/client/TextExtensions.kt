@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.utils.client
 import com.google.common.base.CaseFormat
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import net.ccbluex.fastutil.unmodifiable
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.text.*
@@ -58,6 +59,12 @@ inline fun String.asPlainText(style: Style): Text = PlainText.of(this, style)
  * Returns an immutable [Text] from the receiver with [formatting].
  */
 inline fun String.asPlainText(formatting: Formatting): Text = PlainText.of(this, formatting)
+
+inline operator fun Style.plus(formatting: Formatting): Style = withFormatting(formatting)
+
+inline operator fun Style.plus(color: TextColor): Style = withColor(color)
+
+inline operator fun Style.plus(color: Color4b): Style = withColor(color.toTextColor())
 
 inline fun List<Text>.asText(): Text = TextList.of(this)
 
