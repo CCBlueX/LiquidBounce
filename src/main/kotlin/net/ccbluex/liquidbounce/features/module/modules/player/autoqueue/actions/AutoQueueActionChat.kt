@@ -23,16 +23,21 @@ import kotlinx.coroutines.delay
 
 object AutoQueueActionChat : AutoQueueAction("Chat") {
     private val startDelay by intRange("StartDelay", 0..0, 0..2000, "ms")
+    private val messageDelay by intRange("MessageDelay", 0..0, 0..2000, "ms")
 
-    private val message by text("Message", "/play solo_normal")
+    private val messages by textList("Message", mutableListOf("/play solo_normal"))
 
     override suspend fun execute() {
         delay(startDelay.random().toLong())
 
-        if (message.startsWith("/")) {
-            network.sendChatCommand(message.substring(1))
-        } else {
-            network.sendChatMessage(message)
+        messages.forEach { message ->
+            if (message.startsWith("/")) {
+                network.sendChatCommand(message.substring(1))
+            } else {
+                network.sendChatMessage(message)
+            }
+
+            delay(messageDelay.random().toLong())
         }
     }
 }
