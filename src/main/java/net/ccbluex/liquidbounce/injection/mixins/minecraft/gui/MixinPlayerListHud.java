@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab;
 import net.ccbluex.liquidbounce.features.module.modules.misc.Visibility;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.PlayerListHud;
 import net.minecraft.client.network.PlayerListEntry;
@@ -145,11 +144,11 @@ public abstract class MixinPlayerListHud {
     private void hookOnRenderLatencyIcon(DrawContext context, int width, int x, int y, PlayerListEntry entry, CallbackInfo ci) {
         var accurateLatency = ModuleBetterTab.AccurateLatency.INSTANCE;
         if (ModuleBetterTab.INSTANCE.getRunning() && accurateLatency.getRunning()) {
-            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+            var textRenderer = MinecraftClient.getInstance().textRenderer;
 
-            int latency = MathHelper.clamp(entry.getLatency(), 0, 9999);
-            int color = latency < 150 ? 0x00E970 : latency < 300 ? 0xE7D020 : 0xD74238;
-            String text = latency + (accurateLatency.getSuffix() ? "ms" : "");
+            var latency = MathHelper.clamp(entry.getLatency(), 0, 9999);
+            var color = latency < 150 ? 0xFF00E970 : latency < 300 ? 0xFFE7D020 : 0xFFD74238;
+            var text = latency + (accurateLatency.getSuffix() ? "ms" : "");
             context.drawTextWithShadow(textRenderer, text, x + width - textRenderer.getWidth(text), y, color);
             ci.cancel();
         }
