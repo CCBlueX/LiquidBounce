@@ -122,10 +122,6 @@ dependencies {
     // Minecraft Authlib
     includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
 
-    // Multi module
-    api(project(":liquid-bounce-inbuilt-annotations"))
-    include(project(":liquid-bounce-inbuilt-annotations"))
-
     // JCEF Support
     val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
     modApi(mcef)
