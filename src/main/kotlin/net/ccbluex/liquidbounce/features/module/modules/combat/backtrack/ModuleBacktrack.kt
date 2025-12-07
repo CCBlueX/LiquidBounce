@@ -142,9 +142,10 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         }
 
         // Update box position with these packets
+        val target = target ?: return@handler
         val entityPacket = packet is EntityS2CPacket && packet.getEntity(world) == target
-        val positionPacket = packet is EntityPositionS2CPacket && packet.entityId == target?.id
-        val syncPacket = packet is EntityPositionSyncS2CPacket && packet.id == target?.id
+        val positionPacket = packet is EntityPositionS2CPacket && packet.entityId == target.id
+        val syncPacket = packet is EntityPositionSyncS2CPacket && packet.id == target.id
         if (entityPacket || positionPacket || syncPacket) {
             val pos = when (packet) {
                 is EntityS2CPacket ->
@@ -156,7 +157,6 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
             position?.setPos(pos)
 
             // Is the target's actual position closer than its tracked position?
-            val target = target ?: return@handler
             if (target.squareBoxedDistanceTo(player, pos!!) < target.squaredBoxedDistanceTo(player)) {
                 // Process all packets. We want to be able to hit the enemy, not the opposite.
                 processPackets(true)
