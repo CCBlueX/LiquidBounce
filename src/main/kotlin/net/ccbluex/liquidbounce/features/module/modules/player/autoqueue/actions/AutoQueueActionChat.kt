@@ -25,7 +25,7 @@ object AutoQueueActionChat : AutoQueueAction("Chat") {
     private val startDelay by intRange("StartDelay", 0..0, 0..2000, "ms")
     private val messageDelay by intRange("MessageDelay", 0..0, 0..2000, "ms")
 
-    private val messages by textList("Message", mutableListOf("/play solo_normal"))
+    private val messages by textList("Messages", mutableListOf("/play solo_normal"))
 
     override suspend fun execute() {
         delay(startDelay.random().toLong())
