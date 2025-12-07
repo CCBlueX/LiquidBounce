@@ -49,7 +49,13 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
     @Unique
     private boolean liquid_bounce$customLightMap = false;
 
-    @ModifyExpressionValue(method = "update(F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/SimpleOption;getValue()Ljava/lang/Object;", ordinal = 1))
+    /**
+     * Target:
+     * <pre>
+     *     this.client.options.getGamma().getValue().floatValue()
+     * </pre>
+     */
+    @ModifyExpressionValue(method = "update(F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/SimpleOption;getValue()Ljava/lang/Object;", ordinal = 2))
     private Object injectXRayFullBright(Object original) {
         // If fullBright is enabled, we need to return our own gamma value
         if (ModuleFullBright.FullBrightGamma.INSTANCE.getRunning()) {
