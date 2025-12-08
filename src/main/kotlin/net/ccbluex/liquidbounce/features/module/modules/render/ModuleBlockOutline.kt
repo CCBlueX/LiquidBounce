@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.block.ShapeContext
 import net.minecraft.util.hit.BlockHitResult
@@ -106,7 +107,6 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
             finalPosition
         }
 
-        // TODO(1.21.10-port): this is probably correct
         val translatedPosition = renderPosition.offset(
             mc.entityRenderDispatcher
                 .camera?.pos

@@ -243,7 +243,6 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
 
         renderEnvironmentForWorld(e.matrixStack) {
             startBatch()
-            // TODO(1.21.10-port): this is probably correct
             val camOffset = mc.entityRenderDispatcher.camera?.pos?.negate() ?: return@handler
             drawZones(zones, centers, highlightIndex, camOffset)
             if (holdingProt) {

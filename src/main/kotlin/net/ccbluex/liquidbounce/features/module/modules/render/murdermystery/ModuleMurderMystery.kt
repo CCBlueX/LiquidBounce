@@ -169,7 +169,6 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         val isSword = MurderMysterySwordDetection.isSword(itemStack)
         val isBow = itemStack.item is BowItem
 
-        // TODO(1.21.10-port): this is ALSO probably correct, but...
         val locationSkin = entity.skin.body.texturePath()
 
         when {

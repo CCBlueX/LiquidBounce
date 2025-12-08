@@ -216,12 +216,12 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
                     // TODO(1.21.10-port): figure out how to use the light stuff
                     mc.entityRenderDispatcher.render(
                         rs,
-                        null,
+                        mc.gameRenderer.entityRenderStates.cameraRenderState,
                         0.0,
                         0.0,
-                        1.0,
+                        0.0,
                         event.matrixStack,
-                        null
+                        mc.gameRenderer.entityRenderCommandQueue,
                     )
                 }
             }

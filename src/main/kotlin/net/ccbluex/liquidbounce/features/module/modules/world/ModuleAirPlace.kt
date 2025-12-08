@@ -84,7 +84,6 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
         val targetPos = target.pos.toBlockPos()
         val worldSpaceBox = Box(targetPos)
 
-        // TODO(1.21.10-port): probably correct 2
         val negCameraPos = mc.entityRenderDispatcher.camera?.pos?.negate() ?: return@handler
         val viewSpaceBox = worldSpaceBox.offset(negCameraPos)
 
