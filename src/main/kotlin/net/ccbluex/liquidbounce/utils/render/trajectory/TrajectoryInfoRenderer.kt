@@ -49,6 +49,7 @@ import net.minecraft.block.ShapeContext
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.projectile.ProjectileEntity
 import net.minecraft.entity.projectile.ProjectileUtil
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
@@ -218,13 +219,15 @@ class TrajectoryInfoRenderer(
             owner,
             posBefore,
             posAfter,
-            hitbox.offset(pos).stretch(velocity).expand(1.0)
-        ) {
-            val canCollide = !it.isSpectator && it.isAlive
-            val shouldCollide = it.canHit() || owner !== player && it === player
+            hitbox.offset(pos).stretch(velocity).expand(1.0),
+            {
+                val canCollide = !it.isSpectator && it.isAlive
+                val shouldCollide = it.canHit() || owner !== player && it === player
 
-            return@getEntityCollision canCollide && shouldCollide && !owner.isConnectedThroughVehicle(it)
-        }
+                return@getEntityCollision canCollide && shouldCollide && !owner.isConnectedThroughVehicle(it)
+            },
+            if (owner is ProjectileEntity) ProjectileUtil.getToleranceMargin(owner) else 0f,
+        )
 
         return if (entityHitResult != null && entityHitResult.type != HitResult.Type.MISS) {
             val hitPos = entityHitResult.entity.box.expand(trajectoryInfo.hitboxRadius).raycast(posBefore, posAfter)

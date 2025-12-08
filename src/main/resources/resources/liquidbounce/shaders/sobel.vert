@@ -1,7 +1,7 @@
-#version 410
+#version 330 core
 
-layout (location = 0) in vec4 Position;
-layout (location = 1) in vec2 UV0;
+in vec4 Position;
+in vec2 UV0;
 
 out vec2 fragTexCoord;
 

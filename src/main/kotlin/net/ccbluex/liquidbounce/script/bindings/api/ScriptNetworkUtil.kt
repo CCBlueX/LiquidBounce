@@ -53,6 +53,6 @@ object ScriptNetworkUtil {
     fun sendChatMessage(message: String) = network.sendChatMessage(message)
 
     @JvmName("sendCommand")
-    fun sendCommand(command: String) = network.sendCommand(command)
+    fun sendCommand(command: String) = network.sendChatCommand(command)
 
 }

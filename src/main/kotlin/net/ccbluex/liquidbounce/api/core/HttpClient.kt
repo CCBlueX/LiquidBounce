@@ -18,31 +18,24 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
-import com.google.gson.JsonElement
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.authlib.Authlib
+import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.texture.NativeImage
 import net.minecraft.util.Util
 import net.minecraft.util.crash.CrashException
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.coroutines.executeAsync
-import okio.Buffer
-import okio.BufferedSink
 import okio.BufferedSource
 import okio.sink
 import java.io.File
@@ -79,6 +72,13 @@ object HttpClient {
         " (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, " +
         "${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${System.getProperty("os.name")})"
 
+    /**
+     * Unfortunately, Lunar Client uses OkHttp 4.12.0 which does not have Headers.EMPTY
+     */
+    @Deprecated("Use Headers.EMPTY instead when Lunar Client updates OkHttp to 5.10 or newer.")
+    @JvmField
+    val EMPTY_HEADERS = Headers.Builder().build()
+
     object MediaTypes {
         @JvmField
         val JSON = "application/json; charset=utf-8".toMediaType()
@@ -93,11 +93,7 @@ object HttpClient {
         val OCTET_STREAM = "application/octet-stream".toMediaType()
     }
 
-    /**
-     * Client default [OkHttpClient]
-     */
-    @get:JvmStatic
-    val client: OkHttpClient = OkHttpClient.Builder()
+    private val defaultClient = OkHttpClient.Builder()
         .dispatcher(Dispatcher(Util.getDownloadWorkerExecutor().service))
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
@@ -105,25 +101,43 @@ object HttpClient {
         .followRedirects(true)
         .followSslRedirects(true)
         .cache(Cache(ConfigSystem.rootFolder.resolve("http-cache"), 128L shl 20))
-        .addInterceptor { chain ->
-            val request = chain.request()
-            try {
-                val response = chain.proceed(request)
-
-                if (response.isSuccessful) {
-                    response
-                } else {
-                    // Response is not successful (code is not 2xx)
-                    throw HttpException(enumValueOf(request.method),
-                                        request.url.toString(), response.code, response.body.string())
-                }
-            } catch (e: IOException) {
-                // Failed to request
-                logger.error("Failed to execute request ${request.method} ${request.url})", e)
-                throw e
-            }
+        .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
+        .build().also {
+            McefFileUtils.setOkHttpClient(it)
+            Authlib.client = it
         }
-        .build().also(McefFileUtils::setOkHttpClient)
+
+    /**
+     * This interceptor rejects all non-2xx responses
+     */
+    private val clientHttpApiInterceptor = Interceptor { chain ->
+        val request = chain.request()
+        try {
+            val response = chain.proceed(request)
+
+            if (response.isSuccessful) {
+                response
+            } else {
+                // Response is not successful (code is not 2xx)
+                throw HttpException(
+                    enumValueOf(request.method),
+                    request.url.toString(), response.code, response.body.string()
+                )
+            }
+        } catch (e: IOException) {
+            // Failed to request
+            logger.error("Failed to execute request ${request.method} ${request.url})", e)
+            throw e
+        }
+    }
+
+    /**
+     * API client
+     */
+    @get:JvmStatic
+    val client = defaultClient.newBuilder()
+        .addInterceptor(clientHttpApiInterceptor)
+        .build()
 
     @Suppress("LongParameterList")
     suspend fun request(
@@ -198,9 +212,7 @@ inline fun <reified T> Response.parse(): T {
         InputStream::class.java -> body.byteStream() as T
         BufferedSource::class.java -> body.source() as T
         Reader::class.java -> body.charStream() as T
-        NativeImageBackedTexture::class.java -> body.byteStream().toNativeImage().asTexture {
-            "NetworkImage ${request.url}"
-        } as T
+        NativeImage::class.java -> body.byteStream().toNativeImage() as T
         else -> body.charStream().readJson<T>()
     }
 }
@@ -228,23 +240,6 @@ fun BufferedSource.utf8Lines(): Iterator<String> =
  */
 fun Response.toFile(file: File) = use { response ->
     file.sink().use(response.body.source()::readAll)
-}
-
-/**
- * Creates request body from JSON.
- */
-fun JsonElement.toRequestBody(): RequestBody {
-    val buffer = Buffer()
-    buffer.outputStream().writer(Charsets.UTF_8).use {
-        accessibleInteropGson.toJson(this, it)
-    }
-    return object : RequestBody() {
-        override fun contentType() = HttpClient.MediaTypes.JSON
-        override fun contentLength(): Long = buffer.size
-        override fun writeTo(sink: BufferedSink) {
-            sink.writeAll(buffer.copy())
-        }
-    }
 }
 
 fun String.asForm() = toRequestBody(HttpClient.MediaTypes.FORM)

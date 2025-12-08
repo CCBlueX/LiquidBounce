@@ -15,20 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
+package net.ccbluex.liquidbounce.annotations
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.VertexConsumerProvider;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-
-@Mixin(DrawContext.class)
-public interface MixinDrawContextAccessor {
-
-    @Accessor("vertexConsumers")
-    VertexConsumerProvider.Immediate getVertexConsumers();
-
-}
+@Target(AnnotationTarget.CLASS)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Nameable(
+    val name: String
+)

@@ -24,8 +24,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isSword
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ItemStack
 import net.minecraft.item.MaceItem
 import java.util.function.BooleanSupplier
@@ -52,4 +54,4 @@ enum class KillAuraRequirements(
  * Check if the item is a weapon.
  */
 private fun ItemStack.isWeapon() = this.isSword || !isOlderThanOrEqual1_8 && this.isAxe
-    || this.item is MaceItem
+    || this.item is MaceItem || this.getEnchantment(Enchantments.KNOCKBACK) > 0

@@ -214,7 +214,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
         return original;
     }
 
-    @Inject(method = "onHealthUpdate", at = @At("RETURN"))
+    @Inject(method = "onHealthUpdate", at = @At("HEAD"))
     private void injectHealthUpdate(HealthUpdateS2CPacket packet, CallbackInfo ci) {
         ClientPlayerEntity player = this.client.player;
 

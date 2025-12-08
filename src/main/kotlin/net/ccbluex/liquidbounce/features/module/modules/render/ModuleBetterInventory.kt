@@ -30,14 +30,12 @@ import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemS
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
-import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.toFixed
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.item.ItemStack
 import net.minecraft.screen.slot.Slot
-import net.minecraft.util.math.Vec3d
 
 object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) {
 
@@ -67,7 +65,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
                  */
                 override fun drawHighlightSlot(context: DrawContext, slot: Slot) {
                     context.drawGuiTexture(
-                        RenderLayer::getGuiTextured,
+                        RenderPipelines.GUI_TEXTURED,
                         MixinInGameHudAccessor.getHotbarSelectionTexture(),
                         slot.x - 3,
                         slot.y - 3,
@@ -105,7 +103,8 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
 
         val scale by float("Scale", 1F, 0.25F..4F)
         val relativeToMouse by boolean("RelativeToMouse", true)
-        val renderOffset by vec3d("RenderOffset", Vec3d(150.0, 0.0, 200.0))
+        val renderOffsetX by float("RenderOffsetX", 150.0F, -4096F..4096F)
+        val renderOffsetY by float("RenderOffsetY", 0.0F, -4096F..4096F)
     }
 
     init {
@@ -120,9 +119,8 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         val progress = player.itemCooldownManager.getCooldownProgress(stack, mc.renderTickCounter.getTickProgress(true))
 
         if (progress > 0.0F) {
-            this.matrices.push()
-            this.matrices.translate(0.0, 0.0, 200.0)
-            this.matrices.scale(TextCooldownProgress.scale, TextCooldownProgress.scale, 1f)
+            this.matrices.pushMatrix()
+            this.matrices.scale(TextCooldownProgress.scale)
             val text = when (TextCooldownProgress.mode) {
                 CooldownProgressMode.PERCENTAGE -> "${(progress * 100f).toInt()}%"
                 CooldownProgressMode.DURATION_TICKS -> {
@@ -137,7 +135,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
                 }
             }
             this.drawCenteredTextWithShadow(mc.textRenderer, text, x + 16 / 2, y, TextCooldownProgress.color.toARGB())
-            this.matrices.pop()
+            this.matrices.popMatrix()
         }
     }
 
@@ -162,27 +160,24 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
             containerComponent.streamNonEmpty()
         } else {
             containerComponent.stream()
-        }.toArray()
+        }.toList()
 
         if (stacks.isEmpty()) return false
 
-        var renderX = ContainerItemView.renderOffset.x.toFloat() - x.toFloat()
-        var renderY = ContainerItemView.renderOffset.y.toFloat() - y.toFloat()
-        val renderZ = ContainerItemView.renderOffset.z.toFloat() + 200.0F
+        var renderX = ContainerItemView.renderOffsetX - x.toFloat()
+        var renderY = ContainerItemView.renderOffsetY - y.toFloat()
 
         if (ContainerItemView.relativeToMouse) {
             renderX += mouseX
             renderY += mouseY
         }
 
-        @Suppress("UNCHECKED_CAST")
-        drawItemStackList(stacks.unmodifiable() as List<ItemStack>)
+        drawItemStackList(stacks)
             .centerX(renderX)
             .centerY(renderY)
-            .centerZ(renderZ)
             .scale(ContainerItemView.scale)
             .textureBackground()
-            .draw(immediately = true)
+            .draw()
 
         return true
     }

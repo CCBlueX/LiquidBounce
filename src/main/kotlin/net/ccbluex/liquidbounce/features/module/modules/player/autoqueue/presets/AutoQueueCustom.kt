@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets
 
+import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpe
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.*
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 
 object AutoQueueCustom : Choice("Custom") {
 
@@ -84,7 +86,7 @@ object AutoQueueCustom : Choice("Custom") {
     private var worldChangeOccurred = false
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = tickHandler(Dispatchers.Minecraft) {
         val trigger = triggers.activeChoice
 
         if (trigger.isTriggered) {

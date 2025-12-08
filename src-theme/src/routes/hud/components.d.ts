@@ -21,6 +21,12 @@ interface HudToggleableConfigurable {
     enabled: boolean;
 }
 
+interface HudArrayListSettings {
+    showTags: boolean;
+    itemAlignment: "Left" | "Right";
+    order: "Ascending" | "Descending";
+}
+
 interface HudScoreboardSettings {
     show: ("Header" | "Name" | "Score")[];
 }

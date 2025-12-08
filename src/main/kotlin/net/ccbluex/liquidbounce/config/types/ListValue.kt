@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
@@ -60,7 +59,7 @@ open class ListValue<T : MutableCollection<E>, E>(
 ) {
 
     @Suppress("UNCHECKED_CAST")
-    override fun setByString(string: String) {
+    final override fun setByString(string: String) {
         val deserializer = this.innerValueType.deserializer
 
         requireNotNull(deserializer) { "Cannot deserialize values of type ${this.innerValueType} yet." }
@@ -68,15 +67,19 @@ open class ListValue<T : MutableCollection<E>, E>(
         set(HumanInputDeserializer.parseArray(string, deserializer) as T)
     }
 
-    override fun deserializeFrom(gson: Gson, element: JsonElement) {
-        // TODO: Might add adaptation for single element like : ["foo", "bar"] or "foo"
-        element as? JsonArray ?: error("ListValue can only be deserialized from a JsonArray.")
-
+    final override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val currValue = this.inner
-
-        val newItems = element.asList().mapToArray { gson.fromJson(it, this.innerType) }
-        currValue.clear()
-        currValue.addAll(newItems)
+        if (element is JsonArray) {
+            val newItems = Array(element.size()) {
+                gson.fromJson(element[it], this.innerType)
+            }
+            currValue.clear()
+            currValue.addAll(newItems)
+        } else {
+            val newItem = gson.fromJson(element, this.innerType)
+            currValue.clear()
+            currValue.add(newItem)
+        }
 
         set(currValue) { /** Trigger listener callbacks */ }
     }

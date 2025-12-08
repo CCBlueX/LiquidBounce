@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.client.render.RenderLayer
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -140,7 +140,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
                 dc.drawStackOverlay(mc.textRenderer, currentFood.itemStack, x, y)
                 dc.drawItem(currentFood.itemStack, x, y)
                 dc.drawGuiTexture(
-                    RenderLayer::getGuiTextured,
+                    RenderPipelines.GUI_TEXTURED,
                     HOTBAR_OFFHAND_LEFT_TEXTURE, i - 91 - 29 - offset,
                     scaledHeight - 23, 29, 24
                 )

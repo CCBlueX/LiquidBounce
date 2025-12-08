@@ -22,14 +22,13 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.utils.toVec3d
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.minus
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
@@ -39,7 +38,7 @@ import java.text.NumberFormat
 /**
  * This util should only be called from main thread
  */
-object WorldToScreen : EventListener {
+object WorldToScreen : MinecraftShortcuts, EventListener {
 
     private val mvpMatrix = Matrix4f()
     private val projectionMatrix = Matrix4f()
@@ -52,7 +51,19 @@ object WorldToScreen : EventListener {
         val matrixStack = event.matrixStack
 
         this.mvpMatrix.set(matrixStack.peek().positionMatrix)
-        this.projectionMatrix.set(RenderSystem.getProjectionMatrix())
+
+        // Important: here we need this buffer to be USAGE_MAP_READ, so add mixins at all sources.
+        // Usages (2025/11/09, 1.21.6):
+        // - PostEffectPass
+        // - CubeMapRenderer
+        // - GuiRenderer
+        // - SpecialGuiElementRenderer
+        // - GameRenderer -> renderWorld (we need this within event callback) (@see MixinRawProjectionMatrix)
+        val projMat = RenderSystem.getProjectionMatrixBuffer() ?: return@handler
+
+        projMat.mapBuffer(read = true, write = false).use {
+            this.projectionMatrix.set(it.data())
+        }
     }
 
     @JvmStatic
@@ -61,9 +72,7 @@ object WorldToScreen : EventListener {
         pos: Vec3d,
         cameraPos: Vec3d = mc.gameRenderer.camera.pos,
     ): Vec3? {
-        val relativePos = pos - cameraPos
-
-        val transformedPos = cacheVec3f.set(relativePos)
+        val transformedPos = cacheVec3f.set(pos).sub(cameraPos)
             .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix))
 
         val scaleFactor = mc.window.scaleFactor
@@ -101,4 +110,6 @@ object WorldToScreen : EventListener {
 
 }
 
-private fun Vector3f.set(vec3d: Vec3d) = set(vec3d.x, vec3d.y, vec3d.z)
+private inline fun Vector3f.set(vec3d: Vec3d) = set(vec3d.x, vec3d.y, vec3d.z)
+
+private inline fun Vector3f.sub(vec3d: Vec3d) = sub(vec3d.x.toFloat(), vec3d.y.toFloat(), vec3d.z.toFloat())

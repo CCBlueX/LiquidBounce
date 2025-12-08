@@ -21,18 +21,13 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import com.google.common.base.CaseFormat
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonParseException
-import com.mojang.serialization.JsonOps
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import net.ccbluex.fastutil.unmodifiable
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.nbt.NbtString
-import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.*
 import net.minecraft.util.Formatting
-import net.minecraft.world.World
 import java.util.*
 import java.util.regex.Pattern
 
@@ -41,8 +36,6 @@ private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
 fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
-
-private val TEXT_GSON = GsonBuilder().disableHtmlEscaping().create()
 
 inline fun String.asTextContent(): TextContent = PlainTextContent.of(this)
 
@@ -67,21 +60,17 @@ inline fun String.asPlainText(style: Style): Text = PlainText.of(this, style)
  */
 inline fun String.asPlainText(formatting: Formatting): Text = PlainText.of(this, formatting)
 
+inline operator fun Style.plus(formatting: Formatting): Style = withFormatting(formatting)
+
+inline operator fun Style.plus(color: TextColor): Style = withColor(color)
+
+inline operator fun Style.plus(color: Color4b): Style = withColor(color.toTextColor())
+
 inline fun List<Text>.asText(): Text = TextList.of(this)
 
 inline fun Array<out Text>.asText(): Text = TextList.of(this.unmodifiable())
 
 inline fun textOf(vararg parts: Text): Text = parts.asText()
-
-fun Text.asNbt(world: World? = null): NbtString {
-    val registries = world?.registryManager ?: DynamicRegistryManager.EMPTY
-    return NbtString.of(
-        TEXT_GSON.toJson(
-            TextCodecs.CODEC.encodeStart(registries.getOps(JsonOps.INSTANCE), this)
-                .getOrThrow(::JsonParseException)
-        )
-    )
-}
 
 fun OrderedText.toText(): Text {
     if (this is Text) return this

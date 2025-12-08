@@ -24,9 +24,9 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.render.engine.font.*
 import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
+import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.image.BufferedImage
@@ -34,7 +34,7 @@ import kotlin.math.min
 
 class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight: Int) : GlyphPage() {
     private val image = createBufferedImageWithDimensions(atlasSize)
-    override val texture = NativeImageBackedTexture({ "DynamicGlyphPage" }, image.toNativeImage())
+    override val texture = image.toNativeImage().asTexture { "DynamicGlyphPage ${atlasSize.width}x${atlasSize.height}" }
     private val glyphMap = Long2ObjectOpenHashMap<Pair<GlyphRenderInfo, AtlasSliceHandle>>()
     val dirty = ArrayList<GlyphRenderInfo>()
 

@@ -29,13 +29,13 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.entity.equipmentSlot
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.item.FishingRodItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.registry.Registries
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
-import net.minecraft.util.math.Vec3d
 
 /**
  * AutoFish module
@@ -56,7 +56,7 @@ object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
      * to trigger the pull, but if a server has a custom sound,
      * we might want to add it here.
      */
-    val sounds by sounds(
+    private val sounds by sounds(
         "Sounds", objectRBTreeSetOf(
             Registries.SOUND_EVENT.asComparator(),
             SoundEvents.ENTITY_FISHING_BOBBER_SPLASH,
@@ -67,7 +67,7 @@ object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
      * This is useful to prevent false triggers when the sound is played
      * from a different position than our fishing hook.
      */
-    object PullTriggerSoundDistance : ToggleableConfigurable(
+    private object PullTriggerSoundDistance : ToggleableConfigurable(
         this,
         "SoundDistance",
         true
@@ -92,7 +92,7 @@ object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
             return@tickHandler
         }
 
-        for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
+        for (hand in Hand.entries) {
             if (player.getEquippedStack(hand.equipmentSlot).item !is FishingRodItem) {
                 continue
             }
@@ -127,13 +127,12 @@ object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
 
         if (packet is PlaySoundS2CPacket && packet.sound.value() in sounds) {
             if (PullTriggerSoundDistance.running) {
-                val soundPosition = Vec3d(packet.x, packet.y, packet.z)
-                val hookToSound = fishHook.pos.squaredDistanceTo(soundPosition)
-                debugParameter("HookToSound") { hookToSound }
+                val hookToSoundSq = fishHook.pos.squaredDistanceTo(packet.x, packet.y, packet.z)
+                debugParameter("HookToSoundSq") { hookToSoundSq }
 
                 // From my testing, we should see distances around 0.04 - 0.08 (Paper version 1.21.1-132)
                 // so a threshold of 1.0 should be more than enough.
-                if (hookToSound > PullTriggerSoundDistance.distance) {
+                if (hookToSoundSq > PullTriggerSoundDistance.distance.sq()) {
                     return@handler
                 }
             }

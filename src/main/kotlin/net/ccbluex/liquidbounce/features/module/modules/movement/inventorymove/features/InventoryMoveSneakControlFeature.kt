@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.SneakNetworkEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
@@ -30,7 +29,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 object InventoryMoveSneakControlFeature : ToggleableConfigurable(ModuleInventoryMove, "SneakControl", false) {
 
     private val clientMode by enumChoice("Client", SneakMode.DO_NOT_CHANGE)
-    private val serverMode by enumChoice("Server", SneakMode.DO_NOT_CHANGE)
 
     private enum class SneakMode(override val choiceName: String) : NamedChoice {
 
@@ -63,21 +61,6 @@ object InventoryMoveSneakControlFeature : ToggleableConfigurable(ModuleInventory
         priority = EventPriorityConvention.MODEL_STATE
     ) { event ->
         when (clientMode) {
-            SneakMode.FORCE_SNEAK -> {
-                event.sneak = true
-            }
-            SneakMode.FORCE_NO_SNEAK -> {
-                event.sneak = false
-            }
-            SneakMode.DO_NOT_CHANGE -> { }
-        }
-    }
-
-    @Suppress("unused")
-    private val sneakNetworkHandler = handler<SneakNetworkEvent>(
-        priority = EventPriorityConvention.MODEL_STATE
-    ) { event ->
-        when (serverMode) {
             SneakMode.FORCE_SNEAK -> {
                 event.sneak = true
             }

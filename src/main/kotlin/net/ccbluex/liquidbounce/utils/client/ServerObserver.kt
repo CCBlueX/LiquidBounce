@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventListener
@@ -53,7 +54,7 @@ import kotlin.time.Duration
 object ServerObserver : EventListener {
 
     @Suppress("SpellCheckingInspection")
-    private val knownAntiCheats = arrayOf(
+    private val knownAntiCheats = setOf(
         "nocheatplus",
         "grimac",
         "aac",
@@ -77,8 +78,7 @@ object ServerObserver : EventListener {
         private set
     var serverType: ServerType? = null
         private set
-    var payloadChannels: TreeSet<Identifier> = TreeSet<Identifier>()
-        private set
+    val payloadChannels: TreeSet<Identifier> = TreeSet<Identifier>()
 
     val transactions = mutableListOf<Int>()
     var isCapturingTransactions = false
@@ -103,7 +103,7 @@ object ServerObserver : EventListener {
 
     val formattedPluginList: List<Text>?
         get() = plugins?.map { pluginName ->
-            Text.literal(pluginName).formatted(
+            pluginName.asPlainText(
                 if (knownAntiCheats.contains(pluginName)) {
                     Formatting.GREEN
                 } else {
@@ -162,7 +162,7 @@ object ServerObserver : EventListener {
 
         packet as CommandSuggestionsS2CPacket
 
-        this.plugins = packet.suggestions.list.mapNotNullTo(sortedSetOf()) { cmd ->
+        this.plugins = packet.suggestions.list.mapNotNullTo(objectRBTreeSetOf()) { cmd ->
             val command = cmd.text.split(":")
 
             if (command.size > 1) {

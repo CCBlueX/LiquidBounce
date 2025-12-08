@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEven
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
-import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -189,7 +189,7 @@ object RotationUpdateEvent : Event()
 object ResourceReloadEvent : Event()
 
 @Nameable("scaleFactorChange")
-class ScaleFactorChangeEvent(val scaleFactor: Double) : Event(), WebSocketEvent
+class ScaleFactorChangeEvent(val scaleFactor: Int) : Event(), WebSocketEvent
 
 @Nameable("scheduleInventoryAction")
 class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Chain> = mutableListOf()) : Event() {

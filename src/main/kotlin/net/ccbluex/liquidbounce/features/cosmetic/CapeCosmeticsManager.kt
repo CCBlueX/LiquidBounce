@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.cosmetic
 
 import com.mojang.authlib.GameProfile
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.withScope
@@ -30,6 +29,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.minecraft.util.Identifier
 
 /**
@@ -45,7 +45,7 @@ object CapeCosmeticsManager : EventListener {
      * We also don't need to worry about memory leaks
      * because the cache is cleared when the player disconnects from the world.
      */
-    private val cachedCapes = mutableMapOf<String, Identifier>()
+    private val cachedCapes = hashMapOf<String, Identifier>()
 
     /**
      * Interface for returning a cape texture
@@ -72,15 +72,16 @@ object CapeCosmeticsManager : EventListener {
                     val name = getCapeName(cosmetic) ?: return@fetchCosmetic
 
                     // Check if the cape is cached
-                    if (cachedCapes.containsKey(name)) {
+                    val cachedCapeId = cachedCapes[name]
+                    if (cachedCapeId != null) {
                         LiquidBounce.logger.info("Successfully loaded cached cape for ${player.name}")
-                        response.response(cachedCapes[name]!!)
+                        response.response(cachedCapeId)
                         return@fetchCosmetic
                     }
 
                     // Request cape texture
                     val nativeImageBackedTexture = runCatching {
-                        runBlocking(Dispatchers.IO) {
+                        runBlocking {
                             CapeApi.getCape(name)
                         }
                     }.getOrNull() ?: return@fetchCosmetic
@@ -89,14 +90,16 @@ object CapeCosmeticsManager : EventListener {
 
                     val id = LiquidBounce.identifier("cape-$name")
 
-                    // Register cape texture
-                    mc.textureManager.registerTexture(id, nativeImageBackedTexture)
+                    mc.execute {
+                        // Register cape texture
+                        nativeImageBackedTexture.registerTexture(id)
 
-                    // Cache cape texture
-                    cachedCapes[name] = id
+                        // Cache cape texture
+                        cachedCapes[name] = id
 
-                    // Return cape texture
-                    response.response(id)
+                        // Return cape texture
+                        response.response(id)
+                    }
                 }
             }
         }

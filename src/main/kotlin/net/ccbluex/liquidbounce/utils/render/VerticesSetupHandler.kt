@@ -16,6 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
 
-annotation class Nameable(val name: String)
+package net.ccbluex.liquidbounce.utils.render
+
+import net.minecraft.client.render.VertexConsumer
+import org.joml.Matrix3x2f
+
+/**
+ * @see LambdaSimpleGuiElementRenderState
+ */
+fun interface VerticesSetupHandler {
+    fun VertexConsumer.setupVertices(pose: Matrix3x2f, depth: Float)
+}

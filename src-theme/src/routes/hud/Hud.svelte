@@ -55,7 +55,7 @@
                 {#if c.name === "Watermark"}
                     <Watermark/>
                 {:else if c.name === "ArrayList"}
-                    <ArrayList/>
+                    <ArrayList settings={c.settings}/>
                 {:else if c.name === "TabGui"}
                     <TabGui/>
                 {:else if c.name === "Notifications"}
