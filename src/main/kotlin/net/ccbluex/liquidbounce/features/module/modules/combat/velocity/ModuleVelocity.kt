@@ -63,6 +63,7 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = list
             VelocityGrim2344,
             VelocityAAC442,
             VelocityIntave,
+            VelocityGrimAttackReduce
         )
     ).apply(::tagBy)
 
