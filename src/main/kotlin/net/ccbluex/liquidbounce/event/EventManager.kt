@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.event
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.minecraft.util.crash.CrashException
 
 /**
  * Contains all classes of events. Used to create lookup tables ahead of time
@@ -206,7 +208,8 @@ object EventManager {
             return event
         }
 
-        val target = registry[event.javaClass] ?: return event
+        val eventType = event.javaClass
+        val target = registry[eventType] ?: return event
 
         event.isCompleted = false
         for (eventHook in target) {
@@ -214,10 +217,16 @@ object EventManager {
                 continue
             }
 
-            runCatching {
+            try {
                 eventHook.handler.accept(event)
-            }.onFailure {
-                logger.error("Exception while executing handler.", it)
+            } catch (e: CrashException) {
+                ErrorHandler.fatal(
+                    error = e,
+                    needToReport = true,
+                    additionalMessage = "Event (${eventType.simpleName}) handler of ${eventHook.handlerClass}"
+                )
+            } catch (e: Throwable) {
+                logger.error("Exception while executing event handler", e)
             }
         }
         event.isCompleted = true
