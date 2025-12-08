@@ -53,6 +53,10 @@ import net.minecraft.network.packet.s2c.play.PlayerRespawnS2CPacket
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
 
+
+/*
+* Velocity for grim, and Chinese HeyPixel.
+ */
 internal object VelocityGrimAttackReduce: VelocityMode("GrimAttackReduce") {
     private val attackCount by intRange("AttackCount", 3..3, 0..20)
     private val delayRange by floatRange("DelayRange", 2.5f..3.5f, 0f..10f)
