@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.PacketSnapshot
+import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
@@ -49,7 +50,6 @@ import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket
 import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
 import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.sound.SoundEvents
-import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
@@ -207,13 +207,12 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         private val renderHandler = handler<WorldRenderEvent> { event ->
             val (entity, pos) = getEntityPosition() ?: return@handler
 
-            val light = world.getLightLevel(BlockPos.ORIGIN)
-            val reducedLight = (light * lightAmount.toDouble()).toInt()
-
             renderEnvironmentForWorld(event.matrixStack) {
                 withPositionRelativeToCamera(pos) {
-                    val rs = mc.entityRenderDispatcher.getRenderer(entity).createRenderState()
-                    // TODO(1.21.10-port): figure out how to use the light stuff
+                    // TODO(1.21.10-port): still incorrect
+                    val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity)
+                    val rs = entityRenderer.getAndUpdateRenderState(entity, 1F)
+                    rs.light = (rs.light * lightAmount).floorToInt()
                     mc.entityRenderDispatcher.render(
                         rs,
                         mc.gameRenderer.entityRenderStates.cameraRenderState,
