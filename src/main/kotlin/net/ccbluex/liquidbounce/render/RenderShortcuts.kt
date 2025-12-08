@@ -165,7 +165,6 @@ fun RenderEnvironment.draw(pipeline: RenderPipeline, builtBuffer: BuiltBuffer) =
     builtBuffer,
     this.framebuffer,
     this.shaderColor.toVector4f(),
-    this.shaderLineWidth,
     { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
     { this.shaderTextures[it] ?: RenderSystem.getShaderTexture(it) },
 )
@@ -180,7 +179,6 @@ fun drawMesh(
     builtBuffer: BuiltBuffer,
     framebuffer: Framebuffer = mc.framebuffer,
     shaderColor: Vector4f = Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
-    shaderLineWidth: Float = RenderSystem.getShaderLineWidth(),
     renderPassLabelGetter: Supplier<String>? = null,
     shaderTextureProvider: IntFunction<GpuTextureView?> = IntFunction(RenderSystem::getShaderTexture),
 ) = builtBuffer.use { buffer ->
@@ -190,7 +188,7 @@ fun drawMesh(
             shaderColor,
             Vector3f(),
             RenderSystem.getTextureMatrix(),
-            shaderLineWidth,
+            RenderSystem.getShaderLineWidth(),
         )
     val gpuBuffer = pipeline.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
     val gpuBuffer2: GpuBuffer

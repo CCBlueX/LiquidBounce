@@ -46,7 +46,6 @@ sealed class RenderEnvironment(val framebuffer: Framebuffer) {
 
     val shaderTextures = arrayOfNulls<GpuTextureView>(RenderSystem.TEXTURE_COUNT)
     var shaderColor = Color4b.WHITE
-    var shaderLineWidth = 1.0F
 
     var isBatchMode: Boolean = false
         private set
@@ -90,14 +89,26 @@ class WorldRenderEnvironment(
     val camera: Camera,
 ) : RenderEnvironment(framebuffer) {
     fun relativeToCamera(pos: Vec3): Vec3d {
-        return Vec3d(pos.x.toDouble() - camera.pos.x, pos.y.toDouble() - camera.pos.y, pos.z.toDouble() - camera.pos.z)
+        return Vec3d(
+            pos.x.toDouble() - camera.cameraPos.x,
+            pos.y.toDouble() - camera.cameraPos.y,
+            pos.z.toDouble() - camera.cameraPos.z,
+        )
     }
 
     fun relativeToCamera(pos: Position): Vec3d {
-        return Vec3d(pos.x - camera.pos.x, pos.y - camera.pos.y, pos.z - camera.pos.z)
+        return Vec3d(
+            pos.x - camera.cameraPos.x,
+            pos.y - camera.cameraPos.y,
+            pos.z - camera.cameraPos.z,
+        )
     }
 
     fun relativeToCamera(pos: Vec3i): Vec3d {
-        return Vec3d(pos.x.toDouble() - camera.pos.x, pos.y.toDouble() - camera.pos.y, pos.z.toDouble() - camera.pos.z)
+        return Vec3d(
+            pos.x.toDouble() - camera.cameraPos.x,
+            pos.y.toDouble() - camera.cameraPos.y,
+            pos.z.toDouble() - camera.cameraPos.z,
+        )
     }
 }

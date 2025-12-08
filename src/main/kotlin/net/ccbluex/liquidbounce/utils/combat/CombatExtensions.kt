@@ -249,7 +249,7 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
         }
 
         // Reset cooldown
-        resetLastAttackedTicks()
+        this.lastAttackedTicks = 0
 
         // Swing after attacking (on 1.9+)
         if (!isOlderThanOrEqual1_8) {

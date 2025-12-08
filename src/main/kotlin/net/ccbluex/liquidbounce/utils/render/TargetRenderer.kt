@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
@@ -94,9 +93,8 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         context(env: WorldRenderEnvironment)
         override fun render(entity: Entity, partialTicks: Float) {
             env.matrixStack.push()
-            mc.gameRenderer.lightmapTextureManager.disable()
 
-            env.matrixStack.translate(mc.gameRenderer.camera.pos.negate())
+            env.matrixStack.translate(mc.gameRenderer.camera.cameraPos.negate())
 
             val interpolated = entity.entityPos.interpolate(entity.lastRenderPos(), partialTicks.toDouble())
                 .add(0.2, 1.25, 0.0)
@@ -104,8 +102,8 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             env.matrixStack.translate(interpolated)
 
             with(env) {
-                RenderSystem.setShaderTexture(0, ghostModeTexture.glTextureView)
                 startBatch()
+                shaderTextures[0] = ghostModeTexture.glTextureView
                 drawParticle(
                     { sin, cos -> Vec3d(sin, cos, -cos) },
                     { sin, cos -> Vec3d(-sin, -cos, cos) }
@@ -123,7 +121,6 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 commitBatch()
             }
 
-            mc.gameRenderer.lightmapTextureManager.enable()
             env.matrixStack.pop()
         }
 

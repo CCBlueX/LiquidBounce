@@ -70,7 +70,7 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
     @JvmOverloads
     fun calculateScreenPos(
         pos: Vec3d,
-        cameraPos: Vec3d = mc.gameRenderer.camera.pos,
+        cameraPos: Vec3d = mc.gameRenderer.camera.cameraPos,
     ): Vec3? {
         val transformedPos = cacheVec3f.set(pos).sub(cameraPos)
             .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix))
@@ -86,7 +86,7 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
 
     @JvmStatic
     @JvmOverloads
-    fun calculateMouseRay(posOnScreen: Vec2f, cameraPos: Vec3d = mc.gameRenderer.camera.pos): Line {
+    fun calculateMouseRay(posOnScreen: Vec2f, cameraPos: Vec3d = mc.gameRenderer.camera.cameraPos): Line {
         val screenVec = cacheVec3f.set(posOnScreen.x, posOnScreen.y, 1.0F)
 
         val scaleFactor = mc.window.scaleFactor
