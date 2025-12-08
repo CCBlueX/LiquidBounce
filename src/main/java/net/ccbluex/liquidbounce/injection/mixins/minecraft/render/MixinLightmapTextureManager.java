@@ -86,31 +86,31 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
         var customLightColor = ModuleCustomAmbience.CustomLightColor.INSTANCE;
         if (customLightColor.getRunning()) {
             liquid_bounce$customLightMap = true;
-            if (RenderSystem.getShaderTexture(2) == this.glTextureView) {
-                RenderSystem.setShaderTexture(2, customLightColor.getTextureView());
-            }
+//            if (RenderSystem.getShaderTexture(2) == this.glTextureView) {
+//                RenderSystem.setShaderTexture(2, customLightColor.getTextureView());
+//            }
         }
     }
 
-    @ModifyArg(
-        method = "enable",
-        at = @At(
-            value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderTexture(ILcom/mojang/blaze3d/textures/GpuTextureView;)V"
-        ),
-        index = 1
-    )
-    private @Nullable GpuTextureView hookSpoof(@Nullable GpuTextureView texture) {
-        return liquid_bounce$customLightMap
-            ? ModuleCustomAmbience.CustomLightColor.INSTANCE.getTextureView()
-            : texture;
-    }
+//    @ModifyArg(
+//        method = "enable",
+//        at = @At(
+//            value = "INVOKE",
+//            target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderTexture(ILcom/mojang/blaze3d/textures/GpuTextureView;)V"
+//        ),
+//        index = 1
+//    )
+//    private @Nullable GpuTextureView hookSpoof(@Nullable GpuTextureView texture) {
+//        return liquid_bounce$customLightMap
+//            ? ModuleCustomAmbience.CustomLightColor.INSTANCE.getTextureView()
+//            : texture;
+//    }
 
     @Override
     public void liquid_bounce$restoreLightMap() {
-        if (RenderSystem.getShaderTexture(2) == ModuleCustomAmbience.CustomLightColor.INSTANCE.getTextureView()) {
-            RenderSystem.setShaderTexture(2, this.glTextureView);
-        }
+//        if (RenderSystem.getShaderTexture(2) == ModuleCustomAmbience.CustomLightColor.INSTANCE.getTextureView()) {
+//            RenderSystem.setShaderTexture(2, this.glTextureView);
+//        }
         liquid_bounce$customLightMap = false;
     }
 

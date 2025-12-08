@@ -127,6 +127,12 @@ fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
 
 // Copied from 1.21.4 END
 
+// 1.21.10
+// TODO(1.21.11): ticksSinceLastAttack ?
+var Entity.lastAttackedTicks: Int
+    get() = TODO("1.21.11")
+    set(value) = TODO("1.21.11")
+
 val Entity.netherPosition: Vec3d
     get() = if (world.registryKey == World.NETHER) {
         Vec3d(x, y, z)

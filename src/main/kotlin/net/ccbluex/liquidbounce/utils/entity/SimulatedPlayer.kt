@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.client.fastCos
+import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -312,7 +314,7 @@ class SimulatedPlayer(
             val g = sqrt(vec3d3.x * vec3d3.x + vec3d3.z * vec3d3.z)
             val vec3d = e.horizontalLength()
             val i = vec3d3.length()
-            var j = MathHelper.cos(f)
+            var j = f.fastCos()
             j = (j.toDouble() * (j.toDouble() * 1.0.coerceAtMost(i / 0.4))).toFloat()
             e = this.velocity.add(0.0, d * (-1.0 + j.toDouble() * 0.75), 0.0)
             if (e.y < 0.0 && g > 0.0) {
@@ -320,7 +322,7 @@ class SimulatedPlayer(
                 e = e.add(vec3d3.x * k / g, k, vec3d3.z * k / g)
             }
             if (f < 0.0f && g > 0.0) {
-                k = vec3d * (-MathHelper.sin(f)).toDouble() * 0.04
+                k = vec3d * (-f.fastSin()).toDouble() * 0.04
                 e = e.add(-vec3d3.x * k / g, k * 3.2, -vec3d3.z * k / g)
             }
             if (g > 0.0) {
@@ -525,7 +527,7 @@ class SimulatedPlayer(
         if (this.isSprinting()) {
             val f: Float = this.yaw.toRadians()
 
-            this.velocity += Vec3d((-MathHelper.sin(f) * 0.2f).toDouble(), 0.0, (MathHelper.cos(f) * 0.2f).toDouble())
+            this.velocity += Vec3d((-f.fastSin() * 0.2f).toDouble(), 0.0, (f.fastCos() * 0.2f).toDouble())
         }
 
     }
@@ -840,10 +842,10 @@ class SimulatedPlayer(
         val f = pitch * (Math.PI.toFloat() / 180)
         val g = -yaw * (Math.PI.toFloat() / 180)
 
-        val h = MathHelper.cos(g)
-        val i = MathHelper.sin(g)
-        val j = MathHelper.cos(f)
-        val k = MathHelper.sin(f)
+        val h = g.fastCos()
+        val i = g.fastSin()
+        val j = f.fastCos()
+        val k = f.fastSin()
 
         return Vec3d((i * j).toDouble(), (-k).toDouble(), (h * j).toDouble())
     }

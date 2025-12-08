@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
@@ -36,11 +38,14 @@ import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
+import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
@@ -91,43 +96,44 @@ public abstract class MixinGameRenderer {
 
     /**
      * We change crossHairTarget according to server side rotations
+     * FIXME(1.21.11)
      */
-    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
-    private HitResult hookRaycast(HitResult original, Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta) {
-        if (camera != client.player) {
-            return original;
-        }
-
-        var cameraRotation = new Rotation(camera.getYaw(tickDelta), camera.getPitch(tickDelta), true);
-
-        Rotation rotation;
-        if (RotationManager.INSTANCE.getCurrentRotation() != null) {
-            rotation = RotationManager.INSTANCE.getCurrentRotation();
-        } else if (ModuleFreeCam.INSTANCE.getRunning()) {
-            var serverRotation = RotationManager.INSTANCE.getServerRotation();
-            rotation = ModuleFreeCam.INSTANCE.shouldDisableCameraInteract() ? serverRotation : cameraRotation;
-        } else {
-            rotation = cameraRotation;
-        }
-
-        return RaytracingKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange),
-                ModuleLiquidPlace.INSTANCE.getRunning(), tickDelta);
-    }
-
-    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
-    private Vec3d hookRotationVector(Vec3d original, Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta) {
-        if (camera != client.player) {
-            return original;
-        }
-
-        var rotation = RotationManager.INSTANCE.getCurrentRotation();
-        return rotation != null ? rotation.getDirectionVector() : original;
-    }
-
-    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/projectile/ProjectileUtil;raycast(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Box;Ljava/util/function/Predicate;D)Lnet/minecraft/util/hit/EntityHitResult;"))
-    private @Nullable EntityHitResult hookEntityHitResult(@Nullable EntityHitResult original) {
-        return original == null || !ModuleNoEntityInteract.INSTANCE.test(original) ? null : original;
-    }
+//    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
+//    private HitResult hookRaycast(HitResult original, Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta) {
+//        if (camera != client.player) {
+//            return original;
+//        }
+//
+//        var cameraRotation = new Rotation(camera.getYaw(tickDelta), camera.getPitch(tickDelta), true);
+//
+//        Rotation rotation;
+//        if (RotationManager.INSTANCE.getCurrentRotation() != null) {
+//            rotation = RotationManager.INSTANCE.getCurrentRotation();
+//        } else if (ModuleFreeCam.INSTANCE.getRunning()) {
+//            var serverRotation = RotationManager.INSTANCE.getServerRotation();
+//            rotation = ModuleFreeCam.INSTANCE.shouldDisableCameraInteract() ? serverRotation : cameraRotation;
+//        } else {
+//            rotation = cameraRotation;
+//        }
+//
+//        return RaytracingKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange),
+//                ModuleLiquidPlace.INSTANCE.getRunning(), tickDelta);
+//    }
+//
+//    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
+//    private Vec3d hookRotationVector(Vec3d original, Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta) {
+//        if (camera != client.player) {
+//            return original;
+//        }
+//
+//        var rotation = RotationManager.INSTANCE.getCurrentRotation();
+//        return rotation != null ? rotation.getDirectionVector() : original;
+//    }
+//
+//    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/projectile/ProjectileUtil;raycast(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Box;Ljava/util/function/Predicate;D)Lnet/minecraft/util/hit/EntityHitResult;"))
+//    private @Nullable EntityHitResult hookEntityHitResult(@Nullable EntityHitResult original) {
+//        return original == null || !ModuleNoEntityInteract.INSTANCE.test(original) ? null : original;
+//    }
 
     /**
      * Hook world render event
@@ -140,13 +146,13 @@ public abstract class MixinGameRenderer {
         Pools.MatStack.recycle(newMatStack);
     }
 
-    @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/LightmapTextureManager;enable()V", shift = At.Shift.AFTER))
-    public void prepareItemCharms(float tickProgress, boolean sleeping, Matrix4f positionMatrix, CallbackInfo ci) {
+    // TODO(1.21.11): check this
+    @WrapOperation(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/network/ClientPlayerEntity;I)V"))
+    public void drawItemCharms(HeldItemRenderer instance, float tickProgress, MatrixStack matrices,
+        OrderedRenderCommandQueue orderedRenderCommandQueue, ClientPlayerEntity player, int light,
+        Operation<Void> original) {
         ModuleItemChams.INSTANCE.applyToTexture(this.lightmapTextureManager.getGlTextureView());
-    }
-
-    @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", shift = At.Shift.AFTER))
-    public void drawItemCharms(float tickProgress, boolean sleeping, Matrix4f positionMatrix, CallbackInfo ci) {
+        original.call(instance, tickProgress, matrices, orderedRenderCommandQueue, player, light);
         ModuleItemChams.INSTANCE.resetTexture(this.lightmapTextureManager.getGlTextureView());
     }
 

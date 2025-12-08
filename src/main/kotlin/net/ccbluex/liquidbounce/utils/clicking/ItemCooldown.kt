@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.clicking
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.lastAttackedTicks
 import net.ccbluex.liquidbounce.utils.kotlin.random
 
 open class ItemCooldown : Configurable("ItemCooldown", aliases = listOf("Cooldown")) {

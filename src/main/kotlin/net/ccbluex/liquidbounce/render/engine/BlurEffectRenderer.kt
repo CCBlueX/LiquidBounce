@@ -53,9 +53,9 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         mc.window.framebufferWidth,
         mc.window.framebufferHeight,
         true
-    ).apply {
-        this.setFilter(FilterMode.NEAREST)
-    }
+    )
+
+    private val overlaySampler = RenderSystem.getSamplerCache().get(FilterMode.NEAREST)
 
     private fun clearOverlay() {
         overlayFramebuffer.clearColorAndDepth()
@@ -101,8 +101,8 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         mc.framebuffer.createRenderPass().use { pass ->
             pass.setPipeline(ClientRenderPipelines.GuiBlur)
-            pass.bindSampler("texture0", mc.framebuffer.colorAttachmentView)
-            pass.bindSampler("overlay", overlayFramebuffer.colorAttachmentView)
+            pass.bindTexture("texture0", mc.framebuffer.colorAttachmentView, overlaySampler)
+            pass.bindTexture("overlay", overlayFramebuffer.colorAttachmentView, overlaySampler)
             pass.setUniform("BlurData", GUI_BLUR_UNIFORM_BUFFER)
             pass.draw(0, 3)
         }
@@ -124,7 +124,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             renderPass.setPipeline(ClientRenderPipelines.JCEF.Blit)
             RenderSystem.bindDefaultUniforms(renderPass)
 
-            renderPass.bindSampler("InSampler", overlayFramebuffer.colorAttachmentView)
+            renderPass.bindTexture("InSampler", overlayFramebuffer.colorAttachmentView, overlaySampler)
             renderPass.draw(0, 3)
         }
     }

@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.render
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -166,12 +167,12 @@ fun RenderEnvironment.draw(pipeline: RenderPipeline, builtBuffer: BuiltBuffer) =
     this.framebuffer,
     this.shaderColor.toVector4f(),
     { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
-    { this.shaderTextures[it] ?: RenderSystem.getShaderTexture(it) },
+    this.shaderTextures::get,
 )
 
 /**
- * copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
- * @see RenderLayer.MultiPhase.draw
+ * copied from RenderLayer.draw(BuiltBuffer) (1.21.5-10: RenderLayer.MultiPhase.draw)
+ * @see RenderLayer.draw
  */
 @Suppress("detekt:all")
 fun drawMesh(
@@ -180,15 +181,14 @@ fun drawMesh(
     framebuffer: Framebuffer = mc.framebuffer,
     shaderColor: Vector4f = Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
     renderPassLabelGetter: Supplier<String>? = null,
-    shaderTextureProvider: IntFunction<GpuTextureView?> = IntFunction(RenderSystem::getShaderTexture),
+    shaderTextureProvider: IntFunction<GpuTextureView?> = IntFunction { null },
 ) = builtBuffer.use { buffer ->
     val gpuBufferSlice = RenderSystem.getDynamicUniforms()
         .write(
             RenderSystem.getModelViewMatrix(),
             shaderColor,
             Vector3f(),
-            RenderSystem.getTextureMatrix(),
-            RenderSystem.getShaderLineWidth(),
+            Matrix4f(), // TODO(1.21.11) check this
         )
     val gpuBuffer = pipeline.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
     val gpuBuffer2: GpuBuffer
@@ -229,7 +229,7 @@ fun drawMesh(
         renderPass.setUniform("DynamicTransforms", gpuBufferSlice)
         renderPass.setVertexBuffer(0, gpuBuffer)
 
-        for (i in 0 until RenderSystem.TEXTURE_COUNT) {
+        for (i in 0 until RenderEnvironment.TEXTURE_COUNT) {
             val gpuTexture = shaderTextureProvider.apply(i)
             if (gpuTexture != null) {
                 renderPass.bindSampler(SAMPLER_NAMES[i], gpuTexture)

@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.systems.RenderPass
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -47,6 +49,13 @@ internal val trianglePosTexVertexBuffer: GpuBuffer =
 fun RenderPass.drawFullScreenPositionTexture() {
     setVertexBuffer(0, trianglePosTexVertexBuffer)
     draw(0, 3)
+}
+
+/**
+ * 1.21.5-10
+ */
+inline fun RenderPass.bindSampler(name: String, gpuTextureView: GpuTextureView) {
+    bindTexture(name, gpuTextureView, RenderSystem.getSamplerCache().get(FilterMode.NEAREST))
 }
 
 private val RENDER_PASS_DEFAULT_LABEL = Supplier { LiquidBounce.CLIENT_NAME + " RenderPass" }

@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.integration.theme
 import com.mojang.blaze3d.pipeline.BlendFunction
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.platform.DepthTestFunction
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.textures.TextureFormat
@@ -35,11 +37,13 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.createUbo
+import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.texture.NativeImage
+import net.minecraft.client.texture.TextureSetup
 import net.minecraft.util.Identifier
 import java.io.Closeable
 import java.util.*
@@ -73,6 +77,7 @@ sealed interface ThemeBackground : Closeable {
     ) : ThemeBackground {
 
         private val texture = image.asTexture { "ThemeBackground/Image - ${metadata.name}" }
+        private val textureSetup = texture.textureSetup
 
         override fun draw(
             context: DrawContext,
@@ -83,7 +88,7 @@ sealed interface ThemeBackground : Closeable {
             delta: Float
         ): Boolean {
             context.drawTexQuad(
-                texture.glTextureView,
+                textureSetup,
                 x0 = 0f, y0 = 0f,
                 x1 = width.toFloat(), y1 = height.toFloat(),
             )
@@ -117,6 +122,7 @@ sealed interface ThemeBackground : Closeable {
 
         private var background: GpuTexture? = null
         private var backgroundView: GpuTextureView? = null
+        private var textureSetup: TextureSetup? = null
 
         override fun draw(
             context: DrawContext,
@@ -135,9 +141,9 @@ sealed interface ThemeBackground : Closeable {
                 putVec2(framebufferWidth.toFloat(), framebufferHeight.toFloat())
             }
 
-            val backgroundView = resizeIfNeeded(framebufferWidth, framebufferHeight)
+            resizeIfNeeded(framebufferWidth, framebufferHeight)
 
-            backgroundView.createRenderPass(
+            backgroundView!!.createRenderPass(
                 { "ThemeShaderBackground Pass - ${metadata.name}" }
             ).use { pass ->
                 pass.setPipeline(pipeline)
@@ -146,7 +152,7 @@ sealed interface ThemeBackground : Closeable {
             }
 
             context.drawTexQuad(
-                backgroundView,
+                textureSetup!!,
                 x0 = 0f, y0 = 0f,
                 x1 = width.toFloat(), y1 = height.toFloat(),
                 u1 = 0f, v1 = 1f,
@@ -175,7 +181,7 @@ sealed interface ThemeBackground : Closeable {
         private fun resizeIfNeeded(
             framebufferWidth: Int,
             framebufferHeight: Int,
-        ): GpuTextureView {
+        ) {
             if (background == null ||
                 background!!.getWidth(0) != framebufferWidth ||
                 background!!.getHeight(0) != framebufferHeight
@@ -189,8 +195,11 @@ sealed interface ThemeBackground : Closeable {
                 )
                 backgroundView?.close()
                 backgroundView = background!!.asView()
+                textureSetup = TextureSetup.of(
+                    backgroundView!!,
+                    RenderSystem.getSamplerCache().get(FilterMode.NEAREST),
+                )
             }
-            return backgroundView!!
         }
 
         companion object {

@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
@@ -55,9 +53,7 @@ class MinimapTextureAtlasManager {
     private val texture = NativeImageBackedTexture(
         { "$CLIENT_NAME MinimapTexture" },
         ATLAS_SIZE * 16, ATLAS_SIZE * 16, false
-    ).apply {
-        glTexture.setTextureFilter(FilterMode.NEAREST, false)
-    }
+    )
 
     private val availableAtlasPositions = ObjectArrayList<AtlasPosition>(MAX_ATLAS_POSITIONS).apply {
         for (x in 0 until ATLAS_SIZE) {

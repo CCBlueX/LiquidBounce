@@ -83,7 +83,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
      * <p>
      * There are a few velocity changes when attacking an entity, which could be easily detected by anti-cheats when a different server-side rotation is applied.
      */
-    @ModifyExpressionValue(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
+    @ModifyExpressionValue(method = {"knockbackTarget", "doSweepingAttack"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
     private float hookFixRotation(float original) {
         if ((Object) this != MinecraftClient.getInstance().player) {
             return original;
@@ -159,8 +159,8 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         return original;
     }
 
-    @SuppressWarnings({"UnreachableCode", "ConstantValue"})
-    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;multiply(DDD)Lnet/minecraft/util/math/Vec3d;"))
+    @SuppressWarnings("ConstantValue")
+    @Redirect(method = "knockbackTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;multiply(DDD)Lnet/minecraft/util/math/Vec3d;"))
     private Vec3d hookSlowVelocity(Vec3d instance, double x, double y, double z) {
         if ((Object) this == MinecraftClient.getInstance().player && ModuleKeepSprint.INSTANCE.getRunning()) {
             x = z = ModuleKeepSprint.INSTANCE.getMotion();
@@ -169,8 +169,10 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         return instance.multiply(x, y, z);
     }
 
-    @SuppressWarnings("UnreachableCode")
-    @WrapWithCondition(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setSprinting(Z)V", ordinal = 0))
+    /**
+     * for: attack, pierce
+     */
+    @WrapWithCondition(method = "knockbackTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setSprinting(Z)V", ordinal = 0))
     private boolean hookSlowVelocity(PlayerEntity instance, boolean b) {
         if ((Object) this == MinecraftClient.getInstance().player) {
             ModuleKeepSprint.INSTANCE.setSprinting(b);
@@ -221,36 +223,36 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
      * Sadly, mixins don't allow capturing parameters when redirecting,
      * so there needs to be an extra injection for every sound.
      */
-
-    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 0))
-    private void hookPlaySound(Entity target, CallbackInfo ci) {
-        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK);
-    }
-
-    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 1))
-    private void hookPlaySound1(Entity target, CallbackInfo ci) {
-        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP);
-    }
-
-    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 2))
-    private void hookPlaySound2(Entity target, CallbackInfo ci) {
-        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT);
-    }
-
-    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 3))
-    private void hookPlaySound3(Entity target, CallbackInfo ci) {
-        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_STRONG);
-    }
-
-    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 4))
-    private void hookPlaySound4(Entity target, CallbackInfo ci) {
-        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_WEAK);
-    }
-
-    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 5))
-    private void hookPlaySound5(Entity target, CallbackInfo ci) {
-        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE);
-    }
+// FIXME(1.21.11)
+//    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 0))
+//    private void hookPlaySound(Entity target, CallbackInfo ci) {
+//        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK);
+//    }
+//
+//    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 1))
+//    private void hookPlaySound1(Entity target, CallbackInfo ci) {
+//        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP);
+//    }
+//
+//    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 2))
+//    private void hookPlaySound2(Entity target, CallbackInfo ci) {
+//        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT);
+//    }
+//
+//    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 3))
+//    private void hookPlaySound3(Entity target, CallbackInfo ci) {
+//        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_STRONG);
+//    }
+//
+//    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 4))
+//    private void hookPlaySound4(Entity target, CallbackInfo ci) {
+//        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_WEAK);
+//    }
+//
+//    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/Entity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 5))
+//    private void hookPlaySound5(Entity target, CallbackInfo ci) {
+//        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE);
+//    }
 
     /**
      * When the target is a fake player, this method will play a client side sound.

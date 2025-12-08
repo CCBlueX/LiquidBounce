@@ -154,6 +154,8 @@ fun Configuration.excludeProvidedLibs() = apply {
     exclude(group = "io.netty", module = "netty-resolver")
     exclude(group = "io.netty", module = "netty-transport")
     exclude(group = "io.netty", module = "netty-transport-classes-epoll")
+    exclude(group = "io.netty", module = "netty-transport-classes-kqueue")
     exclude(group = "io.netty", module = "netty-transport-native-epoll")
+    exclude(group = "io.netty", module = "netty-transport-native-kqueue")
     exclude(group = "io.netty", module = "netty-transport-native-unix-common")
 }

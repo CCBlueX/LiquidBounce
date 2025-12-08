@@ -38,10 +38,10 @@ inline fun Double.floorToInt() = MathHelper.floor(this)
 inline fun Float.ceilToInt() = MathHelper.ceil(this)
 inline fun Double.ceilToInt() = MathHelper.ceil(this)
 
-inline fun Float.fastSin() = MathHelper.sin(this)
-inline fun Double.fastSin() = MathHelper.sin(this.toFloat())
-inline fun Float.fastCos() = MathHelper.cos(this)
-inline fun Double.fastCos() = MathHelper.cos(this.toFloat())
+inline fun Float.fastSin() = toDouble().fastSin()
+inline fun Double.fastSin() = MathHelper.sin(this)
+inline fun Float.fastCos() = toDouble().fastCos()
+inline fun Double.fastCos() = MathHelper.cos(this)
 
 fun Box.getFace(direction: Direction): AlignedFace {
     return when (direction) {

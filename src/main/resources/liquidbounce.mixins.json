@@ -31,7 +31,6 @@
     "minecraft.client.MixinPlayerInventory",
     "minecraft.client.MixinRawProjectionMatrix",
     "minecraft.client.MixinTextHandler",
-    "minecraft.client.MixinTextureSetup",
     "minecraft.client.MixinTranslationStorage",
     "minecraft.client.MixinWindow",
     "minecraft.client.MixinWorld",

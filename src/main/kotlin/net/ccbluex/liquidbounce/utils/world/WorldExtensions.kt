@@ -16,21 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.io
 
-import io.netty.bootstrap.AbstractBootstrap
-import io.netty.channel.Channel
-import net.minecraft.network.NetworkingBackend
+package net.ccbluex.liquidbounce.utils.world
 
-/**
- * Shortcut for Netty client [io.netty.bootstrap.Bootstrap],
- * using shared [io.netty.channel.EventLoopGroup] from [NetworkingBackend]
- */
-internal fun <B : AbstractBootstrap<B, Channel>> AbstractBootstrap<B, Channel>.clientChannelAndGroup(
-    useEpoll: Boolean = true
-): B {
-    val networkingBackend = NetworkingBackend.remote(useEpoll)
-    return channel(networkingBackend.channelClass)
-            .group(networkingBackend.eventLoopGroup)
-}
+import net.minecraft.world.dimension.DimensionType
 
+val DimensionType.ultrawarm: Boolean
+    get() = TODO("1.21.11")
+
+val DimensionType.bedWorks: Boolean
+    get() = TODO("1.21.11")
+
+val DimensionType.respawnAnchorWorks: Boolean
+    get() = TODO("1.21.11")

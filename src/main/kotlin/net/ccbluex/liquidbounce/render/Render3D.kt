@@ -22,7 +22,6 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTextureView
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
@@ -44,7 +43,7 @@ import net.minecraft.util.math.Vec3i
  */
 sealed class RenderEnvironment(val framebuffer: Framebuffer) {
 
-    val shaderTextures = arrayOfNulls<GpuTextureView>(RenderSystem.TEXTURE_COUNT)
+    val shaderTextures = arrayOfNulls<GpuTextureView>(TEXTURE_COUNT)
     var shaderColor = Color4b.WHITE
 
     var isBatchMode: Boolean = false
@@ -78,6 +77,8 @@ sealed class RenderEnvironment(val framebuffer: Framebuffer) {
     }
 
     companion object {
+        const val TEXTURE_COUNT = 12
+
         @JvmStatic
         private val batchBuffer = Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()
     }

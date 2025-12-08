@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -65,6 +67,9 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
         },
     ).slice()
 
+    // TODO(1.21.11): check this
+    private val sampler = RenderSystem.getSamplerCache().get(FilterMode.LINEAR, false)
+
     fun applyToTexture(textureView: GpuTextureView) {
         if (!this.running || edited) return
 
@@ -84,8 +89,8 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
         ).use { pass ->
             pass.setPipeline(ClientRenderPipelines.ItemChams)
 
-            pass.bindSampler("texture0", textureView)
-            pass.bindSampler("image", textureView)
+            pass.bindTexture("texture0", textureView, sampler)
+            pass.bindTexture("image", textureView, sampler)
             pass.setUniform("ItemChamsData", UBO)
 
             pass.drawFullScreenPositionTexture()

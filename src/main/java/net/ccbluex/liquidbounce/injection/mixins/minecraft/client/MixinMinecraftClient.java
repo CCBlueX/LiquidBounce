@@ -379,7 +379,7 @@ public abstract class MixinMinecraftClient {
     }
 
     @Inject(method = "setWorld", at = @At("HEAD"))
-    private void hookWorldChangeEvent(ClientWorld world, CallbackInfo ci) {
+    private void hookWorldChangeEvent(ClientWorld world, boolean bl, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new WorldChangeEvent(world));
     }
 

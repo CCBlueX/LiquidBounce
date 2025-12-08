@@ -116,8 +116,8 @@ dependencies {
     modApi("maven.modrinth:lithium:${project.property("lithium_version")}")
 
     // ViaFabricPlus
-    modApi("com.viaversion:viafabricplus-api:${project.property("viafabricplus_version")}")
-    modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}")
+    modCompileOnlyApi("com.viaversion:viafabricplus-api:${project.property("viafabricplus_version")}")
+//    modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}") // TODO: Enable it after update
 
     // Minecraft Authlib
     includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
@@ -127,10 +127,6 @@ dependencies {
     modApi(mcef)
     include(mcef)
     includeDependency("net.ccbluex:netty-httpserver:2.4.4")
-    // MacOS native (Linux native is included in game)
-    includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
-    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
-    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-x86_64")
 
     // Discord RPC Support
     includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")

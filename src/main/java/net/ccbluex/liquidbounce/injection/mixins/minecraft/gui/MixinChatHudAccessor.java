@@ -34,14 +34,15 @@ import java.util.List;
  **/
 @Mixin(ChatHud.class)
 public interface MixinChatHudAccessor {
-    @Invoker("toChatLineY")
-    double invokeToChatLineY(double y);
-
-    @Invoker("getMessageIndex")
-    int invokeGetMessageIndex(double chatLineX, double chatLineY);
 
     @Invoker("getLineHeight")
     int invokeGetLineHeight();
+
+    @Invoker("getChatScale")
+    double getChatScale();
+
+    @Invoker("getWidth")
+    int getWidth();
 
     @Accessor
     List<ChatHudLine.Visible> getVisibleMessages();

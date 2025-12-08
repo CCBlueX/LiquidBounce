@@ -10,6 +10,7 @@ accessible field net/minecraft/client/MinecraftClient apiServices Lnet/minecraft
 mutable field net/minecraft/client/MinecraftClient apiServices Lnet/minecraft/util/ApiServices;
 
 accessible method net/minecraft/entity/LivingEntity tickActiveItemStack ()V
+accessible field net/minecraft/util/Arm id I
 
 mutable field net/minecraft/util/math/Vec3d x D
 mutable field net/minecraft/util/math/Vec3d y D
@@ -64,7 +65,7 @@ accessible field net/minecraft/network/packet/c2s/common/ResourcePackStatusC2SPa
 accessible field net/minecraft/item/BucketItem fluid Lnet/minecraft/fluid/Fluid;
 
 accessible field net/minecraft/client/option/KeyBinding boundKey Lnet/minecraft/client/util/InputUtil$Key;
-accessible field net/minecraft/entity/LivingEntity lastAttackedTicks I
+#accessible field net/minecraft/entity/LivingEntity lastAttackedTicks I
 accessible field net/minecraft/entity/LivingEntity jumping Z
 accessible field net/minecraft/entity/LivingEntity jumpingCooldown I
 accessible method net/minecraft/entity/Entity isAlwaysInvulnerableTo (Lnet/minecraft/entity/damage/DamageSource;)Z

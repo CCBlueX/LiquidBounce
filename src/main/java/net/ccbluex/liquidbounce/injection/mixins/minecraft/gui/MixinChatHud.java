@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBe
 import net.ccbluex.liquidbounce.interfaces.ChatHudAddition;
 import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
@@ -64,7 +65,7 @@ public abstract class MixinChatHud implements ChatHudAddition {
     public abstract void scroll(int scroll);
 
     @Shadow
-    public abstract int getWidth();
+    protected abstract int getWidth();
 
     @Unique
     private int chatY = -1;
@@ -120,8 +121,8 @@ public abstract class MixinChatHud implements ChatHudAddition {
 
             boolean last = j == list.size() - 1;
             //noinspection DataFlowIssue
-            ChatHudLine.Visible visible = new ChatHudLine.Visible(message.creationTick(), orderedText, message.indicator(), last);
-            ChatMessageAddition.class.cast(visible).liquid_bounce$setId(id);
+            var visible = new ChatHudLine.Visible(message.creationTick(), orderedText, message.indicator(), last);
+            ((ChatMessageAddition) (Object) visible).liquid_bounce$setId(id);
             visibleMessages.addFirst(visible);
         }
 
@@ -135,28 +136,29 @@ public abstract class MixinChatHud implements ChatHudAddition {
         ci.cancel();
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;getLineHeight()I", ordinal = 0))
-    public void hookStoreChatY(DrawContext context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci, @Local(ordinal = 7) int m) {
-        this.chatY = m;
-    }
-
-    @ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V", ordinal = 0))
-    private void modifyArgs(
-            Args args,
-            @Local(ordinal = 1, argsOnly = true) int mouseX,
-            @Local(ordinal = 2, argsOnly = true) int mouseY
-    ) {
-        if(!(ModuleBetterChat.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getHighlight())) {
-            return;
-        }
-
-        var hovering = mouseX >= 0 && mouseX <= ((int) args.get(2)) -4 &&
-                mouseY >= ((int)args.get(1)+1) && mouseY <= ((int)args.get(3));
-
-        if (hovering) {
-            args.set(4, 140 << 24);
-        }
-    }
+    // FIXME(1.21.11) getLineHeight -inside> getVisibleLineCount
+//    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;getLineHeight()I", ordinal = 0))
+//    public void hookStoreChatY(DrawContext context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci, @Local(ordinal = 7) int m) {
+//        this.chatY = m;
+//    }
+//
+//    @ModifyArgs(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V", ordinal = 0))
+//    private void modifyArgs(
+//            Args args,
+//            @Local(ordinal = 1, argsOnly = true) int mouseX,
+//            @Local(ordinal = 2, argsOnly = true) int mouseY
+//    ) {
+//        if(!(ModuleBetterChat.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getHighlight())) {
+//            return;
+//        }
+//
+//        var hovering = mouseX >= 0 && mouseX <= ((int) args.get(2)) -4 &&
+//                mouseY >= ((int)args.get(1)+1) && mouseY <= ((int)args.get(3));
+//
+//        if (hovering) {
+//            args.set(4, 140 << 24);
+//        }
+//    }
 
     @Override
     public int liquidbounce_getChatY() {

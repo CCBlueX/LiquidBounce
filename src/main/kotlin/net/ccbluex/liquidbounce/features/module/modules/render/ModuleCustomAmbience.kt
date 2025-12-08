@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
@@ -94,6 +95,8 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
 
     /**
      * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmapTextureManager
+     *
+     * TODO(1.21.11): remove this feature.
      */
     object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
         val textureView: GpuTextureView = gpuDevice.createTexture(
@@ -102,9 +105,9 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
             TextureFormat.RGBA8,
             16, 16,
             1, 1,
-        ).apply {
-            setTextureFilter(FilterMode.LINEAR, false)
-        }.asView()
+        ).asView()
+
+        private val sampler = RenderSystem.getSamplerCache().get(FilterMode.LINEAR, false)
 
         private val UBO = gpuDevice.createUbo(
             labelGetter = { "$name UBO" },
@@ -125,7 +128,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
                 clearColor = optional(-1),
             ).use { pass ->
                 pass.setPipeline(ClientRenderPipelines.Blend)
-                pass.bindSampler("texture0", this.textureView)
+                pass.bindTexture("texture0", this.textureView, this.sampler)
                 pass.setUniform("BlendData", UBO)
                 pass.drawFullScreenPositionTexture()
             }

@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.fastCos
+import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -37,7 +39,6 @@ import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.item.BowItem
 import net.minecraft.item.TridentItem
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 
 object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoot", true) {
@@ -132,9 +133,9 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
 
         val velocity = (TrajectoryInfo.bowWithUsageDuration() ?: return null).initialVelocity
 
-        val vX = -MathHelper.sin(yaw.toRadians()) * MathHelper.cos(pitch.toRadians()) * velocity
-        val vY = -MathHelper.sin(pitch.toRadians()) * velocity
-        val vZ = MathHelper.cos(yaw.toRadians()) * MathHelper.cos(pitch.toRadians()) * velocity
+        val vX = -yaw.toRadians().fastSin() * pitch.toRadians().fastCos() * velocity
+        val vY = -pitch.toRadians().fastSin() * velocity
+        val vZ = yaw.toRadians().fastCos() * pitch.toRadians().fastCos() * velocity
 
         val arrow = SimulatedArrow(
             world,

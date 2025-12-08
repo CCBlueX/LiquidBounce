@@ -128,7 +128,7 @@ class ChatClient {
 
         val bootstrap = Bootstrap()
 
-        bootstrap.clientChannelAndGroup(tryToUseEpoll = true)
+        bootstrap.clientChannelAndGroup(true)
             .handler(object : ChannelInitializer<SocketChannel>() {
 
                 /**

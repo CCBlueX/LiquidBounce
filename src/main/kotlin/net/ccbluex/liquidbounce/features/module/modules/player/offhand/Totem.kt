@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.ccbluex.liquidbounce.utils.world.bedWorks
+import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
 import net.minecraft.block.BedBlock
 import net.minecraft.block.RespawnAnchorBlock
 import net.minecraft.entity.EntityPose
@@ -223,7 +225,7 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
                     arrayOf(pos)
                 } else {
                     // a bed consists of two blocks
-                    arrayOf(pos, (block as BedBlock).getPotentialSecondBedBlock(state, pos))
+                    arrayOf(pos, block.getPotentialSecondBedBlock(state, pos))
                 }
 
                 maxDamage = maxDamage.coerceAtLeast(

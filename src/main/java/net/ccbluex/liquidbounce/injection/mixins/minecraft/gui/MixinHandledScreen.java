@@ -85,11 +85,11 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
 
     // Before `if (itemStack.isEmpty() && slot.isEnabled()) {`
     @Inject(method = "drawSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z", ordinal = 5))
-    private void drawSlotOutline(DrawContext context, Slot slot, CallbackInfo ci) {
+    private void drawSlotOutline(DrawContext context, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {
         ModuleBetterInventory.INSTANCE.drawHighlightSlot(context, slot);
     }
 
-    @Inject(method = "renderMain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/HandledScreen;drawSlots(Lnet/minecraft/client/gui/DrawContext;)V", shift = At.Shift.AFTER))
+    @Inject(method = "renderMain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/HandledScreen;drawSlots(Lnet/minecraft/client/gui/DrawContext;II)V", shift = At.Shift.AFTER))
     private void hookDrawSlot(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         var cursorStack = this.handler.getCursorStack();
         var slot = getSlotAt(mouseX, mouseY);

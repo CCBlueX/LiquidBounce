@@ -249,24 +249,25 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
 
     /**
      * Hook custom multiplier
+     * FIXME(1.21.11): -> getActiveItemSpeedMultiplier? component
      */
-    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0))
-    private void hookCustomMultiplier(CallbackInfo callbackInfo) {
-        var input = (Input & InputAddition) this.input;
-        var playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
-        EventManager.INSTANCE.callEvent(playerUseMultiplier);
-        input.liquid_bounce$setMovementInput(
-                new Vec2f(
-                        input.getMovementInput().x / 0.2f * playerUseMultiplier.getSideways(),
-                        input.getMovementInput().y / 0.2f * playerUseMultiplier.getForward()
-                )
-        );
-    }
+//    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0))
+//    private void hookCustomMultiplier(CallbackInfo callbackInfo) {
+//        var input = (Input & InputAddition) this.input;
+//        var playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
+//        EventManager.INSTANCE.callEvent(playerUseMultiplier);
+//        input.liquid_bounce$setMovementInput(
+//                new Vec2f(
+//                        input.getMovementInput().x / 0.2f * playerUseMultiplier.getSideways(),
+//                        input.getMovementInput().y / 0.2f * playerUseMultiplier.getForward()
+//                )
+//        );
+//    }
 
     /**
      * Hook sprint effect from NoSlow module
      */
-    @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
+    @ModifyExpressionValue(method = "isBlockedFromSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
     private boolean hookSprintAffectStart(boolean original) {
         if (ModuleNoSlow.INSTANCE.getRunning()) {
             return false;
@@ -336,11 +337,11 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return (!ModuleFreeCam.INSTANCE.getRunning() ||
                 RotationManager.INSTANCE.getCurrentRotation() != null) && bl4;
     }
-
-    @ModifyConstant(method = "canSprint()Z", constant = @Constant(floatValue = 6.0F), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I", ordinal = 0)))
-    private float hookSprintIgnoreHunger(float constant) {
-        return ModuleSprint.INSTANCE.getShouldIgnoreHunger() ? -1F : constant;
-    }
+// FIXME(1.21.11)
+//    @ModifyConstant(method = "canSprint()Z", constant = @Constant(floatValue = 6.0F), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I", ordinal = 0)))
+//    private float hookSprintIgnoreHunger(float constant) {
+//        return ModuleSprint.INSTANCE.getShouldIgnoreHunger() ? -1F : constant;
+//    }
 
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canStartSprinting()Z"))
     private boolean hookSprint0(boolean original) {

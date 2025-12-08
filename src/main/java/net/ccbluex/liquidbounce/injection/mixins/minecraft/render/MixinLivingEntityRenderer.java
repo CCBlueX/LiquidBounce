@@ -37,6 +37,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.command.ModelCommandRenderer;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -155,12 +156,12 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     @ModifyReturnValue(method = "getRenderLayer", at = @At("RETURN"))
     private RenderLayer injectTrueSight(RenderLayer original, S state, boolean showBody, boolean translucent, boolean showOutline) {
         if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
-            return RenderLayer.getItemEntityTranslucentCull(this.getTexture(state));
+            return RenderLayers.itemEntityTranslucentCull(this.getTexture(state));
         }
 
         if (ModuleTrueSight.canRenderEntities(state) && !showBody && !translucent && !showOutline) {
             state.invisible = false;
-            return RenderLayer.getItemEntityTranslucentCull(this.getTexture(state));
+            return RenderLayers.itemEntityTranslucentCull(this.getTexture(state));
         }
         return original;
     }

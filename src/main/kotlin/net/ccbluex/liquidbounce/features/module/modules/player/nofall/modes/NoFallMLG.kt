@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.world.ultrawarm
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos

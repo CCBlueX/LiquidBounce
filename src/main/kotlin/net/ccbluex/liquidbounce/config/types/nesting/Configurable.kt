@@ -381,7 +381,7 @@ open class Configurable(
 
     inline fun <reified T> multiEnumChoice(
         name: String,
-        default: EnumEntries<T>,
+        default: Iterable<T>,
         canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
         multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
