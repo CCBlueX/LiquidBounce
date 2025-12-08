@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squareBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
+import net.minecraft.client.render.LightmapTextureManager
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.TrackedPosition
@@ -209,10 +210,15 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
             renderEnvironmentForWorld(event.matrixStack) {
                 withPositionRelativeToCamera(pos) {
-                    // TODO(1.21.10-port): still incorrect
                     val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity)
                     val rs = entityRenderer.getAndUpdateRenderState(entity, 1F)
-                    rs.light = (rs.light * lightAmount).floorToInt()
+                    val originalBlockLight = LightmapTextureManager.getBlockLightCoordinates(rs.light)
+                    val originalSkyLight = LightmapTextureManager.getSkyLightCoordinates(rs.light)
+                    rs.light = LightmapTextureManager.pack(
+                        (originalBlockLight * lightAmount).floorToInt(),
+                        (originalSkyLight * lightAmount).floorToInt(),
+                    )
+                    // TODO(1.21.10-port): position looks incorrect
                     mc.entityRenderDispatcher.render(
                         rs,
                         mc.gameRenderer.entityRenderStates.cameraRenderState,

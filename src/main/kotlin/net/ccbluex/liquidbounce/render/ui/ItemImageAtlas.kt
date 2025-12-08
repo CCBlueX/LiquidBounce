@@ -226,7 +226,7 @@ private class ItemTextureRenderer(
         RenderSystem.enableScissorForRenderTypeDraws(
             scaledX, textureSize - scaledY - itemPixelSize, itemPixelSize, itemPixelSize
         )
-        state.render(matrices, this.commandQueue, 15728880, OverlayTexture.DEFAULT_UV, 0)
+        state.render(matrices, this.commandQueue, 0xf000f0, OverlayTexture.DEFAULT_UV, 0)
         renderDispatcher.render()
         vertexConsumers.draw()
         RenderSystem.disableScissorForRenderTypeDraws()
