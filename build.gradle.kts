@@ -126,7 +126,7 @@ dependencies {
     val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
     modApi(mcef)
     include(mcef)
-    includeDependency("net.ccbluex:netty-httpserver:2.4.2")
+    includeDependency("net.ccbluex:netty-httpserver:2.4.3")
     // MacOS native (Linux native is included in game)
     includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
     includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
