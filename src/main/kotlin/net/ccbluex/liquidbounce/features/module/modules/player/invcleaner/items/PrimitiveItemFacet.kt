@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.item.asItemFacetComparator
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 
 class PrimitiveItemFacet(itemSlot: ItemSlot, override val category: ItemCategory, val worth: Int = 0) :
@@ -29,8 +29,8 @@ class PrimitiveItemFacet(itemSlot: ItemSlot, override val category: ItemCategory
     companion object {
         private val COMPARATOR =
             ComparatorChain<PrimitiveItemFacet>(
-                compareBy { it.worth },
-                compareBy { it.itemStack.count },
+                Comparator.comparingInt { it.worth },
+                PreferStackSize.PREFER_FEWER.asItemFacetComparator(),
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )

@@ -18,19 +18,15 @@
  */
 package net.ccbluex.liquidbounce.render
 
-import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
-import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
+import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.text.Text
 
-abstract class AbstractFontRenderer<T> {
+abstract class AbstractFontRenderer<T : ProcessedText> {
     abstract val size: Float
     abstract val height: Float
-
-    /**
-     * Must be called before rendering
-     */
-    abstract fun begin()
 
     /**
      * Draws a string with minecraft font markup to this object.
@@ -40,37 +36,29 @@ abstract class AbstractFontRenderer<T> {
      * @return The width of the font, without considering the scaling
      */
     @Suppress("LongParameterList")
+    context(ctx: DrawContext)
     abstract fun draw(
         text: T,
         x0: Float,
         y0: Float,
         shadow: Boolean = false,
-        z: Float = 0.0f,
         scale: Float = 1.0f
     ): Float
 
-    abstract fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T
+    fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T = process(text.asPlainText(), defaultColor)
     abstract fun process(text: Text, defaultColor: Color4b = Color4b.WHITE): T
-
-
-    /**
-     */
-    abstract fun commit(
-        env: RenderEnvironment,
-        buffers: FontRendererBuffers
-    )
 
     /**
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting
      */
     abstract fun getStringWidth(
-        text: TextProcessor.ProcessedText,
+        text: ProcessedText,
         shadow: Boolean = false
     ): Float
 
-    val TextProcessor.ProcessedText.width: Float
+    val ProcessedText.width: Float
         get() = getStringWidth(this, false)
 
-    val TextProcessor.ProcessedText.widthWithShadow: Float
+    val ProcessedText.widthWithShadow: Float
         get() = getStringWidth(this, true)
 }

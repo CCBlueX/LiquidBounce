@@ -20,7 +20,9 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import kotlin.collections.filter
@@ -73,7 +75,12 @@ object Slots {
      */
     @JvmField
     val Armor = SlotGroup(
-        List(4) { ArmorItemSlot(it) }
+        listOf(
+            ArmorItemSlot(EquipmentSlot.FEET), // 0
+            ArmorItemSlot(EquipmentSlot.LEGS), // 1
+            ArmorItemSlot(EquipmentSlot.CHEST), // 2
+            ArmorItemSlot(EquipmentSlot.HEAD), // 3
+        )
     )
 
     /**
@@ -91,8 +98,11 @@ object Slots {
 }
 
 class SlotGroup<T : ItemSlot>(val slots: List<T>) : List<T> by slots {
-    val items: List<Item>
-        get() = slots.map { it.itemStack.item }
+    val stacks: Array<ItemStack>
+        get() = slots.mapToArray { it.itemStack }
+
+    val items: Array<Item>
+        get() = slots.mapToArray { it.itemStack.item }
 
     fun findSlot(item: Item): T? {
         return findSlot { it.item === item }

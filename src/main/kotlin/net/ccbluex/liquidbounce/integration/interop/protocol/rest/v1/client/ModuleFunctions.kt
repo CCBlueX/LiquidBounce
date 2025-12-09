@@ -136,8 +136,10 @@ data class ModuleRequest(val name: String) {
 
     fun acceptPutSettingsRequest(content: String): FullHttpResponse {
         val module = ModuleManager[name] ?: return httpForbidden("$name not found")
-        ConfigSystem.deserializeConfigurable(module, content.reader())
-        ConfigSystem.store(modulesConfigurable)
+        mc.execute {
+            ConfigSystem.deserializeConfigurable(module, content.reader())
+            ConfigSystem.store(modulesConfigurable)
+        }
         return httpNoContent()
     }
 

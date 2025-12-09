@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldHeadHitterFeature
@@ -37,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.ItemStack
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
@@ -75,19 +77,29 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
 
+        val offsets = if (ModuleFreeze.running) {
+            FULL_INVESTIGATION_OFFSETS
+        } else if (ScaffoldDownFeature.shouldGoDown) {
+            INVESTIGATE_DOWN_OFFSETS
+        } else {
+            NORMAL_INVESTIGATION_OFFSETS
+        }
+
         // Face position factory for current config
         val facePositionFactory = getFacePositionFactoryForConfig(predictedPos, predictedPose, optimalLine)
 
         val searchOptions = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
-                if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
+                offsets,
                 priorityComparator,
             ),
-            FaceHandlingOptions(facePositionFactory),
+            FaceHandlingOptions(
+                facePositionFactory,
+                considerFacingAwayFaces = ScaffoldDownFeature.shouldGoDown
+            ),
             stackToPlaceWith = bestStack,
             PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose),
         )
-
         return findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
     }
 
@@ -115,6 +127,22 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         return super.getRotations(target)
     }
 
+    override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
+        val crosshairTarget = super.getCrosshairTarget(target ?: return null, rotation)
+
+        // Prefer a visible hit result
+        if (crosshairTarget != null && target.doesCrosshairTargetFullFillRequirements(crosshairTarget)) {
+            return crosshairTarget
+        }
+
+        // Allow a non-visible hit result
+        if (ScaffoldDownFeature.shouldGoDown) {
+            return target.blockHitResult
+        }
+
+        return null
+    }
+
     private fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose, optimalLine: Line?):
         FaceTargetPositionFactory {
         val config = PositionFactoryConfiguration(
@@ -124,7 +152,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
 
         return when (aimMode) {
             AimMode.CENTER -> CenterTargetPositionFactory
-            AimMode.RANDOM -> RandomTargetPositionFactory(config)
+            AimMode.RANDOM -> RandomTargetPositionFactory
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, optimalLine)
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
             AimMode.REVERSE_YAW -> ReverseYawTargetPositionFactory(config)

@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.toFixed
@@ -128,9 +129,9 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                         else -> showAt.apply(renderer, result).calcScreenPosWithOffset()
                     } ?: return@forEachIndexed
 
-                context.matrices.push()
-                context.matrices.translate(screenPos.x, screenPos.y, screenPos.z)
-                context.matrices.scale(scale, scale, 1.0F)
+                context.matrices.pushMatrix()
+                context.matrices.translate(screenPos.x, screenPos.y)
+                context.matrices.scale(scale, scale)
 
                 val text = durationUnit.apply(result.positions.size).asText()
                 if (ownerName && renderer.owner !== player) {
@@ -151,7 +152,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                 )
                 y += mc.textRenderer.fontHeight + 1
 
-                context.matrices.pop()
+                context.matrices.popMatrix()
             }
         }
     }

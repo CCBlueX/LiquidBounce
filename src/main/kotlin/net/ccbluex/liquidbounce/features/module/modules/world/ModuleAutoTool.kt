@@ -34,14 +34,19 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.SlotGroup
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.durability
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
+import net.minecraft.enchantment.Enchantments
+import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 
 /**
@@ -57,10 +62,10 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             arrayOf(DynamicSelectMode, StaticSelectMode)
         )
 
-    private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val blocks by blocks("Blocks", hashSetOf())
-
     sealed class ToolSelectorMode(name: String) : Choice(name) {
+        final override val parent: ChoiceConfigurable<*>
+            get() = toolSelector
+
         fun getTool(blockState: BlockState): HotbarItemSlot? =
             if (filter(blockState.block, blocks)) {
                 getToolSlot(blockState)
@@ -72,12 +77,9 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
     }
 
     private object DynamicSelectMode : ToolSelectorMode("Dynamic") {
-        override val parent: ChoiceConfigurable<*>
-            get() = toolSelector
-
         private val ignoreDurability by boolean("IgnoreDurability", false)
 
-        private object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
+        object ConsiderInventory : ToggleableConfigurable(this, "ConsiderInventory", enabled = false) {
             private val inventoryConstraints = tree(InventoryConstraints())
 
             @JvmField var currentBestTool: ItemSlot? = null
@@ -86,11 +88,13 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             @Suppress("unused")
             private val inventoryActionHandler = handler<ScheduleInventoryActionEvent> { event ->
                 val currentBestTool = currentBestTool ?: return@handler
+                val slotToSwap = Slots.Hotbar.findSlot { it.isEmpty } ?: Slots.Hotbar[SilentHotbar.serversideSlot]
+
                 event.schedule(
                     inventoryConstraints,
                     InventoryAction.Click.performSwap(
                         from = currentBestTool,
-                        to = Slots.Hotbar[SilentHotbar.serversideSlot],
+                        to = slotToSwap,
                     ).also { if (swapAction == null) swapAction = it }
                 )
                 this.currentBestTool = null
@@ -144,12 +148,31 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
     }
 
     private object StaticSelectMode : ToolSelectorMode("Static") {
-        override val parent: ChoiceConfigurable<*>
-            get() = toolSelector
-
         private val slot by int("Slot", 0, 0..8)
 
         override fun getToolSlot(blockState: BlockState) = Slots.Hotbar[slot]
+    }
+
+    private val filter by enumChoice("Filter", Filter.BLACKLIST)
+    private val blocks by blocks("Blocks", blockSortedSetOf())
+
+    private object SilkTouchHandler : ToggleableConfigurable(
+        this, "SilkTouchHandler", enabled = false
+    ) {
+        private val filter by enumChoice("Filter", Filter.WHITELIST)
+        private val blocks by blocks(
+            "Blocks",
+            blockSortedSetOf(Blocks.ENDER_CHEST, Blocks.GLOWSTONE, Blocks.SEA_LANTERN, Blocks.TURTLE_EGG),
+        )
+
+        fun test(blockState: BlockState, itemStack: ItemStack): Boolean =
+            !running // If module AutoTool is disabled, this function returns true
+                || blockState.block !in blocks
+                || (filter == Filter.BLACKLIST) == (itemStack.getEnchantment(Enchantments.SILK_TOUCH) == 0)
+    }
+
+    init {
+        tree(SilkTouchHandler)
     }
 
     private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
@@ -180,6 +203,9 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         tree(RequireNearBed)
     }
 
+    val isInventoryConsidered: Boolean
+        get() = DynamicSelectMode.ConsiderInventory.running
+
     @Suppress("unused")
     private val handleBlockBreakingProgress = handler<BlockBreakingProgressEvent> { event ->
         switchToBreakBlock(event.pos)
@@ -204,7 +230,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         val slot = filter {
             val stack = it.itemStack
             val durabilityCheck = (ignoreDurability || (stack.durability > 2 || stack.maxDamage <= 0))
-            !player.isCreative && durabilityCheck
+            !player.isCreative && durabilityCheck && SilkTouchHandler.test(blockState, stack)
         }.maxWithOrNull(
             Comparator.comparingDouble<T> {
                 it.itemStack.getMiningSpeedMultiplier(blockState).toDouble()

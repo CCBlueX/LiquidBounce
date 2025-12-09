@@ -47,7 +47,7 @@ object CommandItemGive : Command.Factory {
                     .build()
             )
             .handler {
-                if (!interaction.hasCreativeInventory()) {
+                if (!player.isCreative) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 

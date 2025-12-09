@@ -25,9 +25,10 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.Instru
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.kotlin.enumMap
+import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.Blocks
 import net.minecraft.block.enums.NoteBlockInstrument
@@ -42,7 +43,7 @@ object NotebotScanner : MinecraftShortcuts {
     }
 
     private fun scanSurroundingNoteBlocks(songData: SongData): Map<NoteBlockInstrument, MutableList<NoteBlockTracker>> {
-        val result = enumMap<NoteBlockInstrument, ArrayDeque<NoteBlockTracker>>()
+        val result = enumMapOf<NoteBlockInstrument, ArrayDeque<NoteBlockTracker>>()
 
         val surroundings = player.eyePos.toBlockPos().getSortedSphere(ModuleNotebot.range)
         val noteBlocks = surroundings.filter { pos ->
@@ -103,10 +104,10 @@ object NotebotScanner : MinecraftShortcuts {
                 return false
             }
 
-            val requirementByInstrument = enumMap<NoteBlockInstrument, Int>()
+            val requirementByInstrument = enumMapOf<NoteBlockInstrument, Int>()
 
             requirements.forEach { (key, value) ->
-                requirementByInstrument.inlineMerge(key.instrumentEnum, value, Int::plus)
+                requirementByInstrument.merge(key.instrumentEnum, value, Int::plus)
             }
 
             return requirementByInstrument.all { (instrument, required) ->
@@ -115,9 +116,9 @@ object NotebotScanner : MinecraftShortcuts {
         }
 
         fun printRequirements() {
-            val aggregatedRequirements = enumMap<NoteBlockInstrument, Int>()
+            val aggregatedRequirements = enumMapOf<NoteBlockInstrument, Int>()
             for ((key1, count) in requirements) {
-                aggregatedRequirements.inlineMerge(key1.instrumentEnum, count, Int::plus)
+                aggregatedRequirements.merge(key1.instrumentEnum, count, Int::plus)
             }
 
             val text = ModuleNotebot.message("notEnoughNoteBlocks").formatted(Formatting.RED)
@@ -127,21 +128,15 @@ object NotebotScanner : MinecraftShortcuts {
                 val messageLine = "\n - ${instrument.name} ($availableCount/$requiredCount)"
 
                 if (availableCount >= requiredCount) {
-                    text.append(messageLine.asText().formatted(Formatting.GREEN))
+                    text.append(messageLine.asPlainText(Formatting.GREEN))
                 } else if (availableCount == 0) {
-                    text.append(messageLine.asText().formatted(Formatting.RED))
+                    text.append(messageLine.asPlainText(Formatting.RED))
                 } else {
-                    text.append(messageLine.asText().formatted(Formatting.YELLOW))
+                    text.append(messageLine.asPlainText(Formatting.YELLOW))
                 }
             }
 
             chat(text, ModuleNotebot)
         }
     }
-}
-
-private inline fun <K> MutableMap<K, Int>.inlineMerge(key: K, value: Int, remappingFunction: (Int, Int) -> Int) {
-    get(key)?.let {
-        put(key, remappingFunction(it, value))
-    } ?: put(key, value)
 }

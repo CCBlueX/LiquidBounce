@@ -49,18 +49,6 @@ import java.util.function.Function;
 public abstract class MixinDrawContext implements DrawContextAddition {
 
     @Shadow
-    @Final
-    private MatrixStack matrices;
-
-    @Shadow
-    @Final
-    private VertexConsumerProvider.Immediate vertexConsumers;
-
-    @Shadow
-    @Final
-    private GuiAtlasManager guiAtlasManager;
-
-    @Shadow
     protected abstract void drawItemBar(ItemStack stack, int x, int y);
 
     @Shadow
@@ -70,27 +58,9 @@ public abstract class MixinDrawContext implements DrawContextAddition {
     @Shadow
     protected abstract void drawCooldownProgress(ItemStack stack, int x, int y);
 
-  @Inject(method = "drawCooldownProgress", at = @At("TAIL"))
+    @Inject(method = "drawCooldownProgress", at = @At("TAIL"))
     private void drawCooldownProgress(ItemStack stack, int x, int y, CallbackInfo ci) {
         ModuleBetterInventory.INSTANCE.drawTextCooldownProgress((DrawContext) (Object) this, stack, x, y);
-    }
-
-    @Override
-    public void liquid_bounce$drawTexture(Function<Identifier, RenderLayer> renderLayers, Identifier texture, float x, float y, int width, int height) {
-        Sprite sprite = guiAtlasManager.getSprite(texture);
-        float o = 1 / 32768f;
-        liquid_bounce$drawTexturedQuad(renderLayers, sprite.getAtlasId(), x, x + width, y, y + height, sprite.getMinU() + o, sprite.getMaxU() + o, sprite.getMinV() - o, sprite.getMaxV() - o, -1);
-    }
-
-    @Override
-    public void liquid_bounce$drawTexturedQuad(Function<Identifier, RenderLayer> renderLayers, Identifier texture, float x1, float x2, float y1, float y2, float u1, float u2, float v1, float v2, int color) {
-        RenderLayer renderLayer = renderLayers.apply(texture);
-        Matrix4f matrix4f = matrices.peek().getPositionMatrix();
-        VertexConsumer bufferBuilder = vertexConsumers.getBuffer(renderLayer);
-        bufferBuilder.vertex(matrix4f, x1, y1, 0f).texture(u1, v1).color(color);
-        bufferBuilder.vertex(matrix4f, x1, y2, 0f).texture(u1, v2).color(color);
-        bufferBuilder.vertex(matrix4f, x2, y2, 0f).texture(u2, v2).color(color);
-        bufferBuilder.vertex(matrix4f, x2, y1, 0f).texture(u2, v1).color(color);
     }
 
     @Override

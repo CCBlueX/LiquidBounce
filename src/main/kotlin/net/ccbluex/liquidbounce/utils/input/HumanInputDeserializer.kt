@@ -117,10 +117,6 @@ object HumanInputDeserializer {
         return rangeSupplier(lhs, rhs)
     }
 
-    private fun fail(s: String): Boolean {
-        throw IllegalArgumentException(s)
-    }
-
     fun interface StringDeserializer<out T> {
         /**
          * Tries to parse the input.

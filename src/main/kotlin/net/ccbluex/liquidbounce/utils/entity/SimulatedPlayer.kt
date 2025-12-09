@@ -73,7 +73,7 @@ class SimulatedPlayer(
     var pitch: Float,
     private var sprinting: Boolean,
 
-    var fallDistance: Float,
+    var fallDistance: Double,
     private var jumpingCooldown: Int,
     private var isJumping: Boolean,
     private var isFallFlying: Boolean,
@@ -124,7 +124,7 @@ class SimulatedPlayer(
                 player,
                 input,
                 player.pos,
-                velocity = player.pos.subtract(player.prevPos),
+                velocity = player.pos.subtract(player.lastPos),
                 player.boundingBox,
                 player.yaw,
                 player.pitch,
@@ -305,7 +305,7 @@ class SimulatedPlayer(
             var k: Double
             var e: Vec3d = this.velocity
             if (e.y > -0.5) {
-                fallDistance = 1.0f
+                fallDistance = 1.0
             }
             val vec3d3 = this.getRotationVector()
             val f: Float = this.pitch * (Math.PI.toFloat() / 180)
@@ -364,7 +364,9 @@ class SimulatedPlayer(
     private fun applyMovementInput(movementInput: Vec3d?, slipperiness: Float): Vec3d {
         this.updateVelocity(this.getMovementSpeed(slipperiness), movementInput)
         this.velocity = applyClimbingSpeed(this.velocity)
+        this.velocity = applyWebSpeed(this.velocity)
         this.move(this.velocity)
+
 
         var vec3d = this.velocity
         if ((horizontalCollision || this.isJumping) && (
@@ -510,7 +512,7 @@ class SimulatedPlayer(
     }
 
     private fun onLanding() {
-        this.fallDistance = 0.0f
+        this.fallDistance = 0.0
     }
 
     fun jump() {
@@ -542,6 +544,18 @@ class SimulatedPlayer(
         }
 
         return Vec3d(d, g, e)
+    }
+    private fun applyWebSpeed(motion: Vec3d): Vec3d {
+        val blockState = world.getBlockState(pos.toBlockPos())
+        if (blockState.block != Blocks.COBWEB) {
+            return motion
+        }
+        val multiplier = if (hasStatusEffect(StatusEffects.WEAVING)) {
+            Vec3d(0.5, 0.25, 0.5)
+        } else {
+            Vec3d(0.25, 0.05, 0.25)
+        }
+        return motion.multiply(multiplier.x, multiplier.y, multiplier.z)
     }
 
     private fun isClimbing(): Boolean {
@@ -671,8 +685,12 @@ class SimulatedPlayer(
         return this.player.world.isSpaceEmpty(this.player, box) && !this.player.world.containsFluid(box)
     }
 
-    private fun swimUpward(water: TagKey<Fluid>?) {
-        velocity += Vec3d(0.0, 0.03999999910593033, 0.0)
+    private fun swimUpward(fluid: TagKey<Fluid>) {
+        velocity += Vec3d(
+            0.0,
+            if (fluid === FluidTags.WATER) 0.03999999910593033 else 0.005999999865889549,
+            0.0
+        )
     }
 
     private fun getVelocityAffectingPos() =
@@ -951,7 +969,7 @@ class SimulatedPlayer(
              * Guesses the current input of a server player based on player position and velocity
              */
             fun guessInput(entity: PlayerEntity): SimulatedPlayerInput {
-                val velocity = entity.pos.subtract(entity.prevPos)
+                val velocity = entity.pos.subtract(entity.lastPos)
 
                 val horizontalVelocity = velocity.horizontalLengthSquared()
 

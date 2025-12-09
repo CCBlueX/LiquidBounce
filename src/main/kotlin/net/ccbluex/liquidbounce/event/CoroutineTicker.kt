@@ -25,10 +25,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import java.util.function.BooleanSupplier
 import java.util.function.IntPredicate
+import java.util.function.Predicate
 import kotlin.coroutines.resume
 
 typealias SuspendableEventHandler<T> = suspend CoroutineScope.(T) -> Unit
-typealias SuspendableHandler = suspend CoroutineScope.() -> Unit
 
 object CoroutineTicker : EventListener {
 
@@ -56,7 +56,7 @@ object CoroutineTicker : EventListener {
     private val taskTicker = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
         runningList.addAll(pendingList)
         pendingList.clear()
-        runningList.removeIf { it.asBoolean }
+        runningList.removeIf(Predicate(BooleanSupplier::getAsBoolean))
     }
 
 }
@@ -125,26 +125,3 @@ suspend fun waitTicks(ticks: Int) {
  * Note: When TPS is not 20, this won't be actual `seconds`.
  */
 suspend fun waitSeconds(seconds: Int) = waitTicks(seconds * 20)
-
-// A special version of [suspendHandler]...
-fun EventListener.launchSequence(
-    dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable?,
-    handler: SuspendableHandler,
-): Job =
-    eventListenerScope.launch(
-        context = continuationInterceptor(dispatcher),
-        start = CoroutineStart.UNDISPATCHED
-    ) {
-        if (running) {
-            handler()
-        }
-    }.apply {
-        onCancellation?.let {
-            this.invokeOnCompletion { t ->
-                if (t is CancellationException) {
-                    it.run()
-                }
-            }
-        }
-    }

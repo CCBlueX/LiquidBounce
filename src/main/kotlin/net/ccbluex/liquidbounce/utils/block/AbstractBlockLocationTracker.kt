@@ -20,12 +20,16 @@ package net.ccbluex.liquidbounce.utils.block
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import net.ccbluex.liquidbounce.utils.math.contains
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.world.chunk.WorldChunk
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.function.LongPredicate
+import java.util.function.Predicate
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
@@ -101,7 +105,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
      * @see AbstractBlockLocationTracker
      */
     abstract class State2BlockPos<T> : AbstractBlockLocationTracker<T>() {
-        private val stateAndPositions = hashMapOf<T, LongSet>()
+        private val stateAndPositions = Object2ObjectOpenHashMap<T, LongSet>()
 
         private val lock = ReentrantReadWriteLock()
 
@@ -161,13 +165,9 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         }
 
         final override fun clearChunk(pos: ChunkPos) {
-            val blockPos = BlockPos.Mutable()
             lock.write {
                 stateAndPositions.values.forEach { set ->
-                    set.removeIf {
-                        blockPos.set(it)
-                        blockPos.x shr 4 == pos.x && blockPos.z shr 4 == pos.z
-                    }
+                    set.removeIf(LongPredicate(pos::contains))
                 }
             }
         }
@@ -195,14 +195,13 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
             onUpdated()
         }
 
-        final override fun untrack(pos: BlockPos): Boolean {
-            return if (positionAndState.remove(pos) != null) {
+        final override fun untrack(pos: BlockPos): Boolean =
+            if (positionAndState.remove(pos) != null) {
                 onUpdated()
                 true
             } else {
                 false
             }
-        }
 
         final override fun clearAllChunks() {
             positionAndState.clear()
@@ -210,7 +209,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         }
 
         final override fun clearChunk(pos: ChunkPos) {
-            if (positionAndState.keys.removeIf { it.x shr 4 == pos.x && it.z shr 4 == pos.z }) {
+            if (positionAndState.keys.removeIf(Predicate(pos::contains))) {
                 onUpdated()
             }
         }

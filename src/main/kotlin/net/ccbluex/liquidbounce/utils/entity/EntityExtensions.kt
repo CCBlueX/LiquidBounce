@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition
 import net.ccbluex.liquidbounce.interfaces.InputAddition
@@ -29,11 +30,13 @@ import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
+import net.minecraft.block.Blocks
 import net.minecraft.block.EntityShapeContext
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.input.Input
@@ -49,10 +52,14 @@ import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.mob.CreeperEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.projectile.PersistentProjectileEntity
 import net.minecraft.entity.vehicle.TntMinecartEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.item.ShieldItem
 import net.minecraft.item.consume.UseAction
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket
+import net.minecraft.registry.tag.DamageTypeTags
 import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.util.Hand
 import net.minecraft.util.PlayerInput
@@ -64,10 +71,61 @@ import net.minecraft.world.RaycastContext
 import net.minecraft.world.World
 import net.minecraft.world.explosion.ExplosionBehavior
 import net.minecraft.world.explosion.ExplosionImpl
-import kotlin.math.cos
-import kotlin.math.floor
-import kotlin.math.sin
-import kotlin.math.sqrt
+import kotlin.math.*
+
+// Copied from 1.21.4
+val Entity.isInsideWaterOrBubbleColumn: Boolean
+    get() = this.isTouchingWater || this.blockStateAtPos.isOf(Blocks.BUBBLE_COLUMN)
+
+inline var Input.movementForward: Float
+    get() = movementInput.y
+    set(value) {
+        (this as InputAddition).`liquid_bounce$setMovementInput`(movementInput.copy(y = value))
+    }
+
+inline var Input.movementSideways: Float
+    get() = movementInput.x
+    set(value) {
+        (this as InputAddition).`liquid_bounce$setMovementInput`(movementInput.copy(x = value))
+    }
+
+val LivingEntity.handItems: Array<ItemStack>
+    get() = arrayOf(mainHandStack, offHandStack)
+
+val LivingEntity.armorItems: Array<ItemStack>
+    get() = arrayOf(
+        getEquippedStack(EquipmentSlot.FEET),
+        getEquippedStack(EquipmentSlot.LEGS),
+        getEquippedStack(EquipmentSlot.CHEST),
+        getEquippedStack(EquipmentSlot.HEAD),
+    )
+
+val LivingEntity.equippedItems: Array<ItemStack>
+    get() = EquipmentSlot.entries.mapToArray { this.getEquippedStack(it) }
+
+fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
+    val entity = source.source
+    var bl = false
+    if (entity is PersistentProjectileEntity) {
+        if (entity.pierceLevel > 0.toByte()) {
+            bl = true
+        }
+    }
+
+    val itemStack = blockingItem
+    if (!source.isIn(DamageTypeTags.BYPASSES_SHIELD) && itemStack?.item is ShieldItem && !bl) {
+        val vec3d = source.position
+        if (vec3d != null) {
+            val vec3d2 = getRotationVector(0f, headYaw)
+            val vec3d3 = vec3d.relativize(pos).copy(y = 0.0).normalize()
+            return vec3d3.dotProduct(vec3d2) < 0.0
+        }
+    }
+
+    return false
+}
+
+// Copied from 1.21.4 END
 
 val Entity.netherPosition: Vec3d
     get() = if (world.registryKey == World.NETHER) {
@@ -84,12 +142,6 @@ val Input.untransformed: PlayerInput
 
 val Input.initial: PlayerInput
     get() = (this as InputAddition).`liquid_bounce$getInitial`()
-
-val Entity.exactPosition
-    get() = Vec3d(x, y, z)
-
-val Entity.blockVecPosition
-    get() = Vec3i(blockX, blockY, blockZ)
 
 val PlayerEntity.ping: Int
     get() = mc.networkHandler?.getPlayerListEntry(uuid)?.latency ?: 0
@@ -129,7 +181,7 @@ fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
         this.dimensions
             .getBoxAt(position)
             .expand(-0.05, 0.0, -0.05)
-            .offset(0.0, (this.fallDistance - this.stepHeight).toDouble(), 0.0)
+            .offset(0.0, this.fallDistance - this.stepHeight, 0.0)
 
     return world.isSpaceEmpty(this, hitbox)
 }
@@ -230,7 +282,7 @@ val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
 
 val Vec3d.sqrtSpeed: Double
-    get() = sqrt(x * x + z * z)
+    get() = hypot(x, z)
 
 fun Vec3d.withStrafe(
     speed: Double = sqrtSpeed,
@@ -252,17 +304,23 @@ fun Vec3d.withStrafe(
     return Vec3d(x, y, z)
 }
 
-val Entity.prevPos: Vec3d
-    get() = Vec3d(this.prevX, this.prevY, this.prevZ)
+val Entity.lastPos: Vec3d
+    get() = Vec3d(lastX, lastY, lastZ)
 
 val Entity.rotation: Rotation
     get() = Rotation(this.yaw, this.pitch, true)
 
 val ClientPlayerEntity.lastRotation: Rotation
-    get() = Rotation(this.lastYaw, this.lastPitch, true)
+    get() = Rotation(this.lastYawClient, this.lastPitchClient, true)
 
 val Entity.box: Box
     get() = boundingBox.expand(targetingMargin.toDouble())
+
+val cameraEyePos: Vec3d get() = (mc.cameraEntity ?: player).eyePos
+
+fun Position.cameraDistanceSq() = cameraEyePos.squaredDistanceTo(x, y, z)
+
+fun Vec3i.cameraDistanceSq() = cameraEyePos.squaredDistanceTo(x.toDouble(), y.toDouble(), z.toDouble())
 
 /**
  * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
@@ -307,8 +365,8 @@ fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
     }
 
     return Rotation(
-        this.prevYaw + (this.yaw - this.prevYaw) * tickDelta,
-        this.prevPitch + (this.pitch - this.prevPitch) * tickDelta,
+        lastYaw + (this.yaw - lastYaw) * tickDelta,
+        lastPitch + (this.pitch - lastPitch) * tickDelta,
     )
 }
 
@@ -368,12 +426,17 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
             return 0.0F
 
         if (source.isScaledWithDifficulty) {
-            if (world.difficulty == Difficulty.PEACEFUL) {
-                amount = 0.0f
-            } else if (world.difficulty == Difficulty.EASY) {
-                amount = (amount / 2.0f + 1.0f).coerceAtMost(amount)
-            } else if (world.difficulty == Difficulty.HARD) {
-                amount = amount * 3.0f / 2.0f
+            when (world.difficulty) {
+                Difficulty.PEACEFUL -> {
+                    amount = 0.0f
+                }
+                Difficulty.EASY -> {
+                    amount = (amount / 2.0f + 1.0f).coerceAtMost(amount)
+                }
+                Difficulty.HARD -> {
+                    amount = amount * 3.0f / 2.0f
+                }
+                else -> {}
             }
         }
     }
@@ -475,6 +538,7 @@ fun LivingEntity.getExposureToExplosion(
     val shapeContext = entityBoundingBox1?.let {
         EntityShapeContext(
             isDescending,
+            false, // TODO: is this correct?
             entityBoundingBox1.minY,
             mainHandStack,
             ::canWalkOnFluid,
@@ -555,15 +619,21 @@ fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
     return health
 }
 
+private val HEALTH_KEYWORDS = listOf("❤", "HP", "Health", "Здоровья", "Здоровье")
+
+fun LivingEntity.hasHealthScoreboard(): Boolean {
+    if (this == player) return false
+
+    val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME) ?: return false
+    val displayName = objective.displayName?.string ?: return false
+
+    return HEALTH_KEYWORDS.any { displayName.contains(it) }
+}
+
 private fun LivingEntity.getHealthFromScoreboard(): Float? {
-    val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME) ?: return null
-    val score = objective.scoreboard.getScore(this, objective) ?: return null
-
-    val displayName = objective.displayName
-
-    if (score.score <= 0 || displayName?.string?.contains("❤") != true) {
-        return null
-    }
+    if (!this.hasHealthScoreboard()) return null
+    val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME)
+    val score = objective?.scoreboard?.getScore(this, objective) ?: return null
 
     return score.score.toFloat()
 }

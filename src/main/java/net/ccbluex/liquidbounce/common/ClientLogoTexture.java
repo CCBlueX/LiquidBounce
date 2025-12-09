@@ -38,9 +38,9 @@ import java.util.Objects;
  * Should be drawn using [CustomRenderPhase::getTextureBilinear] to make it look smoother.
  */
 @Environment(EnvType.CLIENT)
-public class ClientLogoTexture extends ReloadableTexture {
+public final class ClientLogoTexture extends ReloadableTexture {
 
-    public static final Identifier CLIENT_LOGO = Identifier.of("liquidbounce", "logo");
+    public static final Identifier CLIENT_LOGO = LiquidBounce.identifier("logo");
     public static final int WIDTH = 1920;
     public static final int HEIGHT = 721;
 

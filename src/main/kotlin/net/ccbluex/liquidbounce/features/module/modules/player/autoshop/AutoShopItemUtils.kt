@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
+import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
@@ -37,7 +38,8 @@ const val TIER_ID           = ":tier:"      //usage example: sword:tier:2
  *
  * A server will take them from the player if the latter wants to buy something.
  */
-val LIMITED_ITEMS = setOf(
+@JvmField
+val LIMITED_ITEMS: Set<String> = hashSetOf(
     "brick", "iron_ingot", "gold_ingot", "diamond", "emerald", EXPERIENCE_ID
 )
 
@@ -61,10 +63,10 @@ fun String.isArmorItem() : Boolean {
     // example: armor:tier:3 -> diamond_boots:protection:2 -> diamond_boots
     if (this.isItemWithTiers()) {
         val actualTierItem = actualTierItem(this)
-        return actualTierItem.split(":")[0] in ARMOR_ITEMS
+        return actualTierItem.substringBefore(':') in ARMOR_ITEMS
     }
 
-    return this.split(":")[0] in ARMOR_ITEMS
+    return this.substringBefore(':') in ARMOR_ITEMS
 }
 
 fun GenericContainerScreen.stacks(): List<String> {
@@ -75,14 +77,14 @@ fun GenericContainerScreen.stacks(): List<String> {
         .mapNotNull { Registries.ITEM.getId(it.stack.item).path }
 }
 
-private val WOOL_BLOCKS = setOf(
+private val WOOL_BLOCKS: Set<Item> = ReferenceSet.of(
     Items.BLACK_WOOL, Items.BLUE_WOOL, Items.BROWN_WOOL, Items.CYAN_WOOL,
     Items.GRAY_WOOL, Items.GREEN_WOOL, Items.LIGHT_BLUE_WOOL, Items.LIGHT_GRAY_WOOL,
     Items.LIME_WOOL, Items.MAGENTA_WOOL, Items.ORANGE_WOOL, Items.PINK_WOOL,
     Items.PURPLE_WOOL, Items.RED_WOOL, Items.WHITE_WOOL, Items.YELLOW_WOOL
 )
 
-private val TERRACOTTA_BLOCKS = setOf(
+private val TERRACOTTA_BLOCKS: Set<Item> = ReferenceSet.of(
     Items.BLACK_TERRACOTTA, Items.BLUE_TERRACOTTA, Items.BROWN_TERRACOTTA,
     Items.CYAN_TERRACOTTA, Items.GRAY_TERRACOTTA, Items.GREEN_TERRACOTTA,
     Items.LIGHT_BLUE_TERRACOTTA, Items.LIGHT_GRAY_TERRACOTTA,
@@ -91,7 +93,7 @@ private val TERRACOTTA_BLOCKS = setOf(
     Items.WHITE_TERRACOTTA, Items.YELLOW_TERRACOTTA
 )
 
-private val STAINED_GLASS_BLOCKS = setOf(
+private val STAINED_GLASS_BLOCKS: Set<Item> = ReferenceSet.of(
     Items.BLACK_STAINED_GLASS, Items.BLUE_STAINED_GLASS, Items.BROWN_STAINED_GLASS,
     Items.CYAN_STAINED_GLASS, Items.GRAY_STAINED_GLASS, Items.GREEN_STAINED_GLASS,
     Items.LIGHT_BLUE_STAINED_GLASS, Items.LIGHT_GRAY_STAINED_GLASS,
@@ -100,7 +102,7 @@ private val STAINED_GLASS_BLOCKS = setOf(
     Items.RED_STAINED_GLASS, Items.WHITE_STAINED_GLASS, Items.YELLOW_STAINED_GLASS
 )
 
-private val CONCRETE_BLOCKS = setOf(
+private val CONCRETE_BLOCKS: Set<Item> = ReferenceSet.of(
     Items.BLACK_CONCRETE, Items.BLUE_CONCRETE, Items.BROWN_CONCRETE, Items.CYAN_CONCRETE,
     Items.GRAY_CONCRETE, Items.GREEN_CONCRETE, Items.LIGHT_BLUE_CONCRETE,
     Items.LIGHT_GRAY_CONCRETE, Items.LIME_CONCRETE, Items.MAGENTA_CONCRETE,
@@ -112,7 +114,7 @@ private val CONCRETE_BLOCKS = setOf(
  * Some BedWars implementations don't give players armor straight after a purchase.
  * The players receive it after a shop gets closed.
  */
-private val ARMOR_ITEMS = arrayOf(
+private val ARMOR_ITEMS: Set<String> = arrayOf(
     Items.LEATHER_HELMET,
     Items.CHAINMAIL_HELMET,
     Items.IRON_HELMET,
@@ -136,4 +138,4 @@ private val ARMOR_ITEMS = arrayOf(
     Items.IRON_BOOTS,
     Items.DIAMOND_BOOTS,
     Items.NETHERITE_BOOTS
-).map { Registries.ITEM.getId(it).path }.toSet()
+).mapTo(hashSetOf()) { Registries.ITEM.getId(it).path }

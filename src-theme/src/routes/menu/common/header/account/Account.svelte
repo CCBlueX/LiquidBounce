@@ -1,11 +1,11 @@
 <script lang="ts">
     import ToolTip from "../../ToolTip.svelte";
     import {
+        directLoginToCrackedAccount,
         getAccounts,
         getSession,
-        openScreen,
         loginToAccount,
-        directLoginToCrackedAccount,
+        openScreen,
         randomUsername
     } from "../../../../../integration/rest";
     import {onMount} from "svelte";
@@ -20,8 +20,9 @@
     import {isLoggingIn} from "../../../altmanager/altmanager_store";
 
     let username = "";
+    let service = "";
     let avatar = "";
-    let premium = true;
+    let online = true;
 
     let expanded = false;
     let accountElement: HTMLElement;
@@ -37,8 +38,9 @@
     async function refreshSession() {
         const session = await getSession();
         username = session.username;
+        service = session.service;
         avatar = session.avatar;
-        premium = session.premium;
+        online = session.online;
     }
 
     async function refreshAccounts() {
@@ -115,10 +117,10 @@
         {/if}
         <div class="username">{username}</div>
         <div class="account-type">
-            {#if premium}
-                <span class="premium">Premium</span>
+            {#if online}
+                <span class="online">{service}</span>
             {:else}
-                <span class="offline">Offline</span>
+                <span class="offline">{service}</span>
             {/if}
         </div>
         <div class="buttons">
@@ -213,7 +215,7 @@
       grid-area: d;
       align-self: flex-start;
 
-      .premium {
+      .online {
         color: $menu-account-premium-color;
       }
 

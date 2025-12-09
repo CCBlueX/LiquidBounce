@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -44,10 +44,7 @@ import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3i
 
-internal object NoFallMLG : Choice("MLG") {
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
-
+internal object NoFallMLG : NoFallMode("MLG") {
     private val minFallDist by float("MinFallDistance", 5f, 2f..50f)
 
     private object PickupWater : ToggleableConfigurable(NoFallMLG, "PickUpWater", true) {
@@ -82,6 +79,9 @@ internal object NoFallMLG : Choice("MLG") {
         tree(PickupWater)
     }
 
+    override val running: Boolean
+        get() = super.running && !ModuleFreeze.running
+
     @Suppress("unused")
     private val tickMovementHandler =
         handler<RotationUpdateEvent> {
@@ -102,33 +102,32 @@ internal object NoFallMLG : Choice("MLG") {
         }
 
     @Suppress("unused")
-    private val tickHandler =
-        tickHandler {
-            val target = currentTarget ?: return@tickHandler
+    private val tickHandler = handler<GameTickEvent> {
+        val target = currentTarget ?: return@handler
 
-            val rayTraceResult = raycast()
+        val rayTraceResult = raycast()
 
-            if (!target.doesCorrespondTo(rayTraceResult)) {
-                return@tickHandler
-            }
-
-            SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
-
-            val onSuccess: () -> Boolean = {
-                lastPlacements.add(target.targetPos to Chronometer(System.currentTimeMillis()))
-
-                true
-            }
-
-            doPlacement(
-                rayTraceResult,
-                hand = target.hotbarItemSlot.useHand,
-                onItemUseSuccess = onSuccess,
-                onPlacementSuccess = onSuccess,
-            )
-
-            currentTarget = null
+        if (!target.doesCorrespondTo(rayTraceResult)) {
+            return@handler
         }
+
+        SilentHotbar.selectSlotSilently(this, target.hotbarItemSlot, 1)
+
+        val onSuccess: () -> Boolean = {
+            lastPlacements.add(target.targetPos to Chronometer(System.currentTimeMillis()))
+
+            true
+        }
+
+        doPlacement(
+            rayTraceResult,
+            hand = target.hotbarItemSlot.useHand,
+            onItemUseSuccess = onSuccess,
+            onPlacementSuccess = onSuccess,
+        )
+
+        currentTarget = null
+    }
 
     /**
      * Finds something to do, either

@@ -22,16 +22,16 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
 import net.ccbluex.liquidbounce.render.drawHorizontalLine
+import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.drawVerticalLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.fill
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
+import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.aiming.utils.edgePoints
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
 
 object Esp2DMode : EspMode("2D") {
 
@@ -43,93 +43,75 @@ object Esp2DMode : EspMode("2D") {
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
-        val entitiesWithBoxes = RenderedEntities.map { entity ->
+        for (entity in RenderedEntities) {
+            if (!shouldRender(entity)) continue
+
             val dimensions = entity.getDimensions(entity.pose)
             val d = dimensions.width.toDouble() / 2.0
-            val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
+            val boxNoOffset = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
             val pos = entity.interpolateCurrentPosition(event.tickDelta)
-            val boxAtPos = box.offset(pos)
-            entity to boxAtPos
-        }
+            val box = boxNoOffset.offset(pos)
 
-        renderEnvironmentForGUI {
-            for ((entity, box) in entitiesWithBoxes) {
-                val color = getColor(entity)
-                val baseColor = color.with(a = 50).toARGB()
-                val outlineColor = color.with(a = 255).toARGB()
-                val black = Color4b.BLACK.toARGB()
+            val projected = box.edgePoints.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
+            if (projected.isEmpty()) {
+                continue
+            }
 
-                val corners = arrayOf(
-                    Vec3d(box.minX, box.minY, box.minZ),
-                    Vec3d(box.minX, box.minY, box.maxZ),
-                    Vec3d(box.minX, box.maxY, box.minZ),
-                    Vec3d(box.minX, box.maxY, box.maxZ),
-                    Vec3d(box.maxX, box.minY, box.minZ),
-                    Vec3d(box.maxX, box.minY, box.maxZ),
-                    Vec3d(box.maxX, box.maxY, box.minZ),
-                    Vec3d(box.maxX, box.maxY, box.maxZ)
-                )
+            val color = getColor(entity)
+            val baseColor = color.with(a = 50)
+            val outlineColor = color.with(a = 255)
+            val black = Color4b.BLACK
 
-                val projected = corners.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
-                if (projected.isEmpty()) {
-                    continue
-                }
+            val minX = projected.minOf { it.x }
+            val maxX = projected.maxOf { it.x }
+            val minY = projected.minOf { it.y }
+            val maxY = projected.maxOf { it.y }
+            var rectWidth = (maxX - minX)
+            var rectHeight = (maxY - minY)
 
-                val minX = projected.minOf { it.x }
-                val maxX = projected.maxOf { it.x }
-                val minY = projected.minOf { it.y }
-                val maxY = projected.maxOf { it.y }
-                val minZ = projected.minOf { it.z } // TODO: Handle Z-index correctly
-                var rectWidth = (maxX - minX)
-                var rectHeight = (maxY - minY)
+            with(event.context) {
+                matrices.withPush {
+                    translate(minX, minY)
 
-                with(event.context) {
-                    with(matrices) {
-                        push()
-                        translate(minX, minY, minZ)
+                    if (fill) {
+                        drawQuad(0.0f, 0.0f, rectWidth, rectHeight, fillColor = baseColor)
+                    }
 
-                        if (fill) {
-                            fill(0f, 0f, rectWidth, rectHeight, 0f, baseColor)
+                    if (outline) {
+                        if (border) {
+                            drawHorizontalLine(0.0f, rectWidth, 0.0f, 1.5f, black)
+                            drawVerticalLine(0.0f, 0.0f, rectHeight, 1.5f, black)
+                            drawHorizontalLine(0.0f, rectWidth, rectHeight, 1.5f, black)
+                            drawVerticalLine(rectWidth, 0.0f, rectHeight + 1.5f, 1.5f, black)
+
+                            translate(0.5f, 0.5f)
                         }
 
-                        if (outline) {
-                            if (border) {
-                                drawHorizontalLine(0.0f, rectWidth, 0.0f, 1.5f, black)
-                                drawVerticalLine(0.0f, 0.0f, rectHeight, 1.5f, black)
-                                drawHorizontalLine(0.0f, rectWidth, rectHeight, 1.5f, black)
-                                drawVerticalLine(rectWidth, 0.0f, rectHeight + 1.5f, 1.5f, black)
+                        drawHorizontalLine(0.0f, rectWidth, 0.0f, 0.5f, outlineColor)
+                        drawHorizontalLine(0.0f, rectWidth, rectHeight, 0.5f, outlineColor)
+                        drawVerticalLine(0.0f, 0.0f, rectHeight, 0.5f, outlineColor)
+                        drawVerticalLine(rectWidth, 0.0f, rectHeight + 0.5f, 0.5f, outlineColor)
 
-                                translate(0.5f, 0.5f, 0.0f)
-                            }
-
-                            drawHorizontalLine(0.0f, rectWidth, 0.0f, 0.5f, outlineColor)
-                            drawHorizontalLine(0.0f, rectWidth, rectHeight, 0.5f, outlineColor)
-                            drawVerticalLine(0.0f, 0.0f, rectHeight, 0.5f, outlineColor)
-                            drawVerticalLine(rectWidth, 0.0f, rectHeight + 0.5f, 0.5f, outlineColor)
-
-                            if (border) {
-                                translate(-0.5f, -0.5f, 0.0f)
-                            }
+                        if (border) {
+                            translate(-0.5f, -0.5f)
                         }
+                    }
 
-                        if (healthBar) {
-                            val actualHealth = entity.getActualHealth()
-                            val maxHealth = entity.maxHealth.coerceAtLeast(1f) // prevent division by zero
-                            val healthPercentage = (actualHealth / maxHealth).coerceIn(0f..1f)
+                    if (healthBar) {
+                        val actualHealth = entity.getActualHealth()
+                        val maxHealth = entity.maxHealth.coerceAtLeast(1f) // prevent division by zero
+                        val healthPercentage = (actualHealth / maxHealth).coerceIn(0f..1f)
 
-                            val healthColor = Color4b.RED
-                                .interpolateTo(Color4b.GREEN, healthPercentage.toDouble())
-                                .toARGB()
-                            val healthHeight = rectHeight * healthPercentage
+                        val healthColor = Color4b.RED
+                            .interpolateTo(Color4b.GREEN, healthPercentage.toDouble())
+                        val healthHeight = rectHeight * healthPercentage
 
-                            translate(-3.0f, 0.0f, 0.0f)
+                        translate(-3.0f, 0.0f)
 
-                            if (border) {
-                                drawVerticalLine(0.0f, 0.0f, rectHeight + 1.5f, 1.5f, black)
-                            }
-                            drawVerticalLine(0.5f, rectHeight + 1f, rectHeight - healthHeight + 0.5f, 0.5f, healthColor)
+                        if (border) {
+                            drawVerticalLine(0.0f, 0.0f, rectHeight + 1.5f, 1.5f, black)
                         }
-                        pop()
+                        drawVerticalLine(0.5f, rectHeight + 1f, rectHeight - healthHeight + 0.5f, 0.5f, healthColor)
                     }
                 }
             }

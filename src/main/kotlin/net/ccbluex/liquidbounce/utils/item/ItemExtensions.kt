@@ -165,6 +165,9 @@ fun RegistryKey<Enchantment>.toRegistryEntry(): RegistryEntry<Enchantment> {
     return registry.getOptional(this).orElseThrow { IllegalArgumentException("Unknown enchantment key $this") }
 }
 
+/**
+ * Get [Block] of inner item if it is [BlockItem], or null if not
+ */
 fun ItemStack.getBlock(): Block? {
     val item = this.item
     if (item !is BlockItem) {
@@ -204,7 +207,7 @@ fun ItemStack.isInteractable(): Boolean {
         || item is GlassBottleItem // TODO: water between an interactable block and the player
         || item is GoatHornItem // TODO: item delay?
         || item is KnowledgeBookItem
-        || (item is SwordItem && isOlderThanOrEqual1_8)
+        || (isSword && isOlderThanOrEqual1_8)
         || item is PlaceableOnWaterItem // TODO: water between an interactable block and the player
         || item is ShieldItem
         || item is SnowballItem

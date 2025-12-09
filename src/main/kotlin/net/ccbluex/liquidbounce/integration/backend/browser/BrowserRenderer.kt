@@ -1,9 +1,27 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 package net.ccbluex.liquidbounce.integration.backend.browser
 
-import net.ccbluex.liquidbounce.common.RenderLayerExtensions
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.FrameBufferResizeEvent
+import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
@@ -11,12 +29,13 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
-import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowser
-import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.client.gui.DrawContext
+import java.io.File
 import java.lang.AutoCloseable
 
 /**
@@ -34,7 +53,7 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
     }
 
     @Suppress("unused")
-    private val windowResizeHandler = handler<FrameBufferResizeEvent> { event ->
+    private val windowResizeHandler = handler<FramebufferResizeEvent> { event ->
         browser.update(event.width, event.height)
     }
 
@@ -99,16 +118,16 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
         width: Float,
         height: Float
     ) {
-        val layer = if (texture.bgra) {
-            RenderLayerExtensions::getBgraBlurredTextureLayer
+        val pipeline = if (texture.bgra) {
+            ClientRenderPipelines.JCEF.BGRA_BLURRED_TEXTURE
         } else {
-            RenderLayerExtensions::getBlurredTextureLayer
+            ClientRenderPipelines.JCEF.BLURRED_TEXTURE
         }
 
-        context.drawTexture(
-            layer, texture.identifier, x.toInt(), y.toInt(),
-            0f, 0f, width.toInt(),
-            height.toInt(), width.toInt(), height.toInt()
+        context.drawTexQuad(
+            texture.view,
+            x0 = x, y0 = y, x1 = x + width, y1 = y + height,
+            pipeline = pipeline,
         )
     }
 

@@ -19,19 +19,24 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityType
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.decoration.ArmorStandEntity
 import net.minecraft.entity.mob.MobEntity
+import net.minecraft.entity.vehicle.AbstractMinecartEntity
 
 /**
  * Combine Mobs
  *
  * This module will disable rendering of entities of the same type that are crammed together
- * TODO: and show a single entity instead with a count of how many entities are crammed together.
+ * and show a single entity instead with a count of how many entities are crammed together.
  *
  * This is useful for example in 2b2t where there are a lot of entities in spawn.
  * The idea behind this module originates from the video
@@ -39,40 +44,59 @@ import net.minecraft.entity.mob.MobEntity
  */
 object ModuleCombineMobs : ClientModule("CombineMobs", Category.RENDER) {
 
-    /**
-     * Key: type Value: position->count
-     */
-    private val trackedEntitySinceRender = hashMapOf<EntityType<*>, Long2IntOpenHashMap>()
+    @JvmRecord
+    private data class CombineKey(val type: EntityType<*>, val babyGroup: Boolean)
 
-    /**
-     * As soon we disable the module, we want to clear the tracked entities
-     */
+    private val renderTracker = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
+    private val nametagTracker = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
+
+    private val combineArmorStands by boolean("CombineArmorStands", false)
+    private val combineMinecarts by boolean("CombineMinecarts", false)
+
+    override fun onEnabled() {
+        RenderedEntities.subscribe(this)
+        RenderedEntities.onUpdated(nametagTracker::clear)
+        super.onEnabled()
+    }
+
     override fun onDisabled() {
-        trackedEntitySinceRender.clear()
+        RenderedEntities.unsubscribe(this)
+        renderTracker.clear()
+        nametagTracker.clear()
     }
 
-    /**
-     * On each frame, we start with a clean slate
-     */
     @Suppress("unused")
-    val renderGameHandler = handler<GameRenderEvent> {
-        trackedEntitySinceRender.clear()
+    private val renderGameHandler = handler<GameRenderEvent> {
+        renderTracker.clear()
     }
 
-    fun trackEntity(entity: Entity): Boolean {
-        if (entity !is MobEntity) {
-            return false
+    private fun keyFor(mob: Entity): CombineKey {
+        if (mob !is LivingEntity) {
+            return CombineKey(mob.type, false)
         }
+        val babyGroup = mob.isBaby
+        return CombineKey(mob.type, babyGroup)
+    }
 
-        val entityType = entity.type
+    @JvmOverloads
+    fun trackEntity(entity: Entity, forNametag: Boolean = false): Boolean {
+        val canCombine = entity is MobEntity ||
+            (entity is ArmorStandEntity && combineArmorStands) ||
+            (entity is AbstractMinecartEntity && combineMinecarts)
+        if (!canCombine) return false
 
+        return (if (forNametag) nametagTracker else renderTracker)
+            .getOrPut(keyFor(entity), ::Long2IntOpenHashMap)
+            .addTo(entity.blockPos.asLong(), 1) > 0
+    }
+
+    fun getCombinedCount(entity: Entity): Int {
+        val key = keyFor(entity)
         val pos = entity.blockPos.asLong()
 
-        val trackedEntities = trackedEntitySinceRender.getOrPut(entityType, ::Long2IntOpenHashMap)
-        val count = trackedEntities.getOrDefault(pos, 0)
-        trackedEntities.put(pos, count + 1)
+        val count = renderTracker[key]?.getOrDefault(pos, 0) ?: 0
+        if (count > 0) return count
 
-        return count > 0
+        return nametagTracker[key]?.getOrDefault(pos, 1) ?: 1
     }
-
 }

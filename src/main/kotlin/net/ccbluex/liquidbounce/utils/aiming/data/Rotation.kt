@@ -27,8 +27,8 @@ import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.hypot
 import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
 data class Rotation(
     var yaw: Float,
@@ -37,12 +37,15 @@ data class Rotation(
 ) {
 
     companion object {
+        @JvmField
         val ZERO = Rotation(0f, 0f)
 
+        @JvmStatic
         fun lookingAt(point: Vec3d, from: Vec3d): Rotation {
             return fromRotationVec(point.subtract(from))
         }
 
+        @JvmStatic
         fun fromRotationVec(lookVec: Vec3d): Rotation {
             val diffX = lookVec.x
             val diffY = lookVec.y
@@ -50,7 +53,7 @@ data class Rotation(
 
             return Rotation(
                 MathHelper.wrapDegrees(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f),
-                MathHelper.wrapDegrees((-Math.toDegrees(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ)))).toFloat())
+                MathHelper.wrapDegrees((-Math.toDegrees(atan2(diffY, hypot(diffX, diffZ)))).toFloat())
             )
         }
     }

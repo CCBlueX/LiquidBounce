@@ -18,11 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -31,10 +28,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * @testedOn minecraft.vagdedes.com
  * @note it gives you 6 flags for 50 blocks, which isn't enough to get kicked
  */
-internal object NoFallSpartan524Flag : Choice("Spartan524Flag") {
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
+internal object NoFallSpartan524Flag : NoFallMode("Spartan524Flag") {
 
     val repeatable = tickHandler {
         if (player.fallDistance > 2f) {

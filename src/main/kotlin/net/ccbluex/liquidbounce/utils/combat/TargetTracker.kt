@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.combat
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.RangedValue
@@ -28,7 +29,9 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.mob.Angerable
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.player.PlayerEntity
 import java.util.function.Predicate
@@ -87,11 +90,22 @@ open class TargetSelector(
         this(defaultPriority, DummyRangedValueProvider(range))
 
     var closestSquaredEnemyDistance: Double = 0.0
+        private set
 
     private val range = rangeValue.register(this)
     private val fov by float("FOV", 180f, 0f..180f)
     private val hurtTime by int("HurtTime", 10, 0..10)
-    private val priority by enumChoice("Priority", defaultPriority)
+
+    @Suppress("unused", "UnusedPrivateProperty")
+    private val priority by multiEnumChoice(
+        name = "Priority",
+        default = objectLinkedSetOf(TargetPriority.TYPE, defaultPriority),
+        canBeNone = false,
+    ).onChanged { set ->
+        comparator = ComparatorChain(comparisonFunctions = set.toTypedArray())
+    }
+
+    private var comparator: Comparator<in LivingEntity> = TargetPriority.TYPE
 
     /**
      * Counts available targets.
@@ -112,34 +126,11 @@ open class TargetSelector(
             }
         }
 
-        // Sort by distance (closest first) - in case of tie at priority level
-        entities.sortBy { it.squaredBoxedDistanceTo(player) }
-
         if (entities.isEmpty) {
             return entities
         }
 
-        // Sort by entity type
-        entities.sortWith(Comparator.comparingInt { entity ->
-            when (entity) {
-                is PlayerEntity -> 0
-                is HostileEntity -> 1
-                else -> 2
-            }
-        })
-
-        when (priority) {
-            // Lowest health first
-            TargetPriority.HEALTH -> entities.sortBy { it.getActualHealth() }
-            // Closest to your crosshair first
-            TargetPriority.DIRECTION -> entities.sortBy { RotationUtil.crosshairAngleToEntity(it) }
-            // Oldest entity first
-            TargetPriority.AGE -> entities.sortByDescending { it.age }
-            // With the lowest hurt time first
-            TargetPriority.HURT_TIME -> entities.sortBy { it.hurtTime } // Sort by hurt time
-            // Closest to you first
-            else -> {} // Do nothing
-        }
+        entities.sortWith(this.comparator)
 
         // Update max distance squared
         closestSquaredEnemyDistance = entities.minOf { it.squaredBoxedDistanceTo(player) }
@@ -148,12 +139,12 @@ open class TargetSelector(
     }
 
     open fun validate(entity: LivingEntity) =
-        entity != player
-        && !entity.isRemoved
-        && entity.shouldBeAttacked()
-        && fov >= RotationUtil.crosshairAngleToEntity(entity)
-        && entity.hurtTime <= hurtTime
-        && validateRange(entity)
+        entity !== player
+            && !entity.isRemoved
+            && entity.hurtTime <= hurtTime
+            && validateRange(entity)
+            && entity.shouldBeAttacked()
+            && fov >= RotationUtil.crosshairAngleToEntity(entity)
 
     private fun validateRange(entity: LivingEntity): Boolean {
         if (range == null) return true
@@ -191,10 +182,60 @@ open class TargetSelector(
 
 }
 
-enum class TargetPriority(override val choiceName: String) : NamedChoice {
-    HEALTH("Health"),
-    DISTANCE("Distance"),
-    DIRECTION("Direction"),
-    HURT_TIME("HurtTime"),
-    AGE("Age")
+enum class TargetPriority(override val choiceName: String) : NamedChoice, Comparator<LivingEntity> {
+    /**
+     * Player first
+     */
+    TYPE("Type") {
+        private fun weight(entity: LivingEntity): Int =
+            when (entity) {
+                is PlayerEntity -> 0
+                is HostileEntity -> 1
+                is Angerable if entity.angryAt == player.uuid -> 2
+                else -> Int.MAX_VALUE
+            }
+
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            weight(o1) compareTo weight(o2)
+    },
+
+    /**
+     * Lowest health first
+     */
+    HEALTH("Health") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o1.getActualHealth() compareTo o2.getActualHealth()
+    },
+
+    /**
+     * Closest to you first
+     */
+    DISTANCE("Distance") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o1.squaredBoxedDistanceTo(player) compareTo o2.squaredBoxedDistanceTo(player)
+    },
+
+    /**
+     * Closest to your crosshair first
+     */
+    DIRECTION("Direction") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            RotationUtil.crosshairAngleToEntity(o1) compareTo RotationUtil.crosshairAngleToEntity(o2)
+    },
+
+    /**
+     * With the lowest hurt time first
+     */
+    HURT_TIME("HurtTime") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o1.hurtTime compareTo o2.hurtTime
+    },
+
+    /**
+     * Oldest entity first
+     */
+    AGE("Age") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o2.age compareTo o1.age
+    },
 }

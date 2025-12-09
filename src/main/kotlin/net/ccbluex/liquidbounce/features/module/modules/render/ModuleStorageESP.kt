@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -29,26 +30,27 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.drawBoxes
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
 import net.minecraft.block.entity.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.passive.AbstractDonkeyEntity
 import net.minecraft.entity.vehicle.ChestBoatEntity
+import net.minecraft.entity.vehicle.ChestRaftEntity
 import net.minecraft.entity.vehicle.HopperMinecartEntity
 import net.minecraft.entity.vehicle.StorageMinecartEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
 import java.awt.Color
 
 /**
@@ -65,7 +67,14 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         val color by color("Color", defaultColor)
         val tracers by boolean("Tracers", false)
 
-        fun shouldRender(pos: BlockPos): Boolean = pos !in FeatureChestAura.interactedBlocksSet
+        fun shouldRender(pos: BlockPos): Boolean =
+            this.running
+                && pos !in FeatureChestAura.interactedBlocksSet
+                && pos.cameraDistanceSq() < maximumDistance.sq()
+
+        fun shouldRender(entity: Entity): Boolean =
+            this.running
+                && entity.pos.cameraDistanceSq() < maximumDistance.sq()
 
         object Chest : ChestType("Chest", Color4b(0, 100, 255))
         object EnderChest : ChestType("EnderChest", Color4b(Color.MAGENTA))
@@ -90,6 +99,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
     private val requiresChestStealer by boolean("RequiresChestStealer", false)
 
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
     override fun onEnabled() {
         ChunkScanner.subscribe(StorageScanner)
     }
@@ -105,36 +116,62 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         private val outline by boolean("Outline", true)
 
+        private val blockBoxes = mutableListOf<BlockBox>()
+        private val entityBoxes = mutableListOf<EntityBox>()
+        private val blockPos = BlockPos.Mutable()
+
+        override fun disable() {
+            blockBoxes.clear()
+            entityBoxes.clear()
+            super.disable()
+        }
+
         @Suppress("unused")
-        val renderHandler = handler<WorldRenderEvent> { event ->
+        private val renderHandler = handler<WorldRenderEvent> { event ->
+            if (blockBoxes.isEmpty() && entityBoxes.isEmpty()) return@handler
+
             val matrixStack = event.matrixStack
 
-            val queuedBoxes = collectBoxesToDraw(event)
-
             renderEnvironmentForWorld(matrixStack) {
-                drawBoxes {
-                    for ((pos, box, color) in queuedBoxes) {
-                        val baseColor = color.with(a = 50)
-                        val outlineColor = color.with(a = 100)
+                startBatch()
 
-                        withPositionRelativeToCamera(pos) {
-                            drawBox(box, baseColor, outlineColor.takeIf { outline })
-                        }
+                for ((pos, box, color) in blockBoxes) {
+                    val baseColor = color.with(a = 50)
+                    val outlineColor = if (outline) color.with(a = 100) else null
+
+                    withPositionRelativeToCamera(blockPos.set(pos)) {
+                        drawBox(box, baseColor, outlineColor)
                     }
                 }
+
+                for ((entity, box, color) in entityBoxes) {
+                    val baseColor = color.with(a = 50)
+                    val outlineColor = if (outline) color.with(a = 100) else null
+
+                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                    withPositionRelativeToCamera(pos) {
+                        drawBox(box, baseColor, outlineColor)
+                    }
+                }
+
+                commitBatch()
             }
         }
 
         @JvmRecord
-        private data class BoxRecord(val pos: Vec3d, val box: Box, val color: Color4b)
+        private data class BlockBox(val pos: Long, val box: Box, val color: Color4b)
 
-        private fun collectBoxesToDraw(event: WorldRenderEvent): List<BoxRecord> {
-            val queuedBoxes = mutableListOf<BoxRecord>()
+        @JvmRecord
+        private data class EntityBox(val entity: Entity, val box: Box, val color: Color4b)
+
+        @Suppress("unused")
+        private val tickHandler = handler<GameTickEvent> {
+            blockBoxes.clear()
 
             for ((pos, type) in StorageScanner.iterate()) {
                 val color = type.color
 
-                if (!type.enabled || color.a <= 0 || !type.shouldRender(pos)) {
+                if (color.isTransparent || !type.shouldRender(pos)) {
                     continue
                 }
 
@@ -151,23 +188,22 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     outlineShape.boundingBox
                 }
 
-                queuedBoxes.add(BoxRecord(pos.toVec3d(), boundingBox, color))
+                blockBoxes.add(BlockBox(pos.asLong(), boundingBox, color))
             }
 
-            for (entity in world.entities) {
-                val type = entity.categorize() ?: continue
+            entityBoxes.clear()
 
-                val pos = entity.interpolateCurrentPosition(event.partialTicks)
+            for (entity in world.entities) {
+                val type = entity.categorize()?.takeIf {
+                    !it.color.isTransparent && it.shouldRender(entity)
+                } ?: continue
 
                 val dimensions = entity.getDimensions(entity.pose)
                 val d = dimensions.width.toDouble() / 2.0
                 val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
 
-                queuedBoxes.add(BoxRecord(pos, box, type.color))
+                entityBoxes.add(EntityBox(entity, box, type.color))
             }
-
-            return queuedBoxes
-
         }
 
     }
@@ -178,42 +214,42 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             get() = modes
 
         @Suppress("unused")
-        val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
+        private val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
             if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
                 || StorageScanner.isEmpty()) {
                 return@handler
             }
 
-            renderEnvironmentForWorld(event.matrixStack) {
+            renderEnvironmentForWorld(event.matrixStack, event.framebuffer) {
                 // non-model blocks are already processed by WorldRenderer where we injected code which renders
                 // their outline
-                drawBoxes {
-                    for ((pos, type) in StorageScanner.iterate()) {
-                        if (!type.enabled) continue
+                startBatch()
+                for ((pos, type) in StorageScanner.iterate()) {
+                    if (type.color.isTransparent || !type.shouldRender(pos)) continue
 
-                        val state = pos.getState() ?: continue
+                    val state = pos.getState() ?: continue
 
-                        // non-model blocks are already processed by WorldRenderer where we injected code which renders
-                        // their outline
-                        if (state.renderType != BlockRenderType.MODEL || state.isAir) {
-                            continue
-                        }
-
-                        val outlineShape = state.getOutlineShape(world, pos)
-
-                        val boundingBox = if (outlineShape.isEmpty) {
-                            FULL_BOX
-                        } else {
-                            outlineShape.boundingBox
-                        }
-
-                        withPosition(relativeToCamera(Vec3d.of(pos))) {
-                            drawBox(boundingBox, type.color)
-                        }
-
-                        event.markDirty()
+                    // non-model blocks are already processed by WorldRenderer where we injected code which renders
+                    // their outline
+                    if (state.renderType != BlockRenderType.MODEL || state.isAir) {
+                        continue
                     }
+
+                    val outlineShape = state.getOutlineShape(world, pos)
+
+                    val boundingBox = if (outlineShape.isEmpty) {
+                        FULL_BOX
+                    } else {
+                        outlineShape.boundingBox
+                    }
+
+                    withPositionRelativeToCamera(pos) {
+                        drawBox(boundingBox, type.color)
+                    }
+
+                    event.markDirty()
                 }
+                commitBatch()
             }
         }
     }
@@ -229,16 +265,16 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
                 .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
+            startBatch()
             longLines {
                 for ((blockPos, type) in StorageScanner.iterate()) {
-                    if (!type.enabled || !type.tracers || type.color.a <= 0) continue
+                    if (!type.tracers || type.color.isTransparent || !type.shouldRender(blockPos)) continue
                     val pos = relativeToCamera(blockPos.toCenterPos()).toVec3()
 
-                    withColor(type.color) {
-                        drawLines(eyeVector, pos, pos)
-                    }
+                    drawLine(eyeVector, pos, type.color.toARGB())
                 }
             }
+            commitBatch()
         }
     }
 
@@ -249,6 +285,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             is HopperMinecartEntity -> ChestType.Hopper
             is StorageMinecartEntity -> ChestType.Chest
             is ChestBoatEntity -> ChestType.Chest
+            is ChestRaftEntity -> ChestType.Chest
             is AbstractDonkeyEntity -> ChestType.Chest.takeIf { hasChest() }
             else -> null
         }
@@ -262,6 +299,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             is AbstractFurnaceBlockEntity -> ChestType.Furnace
             is BrewingStandBlockEntity -> ChestType.BrewingStand
             is DispenserBlockEntity -> ChestType.Dispenser
+            is CrafterBlockEntity -> ChestType.Dispenser
             is HopperBlockEntity -> ChestType.Hopper
             is ShulkerBoxBlockEntity -> ChestType.ShulkerBox
             is DecoratedPotBlockEntity -> ChestType.Pot

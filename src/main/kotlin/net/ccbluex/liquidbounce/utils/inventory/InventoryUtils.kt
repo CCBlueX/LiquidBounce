@@ -22,25 +22,35 @@
 
 package net.ccbluex.liquidbounce.utils.inventory
 
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
+import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.block.Block
-import net.minecraft.block.Blocks
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.component.type.DyedColorComponent
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.ItemTags
+import net.minecraft.screen.ScreenHandler
+import net.minecraft.screen.ScreenHandlerType
+import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import java.util.*
@@ -113,13 +123,79 @@ enum class InventoryRequirements(
     OPEN_INVENTORY("InventoryOpen");
 
     override fun test(action: InventoryAction): Boolean = when (this) {
-        NO_MOVEMENT -> player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f && !player.jumping
+        NO_MOVEMENT -> player.input.movementInput.isLikelyZero && !player.jumping
         NO_ROTATION -> RotationManager.rotationMatchesPreviousRotation()
         OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
     }
 }
 
-fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
+class CheckScreenHandlerTypeConfigurable(
+    parent: EventListener,
+) : ToggleableConfigurable(parent, "CheckScreenHandlerType", enabled = true) {
+    private val types by registryList(
+        "Types",
+        objectRBTreeSetOf(
+            Registries.SCREEN_HANDLER.asComparator(),
+            ScreenHandlerType.GENERIC_9X3, ScreenHandlerType.GENERIC_9X6, ScreenHandlerType.SHULKER_BOX,
+        ),
+        ValueType.SCREEN_HANDLER
+    )
+    private val filter by enumChoice("Filter", Filter.WHITELIST)
+
+    fun isValid(screen: HandledScreen<*>): Boolean {
+        return !running || filter(screen.screenHandler.typeOrNull, types)
+    }
+}
+
+class CheckScreenTitleConfigurable(
+    parent: EventListener,
+) : ToggleableConfigurable(parent, "CheckScreenTitle", enabled = true, aliases = listOf("CheckTitle")) {
+    private val titles by multiEnumChoice(
+        "Titles",
+        EnumSet.of(
+            ContainerTitle.CHEST, ContainerTitle.LARGE_CHEST,
+            ContainerTitle.SHULKER_BOX, ContainerTitle.BARREL,
+            ContainerTitle.CHEST_MINECART,
+        ),
+    )
+    private val customTitles by textList("Custom", ObjectRBTreeSet())
+    private val filter by enumChoice("Filter", Filter.WHITELIST)
+
+    fun isValid(screen: Screen): Boolean {
+        if (!running) return true
+
+        val titleString = screen.title.string
+        val matches = titles.any {
+            Text.translatable(it.translatableKey).string == titleString
+        } || titleString in customTitles
+
+        return when (filter) {
+            Filter.WHITELIST -> matches
+            Filter.BLACKLIST -> !matches
+        }
+    }
+
+    @Suppress("unused")
+    private enum class ContainerTitle(override val choiceName: String, val translatableKey: String) : NamedChoice {
+        BARREL("Barrel", "container.barrel"),
+        BEACON("Beacon", "container.beacon"),
+        BLAST_FURNACE("BlastFurnace", "container.blast_furnace"),
+        BREWING_STAND("BrewingStand", "container.brewing"),
+        CHEST("Chest", "container.chest"),
+        LARGE_CHEST("LargeChest", "container.chestDouble"),
+        DISPENSER("Dispenser", "container.dispenser"),
+        DROPPER("Dropper", "container.dropper"),
+        ENDER_CHEST("EnderChest", "container.enderchest"),
+        FURNACE("Furnace", "container.furnace"),
+        HOPPER("Hopper", "container.hopper"),
+        SHULKER_BOX("ShulkerBox", "container.shulkerBox"),
+        SMOKER("Smoker", "container.smoker"),
+        CHEST_MINECART("ChestMinecart", "entity.minecraft.chest_minecart"),
+        HOPPER_MINECART("HopperMinecart", "entity.minecraft.hopper_minecart"),
+    }
+}
+
+fun hasInventorySpace() = player.inventory.mainStacks.any { it.isEmpty }
 
 fun findEmptyStorageSlotsInInventory(): List<ItemSlot> {
     return (Slots.Inventory + Slots.Hotbar).filter { it.itemStack.isEmpty }
@@ -142,7 +218,7 @@ fun openInventorySilently() {
     }
 
     network.sendPacket(
-        OpenInventorySilentlyPacket(),
+        OpenInventorySilentlyPacket,
         onSuccess = { InventoryManager.isInventoryOpenServerSide = true },
         onFailure = { chat(markAsError("Failed to open inventory using ViaFabricPlus, report to developers!")) }
     )
@@ -152,12 +228,12 @@ fun closeInventorySilently() {
     network.sendPacket(CloseHandledScreenC2SPacket(0))
 }
 
-fun HandledScreen<*>.getSlotsInContainer() =
+fun HandledScreen<*>.getSlotsInContainer(): List<ContainerItemSlot> =
     this.screenHandler.slots
         .filter { it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }
 
-fun HandledScreen<*>.findItemsInContainer() =
+fun HandledScreen<*>.findItemsInContainer(): List<ContainerItemSlot> =
     this.screenHandler.slots
         .filter { !it.stack.isEmpty && it.inventory !== player.inventory }
         .map { ContainerItemSlot(it.id) }
@@ -167,7 +243,7 @@ fun useHotbarSlotOrOffhand(
     item: HotbarItemSlot,
     ticksUntilReset: Int = 1,
     yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
-    pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
+    pitch: Float = RotationManager.currentRotation?.pitch ?: player.pitch,
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
 ): ActionResult = when (item) {
     OffHandSlot -> interactItem(Hand.OFF_HAND, yaw, pitch, swingMode)
@@ -181,7 +257,7 @@ fun useHotbarSlotOrOffhand(
 fun interactItem(
     hand: Hand,
     yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
-    pitch: Float = RotationManager.currentRotation?.yaw ?: player.pitch,
+    pitch: Float = RotationManager.currentRotation?.pitch ?: player.pitch,
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
 ): ActionResult {
     val result = interaction.interactItem(player, hand, yaw, pitch)
@@ -197,8 +273,8 @@ fun interactItem(
     return result
 }
 
-internal fun findBlocksEndingWith(vararg targets: String): MutableSet<Block> =
-    Registries.BLOCK.filterTo(ReferenceOpenHashSet()) { block ->
+internal fun findBlocksEndingWith(vararg targets: String): SortedSet<Block> =
+    Registries.BLOCK.filterTo(blockSortedSetOf()) { block ->
         targets.any { Registries.BLOCK.getId(block).path.endsWith(it.lowercase()) }
     }
 
@@ -225,29 +301,5 @@ fun ItemStack.getArmorColor(): Int? {
     }
 }
 
-/**
- * A list of blocks which may not be placed (apart from the usual checks), so inv cleaner and scaffold
- * won't count them as blocks
- *
- * TODO: move to configurable
- */
-val DISALLOWED_BLOCKS_TO_PLACE = hashSetOf(
-    Blocks.TNT,
-    Blocks.COBWEB,
-    Blocks.NETHER_PORTAL,
-)
-
-/**
- * @see [ScaffoldBlockItemSelection.isBlockUnfavourable]
- *
- * TODO: move to configurable
- */
-val UNFAVORABLE_BLOCKS_TO_PLACE = hashSetOf(
-    Blocks.CRAFTING_TABLE,
-    Blocks.JIGSAW,
-    Blocks.SMITHING_TABLE,
-    Blocks.FLETCHING_TABLE,
-    Blocks.ENCHANTING_TABLE,
-    Blocks.CAULDRON,
-    Blocks.MAGMA_BLOCK,
-)
+val ScreenHandler.typeOrNull: ScreenHandlerType<*>?
+    get() = runCatching { type }.getOrNull()

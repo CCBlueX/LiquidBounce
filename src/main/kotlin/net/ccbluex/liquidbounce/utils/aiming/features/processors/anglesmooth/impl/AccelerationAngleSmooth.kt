@@ -42,7 +42,9 @@ import kotlin.math.max
 class AccelerationAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Acceleration", parent) {
 
     private val yawAcceleration by floatRange("YawAcceleration", 20f..25f, 1f..180f)
-    private val pitchAcceleration by floatRange("PitchAccelelation", 20f..25f, 1f..180f)
+    private val pitchAcceleration by floatRange(
+        "PitchAcceleration", 20f..25f, 1f..180f, aliases = listOf("PitchAccelelation")
+    )
 
     private inner class DynamicAccel : ToggleableConfigurable(this, "DynamicAccel", false) {
         val coefDistance by float("CoefDistance", -1.393f, -2f..2f)

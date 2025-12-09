@@ -21,7 +21,8 @@
 package net.ccbluex.liquidbounce.event.events
 
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.annotations.Nameable
+import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.Camera
 import net.minecraft.client.util.math.MatrixStack
@@ -43,6 +44,7 @@ class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val par
  */
 @Nameable("drawOutlines")
 class DrawOutlinesEvent(
+    val framebuffer: Framebuffer,
     val matrixStack: MatrixStack,
     val camera: Camera,
     val partialTicks: Float,
@@ -65,4 +67,7 @@ class DrawOutlinesEvent(
 }
 
 @Nameable("overlayRender")
-class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
+class OverlayRenderEvent(
+    val context: DrawContext,
+    val tickDelta: Float,
+) : Event()

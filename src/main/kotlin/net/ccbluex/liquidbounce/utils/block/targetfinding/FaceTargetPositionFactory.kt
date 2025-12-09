@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.block.targetfinding
 
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -31,6 +32,8 @@ import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
+import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -48,7 +51,7 @@ data class PositionFactoryConfiguration(
 )
 
 
-abstract class FaceTargetPositionFactory {
+sealed class FaceTargetPositionFactory {
 
 
     /**
@@ -115,35 +118,33 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 
         val currentRotation = RotationManager.serverRotation
 
-        val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.directionVector)
+        val rotationLine = Line(config.eyePos - targetPos, currentRotation.directionVector)
 
         val pointOnFace = face.nearestPointTo(rotationLine)
 
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "targetFace",
+        ModuleScaffold.debugGeometry("targetFace") {
             ModuleDebug.DebuggedBox(Box(
                 face.from,
                 face.to
             ).offset(Vec3d.of(targetPos)), Color4b(255, 0, 0, 255))
-        )
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "targetPoint",
+        }
+
+        ModuleScaffold.debugGeometry("targetPoint") {
             ModuleDebug.DebuggedPoint(
-                pointOnFace.add(Vec3d.of(targetPos)),
+                pointOnFace + targetPos,
                 Color4b(0, 0, 255, 255),
                 size = 0.05
             )
-        )
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "daLine",
-            ModuleDebug.DebuggedLine(Line(
-                config.eyePos,
-                currentRotation.directionVector
-            ), Color4b(0, 0, 255, 255))
-        )
+        }
+
+        ModuleScaffold.debugGeometry("daLine") {
+            ModuleDebug.DebuggedLine(
+                Line(
+                    config.eyePos,
+                    currentRotation.directionVector
+                ), Color4b(0, 0, 255, 255)
+            )
+        }
 
         return pointOnFace
     }
@@ -202,7 +203,7 @@ class StabilizedRotationTargetPositionFactory(
     }
 }
 
-class RandomTargetPositionFactory(val config: PositionFactoryConfiguration) : FaceTargetPositionFactory() {
+object RandomTargetPositionFactory : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3d {
         val trimmedFace = trimFace(face)
 
@@ -261,13 +262,13 @@ abstract class BaseYawTargetPositionFactory(
         ModuleDebug.debugParameter(PositionFactoryDebug, "LowTargetYaw", lowTargetYaw)
 
         val highPlane = NormalizedPlane.fromParams(
-            config.eyePos.subtract(Vec3d.of(targetPos)),
+            config.eyePos - targetPos,
             Vec3d(0.0, 0.0, 1.0).rotateY(highTargetYaw),
             Vec3d(0.0, 1.0, 0.0)
         )
 
         val lowPlane = NormalizedPlane.fromParams(
-            config.eyePos.subtract(Vec3d.of(targetPos)),
+            config.eyePos - targetPos,
             Vec3d(0.0, 0.0, 1.0).rotateY(lowTargetYaw),
             Vec3d(0.0, 1.0, 0.0)
         )
@@ -378,27 +379,25 @@ class EdgePointTargetPositionFactory(
     ): Vec3d? {
         val box = Box(face.from, face.to)
         val edge = box.edgePoints.maxByOrNull { edge ->
-            edge.squaredDistanceTo(player.pos.subtract(Vec3d.of(player.blockPos)))
+            edge.squaredDistanceTo(player.pos - player.blockPos)
         } ?: return null
 
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "Face",
-            ModuleDebug.DebuggedBox(Box(
-                face.from,
-                face.to
-            ).offset(Vec3d.of(targetPos)), Color4b(255, 0, 0, 255))
-        )
+        ModuleScaffold.debugGeometry("Face") {
+            ModuleDebug.DebuggedBox(
+                Box(
+                    face.from,
+                    face.to
+                ).offset(Vec3d.of(targetPos)), Color4b(255, 0, 0, 255)
+            )
+        }
 
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "Edge",
+        ModuleScaffold.debugGeometry("Edge") {
             ModuleDebug.DebuggedPoint(
-                edge.add(Vec3d.of(targetPos)),
+                edge + targetPos,
                 Color4b(0, 0, 255, 255),
                 size = 0.05
             )
-        )
+        }
 
         return edge
     }

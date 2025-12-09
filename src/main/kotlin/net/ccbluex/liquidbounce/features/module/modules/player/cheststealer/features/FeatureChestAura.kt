@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -33,15 +34,17 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
+import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
+import net.minecraft.block.ChestBlock
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
@@ -49,7 +52,7 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
+import java.util.function.BooleanSupplier
 
 /**
  * ChestAura feature
@@ -72,6 +75,18 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     private val notDuringCombat by boolean("NotDuringCombat", true)
 
     private val trackManualInteractions by boolean("TrackManualInteractions", true)
+
+    private val pauseOn by multiEnumChoice("PauseOn", emptyEnumSet<PauseCondition>())
+
+    @Suppress("unused")
+    private enum class PauseCondition(override val choiceName: String) : NamedChoice, BooleanSupplier {
+        COMBAT("Combat") {
+            override fun getAsBoolean() = CombatManager.isInCombat
+        },
+        USING_ITEM("UsingItem"){
+            override fun getAsBoolean() = player.isUsingItem
+        };
+    }
 
     // Sub-configurable for managing the await container settings
     private object AwaitContainerSettings : ToggleableConfigurable(this, "AwaitContainer", true) {
@@ -105,6 +120,9 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     // Counter for the number of tries performed to interact with a block
     private var interactionAttempts = 0
 
+    override val running: Boolean
+        get() = super.running && pauseOn.none { it.asBoolean }
+
     override fun onDisabled() {
         interactedBlocksSet.clear()
         interactionAttempts = 0
@@ -115,6 +133,13 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     // Event handler responsible for updating the target block
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
+        fun isUnblockedChestOrNotChest(state: BlockState, pos: BlockPos): Boolean {
+            if (state.block !is ChestBlock) return true
+            if (ChestBlock.isChestBlocked(world, pos)) return false
+
+            return !ChestBlock.isChestBlocked(world, pos.offset(state.anotherChestPartDirection() ?: return true))
+        }
+
         val searchRadius = interactionRange + 1
         val searchRadiusSquared = searchRadius * searchRadius
         val playerEyesPosition = player.eyePos
@@ -126,10 +151,8 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
         // Select blocks for processing within the search radius
         val nearbyStorageBlocks = playerEyesPosition.searchBlocksInCuboid(searchRadius) { pos, state ->
-            state.block in validStorageBlocks && pos !in interactedBlocksSet && getNearestPoint(
-                playerEyesPosition, Box(pos)
-            ).squaredDistanceTo(playerEyesPosition) <= searchRadiusSquared
-        }.sortedBy { it.first.getCenterDistanceSquared() }
+            pos !in interactedBlocksSet && state.block in validStorageBlocks && isUnblockedChestOrNotChest(state, pos)
+        }.sortedBy { it.first.getCenterDistanceSquaredEyes() }
 
         var nextTargetBlock: BlockPos? = null
 
@@ -166,7 +189,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     }
 
     @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
+    private val packetHandler = handler<PacketEvent>(READ_FINAL_STATE) { event ->
         if (trackManualInteractions && event.packet is PlayerInteractBlockC2SPacket && !event.isCancelled) {
             mc.execute {
                 track(event.packet.blockHitResult.blockPos)

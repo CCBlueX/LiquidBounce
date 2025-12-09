@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSwim;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -35,7 +35,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -108,7 +107,7 @@ public abstract class MixinEntity {
         boolean noLimit = ModuleNoPitchLimit.INSTANCE.getRunning();
 
         if (noLimit) return value;
-        return MathHelper.clamp(value, min, max);
+        return Math.clamp(value, min, max);
     }
 
     @ModifyExpressionValue(method = "updateVelocity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;movementInputToVelocity(Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;"))
@@ -200,7 +199,7 @@ public abstract class MixinEntity {
      *
      * @return false if the entity is the client's player, otherwise returns the original value
      */
-    @ModifyExpressionValue(method = "move", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isControlledByPlayer()Z"))
+    @ModifyExpressionValue(method = "isLogicalSideForUpdatingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isControlledByPlayer()Z"))
     private boolean fixFallDistanceCalculation(boolean original) {
         if ((Object) this == MinecraftClient.getInstance().player) {
             return false;
@@ -211,9 +210,8 @@ public abstract class MixinEntity {
 
     @Inject(method = "setPose", at = @At("HEAD"), cancellable = true)
     private void setPose(EntityPose pose, CallbackInfo ci) {
-        if ((Object) this != MinecraftClient.getInstance().player && ModuleNoSwim.INSTANCE.shouldCancel(pose)) {
+        /* Cancel pose if needed */
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleNoPose.INSTANCE.shouldCancelPose(pose))
             ci.cancel();
-        }
     }
-
 }

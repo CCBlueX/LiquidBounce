@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
+import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
+import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.network.SequencedPacketCreator
@@ -45,6 +47,18 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.world.GameMode
 import org.apache.commons.lang3.mutable.MutableObject
 import java.util.*
+
+internal fun sendStartSneaking() {
+    if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) return
+
+    network.sendPacket(PlayerSneakPacket.START)
+}
+
+internal fun sendStopSneaking() {
+    if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) return
+
+    network.sendPacket(PlayerSneakPacket.STOP)
+}
 
 @Suppress("LongParameterList")
 fun clickBlockWithSlot(

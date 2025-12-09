@@ -29,7 +29,7 @@ import net.minecraft.text.Text
  * Adds a message and assigns the ID to it.
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
-fun ChatHud.addMessage(message: Text, id: String?, count: Int) {
+fun ChatHud.addMessage(message: Text, id: String?, count: Int) = mc.execute {
     val indicator = if (mc.isConnectedToLocalServer) MessageIndicator.singlePlayer() else MessageIndicator.system()
     val chatHudLine = ChatHudLine(mc.inGameHud.ticks, message, null, indicator)
     (chatHudLine as ChatMessageAddition).`liquid_bounce$setId`(id)
@@ -43,7 +43,7 @@ fun ChatHud.addMessage(message: Text, id: String?, count: Int) {
  * Removes all messages with the given ID.
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
-fun ChatHud.removeMessage(id: String?) {
+fun ChatHud.removeMessage(id: String?) = mc.execute {
     messages.removeIf {
         val removable = it as? ChatMessageAddition ?: return@removeIf false
         id == removable.`liquid_bounce$getId`()

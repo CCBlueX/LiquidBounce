@@ -26,22 +26,14 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.VirtualItemSlot
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.enumMap
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
+import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
 import java.util.function.Predicate
 
-val PREFER_ITEMS_IN_HOTBAR: Comparator<ItemFacet> = compareByCondition(ItemFacet::isInHotbar)
-val STABILIZE_COMPARISON: Comparator<ItemFacet> = Comparator.comparingInt {
-    it.itemStack.hashCode()
-}
-val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = Comparator.comparingInt {
-    it.itemStack.maxDamage - it.itemStack.damage
-}
-
+@JvmRecord
 data class ItemCategory(val type: ItemType, val subtype: Int)
 
 enum class ItemType(
@@ -67,6 +59,7 @@ enum class ItemType(
     ARMOR(true, allocationPriority = Priority.IMPORTANT_FOR_PLAYER_LIFE),
     SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
     WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
+    MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
@@ -100,6 +93,9 @@ enum class ItemSortChoice(
 ) : NamedChoice {
     SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
     WEAPON("Weapon", ItemCategory(ItemType.WEAPON, 0)),
+    MACE("Mace", ItemCategory(ItemType.MACE, 0), {
+        it.item is MaceItem
+    }),
     BOW("Bow", ItemCategory(ItemType.BOW, 0)),
     CROSSBOW("Crossbow", ItemCategory(ItemType.CROSSBOW, 0)),
     AXE("Axe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_AXE), { it.isAxe }),
@@ -141,7 +137,7 @@ class ItemCategorization(
          * We expect to be full armor to be diamond armor.
          */
         @JvmStatic
-        private val diamondArmorPieces: Map<EquipmentSlot, ArmorPiece> = enumMap {
+        private val diamondArmorPieces: Map<EquipmentSlot, ArmorPiece> = enumMapOf {
             put(EquipmentSlot.HEAD, constructArmorPiece(Items.DIAMOND_HELMET, 0))
             put(EquipmentSlot.CHEST, constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1))
             put(EquipmentSlot.LEGS, constructArmorPiece(Items.DIAMOND_LEGGINGS, 2))
@@ -185,12 +181,10 @@ class ItemCategorization(
         }
 
         return buildList {
-            // Everything could be a weapon (i.e. a stick with Knochback II should be considered a weapon)
+            // Everything could be a weapon (i.e. a stick with Knockback II should be considered a weapon)
             add(WeaponItemFacet(slot))
 
             when (val item = itemStack.item) {
-                // Treat animal armor as a normal item
-                is AnimalArmorItem -> add(ItemFacet(slot))
                 is BowItem -> add(BowItemFacet(slot))
                 is CrossbowItem -> add(CrossbowItemFacet(slot))
                 is ArrowItem -> add(ArrowItemFacet(slot))
@@ -238,12 +232,14 @@ class ItemCategorization(
                     add(PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1))
                 }
 
-                Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> add(ThrowableItemFacet(slot))
+                is EggItem, is SnowballItem, is WindChargeItem -> add(ThrowableItemFacet(slot))
 
                 else -> when {
                     itemStack.isPlayerArmor -> add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
 
                     itemStack.isSword -> add(SwordItemFacet(slot))
+
+                    itemStack.item is MaceItem -> add(MaceItemFacet(slot))
 
                     itemStack.isMiningTool -> add(MiningToolItemFacet(slot))
 

@@ -20,11 +20,12 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleHitbox;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
-import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.state.EntityHitbox;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Box;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,19 +36,37 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(EntityRenderDispatcher.class)
 public abstract class MixinEntityRenderDispatcher {
     @Unique
-    private static Entity entity;
+    private static Entity $entity = null;
 
-    @Inject(method = "renderHitbox", at = @At(value = "HEAD"))
-    private static void getEntity(MatrixStack matrices, VertexConsumer vertices, Entity entity, float tickDelta, float red, float green, float blue, CallbackInfo ci) {
-        MixinEntityRenderDispatcher.entity = entity;
+    @Inject(method = "render(Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/client/render/entity/EntityRenderer;)V", at = @At(value = "HEAD"))
+    private static void getEntity(Entity entity, double x, double y, double z, float tickProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, EntityRenderer<?, ?> renderer, CallbackInfo ci) {
+        MixinEntityRenderDispatcher.$entity = entity;
     }
 
-    @ModifyArg(method = "renderHitbox", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/VertexRendering;drawBox(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;Lnet/minecraft/util/math/Box;FFFF)V", ordinal = 0), index = 2, require = 1, allow = 1)
-    private static Box updateBoundingBox(Box box) {
+    @ModifyArg(
+            method = "renderHitboxes(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/entity/state/EntityHitboxAndView;Lnet/minecraft/client/render/VertexConsumer;F)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/EntityRenderDispatcher;renderHitbox(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;Lnet/minecraft/client/render/entity/state/EntityHitbox;)V"),
+            index = 2
+    )
+    private static EntityHitbox updateBoundingBox(EntityHitbox hitbox) {
         var moduleHitBox = ModuleHitbox.INSTANCE;
-        if (moduleHitBox.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity)) {
-            return box.expand(moduleHitBox.getSize());
+        if ($entity != null && moduleHitBox.getRunning() && CombatExtensionsKt.shouldBeAttacked($entity)) {
+            var expansion = moduleHitBox.getSize();
+            return new EntityHitbox(
+                    hitbox.x0() - expansion,
+                    hitbox.y0() - expansion,
+                    hitbox.z0() - expansion,
+                    hitbox.x1() + expansion,
+                    hitbox.y1() + expansion,
+                    hitbox.z1() + expansion,
+                    hitbox.offsetX(),
+                    hitbox.offsetY(),
+                    hitbox.offsetZ(),
+                    hitbox.red(),
+                    hitbox.green(),
+                    hitbox.blue()
+            );
         }
-        return box;
+        return hitbox;
     }
 }

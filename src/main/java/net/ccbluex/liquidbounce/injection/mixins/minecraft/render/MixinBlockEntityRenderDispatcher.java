@@ -38,8 +38,8 @@ public class MixinBlockEntityRenderDispatcher {
      * @author 1zuna
      */
     @ModifyArg(
-            method = "render(Lnet/minecraft/client/render/block/entity/BlockEntityRenderer;Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/block/entity/BlockEntityRenderer;render(Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;II)V")
+            method = "render(Lnet/minecraft/client/render/block/entity/BlockEntityRenderer;Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/util/math/Vec3d;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/block/entity/BlockEntityRenderer;render(Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IILnet/minecraft/util/math/Vec3d;)V")
     )
     private static <T extends BlockEntity> VertexConsumerProvider render(
             VertexConsumerProvider vertexConsumerProvider,
@@ -51,7 +51,7 @@ public class MixinBlockEntityRenderDispatcher {
             if (type != null && type.shouldRender(blockEntity.getPos())) {
                 var color = type.getColor();
 
-                if (color.a() > 0) {
+                if (!color.isTransparent()) {
                     var outlineVertexConsumerProvider = MinecraftClient.getInstance().getBufferBuilders()
                             .getOutlineVertexConsumers();
                     outlineVertexConsumerProvider.setColor(color.r(), color.g(), color.b(), 255);

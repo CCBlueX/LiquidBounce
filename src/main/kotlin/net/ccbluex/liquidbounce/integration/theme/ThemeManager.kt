@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
+import net.minecraft.resource.SynchronousResourceReloader
 import java.io.File
 
 object ThemeManager : Configurable("theme") {
@@ -48,7 +49,7 @@ object ThemeManager : Configurable("theme") {
     val themes = mutableListOf<Theme>()
     val themeIds get() = themes.map { theme -> theme.metadata.id }
 
-    var currentTheme by text("Theme", "liquidbounce").onChanged {
+    private var currentTheme by text("Theme", "liquidbounce").onChanged {
         // Update integration browser
         mc.execute {
             IntegrationListener.update()
@@ -59,10 +60,25 @@ object ThemeManager : Configurable("theme") {
 
     internal lateinit var includedTheme: Theme
         private set
+    /**
+     * Used for development.
+     */
+    private var temporaryTheme: Theme? = null
 
-    val theme: Theme
-        get() = themes.find { theme -> theme.metadata.id.equals(currentTheme, true) }
+    var theme: Theme
+        get() = temporaryTheme
+            ?: themes.find { theme -> theme.metadata.id.equals(currentTheme, true) }
             ?: includedTheme
+        set(value) {
+            // When external, set as a temporary theme.
+            if (value.origin.external) {
+                temporaryTheme = value
+                currentTheme = includedTheme.metadata.id
+            } else {
+                temporaryTheme = null
+                currentTheme = value.metadata.id
+            }
+        }
 
     private val takesInputHandler = InputAcceptor { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
@@ -77,6 +93,11 @@ object ThemeManager : Configurable("theme") {
 
             return@onChange enabled
         }
+
+    internal val reloader = SynchronousResourceReloader { resourceManager ->
+        themes.forEach { it.reload(resourceManager) }
+        logger.info("Reloaded ${themes.size} themes.")
+    }
 
     init {
         ConfigSystem.root(this)

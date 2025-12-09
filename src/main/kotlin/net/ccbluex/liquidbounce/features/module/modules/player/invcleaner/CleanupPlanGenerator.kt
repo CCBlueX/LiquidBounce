@@ -153,7 +153,7 @@ class CleanupPlanPlacementTemplate(
      * A function which provides constraint groups for each item category and the number which the item counts against
      * the given constraint. More info on how constraints work at [ItemNumberContraintGroup].
      */
-    val itemAmountConstraintProvider: (ItemFacet) -> ArrayList<ItemConstraintInfo>,
+    val itemAmountConstraintProvider: (ItemFacet) -> MutableList<ItemConstraintInfo>,
     /**
      * If false, slots which also contains items of that category, those items are not replaced with other items.
      */

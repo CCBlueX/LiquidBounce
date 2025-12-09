@@ -18,49 +18,40 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.liquidbounce.event.computedOn
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.FontManager
-import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.sq
-import kotlin.math.abs
+import net.minecraft.client.gui.DrawContext
+import org.joml.Vector2fc
 
 /**
  * Nametags module
  *
  * Makes player name tags more visible and adds useful information.
  */
-@Suppress("MagicNumber")
 object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
-    internal val show by multiEnumChoice("Show", NametagShowOptions.entries)
-    val scale by float("Scale", 2F, 0.25F..4F)
-    private val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
 
-    internal val drawnEnchantmentAreas = mutableListOf<Pair<Float, Float>>()
+    init {
+        tree(NametagTextFormatter)
+        tree(NametagEquipment)
+        tree(NametagEnchantmentRenderer)
+    }
+
+    internal val scale by float("Scale", 2F, 0.25F..4F)
+    internal val border by boolean("Border", true)
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
+    internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
 
     val fontRenderer
         get() = FontManager.FONT_RENDERER
 
-    private val nametagsToRender by computedOn<GameTickEvent, MutableList<Nametag>>(
-        initialValue = mutableListOf()
-    ) { _, list ->
-        list.clear()
-        collectAndSortNametagsToRender(list)
-        list
-    }
-
-    @Suppress("unused")
-    private val worldChangeHandler = handler<WorldChangeEvent> {
-        nametagsToRender.clear()
-    }
+    private val nametagsToRender = mutableListOf<Nametag>()
 
     override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
@@ -69,6 +60,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
+        RenderedEntities.onUpdated(::collectAndSortNametagsToRender)
     }
 
     @Suppress("unused")
@@ -77,41 +69,16 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
             return@handler
         }
 
-        renderEnvironmentForGUI {
-            val nametagRenderer = NametagRenderer()
-
-            try {
-                drawNametags(nametagRenderer, event.tickDelta)
-            } finally {
-                nametagRenderer.commit(this)
-            }
-        }
+        event.context.drawNametags(event.tickDelta)
     }
 
-    private fun RenderEnvironment.drawNametags(nametagRenderer: NametagRenderer, tickDelta: Float) {
+    private fun DrawContext.drawNametags(tickDelta: Float) {
         drawnEnchantmentAreas.clear()
-        nametagsToRender.forEach { it.calculatePosition(tickDelta) }
 
-        val filteredNameTags = nametagsToRender.filterTo(mutableListOf()) { it.position != null }
-        if (filteredNameTags.isEmpty()) {
-            return
-        }
+        for (nametagInfo in nametagsToRender) {
+            val (x, y) = nametagInfo.calculateScreenPos(tickDelta) ?: continue
 
-        val nametagsCount = filteredNameTags.size.toFloat()
-
-        filteredNameTags.sortBy { tag ->
-            tag.entity.squaredDistanceTo(mc.cameraEntity)
-        }
-
-        filteredNameTags.forEachIndexed { index, nametagInfo ->
-            val pos = nametagInfo.position!!
-
-            // We want nametags that are closer to the player to be rendered above nametags that are further away.
-            val renderZ = index / nametagsCount * 1000.0F
-
-            with(nametagRenderer) {
-                drawNametag(nametagInfo, pos.copy(z = renderZ))
-            }
+            drawNametag(nametagInfo, x, y)
         }
     }
 
@@ -119,7 +86,8 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
      * Collects all entities that should be rendered, gets the screen position, where the name tag should be displayed,
      * add what should be rendered ([Nametag]). The nametags are sorted in order of rendering.
      */
-    private fun collectAndSortNametagsToRender(list: MutableList<Nametag>) {
+    private fun collectAndSortNametagsToRender() {
+        nametagsToRender.clear()
         val maximumDistanceSquared = maximumDistance.sq()
 
         for (entity in RenderedEntities) {
@@ -127,10 +95,13 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
                 continue
             }
 
-            list += Nametag(entity)
+            nametagsToRender += Nametag(entity)
         }
+        nametagsToRender.sortWith(NAMETAG_COMPARATOR)
+    }
 
-        list.sortByDescending { abs(it.entity.z - player.pos.z) }
+    private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
+        nametag.entity.squaredDistanceTo(mc.cameraEntity)
     }
 
 }

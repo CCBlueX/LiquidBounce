@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.*
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.*
-import net.ccbluex.liquidbounce.utils.entity.prevPos
+import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.Block
@@ -82,7 +82,7 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
         val offsetsForTargets = findOffsetsForTarget(
             targetPos,
             target.getDimensions(EntityPose.STANDING),
-            target.pos.subtract(target.prevPos),
+            target.pos.subtract(target.lastPos),
             slot.itemStack.item == Items.COBWEB
         )
 

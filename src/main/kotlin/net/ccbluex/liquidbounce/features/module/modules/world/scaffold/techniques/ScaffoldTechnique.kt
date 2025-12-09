@@ -55,6 +55,9 @@ sealed class ScaffoldTechnique(name: String) : Choice(name) {
         @JvmField
         internal val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(0, -1, 1)
 
+        @JvmField
+        internal val FULL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(0, -1, 1, -2, 2, -3, 3, -4, 4)
+
         private fun commonOffsetToInvestigate(vararg xzOffsets: Int): List<Vec3i> = buildList(xzOffsets.size.sq() * 2) {
             for (x in xzOffsets) {
                 for (z in xzOffsets) {

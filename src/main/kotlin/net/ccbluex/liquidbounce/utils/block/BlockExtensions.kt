@@ -98,6 +98,22 @@ val BlockPos.outlineBox: Box
 val BlockPos.collisionShape: VoxelShape
     get() = this.getState()!!.getCollisionShape(world, this)
 
+fun VoxelShape.offset(pos: Vec3i): VoxelShape = offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+
+fun VoxelShape.getClosestSquaredDistanceTo(position: Position): Double {
+    var minDistanceSq = Double.MAX_VALUE
+    forEachBox { minX, minY, minZ, maxX, maxY, maxZ ->
+        val nearestX = position.x.coerceIn(minX, maxX)
+        val nearestY = position.y.coerceIn(minY, maxY)
+        val nearestZ = position.z.coerceIn(minZ, maxZ)
+        val distanceSq = (position.x - nearestX).sq() + (position.y - nearestY).sq() + (position.z - nearestZ).sq()
+        if (distanceSq < minDistanceSq) {
+            minDistanceSq = distanceSq
+        }
+    }
+    return minDistanceSq
+}
+
 /**
  * Shrinks a VoxelShape by the specified amounts on selected axes.
  */
@@ -148,33 +164,6 @@ fun VoxelShape.shrink(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): VoxelS
 val Block.mustBePlacedOnUpperSide: Boolean
     get() {
         return this is SlabBlock || this is StairsBlock
-    }
-
-val BlockPos.hasEntrance: Boolean
-    get() {
-        val block = this.getBlock()
-        val cache = BlockPos.Mutable()
-        return DIRECTIONS_EXCLUDING_DOWN.any {
-            val neighbor = cache.set(this, it)
-            neighbor.collisionShape == VoxelShapes.empty() && neighbor.getBlock() !== block
-        }
-    }
-
-val BlockPos.weakestNeighbor: BlockPos?
-    get() {
-        val block = this.getBlock()
-        val cache = BlockPos.Mutable()
-        val neighbors = DIRECTIONS_EXCLUDING_DOWN.mapNotNullTo(mutableListOf()) {
-            val neighbor = cache.set(this, it)
-            val state = neighbor.getState() ?: return@mapNotNullTo null
-            if (state.block !== block && !state.isAir) neighbor.toImmutable() else null
-        }
-
-        if (neighbors.isEmpty()) return null
-
-        val comparator = compareBy<BlockPos> { it.getBlock()?.hardness ?: 0f }
-            .thenBy { it.getCenterDistanceSquaredEyes() }
-        return neighbors.minWith(comparator)
     }
 
 /**
@@ -236,24 +225,21 @@ fun BlockPos.searchBlocksInCuboid(radius: Int): BlockBox =
 fun BlockPos.searchBedLayer(state: BlockState, layers: Int): Sequence<IntLongPair> {
     check(state.isBed) { "This function is only available for Beds" }
 
-    var bedDirection = state.get(BedBlock.FACING)
-    var opposite = bedDirection.opposite
+    val anotherPartDirection = state.anotherBedPartDirection()!!
+    val bedDirection = anotherPartDirection.opposite
 
-    if (BedBlock.getBedPart(state) != DoubleBlockProperties.Type.FIRST) {
-        opposite = bedDirection
-        bedDirection = bedDirection.opposite
-    }
-
-    var left = Direction.WEST
-    var right = Direction.EAST
-
+    val left: Direction
+    val right: Direction
     if (bedDirection.axis == Direction.Axis.X) {
         left = Direction.SOUTH
         right = Direction.NORTH
+    } else {
+        left = Direction.WEST
+        right = Direction.EAST
     }
 
     return searchLayer(layers, bedDirection, Direction.UP, left, right) +
-        offset(opposite).searchLayer(layers, opposite, Direction.UP, left, right)
+        offset(anotherPartDirection).searchLayer(layers, anotherPartDirection, Direction.UP, left, right)
 }
 
 /**
@@ -383,6 +369,19 @@ fun BlockState?.anotherChestPartDirection(): Direction? {
     return ChestBlock.getFacing(this)
 }
 
+fun BlockState?.anotherBedPartDirection(): Direction? {
+    if (this?.block !is BedBlock) return null
+
+    // [body|head] -> (facing)
+    val bedFacing = this.get(BedBlock.FACING)
+
+    return if (BedBlock.getBedPart(this) == DoubleBlockProperties.Type.FIRST) {
+        bedFacing.opposite
+    } else {
+        bedFacing
+    }
+}
+
 /**
  * Check if box is reaching of specified blocks
  */
@@ -508,7 +507,7 @@ fun doPlacement(
         }
 
         interactionResult.isAccepted -> {
-            val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
+            val wasStackUsed = !stack.isEmpty && (stack.count != count || player.isCreative)
 
             handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess, swingMode)
         }

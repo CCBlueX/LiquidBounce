@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.api.services.auth
 
 import io.netty.bootstrap.ServerBootstrap
+import io.netty.channel.ChannelFactory
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
@@ -33,7 +34,7 @@ import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.io.awaitSuspend
+import net.ccbluex.netty.http.coroutines.awaitSuspend
 import java.net.InetSocketAddress
 import java.util.*
 import kotlin.coroutines.Continuation
@@ -92,7 +93,7 @@ object OAuthClient : EventListener {
 
         val bootstrap = ServerBootstrap()
             .group(bossGroup, workerGroup)
-            .channelFactory(::NioServerSocketChannel)
+            .channelFactory(ChannelFactory(::NioServerSocketChannel))
             .childHandler(NettyChannelInitializer())
 
         val channel = bootstrap.bind(0).awaitSuspend().channel()

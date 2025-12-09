@@ -1,13 +1,33 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
+import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawLineStrip
-import net.ccbluex.liquidbounce.render.drawSideBox
-import net.ccbluex.liquidbounce.render.drawSolidBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -29,6 +49,7 @@ import net.minecraft.block.ShapeContext
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.projectile.ProjectileEntity
 import net.minecraft.entity.projectile.ProjectileUtil
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
@@ -77,7 +98,7 @@ class TrajectoryInfoRenderer(
             entity: Entity,
             trajectoryInfo: TrajectoryInfo,
             rotation: Rotation,
-            partialTicks: Float = mc.renderTickCounter.getTickDelta(true)
+            partialTicks: Float = mc.renderTickCounter.getTickProgress(true)
         ): TrajectoryInfoRenderer {
             val yawRadians = rotation.yaw / 180f * Math.PI.toFloat()
             val pitchRadians = rotation.pitch / 180f * Math.PI.toFloat()
@@ -96,8 +117,9 @@ class TrajectoryInfoRenderer(
                 cos(yawRadians) * cos(pitchRadians).toDouble()
             ).normalize().scale(trajectoryInfo.initialVelocity)
 
-            if (trajectoryInfo.copiesPlayerVelocity) {
-                velocity.move(
+            //In Freeze, this momentum is the residual value before freezing.
+            if (trajectoryInfo.copiesPlayerVelocity && !ModuleFreeze.running) {
+            velocity.move(
                     x = entity.velocity.x,
                     y = if (entity.isOnGround) 0.0 else entity.velocity.y,
                     z = entity.velocity.z
@@ -124,9 +146,26 @@ class TrajectoryInfoRenderer(
     fun runSimulation(
         maxTicks: Int,
     ): SimulationResult {
+        fun tickVelocity() {
+            val blockState = world.getBlockState(mutableBlockPos.set(pos.x, pos.y, pos.z))
+            // Check is next position water
+            val drag = if (!blockState.fluidState.isEmpty) {
+                trajectoryInfo.dragInWater
+            } else {
+                trajectoryInfo.drag
+            }
+
+            velocity.scale(drag).move(y = -trajectoryInfo.gravity)
+        }
+
         val positions = mutableListOf<Vec3d>()
+
+        // Apply first-tick physics to velocity only, mimicking server spawn reset
+        tickVelocity()
+
+        // Now start normal simulation, starting from currTicks = 1
         val prevPos = pos.copy()
-        var currTicks = 0
+        var currTicks = 1
 
         while (currTicks < maxTicks) {
             if (pos.y < world.bottomY) {
@@ -143,17 +182,7 @@ class TrajectoryInfoRenderer(
                 return SimulationResult(hitResult.first, positions)
             }
 
-            val blockState = world.getBlockState(mutableBlockPos.set(pos.x, pos.y, pos.z))
-
-            // Check is next position water
-            val drag = if (!blockState.fluidState.isEmpty) {
-                trajectoryInfo.dragInWater
-            } else {
-                trajectoryInfo.drag
-            }
-
-            velocity.scale(drag)
-                .move(y = -trajectoryInfo.gravity)
+            tickVelocity()
 
             // Draw path
             positions += pos.copy()
@@ -164,6 +193,7 @@ class TrajectoryInfoRenderer(
         if (positions.isEmpty()) {
             positions += pos
         }
+
         return SimulationResult(null, positions)
     }
 
@@ -189,13 +219,15 @@ class TrajectoryInfoRenderer(
             owner,
             posBefore,
             posAfter,
-            hitbox.offset(pos).stretch(velocity).expand(1.0)
-        ) {
-            val canCollide = !it.isSpectator && it.isAlive
-            val shouldCollide = it.canHit() || owner !== player && it === player
+            hitbox.offset(pos).stretch(velocity).expand(1.0),
+            {
+                val canCollide = !it.isSpectator && it.isAlive
+                val shouldCollide = it.canHit() || owner !== player && it === player
 
-            return@getEntityCollision canCollide && shouldCollide && !owner.isConnectedThroughVehicle(it)
-        }
+                return@getEntityCollision canCollide && shouldCollide && !owner.isConnectedThroughVehicle(it)
+            },
+            if (owner is ProjectileEntity) ProjectileUtil.getToleranceMargin(owner) else 0f,
+        )
 
         return if (entityHitResult != null && entityHitResult.type != HitResult.Type.MISS) {
             val hitPos = entityHitResult.entity.box.expand(trajectoryInfo.hitboxRadius).raycast(posBefore, posAfter)
@@ -245,9 +277,9 @@ class TrajectoryInfoRenderer(
         matrixStack: MatrixStack,
     ) {
         renderEnvironmentForWorld(matrixStack) {
-            withColor(color) {
-                drawLineStrip(positions = positions.mapToArray { relativeToCamera(it + renderOffset).toVec3() })
-            }
+            drawLineStrip(
+                color.toARGB(),
+                positions = positions.mapToArray { relativeToCamera(it + renderOffset).toVec3() })
         }
     }
 
@@ -281,24 +313,24 @@ private fun drawHitEntities(
     partialTicks: Float
 ) {
     renderEnvironmentForWorld(matrixStack) {
-        withColor(entityHitColor) {
-            for (entity in entities) {
-                if (entity === player) {
-                    continue
-                }
+        startBatch()
+        for (entity in entities) {
+            if (entity === player) {
+                continue
+            }
 
-                val pos = entity.interpolateCurrentPosition(partialTicks)
+            val pos = entity.interpolateCurrentPosition(partialTicks)
 
-                withPositionRelativeToCamera(pos) {
-                    drawSolidBox(
-                        entity
-                            .getDimensions(entity.pose)!!
-                            .getBoxAt(Vec3d.ZERO)
-                    )
-                }
+            withPositionRelativeToCamera(pos) {
+                drawBox(
+                    entity
+                        .getDimensions(entity.pose)!!
+                        .getBoxAt(Vec3d.ZERO),
+                    entityHitColor,
+                )
             }
         }
-
+        commitBatch()
     }
 }
 
@@ -313,9 +345,11 @@ private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHi
     if (bestBox != null) {
         renderEnvironmentForWorld(matrixStack) {
             withPositionRelativeToCamera(currPos) {
-                withColor(color) {
-                    drawSideBox(bestBox, blockHitResult.side)
-                }
+                drawBoxSide(
+                    bestBox,
+                    side = blockHitResult.side,
+                    faceColor = color,
+                )
             }
         }
     }

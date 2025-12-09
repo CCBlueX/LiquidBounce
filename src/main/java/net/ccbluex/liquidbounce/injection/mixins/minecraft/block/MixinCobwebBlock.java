@@ -24,6 +24,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.CobwebBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCollisionHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,10 +39,11 @@ public class MixinCobwebBlock {
      * Hook entity collision event
      */
     @Inject(method = "onEntityCollision", at = @At("HEAD"), cancellable = true)
-    private void hookEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, CallbackInfo callback) {
+    private void hookEntityCollision(BlockState state, World world, BlockPos pos, Entity entity,
+        EntityCollisionHandler handler, CallbackInfo ci) {
         if (ModuleNoWeb.INSTANCE.getRunning() && entity == MinecraftClient.getInstance().player &&
                 ModuleNoWeb.INSTANCE.handleEntityCollision(pos)) {
-            callback.cancel();
+            ci.cancel();
         }
     }
 }

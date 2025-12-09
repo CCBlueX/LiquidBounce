@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.spoofer.SpooferClient;
+import net.ccbluex.liquidbounce.utils.client.PlainText;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -58,11 +59,12 @@ public class MixinClientLoginNetworkHandlerMixin {
 
         return Text.empty()
                 .append(notOfflineMode)
-                .append("\n\n")
+                .append(PlainText.NEW_LINE)
+                .append(PlainText.NEW_LINE)
                 .append(requiresValidText)
-                .append("\n")
+                .append(PlainText.NEW_LINE)
                 .append(loginText)
-                .append("\n")
+                .append(PlainText.NEW_LINE)
                 .append(retryText);
     }
 

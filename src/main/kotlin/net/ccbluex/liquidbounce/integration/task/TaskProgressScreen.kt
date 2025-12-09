@@ -24,9 +24,11 @@ package net.ccbluex.liquidbounce.integration.task
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.task.type.ResourceTask
 import net.ccbluex.liquidbounce.integration.task.type.Task
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.PlainText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
@@ -41,7 +43,7 @@ import java.text.DecimalFormat
 class TaskProgressScreen(
     title: String,
     private val taskManager: TaskManager
-) : Screen(Text.literal(title)) {
+) : Screen(title.asPlainText()) {
 
     private val percentFormat = DecimalFormat("0.0")
 
@@ -65,10 +67,10 @@ class TaskProgressScreen(
         // Draw title
         context.drawText(
             textRenderer,
-            title.string.asText().formatted(Formatting.GOLD),
+            title.string.asPlainText(Formatting.GOLD),
             (cx - textRenderer.getWidth(title.string) / 2).toInt(),
             yOffset,
-            0xFFFFFF,
+            -1,
             true
         )
 
@@ -81,18 +83,18 @@ class TaskProgressScreen(
                 line,
                 (cx - textRenderer.getWidth(line) / 2).toInt(),
                 yOffset,
-                0xFFFFFF,
+                -1,
                 false
             )
             yOffset += textRenderer.fontHeight + 2
         }
 
-        var progressBarHeight = 14
+        val progressBarHeight = 14
 
         // Draw progress bar
-        poseStack.push()
-        poseStack.translate(cx, yOffset.toDouble() + 18.0, 0.0)
-        poseStack.translate(-progressBarWidth / 2.0, -progressBarHeight / 2.0, 0.0)
+        poseStack.pushMatrix()
+        poseStack.translate(cx.toFloat(), yOffset.toFloat() + 18.0f)
+        poseStack.translate(progressBarWidth.toFloat() * -0.5f, progressBarHeight.toFloat() * -0.5f)
 
         // Bar border
         context.fill(
@@ -113,7 +115,7 @@ class TaskProgressScreen(
             ((progressBarWidth - 4) * progress).toInt(), (progressBarHeight - 4).toInt(),
             -1
         )
-        poseStack.pop()
+        poseStack.popMatrix()
     }
 
     private fun getTaskLines(progress: Float): List<Text> {
@@ -122,21 +124,21 @@ class TaskProgressScreen(
 
         // Prepare text to display
         val textLines = mutableListOf<Text>()
-        textLines.add("Total: ${percentFormat.format(progress * 100)}%$speed".asText())
-        textLines.add(Text.empty())
+        textLines.add("Total: ${percentFormat.format(progress * 100)}%$speed".asPlainText())
+        textLines.add(PlainText.EMPTY)
 
         activeTasks.take(3).forEach { task ->
-            textLines.add(buildString {
+            textLines.add(Pools.buildStringPooled {
                 append(task.name)
                 append(": ")
                 append(percentFormat.format(task.progress * 100))
                 append("%")
                 append(formatTotalSpeed(listOf(task)))
-            }.asText().formatted(Formatting.GRAY))
+            }.asPlainText(Formatting.GRAY))
         }
 
         if (activeTasks.size > 3) {
-            textLines.add("... and ${activeTasks.size - 3} more tasks".asText().formatted(Formatting.GRAY))
+            textLines.add("... and ${activeTasks.size - 3} more tasks".asPlainText(Formatting.GRAY))
         }
         return textLines
     }

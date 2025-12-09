@@ -26,10 +26,10 @@ import org.gradle.kotlin.dsl.support.listFilesOrdered
 plugins {
     id("fabric-loom")
     kotlin("jvm")
-    id("com.gorylenko.gradle-git-properties") version "2.5.3"
-    id("io.gitlab.arturbosch.detekt") version "1.23.6"
+    id("com.gorylenko.gradle-git-properties") version "2.5.4"
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.node-gradle.node") version "7.1.0"
-    id("org.jetbrains.dokka") version "1.9.10"
+    id("org.jetbrains.dokka") version "2.1.0"
 }
 
 base {
@@ -41,95 +41,56 @@ base {
 /** Includes non-mod dependency recursively in the JAR file */
 val includeDependency: Configuration by configurations.creating
 
-/** Includes mod in the JAR file */
-val includeModDependency: Configuration by configurations.creating
-
 /** Includes native-only dependency in the JAR file */
 val includeNative: Configuration by configurations.creating
 
-/**
- * Provided by:
- * - Minecraft
- * - Mod dependencies
- */
-fun Configuration.excludeProvidedLibs() = apply {
-    exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
-    exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
-
-    exclude(group = "com.google.code.gson", module = "gson")
-    exclude(group = "net.java.dev.jna", module = "jna")
-    exclude(group = "commons-codec", module = "commons-codec")
-    exclude(group = "commons-io", module = "commons-io")
-    exclude(group = "org.apache.commons", module = "commons-compress")
-    exclude(group = "org.apache.commons", module = "commons-lang3")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-core")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-api")
-    exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
-    exclude(group = "org.slf4j", module = "slf4j-api")
-    exclude(group = "com.mojang", module = "authlib")
-
-    // Note: from Netty HTTP Server, not all components are used
-    exclude(group = "io.netty", module = "netty-all")
-
-    exclude(group = "io.netty", module = "netty-buffer")
-    exclude(group = "io.netty", module = "netty-codec")
-    exclude(group = "io.netty", module = "netty-common")
-    exclude(group = "io.netty", module = "netty-handler")
-    exclude(group = "io.netty", module = "netty-resolver")
-    exclude(group = "io.netty", module = "netty-transport")
-    exclude(group = "io.netty", module = "netty-transport-native-unix-common")
-}
-
 includeDependency.excludeProvidedLibs()
-includeModDependency.excludeProvidedLibs()
 
 configurations {
     include.configure {
-        extendsFrom(includeModDependency)
         extendsFrom(includeNative)
-    }
-    modApi.configure {
-        extendsFrom(includeModDependency)
     }
     runtimeOnly.configure {
         extendsFrom(includeNative)
     }
 }
 
-repositories {
-    mavenCentral()
-    mavenLocal()
-    maven {
-        name = "CCBlueX"
-        url = uri("https://maven.ccbluex.net/releases")
-    }
-    maven {
-        name = "Fabric"
-        url = uri("https://maven.fabricmc.net/")
-    }
-    maven {
-        name = "Jitpack"
-        url = uri("https://jitpack.io")
-    }
-    maven {
-        name = "TerraformersMC"
-        url = uri("https://maven.terraformersmc.com/")
-    }
-    maven {
-        name = "ViaVersion"
-        url = uri("https://repo.viaversion.com/")
-    }
-    maven {
-        name = "modrinth"
-        url = uri("https://api.modrinth.com/maven")
-    }
-    maven {
-        name = "OpenCollab Snapshots"
-        url = uri("https://repo.opencollab.dev/maven-snapshots/")
-    }
-    maven {
-        name = "Lenni0451"
-        url = uri("https://maven.lenni0451.net/everything")
+allprojects {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven {
+            name = "CCBlueX"
+            url = uri("https://maven.ccbluex.net/releases")
+        }
+        maven {
+            name = "Fabric"
+            url = uri("https://maven.fabricmc.net/")
+        }
+        maven {
+            name = "Jitpack"
+            url = uri("https://jitpack.io")
+        }
+        maven {
+            name = "TerraformersMC"
+            url = uri("https://maven.terraformersmc.com/")
+        }
+        maven {
+            name = "ViaVersion"
+            url = uri("https://repo.viaversion.com/")
+        }
+        maven {
+            name = "modrinth"
+            url = uri("https://api.modrinth.com/maven")
+        }
+        maven {
+            name = "OpenCollab Snapshots"
+            url = uri("https://repo.opencollab.dev/maven-snapshots/")
+        }
+        maven {
+            name = "Lenni0451"
+            url = uri("https://maven.lenni0451.net/everything")
+        }
     }
 }
 
@@ -148,7 +109,7 @@ dependencies {
     modApi("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
 
     // Mod menu
-    modApi("com.terraformersmc:modmenu:${project.property("mod_menu_version")}")
+    modApi("maven.modrinth:modmenu:${project.property("mod_menu_version")}")
 
     // Recommended mods (on IDE)
     modApi("maven.modrinth:sodium:${project.property("sodium_version")}")
@@ -159,11 +120,13 @@ dependencies {
     modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}")
 
     // Minecraft Authlib
-    includeDependency("com.github.CCBlueX:mc-authlib:${project.property("mc_authlib_version")}")
+    includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
 
     // JCEF Support
-    includeModDependency("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
-    includeDependency("net.ccbluex:netty-httpserver:2.3.2")
+    val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
+    modApi(mcef)
+    include(mcef)
+    includeDependency("net.ccbluex:netty-httpserver:2.4.4")
     // MacOS native (Linux native is included in game)
     includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
     includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
@@ -202,8 +165,9 @@ dependencies {
     // Name Protect
     includeDependency("org.ahocorasick:ahocorasick:0.6.3")
 
-    // Kotlin add-on for Java library
-    includeDependency("net.ccbluex:fastutil-kt-ext:0.1.2")
+    // External utils
+    compileOnlyApi("net.ccbluex:fastutil4k-extensions-only:0.2.2")
+    includeDependency("net.ccbluex:fastutil4k-more-collections:0.2.2")
 
     // Test libraries
     testImplementation(kotlin("test"))
@@ -340,9 +304,8 @@ tasks.withType<JavaCompile>().configureEach {
     options.release = 21
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
     useJUnitPlatform()
-    dependsOn("genSources")
 }
 
 // Detekt check

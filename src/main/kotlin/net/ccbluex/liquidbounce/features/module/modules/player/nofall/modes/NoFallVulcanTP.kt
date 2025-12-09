@@ -18,11 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -32,10 +29,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * @anticheatVersion 2.8.8
  * @testedOn eu.loyisa.cn
  */
-internal object NoFallVulcanTP : Choice("VulcanTP288") {
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
+internal object NoFallVulcanTP : NoFallMode("VulcanTP288") {
 
     private val voidThreshold by int("VoidLevel", 0, -256..0)
 

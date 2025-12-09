@@ -32,6 +32,7 @@ abstract class FactorAngleSmooth(name: String, parent: ChoiceConfigurable<*>) : 
      *
      * @param currentRotation The current rotation
      * @param targetRotation The target rotation
+     * @return horizontal speed, vertical speed
      */
     abstract fun calculateFactors(
         rotationTarget: RotationTarget?,

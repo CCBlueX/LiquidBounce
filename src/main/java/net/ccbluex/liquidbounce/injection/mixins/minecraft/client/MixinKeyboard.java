@@ -44,13 +44,13 @@ public class MixinKeyboard {
      * Hook key event
      */
     @Inject(method = "onKey", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", shift = At.Shift.BEFORE, ordinal = 0))
-    private void hookKeyboardKey(long window, int key, int scancode, int i, int j, CallbackInfo callback) {
+    private void hookKeyboardKey(long window, int key, int scancode, int action, int modifiers, CallbackInfo callback) {
         // does if (window == this.client.getWindow().getHandle())
         var inputKey = InputUtil.fromKeyCode(key, scancode);
 
-        EventManager.INSTANCE.callEvent(new KeyboardKeyEvent(inputKey, key, scancode, i, j, this.client.currentScreen));
+        EventManager.INSTANCE.callEvent(new KeyboardKeyEvent(inputKey, key, scancode, action, modifiers, this.client.currentScreen));
         if (client.currentScreen == null) {
-            EventManager.INSTANCE.callEvent(new KeyEvent(inputKey, i));
+            EventManager.INSTANCE.callEvent(new KeyEvent(inputKey, action));
         }
     }
 

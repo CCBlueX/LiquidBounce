@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.*
@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.block.BlockRenderType
 import net.minecraft.entity.EntityDimensions
@@ -63,8 +62,15 @@ object ModuleEasyPearl :
 
     private var targetPosition: Vec3d? = null
 
+    var currentTargetRotation : Rotation? = null
+        private set
     private val enderPearlSlot: HotbarItemSlot?
         get() = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)
+
+    override fun onDisabled() {
+        currentTargetRotation = null
+        super.onDisabled()
+    }
 
     /**
      * Handler throw pearl by player self.
@@ -110,20 +116,21 @@ object ModuleEasyPearl :
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         /**
          * handler for tick event,and check if we are rotating to the target rotation correctly,if yes,throw the pearl
          */
-        val currentTargetRotation = getTargetRotation(targetPosition ?: return@tickHandler) ?: return@tickHandler
+        currentTargetRotation = targetPosition?.let(::getTargetRotation) ?: return@handler
 
-        if (isRotationDone(targetPosition ?: return@tickHandler)) {
+        if (isRotationDone(targetPosition ?: return@handler)) {
             useHotbarSlotOrOffhand(
-                enderPearlSlot ?: return@tickHandler,
+                enderPearlSlot ?: return@handler,
                 0,
-                currentTargetRotation.yaw,
-                currentTargetRotation.pitch,
+                currentTargetRotation!!.yaw,
+                currentTargetRotation!!.pitch,
             )
             targetPosition = null
+            currentTargetRotation = null
         }
     }
 
@@ -142,35 +149,32 @@ object ModuleEasyPearl :
         val state = blockPos.getState() ?: return@handler
 
         renderEnvironmentForWorld(matrixStack) {
-            withDisabledCull {
-                val color =
-                    if (getTargetRotation(pos) != null) {
-                        Color4b(0x20, 0xC2, 0x06)
-                    } else {
-                        Color4b(0xD7, 0x09, 0x09)
-                    }
+            val color =
+                if (getTargetRotation(pos) != null) {
+                    Color4b(0x20, 0xC2, 0x06)
+                } else {
+                    Color4b(0xD7, 0x09, 0x09)
+                }
 
-                val baseColor = color.with(a = 50)
-                val transparentColor = baseColor.with(a = 0)
-                val outlineColor = color.with(a = 200)
+            val baseColor = color.with(a = 50)
+            val transparentColor = baseColor.with(a = 0)
+            val outlineColor = color.with(a = 200)
 
-                withPositionRelativeToCamera(pos.toBlockPos().toVec3d()) {
-                    if (state.renderType != BlockRenderType.MODEL && state.isAir) {
-                        withColor(baseColor) {
-                            drawSideBox(FULL_BOX, Direction.DOWN)
-                        }
-                        withColor(outlineColor) {
-                            drawSideBox(FULL_BOX, Direction.DOWN, onlyOutline = true)
-                        }
-                        drawGradientSides(0.7, baseColor, transparentColor, FULL_BOX)
-                    } else {
-                        withColor(baseColor) {
-                            drawSolidBox(FULL_BOX)
-                        }
-                        withColor(outlineColor) {
-                            drawOutlinedBox(FULL_BOX)
-                        }
-                    }
+            withPositionRelativeToCamera(blockPos) {
+                if (state.renderType != BlockRenderType.MODEL && state.isAir) {
+                    drawBoxSide(
+                        FULL_BOX,
+                        Direction.DOWN,
+                        baseColor,
+                        outlineColor,
+                    )
+                    drawGradientSides(0.7, baseColor, transparentColor, FULL_BOX)
+                } else {
+                    drawBox(
+                        FULL_BOX,
+                        baseColor,
+                        outlineColor,
+                    )
                 }
             }
         }

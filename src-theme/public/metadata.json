@@ -29,13 +29,15 @@
     "ArmorItems",
     "Inventory",
     "CraftingInventory",
+    "EnderChestInventory",
     "TargetHud",
     "BlockCounter",
     "Effects",
     "Keystrokes",
     "Taco",
     "Image",
-    "Text"
+    "Text",
+    "KeyBinds"
   ],
   "fonts": [
     "Inter-Black.ttf",

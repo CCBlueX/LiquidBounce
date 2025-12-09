@@ -34,5 +34,6 @@ object SpooferManager : Configurable("Spoofer") {
         tree(SpooferResourcePack)
         tree(SpooferBungeeCord)
         tree(SpooferTranslation)
+        tree(SpooferFingerprint)
     }
 }

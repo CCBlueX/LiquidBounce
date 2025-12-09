@@ -29,13 +29,13 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.direction
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.util.Hand
 
 /**
@@ -166,7 +166,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
 
                 waitTicks(unhookAfter)
                 vehicleId = player.controllingVehicle?.id ?: return@tickHandler
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                sendStartSneaking()
                 player.stopRiding()
                 waitTicks(hookAfter - 1)
             }

@@ -153,7 +153,7 @@ open class Configurable(
         return output.toTypedArray()
     }
 
-    fun getContainedValuesRecursivelyInternal(output: MutableList<Value<*>>) {
+    protected fun getContainedValuesRecursivelyInternal(output: MutableList<Value<*>>) {
         for (currentValue in this.inner) {
             if (currentValue is ToggleableConfigurable) {
                 output.add(currentValue)
@@ -199,14 +199,15 @@ open class Configurable(
         name: String,
         defaultValue: T,
         valueType: ValueType = ValueType.INVALID,
-    ) = Value(name, defaultValue = defaultValue, valueType = valueType).apply {
+        aliases: List<String> = emptyList(),
+    ) = Value(name, aliases = aliases, defaultValue = defaultValue, valueType = valueType).apply {
         this@Configurable.inner.add(this)
     }
 
     internal inline fun <T : MutableCollection<E>, reified E> list(
         name: String,
         defaultValue: T,
-        valueType: ValueType
+        valueType: ValueType,
     ) = ListValue(name, defaultValue, innerValueType = valueType, innerType = E::class.java).apply {
         this@Configurable.inner.add(this)
     }
@@ -214,7 +215,7 @@ open class Configurable(
     internal inline fun <T : MutableCollection<E>, reified E> mutableList(
         name: String,
         defaultValue: T,
-        valueType: ValueType
+        valueType: ValueType,
     ) = MutableListValue(name, defaultValue, valueType, E::class.java).apply {
         this@Configurable.inner.add(this)
     }
@@ -223,45 +224,76 @@ open class Configurable(
         name: String,
         defaultValue: T,
         items: Set<ItemListValue.NamedItem<E>>,
-        valueType: ValueType
+        valueType: ValueType,
     ) = ItemListValue(name, defaultValue, items, valueType, E::class.java).apply {
         this@Configurable.inner.add(this)
     }
 
-    internal inline fun <T : MutableSet<E>, reified E> registryList(
+    internal inline fun <T : SequencedSet<E>, reified E> registryList(
         name: String,
         defaultValue: T,
-        valueType: ValueType
+        valueType: ValueType,
     ) = RegistryListValue(name, defaultValue, valueType, E::class.java).apply {
         this@Configurable.inner.add(this)
     }
 
-    fun <T : Any> rangedValue(
+    private fun <T : Any> rangedValue(
         name: String,
         defaultValue: T,
         range: ClosedRange<*>,
         suffix: String,
-        valueType: ValueType
-    ) = RangedValue(name, defaultValue = defaultValue, range = range, suffix = suffix, valueType = valueType).apply {
+        valueType: ValueType,
+        aliases: List<String> = emptyList(),
+    ) = RangedValue(
+        name,
+        aliases = aliases,
+        defaultValue = defaultValue,
+        range = range,
+        suffix = suffix,
+        valueType = valueType,
+    ).apply {
         this@Configurable.inner.add(this)
     }
 
     // Fixed data types
 
-    fun boolean(name: String, default: Boolean) = value(name, default, ValueType.BOOLEAN)
+    fun boolean(
+        name: String,
+        default: Boolean,
+        aliases: List<String> = emptyList(),
+    ) = value(name, default, ValueType.BOOLEAN, aliases)
 
-    fun float(name: String, default: Float, range: ClosedFloatingPointRange<Float>, suffix: String = "") =
-        rangedValue(name, default, range, suffix, ValueType.FLOAT)
+    fun float(
+        name: String,
+        default: Float,
+        range: ClosedFloatingPointRange<Float>,
+        suffix: String = "",
+        aliases: List<String> = emptyList(),
+    ) = rangedValue(name, default, range, suffix, ValueType.FLOAT, aliases)
 
     fun floatRange(
         name: String,
         default: ClosedFloatingPointRange<Float>,
         range: ClosedFloatingPointRange<Float>,
-        suffix: String = ""
-    ) = rangedValue(name, default, range, suffix, ValueType.FLOAT_RANGE)
+        suffix: String = "",
+        aliases: List<String> = emptyList(),
+    ) = rangedValue(name, default, range, suffix, ValueType.FLOAT_RANGE, aliases)
 
-    fun int(name: String, default: Int, range: IntRange, suffix: String = "") =
-        rangedValue(name, default, range, suffix, ValueType.INT)
+    fun int(
+        name: String,
+        default: Int,
+        range: IntRange,
+        suffix: String = "",
+        aliases: List<String> = emptyList(),
+    ) = rangedValue(name, default, range, suffix, ValueType.INT, aliases)
+
+    fun intRange(
+        name: String,
+        default: IntRange,
+        range: IntRange,
+        suffix: String = "",
+        aliases: List<String> = emptyList(),
+    ) = rangedValue(name, default, range, suffix, ValueType.INT_RANGE, aliases)
 
     fun bind(name: String, default: Int = GLFW.GLFW_KEY_UNKNOWN) = bind(
         name,
@@ -276,9 +308,6 @@ open class Configurable(
 
     fun key(name: String, default: InputUtil.Key = InputUtil.UNKNOWN_KEY) =
         value(name, default, ValueType.KEY)
-
-    fun intRange(name: String, default: IntRange, range: IntRange, suffix: String = "") =
-        rangedValue(name, default, range, suffix, ValueType.INT_RANGE)
 
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
 
@@ -300,27 +329,27 @@ open class Configurable(
 
     fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR3_D)
 
-    fun <C : MutableSet<Block>> blocks(name: String, default: C) =
+    fun <C : SequencedSet<Block>> blocks(name: String, default: C) =
         registryList(name, default, ValueType.BLOCK)
 
     fun item(name: String, default: Item) = value(name, default, ValueType.ITEM)
 
-    fun <C : MutableSet<Item>> items(name: String, default: C) =
+    fun <C : SequencedSet<Item>> items(name: String, default: C) =
         registryList(name, default, ValueType.ITEM)
 
-    fun <C : MutableSet<SoundEvent>> sounds(name: String, default: C) =
+    fun <C : SequencedSet<SoundEvent>> sounds(name: String, default: C) =
         registryList(name, default, ValueType.SOUND)
 
-    fun <C : MutableSet<StatusEffect>> statusEffects(name: String, default: C) =
+    fun <C : SequencedSet<StatusEffect>> statusEffects(name: String, default: C) =
         registryList(name, default, ValueType.STATUS_EFFECT)
 
-    fun <C : MutableSet<Identifier>> clientPackets(name: String, default: C) =
+    fun <C : SequencedSet<Identifier>> clientPackets(name: String, default: C) =
         registryList(name, default, ValueType.CLIENT_PACKET)
 
-    fun <C : MutableSet<Identifier>> serverPackets(name: String, default: C) =
+    fun <C : SequencedSet<Identifier>> serverPackets(name: String, default: C) =
         registryList(name, default, ValueType.SERVER_PACKET)
 
-    fun <C : MutableSet<EntityType<*>>> entityTypes(name: String, default: C) =
+    fun <C : SequencedSet<EntityType<*>>> entityTypes(name: String, default: C) =
         registryList(name, default, ValueType.ENTITY_TYPE)
 
     @Suppress("LongParameterList")
@@ -338,7 +367,7 @@ open class Configurable(
         name: String,
         default: File? = null,
         dialogMode: FileDialogMode = FileDialogMode.OPEN_FILE,
-        supportedExtensions: Set<String>? = null
+        supportedExtensions: Set<String>? = null,
     ) = FileValue(name, default, dialogMode, supportedExtensions).apply {
         this@Configurable.inner.add(this)
     }
@@ -346,14 +375,14 @@ open class Configurable(
     inline fun <reified T> multiEnumChoice(
         name: String,
         vararg default: T,
-        canBeNone: Boolean = true
+        canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
         multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
 
     inline fun <reified T> multiEnumChoice(
         name: String,
         default: EnumEntries<T>,
-        canBeNone: Boolean = true
+        canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
         multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
 
@@ -361,16 +390,27 @@ open class Configurable(
         name: String,
         default: EnumSet<T> = emptyEnumSet(),
         choices: EnumSet<T> = EnumSet.allOf(T::class.java),
-        canBeNone: Boolean = true
+        canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, default, choices as Set<T>, canBeNone)
+        multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = false)
+
+    inline fun <reified T> multiEnumChoice(
+        name: String,
+        default: SequencedSet<T>,
+        choices: EnumSet<T> = EnumSet.allOf(T::class.java),
+        canBeNone: Boolean = true,
+    ) where T : Enum<T>, T : NamedChoice =
+        multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = true)
 
     fun <T : NamedChoice> multiEnumChoice(
         name: String,
         default: MutableSet<T>,
         choices: Set<T>,
-        canBeNone: Boolean
-    ) = MultiChooseListValue(name, default, choices, canBeNone).apply { this@Configurable.inner.add(this@apply) }
+        canBeNone: Boolean,
+        isOrderSensitive: Boolean,
+    ) = MultiChooseListValue(name, default, choices, canBeNone, isOrderSensitive).apply {
+        this@Configurable.inner.add(this)
+    }
 
     inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
         where T : Enum<T>, T : NamedChoice = enumChoice(name, default, EnumSet.allOf(T::class.java))
@@ -382,7 +422,7 @@ open class Configurable(
         eventListener: EventListener,
         name: String,
         active: T,
-        choices: Array<T>
+        choices: Array<T>,
     ): ChoiceConfigurable<T> {
         return choices(eventListener, name, {
             val idx = choices.indexOf(active)
@@ -397,7 +437,7 @@ open class Configurable(
         eventListener: EventListener,
         name: String,
         activeCallback: ToIntFunction<List<T>>,
-        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
+        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>,
     ): ChoiceConfigurable<T> {
         return ChoiceConfigurable(eventListener, name, activeCallback, choicesCallback).apply {
             this@Configurable.inner.add(this)
@@ -409,10 +449,10 @@ open class Configurable(
         eventListener: EventListener,
         name: String,
         activeIndex: Int = 0,
-        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
+        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>,
     ) = choices(eventListener, name, { activeIndex }, choicesCallback)
 
-    fun value(value: Value<*>) = value.apply { this@Configurable.inner.add(this) }
+    fun <V : Value<*>> value(value: V) = value.apply { this@Configurable.inner.add(this) }
 
     /**
      * Assigns the value of the settings to the component
@@ -521,15 +561,21 @@ open class Configurable(
             }
 
             ValueType.MULTI_CHOOSE -> {
-                val value = valueObject["value"].asJsonArray.mapTo(hashSetOf()) { it.asString.asNamedChoice() }
-                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
-                val canBeNone = when (val json = valueObject["canBeNone"]) {
-                    null, is JsonNull -> true // default = true
+                fun parseBoolean(key: String, default: Boolean) = when (val json = valueObject[key]) {
+                    null, is JsonNull -> default
                     is JsonPrimitive, is JsonArray -> json.asBoolean
-                    else -> error("Unexpected JSON (${json.javaClass}): $json, should be boolean")
+                    else -> error("Unexpected JSON value (${json.javaClass}): $json, should be boolean")
                 }
 
-                multiEnumChoice(name, value, choices, canBeNone)
+                val canBeNone = parseBoolean(key = "canBeNone", default = true)
+                val isOrderSensitive = parseBoolean(key = "isOrderSensitive", default = false)
+
+                val value = valueObject["value"].asJsonArray.mapTo(
+                    if (isOrderSensitive) sortedSetOf() else linkedSetOf()
+                ) { it.asString.asNamedChoice() }
+                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
+
+                multiEnumChoice(name, default = value, choices, canBeNone, isOrderSensitive)
             }
 
             else -> error("Unsupported type: $type")

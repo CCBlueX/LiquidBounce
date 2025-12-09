@@ -28,10 +28,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.drawSolidBox
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.PacketSnapshot
@@ -143,22 +142,22 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         }
 
         // Update box position with these packets
+        val target = target ?: return@handler
         val entityPacket = packet is EntityS2CPacket && packet.getEntity(world) == target
-        val positionPacket = packet is EntityPositionS2CPacket && packet.entityId == target?.id
-        val syncPacket = packet is EntityPositionSyncS2CPacket && packet.id == target?.id
+        val positionPacket = packet is EntityPositionS2CPacket && packet.entityId == target.id
+        val syncPacket = packet is EntityPositionSyncS2CPacket && packet.id == target.id
         if (entityPacket || positionPacket || syncPacket) {
-            val pos = if (packet is EntityS2CPacket) {
-                position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
-            } else if (packet is EntityPositionS2CPacket) {
-                Vec3d(packet.change.position.x, packet.change.position.y, packet.change.position.z)
-            } else {
-                (packet as EntityPositionSyncS2CPacket).values.position()
+            val pos = when (packet) {
+                is EntityS2CPacket ->
+                    position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
+                is EntityPositionS2CPacket ->
+                    Vec3d(packet.change.position.x, packet.change.position.y, packet.change.position.z)
+                else -> (packet as EntityPositionSyncS2CPacket).values.position()
             }
-
             position?.setPos(pos)
 
             // Is the target's actual position closer than its tracked position?
-            if (target!!.squareBoxedDistanceTo(player, pos!!) < target!!.squaredBoxedDistanceTo(player)) {
+            if (target.squareBoxedDistanceTo(player, pos!!) < target.squaredBoxedDistanceTo(player)) {
                 // Process all packets. We want to be able to hit the enemy, not the opposite.
                 processPackets(true)
                 // And stop right here. No need to cancel further packets.
@@ -170,7 +169,10 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         delayedPacketQueue.add(PacketSnapshot(packet, event.origin, System.currentTimeMillis()))
     }
 
-    abstract class RenderChoice(name: String) : Choice(name) {
+    private sealed class RenderChoice(name: String) : Choice(name) {
+        final override val parent: ChoiceConfigurable<*>
+            get() = espMode
+
         protected fun getEntityPosition(): Pair<Entity, Vec3d>? {
             val entity = target ?: return null
             val pos = position?.pos ?: return null
@@ -178,10 +180,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         }
     }
 
-    object Box : RenderChoice("Box") {
-        override val parent: ChoiceConfigurable<RenderChoice>
-            get() = espMode
-
+    private object Box : RenderChoice("Box") {
         private val color by color("Color", Color4b(36, 32, 147, 87))
 
         @Suppress("unused")
@@ -195,18 +194,13 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
             renderEnvironmentForWorld(event.matrixStack) {
                 withPositionRelativeToCamera(pos) {
-                    withColor(color) {
-                        drawSolidBox(box)
-                    }
+                    drawBox(box, color)
                 }
             }
         }
     }
 
-    object Model : RenderChoice("Model") {
-        override val parent: ChoiceConfigurable<RenderChoice>
-            get() = espMode
-
+    private object Model : RenderChoice("Model") {
         private val lightAmount by float("LightAmount", 0.3f, 0.01f..1f)
 
         @Suppress("unused")
@@ -233,10 +227,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         }
     }
 
-    object Wireframe : RenderChoice("Wireframe") {
-        override val parent: ChoiceConfigurable<RenderChoice>
-            get() = espMode
-
+    private object Wireframe : RenderChoice("Wireframe") {
         private val color by color("Color", Color4b(36, 32, 147, 87))
         private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
 
@@ -249,10 +240,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         }
     }
 
-    object None : RenderChoice("None") {
-        override val parent: ChoiceConfigurable<RenderChoice>
-            get() = espMode
-    }
+    private object None : RenderChoice("None")
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> { event ->

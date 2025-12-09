@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -51,17 +52,14 @@ object CommandHelp : Command.Factory {
                     "\u2B25 ".asText()
                         .formatted(Formatting.BLUE)
                         .onHover(
-                            HoverEvent(
-                                HoverEvent.Action.SHOW_TEXT,
+                            HoverEvent.ShowText(
                                 translation("liquidbounce.command.${command.name}.description")
                             )
                         )
                         .append(
                             commandStart.asText()
                                 .formatted(Formatting.GRAY)
-                                .onClick {
-                                    mc.openChat(commandStart)
-                                }
+                                .onClick(ClickEvent.SuggestCommand(commandStart))
                         )
                         .append(buildAliasesText(command))
                 }
@@ -73,11 +71,9 @@ object CommandHelp : Command.Factory {
 
         if (cmd.aliases.isNotEmpty()) {
             cmd.aliases.forEach { alias ->
-                aliasesText += ", ".asText().formatted(Formatting.DARK_GRAY)
+                aliasesText += ", ".asPlainText(Formatting.DARK_GRAY)
                 aliasesText += regular(alias).formatted(Formatting.GRAY)
-                    .onClick {
-                        mc.openChat(CommandManager.Options.prefix + alias)
-                    }
+                    .onClick(ClickEvent.SuggestCommand(CommandManager.Options.prefix + alias))
             }
         }
 

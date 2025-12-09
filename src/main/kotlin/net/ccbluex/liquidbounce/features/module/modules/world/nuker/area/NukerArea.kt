@@ -46,7 +46,7 @@ sealed class NukerArea(name: String) : Choice(name) {
             return false
         }
 
-        val shape = state.getCollisionShape(world, pos, ShapeContext.of(player))
+        val shape = state.getOutlineShape(world, pos, ShapeContext.of(player))
 
         if (shape.isEmpty) {
             return false

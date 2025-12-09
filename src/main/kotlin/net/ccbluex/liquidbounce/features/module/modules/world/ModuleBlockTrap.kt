@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.placer.placeInstantOnBlockUpdate
 import net.ccbluex.liquidbounce.utils.client.FloatValueProvider
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
@@ -64,7 +65,7 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
     private val instant by boolean("Instant", true)
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val blocks by blocks("Blocks", hashSetOf())
+    private val blocks by blocks("Blocks", blockSortedSetOf())
     private val placePriority by enumChoice("PlacePriority", PlacePriority.FURTHEST)
     private val placer = tree(BlockPlacer("Place", this, Priority.NORMAL, { filter.getSlot(blocks) }))
     private val targetTracker = tree(TargetTracker(
@@ -98,7 +99,7 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
         val target = targetTracker.target ?: return@handler
 
         renderEnvironmentForWorld(it.matrixStack) {
-            targetRenderer.render(this, target, it.partialTicks)
+            targetRenderer.render(target, it.partialTicks)
         }
     }
 

@@ -21,9 +21,7 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.doubles.DoubleIterable
-import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet
-import it.unimi.dsi.fastutil.ints.IntSet
-import net.ccbluex.fastutil.mapToIntArray
+import net.ccbluex.fastutil.forEachDouble
 import java.util.*
 import java.util.stream.Stream
 
@@ -47,25 +45,9 @@ fun ClosedFloatingPointRange<Float>.proportionOfValue(value: Float): Float {
     }
 }
 
-inline fun range(iterable: DoubleIterable, operation: (Double) -> Unit) {
-    iterable.doubleIterator().apply {
-        while (hasNext()) {
-            operation(nextDouble())
-        }
-    }
-}
-
-inline fun range(iterable: IntProgression, operation: (Int) -> Unit) {
-    iterable.iterator().apply {
-        while (hasNext()) {
-            operation(nextInt())
-        }
-    }
-}
-
 inline fun range(iterable1: DoubleIterable, iterable2: DoubleIterable, operation: (Double, Double) -> Unit) {
-    range(iterable1) { d1 ->
-        range(iterable2) { d2 ->
+    iterable1.forEachDouble { d1 ->
+        iterable2.forEachDouble { d2 ->
             operation(d1, d2)
         }
     }
@@ -77,9 +59,9 @@ inline fun range(
     iterable3: IntProgression,
     operation: (Int, Int, Int) -> Unit
 ) {
-    range(iterable1) { d1 ->
-        range(iterable2) { d2 ->
-            range(iterable3) { d3 ->
+    iterable1.forEach { d1 ->
+        iterable2.forEach { d2 ->
+            iterable3.forEach { d3 ->
                 operation(d1, d2, d3)
             }
         }
@@ -129,10 +111,6 @@ inline fun <reified T : Enum<T>> Iterable<T>.toEnumSet(): EnumSet<T> =
 
 inline fun <reified T : Enum<T>> emptyEnumSet(): EnumSet<T> =
     EnumSet.noneOf(T::class.java)
-
-inline fun <T> Collection<T>.mapIntSet(transform: (T) -> Int): IntSet {
-    return IntLinkedOpenHashSet(mapToIntArray(transform))
-}
 
 /**
  * Inserts a new element into a sorted list while maintaining the order.

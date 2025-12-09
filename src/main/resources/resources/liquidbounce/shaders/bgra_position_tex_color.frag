@@ -1,18 +1,26 @@
-#version 410 core
+#version 330 core
 
 uniform sampler2D Sampler0;
-uniform vec4 ColorModulator;
 
-in vec2 fragTexCoord;
-in vec4 fragColor;
+// see mc position_tex_color.fsh
+layout(std140) uniform DynamicTransforms {
+    mat4 ModelViewMat;
+    vec4 ColorModulator;
+    vec3 ModelOffset;
+    mat4 TextureMat;
+    float LineWidth;
+};
 
-out vec4 finalColor;
+in vec2 texCoord0;
+in vec4 vertexColor;
+
+out vec4 fragColor;
 
 void main() {
-    vec4 texColor = texture(Sampler0, fragTexCoord);
+    vec4 texColor = texture(Sampler0, texCoord0);
     if (texColor.a == 0.0) {
         discard;
     }
     texColor.rgb = texColor.bgr;
-    finalColor = texColor * fragColor * ColorModulator;
+    fragColor = texColor * vertexColor * ColorModulator;
 }

@@ -59,7 +59,7 @@ object CommandInvsee : Command.Factory {
                     throw CommandException(command.result("playerNotFound", inputName))
                 }
 
-                mc.execute {
+                mc.send {
                     mc.setScreen(ViewedInventoryScreen(player))
                 }
 

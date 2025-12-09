@@ -18,12 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall.modes
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
@@ -36,7 +33,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * SpoofGround mode for the NoFall module.
  * This mode spoofs the 'onGround' flag in PlayerMoveC2SPacket to prevent fall damage.
  */
-internal object NoFallBlink : Choice("Blink") {
+internal object NoFallBlink : NoFallMode("Blink") {
 
     private const val PEEK_TICKS = 2
 
@@ -50,12 +47,6 @@ internal object NoFallBlink : Choice("Blink") {
 
     private var blinkFall = false
     var waitUntilGround = true
-
-    /**
-     * Specifies the parent configuration for this mode
-     */
-    override val parent: ChoiceConfigurable<*>
-        get() = modes
 
     private val inputHandler = handler<MovementInputEvent> { event ->
         // If we are invincible, we don't need to care about fall damage
@@ -112,7 +103,7 @@ internal object NoFallBlink : Choice("Blink") {
         )
 
         // Check if we collect fall distance above 2f in the next 10 ticks
-        for (ignored in 0..MAXIMUM_TICKS) {
+        for (ignored in 0 until MAXIMUM_TICKS) {
             simulatedPlayer.tick()
 
             if (simulatedPlayer.fallDistance > triggerFallDistance) {

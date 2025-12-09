@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.ItemStack
 import net.minecraft.util.hit.BlockHitResult
@@ -54,9 +53,12 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
                     listOf(Vec3i.ZERO),
                     BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
                 ),
-                FaceHandlingOptions(CenterTargetPositionFactory),
+                FaceHandlingOptions(
+                    CenterTargetPositionFactory,
+                    considerFacingAwayFaces = true
+                ),
                 stackToPlaceWith = bestStack,
-                PlayerLocationOnPlacement(position = position.toVec3d(), pose = predictedPose),
+                PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose)
             )
 
             return findBestBlockPlacementTarget(position, searchOptions) ?: continue

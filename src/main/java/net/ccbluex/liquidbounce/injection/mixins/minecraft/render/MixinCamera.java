@@ -107,6 +107,7 @@ public abstract class MixinCamera {
             ci.cancel();
             return;
         }
+
         var screen = ModuleDroneControl.INSTANCE.getScreen();
 
         if (screen != null) {
@@ -148,16 +149,25 @@ public abstract class MixinCamera {
 
     @ModifyReturnValue(method = "getPos", at = @At("RETURN"))
     private Vec3d modifyGetPos(Vec3d original) {
+        if (ModuleFreeLook.INSTANCE.getRunning()) {
+            return original;
+        }
         return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothPos() : original;
     }
 
     @ModifyReturnValue(method = "getYaw", at = @At("RETURN"))
     private float modifyGetYaw(float original) {
+        if (ModuleFreeLook.INSTANCE.getRunning()) {
+            return original;
+        }
         return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothYaw() : original;
     }
 
     @ModifyReturnValue(method = "getPitch", at = @At("RETURN"))
     private float modifyGetPitch(float original) {
+        if (ModuleFreeLook.INSTANCE.getRunning()) {
+            return original;
+        }
         return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothPitch() : original;
     }
 }

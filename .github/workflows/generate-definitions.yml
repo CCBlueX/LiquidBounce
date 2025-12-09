@@ -17,6 +17,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
 
       - name: Create Mods Directory
         run: mkdir -p run/mods

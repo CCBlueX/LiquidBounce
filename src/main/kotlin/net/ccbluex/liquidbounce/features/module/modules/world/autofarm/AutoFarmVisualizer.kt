@@ -23,13 +23,12 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.util.math.Direction
+import kotlin.math.hypot
 
 object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", true) {
     private object Path : ToggleableConfigurable(this, "Path", true) {
@@ -41,13 +40,12 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
             renderEnvironmentForWorld(event.matrixStack) {
-                withColor(color) {
-                    AutoFarmAutoWalk.walkTarget?.let { target ->
-                        drawLines(
-                            relativeToCamera(player.interpolateCurrentPosition(event.partialTicks)).toVec3(),
-                            relativeToCamera(target).toVec3()
-                        )
-                    }
+                AutoFarmAutoWalk.walkTarget?.let { target ->
+                    drawLine(
+                        relativeToCamera(player.interpolateCurrentPosition(event.partialTicks)).toVec3(),
+                        relativeToCamera(target).toVec3(),
+                        color.toARGB(),
+                    )
                 }
             }
         }
@@ -71,14 +69,12 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             private val color by color("Color", Color4b(66, 120, 245, 255))
             private val colorRainbow by boolean("Rainbow", false)
 
-            fun render(renderEnvironment: RenderEnvironment) {
+            fun render(renderEnvironment: WorldRenderEnvironment) {
                 if (!this.enabled) return
                 val target = ModuleAutoFarm.currentTarget ?: return
                 with(renderEnvironment) {
-                    withPosition(Vec3(target)) {
-                        withColor((if (colorRainbow) rainbow() else color).with(a = 50)) {
-                            drawSolidBox(FULL_BOX)
-                        }
+                    withPositionRelativeToCamera(target) {
+                        drawBox(FULL_BOX, if (colorRainbow) rainbow(alpha = 0.2f) else color.with(a = 50))
                     }
                 }
             }
@@ -90,37 +86,39 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             val baseColor = if (colorRainbow) rainbow() else readyColor
 
             val fillColor = baseColor.with(a = 50)
-            val outlineColor = baseColor.with(a = 100)
 
             renderEnvironmentForWorld(matrixStack) {
+                startBatch()
+
                 CurrentTarget.render(this)
                 for ((pos, type) in AutoFarmBlockTracker.iterate()) {
-                    if ((pos.x - player.x).sq() + (pos.z - player.z).sq() > rangeSquared) continue
+                    if (hypot(pos.x - player.x, pos.z - player.z) > rangeSquared) continue
 
-                    withPositionRelativeToCamera(pos.toVec3d()) {
+                    withPositionRelativeToCamera(pos) {
                         when (type) {
                             AutoFarmTrackedState.SHOULD_BE_DESTROYED -> {
-                                withColor(fillColor) {
-                                    drawSolidBox(FULL_BOX)
-                                }
+                                drawBox(
+                                    FULL_BOX,
+                                    fillColor,
+                                    if (outline) baseColor.with(a = 100) else null,
+                                )
                             }
                             AutoFarmTrackedState.SOUL_SAND, AutoFarmTrackedState.FARMLAND -> {
-                                withColor(placeColor) {
-                                    drawSideBox(FULL_BOX, Direction.UP)
-                                }
+                                drawBoxSide(
+                                    FULL_BOX,
+                                    side = Direction.UP,
+                                    faceColor = placeColor,
+                                    outlineColor = if (outline) baseColor.with(a = 100) else null,
+                                )
                             }
                             AutoFarmTrackedState.CAN_USE_BONE_MEAL -> {
                                 // NOOP
                             }
                         }
-
-                        if (outline && type == AutoFarmTrackedState.SHOULD_BE_DESTROYED) {
-                            withColor(outlineColor) {
-                                drawOutlinedBox(FULL_BOX)
-                            }
-                        }
                     }
                 }
+
+                commitBatch()
             }
         }
     }

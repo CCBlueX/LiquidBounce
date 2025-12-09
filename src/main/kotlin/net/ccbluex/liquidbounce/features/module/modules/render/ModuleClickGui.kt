@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTypi
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.additions.setPosition
 import net.ccbluex.liquidbounce.event.waitSeconds
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
@@ -192,7 +193,7 @@ object ModuleClickGui :
     /**
      * An empty screen that acts as a hint when to draw the clickgui
      */
-    class ClickScreen : Screen("ClickGUI".asText()) {
+    class ClickScreen : Screen("ClickGUI".asPlainText()) {
 
         override fun init() {
             if (trackMousePosition && !screenInitialized && !mouseX.isNaN() && !mouseY.isNaN()) {

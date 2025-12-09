@@ -182,7 +182,7 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
         // Send answer
         val formattedAnswer = answerTemplate.format(answer)
         if (formattedAnswer.startsWith("/")) {
-            network.sendCommand(formattedAnswer.substring(1))
+            network.sendChatCommand(formattedAnswer.substring(1))
         } else {
             network.sendChatMessage(formattedAnswer)
         }
