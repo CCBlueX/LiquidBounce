@@ -60,7 +60,7 @@
     });
 
     $: avatarUrl = user?.nickname 
-        ? `https://avatar.liquidbounce.net/avatar/${user.nickname}` 
+        ? `https://avatar.liquidbounce.net/avatar/${encodeURIComponent(user.nickname)}` 
         : "img/steve.png";
     
     function formatGroups(groups: string[]): string {
