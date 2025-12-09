@@ -74,7 +74,7 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
     @Inject(method = "onMouseClick(Lnet/minecraft/screen/slot/Slot;IILnet/minecraft/screen/slot/SlotActionType;)V", at = @At("HEAD"), cancellable = true)
     private void cancelMouseClick(Slot slot, int slotId, int button, SlotActionType actionType, CallbackInfo ci) {
         var inventoryMove = ModuleInventoryMove.INSTANCE;
-        if ((Object) this instanceof InventoryScreen && inventoryMove.getRunning() && inventoryMove.getDoNotAllowClicking()) {
+        if ((HandledScreen<?>) (Object) this instanceof InventoryScreen && inventoryMove.getRunning() && inventoryMove.getDoNotAllowClicking()) {
             ci.cancel();
         }
 
@@ -124,13 +124,13 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
         /*
          * We move the item by itself, we don't need this action by Minecraft
          */
-        if (matchingItemScrollerMoveConditions((int) click.x(), (int) click.y())) {
+        if (matchingItemScrollerMoveConditions(click.x(), click.y())) {
             cir.cancel();
         }
     }
 
     @Unique
-    private boolean matchingItemScrollerMoveConditions(int mouseX, int mouseY) {
+    private boolean matchingItemScrollerMoveConditions(double mouseX, double mouseY) {
         return getSlotAt(mouseX, mouseY) != null
             && ModuleItemScroller.INSTANCE.canPerformScroll(this.client.getWindow());
     }

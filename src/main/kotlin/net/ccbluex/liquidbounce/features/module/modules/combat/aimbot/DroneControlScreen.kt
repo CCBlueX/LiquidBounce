@@ -63,7 +63,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
     private var focusedEntity: EntityFocusData? = null
 
     private var dragStartPos: Vector2d? = null
-    private var dragStartRottion: Vec2f = Vec2f(0.0F, 0.0F)
+    private var dragStartRottion: Vec2f = Vec2f.ZERO
 
     private var zoomSteps = 0.0
 
@@ -228,5 +228,5 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         return false
     }
 
-    class EntityFocusData(val entity: Entity, val baseY: Double, val hitBoxOffsetY: Double)
+    private class EntityFocusData(val entity: Entity, val baseY: Double, val hitBoxOffsetY: Double)
 }
