@@ -48,13 +48,13 @@ object ClientInteropServer {
 
     val url get() = "http://127.0.0.1:$port"
 
-    fun start() {
+    suspend fun start() {
         runCatching {
             // RestAPI
             httpServer.apply {
-                routeController.apply {
+                routing {
                     get("/", ::getRootResponse)
-                    registerInteropFunctions(this)
+                    registerInteropFunctions()
 
                     LiquidBounce.resource("themes/liquidbounce.zip").use { stream ->
                         zip("/resource/liquidbounce", stream)
@@ -79,7 +79,8 @@ object ClientInteropServer {
     }
 
     private var attempt = 0
-    private fun startServer(port: Int): Int {
+
+    private suspend fun startServer(port: Int): Int {
         return try {
             httpServer.start(port)
         } catch (bindException: BindException) {
