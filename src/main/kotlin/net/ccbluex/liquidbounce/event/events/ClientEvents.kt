@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.minecraft.block.Block
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.world.GameMode
 
@@ -91,7 +92,7 @@ class GameModeChangeEvent(val gameMode: GameMode) : Event(), WebSocketEvent
 class TargetChangeEvent(val target: PlayerData?) : Event(), WebSocketEvent
 
 @Nameable("blockCountChange")
-class BlockCountChangeEvent(val count: Int?) : Event(), WebSocketEvent
+class BlockCountChangeEvent(val nextBlock: Block?, val count: Int?) : Event(), WebSocketEvent
 
 @Nameable("bedStateChange")
 class BedStateChangeEvent(val bedStates: Collection<BedState>) : Event(), WebSocketEvent

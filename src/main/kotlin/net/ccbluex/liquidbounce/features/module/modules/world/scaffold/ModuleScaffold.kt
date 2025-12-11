@@ -71,6 +71,7 @@ import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.block.Block
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.*
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
@@ -235,6 +236,8 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     private var startY = 0
     private var jumps = 0
 
+    private var nextBlock: Block? = null
+
     val blockCount: Int
         get() {
             fun ItemStack.blockCount() = if (isValidBlock(this)) this.count else 0
@@ -302,12 +305,15 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)
-        updateRenderCount()
+        nextBlock = null
+        updateRenderCount(null)
         forceSneak = 0
         renderer.clearSilently()
     }
 
-    private fun updateRenderCount(count: Int? = null) = EventManager.callEvent(BlockCountChangeEvent(count))
+    private fun updateRenderCount(count: Int?) {
+        EventManager.callEvent(BlockCountChangeEvent(nextBlock, count))
+    }
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
@@ -316,9 +322,12 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         val blockInHotbar = findBestValidHotbarSlotForTarget()
 
         val bestStack = if (blockInHotbar == null) {
+            nextBlock = null
             ItemStack(Items.SANDSTONE, 64)
         } else {
-            player.inventory.getStack(blockInHotbar)
+            player.inventory.getStack(blockInHotbar).also {
+                nextBlock = it.getBlock()
+            }
         }
 
         val optimalLine = this.currentOptimalLine
@@ -466,7 +475,6 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         debugParameter("WasTowering") { wasTowering }
 
         val target = currentTarget
-
 
         val computedRotation = if (target != null) {
             technique.activeChoice.getRotations(target)

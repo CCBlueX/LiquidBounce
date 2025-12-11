@@ -136,6 +136,7 @@ export interface TargetChangeEvent {
 }
 
 export interface BlockCountChangeEvent {
+    nextBlock?: string;
     count?: number;
 }
 
