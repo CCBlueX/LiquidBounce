@@ -85,7 +85,7 @@ object ChunkRenderer {
             for (posToUpdate in positionsToUpdate) {
                 val color = getColor(posToUpdate.x, posToUpdate.z)
 
-                textureAtlasManager.editChunk(ChunkPos(posToUpdate)) { texture, atlasPosition ->
+                textureAtlasManager.editChunk(ChunkPos.toLong(posToUpdate)) { texture, atlasPosition ->
                     val (x, y) = atlasPosition.getPosOnAtlas(posToUpdate.x and 15, posToUpdate.z and 15)
 
                     texture.image!!.setColorArgb(x, y, color)
@@ -182,7 +182,7 @@ object ChunkRenderer {
 
             heightmapManager.updateChunk(chunkPos)
 
-            textureAtlasManager.editChunk(chunkPos) { texture, atlasPosition ->
+            textureAtlasManager.editChunk(chunkPos.toLong()) { texture, atlasPosition ->
                 for (offX in 0..15) {
                     for (offZ in 0..15) {
                         val (texX, texY) = atlasPosition.getPosOnAtlas(offX, offZ)
@@ -195,7 +195,7 @@ object ChunkRenderer {
             }
 
             for ((otherPos, from, to) in chunkBordersToUpdate) {
-                textureAtlasManager.editChunk(otherPos) { texture, atlasPosition ->
+                textureAtlasManager.editChunk(otherPos.toLong()) { texture, atlasPosition ->
                     for (offX in from.x..to.x) {
                         for (offZ in from.y..to.y) {
                             val (texX, texY) = atlasPosition.getPosOnAtlas(offX, offZ)

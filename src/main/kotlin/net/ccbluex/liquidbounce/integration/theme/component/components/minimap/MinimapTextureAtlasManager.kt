@@ -85,11 +85,11 @@ class MinimapTextureAtlasManager {
         this.dirtyAtlasPositions.add(NOT_LOADED_ATLAS_POSITION)
     }
 
-    private fun allocate(chunkPos: ChunkPos): AtlasPosition {
+    private fun allocate(chunkPos: Long): AtlasPosition {
         return lock.write {
             val atlasPosition =
                 availableAtlasPositions.removeLastOrNull() ?: error("No more space in the texture atlas!")
-            chunkPosAtlasPosMap.put(chunkPos.toLong(), atlasPosition)
+            chunkPosAtlasPosMap.put(chunkPos, atlasPosition)
             atlasPosition
         }
     }
@@ -116,12 +116,12 @@ class MinimapTextureAtlasManager {
         return lock.read { chunkPosAtlasPosMap[chunkPos.toLong()] }
     }
 
-    private fun getOrAllocate(chunkPos: ChunkPos): AtlasPosition {
-        return chunkPosAtlasPosMap[chunkPos.toLong()] ?: allocate(chunkPos)
+    private fun getOrAllocate(chunkPos: Long): AtlasPosition {
+        return chunkPosAtlasPosMap[chunkPos] ?: allocate(chunkPos)
     }
 
     fun editChunk(
-        chunkPos: ChunkPos,
+        chunkPos: Long,
         editor: BiConsumer<NativeImageBackedTexture, AtlasPosition>,
     ) {
         val atlasPosition = getOrAllocate(chunkPos)
