@@ -188,7 +188,7 @@ fun drawMesh(
             RenderSystem.getModelViewMatrix(),
             shaderColor,
             Vector3f(),
-            Matrix4f(), // TODO(1.21.11) check this
+            Matrix4f(),
         )
     val gpuBuffer = pipeline.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
     val gpuBuffer2: GpuBuffer

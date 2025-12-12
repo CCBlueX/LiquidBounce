@@ -135,7 +135,6 @@ public abstract class MixinGameRenderer {
         Pools.MatStack.recycle(newMatStack);
     }
 
-    // TODO(1.21.11): check this
     @WrapOperation(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/network/ClientPlayerEntity;I)V"))
     public void drawItemCharms(HeldItemRenderer instance, float tickProgress, MatrixStack matrices,
         OrderedRenderCommandQueue orderedRenderCommandQueue, ClientPlayerEntity player, int light,
