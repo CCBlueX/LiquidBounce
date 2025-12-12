@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.utils.world
 
 import net.minecraft.world.World
+import net.minecraft.world.attribute.BedRule
 import net.minecraft.world.attribute.EnvironmentAttributes
-import net.minecraft.world.dimension.DimensionType
 
 /**
  * @return if water and ice evaporates in this world (e.g. nether)
@@ -29,8 +29,8 @@ import net.minecraft.world.dimension.DimensionType
 val World.waterEvaporates: Boolean
     get() = this.environmentAttributes.getAttributeValue(EnvironmentAttributes.WATER_EVAPORATES_GAMEPLAY)
 
-val DimensionType.bedWorks: Boolean
-    get() = TODO("1.21.11")
+val World.bedRule: BedRule
+    get() = this.environmentAttributes.getAttributeValue(EnvironmentAttributes.BED_RULE_GAMEPLAY)
 
-val DimensionType.respawnAnchorWorks: Boolean
-    get() = TODO("1.21.11")
+val World.respawnAnchorWorks: Boolean
+    get() = this.environmentAttributes.getAttributeValue(EnvironmentAttributes.RESPAWN_ANCHOR_WORKS_GAMEPLAY)
