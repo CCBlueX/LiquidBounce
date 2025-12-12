@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
+import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
@@ -30,6 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.render.clearColor
+import net.ccbluex.liquidbounce.utils.render.copyFrom
 import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.putVec4
 import net.ccbluex.liquidbounce.utils.render.writeStd140
@@ -40,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.render.writeStd140
  * Applies visual effects to your held items.
  *
  * @see MixinGameRenderer
+ * @see net.minecraft.client.render.LightmapTextureManager
  *
  * @author ccetl
  */
@@ -54,6 +58,13 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
 
     private var edited = false
 
+    private val storedLightmapTexture = gpuDevice.createTexture(
+        "$name - Lightmap Texture",
+        GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_COPY_SRC,
+        TextureFormat.RGBA8,
+        16, 16, 1, 1,
+    )
+
     private val UBO = gpuDevice.createUbo(
         labelGetter = { "$name UBO" },
         std140Size = {
@@ -67,11 +78,12 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
         },
     ).slice()
 
-    // TODO(1.21.11): check this
     private val sampler = RenderSystem.getSamplerCache().get(FilterMode.LINEAR, false)
 
     fun applyToTexture(textureView: GpuTextureView) {
         if (!this.running || edited) return
+
+        this.storedLightmapTexture.copyFrom(source = textureView.texture())
 
         UBO.writeStd140 {
             putInt(0)
@@ -102,7 +114,8 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
     fun resetTexture(texture: GpuTextureView) {
         if (!edited) return
 
-        texture.texture().clearColor(-1)
+        texture.texture().copyFrom(source = this.storedLightmapTexture)
+        storedLightmapTexture.clearColor(-1)
 
         edited = false
     }
