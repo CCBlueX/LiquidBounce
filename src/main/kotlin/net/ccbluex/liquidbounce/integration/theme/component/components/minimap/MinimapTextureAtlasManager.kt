@@ -94,9 +94,9 @@ class MinimapTextureAtlasManager {
         }
     }
 
-    fun deallocate(chunkPos: ChunkPos) {
+    fun deallocate(chunkPos: Long) {
         lock.write {
-            chunkPosAtlasPosMap.remove(chunkPos.toLong())?.apply(availableAtlasPositions::push)
+            chunkPosAtlasPosMap.remove(chunkPos)?.apply(availableAtlasPositions::push)
         }
     }
 
@@ -108,12 +108,12 @@ class MinimapTextureAtlasManager {
         }
     }
 
-    fun getOrNotLoadedTexture(chunkPos: ChunkPos): AtlasPosition {
+    fun getOrNotLoadedTexture(chunkPos: Long): AtlasPosition {
         return get(chunkPos) ?: NOT_LOADED_ATLAS_POSITION
     }
 
-    fun get(chunkPos: ChunkPos): AtlasPosition? {
-        return lock.read { chunkPosAtlasPosMap[chunkPos.toLong()] }
+    fun get(chunkPos: Long): AtlasPosition? {
+        return lock.read { chunkPosAtlasPosMap[chunkPos] }
     }
 
     private fun getOrAllocate(chunkPos: Long): AtlasPosition {

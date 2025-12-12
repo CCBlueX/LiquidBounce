@@ -225,7 +225,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                         continue
                     }
 
-                    val chunkPos = ChunkPos(centerPos.x + x, centerPos.z + y)
+                    val chunkPos = ChunkPos.toLong(centerPos.x + x, centerPos.z + y)
 
                     val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                     val fromX = x.toFloat()

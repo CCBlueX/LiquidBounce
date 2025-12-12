@@ -50,7 +50,7 @@ object ChunkRenderer {
         textureAtlasManager.deallocateAll()
     }
 
-    fun getAtlasPosition(chunkPos: ChunkPos): MinimapTextureAtlasManager.AtlasPosition {
+    fun getAtlasPosition(chunkPos: Long): MinimapTextureAtlasManager.AtlasPosition {
         return textureAtlasManager.getOrNotLoadedTexture(chunkPos)
     }
 
@@ -211,7 +211,7 @@ object ChunkRenderer {
 
         override fun clearChunk(pos: ChunkPos) {
             heightmapManager.unloadChunk(pos)
-            textureAtlasManager.deallocate(pos)
+            textureAtlasManager.deallocate(pos.toLong())
         }
 
         override fun clearAllChunks() {
