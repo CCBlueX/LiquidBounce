@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 import net.ccbluex.liquidbounce.interfaces.ChatHudAddition;
@@ -64,30 +65,35 @@ public abstract class MixinChatHud implements ChatHudAddition {
     @Shadow
     public abstract void scroll(int scroll);
 
-    @Shadow
-    protected abstract int getWidth();
+//    @Shadow
+//    protected abstract int getWidth();
 
     @Unique
     private int chatY = -1;
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
     public void hookNewArrayList2(MinecraftClient client, CallbackInfo ci) {
-        messages = new ArrayListDeque<>(50);
+        messages = new ArrayListDeque<>(100);
         // ArrayDeque for addFirst operations
-        visibleMessages = new ArrayListDeque<>(50);
+        visibleMessages = new ArrayListDeque<>(100);
     }
 
     /**
      * Spoofs the message size to be empty to avoid deletion.
+     * <pre>
+     * while(this.messages.size() > 100) {
+     *     this.messages.removeLast();
+     * }
+     * </pre>
      */
-    @Redirect(method = "addMessage(Lnet/minecraft/client/gui/hud/ChatHudLine;)V", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", ordinal = 0))
-    public int hookGetSize2(List<ChatHudLine.Visible> list) {
+    @ModifyExpressionValue(method = "addMessage(Lnet/minecraft/client/gui/hud/ChatHudLine;)V", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", ordinal = 0, remap = false))
+    public int hookGetSize2(int original) {
         var betterChat = ModuleBetterChat.INSTANCE;
         if (betterChat.getRunning() && betterChat.getInfiniteLength()) {
-            return -1;
+            return 0;
         }
 
-        return list.size();
+        return original;
     }
 
     /**

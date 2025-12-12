@@ -39,10 +39,10 @@ public interface MixinChatHudAccessor {
     int invokeGetLineHeight();
 
     @Invoker("getChatScale")
-    double getChatScale();
+    double invokeGetChatScale();
 
     @Invoker("getWidth")
-    int getWidth();
+    int invokeGetWidth();
 
     @Accessor
     List<ChatHudLine.Visible> getVisibleMessages();
