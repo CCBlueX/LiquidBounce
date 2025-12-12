@@ -18,24 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.GpuTextureView
-import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
-import net.ccbluex.liquidbounce.utils.kotlin.optional
-import net.ccbluex.liquidbounce.utils.render.asView
-import net.ccbluex.liquidbounce.utils.render.createUbo
-import net.ccbluex.liquidbounce.utils.render.putVec4
-import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.render.fog.FogData
 
 /**
@@ -96,49 +83,14 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
     /**
      * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmapTextureManager
      *
-     * TODO(1.21.11): remove this feature.
+     * FIXME: redesign
      */
-    object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
-        val textureView: GpuTextureView = gpuDevice.createTexture(
-            "Custom Light Texture",
-            GpuTexture.USAGE_TEXTURE_BINDING or GpuTexture.USAGE_RENDER_ATTACHMENT,
-            TextureFormat.RGBA8,
-            16, 16,
-            1, 1,
-        ).asView()
-
-        private val sampler = RenderSystem.getSamplerCache().get(FilterMode.LINEAR, false)
-
-        private val UBO = gpuDevice.createUbo(
-            labelGetter = { "$name UBO" },
-            std140Size = { vec4 },
-        ).slice()
-
-        @Suppress("unused")
-        private val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
-            .onChanged {
-                UBO.writeStd140 {
-                    putVec4(it)
-                }
-            }
-
-        fun update() {
-            textureView.createRenderPass(
-                { "$name Pass" },
-                clearColor = optional(-1),
-            ).use { pass ->
-                pass.setPipeline(ClientRenderPipelines.Blend)
-                pass.bindTexture("texture0", this.textureView, this.sampler)
-                pass.setUniform("BlendData", UBO)
-                pass.drawFullScreenPositionTexture()
-            }
-        }
-    }
+//    object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
+//    }
 
     init {
         tree(Precipitation)
         tree(FogConfigurable)
-        tree(CustomLightColor)
     }
 
     @JvmStatic
