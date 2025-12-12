@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.world.ultrawarm
+import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
@@ -79,7 +79,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         // we can't place water in the nether
-        if (world.dimension.ultrawarm) {
+        if (world.waterEvaporates) {
             return@handler
         }
 

@@ -19,10 +19,15 @@
 
 package net.ccbluex.liquidbounce.utils.world
 
+import net.minecraft.world.World
+import net.minecraft.world.attribute.EnvironmentAttributes
 import net.minecraft.world.dimension.DimensionType
 
-val DimensionType.ultrawarm: Boolean
-    get() = TODO("1.21.11")
+/**
+ * @return if water and ice evaporates in this world (e.g. nether)
+ */
+val World.waterEvaporates: Boolean
+    get() = this.environmentAttributes.getAttributeValue(EnvironmentAttributes.WATER_EVAPORATES_GAMEPLAY)
 
 val DimensionType.bedWorks: Boolean
     get() = TODO("1.21.11")
