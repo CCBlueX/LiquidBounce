@@ -69,9 +69,8 @@ object ModuleNoSlow : ClientModule("NoSlow", Category.MOVEMENT) {
         UseAction.NONE -> NoSlowUseActionHandler.DEFAULT_USE_MUL
         UseAction.EAT, UseAction.DRINK -> NoSlowConsume.getMultiplier()
         UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN, UseAction.BRUSH -> NoSlowBlock.getMultiplier()
-        UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR -> NoSlowBow.getMultiplier()
+        UseAction.BOW, UseAction.TRIDENT, UseAction.CROSSBOW, UseAction.SPEAR -> NoSlowBow.getMultiplier()
         UseAction.BUNDLE -> NoSlowBundle.getMultiplier()
-        UseAction.TRIDENT -> TODO("1.21.11")
     }
 
 }
