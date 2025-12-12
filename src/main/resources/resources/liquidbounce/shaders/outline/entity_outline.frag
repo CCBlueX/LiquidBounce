@@ -5,13 +5,13 @@
  */
 #version 330 core
 
-in vec2 fragTexCoord;
+in vec2 texCoord;
 out vec4 fragColor;
 
 uniform sampler2D texture0;
 
 void main() {
-    vec2 uv = fragTexCoord.xy;
+    vec2 uv = texCoord.xy;
 
     vec4 color = textureLod(texture0, uv, 0.0);
     if (color.a != 0.0) {

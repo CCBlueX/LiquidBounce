@@ -27,10 +27,9 @@ import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.textures.TextureFormat
-import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines.screenQuad
 import net.ccbluex.liquidbounce.render.createRenderPass
-import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -41,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.TextureSetup
 import net.minecraft.util.Identifier
@@ -108,9 +106,7 @@ sealed interface ThemeBackground : Closeable {
     class Shader private constructor(
         private val metadata: ThemeMetadata,
         private val pipeline: RenderPipeline,
-        private val vshId: Identifier,
         private val fshId: Identifier,
-        private val vertexShader: String,
         private val fragmentShader: String,
     ) : ThemeBackground {
 
@@ -148,7 +144,7 @@ sealed interface ThemeBackground : Closeable {
             ).use { pass ->
                 pass.setPipeline(pipeline)
                 pass.setUniform(UNIFORM_NAME, uboSlice)
-                pass.drawFullScreenPositionTexture()
+                pass.draw(0, 3)
             }
 
             context.drawTexQuad(
@@ -170,10 +166,10 @@ sealed interface ThemeBackground : Closeable {
 
         override fun onResourceReload() {
             gpuDevice.precompilePipeline(pipeline) { id, _ ->
-                when (id) {
-                    vshId -> vertexShader
-                    fshId -> fragmentShader
-                    else -> error("Unknown shader id: $id")
+                if (id == fshId) {
+                    fragmentShader
+                } else {
+                    error("Unknown shader id: $id")
                 }
             }
         }
@@ -209,19 +205,16 @@ sealed interface ThemeBackground : Closeable {
             fun build(
                 metadata: ThemeMetadata,
                 background: Background,
-                vertexShader: String,
                 fragmentShader: String,
             ): Shader {
                 val bgName = background.name.lowercase(Locale.US)
                 val themeName = metadata.name.lowercase(Locale.US)
 
-                val vshId = LiquidBounce.identifier("shader/vsh/theme-bg-$themeName-$bgName")
                 val fshId = LiquidBounce.identifier("shader/fsh/theme-bg-$themeName-$bgName")
 
                 val pipeline = RenderPipeline.Builder()
                     .withLocation(LiquidBounce.identifier("pipeline/theme-bg-$themeName"))
-                    .withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
-                    .withVertexShader(vshId)
+                    .screenQuad()
                     .withFragmentShader(fshId)
                     .withBlend(BlendFunction.TRANSLUCENT)
                     .withUniform(UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
@@ -229,7 +222,7 @@ sealed interface ThemeBackground : Closeable {
                     .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
                     .build()
 
-                return Shader(metadata, pipeline, vshId, fshId, vertexShader, fragmentShader)
+                return Shader(metadata, pipeline, fshId, fragmentShader)
             }
         }
     }

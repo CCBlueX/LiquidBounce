@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRende
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.kotlin.optional
 import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.ccbluex.liquidbounce.utils.render.copyFrom
@@ -105,7 +104,7 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
             pass.bindTexture("image", textureView, sampler)
             pass.setUniform("ItemChamsData", UBO)
 
-            pass.drawFullScreenPositionTexture()
+            pass.draw(0, 3)
         }
 
         edited = true

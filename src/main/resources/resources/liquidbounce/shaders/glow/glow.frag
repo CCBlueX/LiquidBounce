@@ -5,7 +5,7 @@
  */
 #version 330 core
 
-in vec2 fragTexCoord;
+in vec2 texCoord;
 out vec4 fragColor;
 
 uniform sampler2D texture0;
@@ -33,7 +33,7 @@ vec4 getFinalColor(vec4 color) {
 }
 
 void main() {
-    vec2 uv = fragTexCoord.xy;
+    vec2 uv = texCoord.xy;
     vec2 pos = gl_FragCoord.xy;
 
     vec4 color = textureLod(texture0, uv, 0.0);

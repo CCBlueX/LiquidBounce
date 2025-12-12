@@ -19,13 +19,10 @@
 
 package net.ccbluex.liquidbounce.render.engine
 
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.bindSampler
 import net.ccbluex.liquidbounce.render.createRenderPass
-import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.SimpleFramebuffer
@@ -70,7 +67,7 @@ object OutlineFramebufferHolder : MinecraftShortcuts {
             target.createRenderPass().use { pass ->
                 pass.setPipeline(ClientRenderPipelines.Outline)
                 pass.bindSampler("texture0", outlineTextureView)
-                pass.drawFullScreenPositionTexture()
+                pass.draw(0, 3)
             }
         }
     }

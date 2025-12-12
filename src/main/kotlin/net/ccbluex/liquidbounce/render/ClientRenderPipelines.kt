@@ -191,9 +191,8 @@ object ClientRenderPipelines {
 
     @JvmField
     val Outline = newPipeline("outline") {
-        withVertexShader(ClientShaders.SOBEL_VSH_ID)
+        screenQuad()
         withFragmentShader(ClientShaders.OUTLINE_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withBlend(BlendFunction.ENTITY_OUTLINE_BLIT)
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
@@ -201,9 +200,8 @@ object ClientRenderPipelines {
 
     @JvmField
     val ItemChams = newPipeline("item_chams") {
-        withVertexShader(ClientShaders.PLANE_PROJECTION_VSH_ID)
+        screenQuad()
         withFragmentShader(ClientShaders.GLOW_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withSampler("image")
         withUniform("ItemChamsData", UniformType.UNIFORM_BUFFER)

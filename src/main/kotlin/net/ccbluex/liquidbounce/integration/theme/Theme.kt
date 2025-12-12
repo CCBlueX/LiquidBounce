@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.integration.theme
 import io.netty.handler.codec.http.HttpHeaderNames
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
@@ -163,7 +162,6 @@ class Theme private constructor(val origin: Origin, url: String) :
             return false
         }
 
-        val vertexShader = LiquidBounce.resourceToString("shaders/position_tex.vert")
         val fragmentShader = runCatching {
             get<String>("/backgrounds/${background.name.lowercase(Locale.US)}.frag")
         }.getOrNull() ?: return false
@@ -172,7 +170,6 @@ class Theme private constructor(val origin: Origin, url: String) :
             themeBackgroundShader = ThemeBackground.Shader.build(
                 metadata,
                 background,
-                vertexShader,
                 fragmentShader,
             ).also {
                 it.onResourceReload()
