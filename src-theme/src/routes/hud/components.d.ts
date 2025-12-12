@@ -27,6 +27,10 @@ interface HudArrayListSettings {
     order: "Ascending" | "Descending";
 }
 
+interface HudBlockCounterSettings {
+    iconPosition: "None" | "Left" | "Right" | "Top" | "Bottom";
+}
+
 interface HudScoreboardSettings {
     show: ("Header" | "Name" | "Score")[];
 }
