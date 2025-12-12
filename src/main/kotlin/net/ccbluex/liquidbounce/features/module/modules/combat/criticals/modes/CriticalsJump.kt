@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.lastAttackedTicks
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
@@ -167,7 +166,7 @@ object CriticalsJump : Choice("Jump") {
 
     private fun calculateTicksUntilNextCrit(): Float {
         val durationToWait = player.attackCooldownProgressPerTick * 0.9F - 0.5F
-        val waitedDuration = player.lastAttackedTicks.toFloat()
+        val waitedDuration = player.ticksSinceLastAttack.toFloat()
 
         return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
     }
