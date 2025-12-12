@@ -7,9 +7,7 @@
     export let chosen: typeof choices[number];
     export let onchange: () => any;
 
-    let direction = 1;
-    let arrowWrapper: HTMLSpanElement;
-    let jiggle = false;
+    let jiggle = 0;
 
     /**
      * Switch item among {@link choices}.
@@ -20,7 +18,7 @@
             throw new Error("Unexpected action: " + chosen);
         }
 
-        const nextIndex = (currentIndex + direction) % choices.length;
+        const nextIndex = (currentIndex + 1) % choices.length;
         chosen = choices[nextIndex];
 
         triggerArrowAnimation();
@@ -28,29 +26,25 @@
     }
 
     function triggerArrowAnimation() {
-        jiggle = true;
-        void arrowWrapper.offsetWidth;
-
-        setTimeout(() => {
-            jiggle = false;
-        }, 210);
+        jiggle++;
     }
 </script>
 
 <!-- svelte-ignore a11y_consider_explicit_label -->
-<button style="--direction: {direction}" on:click|stopPropagation={switchAction}>
+<button on:click|stopPropagation={switchAction}>
     <span class="chosen-holder">
         {#key chosen}
             <span
                     class="chosen"
-                    in:fly={{ x: direction * 5, duration: 100, delay: 100, easing: cubicOut }}
-                    out:fly={{ x: -direction * 5, duration: 100, easing: cubicOut }}
+                    in:fly={{ x: 5, duration: 100, delay: 100, easing: cubicOut }}
+                    out:fly={{ x: -5, duration: 100, easing: cubicOut }}
             >{chosen}</span>
         {/key}
     </span>
 
-    <span class="arrow arrow-right" class:jiggle bind:this={arrowWrapper}>
-    </span>
+    {#key jiggle}
+        <span class="arrow arrow-right"></span>
+    {/key}
 </button>
 
 <style lang="scss">
@@ -58,21 +52,24 @@
   @use "../../icon-settings-expand" as *;
 
   @keyframes jiggle {
-    0% { transform: translateX(0); }
-    50% { transform: translateX(calc(var(--direction) * 2px)); }
-    100% { transform: translateX(0); }
+    0% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(2px);
+    }
+    100% {
+      transform: translateX(0);
+    }
   }
 
   .arrow {
     width: 10px;
+    animation: jiggle 200ms ease;
 
     &.arrow-right::after {
       @include icon-settings-expand($size: 10px, $right: auto);
       color: $clickgui-text-dimmed-color;
-    }
-
-    &.jiggle {
-      animation: jiggle 200ms ease;
     }
   }
 

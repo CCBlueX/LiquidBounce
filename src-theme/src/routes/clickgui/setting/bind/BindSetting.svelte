@@ -52,7 +52,9 @@
     }
 
     const isClickGuiScreen = (screen: Screen | undefined) =>
-        !(screen === undefined || !screen.class.startsWith("net.ccbluex.liquidbounce") || screen.title !== "ClickGUI" && screen.title !== "VS-CLICKGUI");
+        screen !== undefined &&
+        screen.class.startsWith("net.ccbluex.liquidbounce") &&
+        (screen.title === "ClickGUI" || screen.title === "VS-CLICKGUI");
 
     /**
      * Gets the next possible event which can be used as a bind.
@@ -73,25 +75,24 @@
      * @return undefined if it's not a modifier, or else its key name and parsed modifier
      */
     const handleBindEventIfNotModifier = (event: MouseButtonEvent | KeyboardKeyEvent) => {
-        if (Object.hasOwn(event, 'keyCode')) {
+        if (Object.hasOwn(event, "keyCode")) {
             const e = event as KeyboardKeyEvent;
             if (e.keyCode === 256 /* GLFW_KEY_ESCAPE */) {
                 handleActionChange(UNKNOWN_KEY);
-                return undefined;
+                return;
             }
 
-            const modifierOrUndef = KEY_TOKEN_TO_MODIFIERS[e.keyCode];
+            const modifier = KEY_TOKEN_TO_MODIFIERS[e.keyCode];
 
-            if (!modifierOrUndef) {
+            if (!modifier) {
                 handleActionChange(e.key);
-                return undefined;
+                return;
             }
 
-            return { key: e.key, keyCode: e.keyCode, modifier: modifierOrUndef };
-        } else if (Object.hasOwn(event, 'button')) {
+            return { key: e.key, keyCode: e.keyCode, modifier };
+        } else if (Object.hasOwn(event, "button")) {
             const e = event as MouseButtonEvent;
             handleActionChange(e.key);
-            return undefined;
         } else {
             throw new Error("Unexcepted event: " + JSON.stringify(event));
         }
@@ -117,7 +118,9 @@
         let event = await nextBindEvent();
         // Promise doesn't support cancellation, so we need manual check
         if (!binding) return;
+
         let result = handleBindEventIfNotModifier(event);
+
         while (result) {
             if (timeout !== undefined) {
                 clearTimeout(timeout);
@@ -135,7 +138,9 @@
             }, 1000);
 
             event = await nextBindEvent();
+
             if (!binding) return;
+
             result = handleBindEventIfNotModifier(event);
         }
     }

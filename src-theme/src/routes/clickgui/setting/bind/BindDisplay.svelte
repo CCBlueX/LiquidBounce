@@ -38,8 +38,7 @@
 <span class="wrapper">
     {#if boundKey}
         {#each modifiers as modifier (modifier)}
-            <span>{getRenderString(modifier)}</span>
-            <span class="divider">+</span>
+            <span class="modifier">{getRenderString(modifier)}</span>
         {/each}
         <span class="boundKey">{boundKey}</span>
     {:else}
@@ -60,12 +59,13 @@
     color: $clickgui-text-dimmed-color;
   }
 
-  .divider {
+  .modifier:after {
+    content: "+";
     color: $clickgui-text-dimmed-color;
     opacity: 0.8;
-    font-size: 10px;
     line-height: 1;
     font-family: monospace;
+    margin-left: 2px;
   }
 
   .boundKey {
