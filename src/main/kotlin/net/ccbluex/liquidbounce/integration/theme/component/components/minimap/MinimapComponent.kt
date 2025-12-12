@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.ScreenRect
-import net.minecraft.client.texture.TextureSetup
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
@@ -216,8 +215,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
     ) {
         drawCustomElement(
             pipeline = RenderPipelines.GUI_TEXTURED,
-            // TODO(1.21.11): check this
-            textureSetup = TextureSetup.of(ChunkRenderer.prepareRendering(), ChunkRenderer.sampler),
+            textureSetup = ChunkRenderer.prepareRendering(),
             bounds = bounds,
         ) { pose ->
             for (x in -chunksToRenderAround..chunksToRenderAround) {

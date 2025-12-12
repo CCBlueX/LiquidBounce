@@ -18,9 +18,6 @@
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -28,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.math.dotProduct
 import net.ccbluex.liquidbounce.utils.math.similarity
 import net.minecraft.block.BlockState
 import net.minecraft.block.MapColor.Brightness
+import net.minecraft.client.texture.TextureSetup
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.world.chunk.WorldChunk
@@ -44,8 +42,6 @@ object ChunkRenderer {
     private val textureAtlasManager = MinimapTextureAtlasManager()
     private val heightmapManager = MinimapHeightmapManager()
 
-    val sampler = RenderSystem.getSamplerCache().get(FilterMode.NEAREST, false)
-
     @JvmField
     val SUN_DIRECTION: Vector2ic = Vector2i(2, 1)
 
@@ -58,7 +54,7 @@ object ChunkRenderer {
         return textureAtlasManager.getOrNotLoadedTexture(chunkPos)
     }
 
-    fun prepareRendering(): GpuTextureView {
+    fun prepareRendering(): TextureSetup {
         return textureAtlasManager.prepareRendering()
     }
 

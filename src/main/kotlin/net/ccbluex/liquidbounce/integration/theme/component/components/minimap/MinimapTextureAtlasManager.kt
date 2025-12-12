@@ -18,16 +18,16 @@
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
-import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuTextureView
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.uploadRect
 import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.texture.TextureSetup
 import net.minecraft.util.math.ChunkPos
 import org.joml.Vector2i
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -136,12 +136,12 @@ class MinimapTextureAtlasManager {
     /**
      * Uploads texture changes to the GPU
      *
-     * @return the [GpuTextureView] of the texture
+     * @return the [TextureSetup] of the texture
      */
-    fun prepareRendering(): GpuTextureView {
+    fun prepareRendering(): TextureSetup {
         lock.read {
             if (this.dirtyAtlasPositions.isEmpty()) {
-                return this.texture.glTextureView
+                return this.texture.textureSetup
             }
 
             val dirtyChunks = this.dirtyAtlasPositions.size
@@ -156,7 +156,7 @@ class MinimapTextureAtlasManager {
             this.dirtyAtlasPositions.clear()
         }
 
-        return this.texture.glTextureView
+        return this.texture.textureSetup
     }
 
     private fun uploadFullTexture() {
