@@ -117,7 +117,7 @@ dependencies {
 
     // ViaFabricPlus
     modCompileOnlyApi("com.viaversion:viafabricplus-api:${project.property("viafabricplus_version")}")
-//    modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}") // TODO: Enable it after update
+    modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}")
 
     // Minecraft Authlib
     includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
