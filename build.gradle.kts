@@ -116,7 +116,7 @@ dependencies {
     modApi("maven.modrinth:lithium:${project.property("lithium_version")}")
 
     // ViaFabricPlus
-    modCompileOnlyApi("com.viaversion:viafabricplus-api:${project.property("viafabricplus_version")}")
+    modApi("com.viaversion:viafabricplus-api:${project.property("viafabricplus_version")}")
     modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}")
 
     // Minecraft Authlib
