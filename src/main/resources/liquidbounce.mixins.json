@@ -57,6 +57,7 @@
     "minecraft.entity.MixinMobEntity",
     "minecraft.entity.MixinMobSpawnerBlockEntityRenderer",
     "minecraft.entity.MixinPlayerEntity",
+    "minecraft.entity.MixinPlayerLikeEntity",
     "minecraft.entity.projectile.MixinFireworkRocketEntity",
     "minecraft.entity.projectile.MixinFishingBobberEntity",
     "minecraft.fluid.MixinFlowableFluid",
@@ -91,6 +92,7 @@
     "minecraft.network.MixinClientConnection",
     "minecraft.network.MixinClientLoginNetworkHandlerMixin",
     "minecraft.network.MixinClientPlayerInteractionManager",
+    "minecraft.network.MixinClientPlayerLikeState",
     "minecraft.network.MixinClientPlayNetworkHandler",
     "minecraft.network.MixinEntitiesDestroyS2CPacket",
     "minecraft.network.MixinHandshakeC2SPacket",
@@ -143,8 +145,7 @@
     "truffle.MixinHostClassLoader",
     "truffle.MixinHostContext",
     "truffle.MixinNpmCompatibleESModuleLoader",
-    "truffle.MixinTruffleLanguage",
-    "minecraft.entity.MixinPlayerLikeEntity"
+    "truffle.MixinTruffleLanguage"
   ],
   "server": [],
   "injectors": {

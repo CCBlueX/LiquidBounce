@@ -58,17 +58,6 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @Shadow
     public abstract SoundCategory getSoundCategory();
 
-    // TODO(1.21.10-port): stride distance is gone, it's probably handled somewhere else in the render states.
-    /**
-     * Hook player stride event
-     */
-//    @ModifyVariable(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;strideDistance:F", shift = At.Shift.BEFORE, ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setMovementSpeed(F)V"), to = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z")), index = 1, ordinal = 0, require = 1, allow = 1)
-//    private float hookStrideForce(float strideForce) {
-//        final PlayerStrideEvent event = new PlayerStrideEvent(strideForce);
-//        EventManager.INSTANCE.callEvent(event);
-//        return event.getStrideForce();
-//    }
-
     /**
      * Hook safe walk event
      */
