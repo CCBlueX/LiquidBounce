@@ -297,20 +297,25 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
 
     /**
      * Hook custom multiplier
-     * FIXME(1.21.11): -> getActiveItemSpeedMultiplier? component
+     *
+     * <pre>
+     * if (this.isUsingItem() && !this.hasVehicle()) {
+     *     vec2f = vec2f.multiply(this.getActiveItemSpeedMultiplier());
+     * }
+     * </pre>
+     *
+     * TODO(1.21.11): check this
      */
-//    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0))
-//    private void hookCustomMultiplier(CallbackInfo callbackInfo) {
-//        var input = (Input & InputAddition) this.input;
-//        var playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
-//        EventManager.INSTANCE.callEvent(playerUseMultiplier);
-//        input.liquid_bounce$setMovementInput(
-//                new Vec2f(
-//                        input.getMovementInput().x / 0.2f * playerUseMultiplier.getSideways(),
-//                        input.getMovementInput().y / 0.2f * playerUseMultiplier.getForward()
-//                )
-//        );
-//    }
+    @Redirect(method = "applyMovementSpeedFactors", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec2f;multiply(F)Lnet/minecraft/util/math/Vec2f;"))
+    private Vec2f hookCustomMultiplier(Vec2f instance, float value) {
+        var input = (Input & InputAddition) this.input;
+        var playerUseMultiplier = new PlayerUseMultiplier(value, value);
+        EventManager.INSTANCE.callEvent(playerUseMultiplier);
+        return new Vec2f(
+            instance.x * playerUseMultiplier.getSideways(),
+            instance.y * playerUseMultiplier.getForward()
+        );
+    }
 
     /**
      * Hook sprint effect from NoSlow module
