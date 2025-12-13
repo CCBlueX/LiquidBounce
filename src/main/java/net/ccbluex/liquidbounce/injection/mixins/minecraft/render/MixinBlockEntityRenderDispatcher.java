@@ -20,10 +20,9 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.sugar.Local;
-//import net.ccbluex.liquidbounce.common.OutlineFlag;
-//import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
-//import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
-//import net.minecraft.client.MinecraftClient;
+import net.ccbluex.liquidbounce.common.OutlineFlag;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.block.entity.BlockEntityRenderManager;
 import net.minecraft.client.render.block.entity.state.BlockEntityRenderState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,25 +42,24 @@ public class MixinBlockEntityRenderDispatcher {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/block/entity/BlockEntityRenderer;render(Lnet/minecraft/client/render/block/entity/state/BlockEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/render/state/CameraRenderState;)V")
     )
     private static <S extends BlockEntityRenderState> S render(
-        S state, @Local(argsOnly = true) S blockEntity
+        S state, @Local(argsOnly = true) S blockEntityRenderState
     ) {
-//        TODO(1.21.10-port): fix StorageESP Glow
-//        if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
-//            final var e = ((EntityRenderStateAddition) blockEntity).liquid_bounce$getEntity();
-//            var type = ModuleStorageESP.categorize(e);
-//
-//            if (type != null && type.shouldRender(blockEntity.pos)) {
-//                var color = type.getColor();
-//
-//                if (!color.isTransparent()) {
-//                    var outlineVertexConsumerProvider = MinecraftClient.getInstance().getBufferBuilders()
-//                            .getOutlineVertexConsumers();
-//                    outlineVertexConsumerProvider.setColor(color.toARGB());
-//                    OutlineFlag.drawOutline = true;
-//                    return state;
-//                }
-//            }
-//        }
+        var client = MinecraftClient.getInstance();
+        if (ModuleStorageESP.Glow.INSTANCE.getRunning() && client.world != null) {
+            var type = ModuleStorageESP.categorize(client.world.getBlockEntity(blockEntityRenderState.pos));
+
+            if (type != null && type.shouldRender(blockEntityRenderState.pos)) {
+                var color = type.getColor();
+
+                if (!color.isTransparent()) {
+                    var outlineVertexConsumerProvider = client.getBufferBuilders()
+                        .getOutlineVertexConsumers();
+                    outlineVertexConsumerProvider.setColor(color.toARGB());
+                    OutlineFlag.drawOutline = true;
+                    return state;
+                }
+            }
+        }
 
         return state;
     }

@@ -279,7 +279,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     }
 
     @JvmStatic
-    fun Entity.categorize(): ChestType? {
+    fun Entity?.categorize(): ChestType? {
         return when (this) {
             // This includes any storage type minecart entity including ChestMinecartEntity
             is HopperMinecartEntity -> ChestType.Hopper
@@ -292,7 +292,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     }
 
     @JvmStatic
-    fun BlockEntity.categorize(): ChestType? {
+    fun BlockEntity?.categorize(): ChestType? {
         return when (this) {
             is ChestBlockEntity, is BarrelBlockEntity -> ChestType.Chest
             is EnderChestBlockEntity -> ChestType.EnderChest
