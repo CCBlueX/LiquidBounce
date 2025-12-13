@@ -112,29 +112,6 @@ public abstract class MixinWorldRenderer {
 //        return ModuleFreeCam.INSTANCE.renderPlayerFromAllPerspectives(instance);
 //    }
 
-//    /**
-//     * Inject ESP color as glow color
-//     *
-//     * @author 1zuna
-//     */
-//    @ModifyExpressionValue(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"))
-//    private int injectTeamColor(int original, @Local Entity entity) {
-//        if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning() && EspGlowMode.INSTANCE.shouldRender(livingEntity)) {
-//            return ModuleESP.INSTANCE.getColor(livingEntity).toARGB();
-//        } else if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
-//            return ModuleItemESP.INSTANCE.getColor().toARGB();
-//        } else if (entity instanceof TntEntity tntEntity && ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp()) {
-//            return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).toARGB();
-//        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
-//            var category = ModuleStorageESP.categorize(entity);
-//            if (category != null && category.shouldRender(entity)) {
-//                return category.getColor().toARGB();
-//            }
-//        }
-//
-//        return original;
-//    }
-
     // this method is a lambda
     @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
     private void onDrawOutlines(GpuBufferSlice gpuBufferSlice, WorldRenderState worldRenderState, Profiler profiler,

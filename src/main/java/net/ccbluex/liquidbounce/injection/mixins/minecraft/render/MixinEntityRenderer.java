@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode;
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
@@ -37,6 +37,7 @@ import net.minecraft.client.render.entity.state.EntityRenderState;
 import net.minecraft.client.render.state.CameraRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.TntEntity;
 import net.minecraft.text.OrderedText;
 import org.spongepowered.asm.mixin.Final;
@@ -143,6 +144,29 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
         } else {
             return false;
         }
+    }
+
+    /**
+     * Inject ESP color as glow color
+     *
+     * @author 1zuna
+     */
+    @WrapOperation(method = "updateRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"))
+    private int injectTeamColor(Entity entity, Operation<Integer> operation) {
+        if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning() && EspGlowMode.INSTANCE.shouldRender(livingEntity)) {
+            return ModuleESP.INSTANCE.getColor(livingEntity).toARGB();
+        } else if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
+            return ModuleItemESP.INSTANCE.getColor().toARGB();
+        } else if (entity instanceof TntEntity tntEntity && ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp()) {
+            return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).toARGB();
+        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
+            var category = ModuleStorageESP.categorize(entity);
+            if (category != null && category.shouldRender(entity)) {
+                return category.getColor().toARGB();
+            }
+        }
+
+        return operation.call(entity);
     }
 
 }
