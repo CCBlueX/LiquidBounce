@@ -37,7 +37,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
 
     object Precipitation : ToggleableConfigurable(this, "ModifyPrecipitation", true) {
         val gradient by float("Gradient", 0.7f, 0.1f..1f)
-        val layers by int("Layers", 3, 1..14)
+//        val layers by int("Layers", 3, 1..14)
     }
 
     /**
