@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
@@ -57,6 +59,10 @@ public abstract class MixinWorldRenderer {
     @Shadow
     protected abstract boolean canDrawEntityOutlines();
 
+    @Shadow
+    @Final
+    private WorldRenderState worldRenderState;
+
     @Inject(method = "render", at = @At("HEAD"))
     private void onRender(ObjectAllocator allocator, RenderTickCounter tickCounter, boolean renderBlockOutline, Camera camera, Matrix4f positionMatrix, Matrix4f matrix4f, Matrix4f projectionMatrix, GpuBufferSlice fogBuffer, Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
         var matrixStack = Pools.MatStack.borrow();
@@ -65,11 +71,11 @@ public abstract class MixinWorldRenderer {
 
         var event = new DrawOutlinesEvent(OutlineFramebufferHolder.prepare(), matrixStack, camera, tickCounter.getTickProgress(false), DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
         EventManager.INSTANCE.callEvent(event);
+        Pools.MatStack.recycle(matrixStack);
 
         if (event.getDirtyFlag()) {
             OutlineFramebufferHolder.setDirty(true);
         }
-        Pools.MatStack.recycle(matrixStack);
     }
 
     @ModifyExpressionValue(method = "method_62218", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/ColorHelper;fromFloats(FFFF)I"))
@@ -94,31 +100,29 @@ public abstract class MixinWorldRenderer {
 
         var matrixStack = Pools.MatStack.borrow();
         entityOutlineFb.blitToScreen();
-        final var mc = MinecraftClient.getInstance();
-        final var camera = mc.gameRenderer.getCamera();
+        final var camera = this.client.gameRenderer.getCamera();
         var event = new DrawOutlinesEvent(
             entityOutlineFb, matrixStack,
-            camera, mc.getRenderTickCounter().getTickProgress(false),
+            camera, this.client.getRenderTickCounter().getTickProgress(false),
             DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
         );
         EventManager.INSTANCE.callEvent(event);
-        OutlineFlag.drawOutline |= event.getDirtyFlag();
         Pools.MatStack.recycle(matrixStack);
+        OutlineFlag.drawOutline |= event.getDirtyFlag();
     }
 
-
-    // TODO(1.21.10-port): fix this too lol
-//    @ModifyVariable(method = "render", at = @At(
-//            value = "INVOKE",
-//            target = "Lnet/minecraft/client/gl/ShaderLoader;loadPostEffect(Lnet/minecraft/util/Identifier;Ljava/util/Set;)Lnet/minecraft/client/gl/PostEffectProcessor;"
-//    ), name = "bl3", ordinal = 3) // boolean bl3 = this.capturedFrustum != null
-//    private boolean modifyDrawOutline(boolean original) {
-//        var flag = OutlineFlag.drawOutline;
-//        if (flag) {
-//            OutlineFlag.drawOutline = false;
-//        }
-//        return original || flag;
-//    }
+    @WrapOperation(method = "render", at = @At(
+        value = "FIELD",
+        target = "Lnet/minecraft/client/render/state/WorldRenderState;hasOutline:Z"
+    ))
+    private boolean modifyDrawOutline(WorldRenderState instance, Operation<Boolean> original) {
+        var flag = OutlineFlag.drawOutline;
+        if (flag) {
+            OutlineFlag.drawOutline = false;
+            return true;
+        }
+        return original.call(instance);
+    }
 
     // TODO(1.21.10-port): fix renderSetupTerrainModifyArg
 //    @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;setupTerrain(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/Frustum;ZZ)V"), index = 3)
