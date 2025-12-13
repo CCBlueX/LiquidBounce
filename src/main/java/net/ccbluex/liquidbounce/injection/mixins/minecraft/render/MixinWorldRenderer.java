@@ -130,11 +130,10 @@ public abstract class MixinWorldRenderer {
         return original.call(instance);
     }
 
-    // TODO(1.21.10-port): fix renderSetupTerrainModifyArg
-//    @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;setupTerrain(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/Frustum;ZZ)V"), index = 3)
-//    private boolean renderSetupTerrainModifyArg(boolean spectator) {
-//        return ModuleFreeCam.INSTANCE.getRunning() || spectator;
-//    }
+    @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;updateCamera(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/Frustum;Z)V"), index = 2)
+    private boolean renderSetupTerrainModifyArg(boolean spectator) {
+        return ModuleFreeCam.INSTANCE.getRunning() || spectator;
+    }
 
     @Inject(method = "renderTargetBlockOutline", at = @At("HEAD"), cancellable = true)
     private void cancelBlockOutline(VertexConsumerProvider.Immediate immediate, MatrixStack matrices, boolean renderBlockOutline, WorldRenderState renderStates, CallbackInfo ci) {
