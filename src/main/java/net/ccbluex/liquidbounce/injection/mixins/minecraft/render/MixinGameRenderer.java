@@ -84,47 +84,6 @@ public abstract class MixinGameRenderer {
     }
 
     /**
-     * We change crossHairTarget according to server side rotations
-     * FIXME(1.21.11)
-     */
-//    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
-//    private HitResult hookRaycast(HitResult original, Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta) {
-//        if (camera != client.player) {
-//            return original;
-//        }
-//
-//        var cameraRotation = new Rotation(camera.getYaw(tickDelta), camera.getPitch(tickDelta), true);
-//
-//        Rotation rotation;
-//        if (RotationManager.INSTANCE.getCurrentRotation() != null) {
-//            rotation = RotationManager.INSTANCE.getCurrentRotation();
-//        } else if (ModuleFreeCam.INSTANCE.getRunning()) {
-//            var serverRotation = RotationManager.INSTANCE.getServerRotation();
-//            rotation = ModuleFreeCam.INSTANCE.shouldDisableCameraInteract() ? serverRotation : cameraRotation;
-//        } else {
-//            rotation = cameraRotation;
-//        }
-//
-//        return RaytracingKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange),
-//                ModuleLiquidPlace.INSTANCE.getRunning(), tickDelta);
-//    }
-//
-//    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
-//    private Vec3d hookRotationVector(Vec3d original, Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta) {
-//        if (camera != client.player) {
-//            return original;
-//        }
-//
-//        var rotation = RotationManager.INSTANCE.getCurrentRotation();
-//        return rotation != null ? rotation.getDirectionVector() : original;
-//    }
-//
-//    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/projectile/ProjectileUtil;raycast(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Box;Ljava/util/function/Predicate;D)Lnet/minecraft/util/hit/EntityHitResult;"))
-//    private @Nullable EntityHitResult hookEntityHitResult(@Nullable EntityHitResult original) {
-//        return original == null || !ModuleNoEntityInteract.INSTANCE.test(original) ? null : original;
-//    }
-
-    /**
      * Hook world render event
      */
     @Inject(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z"))

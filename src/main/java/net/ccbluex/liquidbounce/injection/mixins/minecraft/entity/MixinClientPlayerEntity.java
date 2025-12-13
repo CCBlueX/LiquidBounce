@@ -30,9 +30,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoEntityInteract;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
 import net.ccbluex.liquidbounce.integration.BrowserScreen;
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData;
@@ -41,17 +43,22 @@ import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition;
 import net.ccbluex.liquidbounce.interfaces.InputAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingKt;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -235,6 +242,47 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         }
 
         return original;
+    }
+
+    /**
+     * We change crossHairTarget according to server side rotations
+     * TODO(1.21.11): check this
+     */
+    @ModifyExpressionValue(method = "getCrosshairTarget(Lnet/minecraft/entity/Entity;DDF)Lnet/minecraft/util/hit/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
+    private static HitResult hookRaycast(HitResult original, Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta) {
+        if (camera != MinecraftClient.getInstance().player) {
+            return original;
+        }
+
+        var cameraRotation = new Rotation(camera.getYaw(tickDelta), camera.getPitch(tickDelta), true);
+
+        Rotation rotation;
+        if (RotationManager.INSTANCE.getCurrentRotation() != null) {
+            rotation = RotationManager.INSTANCE.getCurrentRotation();
+        } else if (ModuleFreeCam.INSTANCE.getRunning()) {
+            var serverRotation = RotationManager.INSTANCE.getServerRotation();
+            rotation = ModuleFreeCam.INSTANCE.shouldDisableCameraInteract() ? serverRotation : cameraRotation;
+        } else {
+            rotation = cameraRotation;
+        }
+
+        return RaytracingKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange),
+            ModuleLiquidPlace.INSTANCE.getRunning(), tickDelta);
+    }
+
+    @ModifyExpressionValue(method = "getCrosshairTarget(Lnet/minecraft/entity/Entity;DDF)Lnet/minecraft/util/hit/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
+    private static Vec3d hookRotationVector(Vec3d original, Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta) {
+        if (camera != MinecraftClient.getInstance().player) {
+            return original;
+        }
+
+        var rotation = RotationManager.INSTANCE.getCurrentRotation();
+        return rotation != null ? rotation.getDirectionVector() : original;
+    }
+
+    @ModifyExpressionValue(method = "getCrosshairTarget(Lnet/minecraft/entity/Entity;DDF)Lnet/minecraft/util/hit/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/projectile/ProjectileUtil;raycast(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Box;Ljava/util/function/Predicate;D)Lnet/minecraft/util/hit/EntityHitResult;"))
+    private static @Nullable EntityHitResult hookEntityHitResult(@Nullable EntityHitResult original) {
+        return original == null || !ModuleNoEntityInteract.INSTANCE.test(original) ? null : original;
     }
 
     /**
