@@ -149,6 +149,9 @@ fun Configuration.excludeProvidedLibs() = apply {
 
     exclude(group = "io.netty", module = "netty-buffer")
     exclude(group = "io.netty", module = "netty-codec")
+    exclude(group = "io.netty", module = "netty-codec-base")
+    exclude(group = "io.netty", module = "netty-codec-compression")
+    exclude(group = "io.netty", module = "netty-codec-http")
     exclude(group = "io.netty", module = "netty-common")
     exclude(group = "io.netty", module = "netty-handler")
     exclude(group = "io.netty", module = "netty-resolver")
