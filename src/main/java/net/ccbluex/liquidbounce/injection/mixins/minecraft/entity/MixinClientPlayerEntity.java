@@ -306,7 +306,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
      *
      * TODO(1.21.11): check this
      */
-    @Redirect(method = "applyMovementSpeedFactors", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec2f;multiply(F)Lnet/minecraft/util/math/Vec2f;"))
+    @Redirect(method = "applyMovementSpeedFactors", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec2f;multiply(F)Lnet/minecraft/util/math/Vec2f;", ordinal = 1))
     private Vec2f hookCustomMultiplier(Vec2f instance, float value) {
         var input = (Input & InputAddition) this.input;
         var playerUseMultiplier = new PlayerUseMultiplier(value, value);
