@@ -83,6 +83,84 @@ public abstract class MixinWorldRenderer {
         return ModuleCustomAmbience.FogConfigurable.INSTANCE.modifyClearColor(original);
     }
 
+//    @Unique
+//    private boolean isRenderingChams = false;
+
+    // TODO(1.21.11): Chams
+//    @Inject(method = "renderEntity", at = @At("HEAD"))
+//    private void injectChamsForEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
+//        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity)) {
+//            glEnable(GL_POLYGON_OFFSET_FILL);
+//            glPolygonOffset(1f, -1000000F);
+//
+//            this.isRenderingChams = true;
+//        }
+//    }
+//
+//    @Inject(method = "renderEntity", at = @At("RETURN"))
+//    private void injectChamsForEntityPost(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
+//        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity) && this.isRenderingChams) {
+//            glPolygonOffset(1f, 1000000F);
+//            glDisable(GL_POLYGON_OFFSET_FILL);
+//
+//            this.isRenderingChams = false;
+//        }
+//    }
+
+//    @Redirect(method = "getEntitiesToRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z"))
+//    private boolean hookFreeCamRenderPlayerFromAllPerspectives(LivingEntity instance) {
+//        return ModuleFreeCam.INSTANCE.renderPlayerFromAllPerspectives(instance);
+//    }
+
+//    @ModifyExpressionValue(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;hasOutline(Lnet/minecraft/entity/Entity;)Z"))
+//    private boolean injectHasOutline(boolean original, @Local Entity entity) {
+//        return original || shouldRenderOutline(entity);
+//    }
+//
+//    @ModifyExpressionValue(method = "getEntitiesToRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;hasOutline(Lnet/minecraft/entity/Entity;)Z"))
+//    private boolean injectHasOutline2(boolean original, @Local Entity entity) {
+//        return original || shouldRenderOutline(entity);
+//    }
+
+//    @Unique
+//    private boolean shouldRenderOutline(Entity entity) {
+//        if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
+//            return true;
+//        } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {
+//            return true;
+//        } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof TntEntity) {
+//            return true;
+//        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
+//            var category = ModuleStorageESP.categorize(entity);
+//            return category != null && category.shouldRender(entity);
+//        } else {
+//            return false;
+//        }
+//    }
+//
+//    /**
+//     * Inject ESP color as glow color
+//     *
+//     * @author 1zuna
+//     */
+//    @ModifyExpressionValue(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"))
+//    private int injectTeamColor(int original, @Local Entity entity) {
+//        if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning() && EspGlowMode.INSTANCE.shouldRender(livingEntity)) {
+//            return ModuleESP.INSTANCE.getColor(livingEntity).toARGB();
+//        } else if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
+//            return ModuleItemESP.INSTANCE.getColor().toARGB();
+//        } else if (entity instanceof TntEntity tntEntity && ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp()) {
+//            return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).toARGB();
+//        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
+//            var category = ModuleStorageESP.categorize(entity);
+//            if (category != null && category.shouldRender(entity)) {
+//                return category.getColor().toARGB();
+//            }
+//        }
+//
+//        return original;
+//    }
+
     // this method is a lambda
     @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
     private void onDrawOutlines(GpuBufferSlice gpuBufferSlice, WorldRenderState worldRenderState, Profiler profiler,
