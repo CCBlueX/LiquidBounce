@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.events.*;
@@ -306,8 +308,8 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
      *
      * TODO(1.21.11): check this
      */
-    @Redirect(method = "applyMovementSpeedFactors", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec2f;multiply(F)Lnet/minecraft/util/math/Vec2f;", ordinal = 1))
-    private Vec2f hookCustomMultiplier(Vec2f instance, float value) {
+    @WrapOperation(method = "applyMovementSpeedFactors", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec2f;multiply(F)Lnet/minecraft/util/math/Vec2f;", ordinal = 1))
+    private Vec2f hookCustomMultiplier(Vec2f instance, float value, Operation<Vec2f> original) {
         var input = (Input & InputAddition) this.input;
         var playerUseMultiplier = new PlayerUseMultiplier(value, value);
         EventManager.INSTANCE.callEvent(playerUseMultiplier);
