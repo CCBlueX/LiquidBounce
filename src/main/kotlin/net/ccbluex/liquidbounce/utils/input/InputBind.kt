@@ -190,8 +190,8 @@ data class InputBind(
             @JvmStatic
             private val LOOKUP_TABLE = NamedChoice.makeLookupTable<Modifier>()
 
-            @JvmField
-            internal val KEY_CODE_LOOKUP: Int2ReferenceMap<Modifier> = run {
+            @JvmStatic
+            private val KEY_CODE_LOOKUP: Int2ReferenceMap<Modifier> = run {
                 val map = Int2ReferenceOpenHashMap<Modifier>()
                 for (modifier in Modifier.entries) {
                     for (keyCode in modifier.keyCodes) {
@@ -203,6 +203,9 @@ data class InputBind(
 
             @JvmStatic
             fun of(string: String?): Modifier? = LOOKUP_TABLE[string]
+
+            @JvmStatic
+            fun of(keyCode: Int): Modifier? = KEY_CODE_LOOKUP[keyCode]
 
             @JvmStatic
             fun fromRawValue(modifiers: Int) = entries.filterTo(emptyEnumSet()) {

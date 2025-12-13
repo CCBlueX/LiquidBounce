@@ -46,7 +46,6 @@ import org.lwjgl.glfw.GLFW
 import java.io.File
 import java.util.*
 import java.util.function.ToIntFunction
-import kotlin.enums.EnumEntries
 
 @Suppress("TooManyFunctions")
 open class Configurable(

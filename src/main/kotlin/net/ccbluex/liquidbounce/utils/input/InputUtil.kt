@@ -107,7 +107,7 @@ fun ActionResult.shouldSwingHand() = this is ActionResult.Success && this.swingS
  */
 fun InputUtil.Key.toModifierOrNull(): InputBind.Modifier? {
     return if (this.category == InputUtil.Type.KEYSYM) {
-        InputBind.Modifier.KEY_CODE_LOOKUP[this.code]
+        InputBind.Modifier.of(this.code)
     } else {
         null
     }

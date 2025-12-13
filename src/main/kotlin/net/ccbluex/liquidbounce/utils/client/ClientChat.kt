@@ -118,7 +118,7 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableT
         val color = startColor.interpolateTo(endColor, factor)
 
         newText.append(
-            char.toString().asText().withColor(color.toARGB())
+            char.toString().asPlainText(Style.EMPTY + color)
         )
     }
 }
