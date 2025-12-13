@@ -208,28 +208,32 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         private val renderHandler = handler<WorldRenderEvent> { event ->
             val (entity, pos) = getEntityPosition() ?: return@handler
 
-            renderEnvironmentForWorld(event.matrixStack) {
-                withPositionRelativeToCamera(pos) {
-                    val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity)
-                    val rs = entityRenderer.getAndUpdateRenderState(entity, 1F)
-                    val originalBlockLight = LightmapTextureManager.getBlockLightCoordinates(rs.light)
-                    val originalSkyLight = LightmapTextureManager.getSkyLightCoordinates(rs.light)
-                    rs.light = LightmapTextureManager.pack(
-                        (originalBlockLight * lightAmount).floorToInt(),
-                        (originalSkyLight * lightAmount).floorToInt(),
-                    )
-                    // TODO(1.21.10-port): position looks incorrect
-                    mc.entityRenderDispatcher.render(
-                        rs,
-                        mc.gameRenderer.entityRenderStates.cameraRenderState,
-                        0.0,
-                        0.0,
-                        0.0,
-                        event.matrixStack,
-                        mc.gameRenderer.entityRenderCommandQueue,
-                    )
-                }
-            }
+            val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity)
+
+            val rs = entityRenderer.getAndUpdateRenderState(entity, event.partialTicks)
+
+            val originalBlockLight = LightmapTextureManager.getBlockLightCoordinates(rs.light)
+            val originalSkyLight = LightmapTextureManager.getSkyLightCoordinates(rs.light)
+            rs.light = LightmapTextureManager.pack(
+                (originalBlockLight * lightAmount).floorToInt(),
+                (originalSkyLight * lightAmount).floorToInt(),
+            )
+            rs.x = pos.x
+            rs.y = pos.y
+            rs.z = pos.z
+            val cameraState = mc.gameRenderer.entityRenderStates.cameraRenderState
+            rs.squaredDistanceToCamera = pos.squaredDistanceTo(cameraState.pos)
+
+            // TODO(1.21.10-port): position & light incorrect
+            mc.entityRenderDispatcher.render(
+                rs,
+                cameraState,
+                rs.x - cameraState.pos.x,
+                rs.y - cameraState.pos.y,
+                rs.z - cameraState.pos.z,
+                event.matrixStack,
+                mc.gameRenderer.entityRenderCommandQueue,
+            )
         }
     }
 
