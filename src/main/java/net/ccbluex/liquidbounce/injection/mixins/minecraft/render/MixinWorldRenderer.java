@@ -83,30 +83,7 @@ public abstract class MixinWorldRenderer {
         return ModuleCustomAmbience.FogConfigurable.INSTANCE.modifyClearColor(original);
     }
 
-//    @Unique
-//    private boolean isRenderingChams = false;
-
-    // TODO(1.21.11): Chams
-//    @Inject(method = "renderEntity", at = @At("HEAD"))
-//    private void injectChamsForEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-//        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity)) {
-//            glEnable(GL_POLYGON_OFFSET_FILL);
-//            glPolygonOffset(1f, -1000000F);
-//
-//            this.isRenderingChams = true;
-//        }
-//    }
-//
-//    @Inject(method = "renderEntity", at = @At("RETURN"))
-//    private void injectChamsForEntityPost(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-//        if (ModuleChams.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeAttacked(entity) && this.isRenderingChams) {
-//            glPolygonOffset(1f, 1000000F);
-//            glDisable(GL_POLYGON_OFFSET_FILL);
-//
-//            this.isRenderingChams = false;
-//        }
-//    }
-
+    // FIXME(1.21.11) FreeCam
 //    @Redirect(method = "getEntitiesToRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z"))
 //    private boolean hookFreeCamRenderPlayerFromAllPerspectives(LivingEntity instance) {
 //        return ModuleFreeCam.INSTANCE.renderPlayerFromAllPerspectives(instance);
