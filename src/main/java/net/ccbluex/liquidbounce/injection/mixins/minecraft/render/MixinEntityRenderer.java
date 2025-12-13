@@ -18,8 +18,11 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMobOwners;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.ccbluex.liquidbounce.features.module.modules.render.*;
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode;
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
@@ -34,6 +37,7 @@ import net.minecraft.client.render.entity.state.EntityRenderState;
 import net.minecraft.client.render.state.CameraRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.TntEntity;
 import net.minecraft.text.OrderedText;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -118,6 +122,27 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     @Inject(method = "updateRenderState", at = @At("HEAD"))
     private void hookInjectEntityIntoState(T entity, S state, float tickDelta, CallbackInfo ci) {
         ((EntityRenderStateAddition) state).liquid_bounce$setEntity(entity);
+    }
+
+    @WrapOperation(method = "updateRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;hasOutline(Lnet/minecraft/entity/Entity;)Z"))
+    private boolean modifyShouldRenderOutline(MinecraftClient instance, Entity entity, Operation<Boolean> operation) {
+        return operation.call(instance, entity) || liquid_bounce$shouldRenderOutline(entity);
+    }
+
+    @Unique
+    private static boolean liquid_bounce$shouldRenderOutline(Entity entity) {
+        if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
+            return true;
+        } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {
+            return true;
+        } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof TntEntity) {
+            return true;
+        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
+            var category = ModuleStorageESP.categorize(entity);
+            return category != null && category.shouldRender(entity);
+        } else {
+            return false;
+        }
     }
 
 }

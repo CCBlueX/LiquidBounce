@@ -112,32 +112,6 @@ public abstract class MixinWorldRenderer {
 //        return ModuleFreeCam.INSTANCE.renderPlayerFromAllPerspectives(instance);
 //    }
 
-//    @ModifyExpressionValue(method = "renderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;hasOutline(Lnet/minecraft/entity/Entity;)Z"))
-//    private boolean injectHasOutline(boolean original, @Local Entity entity) {
-//        return original || shouldRenderOutline(entity);
-//    }
-//
-//    @ModifyExpressionValue(method = "getEntitiesToRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;hasOutline(Lnet/minecraft/entity/Entity;)Z"))
-//    private boolean injectHasOutline2(boolean original, @Local Entity entity) {
-//        return original || shouldRenderOutline(entity);
-//    }
-
-//    @Unique
-//    private boolean shouldRenderOutline(Entity entity) {
-//        if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
-//            return true;
-//        } else if (EspGlowMode.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity) && EspGlowMode.INSTANCE.shouldRender(entity)) {
-//            return true;
-//        } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof TntEntity) {
-//            return true;
-//        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
-//            var category = ModuleStorageESP.categorize(entity);
-//            return category != null && category.shouldRender(entity);
-//        } else {
-//            return false;
-//        }
-//    }
-//
 //    /**
 //     * Inject ESP color as glow color
 //     *
