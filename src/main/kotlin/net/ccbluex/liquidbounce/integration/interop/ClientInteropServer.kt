@@ -67,9 +67,6 @@ object ClientInteropServer {
                 middleware(CorsMiddleware())
                 middleware(AuthMiddleware())
             }
-
-            // Register events with @WebSocketEvent annotation
-            SocketEventListener.registerAll()
         }.onFailure {
             ErrorHandler.fatal(it, additionalMessage = "Register endpoints")
         }
@@ -82,7 +79,12 @@ object ClientInteropServer {
 
     private suspend fun startServer(port: Int): Int {
         return try {
-            httpServer.start(port)
+            val actualPort = httpServer.start(port)
+
+            // Register events with @WebSocketEvent annotation
+            SocketEventListener.registerAll()
+
+            actualPort
         } catch (bindException: BindException) {
             if (attempt >= 5) {
                 ErrorHandler.fatal(bindException, additionalMessage = "Bind interop server")
