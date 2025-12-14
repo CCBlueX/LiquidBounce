@@ -85,12 +85,14 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
      *
      * FIXME: redesign
      */
-//    object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
-//    }
+    object CustomLightmap : ToggleableConfigurable(this, "CustomLightmap", false) {
+        val color by color("Color", Color4b.LIQUID_BOUNCE)
+    }
 
     init {
         tree(Precipitation)
         tree(FogConfigurable)
+        tree(CustomLightmap)
     }
 
     @JvmStatic

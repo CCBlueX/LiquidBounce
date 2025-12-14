@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTexture;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -26,13 +27,21 @@ import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.registry.entry.RegistryEntry;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LightmapTextureManager.class)
 public abstract class MixinLightmapTextureManager {
+
+    @Shadow
+    @Final
+    private GpuTexture glTexture;
 
     /**
      * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams
@@ -44,6 +53,21 @@ public abstract class MixinLightmapTextureManager {
     )
     private int makeTextureCopiable(int usage) {
         return usage | GpuTexture.USAGE_COPY_SRC | GpuTexture.USAGE_COPY_DST;
+    }
+
+    /**
+     * <pre>
+     * this.dirty = false;
+     * </pre>
+     */
+    @Inject(method = "update(F)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/LightmapTextureManager;dirty:Z", ordinal = 1), cancellable = true)
+    private void injectCustomClearColor(float tickProgress, CallbackInfo ci) {
+        if (ModuleCustomAmbience.CustomLightmap.INSTANCE.getRunning()) {
+            RenderSystem.getDevice().createCommandEncoder()
+                .clearColorTexture(this.glTexture, ModuleCustomAmbience.CustomLightmap.INSTANCE.getColor().toARGB());
+
+            ci.cancel();
+        }
     }
 
     /**
