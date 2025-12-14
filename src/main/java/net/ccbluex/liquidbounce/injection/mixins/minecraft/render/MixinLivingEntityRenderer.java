@@ -211,4 +211,9 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     }
     // Chams END
 
+    // FreeCam
+//    @ModifyExpressionValue(method = "hasLabel(Lnet/minecraft/entity/LivingEntity;D)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getCameraEntity()Lnet/minecraft/entity/Entity;"))
+//    private Entity hasLabelGetCameraEntityProxy(Entity cameraEntity) {
+//        return ModuleFreeCam.INSTANCE.getRunning() ? null : cameraEntity;
+//    }
 }

@@ -110,7 +110,7 @@
     "minecraft.render.MixinChunkOcclusionDataBuilder",
     "minecraft.render.MixinEndCrystalEntityModel",
     "minecraft.render.MixinEndCrystalEntityRenderer",
-    "minecraft.render.MixinEntityRenderDispatcher",
+    "minecraft.render.MixinEntityHitboxDebugRenderer",
     "minecraft.render.MixinEntityRenderer",
     "minecraft.render.MixinFogRenderer",
     "minecraft.render.MixinGameRenderer",

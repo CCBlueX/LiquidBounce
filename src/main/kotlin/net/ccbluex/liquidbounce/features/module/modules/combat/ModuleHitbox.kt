@@ -33,6 +33,8 @@ object ModuleHitbox : ClientModule("Hitbox", Category.COMBAT) {
 
     val size by float("Size", 0.4f, 0f..1f).apply { tagBy(this) }
 
+    val applyToDebugHitbox by boolean("ApplyToDebugHitbox", true)
+
     @Suppress("unused")
     val marginHandler = handler<EntityMarginEvent> { event ->
         if (event.entity.shouldBeAttacked()) {
