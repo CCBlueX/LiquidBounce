@@ -18,9 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.config.types.nesting.ScrollAdjustConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
-import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -31,10 +30,8 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.client.util.InputUtil
 import net.minecraft.item.*
 import net.minecraft.util.hit.BlockHitResult
 
@@ -57,29 +54,13 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
         private val rangeBounds = 1.0f..4.5f
         val range = float("Range", 3.0f, rangeBounds)
 
-        object ScrollAdjust : ToggleableConfigurable(this, "ScrollAdjust", true) {
-            val modifierKey by key("Modifier", InputUtil.GLFW_KEY_LEFT_ALT)
-            val sensitivity by float("Sensitivity", 0.5f, 0.1f..1.0f)
-
-            @Suppress("unused")
-            private val rangeChangeHandler = handler<MouseScrollEvent> { event ->
-                if (!running) return@handler
-                if (modifierKey != InputUtil.UNKNOWN_KEY && !modifierKey.isPressed) return@handler
-                val delta = event.vertical.toFloat() * sensitivity
-                val newValue = range.get() + delta
-                range.set(newValue.coerceIn(rangeBounds))
-            }
-
-            @Suppress("unused")
-            private val hotbarScrollHandler = handler<MouseScrollInHotbarEvent> {
-                if (running && (modifierKey == InputUtil.UNKNOWN_KEY || modifierKey.isPressed)) {
-                    it.cancelEvent()
-                }
-            }
-        }
+        private val scrollAdjust = ScrollAdjustConfigurable(this, "ScrollAdjust", true, { delta ->
+            val newValue = range.get() + delta
+            range.set(newValue.coerceIn(rangeBounds))
+        })
 
         init {
-            tree(ScrollAdjust)
+            tree(scrollAdjust)
         }
 
     }
