@@ -123,9 +123,9 @@ public abstract class MixinCamera {
         var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
 
         var changeLook = rotationTarget != null &&
-                rotationTarget.getMovementCorrection() == MovementCorrection.CHANGE_LOOK;
+            rotationTarget.getMovementCorrection() == MovementCorrection.CHANGE_LOOK;
         if (currentRotation == null || previousRotation == null || !changeLook ||
-                !RotationManager.INSTANCE.isRotatingAllowed(rotationTarget)) {
+            !RotationManager.INSTANCE.isRotatingAllowed(rotationTarget)) {
             return;
         }
 
@@ -133,6 +133,13 @@ public abstract class MixinCamera {
             MathHelper.lerp(tickProgress, previousRotation.getYaw(), currentRotation.getYaw()),
             MathHelper.lerp(tickProgress, previousRotation.getPitch(), currentRotation.getPitch())
         );
+    }
+
+    @Inject(method = "update", at = @At("TAIL"))
+    private void applyFreeCamPlayerSelfRendering(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickProgress, CallbackInfo ci) {
+        if (ModuleFreeCam.INSTANCE.getRunning()) {
+            this.thirdPerson = true;
+        }
     }
 
     @ModifyConstant(method = "clipToSpace", constant = @Constant(intValue = 8))

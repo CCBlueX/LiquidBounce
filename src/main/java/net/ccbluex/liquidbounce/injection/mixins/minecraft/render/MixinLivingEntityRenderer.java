@@ -45,6 +45,7 @@ import net.minecraft.client.render.entity.state.LivingEntityRenderState;
 import net.minecraft.client.render.state.CameraRenderState;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
@@ -212,8 +213,8 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
     // Chams END
 
     // FreeCam
-//    @ModifyExpressionValue(method = "hasLabel(Lnet/minecraft/entity/LivingEntity;D)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getCameraEntity()Lnet/minecraft/entity/Entity;"))
-//    private Entity hasLabelGetCameraEntityProxy(Entity cameraEntity) {
-//        return ModuleFreeCam.INSTANCE.getRunning() ? null : cameraEntity;
-//    }
+    @ModifyExpressionValue(method = "hasLabel(Lnet/minecraft/entity/LivingEntity;D)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getCameraEntity()Lnet/minecraft/entity/Entity;"))
+    private Entity hasLabelGetCameraEntityProxy(Entity cameraEntity) {
+        return ModuleFreeCam.INSTANCE.getRunning() ? null : cameraEntity;
+    }
 }
