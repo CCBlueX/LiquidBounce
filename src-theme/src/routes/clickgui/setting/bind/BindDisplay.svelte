@@ -66,7 +66,6 @@
   @use "../../../../colors" as *;
 
   .wrapper {
-    font-family: monospace;
     column-gap: 2px;
     display: flex;
     align-items: center;
