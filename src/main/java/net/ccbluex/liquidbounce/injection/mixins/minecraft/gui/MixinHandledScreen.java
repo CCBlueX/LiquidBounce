@@ -24,15 +24,20 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleItemScroller;
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory;
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMouseAccessor;
+import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -111,9 +116,24 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends MixinS
             this.cancelNextRelease = true;
 
             this.lastClickedSlot = slot;
-//            TODO(1.21.10-port): missing fields
-//            this.lastButtonClickTime = Util.getMeasuringTimeMs();
-//            this.lastClickedButton = GLFW.GLFW_MOUSE_BUTTON_1;
+            // See Mouse.onMouseButton
+            /*
+            <pre>
+             long l = Util.getMeasuringTimeMs();
+             boolean bl2 = this.lastMouseClick != null
+             && l - this.lastMouseClick.time() < 250L
+             && this.lastMouseClick.screen() == screen
+             && this.lastMouseButton == click.button();
+             if (screen.mouseClicked(click, bl2)) {
+             this.lastMouseClick = new Mouse.MouseClickTime(l, screen);
+             this.lastMouseButton = mouseInput.button();
+             return;
+             }
+             </pre>
+             */
+            var mouse = (MixinMouseAccessor) this.client.mouse;
+            mouse.setLastMouseClick(new Mouse.MouseClickTime(Util.getMeasuringTimeMs(), (Screen) (Object) this));
+            mouse.setLastMouseButton(GLFW.GLFW_MOUSE_BUTTON_1);
 
             ModuleItemScroller.INSTANCE.resetChronometer();
         }

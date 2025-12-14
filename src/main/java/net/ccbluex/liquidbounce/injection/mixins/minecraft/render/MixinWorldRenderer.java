@@ -83,12 +83,6 @@ public abstract class MixinWorldRenderer {
         return ModuleCustomAmbience.FogConfigurable.INSTANCE.modifyClearColor(original);
     }
 
-    // FIXME(1.21.11) FreeCam
-//    @Redirect(method = "getEntitiesToRender", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isSleeping()Z"))
-//    private boolean hookFreeCamRenderPlayerFromAllPerspectives(LivingEntity instance) {
-//        return ModuleFreeCam.INSTANCE.renderPlayerFromAllPerspectives(instance);
-//    }
-
     // this method is a lambda
     @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
     private void onDrawOutlines(GpuBufferSlice gpuBufferSlice, WorldRenderState worldRenderState, Profiler profiler,

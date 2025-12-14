@@ -27,6 +27,7 @@
     "minecraft.client.MixinKeyboardInput",
     "minecraft.client.MixinMinecraftClient",
     "minecraft.client.MixinMouse",
+    "minecraft.client.MixinMouseAccessor",
     "minecraft.client.MixinNarratorManager",
     "minecraft.client.MixinPlayerInventory",
     "minecraft.client.MixinRawProjectionMatrix",
