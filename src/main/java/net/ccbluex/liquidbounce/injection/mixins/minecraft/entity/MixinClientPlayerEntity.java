@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData;
 import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition;
-import net.ccbluex.liquidbounce.interfaces.InputAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingKt;
@@ -248,7 +247,6 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
 
     /**
      * We change crossHairTarget according to server side rotations
-     * TODO(1.21.11): check this
      */
     @ModifyExpressionValue(method = "getCrosshairTarget(Lnet/minecraft/entity/Entity;DDF)Lnet/minecraft/util/hit/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
     private static HitResult hookRaycast(HitResult original, Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta) {
@@ -305,12 +303,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
      *     vec2f = vec2f.multiply(this.getActiveItemSpeedMultiplier());
      * }
      * </pre>
-     *
-     * TODO(1.21.11): check this
      */
     @WrapOperation(method = "applyMovementSpeedFactors", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec2f;multiply(F)Lnet/minecraft/util/math/Vec2f;", ordinal = 1))
     private Vec2f hookCustomMultiplier(Vec2f instance, float value, Operation<Vec2f> original) {
-        var input = (Input & InputAddition) this.input;
         var playerUseMultiplier = new PlayerUseMultiplier(value, value);
         EventManager.INSTANCE.callEvent(playerUseMultiplier);
         return new Vec2f(
@@ -392,11 +387,6 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
         return (!ModuleFreeCam.INSTANCE.getRunning() ||
                 RotationManager.INSTANCE.getCurrentRotation() != null) && bl4;
     }
-// FIXME(1.21.11)
-//    @ModifyConstant(method = "canSprint()Z", constant = @Constant(floatValue = 6.0F), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I", ordinal = 0)))
-//    private float hookSprintIgnoreHunger(float constant) {
-//        return ModuleSprint.INSTANCE.getShouldIgnoreHunger() ? -1F : constant;
-//    }
 
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canStartSprinting()Z"))
     private boolean hookSprint0(boolean original) {

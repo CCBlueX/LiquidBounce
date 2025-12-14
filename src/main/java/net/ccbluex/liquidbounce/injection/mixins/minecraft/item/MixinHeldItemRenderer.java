@@ -144,7 +144,6 @@ public abstract class MixinHeldItemRenderer {
         return original;
     }
 
-    // TODO(1.21.11): check this
     @ModifyExpressionValue(method = "updateHeldItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getHandEquippingProgress(F)F"))
     private float injectSilentHotbarNoCooldown(float original) {
         if (ModuleSilentHotbar.INSTANCE.getRunning() && ModuleSilentHotbar.INSTANCE.getNoCooldownProgress() && SilentHotbar.INSTANCE.isSlotModified()) {
