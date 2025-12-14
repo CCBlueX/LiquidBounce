@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.nesting.ScrollAdjustConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ScrollAdjustOptions
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -56,9 +57,11 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
         "ScrollAdjust",
         true,
         { delta -> ScrollAdjust.scrolledDistance += delta },
-        GLFW.GLFW_KEY_LEFT_CONTROL,
-        0.3f,
-        0.1f..2f
+        ScrollAdjustOptions(
+            modifierKeyDefault = GLFW.GLFW_KEY_LEFT_CONTROL,
+            sensitivityDefault = 0.3f,
+            sensitivityRange = 0.1f..2f
+        )
     ) {
         private val rememberScrolled by boolean("RememberScrolled", false)
         private val requireFreeLook by boolean("RequireFreeLook", false)

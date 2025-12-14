@@ -28,18 +28,23 @@ import net.minecraft.client.util.InputUtil
 /**
  * A configurable for scroll-adjusting values.
  */
+
+data class ScrollAdjustOptions(
+    val modifierKeyDefault: Int = InputUtil.GLFW_KEY_LEFT_ALT,
+    val sensitivityDefault: Float = 0.5f,
+    val sensitivityRange: ClosedFloatingPointRange<Float> = 0.1f..1.0f
+)
+
 open class ScrollAdjustConfigurable(
     parent: EventListener?,
     name: String,
     default: Boolean,
-    adjustFunction: (Float) -> Unit = { },
-    modifierKeyDefault: Int = InputUtil.GLFW_KEY_LEFT_ALT,
-    sensitivityDefault: Float = 0.5f,
-    sensitivityRange: ClosedFloatingPointRange<Float> = 0.1f..1.0f
+    private val adjustFunction: (Float) -> Unit,
+    options: ScrollAdjustOptions = ScrollAdjustOptions()
 ) : ToggleableConfigurable(parent, name, default) {
 
-    val modifierKey by key("Modifier", modifierKeyDefault)
-    val sensitivity by float("Sensitivity", sensitivityDefault, sensitivityRange)
+    val modifierKey by key("Modifier", options.modifierKeyDefault)
+    val sensitivity by float("Sensitivity", options.sensitivityDefault, options.sensitivityRange)
 
     open fun canPerformScroll(): Boolean = modifierKey == InputUtil.UNKNOWN_KEY || modifierKey.isPressed
 
