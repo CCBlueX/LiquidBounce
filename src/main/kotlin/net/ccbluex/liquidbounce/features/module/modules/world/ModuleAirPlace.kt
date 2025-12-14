@@ -37,8 +37,6 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.client.util.InputUtil
 import net.minecraft.item.*
 import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.Vec3d
-import org.lwjgl.glfw.GLFW
 
 /**
  * AirPlace module
@@ -56,11 +54,11 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
     val liquidPlace by boolean("Place in Liquids", false)
 
     object CustomRange : ToggleableConfigurable(this, "CustomRange", false) {
-        private val rangeBounds = 1.0f..5.0f
-        val range = float("Range", 4.0f, rangeBounds)
+        private val rangeBounds = 1.0f..4.5f
+        val range = float("Range", 3.0f, rangeBounds)
 
         object ScrollAdjust : ToggleableConfigurable(this, "ScrollAdjust", true) {
-            val modifierKey by key("Modifier", GLFW.GLFW_KEY_LEFT_ALT)
+            val modifierKey by key("Modifier", InputUtil.GLFW_KEY_LEFT_ALT)
             val sensitivity by float("Sensitivity", 0.5f, 0.1f..1.0f)
 
             @Suppress("unused")
@@ -124,21 +122,19 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
             val distance = CustomRange.range.get().toDouble()
             val playerEye = player.eyePos
             val direction = hitResult.pos.subtract(playerEye).normalize()
-            val targetPosVec = playerEye.add(direction.multiply(distance))
+            val targetPos = playerEye.add(direction.multiply(distance))
 
-            val targetBlockPos = targetPosVec.toBlockPos()
-            val adjustedPosVec = Vec3d(
-                targetBlockPos.x + 0.5,
-                targetBlockPos.y.toDouble(),
-                targetBlockPos.z + 0.5
-            )
-
-            return BlockHitResult(
-                adjustedPosVec,
+            val newHitResult = BlockHitResult(
+                targetPos,
                 hitResult.side,
-                targetBlockPos,
-                false
+                targetPos.toBlockPos(),
+                hitResult.isInsideBlock
             )
+
+            if (!newHitResult.isAirOrFluid) return null
+            if (!canPlayerPlaceAt(newHitResult)) return null
+
+            return newHitResult
         }
 
         return hitResult
