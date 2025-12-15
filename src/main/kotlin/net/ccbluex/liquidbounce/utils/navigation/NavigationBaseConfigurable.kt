@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.MinecraftAutoJumpEvent
+import net.ccbluex.liquidbounce.event.events.AutoJumpEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -127,7 +127,7 @@ abstract class NavigationBaseConfigurable<T>(
     }
 
     @Suppress("unused")
-    private val autoJumpHandler = handler<MinecraftAutoJumpEvent> { event ->
+    private val autoJumpHandler = handler<AutoJumpEvent> { event ->
         if (autoJump) {
             event.autoJump = true
         }

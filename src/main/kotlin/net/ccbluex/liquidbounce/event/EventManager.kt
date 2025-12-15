@@ -141,7 +141,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ClickGuiValueChangeEvent::class.java,
     BlockAttackEvent::class.java,
     QueuePacketEvent::class.java,
-    MinecraftAutoJumpEvent::class.java,
+    AutoJumpEvent::class.java,
     WorldEntityRemoveEvent::class.java,
     TitleEvent.Title::class.java,
     TitleEvent.Subtitle::class.java,

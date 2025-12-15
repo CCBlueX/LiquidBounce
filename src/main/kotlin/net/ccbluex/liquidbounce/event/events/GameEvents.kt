@@ -20,11 +20,11 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
-import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
@@ -106,7 +106,7 @@ class UseCooldownEvent(
 class CancelBlockBreakingEvent : CancellableEvent()
 
 @Nameable("autoJump")
-class MinecraftAutoJumpEvent(
+class AutoJumpEvent(
     var autoJump: Boolean,
 ) : Event()
 

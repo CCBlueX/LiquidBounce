@@ -64,7 +64,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientPlayerEntity.class)
@@ -350,7 +352,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
 
     @ModifyReturnValue(method = "isAutoJumpEnabled", at = @At("RETURN"))
     private boolean injectLegitStep(boolean original) {
-        return new MinecraftAutoJumpEvent(original).getAutoJump();
+        return EventManager.INSTANCE.callEvent(new AutoJumpEvent(original)).getAutoJump();
     }
 
     @Inject(method = "swingHand", at = @At("HEAD"), cancellable = true)
