@@ -5,13 +5,13 @@
     import {createEventDispatcher} from "svelte";
     import {listen} from "../../../integration/ws";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
+    import {isClickGuiScreen, UNKNOWN_KEY} from "../../../util/keybind_utils";
 
     export let setting: ModuleSetting;
 
     const cSetting = setting as KeySetting;
 
     const dispatch = createEventDispatcher();
-    const UNKNOWN_KEY = "key.keyboard.unknown";
 
     let isHovered = false;
     let binding = false;
@@ -39,8 +39,7 @@
     }
 
     listen("keyboardKey", async (e: KeyboardKeyEvent) => {
-        if (e.screen === undefined || !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
-            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")) {
+        if (!isClickGuiScreen(e.screen)) {
             return;
         }
 
@@ -62,8 +61,7 @@
     });
 
     listen("mouseButton", async (e: MouseButtonEvent) => {
-        if (e.screen === undefined || !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
-            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")) {
+        if (!isClickGuiScreen(e.screen)) {
             return;
         }
 
