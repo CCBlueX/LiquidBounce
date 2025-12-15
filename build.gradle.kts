@@ -119,6 +119,9 @@ dependencies {
     modApi("com.viaversion:viafabricplus-api:${project.property("viafabricplus_version")}")
     modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}")
 
+    // Exploit Preventer
+    modApi("maven.modrinth:exploitpreventer:${project.property("exploit_preventer_version")}")
+
     // Minecraft Authlib
     includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
 
