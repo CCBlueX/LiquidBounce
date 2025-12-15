@@ -126,6 +126,8 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
         }
     }
 
+    private val playerHitboxBase = Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
+
     fun getHypotheticalHit(): AbstractClientPlayerEntity? {
         val rotation = RotationManager.serverRotation
         val yaw = rotation.yaw
@@ -155,9 +157,7 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
                 val playerSnapshot = player.getSnapshotAt(i)
 
                 val playerHitBox =
-                    Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
-                        .expand(0.3)
-                        .offset(playerSnapshot.pos)
+                    playerHitboxBase.expand(0.3).offset(playerSnapshot.pos)
 
                 val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
 
