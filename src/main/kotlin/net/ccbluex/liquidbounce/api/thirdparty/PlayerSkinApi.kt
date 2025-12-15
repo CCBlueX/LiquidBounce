@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.api.thirdparty
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.core.HttpClient
-import net.ccbluex.liquidbounce.api.core.toRequestBody
+import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
+import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.session.Session
-import net.minecraft.client.util.SkinTextures
+import net.minecraft.entity.player.PlayerSkinType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -35,7 +35,7 @@ class PlayerSkinApi(serviceHost: String) : BaseApi(serviceHost) {
 
     private suspend fun uploadSkin(body: RequestBody) {
         val session = mc.session
-        require(session.accountType !== Session.AccountType.LEGACY) {
+        require(session.accountType != "legacy") {
             "Legacy account can't use this API"
         }
 
@@ -44,7 +44,7 @@ class PlayerSkinApi(serviceHost: String) : BaseApi(serviceHost) {
         }
     }
 
-    suspend fun changeSkin(url: String, model: SkinTextures.Model) {
+    suspend fun changeSkin(url: String, model: PlayerSkinType) {
         // https://minecraft.wiki/w/Mojang_API#Change_skin
         val jsonBody = JsonObject().apply {
             addProperty("url", url)
@@ -54,7 +54,7 @@ class PlayerSkinApi(serviceHost: String) : BaseApi(serviceHost) {
         uploadSkin(jsonBody)
     }
 
-    suspend fun uploadSkin(file: File, model: SkinTextures.Model) {
+    suspend fun uploadSkin(file: File, model: PlayerSkinType) {
         // https://minecraft.wiki/w/Mojang_API#Upload_skin
         val formBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -69,9 +69,10 @@ class PlayerSkinApi(serviceHost: String) : BaseApi(serviceHost) {
         uploadSkin(formBody)
     }
 
-    private val SkinTextures.Model.variant get() = when (this) {
-        SkinTextures.Model.WIDE -> "classic"
-        SkinTextures.Model.SLIM -> "slim"
+    private val PlayerSkinType.variant
+        get() = when (this) {
+            PlayerSkinType.WIDE -> "classic"
+            PlayerSkinType.SLIM -> "slim"
     }
 
 }
