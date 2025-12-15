@@ -116,6 +116,7 @@
 
     .key-bind {
       display: inline-flex;
+      align-items: center;
       font-family: monospace;
       font-size: 11px;
       color: $accent-color;
