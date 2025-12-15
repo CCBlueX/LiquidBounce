@@ -126,7 +126,7 @@ dependencies {
     val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
     modApi(mcef)
     include(mcef)
-    includeDependency("net.ccbluex:netty-httpserver:2.4.4")
+    includeDependency("net.ccbluex:netty-httpserver:2.5.0")
 
     // Discord RPC Support
     includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")

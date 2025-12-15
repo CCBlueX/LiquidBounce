@@ -24,9 +24,7 @@ import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.SimpleChannelInboundHandler
-import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
-import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.http.*
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_AUTHORIZE_URL
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_CLIENT_ID
@@ -35,6 +33,7 @@ import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.netty.http.coroutines.awaitSuspend
+import net.ccbluex.netty.http.util.setup
 import java.net.InetSocketAddress
 import java.util.*
 import kotlin.coroutines.Continuation
@@ -88,13 +87,9 @@ object OAuthClient : EventListener {
     }
 
     private suspend fun startNettyServer(): Int {
-        val bossGroup = NioEventLoopGroup(1)
-        val workerGroup = NioEventLoopGroup()
-
         val bootstrap = ServerBootstrap()
-            .group(bossGroup, workerGroup)
-            .channelFactory(ChannelFactory(::NioServerSocketChannel))
-            .childHandler(NettyChannelInitializer())
+        val (bossGroup, workerGroup) = bootstrap.setup(useNativeTransport = true)
+        bootstrap.childHandler(NettyChannelInitializer())
 
         val channel = bootstrap.bind(0).awaitSuspend().channel()
         val localPort = (channel.localAddress() as InetSocketAddress).port
