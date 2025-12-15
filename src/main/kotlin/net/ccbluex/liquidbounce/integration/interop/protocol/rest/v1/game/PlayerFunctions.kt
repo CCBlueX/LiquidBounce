@@ -102,13 +102,13 @@ data class PlayerData(
         fun fromPlayer(player: PlayerEntity) = PlayerData(
             ModuleNameProtect.replace(player.nameForScoreboard),
             player.uuidAsString,
-            player.world.registryKey.value,
-            player.pos,
+            player.entityWorld.registryKey.value,
+            player.entityPos,
             player.netherPosition,
             player.blockPos,
             player.velocity,
             player.inventory.selectedSlot,
-            if (mc.player === player) interaction.currentGameMode else GameMode.DEFAULT,
+            player.gameMode ?: GameMode.DEFAULT,
             player.health.fixNaN(),
             player.getActualHealth().fixNaN(),
             player.maxHealth.fixNaN(),
@@ -126,7 +126,9 @@ data class PlayerData(
             player.mainHandStack,
             if (player == mc.player && shouldHideOffhand() && hideShieldSlot) ItemStack.EMPTY else player.offHandStack,
             player.armorItems.toList(),
-            if (mc.player === player) ScoreboardData.fromScoreboard(player.scoreboard) else null
+            ScoreboardData.fromScoreboard(
+                player.entityWorld.scoreboard
+            )
         )
     }
 

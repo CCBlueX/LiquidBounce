@@ -7,5 +7,13 @@
     "horizontalOffset": -20,
     "verticalAlignment": "CenterTranslated",
     "verticalOffset": 0
-  }
+  },
+  "values": [
+    {
+      "type": "CHOOSE",
+      "name": "IconPosition",
+      "value": "Left",
+      "choices": ["None", "Left", "Right", "Top", "Bottom"]
+    }
+  ]
 }

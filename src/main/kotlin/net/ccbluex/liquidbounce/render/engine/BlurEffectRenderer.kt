@@ -20,16 +20,15 @@ package net.ccbluex.liquidbounce.render.engine
 
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.createRenderPass
-import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -54,9 +53,9 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         mc.window.framebufferWidth,
         mc.window.framebufferHeight,
         true
-    ).apply {
-        this.setFilter(FilterMode.NEAREST)
-    }
+    )
+
+    private val overlaySampler = RenderSystem.getSamplerCache().get(FilterMode.NEAREST)
 
     private fun clearOverlay() {
         overlayFramebuffer.clearColorAndDepth()
@@ -81,7 +80,10 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         std140Size = { float + float + float },
     ).slice()
 
-    fun shouldDrawBlur(): Boolean = inGame && (mc.currentScreen == null || mc.currentScreen is ChatScreen) &&
+    private fun hasNoFullScreen(): Boolean =
+        mc.currentScreen == null || mc.currentScreen is ChatScreen || FeatureSilentScreen.shouldHide
+
+    fun shouldDrawBlur(): Boolean = inGame && hasNoFullScreen() &&
         ModuleHud.running && ModuleHud.isBlurEffectActive
 
     fun blitBlurOverlay() {
@@ -99,10 +101,10 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         mc.framebuffer.createRenderPass().use { pass ->
             pass.setPipeline(ClientRenderPipelines.GuiBlur)
-            pass.bindSampler("texture0", mc.framebuffer.colorAttachmentView)
-            pass.bindSampler("overlay", overlayFramebuffer.colorAttachmentView)
+            pass.bindTexture("texture0", mc.framebuffer.colorAttachmentView, overlaySampler)
+            pass.bindTexture("overlay", overlayFramebuffer.colorAttachmentView, overlaySampler)
             pass.setUniform("BlurData", GUI_BLUR_UNIFORM_BUFFER)
-            pass.drawFullScreenPositionTexture()
+            pass.draw(0, 3)
         }
 
         // overlayFramebuffer ---blit--> mc.framebuffer
@@ -112,26 +114,23 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     /**
      * Draws a blit using a custom JCEF-compatible blending pipeline.
      * Replaces the call to `overlayFramebuffer.drawBlit(mc.framebuffer.colorAttachment)`.
+     *
+     * @see net.minecraft.client.gl.Framebuffer.drawBlit
      */
     private fun drawOverlayBlit() {
-        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(VertexFormat.DrawMode.QUADS)
-        val indexBuffer = shapeIndexBuffer.getIndexBuffer(6)
-        val vertexBuffer = RenderSystem.getQuadVertexBuffer()
-
         mc.framebuffer.colorAttachmentView!!.createRenderPass(
             { "GUI blur overlay blit pass" },
         ).use { renderPass ->
             renderPass.setPipeline(ClientRenderPipelines.JCEF.Blit)
             RenderSystem.bindDefaultUniforms(renderPass)
-            renderPass.setVertexBuffer(0, vertexBuffer)
-            renderPass.setIndexBuffer(indexBuffer, shapeIndexBuffer.indexType)
-            renderPass.bindSampler("InSampler", overlayFramebuffer.colorAttachmentView)
-            renderPass.drawIndexed(0, 0, 6, 1)
+
+            renderPass.bindTexture("InSampler", overlayFramebuffer.colorAttachmentView, overlaySampler)
+            renderPass.draw(0, 3)
         }
     }
 
     fun getBlurRadiusFactor(): Float {
-        val isScreenOpen = mc.currentScreen != null && mc.currentScreen !is ChatScreen
+        val isScreenOpen = !hasNoFullScreen()
 
         if (isScreenOpen && !wasScreenOpen) {
             lastTimeScreenOpened.reset()

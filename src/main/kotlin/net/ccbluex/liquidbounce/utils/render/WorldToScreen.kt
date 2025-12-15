@@ -70,7 +70,7 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
     @JvmOverloads
     fun calculateScreenPos(
         pos: Vec3d,
-        cameraPos: Vec3d = mc.gameRenderer.camera.pos,
+        cameraPos: Vec3d = mc.gameRenderer.camera.cameraPos,
     ): Vec3? {
         val transformedPos = cacheVec3f.set(pos).sub(cameraPos)
             .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix))
@@ -79,22 +79,22 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
         val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
-            .mul(guiScaleMul * mc.framebuffer.viewportWidth, guiScaleMul * mc.framebuffer.viewportHeight, 1.0F)
+            .mul(guiScaleMul * mc.framebuffer.textureWidth, guiScaleMul * mc.framebuffer.textureHeight, 1.0F)
 
         return if (transformedPos.z < 1.0F) Vec3(screenPos.x, screenPos.y, transformedPos.z) else null
     }
 
     @JvmStatic
     @JvmOverloads
-    fun calculateMouseRay(posOnScreen: Vec2f, cameraPos: Vec3d = mc.gameRenderer.camera.pos): Line {
+    fun calculateMouseRay(posOnScreen: Vec2f, cameraPos: Vec3d = mc.gameRenderer.camera.cameraPos): Line {
         val screenVec = cacheVec3f.set(posOnScreen.x, posOnScreen.y, 1.0F)
 
         val scaleFactor = mc.window.scaleFactor
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
         val transformedPos = screenVec.mul(
-            1.0F / (guiScaleMul * mc.framebuffer.viewportWidth),
-            1.0F / (guiScaleMul * mc.framebuffer.viewportHeight),
+            1.0F / (guiScaleMul * mc.framebuffer.textureWidth),
+            1.0F / (guiScaleMul * mc.framebuffer.textureHeight),
             1.0F
         ).sub(1.0F, 1.0F, 0.0F).mul(1.0F, -1.0F, 1.0F)
 

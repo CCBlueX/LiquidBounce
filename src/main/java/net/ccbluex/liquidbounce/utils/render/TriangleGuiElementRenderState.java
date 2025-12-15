@@ -41,10 +41,10 @@ public record TriangleGuiElementRenderState(
 ) implements LiquidBounceGuiElementRenderState {
 
     @Override
-    public void setupVertices(VertexConsumer vertices, float depth) {
-        vertices.vertex(pose, x0, y0, depth).color(argb);
-        vertices.vertex(pose, x1, y1, depth).color(argb);
-        vertices.vertex(pose, x2, y2, depth).color(argb);
+    public void setupVertices(VertexConsumer vertices) {
+        vertices.vertex(pose, x0, y0).color(argb);
+        vertices.vertex(pose, x1, y1).color(argb);
+        vertices.vertex(pose, x2, y2).color(argb);
     }
 
     @Override

@@ -86,7 +86,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
     private val playerJumpHandler = handler<PlayerJumpEvent> { _ ->
         // Adds new circle when the player jumps
-        circles.add(player.pos, lifetime)
+        circles.add(player.entityPos, lifetime)
     }
 
 }

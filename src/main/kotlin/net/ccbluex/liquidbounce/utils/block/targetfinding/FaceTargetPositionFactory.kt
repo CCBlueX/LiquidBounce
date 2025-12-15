@@ -175,20 +175,20 @@ class StabilizedRotationTargetPositionFactory(
     ): AlignedFace? {
         val optimalLine = optimalLine ?: return null
 
-        val nearsetPointToOptimalLine = optimalLine.getNearestPointTo(player.pos)
-        val directionToOptimalLine = player.pos.subtract(nearsetPointToOptimalLine).normalize()
+        val nearsetPointToOptimalLine = optimalLine.getNearestPointTo(player.entityPos)
+        val directionToOptimalLine = player.entityPos.subtract(nearsetPointToOptimalLine).normalize()
 
         val optimalLineFromPlayer = Line(config.eyePos, optimalLine.direction)
         val collisionWithFacePlane = trimmedFace.toPlane().intersection(optimalLineFromPlayer) ?: return null
 
-        val b = player.pos.add(directionToOptimalLine.multiply(2.0))
+        val b = player.entityPos.add(directionToOptimalLine.multiply(2.0))
 
         val cropBox = Box(
             collisionWithFacePlane.x,
-            player.pos.y - 2.0,
+            player.entityPos.y - 2.0,
             collisionWithFacePlane.z,
             b.x,
-            player.pos.y + 1.0,
+            player.entityPos.y + 1.0,
             b.z,
         )
 
@@ -379,7 +379,7 @@ class EdgePointTargetPositionFactory(
     ): Vec3d? {
         val box = Box(face.from, face.to)
         val edge = box.edgePoints.maxByOrNull { edge ->
-            edge.squaredDistanceTo(player.pos - player.blockPos)
+            edge.squaredDistanceTo(player.entityPos - player.blockPos)
         } ?: return null
 
         ModuleScaffold.debugGeometry("Face") {

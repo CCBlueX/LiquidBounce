@@ -66,7 +66,7 @@ abstract class MurderMysteryGenericMode(name: String) : Choice(name), MurderMyst
     }
 
     override fun getPlayerType(player: AbstractClientPlayerEntity): MurderMysteryMode.PlayerType {
-        return when (player.skinTextures.texture.path) {
+        return when (player.skin.body.texturePath().path) {
             in murdererSkins -> MurderMysteryMode.PlayerType.MURDERER
             in bowSkins -> MurderMysteryMode.PlayerType.DETECTIVE_LIKE
             else -> MurderMysteryMode.PlayerType.NEUTRAL

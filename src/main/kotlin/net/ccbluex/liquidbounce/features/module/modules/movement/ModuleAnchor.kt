@@ -75,7 +75,7 @@ object ModuleAnchor : ClientModule(
             return@tickHandler
         }
 
-        val playerPos = player.pos
+        val playerPos = player.entityPos
         val maxDistanceSq = maxDistance.sq()
 
         // check if the current goal is still okay, don't update it then
@@ -98,7 +98,7 @@ object ModuleAnchor : ClientModule(
         val goal = goal ?: return@handler
 
         // determine the desired movement
-        val delta = goal.subtract(player.pos)
+        val delta = goal.subtract(player.entityPos)
 
         // apply the movement
         val movement = event.movement

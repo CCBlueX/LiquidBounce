@@ -234,16 +234,16 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         val centers = nearestCenters(
             centers = BlockTracker.allPositions(),
             limit = Renderer.renderLimit,
-            playerPos = player.pos,
+            playerPos = player.entityPos,
         )
         if (centers.isEmpty()) return@handler
 
         val zones = computeZones(centers, world)
-        val highlightIndex = findHighlightIndex(zones, playerPos = player.pos)
+        val highlightIndex = findHighlightIndex(zones, playerPos = player.entityPos)
 
         renderEnvironmentForWorld(e.matrixStack) {
             startBatch()
-            val camOffset = mc.entityRenderDispatcher.camera.pos.negate()
+            val camOffset = mc.entityRenderDispatcher.camera?.cameraPos?.negate() ?: return@handler
             drawZones(zones, centers, highlightIndex, camOffset)
             if (holdingProt) {
                 drawIndicator(centers, zones, camOffset)

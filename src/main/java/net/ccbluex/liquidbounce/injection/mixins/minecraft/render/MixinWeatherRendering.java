@@ -25,7 +25,6 @@ import net.minecraft.client.render.WeatherRendering;
 import net.minecraft.world.biome.Biome;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(WeatherRendering.class)
 public abstract class MixinWeatherRendering {
@@ -40,17 +39,7 @@ public abstract class MixinWeatherRendering {
         return original;
     }
 
-    @ModifyVariable(method = "renderPrecipitation(Lnet/minecraft/world/World;Lnet/minecraft/client/render/VertexConsumerProvider;IFLnet/minecraft/util/math/Vec3d;)V", at = @At(value = "STORE"), ordinal = 1)
-    private int modifyPrecipitationLayers(int original) {
-        var precipitation = ModuleCustomAmbience.Precipitation.INSTANCE;
-        if (precipitation.getRunning()) {
-            return precipitation.getLayers();
-        }
-
-        return original;
-    }
-
-    @ModifyExpressionValue(method = "renderPrecipitation(Lnet/minecraft/world/World;Lnet/minecraft/client/render/VertexConsumerProvider;IFLnet/minecraft/util/math/Vec3d;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getRainGradient(F)F"))
+    @ModifyExpressionValue(method = "renderPrecipitation", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/state/WeatherRenderState;intensity:F"))
     private float modifyPrecipitationGradient(float original) {
         var precipitation = ModuleCustomAmbience.Precipitation.INSTANCE;
         if (precipitation.getRunning() && original != 0f) {

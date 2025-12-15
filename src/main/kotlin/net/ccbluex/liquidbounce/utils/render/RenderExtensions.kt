@@ -28,13 +28,16 @@ import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
+import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.render.BuiltBuffer
+import net.minecraft.client.texture.AbstractTexture
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.texture.TextureSetup
 import net.minecraft.client.util.ScreenshotRecorder
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Identifier
@@ -51,7 +54,7 @@ import java.util.function.Supplier
  * Avoiding String contract
  */
 @JvmField
-val SAMPLER_NAMES = Array(RenderSystem.TEXTURE_COUNT) { "Sampler$it" }
+val SAMPLER_NAMES = Array(RenderEnvironment.TEXTURE_COUNT) { "Sampler$it" }
 
 fun MatrixStack.reset() {
     while (!isEmpty) pop()
@@ -156,7 +159,7 @@ fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> 
     val gpuBuffer = gpuDevice.createBuffer(
         { "PixelBuffer - " + (this.label ?: "Anonymous") },
         GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
-        width * height * pixelSize
+        width * height * pixelSize.toLong()
     )
 
     gpuDevice.createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, {
@@ -185,7 +188,7 @@ fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedIma
     val gpuBuffer = gpuDevice.createBuffer(
         { "PixelBuffer - " + (this.label ?: "Anonymous") },
         GpuBuffer.USAGE_MAP_READ or GpuBuffer.USAGE_COPY_DST,
-        width * height * pixelSize
+        width * height * pixelSize.toLong()
     )
 
     gpuDevice.createCommandEncoder().copyTextureToBuffer(this, gpuBuffer, 0, {
@@ -255,6 +258,9 @@ inline fun InputStream.toNativeImage(): NativeImage = NativeImage.read(this)
 inline fun NativeImage.asTexture(nameSupplier: Supplier<String>? = null) =
     NativeImageBackedTexture(nameSupplier, this)
 
+val AbstractTexture.textureSetup: TextureSetup
+    get() = TextureSetup.of(glTextureView, sampler)
+
 @JvmOverloads
 fun BuiltBuffer.createGpuBuffer(labelGetter: Supplier<String>? = null): GpuBuffer = use {
     gpuDevice.createBuffer(
@@ -320,7 +326,7 @@ inline fun GpuDevice.createUbo(
     createBuffer(
         labelGetter,
         GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
-        std140Size(std140Size)
+        std140Size(std140Size).toLong()
     )
 
 inline fun ByteBuffer.writeStd140(): Std140Builder = Std140Builder.intoBuffer(this)

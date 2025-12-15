@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.with
 import net.minecraft.client.session.ProfileKeys
-import net.minecraft.client.session.Session
 import java.net.Proxy
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -53,7 +53,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
         ConfigSystem.root(this)
 
         try {
-            initialSession = SessionBundle(mc.session, mc.sessionService, mc.profileKeys)
+            initialSession = SessionBundle(mc.session, mc.apiServices.sessionService, mc.profileKeys)
             logger.info("Initial session saved: ${mc.session.username} (${mc.session.uuidOrNull})")
         } catch (e: Exception) {
             logger.error("Failed to save initial session", e)
@@ -82,7 +82,6 @@ object AccountManager : Configurable("Accounts"), EventListener {
             compatSession.username, compatSession.uuid, compatSession.token,
             Optional.empty(),
             Optional.of(clientIdentifier),
-            Session.AccountType.byName(compatSession.type),
             AccountService.getService(account)
         )
 
@@ -96,7 +95,11 @@ object AccountManager : Configurable("Accounts"), EventListener {
         }.getOrDefault(ProfileKeys.MISSING)
 
         mc.session = session
-        mc.sessionService = service.createMinecraftSessionService()
+        mc.apiServices = mc.apiServices.with(
+            service.createMinecraftSessionService(),
+            service.servicesKeySet,
+            service.createProfileRepository(),
+        )
         mc.profileKeys = profileKeys
 
         EventManager.callEvent(SessionEvent(session))
@@ -300,7 +303,9 @@ object AccountManager : Configurable("Accounts"), EventListener {
     fun restoreInitial() {
         val initialSession = initialSession
         mc.session = initialSession.session
-        mc.sessionService = initialSession.sessionService
+        mc.apiServices = mc.apiServices.with(
+            initialSession.sessionService ?: mc.apiServices.sessionService
+        )
         mc.profileKeys = initialSession.profileKeys
 
         EventManager.callEvent(SessionEvent(mc.session))
@@ -339,7 +344,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
     fun removeAccount(id: Int): MinecraftAccount {
         val account = accounts.removeAt(id).apply { ConfigSystem.store(this@AccountManager) }
         EventManager.callEvent(AccountManagerRemovalResultEvent(account.profile?.username))
-        return account;
+        return account
     }
 
     fun newSessionAccount(token: String) {

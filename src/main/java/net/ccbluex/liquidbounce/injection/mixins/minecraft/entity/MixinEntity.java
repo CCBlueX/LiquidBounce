@@ -61,7 +61,7 @@ public abstract class MixinEntity {
     public abstract boolean isPlayer();
 
     @Shadow
-    public abstract World getWorld();
+    public abstract World getEntityWorld();
 
     @Shadow
     public abstract double getX();

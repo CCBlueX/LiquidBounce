@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiStaff;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterTab;
 import net.ccbluex.liquidbounce.features.module.modules.misc.Visibility;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.PlayerListHud;
 import net.minecraft.client.network.PlayerListEntry;
@@ -99,7 +98,7 @@ public abstract class MixinPlayerListHud {
             return original;
         }
 
-        return ModuleBetterTab.isVisible(Visibility.NAME_ONLY) ? Text.of(entry.getProfile().getName()) : original;
+        return ModuleBetterTab.isVisible(Visibility.NAME_ONLY) ? Text.of(entry.getProfile().name()) : original;
 
     }
 
@@ -109,7 +108,7 @@ public abstract class MixinPlayerListHud {
             return original;
         }
 
-        return ModuleBetterTab.isVisible(Visibility.NAME_ONLY) ? Text.of(entry.getProfile().getName()) : original;
+        return ModuleBetterTab.isVisible(Visibility.NAME_ONLY) ? Text.of(entry.getProfile().name()) : original;
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I", shift = At.Shift.BEFORE))
@@ -145,11 +144,11 @@ public abstract class MixinPlayerListHud {
     private void hookOnRenderLatencyIcon(DrawContext context, int width, int x, int y, PlayerListEntry entry, CallbackInfo ci) {
         var accurateLatency = ModuleBetterTab.AccurateLatency.INSTANCE;
         if (ModuleBetterTab.INSTANCE.getRunning() && accurateLatency.getRunning()) {
-            TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+            var textRenderer = MinecraftClient.getInstance().textRenderer;
 
-            int latency = MathHelper.clamp(entry.getLatency(), 0, 9999);
-            int color = latency < 150 ? 0x00E970 : latency < 300 ? 0xE7D020 : 0xD74238;
-            String text = latency + (accurateLatency.getSuffix() ? "ms" : "");
+            var latency = MathHelper.clamp(entry.getLatency(), 0, 9999);
+            var color = latency < 150 ? 0xFF00E970 : latency < 300 ? 0xFFE7D020 : 0xFFD74238;
+            var text = latency + (accurateLatency.getSuffix() ? "ms" : "");
             context.drawTextWithShadow(textRenderer, text, x + width - textRenderer.getWidth(text), y, color);
             ci.cancel();
         }
@@ -166,9 +165,9 @@ public abstract class MixinPlayerListHud {
             var others = highlight.getOthers();
 
             //noinspection DataFlowIssue
-            if (highlight.getSelf().getRunning() && Objects.equals(entry.getProfile().getName(), MinecraftClient.getInstance().player.getGameProfile().getName())) {
+            if (highlight.getSelf().getRunning() && Objects.equals(entry.getProfile().name(), MinecraftClient.getInstance().player.getGameProfile().name())) {
                 drawColor = highlight.getSelf().getColor().toARGB();
-            } else if (highlight.getFriends().getRunning() && FriendManager.INSTANCE.isFriend(entry.getProfile().getName())) {
+            } else if (highlight.getFriends().getRunning() && FriendManager.INSTANCE.isFriend(entry.getProfile().name())) {
                 drawColor = highlight.getFriends().getColor().toARGB();
             } else if (others.getRunning() && others.getFilter().isInFilter(entry)) {
                 drawColor = others.getColor().toARGB();
@@ -180,7 +179,7 @@ public abstract class MixinPlayerListHud {
 
     @ModifyReturnValue(method = "getPlayerName", at = @At("RETURN"))
     private Text modifyPlayerName(Text original, PlayerListEntry entry) {
-        if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().getName())) {
+        if (ModuleAntiStaff.INSTANCE.shouldShowAsStaffOnTab(entry.getProfile().name())) {
             return original.copy().append(Text.literal(" - (Staff)").withColor(Colors.LIGHT_RED));
         }
 

@@ -122,9 +122,9 @@ object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = 
 
         protected fun applySwingOffset(matrices: MatrixStack, arm: Arm, swingProgress: Float) {
             val armSide = if (arm == Arm.RIGHT) 1 else -1
-            val f = MathHelper.sin(swingProgress * swingProgress * Math.PI.toFloat())
+            val f = MathHelper.sin(swingProgress * swingProgress * Math.PI)
             matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(armSide.toFloat() * (45.0f + f * -20.0f)))
-            val g = MathHelper.sin(MathHelper.sqrt(swingProgress) * Math.PI.toFloat())
+            val g = MathHelper.sin(MathHelper.sqrt(swingProgress) * Math.PI)
             matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(armSide.toFloat() * g * -20.0f))
             matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(g * -80.0f))
             matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(armSide.toFloat() * -45.0f))
@@ -164,7 +164,7 @@ object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = 
         override fun transform(matrices: MatrixStack, arm: Arm, equipProgress: Float, swingProgress: Float) {
             matrices.translate(if (arm == Arm.RIGHT) -0.1f else 0.1f, 0.1f, 0.0f)
 
-            val g = MathHelper.sin(MathHelper.sqrt(swingProgress) * Math.PI.toFloat())
+            val g = MathHelper.sin(MathHelper.sqrt(swingProgress) * Math.PI)
             matrices.multiply(
                 RotationAxis.POSITIVE_Z.rotationDegrees(
                     (if (arm == Arm.RIGHT) 1 else -1) * g * 10.0f

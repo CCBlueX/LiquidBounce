@@ -27,6 +27,7 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.HandledScreen.BACKGROUND_TEXTURE
 import net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity
+import net.minecraft.client.input.KeyInput
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.screen.PlayerScreenHandler
@@ -150,10 +151,10 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Pl
             && pY >= slot.y - 1 && pY < slot.y + height + 1
     }
 
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        super.keyPressed(keyCode, scanCode, modifiers)
+    override fun keyPressed(input: KeyInput): Boolean {
+        super.keyPressed(input)
 
-        if (mc.options.inventoryKey.matchesKey(keyCode, scanCode)) {
+        if (mc.options.inventoryKey.matchesKey(input)) {
             close()
         }
 

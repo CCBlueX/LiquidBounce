@@ -85,7 +85,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
         val offsetsForTargets = findOffsetsForTarget(
             targetPos,
             target.getDimensions(EntityPose.STANDING),
-            target.pos.subtract(target.lastPos),
+            target.entityPos.subtract(target.lastPos),
             slot.itemStack.item == Items.FLINT_AND_STEEL
         )
 
@@ -98,7 +98,7 @@ class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlann
                 NearestRotationTargetPositionFactory(PositionFactoryConfiguration(player.eyePos, 0.5))
             ),
             stackToPlaceWith = slot.itemStack,
-            PlayerLocationOnPlacement(position = player.pos),
+            PlayerLocationOnPlacement(position = player.entityPos),
         )
 
         return findBestBlockPlacementTarget(blockPos, options)

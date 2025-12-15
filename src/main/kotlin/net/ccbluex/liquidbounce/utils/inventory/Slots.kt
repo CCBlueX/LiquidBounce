@@ -113,16 +113,10 @@ class SlotGroup<T : ItemSlot>(val slots: List<T>) : List<T> by slots {
     }
 
     operator fun plus(other: SlotGroup<*>): SlotGroup<ItemSlot> {
-        val newList = ArrayList<ItemSlot>(this.size + other.size)
-        newList.addAll(this)
-        newList.addAll(other)
-        return SlotGroup(newList)
+        return SlotGroup(this.slots + other.slots)
     }
 
     operator fun plus(other: ItemSlot): SlotGroup<ItemSlot> {
-        val newList = ArrayList<ItemSlot>(this.size + 1)
-        newList.addAll(this)
-        newList.add(other)
-        return SlotGroup(newList)
+        return SlotGroup(this.slots + other)
     }
 }

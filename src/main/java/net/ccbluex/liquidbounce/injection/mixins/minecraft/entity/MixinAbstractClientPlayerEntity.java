@@ -25,9 +25,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.util.SkinTextures;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.entity.player.SkinTextures;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -49,7 +48,7 @@ public abstract class MixinAbstractClientPlayerEntity extends PlayerEntity {
         return original;
     }
 
-    @Inject(method = "getSkinTextures", at = @At("TAIL"), cancellable = true)
+    @Inject(method = "getSkin", at = @At("TAIL"), cancellable = true)
     private void injectCustomSkinTextures(CallbackInfoReturnable<SkinTextures> cir) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (client.world == null || client.player == null) return;
@@ -60,10 +59,9 @@ public abstract class MixinAbstractClientPlayerEntity extends PlayerEntity {
                 SkinTextures original = cir.getReturnValue();
                 SkinTextures customTextures = customSupplier.get();
                 cir.setReturnValue(new SkinTextures(
-                        customTextures.texture(),
-                        customTextures.textureUrl(),
-                        original.capeTexture(),
-                        customTextures.elytraTexture(),
+                        customTextures.body(),
+                        original.cape(),
+                        customTextures.elytra(),
                         customTextures.model(),
                         customTextures.secure()
                 ));

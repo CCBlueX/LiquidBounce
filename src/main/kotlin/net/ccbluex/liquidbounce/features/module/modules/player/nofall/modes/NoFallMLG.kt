@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -39,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
@@ -73,7 +73,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
     private val normalItems = netherItems + Items.WATER_BUCKET
 
     private val itemsForMLG
-        get() = if (world.dimension.ultrawarm) netherItems else normalItems
+        get() = if (world.waterEvaporates) netherItems else normalItems
 
     init {
         tree(PickupWater)
@@ -203,7 +203,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
                 ),
                 FaceHandlingOptions(CenterTargetPositionFactory),
                 stackToPlaceWith = item.itemStack,
-                PlayerLocationOnPlacement(position = player.pos),
+                PlayerLocationOnPlacement(position = player.entityPos),
             )
 
         val bestPlacementPlan = findBestBlockPlacementTarget(pos, options) ?: return null

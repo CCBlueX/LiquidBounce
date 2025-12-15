@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.*
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.*
 import net.ccbluex.netty.http.rest.Node
 
-internal fun registerInteropFunctions(node: Node) = node.withPath("/api/v1/client") {
+internal fun Node.registerInteropFunctions() = withPath("/api/v1/client") {
     // Client Functions
     get("/info", ::getClientInfo)
     get("/update", ::getUpdateInfo)

@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.event.events
 
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.world.ClientWorld
@@ -56,7 +56,7 @@ class BlockShapeEvent(var state: BlockState, var pos: BlockPos, var shape: Voxel
 @Nameable("blockBreakingProgress")
 class BlockBreakingProgressEvent(val pos: BlockPos) : Event()
 
-@Nameable("blockBreakingProgress")
+@Nameable("blockAttack")
 class BlockAttackEvent(val pos: BlockPos) : CancellableEvent()
 
 @Nameable("blockVelocityMultiplier")

@@ -37,18 +37,18 @@ public abstract class MixinFogRenderer {
 
     @Inject(method = "getFogColor", at = @At("HEAD"), cancellable = true)
     private void editFogColor(Camera camera, float tickProgress, ClientWorld world, int viewDistance, float skyDarkness,
-        boolean thick, CallbackInfoReturnable<Vector4f> cir) {
+        CallbackInfoReturnable<Vector4f> cir) {
         if (ModuleCustomAmbience.FogConfigurable.INSTANCE.getRunning()) {
             cir.setReturnValue(ModuleCustomAmbience.FogConfigurable.INSTANCE.getColor().toVector4f());
         }
     }
 
     @Inject(
-        method = "applyFog(Lnet/minecraft/client/render/Camera;IZLnet/minecraft/client/render/RenderTickCounter;FLnet/minecraft/client/world/ClientWorld;)Lorg/joml/Vector4f;",
+        method = "applyFog(Lnet/minecraft/client/render/Camera;ILnet/minecraft/client/render/RenderTickCounter;FLnet/minecraft/client/world/ClientWorld;)Lorg/joml/Vector4f;",
         at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/CommandEncoder;mapBuffer(Lcom/mojang/blaze3d/buffers/GpuBuffer;ZZ)Lcom/mojang/blaze3d/buffers/GpuBuffer$MappedView;")
     )
-    private void editFogData(Camera camera, int viewDistance, boolean thick, RenderTickCounter tickCounter,
-        float skyDarkness, ClientWorld world, CallbackInfoReturnable<Vector4f> cir, @Local FogData fogData) {
+    private void editFogData(Camera camera, int viewDistance, RenderTickCounter renderTickCounter, float f,
+        ClientWorld clientWorld, CallbackInfoReturnable<Vector4f> cir, @Local FogData fogData) {
         ModuleCustomAmbience.FogConfigurable.INSTANCE.modifyFogData(fogData);
     }
 

@@ -64,13 +64,13 @@ object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Aim
             }.minByOrNull {
                 it.distanceTo(player)
             }?.let {
-                val vector = it.pos - player.pos
+                val vector = it.entityPos - player.entityPos
                 add("vec", JsonObject().apply {
                     addProperty("x", vector.x)
                     addProperty("y", vector.y)
                     addProperty("z", vector.z)
                 })
-                val velocity = it.pos - it.lastPos
+                val velocity = it.entityPos - it.lastPos
                 add("velocity", JsonObject().apply {
                     addProperty("x", velocity.x)
                     addProperty("y", velocity.y)

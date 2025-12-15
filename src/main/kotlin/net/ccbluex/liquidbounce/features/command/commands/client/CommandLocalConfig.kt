@@ -27,11 +27,13 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.modules
+import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
-import net.minecraft.text.Text
+import net.minecraft.text.Style
 import net.minecraft.util.Formatting
 import net.minecraft.util.Util
 import java.time.Instant
@@ -110,50 +112,44 @@ object CommandLocalConfig : Command.Factory {
 
     private fun listSubcommand() = CommandBuilder
         .begin("list")
-        .parameter(
-            ParameterBuilder
-                .begin<String>("online")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .optional()
-                .build()
-        )
-        .handler {
-            val configFiles = ConfigSystem.userConfigsFolder.listFiles { file, name ->
-                name.endsWith(".json", ignoreCase = true)
-            }
+        .pagedQuery(
+            pageSize = 8,
+            header = {
+                "Local Configs:".asPlainText(Style.EMPTY + Color4b.LIQUID_BOUNCE + Formatting.BOLD)
+            },
+            items = {
+                ConfigSystem.userConfigsFolder.listFiles { _, name ->
+                    name.endsWith(".json", ignoreCase = true)
+                }.asList()
+            },
+            eachRow = { _, file ->
+                val fileNameWithoutSuffix = file.name.removeSuffix(".json")
 
-            if (configFiles.isNullOrEmpty()) {
-                chat("No local config!".asPlainText(Formatting.RED))
-            } else {
-                chat("Settings:".asPlainText(Formatting.AQUA))
-                for (file in configFiles) {
-                    val fileNameWithoutSuffix = file.name.removeSuffix(".json")
+                val lastModified = Instant.ofEpochMilli(file.lastModified())
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDateTime()
+                    .format(AutoSettings.FORMATTER)
 
-                    chat(
-                        variable(file.name)
-                            .onClick(
-                                ClickEvent.SuggestCommand(
-                                    ".localconfig load $fileNameWithoutSuffix"
+                textOf(
+                    "\u2B25 ".asPlainText(Formatting.BLUE),
+                    variable(file.name)
+                        .onClick(
+                            ClickEvent.SuggestCommand(
+                                ".localconfig load $fileNameWithoutSuffix"
+                            )
+                        )
+                        .onHover(
+                            HoverEvent.ShowText(
+                                textOf(
+                                    "Click to load ".asPlainText(Formatting.GRAY),
+                                    fileNameWithoutSuffix.asPlainText(Formatting.AQUA),
                                 )
                             )
-                            .onHover(
-                                HoverEvent.ShowText(
-                                    Text.of("§7Click to load ${file.name}")
-                                )
-                            ),
-                        regular(" ("),
-                        regular(
-                            Instant.ofEpochMilli(file.lastModified())
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDateTime()
-                                .format(AutoSettings.FORMATTER)
                         ),
-                        regular(")"),
-                    )
-                }
+                    regular(" ($lastModified)"),
+                )
             }
-        }
-        .build()
+        )
 
     private fun loadSubcommand() = CommandBuilder
         .begin("load")

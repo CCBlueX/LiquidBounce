@@ -59,11 +59,11 @@ public record LineGuiElementRenderState(
     }
 
     @Override
-    public void setupVertices(VertexConsumer vertices, float depth) {
+    public void setupVertices(VertexConsumer vertices) {
         for (int i = 0; i < points.length; i += 2) {
             float x = points[i];
             float y = points[i + 1];
-            vertices.vertex(pose, x, y, depth).color(argb);
+            vertices.vertex(pose, x, y).color(argb);
         }
     }
 

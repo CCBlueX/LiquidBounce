@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -132,7 +133,7 @@ object CommandDebug : Command.Factory {
         add("profile", JsonObject().apply {
             addProperty("name", mc.session.username)
             addProperty("uuid", mc.session.uuidOrNull.toString())
-            addProperty("type", mc.session.accountType.toString())
+            addProperty("type", mc.session.accountType)
         })
 
         add("language", JsonObject().apply {

@@ -77,10 +77,10 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                 renderer: TrajectoryInfoRenderer,
                 result: TrajectoryInfoRenderer.SimulationResult,
             ): Vec3d = when (this) {
-                OWNER -> renderer.owner.pos
+                OWNER -> renderer.owner.entityPos
                 ENTITY -> result.positions.firstOrNull()
                 LANDING -> result.positions.lastOrNull()
-            } ?: renderer.owner.pos
+            } ?: renderer.owner.entityPos
         }
 
         private val ownerName by boolean("OwnerName", true)
@@ -138,7 +138,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                     text.append(" ").append(renderer.owner.name)
                 }
                 if (distance && result.positions.isNotEmpty()) {
-                    text.append(" ${player.pos.distanceTo(result.positions.last()).toFixed(1)}m")
+                    text.append(" ${player.entityPos.distanceTo(result.positions.last()).toFixed(1)}m")
                 }
 
                 var y = 0
@@ -180,7 +180,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             val trajectoryRenderer = TrajectoryInfoRenderer(
                 owner = (it as? Ownable)?.owner ?: it,
                 velocity = it.velocity,
-                pos = it.pos,
+                pos = it.entityPos,
                 trajectoryInfo = trajectoryInfo,
                 type = TrajectoryInfoRenderer.Type.REAL,
                 renderOffset = Vec3d.ZERO

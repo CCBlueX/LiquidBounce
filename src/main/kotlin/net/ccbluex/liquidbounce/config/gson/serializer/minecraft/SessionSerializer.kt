@@ -24,8 +24,20 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
 import net.ccbluex.liquidbounce.features.account.SessionWithService
+import net.ccbluex.liquidbounce.features.account.couldBeOnline
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.session.Session
 import java.lang.reflect.Type
+
+val Session.accountType
+    get() = when {
+        !this.couldBeOnline()
+            || uuidOrNull == null
+            || mc.isOfflineDeveloperMode -> "legacy" // cracked
+        xuid.isEmpty || clientId.isEmpty -> "mojang" // Mojang account
+        xuid.isPresent || clientId.isPresent -> "msa" // Microsoft account
+        else -> "legacy"
+    }
 
 object SessionSerializer : JsonSerializer<Session> {
     override fun serialize(src: Session?, typeOfSrc: Type, context: JsonSerializationContext) = src?.let {
@@ -35,7 +47,7 @@ object SessionSerializer : JsonSerializer<Session> {
             addProperty("username", it.username)
             addProperty("uuid", it.uuidOrNull.toString())
             addProperty("service", service.choiceName)
-            addProperty("type", it.accountType.getName())
+            addProperty("type", it.accountType)
             addProperty("avatar", formatAvatarUrl(it.uuidOrNull, it.username))
             addProperty("online", service.canJoinOnline)
             addProperty("premium", service.canJoinOnline) // todo: deprecated, kept for compatibility

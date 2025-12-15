@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import com.mojang.authlib.GameProfileRepository
+import com.mojang.authlib.minecraft.MinecraftSessionService
+import com.mojang.authlib.yggdrasil.ServicesKeySet
 import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
@@ -26,6 +29,9 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.util.Window
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.server.GameProfileResolver
+import net.minecraft.util.ApiServices
+import net.minecraft.util.NameToIdCache
 
 val Window.dimensions
     get() = intArrayOf(width, height)
@@ -45,3 +51,18 @@ val interaction: ClientPlayerInteractionManager
     inline get() = mc.interactionManager!!
 val gpuDevice: GpuDevice
     inline get() = RenderSystem.getDevice()
+
+fun ApiServices.with(
+    sessionService: MinecraftSessionService = this.sessionService,
+    servicesKeySet: ServicesKeySet = this.servicesKeySet,
+    profileRepository: GameProfileRepository = this.profileRepository,
+    nameToIdCache: NameToIdCache = this.nameToIdCache,
+    profileResolver: GameProfileResolver = this.profileResolver
+): ApiServices {
+    return ApiServices(
+        sessionService, servicesKeySet,
+        profileRepository,
+        nameToIdCache,
+        profileResolver
+    )
+}

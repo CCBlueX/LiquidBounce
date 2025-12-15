@@ -4,13 +4,12 @@
     import {listen} from "../../../integration/ws";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import type {Module, PrintableKey} from "../../../integration/types";
+    import {UNKNOWN_KEY} from "../../../util/keybind_utils";
 
     interface ModuleWithKey {
         module: Module,
         key: PrintableKey
     }
-
-    const UNKNOWN_KEY = "key.keyboard.unknown";
 
     let modulesWithKey: ModuleWithKey[] = $state([]);
 

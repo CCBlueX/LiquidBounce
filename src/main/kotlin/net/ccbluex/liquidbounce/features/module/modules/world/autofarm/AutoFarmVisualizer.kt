@@ -74,7 +74,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                 val target = ModuleAutoFarm.currentTarget ?: return
                 with(renderEnvironment) {
                     withPositionRelativeToCamera(target) {
-                        drawBox(FULL_BOX, (if (colorRainbow) rainbow() else color).with(a = 50))
+                        drawBox(FULL_BOX, if (colorRainbow) rainbow(alpha = 0.2f) else color.with(a = 50))
                     }
                 }
             }

@@ -117,7 +117,7 @@ class CefBrowser(
             }
 
             return BrowserTexture(
-                mcefBrowser.renderer.textureView!!,
+                mcefBrowser.renderer.textureSetup!!,
                 viewport.height,
                 viewport.width,
                 mcefBrowser.renderer.isBGRA,

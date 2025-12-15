@@ -73,7 +73,7 @@ object ScriptInteractionUtil {
             ),
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = itemStack,
-            PlayerLocationOnPlacement(position = player.pos),
+            PlayerLocationOnPlacement(position = player.entityPos),
         )
 
         val bestPlacement = findBestBlockPlacementTarget(blockPos, blockPlacementOptions)

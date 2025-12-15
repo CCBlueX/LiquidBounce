@@ -48,6 +48,7 @@ import net.minecraft.client.network.ServerAddress
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.client.network.ServerInfo.ResourcePackPolicy
 import net.minecraft.client.option.ServerList
+import net.minecraft.network.NetworkingBackend
 import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
 import net.minecraft.util.Colors
@@ -224,14 +225,14 @@ object ActiveServerList : EventListener {
 
         pingTasks += CompletableFuture.runAsync({
             try {
-                serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }) {
+                serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }, {
                     serverEntry.status =
                         if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion()) {
                             ServerInfo.Status.SUCCESSFUL
                         } else {
                             ServerInfo.Status.INCOMPATIBLE
                         }
-                }
+                }, NetworkingBackend.remote(true))
             } catch (unknownHostException: UnknownHostException) {
                 serverEntry.status = ServerInfo.Status.UNREACHABLE
                 serverEntry.label = cannotResolveText

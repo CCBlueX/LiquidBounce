@@ -79,16 +79,17 @@ fun getItemTexture(requestObject: RequestObject) = run {
 fun getSkin(requestObject: RequestObject) = run {
     val uuid = requestObject.queryParams["uuid"]?.let { UUID.fromString(it) }
         ?: return@run httpBadRequest("Missing UUID parameter")
-    val skinTextures = world.players.find { it.uuid == uuid }?.skinTextures
+    val skinTextures = world.players.find { it.uuid == uuid }?.skin
         ?: DefaultSkinHelper.getSkinTextures(uuid)
-    val texture = mc.textureManager.getTexture(skinTextures.texture)
+    val bodyTexturePath = skinTextures.body.texturePath()
+    val texture = mc.textureManager.getTexture(bodyTexturePath)
 
     if (texture is NativeImageBackedTexture) {
         val buffer = okio.Buffer()
         texture.image?.write(buffer) ?: return@run httpInternalServerError("Texture is not cached yet")
         httpFileStream(buffer.inputStream(), contentLength = buffer.size.toInt(), contentType = "image/png")
     } else {
-        val resource = mc.resourceManager.getResource(skinTextures.texture)
+        val resource = mc.resourceManager.getResource(bodyTexturePath)
             .getOrNull() ?: return@run httpInternalServerError("Texture not found")
 
         resource.inputStream.use {

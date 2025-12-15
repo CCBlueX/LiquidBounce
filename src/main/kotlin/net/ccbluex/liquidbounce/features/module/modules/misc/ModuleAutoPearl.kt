@@ -98,7 +98,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
         proceedPearl(
             pearl = entity,
             // entity.velocity & entity.pos doesn't work, don't use it
-            velocity = with(data) { Vec3d(velocityX, velocityY, velocityZ) },
+            velocity = with(data) { Vec3d(velocity.x, velocity.y, velocity.z) },
             pearlPos = with(data) { Vec3d(x, y, z) }
         )
     }
@@ -161,7 +161,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
             pos = pearlPos
         )?.pos ?: return
 
-        if (Limits.enabled && Limits.activationDistance > destination.distanceTo(player.pos)) {
+        if (Limits.enabled && Limits.activationDistance > destination.distanceTo(player.entityPos)) {
             return
         }
 

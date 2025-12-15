@@ -128,7 +128,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
             it.boxedDistanceTo(player) < 5 && it.displayName?.string?.contains("Duels") == true
         }?.let { armorStand ->
             world.entities.filterIsInstance<PlayerEntity>().find {
-                it.boxedDistanceTo(player) < 5 && it.pos == armorStand.pos.subtract(0.0, 2.0, 0.0)
+                it.boxedDistanceTo(player) < 5 && it.entityPos == armorStand.entityPos.subtract(0.0, 2.0, 0.0)
             }
         }
 

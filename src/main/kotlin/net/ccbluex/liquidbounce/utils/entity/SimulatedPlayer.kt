@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.client.fastCos
+import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -88,14 +90,14 @@ class SimulatedPlayer(
     private var submergedFluidTag: HashSet<TagKey<Fluid>>
 ) : PlayerSimulation {
     private val world: World
-        get() = player.world!!
+        get() = player.entityWorld!!
 
     companion object {
         fun fromClientPlayer(input: SimulatedPlayerInput): SimulatedPlayer {
             return SimulatedPlayer(
                 player,
                 input,
-                player.pos,
+                player.entityPos,
                 player.velocity,
                 player.boundingBox,
                 player.yaw,
@@ -123,8 +125,8 @@ class SimulatedPlayer(
             return SimulatedPlayer(
                 player,
                 input,
-                player.pos,
-                velocity = player.pos.subtract(player.lastPos),
+                player.entityPos,
+                velocity = player.entityPos.subtract(player.lastPos),
                 player.boundingBox,
                 player.yaw,
                 player.pitch,
@@ -226,7 +228,7 @@ class SimulatedPlayer(
         if (this.isSwimming && !this.player.hasVehicle()) {
             val g = this.getRotationVector().y
             val h = if (g < -0.2) 0.085 else 0.06
-            if (g <= 0.0 || this.input.playerInput.jump || !this.player.world
+            if (g <= 0.0 || this.input.playerInput.jump || !this.player.entityWorld
                 .getBlockState(BlockPos.ofFloored(this.pos.x, this.pos.y + 1.0 - 0.1, this.pos.z))
                 .fluidState.isEmpty
             ) {
@@ -250,7 +252,7 @@ class SimulatedPlayer(
             this.onLanding()
         }
 
-//        val fluidState: FluidState = this.player.world.getFluidState(pos.toBlockPos())
+//        val fluidState: FluidState = this.player.entityWorld.getFluidState(pos.toBlockPos())
 
         if (isTouchingWater() && this.player.shouldSwimInFluids() /*&& !this.player.canWalkOnFluid(fluidState.fluid)*/) {
             val e: Double = this.pos.y
@@ -312,7 +314,7 @@ class SimulatedPlayer(
             val g = sqrt(vec3d3.x * vec3d3.x + vec3d3.z * vec3d3.z)
             val vec3d = e.horizontalLength()
             val i = vec3d3.length()
-            var j = MathHelper.cos(f)
+            var j = f.fastCos()
             j = (j.toDouble() * (j.toDouble() * 1.0.coerceAtMost(i / 0.4))).toFloat()
             e = this.velocity.add(0.0, d * (-1.0 + j.toDouble() * 0.75), 0.0)
             if (e.y < 0.0 && g > 0.0) {
@@ -320,7 +322,7 @@ class SimulatedPlayer(
                 e = e.add(vec3d3.x * k / g, k, vec3d3.z * k / g)
             }
             if (f < 0.0f && g > 0.0) {
-                k = vec3d * (-MathHelper.sin(f)).toDouble() * 0.04
+                k = vec3d * (-f.fastSin()).toDouble() * 0.04
                 e = e.add(-vec3d3.x * k / g, k * 3.2, -vec3d3.z * k / g)
             }
             if (g > 0.0) {
@@ -331,14 +333,14 @@ class SimulatedPlayer(
             move(this.velocity)
         } else {
             val blockPos = this.getVelocityAffectingPos()
-            val p: Float = this.player.world.getBlockState(blockPos).block.slipperiness
+            val p: Float = this.player.entityWorld.getBlockState(blockPos).block.slipperiness
             val f = if (onGround) p * 0.91f else 0.91f
             val vec3d6 = this.applyMovementInput(movementInput, p)
             var q = vec3d6.y
             if (hasStatusEffect(StatusEffects.LEVITATION)) {
                 q += (0.05 * (getStatusEffect(StatusEffects.LEVITATION)!!.amplifier + 1).toDouble() - vec3d6.y) * 0.2
-            } else if (this.player.world.isClient && !this.player.world.isChunkLoaded(blockPos)) {
-                q = if (this.pos.y > this.player.world.bottomY.toDouble()) {
+            } else if (this.player.entityWorld.isClient && !this.player.entityWorld.isChunkLoaded(blockPos)) {
+                q = if (this.pos.y > this.player.entityWorld.bottomY.toDouble()) {
                     -0.1
                 } else {
                     0.0
@@ -459,7 +461,7 @@ class SimulatedPlayer(
                 this.player,
                 movement,
                 box,
-                this.player.world,
+                this.player.entityWorld,
                 entityCollisionList
             )
         }
@@ -474,21 +476,21 @@ class SimulatedPlayer(
                 this.player,
                 Vec3d(movement.x, this.player.stepHeight.toDouble(), movement.z),
                 box,
-                this.player.world,
+                this.player.entityWorld,
                 entityCollisionList
             )
             val vec3d3 = Entity.adjustMovementForCollisions(
                 this.player,
                 Vec3d(0.0, this.player.stepHeight.toDouble(), 0.0),
                 box.stretch(movement.x, 0.0, movement.z),
-                this.player.world,
+                this.player.entityWorld,
                 entityCollisionList
             )
             val asdf = Entity.adjustMovementForCollisions(
                 this.player,
                 Vec3d(movement.x, 0.0, movement.z),
                 box.offset(vec3d3),
-                this.player.world,
+                this.player.entityWorld,
                 entityCollisionList
             ).add(vec3d3)
 
@@ -502,7 +504,7 @@ class SimulatedPlayer(
                         this.player,
                         Vec3d(0.0, -vec3d2.y + movement.y, 0.0),
                         box.offset(vec3d2),
-                        this.player.world,
+                        this.player.entityWorld,
                         entityCollisionList
                     )
                 )
@@ -525,7 +527,7 @@ class SimulatedPlayer(
         if (this.isSprinting()) {
             val f: Float = this.yaw.toRadians()
 
-            this.velocity += Vec3d((-MathHelper.sin(f) * 0.2f).toDouble(), 0.0, (MathHelper.cos(f) * 0.2f).toDouble())
+            this.velocity += Vec3d((-f.fastSin() * 0.2f).toDouble(), 0.0, (f.fastCos() * 0.2f).toDouble())
         }
 
     }
@@ -574,7 +576,7 @@ class SimulatedPlayer(
         if (!(state.get(TrapdoorBlock.OPEN) as Boolean)) {
             return false
         }
-        val blockState = this.player.world.getBlockState(pos.down())
+        val blockState = this.player.entityWorld.getBlockState(pos.down())
         return blockState.isOf(Blocks.LADDER) && blockState.get(LadderBlock.FACING) == state.get(TrapdoorBlock.FACING)
     }
 
@@ -682,7 +684,7 @@ class SimulatedPlayer(
     }
 
     private fun doesNotCollide(box: Box): Boolean {
-        return this.player.world.isSpaceEmpty(this.player, box) && !this.player.world.containsFluid(box)
+        return this.player.entityWorld.isSpaceEmpty(this.player, box) && !this.player.entityWorld.containsFluid(box)
     }
 
     private fun swimUpward(fluid: TagKey<Fluid>) {
@@ -727,7 +729,7 @@ class SimulatedPlayer(
         } else {
             isSprinting() && this.isSubmergedInWater() &&
                 !this.player.hasVehicle() &&
-                this.player.world
+                this.player.entityWorld
                     .getFluidState(this.pos.toBlockPos())
                     .isIn(FluidTags.WATER)
         }
@@ -744,8 +746,8 @@ class SimulatedPlayer(
             }
         }
         val blockPos = BlockPos.ofFloored(this.pos.x, d, this.pos.z)
-        val fluidState: FluidState = this.player.world.getFluidState(blockPos)
-        val e = (blockPos.y.toFloat() + fluidState.getHeight(this.player.world, blockPos)).toDouble()
+        val fluidState: FluidState = this.player.entityWorld.getFluidState(blockPos)
+        val e = (blockPos.y.toFloat() + fluidState.getHeight(this.player.entityWorld, blockPos)).toDouble()
         if (e > d) {
             fluidState.streamTags().forEach {
                 submergedFluidTag.add(it)
@@ -785,14 +787,14 @@ class SimulatedPlayer(
             for (q in k until l) {
                 for (r in m until n) {
                     mutable[p, q] = r
-                    val fluidState: FluidState = this.player.world.getFluidState(mutable)
+                    val fluidState: FluidState = this.player.entityWorld.getFluidState(mutable)
                     if (fluidState.isIn(tag)) {
-                        val e = (q.toFloat() + fluidState.getHeight(this.player.world, mutable)).toDouble()
+                        val e = (q.toFloat() + fluidState.getHeight(this.player.entityWorld, mutable)).toDouble()
                         if (e >= box.minY) {
                             bl2 = true
                             d = max(e - box.minY, d)
                             if (bl) {
-                                var vec3d2 = fluidState.getVelocity(this.player.world, mutable)
+                                var vec3d2 = fluidState.getVelocity(this.player.entityWorld, mutable)
                                 if (d < 0.4) {
                                     vec3d2 = vec3d2.multiply(d)
                                 }
@@ -831,7 +833,7 @@ class SimulatedPlayer(
         val j = MathHelper.ceil(box.maxX)
         val k = MathHelper.floor(box.minZ)
         val l = MathHelper.ceil(box.maxZ)
-        return !this.player.world.isRegionLoaded(i, k, j, l)
+        return !this.player.entityWorld.isRegionLoaded(i, k, j, l)
     }
 
     private fun getRotationVector() = getRotationVector(this.pitch, this.yaw)
@@ -840,10 +842,10 @@ class SimulatedPlayer(
         val f = pitch * (Math.PI.toFloat() / 180)
         val g = -yaw * (Math.PI.toFloat() / 180)
 
-        val h = MathHelper.cos(g)
-        val i = MathHelper.sin(g)
-        val j = MathHelper.cos(f)
-        val k = MathHelper.sin(f)
+        val h = g.fastCos()
+        val i = g.fastSin()
+        val j = f.fastCos()
+        val k = f.fastSin()
 
         return Vec3d((i * j).toDouble(), (-k).toDouble(), (h * j).toDouble())
     }
@@ -969,7 +971,7 @@ class SimulatedPlayer(
              * Guesses the current input of a server player based on player position and velocity
              */
             fun guessInput(entity: PlayerEntity): SimulatedPlayerInput {
-                val velocity = entity.pos.subtract(entity.lastPos)
+                val velocity = entity.entityPos.subtract(entity.lastPos)
 
                 val horizontalVelocity = velocity.horizontalLengthSquared()
 

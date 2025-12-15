@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.additions.ScreenAddition;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager;
@@ -32,6 +33,7 @@ import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.ClickEvent;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -46,6 +48,7 @@ public abstract class MixinScreen implements ScreenAddition {
     @Shadow
     protected abstract void remove(Element child);
 
+    @Final
     @Shadow
     protected TextRenderer textRenderer;
     @Shadow
@@ -56,6 +59,7 @@ public abstract class MixinScreen implements ScreenAddition {
     @Shadow
     protected abstract <T extends Element & Drawable> T addDrawableChild(T drawableElement);
 
+    @Final
     @Shadow
     @Nullable
     protected MinecraftClient client;
@@ -63,7 +67,7 @@ public abstract class MixinScreen implements ScreenAddition {
     @Shadow
     private boolean screenInitialized;
 
-    @Inject(method = "init(Lnet/minecraft/client/MinecraftClient;II)V", at = @At("TAIL"))
+    @Inject(method = "init(II)V", at = @At("TAIL"))
     private void objInit(CallbackInfo ci) {
         if (!LiquidBounce.INSTANCE.isInitialized()) {
             return;
@@ -84,6 +88,13 @@ public abstract class MixinScreen implements ScreenAddition {
     @Inject(method = "renderInGameBackground", at = @At("HEAD"), cancellable = true)
     private void hookRenderInGameBackground(DrawContext context, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.GUI_BACKGROUND)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "renderWithTooltip", at = @At("HEAD"), cancellable = true)
+    private void cancelRenderByChestStealer(CallbackInfo ci) {
+        if (FeatureSilentScreen.getShouldHide()) {
             ci.cancel();
         }
     }

@@ -45,8 +45,8 @@ import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.chat.packet.*
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.awaitSuspend
 import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
+import net.ccbluex.netty.http.coroutines.syncSuspend
 import java.net.URI
 import java.util.*
 
@@ -128,7 +128,7 @@ class ChatClient {
 
         val bootstrap = Bootstrap()
 
-        bootstrap.clientChannelAndGroup(tryToUseEpoll = true)
+        bootstrap.clientChannelAndGroup(true)
             .handler(object : ChannelInitializer<SocketChannel>() {
 
                 /**
@@ -150,8 +150,8 @@ class ChatClient {
 
             })
 
-        channel = bootstrap.connect(uri.host, uri.port).awaitSuspend().channel()!!
-        handler.handshakeFuture.awaitSuspend()
+        channel = bootstrap.connect(uri.host, uri.port).syncSuspend().channel()!!
+        handler.handshakeFuture.syncSuspend()
     }.onFailure {
         EventManager.callEvent(ClientChatErrorEvent(it.localizedMessage ?: it.message ?: it.javaClass.name))
 
@@ -242,7 +242,11 @@ class ChatClient {
                 runCatching {
                     val sessionHash = packet.sessionHash
 
-                    mc.sessionService.joinServer(mc.session.uuidOrNull, mc.session.accessToken, sessionHash)
+                    mc.apiServices.sessionService.joinServer(
+                        mc.session.uuidOrNull,
+                        mc.session.accessToken,
+                        sessionHash
+                    )
                     sendPacket(
                         ServerLoginMojangPacket(
                             mc.session.username,

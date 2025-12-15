@@ -25,11 +25,14 @@ import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleLogoffSpot;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
 import net.ccbluex.liquidbounce.render.engine.type.Color4b;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.RenderLayers;
+import net.minecraft.client.render.command.ModelCommandRenderer;
+import net.minecraft.client.render.command.RenderCommandQueue;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
-import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.state.LivingEntityRenderState;
+import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,23 +45,45 @@ public abstract class MixinFeatureRenderer {
     @Unique
     private static final int ESP_TRUE_SIGHT_REQUIREMENT_COLOR = new Color4b(255, 255, 255, 120).toARGB();
 
-    @WrapOperation(method = "renderModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/model/EntityModel;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;III)V"))
-    private static void injectTrueSight(EntityModel instance, MatrixStack matrixStack, VertexConsumer vertexConsumer, int light, int overlay, int color, Operation<Void> original, @Local(argsOnly = true) LivingEntityRenderState state) {
-        var trueSightModule = ModuleTrueSight.INSTANCE;
-        var trueSight = trueSightModule.getRunning() && trueSightModule.getEntities();
-        if (ModuleTrueSight.canRenderEntities(state)) {
-            color = trueSight ? trueSightModule.getEntityFeatureLayerColor().toARGB() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
+    @WrapOperation(method = "renderModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/command/RenderCommandQueue;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/RenderLayer;IIILnet/minecraft/client/texture/Sprite;ILnet/minecraft/client/render/command/ModelCommandRenderer$CrumblingOverlayCommand;)V"))
+    private static <S> void injectTrueSight(
+        RenderCommandQueue instance,
+        Model<? super S> model,
+        S state,
+        MatrixStack matrices,
+        RenderLayer renderLayer,
+        int light,
+        int overlay,
+        int tintedColor,
+        Sprite sprite,
+        int outlineColor,
+        ModelCommandRenderer.CrumblingOverlayCommand crumblingOverlay,
+        Operation<Void> original
+    ) {
+        if (state instanceof LivingEntityRenderState rs) {
+            var trueSightModule = ModuleTrueSight.INSTANCE;
+            var trueSight = trueSightModule.getRunning() && trueSightModule.getEntities();
+            if (ModuleTrueSight.canRenderEntities(rs)) {
+                tintedColor = trueSight ? trueSightModule.getEntityFeatureLayerColor().toARGB() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
+            }
+            if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(rs)) {
+                tintedColor = ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
+            }
         }
-        if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
-            color = ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
-        }
-        original.call(instance, matrixStack, vertexConsumer, light, overlay, color);
+        original.call(
+            instance, model,
+            state, matrices,
+            renderLayer, light,
+            overlay, tintedColor,
+            sprite, outlineColor,
+            crumblingOverlay
+        );
     }
 
-    @WrapOperation(method = "renderModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/RenderLayer;getEntityCutoutNoCull(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;"))
+    @WrapOperation(method = "renderModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/RenderLayers;entityCutoutNoCull(Lnet/minecraft/util/Identifier;)Lnet/minecraft/client/render/RenderLayer;"))
     private static RenderLayer injectTrueSight(Identifier texture, Operation<RenderLayer> original, @Local(argsOnly = true) LivingEntityRenderState state) {
         if (ModuleTrueSight.canRenderEntities(state) || ModuleLogoffSpot.INSTANCE.isLogoffEntity(state)) {
-            return RenderLayer.getItemEntityTranslucentCull(texture);
+            return RenderLayers.itemEntityTranslucentCull(texture);
         }
         return original.call(texture);
     }

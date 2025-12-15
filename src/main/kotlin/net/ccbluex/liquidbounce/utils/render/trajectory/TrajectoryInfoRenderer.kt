@@ -103,7 +103,7 @@ class TrajectoryInfoRenderer(
             val yawRadians = rotation.yaw / 180f * Math.PI.toFloat()
             val pitchRadians = rotation.pitch / 180f * Math.PI.toFloat()
 
-            val interpolatedOffset = entity.interpolateCurrentPosition(partialTicks) - entity.pos
+            val interpolatedOffset = entity.interpolateCurrentPosition(partialTicks) - entity.entityPos
 
             val pos = Vec3d(
                 entity.x,

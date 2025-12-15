@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.utils
 
-import com.nimbusds.oauth2.sdk.util.CollectionUtils
 import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
@@ -498,7 +497,7 @@ fun raytraceUpperBlockSide(
         }
 
         val rotation = Rotation.lookingAt(point = vec3, from = eyes)
-        if (CollectionUtils.contains(rotationsNotToMatch, rotation)) {
+        if (rotationsNotToMatch != null && rotation in rotationsNotToMatch) {
             return@range
         }
 
@@ -587,7 +586,7 @@ fun findClosestPointOnBlockInLineWithCrystal(
             }
 
             val rotation = Rotation.lookingAt(point = vec3, from = eyes)
-            if (CollectionUtils.contains(rotationsNotToMatch, rotation)) {
+            if (rotationsNotToMatch != null && rotation in rotationsNotToMatch) {
                 return@range
             }
 

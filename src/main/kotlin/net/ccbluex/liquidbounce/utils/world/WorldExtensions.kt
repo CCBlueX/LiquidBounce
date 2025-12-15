@@ -17,26 +17,20 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.interfaces;
+package net.ccbluex.liquidbounce.utils.world
 
-import com.mojang.blaze3d.systems.RenderPass;
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.util.ObjectAllocator;
-import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.World
+import net.minecraft.world.attribute.BedRule
+import net.minecraft.world.attribute.EnvironmentAttributes
 
-import java.util.Map;
-import java.util.function.Consumer;
+/**
+ * @return if water and ice evaporates in this world (e.g. nether)
+ */
+val World.waterEvaporates: Boolean
+    get() = this.environmentAttributes.getAttributeValue(EnvironmentAttributes.WATER_EVAPORATES_GAMEPLAY)
 
-public interface PostEffectProcessorAdditions {
+val World.bedRule: BedRule
+    get() = this.environmentAttributes.getAttributeValue(EnvironmentAttributes.BED_RULE_GAMEPLAY)
 
-    /**
-     * Used for rendering the ui blur as it requires a 3-way merge.
-     */
-    void liquid_bounce$renderWithAdditionalExternalTargets(
-            Framebuffer framebuffer,
-            ObjectAllocator objectAllocator,
-            @Nullable Consumer<RenderPass> additionalUniformsSetter,
-            Map<Identifier, Framebuffer> additionalExternalFramebuffers
-    );
-}
+val World.respawnAnchorWorks: Boolean
+    get() = this.environmentAttributes.getAttributeValue(EnvironmentAttributes.RESPAWN_ANCHOR_WORKS_GAMEPLAY)

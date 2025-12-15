@@ -88,7 +88,7 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
     logger.info("Resolved ping server [$PING_SERVER]: $socketAddress")
 
     val clientConnection = ClientConnection(NetworkSide.CLIENTBOUND)
-    val channelFuture = connect(socketAddress, false, clientConnection)
+    val channelFuture = connect(socketAddress, true, clientConnection)
         .syncUninterruptibly()
 
     // Channel is ready after connection future

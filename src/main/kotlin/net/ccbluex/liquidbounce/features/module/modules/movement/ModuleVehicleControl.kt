@@ -155,7 +155,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
                     } else {
                         // We are already in the vehicle on the server-side, but our client does not know that, so
                         // we force the client to enter the vehicle again
-                        player.startRiding(vehicle, true)
+                        player.startRiding(vehicle, true, true)
                     }
                 } else {
                     chat(warning(message("vehicleGone")))

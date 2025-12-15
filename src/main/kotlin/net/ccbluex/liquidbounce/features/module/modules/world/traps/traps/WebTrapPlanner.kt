@@ -82,7 +82,7 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
         val offsetsForTargets = findOffsetsForTarget(
             targetPos,
             target.getDimensions(EntityPose.STANDING),
-            target.pos.subtract(target.lastPos),
+            target.entityPos.subtract(target.lastPos),
             slot.itemStack.item == Items.COBWEB
         )
 
@@ -95,7 +95,7 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
                 NearestRotationTargetPositionFactory(PositionFactoryConfiguration(player.eyePos, 0.5))
             ),
             stackToPlaceWith = slot.itemStack,
-            PlayerLocationOnPlacement(position = player.pos),
+            PlayerLocationOnPlacement(position = player.entityPos),
         )
 
         return findBestBlockPlacementTarget(blockPos, options)

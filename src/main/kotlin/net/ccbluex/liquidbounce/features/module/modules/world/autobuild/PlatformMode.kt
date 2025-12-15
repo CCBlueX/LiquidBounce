@@ -40,12 +40,12 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
     private var startY = 0.0
 
     override fun enabled() {
-        startY = player.pos.y
+        startY = player.entityPos.y
     }
 
     @Suppress("unused")
     private val repeatable = tickHandler {
-        if (disableOnYChange && player.pos.y != startY) {
+        if (disableOnYChange && player.entityPos.y != startY) {
             ModuleAutoBuild.enabled = false
         }
     }
@@ -53,7 +53,7 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
         val blocks1 = hashSetOf<BlockPos>()
-        val center = BlockPos.ofFloored(player.pos).down()
+        val center = BlockPos.ofFloored(player.entityPos).down()
         val pos = center.mutableCopy()
         for (x in center.x - platformSize..center.x + platformSize) {
             for (z in center.z - platformSize..center.z + platformSize) {

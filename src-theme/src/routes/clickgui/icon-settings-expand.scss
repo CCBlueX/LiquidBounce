@@ -1,4 +1,4 @@
-/*
+/*!
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
  * Copyright (c) 2015 - 2025 CCBlueX
@@ -15,24 +15,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.player.PlayerEntity;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
-
-@Mixin(PlayerEntity.class)
-public interface MixinPlayerEntityAccessor {
-
-    /*
-        * Used to get the TrackedData of the arm
-     */
-    @Accessor("MAIN_ARM")
-    static TrackedData<Byte> getTrackedMainArm() {
-        throw new AssertionError();
-    }
-
+@mixin icon-settings-expand(
+  $size: 10px,
+  $right: 10px,
+  $rotate: -90deg,
+) {
+  content: "";
+  display: block;
+  position: absolute;
+  height: $size;
+  width: $size;
+  right: $right;
+  top: 50%;
+  background-image: url("/img/clickgui/icon-settings-expand.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  transform-origin: 50% 50%;
+  transform: translateY(-50%) rotate($rotate);
+  transition: ease opacity 0.2s, ease transform 0.4s;
 }

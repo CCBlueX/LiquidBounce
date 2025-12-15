@@ -25,6 +25,7 @@ import net.minecraft.util.math.*
 
 inline operator fun Vec2f.component1() = this.x
 inline operator fun Vec2f.component2() = this.y
+inline fun Vec2f.copy(x: Float = this.x, y: Float = this.y) = Vec2f(x, y)
 
 inline operator fun BlockPos.rangeTo(other: BlockPos): BlockBox = BlockBox.create(this, other)
 
@@ -55,6 +56,9 @@ inline operator fun Vec3d.times(scalar: Double): Vec3d = multiply(scalar)
 
 val Vec3d.isLikelyZero: Boolean
     get() = MathHelper.approximatelyEquals(this.lengthSquared(), 1.0E-6)
+
+val Vec2f.isLikelyZero: Boolean
+    get() = MathHelper.approximatelyEquals(this.lengthSquared(), 1.0E-6F)
 
 inline fun Vec3d.interpolate(start: Vec3d, multiple: Double) =
     Vec3d(

@@ -36,16 +36,7 @@ public class MixinOutlineVertexConsumerProvider implements OutlineVertexConsumer
     private VertexConsumerProvider.Immediate plainDrawer;
 
     @Shadow
-    private int red;
-
-    @Shadow
-    private int green;
-
-    @Shadow
-    private int blue;
-
-    @Shadow
-    private int alpha;
+    private int OUTLINE_COLOR;
 
     public VertexConsumer liquid_bounce_getSingleDrawBuffers(RenderLayer layer) {
         var affectedOutline = layer.getAffectedOutline();
@@ -56,6 +47,6 @@ public class MixinOutlineVertexConsumerProvider implements OutlineVertexConsumer
 
         VertexConsumer vertexConsumer = this.plainDrawer.getBuffer(affectedOutline.get());
 
-        return new OutlineVertexConsumerProvider.OutlineVertexConsumer(vertexConsumer, this.red, this.green, this.blue, this.alpha);
+        return new OutlineVertexConsumerProvider.OutlineVertexConsumer(vertexConsumer, this.OUTLINE_COLOR);
     }
 }

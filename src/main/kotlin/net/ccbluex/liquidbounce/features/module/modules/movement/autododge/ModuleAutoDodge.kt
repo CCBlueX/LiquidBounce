@@ -112,7 +112,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         maxTicks: Int = 80,
         hitboxExpansion: Double = 0.7,
     ): HitInfo? {
-        val simulatedArrows = arrows.map { SimulatedArrow(world, it.pos, it.velocity, false) }
+        val simulatedArrows = arrows.map { SimulatedArrow(world, it.entityPos, it.velocity, false) }
 
         for (i in 0 until maxTicks) {
             simulatedPlayer.tick()

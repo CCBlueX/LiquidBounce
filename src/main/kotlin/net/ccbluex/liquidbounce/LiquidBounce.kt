@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.coroutines.*
-import kotlinx.coroutines.future.asCompletableFuture
+import kotlinx.coroutines.future.future
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.ioScope
@@ -60,12 +60,10 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientShaders
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.HAS_AMD_VEGA_APU
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer
-import net.ccbluex.liquidbounce.render.trianglePosTexVertexBuffer
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
@@ -83,7 +81,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.resource.ReloadableResourceManagerImpl
-import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
 import net.minecraft.util.Identifier
@@ -192,13 +189,10 @@ object LiquidBounce : EventListener {
         workerDispatcher: CoroutineDispatcher,
         renderThreadDispatcher: CoroutineDispatcher,
     ): CompletableFuture<Unit> = CoroutineScope(
-        renderThreadDispatcher + CoroutineName("$CLIENT_NAME Initializer") +
-            CoroutineExceptionHandler { ctx, throwable ->
-                ErrorHandler.fatal(throwable, additionalMessage = ctx[CoroutineName]?.name)
-            }
-    ).launch {
+        renderThreadDispatcher + CoroutineName("$CLIENT_NAME Initializer")
+    ).future {
         if (isInitialized) {
-            return@launch
+            return@future
         }
 
         // Ensure we are on the render thread
@@ -235,7 +229,9 @@ object LiquidBounce : EventListener {
 
         isInitialized = true
         logger.info("$CLIENT_NAME has been successfully initialized.")
-    }.asCompletableFuture()
+    }.exceptionally { throwable ->
+        ErrorHandler.fatal(throwable, additionalMessage = "$CLIENT_NAME initializer")
+    }
 
     /**
      * Initializes managers for Event Listener registration.
@@ -380,8 +376,6 @@ object LiquidBounce : EventListener {
         ConfigSystem.load(MarketplaceManager)
         ConfigSystem.load(ThemeManager)
         ThemeManager.load()
-        // Init GL buffers
-        trianglePosTexVertexBuffer
 
         BlurEffectRenderer
         IntegrationListener
@@ -476,8 +470,9 @@ object LiquidBounce : EventListener {
                 initializeClient(
                     workerDispatcher = Dispatchers.Default,
                     renderThreadDispatcher = Dispatchers.Minecraft,
-                ).join()
-                ThemeManager.reloader.reload(resourceManager)
+                ).thenRun {
+                    ThemeManager.reloader.reload(resourceManager)
+                }
             }
         }.onFailure {
             ErrorHandler.fatal(it, additionalMessage = "Client start")
@@ -505,10 +500,10 @@ object LiquidBounce : EventListener {
      */
     private object ClientResourceReloader : ResourceReloader {
         override fun reload(
-            synchronizer: ResourceReloader.Synchronizer,
-            manager: ResourceManager,
+            store: ResourceReloader.Store,
             prepareExecutor: Executor,
-            applyExecutor: Executor,
+            synchronizer: ResourceReloader.Synchronizer,
+            applyExecutor: Executor
         ): CompletableFuture<Void> {
             return synchronizer.whenPrepared(net.minecraft.util.Unit.INSTANCE)
                 .thenCompose {

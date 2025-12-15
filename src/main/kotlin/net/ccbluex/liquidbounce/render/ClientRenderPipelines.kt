@@ -66,7 +66,7 @@ object ClientRenderPipelines {
     }
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() = apply {
+    private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() {
         withVertexShader("core/position_tex_color")
         withFragmentShader(ClientShaders.BGRA_FSH_ID)
         withSampler("Sampler0")
@@ -75,7 +75,13 @@ object ClientRenderPipelines {
     }
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun RenderPipeline.Builder.forWorldRender() = apply {
+    inline fun RenderPipeline.Builder.screenQuad() = apply {
+        withVertexShader("core/screenquad")
+        withVertexFormat(VertexFormats.EMPTY, VertexFormat.DrawMode.TRIANGLES)
+    }
+
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun RenderPipeline.Builder.forWorldRender() {
         withCull(false)
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
         withBlend(COVERING_BLEND)
@@ -110,17 +116,18 @@ object ClientRenderPipelines {
             withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
         }
 
+        /**
+         * @see RenderPipelines.ENTITY_OUTLINE_BLIT
+         */
         @JvmField
         val Blit = newPipeline("jcef_blit") {
-            withLocation("pipeline/entity_outline_blit")
-            withVertexShader("core/blit_screen")
+            screenQuad()
             withFragmentShader("core/blit_screen")
             withSampler("InSampler")
             withBlend(JCEF_COMPATIBLE_BLEND)
             withDepthWrite(false)
             withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             withColorWrite(true, false)
-            withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
         }
     }
 
@@ -184,9 +191,8 @@ object ClientRenderPipelines {
 
     @JvmField
     val Outline = newPipeline("outline") {
-        withVertexShader(ClientShaders.SOBEL_VSH_ID)
+        screenQuad()
         withFragmentShader(ClientShaders.OUTLINE_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withBlend(BlendFunction.ENTITY_OUTLINE_BLIT)
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
@@ -194,9 +200,8 @@ object ClientRenderPipelines {
 
     @JvmField
     val ItemChams = newPipeline("item_chams") {
-        withVertexShader(ClientShaders.PLANE_PROJECTION_VSH_ID)
+        screenQuad()
         withFragmentShader(ClientShaders.GLOW_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withSampler("image")
         withUniform("ItemChamsData", UniformType.UNIFORM_BUFFER)
@@ -206,9 +211,8 @@ object ClientRenderPipelines {
 
     @JvmField
     val GuiBlur = newPipeline("blur") {
-        withVertexShader(ClientShaders.SOBEL_VSH_ID)
+        screenQuad()
         withFragmentShader(ClientShaders.BLUR_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withSampler("overlay")
         withUniform("BlurData", UniformType.UNIFORM_BUFFER)

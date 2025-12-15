@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.texture.TextureSetup
 import java.io.File
 import java.lang.AutoCloseable
 
@@ -125,7 +126,7 @@ class BrowserRenderer(val browser: Browser) : EventListener, AutoCloseable {
         }
 
         context.drawTexQuad(
-            texture.view,
+            texture.textureSetup,
             x0 = x, y0 = y, x1 = x + width, y1 = y + height,
             pipeline = pipeline,
         )

@@ -58,7 +58,7 @@ fun planEvasion(
             Vec3d(inflictedHit.arrowVelocity.x, 0.0, inflictedHit.arrowVelocity.z),
         )
 
-    val playerPos2d = Vec3d(player.pos.x, 0.0, player.pos.z)
+    val playerPos2d = Vec3d(player.entityPos.x, 0.0, player.entityPos.z)
     val nearestPointOnArrowLine = arrowLine.getNearestPointTo(playerPos2d)
     val distanceToArrowLine = nearestPointOnArrowLine.distanceTo(playerPos2d)
 
@@ -146,7 +146,10 @@ class DodgePlanner(
         val isJumpEffective = effectiveVelocity > 0.11
 
         val rotation =
-            Rotation.lookingAt(point = player.pos + optimalDodgePosRelativeToPlayer, from = player.eyePos).normalize()
+            Rotation.lookingAt(
+                point = player.entityPos + optimalDodgePosRelativeToPlayer,
+                from = player.eyePos
+            ).normalize()
 
         return DodgePlan(
             directionalInput = DirectionalInput.FORWARDS,
@@ -197,7 +200,7 @@ private fun getDodgeMovementWithoutAngleChange(positionRelativeToPlayer: Vec3d):
 fun findOptimalDodgePosition(baseLine: Line): Vec3d {
     val player = mc.player!!
 
-    val playerPos2d = Vec3d(player.pos.x, 0.0, player.pos.z)
+    val playerPos2d = Vec3d(player.entityPos.x, 0.0, player.entityPos.z)
     // Usually it takes around two ticks to change the movement to whatever we want. In this time we will keep the
     // current velocity. So we have to account for this by integrating the player's velocity in the calculation.
     val playerPosAfterFreeMovement = playerPos2d.add(player.velocity.x * 2.0, 0.0, player.velocity.z * 2.0)

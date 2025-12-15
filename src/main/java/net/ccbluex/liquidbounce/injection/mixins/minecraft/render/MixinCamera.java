@@ -35,6 +35,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockView;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -68,12 +69,14 @@ public abstract class MixinCamera {
     public abstract void setPos(Vec3d pos);
 
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER))
-    private void hookFreeCamModifiedPosition(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
-        ModuleFreeCam.INSTANCE.applyCameraPosition(focusedEntity, tickDelta);
+    private void hookFreeCamModifiedPosition(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView,
+        float tickProgress, CallbackInfo ci) {
+        ModuleFreeCam.INSTANCE.applyCameraPosition(focusedEntity, tickProgress);
     }
 
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER), cancellable = true)
-    private void modifyCameraOrientation(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
+    private void modifyCameraOrientation(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView,
+        float tickProgress, CallbackInfo ci) {
         var freeLook = ModuleFreeLook.INSTANCE.getRunning();
         var freeLockInvertedView = ModuleFreeLook.INSTANCE.isInvertedView();
         var qps = ModuleQuickPerspectiveSwap.INSTANCE.getRunning();
@@ -120,16 +123,23 @@ public abstract class MixinCamera {
         var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
 
         var changeLook = rotationTarget != null &&
-                rotationTarget.getMovementCorrection() == MovementCorrection.CHANGE_LOOK;
+            rotationTarget.getMovementCorrection() == MovementCorrection.CHANGE_LOOK;
         if (currentRotation == null || previousRotation == null || !changeLook ||
-                !RotationManager.INSTANCE.isRotatingAllowed(rotationTarget)) {
+            !RotationManager.INSTANCE.isRotatingAllowed(rotationTarget)) {
             return;
         }
 
         setRotation(
-            MathHelper.lerp(tickDelta, previousRotation.getYaw(), currentRotation.getYaw()),
-            MathHelper.lerp(tickDelta, previousRotation.getPitch(), currentRotation.getPitch())
+            MathHelper.lerp(tickProgress, previousRotation.getYaw(), currentRotation.getYaw()),
+            MathHelper.lerp(tickProgress, previousRotation.getPitch(), currentRotation.getPitch())
         );
+    }
+
+    @Inject(method = "update", at = @At("TAIL"))
+    private void applyFreeCamPlayerSelfRendering(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickProgress, CallbackInfo ci) {
+        if (ModuleFreeCam.INSTANCE.getRunning()) {
+            this.thirdPerson = true;
+        }
     }
 
     @ModifyConstant(method = "clipToSpace", constant = @Constant(intValue = 8))
@@ -143,11 +153,12 @@ public abstract class MixinCamera {
     }
 
     @Inject(method = "update", at = @At("TAIL"))
-    private void onUpdate(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
+    private void onUpdate(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView,
+        float tickProgress, CallbackInfo ci) {
         ModuleSmoothCamera.cameraUpdate(yaw, pitch, pos);
     }
 
-    @ModifyReturnValue(method = "getPos", at = @At("RETURN"))
+    @ModifyReturnValue(method = "getCameraPos", at = @At("RETURN"))
     private Vec3d modifyGetPos(Vec3d original) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
             return original;

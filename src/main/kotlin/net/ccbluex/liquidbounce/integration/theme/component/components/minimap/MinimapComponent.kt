@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.ScreenRect
-import net.minecraft.client.texture.TextureSetup
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
@@ -180,33 +179,31 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         drawCustomElement(
             pipeline = RenderPipelines.GUI,
             bounds = bounds,
-        ) { pose, depth ->
-            val z = depth // - 1.0F
+        ) { pose ->
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax).color(from)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
 
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax, z).color(from)
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset).color(from)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset).color(to)
 
-            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset, z).color(from)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMax, z).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset, z).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax).color(to)
 
-            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMax, z).color(to)
+            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax).color(to)
+            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax).color(from)
 
-            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax, z).color(to)
-            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax, z).color(from)
-
-            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset - width, z).color(to)
-            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset, z).color(from)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset, z).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset - width, z).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset - width).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset).color(from)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset - width).color(to)
         }
     }
 
@@ -218,9 +215,9 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
     ) {
         drawCustomElement(
             pipeline = RenderPipelines.GUI_TEXTURED,
-            textureSetup = TextureSetup.withoutGlTexture(ChunkRenderer.prepareRendering()),
+            textureSetup = ChunkRenderer.prepareRendering(),
             bounds = bounds,
-        ) { pose, depth ->
+        ) { pose ->
             for (x in -chunksToRenderAround..chunksToRenderAround) {
                 for (y in -chunksToRenderAround..chunksToRenderAround) {
                     // Don't render too much
@@ -228,7 +225,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                         continue
                     }
 
-                    val chunkPos = ChunkPos(centerPos.x + x, centerPos.z + y)
+                    val chunkPos = ChunkPos.toLong(centerPos.x + x, centerPos.z + y)
 
                     val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                     val fromX = x.toFloat()
@@ -236,13 +233,13 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                     val toX = fromX + 1F
                     val toY = fromY + 1F
 
-                    vertex(pose, fromX, fromY, depth).texture(texPosition.xMin, texPosition.yMin)
+                    vertex(pose, fromX, fromY).texture(texPosition.xMin, texPosition.yMin)
                         .color(-1)
-                    vertex(pose, fromX, toY, depth).texture(texPosition.xMin, texPosition.yMax)
+                    vertex(pose, fromX, toY).texture(texPosition.xMin, texPosition.yMax)
                         .color(-1)
-                    vertex(pose, toX, toY, depth).texture(texPosition.xMax, texPosition.yMax)
+                    vertex(pose, toX, toY).texture(texPosition.xMax, texPosition.yMax)
                         .color(-1)
-                    vertex(pose, toX, fromY, depth).texture(texPosition.xMax, texPosition.yMin)
+                    vertex(pose, toX, fromY).texture(texPosition.xMax, texPosition.yMin)
                         .color(-1)
                 }
             }

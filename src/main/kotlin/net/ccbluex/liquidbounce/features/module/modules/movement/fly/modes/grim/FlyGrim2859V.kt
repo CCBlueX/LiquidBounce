@@ -89,8 +89,8 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
                  * Tested versions: 2.3.59
                  */
 
-                pos = player.pos
-                player.setPosition(player.pos.x + 1152, player.pos.y, player.pos.z + 1152)
+                pos = player.entityPos
+                player.setPosition(player.entityPos.x + 1152, player.entityPos.y, player.entityPos.z + 1152)
             } else if (pos != null) {
                 player.setPosition(pos)
             }

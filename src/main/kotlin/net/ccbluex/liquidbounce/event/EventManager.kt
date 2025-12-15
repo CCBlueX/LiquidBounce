@@ -19,9 +19,13 @@
 package net.ccbluex.liquidbounce.event
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.minecraft.util.crash.CrashException
 
 /**
  * Contains all classes of events. Used to create lookup tables ahead of time
@@ -139,7 +143,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ClickGuiValueChangeEvent::class.java,
     BlockAttackEvent::class.java,
     QueuePacketEvent::class.java,
-    MinecraftAutoJumpEvent::class.java,
+    AllowAutoJumpEvent::class.java,
     WorldEntityRemoveEvent::class.java,
     TitleEvent.Title::class.java,
     TitleEvent.Subtitle::class.java,
@@ -156,6 +160,11 @@ object EventManager {
         ALL_EVENT_CLASSES.associateWithTo(
             Reference2ObjectOpenHashMap(ALL_EVENT_CLASSES.size)
         ) { EventHookRegistry() }
+
+    private val flows: Map<Class<out Event>, MutableSharedFlow<Event>> =
+        ALL_EVENT_CLASSES.associateWithTo(
+            Reference2ObjectOpenHashMap(ALL_EVENT_CLASSES.size)
+        ) { MutableSharedFlow(replay = 0, extraBufferCapacity = 0) }
 
     init {
         CoroutineTicker
@@ -206,7 +215,8 @@ object EventManager {
             return event
         }
 
-        val target = registry[event.javaClass] ?: return event
+        val eventType = event.javaClass
+        val target = registry[eventType] ?: return event
 
         event.isCompleted = false
         for (eventHook in target) {
@@ -214,14 +224,33 @@ object EventManager {
                 continue
             }
 
-            runCatching {
+            try {
                 eventHook.handler.accept(event)
-            }.onFailure {
-                logger.error("Exception while executing handler.", it)
+            } catch (e: CrashException) {
+                ErrorHandler.fatal(
+                    error = e,
+                    needToReport = true,
+                    additionalMessage = "Event (${eventType.simpleName}) handler of ${eventHook.handlerClass}"
+                )
+            } catch (e: Throwable) {
+                logger.error("Exception while executing event handler", e)
             }
         }
         event.isCompleted = true
 
+        @Suppress("UNCHECKED_CAST")
+        (flows[event.javaClass] as MutableSharedFlow<T>).tryEmit(event)
+
         return event
+    }
+
+    /**
+     * Gets a [SharedFlow] for the given event class.
+     * The flow receives the event instances after all [EventHook]s are executed.
+     * So the [Event.isCompleted] will be true when the event is emitted.
+     */
+    fun <T : Event> flowOf(eventClass: Class<T>): SharedFlow<T> {
+        @Suppress("UNCHECKED_CAST")
+        return flows[eventClass] as SharedFlow<T>
     }
 }

@@ -42,7 +42,7 @@ class PlacementPositionCandidate(
     /**
      * The distance to us.
      */
-    private val distanceSq by lazy { pos.getSquaredDistance(player.pos) }
+    private val distanceSq by lazy { pos.getSquaredDistance(player.entityPos) }
 
     init {
         calculate()

@@ -93,7 +93,7 @@ sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConf
 
             if (packet is PlayerPositionLookS2CPacket) {
                 val pos = packet.change.position
-                val distSq = player.pos.squaredDistanceTo(pos.x, pos.y, pos.z)
+                val distSq = player.entityPos.squaredDistanceTo(pos.x, pos.y, pos.z)
 
                 if (distSq > 16.0 * 16.0) {
                     trackedSpawnLocation.set(pos.x, pos.y, pos.z)

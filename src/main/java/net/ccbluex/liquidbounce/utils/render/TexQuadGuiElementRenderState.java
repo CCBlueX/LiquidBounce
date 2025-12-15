@@ -45,13 +45,12 @@ public record TexQuadGuiElementRenderState(
     @Nullable ScreenRect scissorArea,
     @Nullable ScreenRect bounds
 ) implements LiquidBounceGuiElementRenderState {
-
     @Override
-    public void setupVertices(VertexConsumer vertices, float depth) {
-        vertices.vertex(pose, x0, y0, depth).texture(u1, v1).color(argb);
-        vertices.vertex(pose, x0, y1, depth).texture(u1, v2).color(argb);
-        vertices.vertex(pose, x1, y1, depth).texture(u2, v2).color(argb);
-        vertices.vertex(pose, x1, y0, depth).texture(u2, v1).color(argb);
+    public void setupVertices(VertexConsumer vertices) {
+        vertices.vertex(pose, x0, y0).texture(u1, v1).color(argb);
+        vertices.vertex(pose, x0, y1).texture(u1, v2).color(argb);
+        vertices.vertex(pose, x1, y1).texture(u2, v2).color(argb);
+        vertices.vertex(pose, x1, y0).texture(u2, v1).color(argb);
     }
 
 }
