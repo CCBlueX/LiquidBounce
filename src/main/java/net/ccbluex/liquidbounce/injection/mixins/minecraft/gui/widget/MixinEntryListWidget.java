@@ -21,19 +21,27 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.widget;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.EntryListWidget;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(EntryListWidget.class)
 public class MixinEntryListWidget {
 
-    @ModifyExpressionValue(method = "renderWidget",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/widget/EntryListWidget;renderHeader:Z"))
-    private boolean renderBackground(boolean original) {
-        return original && HideAppearance.INSTANCE.isHidingNow();
+    @Shadow
+    @Final
+    protected MinecraftClient client;
+
+    @WrapWithCondition(method = "renderWidget",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/EntryListWidget;drawHeaderAndFooterSeparators(Lnet/minecraft/client/gui/DrawContext;)V"))
+    private boolean renderBackground(EntryListWidget instance, DrawContext context) {
+        return this.client.world != null || HideAppearance.INSTANCE.isHidingNow();
     }
 
 }

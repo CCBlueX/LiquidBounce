@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,8 +45,8 @@ public class MixinPlayerInventory implements PlayerInventoryAddition {
      * Override the original slot based on the server-side slot information.
      */
     @ModifyExpressionValue(
-            method = {"dropSelectedItem", "getSelectedSlot", "getSelectedStack"},
-            at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I")
+            method = {"dropSelectedItem", "updateItems", "getSelectedStack"},
+            at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I", opcode = Opcodes.GETFIELD)
     )
     private int hookOverrideOriginalSlot(int original) {
         return ((PlayerInventory) (Object) this).player == MinecraftClient.getInstance().player ? SilentHotbar.INSTANCE.getServersideSlot() : original;

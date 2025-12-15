@@ -20,11 +20,18 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.google.common.base.Predicates;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.client.network.Address;
 import net.minecraft.client.network.AllowedAddressResolver;
 import net.minecraft.client.network.BlockListChecker;
+import net.minecraft.client.network.ServerAddress;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+
+import java.util.function.Predicate;
 
 /**
  * Patches out Mojang's server blacklist
@@ -34,16 +41,22 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(AllowedAddressResolver.class)
 public class MixinAllowedAddressResolver {
 
-    @ModifyExpressionValue(method = "resolve", at = @At(value = "INVOKE",
+    @WrapOperation(method = "resolve", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/network/BlockListChecker;isAllowed(Lnet/minecraft/client/network/ServerAddress;)Z"))
-    private boolean isAllowedA(boolean original) {
+    private boolean isAllowedA(BlockListChecker instance, ServerAddress serverAddress, Operation<Boolean> original) {
         return true;
     }
 
-    @ModifyExpressionValue(method = "resolve", at = @At(value = "INVOKE",
+    @WrapOperation(method = "resolve", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/network/BlockListChecker;isAllowed(Lnet/minecraft/client/network/Address;)Z"))
-    private boolean isAllowedB(boolean original) {
+    private boolean isAllowedB(BlockListChecker instance, Address address, Operation<Boolean> original) {
         return true;
+    }
+
+    @ModifyArg(method = "resolve", at = @At(value = "INVOKE",
+        target = "Ljava/util/Optional;filter(Ljava/util/function/Predicate;)Ljava/util/Optional;"))
+    private Predicate<?> isAllowedC(Predicate<?> predicate) {
+        return Predicates.alwaysTrue();
     }
 
 }

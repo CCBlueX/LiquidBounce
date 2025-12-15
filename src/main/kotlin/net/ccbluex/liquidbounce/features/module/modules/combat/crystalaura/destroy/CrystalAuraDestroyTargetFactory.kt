@@ -61,7 +61,7 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
     fun validateAndUpdateTarget(crystal: EndCrystalEntity) {
         val maxRange = getMaxRange().toDouble() + crystal.boundingBox.maxX - crystal.boundingBox.minX
         currentTarget = null
-        if (player.eyePos.squaredDistanceTo(crystal.pos) > maxRange.sq()) {
+        if (player.eyePos.squaredDistanceTo(crystal.entityPos) > maxRange.sq()) {
             return
         }
 
@@ -76,7 +76,7 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
 
     private fun dealsEnoughDamage(entity: Entity) =
         CrystalAuraDamageOptions.approximateExplosionDamage(
-            entity.pos,
+            entity.entityPos,
             CrystalAuraDamageOptions.RequestingSubmodule.DESTROY
         )
 

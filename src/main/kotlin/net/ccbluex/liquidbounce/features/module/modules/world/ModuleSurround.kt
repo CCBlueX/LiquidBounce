@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.placer.CrystalDestroyFeature
 import net.ccbluex.liquidbounce.utils.block.placer.placeInstantOnBlockUpdate
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.entity.getFeetBlockPos
 import net.ccbluex.liquidbounce.utils.entity.isInHole
@@ -62,7 +63,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
     /**
      * The blocks the surround normal utilizes.
      */
-    private val DEFAULT_BLOCKS = hashSetOf(Blocks.OBSIDIAN, Blocks.ENDER_CHEST, Blocks.CRYING_OBSIDIAN)
+    private val DEFAULT_BLOCKS = arrayOf(Blocks.OBSIDIAN, Blocks.ENDER_CHEST, Blocks.CRYING_OBSIDIAN)
 
     private val features by multiEnumChoice("Features",
         Features.EXTEND,
@@ -109,7 +110,6 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
          * X = obsidian
          * p = the players hitbox
          */
-        @Suppress("SpellCheckingInspection", "GrazieInspection")
         object ExtraLayer : ToggleableConfigurable(this, "ExtraLayer", true) {
 
             /**
@@ -204,7 +204,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
     }
 
     private val filter by enumChoice("Filter", Filter.WHITELIST)
-    private val blocks by blocks("Blocks", DEFAULT_BLOCKS)
+    private val blocks by blocks("Blocks", blockSortedSetOf(blocks = DEFAULT_BLOCKS))
     private val placer = tree(BlockPlacer(
         "Placing",
         this,
@@ -226,7 +226,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
             CommandCenter.state = CenterHandlerState.APPLY_ON_NEXT_EVENT
         }
 
-        startY = player.pos.y
+        startY = player.entityPos.y
         val centerBlockPos = player.blockPos.toCenterPos()
         centerPos = Vector2d(centerBlockPos.x, centerBlockPos.z)
     }
@@ -251,7 +251,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         val dx = abs(player.x - (centerPos?.x ?: 0.0))
         val dz = abs(player.z - (centerPos?.y ?: 0.0))
         val xzChange = DisableOn.XZ_MOVE in disableOn && (dx > 0.5 || dz > 0.5)
-        val speed = player.pos.subtract(player.lastX, player.lastY, player.lastZ).lengthSquared() * 20.0
+        val speed = player.entityPos.subtract(player.lastX, player.lastY, player.lastZ).lengthSquared() * 20.0
         val highSpeed = DisableOn.XZ_SPEED in disableOn && speed >= 5.0
         if (yChange || xzChange || highSpeed) {
             enabled = false
@@ -260,7 +260,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (DisableOn.Y_CHANGE in disableOn && player.pos.y != startY) {
+        if (DisableOn.Y_CHANGE in disableOn && player.entityPos.y != startY) {
             enabled = false
             return@handler
         }

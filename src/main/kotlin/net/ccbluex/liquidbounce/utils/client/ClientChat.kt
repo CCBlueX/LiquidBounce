@@ -118,7 +118,7 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableT
         val color = startColor.interpolateTo(endColor, factor)
 
         newText.append(
-            char.toString().asText().withColor(color.toARGB())
+            char.toString().asPlainText(Style.EMPTY + color)
         )
     }
 }
@@ -154,8 +154,8 @@ fun MutableText.bypassNameProtection(): MutableText = styled {
  * Open a [ChatScreen] with given text,
  * or set the text of current [ChatScreen]
  */
-fun MinecraftClient.openChat(text: String) = send {
-    (currentScreen as? MixinChatScreenAccessor)?.chatField?.setText(text) ?: setScreen(ChatScreen(text))
+fun MinecraftClient.openChat(text: String, draft: Boolean = false) = send {
+    (currentScreen as? MixinChatScreenAccessor)?.chatField?.setText(text) ?: setScreen(ChatScreen(text, draft))
 }
 
 private val defaultMessageMetadata = MessageMetadata()
@@ -232,20 +232,19 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
 /**
  * Joins a list of [Text] into a single [Text] with the given [separator].
  */
-fun List<Text>.joinToText(separator: Text): MutableText {
-    val result = "".asText()
+fun Collection<Text>.joinToText(separator: Text): Text {
     if (isEmpty()) {
-        return result
+        return PlainText.EMPTY
     }
 
-    with(iterator()) {
-        result += next()
-        while (hasNext()) {
-            result += separator
-            result += next()
+    val iterator = iterator()
+    return Array(this.size * 2 - 1) { i ->
+        if (i % 2 == 0) {
+            iterator.next()
+        } else {
+            separator
         }
-    }
-    return result
+    }.asText()
 }
 
 val TextColor.bypassesNameProtection: Boolean

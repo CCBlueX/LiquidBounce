@@ -29,9 +29,8 @@ class SessionWithService(
     accessToken: String,
     xuid: Optional<String>,
     clientId: Optional<String>,
-    accountType: AccountType?,
     val service: AccountService
-) : Session(username, uuid, accessToken, xuid, clientId, accountType) {
+) : Session(username, uuid, accessToken, xuid, clientId) {
 
     companion object {
         fun getService(session: Session) = when {
@@ -46,5 +45,4 @@ class SessionWithService(
 /**
  * Checks if the session is online by checking the account type and if we have a valid access token.
  */
-fun Session.couldBeOnline() = (accountType == Session.AccountType.MOJANG || accountType == Session.AccountType.MSA)
-    && accessToken.isNotBlank() && accessToken.length > 3
+fun Session.couldBeOnline() = accessToken.startsWith("eyJra") && accessToken.length >= 13

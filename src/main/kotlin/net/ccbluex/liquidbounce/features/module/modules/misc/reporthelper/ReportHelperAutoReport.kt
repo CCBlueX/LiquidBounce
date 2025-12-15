@@ -58,7 +58,7 @@ internal object ReportHelperAutoReport : ToggleableConfigurable(ModuleReportHelp
             }
 
             waitTicks(delay.random())
-            player.networkHandler.sendCommand(pattern.format(another))
+            player.networkHandler.sendChatCommand(pattern.format(another))
         }
     }
 

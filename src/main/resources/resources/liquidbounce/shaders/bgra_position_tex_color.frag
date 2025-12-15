@@ -1,8 +1,14 @@
-#version 330
+#version 330 core
 
 uniform sampler2D Sampler0;
 
-uniform vec4 ColorModulator;
+// see mc position_tex_color.fsh
+layout(std140) uniform DynamicTransforms {
+    mat4 ModelViewMat;
+    vec4 ColorModulator;
+    vec3 ModelOffset;
+    mat4 TextureMat;
+};
 
 in vec2 texCoord0;
 in vec4 vertexColor;

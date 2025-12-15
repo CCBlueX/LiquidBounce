@@ -44,7 +44,7 @@ open class FakePlayer(
     gameProfile
 ), MinecraftShortcuts {
 
-    lateinit var onRemoval: () -> Unit
+    var onRemoval: Runnable? = null
 
     /**
      * Loads the attributes from the player into the fake player.
@@ -93,7 +93,7 @@ open class FakePlayer(
      */
     override fun tick() {
         if (removalReason != null) {
-            onRemoval()
+            onRemoval?.run()
         }
 
         super.tick()

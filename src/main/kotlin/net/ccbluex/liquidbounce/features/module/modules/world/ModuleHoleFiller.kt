@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
 import net.ccbluex.liquidbounce.utils.block.hole.HoleTracker
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.inventory.Slots
@@ -77,7 +78,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
     /**
      * Blocks that are used to fill holes, by default just obsidian.
      */
-    private val blocks by blocks("Blocks", hashSetOf(Blocks.OBSIDIAN))
+    private val blocks by blocks("Blocks", blockSortedSetOf(Blocks.OBSIDIAN))
 
     /**
      * The core of the module, the placer.
@@ -250,8 +251,8 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
 
     private fun isMovingTowardsHole(hole: Hole, entity: Entity): BooleanDoubleImmutablePair {
         val holePos = hole.positions.from.toCenterPos()
-        val velocity = entity.pos.subtract(entity.lastX, entity.lastY, entity.lastZ)
-        val playerPos = entity.pos
+        val velocity = entity.entityPos.subtract(entity.lastX, entity.lastY, entity.lastZ)
+        val playerPos = entity.entityPos
 
         val normalizedVelocity = Vector2d(velocity.x, velocity.z).normalize()
         val normalizedDelta = Vector2d(holePos.x - playerPos.x, holePos.z - playerPos.z).normalize()

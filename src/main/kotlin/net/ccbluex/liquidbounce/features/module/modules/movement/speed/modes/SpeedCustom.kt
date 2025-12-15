@@ -151,9 +151,9 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             val packet = it.packet
 
             if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-                val velocityX = packet.velocityX / 8000.0
-                val velocityY = packet.velocityY / 8000.0
-                val velocityZ = packet.velocityZ / 8000.0
+                val velocityX = packet.velocity.x / 8000.0
+                val velocityY = packet.velocity.y / 8000.0
+                val velocityZ = packet.velocity.z / 8000.0
 
                 ticksTimeout = velocityTimeout
 

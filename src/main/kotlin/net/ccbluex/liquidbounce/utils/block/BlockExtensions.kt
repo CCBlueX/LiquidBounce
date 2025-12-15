@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
 import net.ccbluex.liquidbounce.utils.math.iterator
+import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.block.*
 import net.minecraft.entity.Entity
@@ -97,8 +98,6 @@ val BlockPos.outlineBox: Box
 
 val BlockPos.collisionShape: VoxelShape
     get() = this.getState()!!.getCollisionShape(world, this)
-
-fun VoxelShape.offset(pos: Vec3i): VoxelShape = offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 
 fun VoxelShape.getClosestSquaredDistanceTo(position: Position): Double {
     var minDistanceSq = Double.MAX_VALUE
@@ -602,7 +601,7 @@ fun doBreak(
 
     if (interaction.updateBlockBreakingProgress(blockPos, direction)) {
         swingMode.swing(Hand.MAIN_HAND)
-        mc.particleManager.addBlockBreakingParticles(blockPos, direction)
+        world.spawnBlockBreakingParticle(blockPos, direction)
     }
 }
 
@@ -678,14 +677,14 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
 val BlockState?.isInteractable: Boolean get() = this?.block?.isInteractable(this) ?: false
 
 fun BlockPos.isBlockedByEntities(): Boolean {
-    val posBox = FULL_BOX.offset(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
+    val posBox = FULL_BOX + this
     return world.entities.any {
         it.boundingBox.intersects(posBox)
     }
 }
 
 inline fun BlockPos.getBlockingEntities(include: (Entity) -> Boolean = { true }): List<Entity> {
-    val posBox = FULL_BOX.offset(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
+    val posBox = FULL_BOX + this
     return world.entities.filter {
         it.boundingBox.intersects(posBox) &&
             include.invoke(it)
@@ -701,7 +700,7 @@ fun BlockPos.isBlockedByEntitiesReturnCrystal(
 ): BooleanObjectPair<EndCrystalEntity?> {
     var blocked = false
 
-    val posBox = box.offset(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
+    val posBox = box + this
     world.entities.forEach {
         if (it.boundingBox.intersects(posBox) && (excludeIds == null || it.id !in excludeIds)) {
             if (it is EndCrystalEntity) {

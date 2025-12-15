@@ -26,7 +26,7 @@ import org.gradle.kotlin.dsl.support.listFilesOrdered
 plugins {
     id("fabric-loom")
     kotlin("jvm")
-    id("com.gorylenko.gradle-git-properties") version "2.5.3"
+    id("com.gorylenko.gradle-git-properties") version "2.5.4"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("com.github.node-gradle.node") version "7.1.0"
     id("org.jetbrains.dokka") version "2.1.0"
@@ -41,62 +41,56 @@ base {
 /** Includes non-mod dependency recursively in the JAR file */
 val includeDependency: Configuration by configurations.creating
 
-/** Includes mod in the JAR file */
-val includeModDependency: Configuration by configurations.creating
-
 /** Includes native-only dependency in the JAR file */
 val includeNative: Configuration by configurations.creating
 
 includeDependency.excludeProvidedLibs()
-includeModDependency.excludeProvidedLibs()
 
 configurations {
     include.configure {
-        extendsFrom(includeModDependency)
         extendsFrom(includeNative)
-    }
-    modApi.configure {
-        extendsFrom(includeModDependency)
     }
     runtimeOnly.configure {
         extendsFrom(includeNative)
     }
 }
 
-repositories {
-    mavenCentral()
-    mavenLocal()
-    maven {
-        name = "CCBlueX"
-        url = uri("https://maven.ccbluex.net/releases")
-    }
-    maven {
-        name = "Fabric"
-        url = uri("https://maven.fabricmc.net/")
-    }
-    maven {
-        name = "Jitpack"
-        url = uri("https://jitpack.io")
-    }
-    maven {
-        name = "TerraformersMC"
-        url = uri("https://maven.terraformersmc.com/")
-    }
-    maven {
-        name = "ViaVersion"
-        url = uri("https://repo.viaversion.com/")
-    }
-    maven {
-        name = "modrinth"
-        url = uri("https://api.modrinth.com/maven")
-    }
-    maven {
-        name = "OpenCollab Snapshots"
-        url = uri("https://repo.opencollab.dev/maven-snapshots/")
-    }
-    maven {
-        name = "Lenni0451"
-        url = uri("https://maven.lenni0451.net/everything")
+allprojects {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven {
+            name = "CCBlueX"
+            url = uri("https://maven.ccbluex.net/releases")
+        }
+        maven {
+            name = "Fabric"
+            url = uri("https://maven.fabricmc.net/")
+        }
+        maven {
+            name = "Jitpack"
+            url = uri("https://jitpack.io")
+        }
+        maven {
+            name = "TerraformersMC"
+            url = uri("https://maven.terraformersmc.com/")
+        }
+        maven {
+            name = "ViaVersion"
+            url = uri("https://repo.viaversion.com/")
+        }
+        maven {
+            name = "modrinth"
+            url = uri("https://api.modrinth.com/maven")
+        }
+        maven {
+            name = "OpenCollab Snapshots"
+            url = uri("https://repo.opencollab.dev/maven-snapshots/")
+        }
+        maven {
+            name = "Lenni0451"
+            url = uri("https://maven.lenni0451.net/everything")
+        }
     }
 }
 
@@ -115,7 +109,7 @@ dependencies {
     modApi("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
 
     // Mod menu
-    modApi("com.terraformersmc:modmenu:${project.property("mod_menu_version")}")
+    modApi("maven.modrinth:modmenu:${project.property("mod_menu_version")}")
 
     // Recommended mods (on IDE)
     modApi("maven.modrinth:sodium:${project.property("sodium_version")}")
@@ -126,15 +120,13 @@ dependencies {
     modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}")
 
     // Minecraft Authlib
-    includeDependency("com.github.CCBlueX:mc-authlib:${project.property("mc_authlib_version")}")
+    includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
 
     // JCEF Support
-    includeModDependency("com.github.CCBlueX:mcef:${project.property("mcef_version")}")
-    includeDependency("net.ccbluex:netty-httpserver:2.4.2")
-    // MacOS native (Linux native is included in game)
-    includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
-    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
-    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-x86_64")
+    val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
+    modApi(mcef)
+    include(mcef)
+    includeDependency("net.ccbluex:netty-httpserver:2.5.0")
 
     // Discord RPC Support
     includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")

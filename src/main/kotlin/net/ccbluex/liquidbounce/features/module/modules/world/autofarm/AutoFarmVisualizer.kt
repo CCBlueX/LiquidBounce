@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -70,12 +69,12 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             private val color by color("Color", Color4b(66, 120, 245, 255))
             private val colorRainbow by boolean("Rainbow", false)
 
-            fun render(renderEnvironment: RenderEnvironment) {
+            fun render(renderEnvironment: WorldRenderEnvironment) {
                 if (!this.enabled) return
                 val target = ModuleAutoFarm.currentTarget ?: return
                 with(renderEnvironment) {
-                    withPosition(Vec3(target)) {
-                        drawBox(FULL_BOX, (if (colorRainbow) rainbow() else color).with(a = 50))
+                    withPositionRelativeToCamera(target) {
+                        drawBox(FULL_BOX, if (colorRainbow) rainbow(alpha = 0.2f) else color.with(a = 50))
                     }
                 }
             }

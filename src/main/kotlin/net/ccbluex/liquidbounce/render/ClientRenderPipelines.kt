@@ -29,14 +29,13 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gl.UniformType
 import net.minecraft.client.render.VertexFormats
-import net.minecraft.resource.ResourceManager
-import net.minecraft.resource.SynchronousResourceReloader
 import net.minecraft.util.Identifier
 
-object ClientRenderPipelines : SynchronousResourceReloader {
+object ClientRenderPipelines {
 
     private val renderPipelines = Object2ObjectOpenHashMap<Identifier, RenderPipeline>()
 
@@ -67,16 +66,22 @@ object ClientRenderPipelines : SynchronousResourceReloader {
     }
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() = apply {
+    private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() {
         withVertexShader("core/position_tex_color")
         withFragmentShader(ClientShaders.BGRA_FSH_ID)
         withSampler("Sampler0")
         withVertexFormat(VertexFormats.POSITION_TEXTURE_COLOR, VertexFormat.DrawMode.QUADS)
-        withSnippet(RenderPipelines.MATRICES_COLOR_SNIPPET)
+        withSnippet(RenderPipelines.TRANSFORMS_AND_PROJECTION_SNIPPET)
     }
 
     @Suppress("NOTHING_TO_INLINE")
-    private inline fun RenderPipeline.Builder.forWorldRender() = apply {
+    inline fun RenderPipeline.Builder.screenQuad() = apply {
+        withVertexShader("core/screenquad")
+        withVertexFormat(VertexFormats.EMPTY, VertexFormat.DrawMode.TRIANGLES)
+    }
+
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun RenderPipeline.Builder.forWorldRender() {
         withCull(false)
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
         withBlend(COVERING_BLEND)
@@ -111,17 +116,32 @@ object ClientRenderPipelines : SynchronousResourceReloader {
             withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
         }
 
+        /**
+         * @see RenderPipelines.ENTITY_OUTLINE_BLIT
+         */
         @JvmField
         val Blit = newPipeline("jcef_blit") {
-            withLocation("pipeline/entity_outline_blit")
-            withVertexShader("core/blit_screen")
+            screenQuad()
             withFragmentShader("core/blit_screen")
             withSampler("InSampler")
             withBlend(JCEF_COMPATIBLE_BLEND)
             withDepthWrite(false)
             withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
             withColorWrite(true, false)
-            withVertexFormat(VertexFormats.POSITION, VertexFormat.DrawMode.QUADS)
+        }
+    }
+
+    object GUI {
+        @JvmField
+        val Lines = newPipeline("gui/lines") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINES)
+        }
+
+        @JvmField
+        val Triangles = newPipeline("gui/triangles") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES)
         }
     }
 
@@ -171,42 +191,31 @@ object ClientRenderPipelines : SynchronousResourceReloader {
 
     @JvmField
     val Outline = newPipeline("outline") {
-        withVertexShader(ClientShaders.SOBEL_VSH_ID)
+        screenQuad()
         withFragmentShader(ClientShaders.OUTLINE_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withBlend(BlendFunction.ENTITY_OUTLINE_BLIT)
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
     }
 
     @JvmField
-    val ItemChams = newPipeline("glow") {
-        withVertexShader(ClientShaders.PLANE_PROJECTION_VSH_ID)
+    val ItemChams = newPipeline("item_chams") {
+        screenQuad()
         withFragmentShader(ClientShaders.GLOW_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withSampler("image")
-        withUniform("useImage", UniformType.INT)
-        withUniform("blendColor", UniformType.VEC4)
-        withUniform("alpha", UniformType.FLOAT)
-        withUniform("sampleMul", UniformType.FLOAT)
-        withUniform("glowColor", UniformType.VEC4)
-        withUniform("falloff", UniformType.FLOAT)
-        withUniform("layerCount", UniformType.INT)
+        withUniform("ItemChamsData", UniformType.UNIFORM_BUFFER)
         withoutBlend()
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
     }
 
     @JvmField
     val GuiBlur = newPipeline("blur") {
-        withVertexShader(ClientShaders.SOBEL_VSH_ID)
+        screenQuad()
         withFragmentShader(ClientShaders.BLUR_FSH_ID)
-        withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
         withSampler("overlay")
-        withUniform("radius", UniformType.FLOAT)
-        withUniform("alphaBlendMin", UniformType.FLOAT)
-        withUniform("alphaBlendMax", UniformType.FLOAT)
+        withUniform("BlurData", UniformType.UNIFORM_BUFFER)
         withoutBlend()
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
     }
@@ -217,19 +226,21 @@ object ClientRenderPipelines : SynchronousResourceReloader {
         withFragmentShader(ClientShaders.BLEND_FSH_ID)
         withVertexFormat(VertexFormats.POSITION_TEXTURE, VertexFormat.DrawMode.TRIANGLES)
         withSampler("texture0")
-        withUniform("mixColor", UniformType.VEC4)
+        withUniform("BlendData", UniformType.UNIFORM_BUFFER)
         withoutBlend()
     }
 
     /**
      * Precompile
      */
-    override fun reload(manager: ResourceManager) {
+    fun precompile() {
+        JCEF
+        GUI
+
         renderPipelines.fastIterator().forEach { (_, pipeline) ->
-            gpuDevice.precompilePipeline(pipeline) { identifier, _ ->
-                ClientShaders[identifier] ?: error("Unknown identifier: $identifier")
-            }
+            gpuDevice.precompilePipeline(pipeline, ClientShaders)
         }
+        logger.info("Loaded ${renderPipelines.size} Render Pipelines.")
     }
 
 }

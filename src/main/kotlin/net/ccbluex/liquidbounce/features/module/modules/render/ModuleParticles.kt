@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -129,14 +129,11 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
-            mc.gameRenderer.lightmapTextureManager.disable()
-
             for (particle in particles) {
                 if (!particle.visible) continue
 
                 particle.render(event.partialTicks)
             }
-            mc.gameRenderer.lightmapTextureManager.enable()
         }
     }
 
@@ -163,7 +160,9 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
          */
         DOLLAR("Dollar", LiquidBounce.resource("particles/dollar.png").toNativeImage());
 
-        val texture = this.image.asTexture { choiceName }
+        private val texture = this.image.asTexture { choiceName }
+
+        val textureView: GpuTextureView = texture.glTextureView
     }
 
     private class Particle(var pos: Vec3d, val particleImage: ParticleImage) {
@@ -223,7 +222,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         fun render(partialTicks: Float) {
             val interpPos = prevPos.lerp(pos, partialTicks.toDouble())
             env.withPositionRelativeToCamera(interpPos) {
-                RenderSystem.setShaderTexture(0, particleImage.texture.glTexture)
+                env.shaderTextures[0] = particleImage.textureView
 
                 val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - spawnTime) / 12000f)
                 val rotation = if (rotate) {

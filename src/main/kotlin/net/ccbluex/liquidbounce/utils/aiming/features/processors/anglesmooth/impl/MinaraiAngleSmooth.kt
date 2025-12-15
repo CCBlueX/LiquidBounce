@@ -125,8 +125,8 @@ class MinaraiAngleSmooth(
             targetVector = targetRotation.directionVector,
             velocityDelta = velocityDelta.toVec2f(),
 
-            playerDiff = player.pos.subtract(player.lastPos),
-            targetDiff = entity?.let { entity.pos.subtract(entity.lastPos) } ?: Vec3d.ZERO,
+            playerDiff = player.entityPos.subtract(player.lastPos),
+            targetDiff = entity?.let { entity.entityPos.subtract(entity.lastPos) } ?: Vec3d.ZERO,
 
             hurtTime = entity?.let {entity.hurtTime } ?: 10,
             distance = entity?.let { player.squaredBoxedDistanceTo(entity).toFloat() } ?: 3f,

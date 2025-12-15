@@ -252,7 +252,7 @@ class BlockPlacer(
                 ),
                 FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
                 stackToPlaceWith = itemStack,
-                PlayerLocationOnPlacement(position = player.pos),
+                PlayerLocationOnPlacement(position = player.entityPos),
             )
 
             // TODO prioritize faces where sneaking is not required

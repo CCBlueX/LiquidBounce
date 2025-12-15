@@ -348,11 +348,11 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
 
         when (val packet = it.packet) {
             is BlockUpdateS2CPacket -> {
-                mc.renderTaskQueue.add { updatePosOnChange(packet.pos, packet.state) }
+                mc.submit { updatePosOnChange(packet.pos, packet.state) }
             }
 
             is ChunkDeltaUpdateS2CPacket -> {
-                mc.renderTaskQueue.add {
+                mc.submit {
                     packet.visitUpdates { pos, state -> updatePosOnChange(pos, state) }
                 }
             }

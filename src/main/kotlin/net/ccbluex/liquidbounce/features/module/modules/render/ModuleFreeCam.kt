@@ -20,10 +20,14 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -37,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -65,6 +70,18 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
     private object CameraInteract : ToggleableConfigurable(ModuleFreeCam, "AllowCameraInteract", true) {
         val lookAt by boolean("LookAt", true)
     }
+
+    /**
+     * This is useful for cancelling FreeCam on certain events.
+     * For example, when the player takes damage.
+     */
+    private enum class CancelOn(override val choiceName: String) : NamedChoice {
+        DAMAGE("Damage"),
+        MOVE("Move"),
+        LIQUID("Liquid"),
+    }
+
+    private val cancelOn by multiEnumChoice("CancelOn", emptyEnumSet<CancelOn>())
 
     /**
      * Navigation configuration for the FreeCam module
@@ -199,6 +216,30 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
 
         RotationManager.setRotationTarget(rotationsConfigurable.toRotationTarget(lookAt),
             Priority.NOT_IMPORTANT, ModuleFreeCam)
+    }
+
+    @Suppress("unused")
+    private val healthHandler = handler<HealthUpdateEvent> { event ->
+        val tookDamage = event.health < event.previousHealth
+
+        if (CancelOn.DAMAGE in cancelOn && tookDamage) {
+            this.enabled = false
+        }
+    }
+
+    @Suppress("unused")
+    private val moveHandler = handler<PlayerMoveEvent> { event ->
+        // Don't check movement.y because it's gravity / falling motion
+        if (CancelOn.MOVE in cancelOn && (event.movement.y > 0 || event.movement.z > 0)) {
+            this.enabled = false
+        }
+    }
+
+    @Suppress("unused")
+    private val tickHandler = handler<PlayerTickEvent> { event ->
+        if (CancelOn.LIQUID in cancelOn && player.isInFluid) {
+            this.enabled = false
+        }
     }
 
     fun applyCameraPosition(entity: Entity, tickDelta: Float) {

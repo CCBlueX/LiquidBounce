@@ -207,10 +207,10 @@ public abstract class MixinMinecraftClient {
             if (protocolVersion != null) {
                 titleBuilder.append(protocolVersion.getName());
             } else {
-                titleBuilder.append(SharedConstants.getGameVersion().getName());
+                titleBuilder.append(SharedConstants.getGameVersion().name());
             }
         } else {
-            titleBuilder.append(SharedConstants.getGameVersion().getName());
+            titleBuilder.append(SharedConstants.getGameVersion().name());
         }
 
         // For debugging purposes, will be removed until we have a stable release
@@ -378,8 +378,8 @@ public abstract class MixinMinecraftClient {
         }
     }
 
-    @Inject(method = "setWorld", at = @At("HEAD"))
-    private void hookWorldChangeEvent(ClientWorld world, CallbackInfo ci) {
+    @Inject(method = "setWorld(Lnet/minecraft/client/world/ClientWorld;Z)V", at = @At("HEAD"))
+    private void hookWorldChangeEvent(ClientWorld world, boolean bl, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new WorldChangeEvent(world));
     }
 

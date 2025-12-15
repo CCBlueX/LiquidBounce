@@ -47,7 +47,7 @@ object CrystalDestroyTrigger : PostPacketTrigger<EntitiesDestroyS2CPacket>("Crys
             val entity = world.getEntityById(it)
 
             // is the entity a crystal and in range?
-            entity is EndCrystalEntity && entity.pos.squaredDistanceTo(player.pos) <= maxRangeSq
+            entity is EndCrystalEntity && entity.entityPos.squaredDistanceTo(player.entityPos) <= maxRangeSq
         }
 
         // mark the packet

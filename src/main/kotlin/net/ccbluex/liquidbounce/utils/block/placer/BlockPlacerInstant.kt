@@ -61,7 +61,7 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
         ),
         FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
         stackToPlaceWith = Items.SANDSTONE.defaultStack,
-        PlayerLocationOnPlacement(position = player.pos, pose = player.pose),
+        PlayerLocationOnPlacement(position = player.entityPos, pose = player.pose),
     )
 
     val placementTarget = findBestBlockPlacementTarget(pos, searchOptions) ?: return

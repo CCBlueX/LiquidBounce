@@ -700,3 +700,7 @@ export async function setTyping(typing: boolean) {
         body: JSON.stringify({typing})
     });
 }
+
+export function itemTextureUrl(identifier: string) {
+    return `${REST_BASE}/api/v1/client/resource/itemTexture?id=${identifier}`
+}

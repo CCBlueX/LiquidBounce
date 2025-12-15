@@ -7,5 +7,24 @@
     "horizontalOffset": 0,
     "verticalAlignment": "Top",
     "verticalOffset": 0
-  }
+  },
+  "values": [
+    {
+      "type": "BOOLEAN",
+      "name": "ShowTags",
+      "value": true
+    },
+    {
+      "type": "CHOOSE",
+      "name": "ItemAlignment",
+      "value": "Right",
+      "choices": ["Left", "Right"]
+    },
+    {
+      "type": "CHOOSE",
+      "name": "Order",
+      "value": "Descending",
+      "choices": ["Ascending", "Descending"]
+    }
+  ]
 }

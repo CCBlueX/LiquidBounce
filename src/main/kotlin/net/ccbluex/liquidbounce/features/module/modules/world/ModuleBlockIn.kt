@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
@@ -54,7 +55,7 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
         arrayOf(Order.Normal, Order.Random, Order.BottomTop, Order.TopBottom)
     }
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val blocks by blocks("Blocks", hashSetOf())
+    private val blocks by blocks("Blocks", blockSortedSetOf())
 
     private sealed class Order(name: String) : Choice(name) {
         override val parent: ChoiceConfigurable<*>

@@ -30,7 +30,7 @@ public class MixinStringHelper {
      * @reason .
      */
     @Overwrite
-    public static boolean isValidChar(char chr) {
+    public static boolean isValidChar(int chr) {
         return chr >= ' ' && chr != 127;
     }
 

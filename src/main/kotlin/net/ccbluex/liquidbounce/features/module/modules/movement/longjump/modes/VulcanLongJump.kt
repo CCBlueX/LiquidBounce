@@ -72,17 +72,17 @@ internal object VulcanLongJump : Choice("Vulcan289") {
         if (started) {
             if (recievedLagback) {
                 player.velocity.y = 1.0
-                player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
+                player.setPosition(player.entityPos.x, player.entityPos.y + 8, player.entityPos.z)
                 player.velocity = player.velocity.withStrafe(strength = 1.0, speed = 4.2)
                 recievedLagback = false
             }
 
             when (player.hurtTime) {
                 10 -> {
-                    player.setPosition(player.pos.x, player.pos.y - 0.5, player.pos.z)
+                    player.setPosition(player.entityPos.x, player.entityPos.y - 0.5, player.entityPos.z)
                 }
                 5 -> {
-                    player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
+                    player.setPosition(player.entityPos.x, player.entityPos.y + 8, player.entityPos.z)
                     player.velocity = player.velocity.withStrafe(strength = 1.0, speed = 0.3)
                     started = false
                     ModuleLongJump.jumped = true
@@ -104,9 +104,9 @@ internal object VulcanLongJump : Choice("Vulcan289") {
                 for (position in jumpingSequence) {
                     network.sendPacket(
                         PlayerMoveC2SPacket.PositionAndOnGround(
-                            player.pos.x,
-                            player.pos.y + position,
-                            player.pos.z,
+                            player.entityPos.x,
+                            player.entityPos.y + position,
+                            player.entityPos.z,
                             false,
                             false
                         )

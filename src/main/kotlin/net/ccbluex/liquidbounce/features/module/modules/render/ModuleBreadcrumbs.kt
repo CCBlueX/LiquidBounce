@@ -200,7 +200,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
 
         private fun calculatePoint(camera: Camera, x: Double, y: Double, z: Double): Vector3f {
             val point = Vector3f(x.toFloat(), y.toFloat(), z.toFloat())
-            point.sub(camera.pos.x.toFloat(), camera.pos.y.toFloat(), camera.pos.z.toFloat())
+            point.sub(camera.cameraPos.x.toFloat(), camera.cameraPos.y.toFloat(), camera.cameraPos.z.toFloat())
             return point
         }
 

@@ -149,7 +149,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
             ?: return
 
         renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(this, target, partialTicks)
+            targetRenderer.render(target, partialTicks)
         }
     }
 

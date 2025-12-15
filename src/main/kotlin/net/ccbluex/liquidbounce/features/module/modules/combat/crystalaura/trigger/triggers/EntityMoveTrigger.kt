@@ -36,7 +36,7 @@ object EntityMoveTrigger : PostPacketTrigger<EntityPositionS2CPacket>("EntityMov
 
     override fun postPacketHandler(packet: EntityPositionS2CPacket) {
         val entity = world.getEntityById(packet.entityId) ?: return
-        if (player.eyePos.squaredDistanceTo(entity.pos) > ModuleCrystalAura.targetTracker.maxRange.sq()) {
+        if (player.eyePos.squaredDistanceTo(entity.entityPos) > ModuleCrystalAura.targetTracker.maxRange.sq()) {
             return
         }
 

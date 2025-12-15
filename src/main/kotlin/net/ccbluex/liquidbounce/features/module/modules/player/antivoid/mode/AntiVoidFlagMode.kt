@@ -46,7 +46,7 @@ object AntiVoidFlagMode : AntiVoidMode("Flag") {
                     event.state == EventState.PRE
                 }
             } else {
-                player.setPosition(player.pos.add(0.0, height.toDouble(), 0.0))
+                player.setPosition(player.entityPos.add(0.0, height.toDouble(), 0.0))
             }
             return true
         }

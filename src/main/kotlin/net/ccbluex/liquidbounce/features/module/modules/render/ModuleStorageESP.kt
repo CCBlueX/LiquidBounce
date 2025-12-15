@@ -74,7 +74,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         fun shouldRender(entity: Entity): Boolean =
             this.running
-                && entity.pos.cameraDistanceSq() < maximumDistance.sq()
+                && entity.entityPos.cameraDistanceSq() < maximumDistance.sq()
 
         object Chest : ChestType("Chest", Color4b(0, 100, 255))
         object EnderChest : ChestType("EnderChest", Color4b(Color.MAGENTA))
@@ -279,7 +279,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     }
 
     @JvmStatic
-    fun Entity.categorize(): ChestType? {
+    fun Entity?.categorize(): ChestType? {
         return when (this) {
             // This includes any storage type minecart entity including ChestMinecartEntity
             is HopperMinecartEntity -> ChestType.Hopper
@@ -292,7 +292,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     }
 
     @JvmStatic
-    fun BlockEntity.categorize(): ChestType? {
+    fun BlockEntity?.categorize(): ChestType? {
         return when (this) {
             is ChestBlockEntity, is BarrelBlockEntity -> ChestType.Chest
             is EnderChestBlockEntity -> ChestType.EnderChest

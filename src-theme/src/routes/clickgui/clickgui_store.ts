@@ -7,6 +7,8 @@ export interface TDescription {
     y: number;
 }
 
+export const os: Writable<string | null> = writable<string | null>(null);
+
 export const description: Writable<TDescription | null> = writable(null);
 
 export const maxPanelZIndex: Writable<number> = writable(0);

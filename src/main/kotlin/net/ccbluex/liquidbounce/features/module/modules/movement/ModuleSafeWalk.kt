@@ -114,7 +114,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
                             ModuleDebug.DebuggedPoint(center, Color4b.BLUE, 0.05)
                         }
 
-                        val currentDistance = center.subtract(player.pos).horizontalLengthSquared()
+                        val currentDistance = center.subtract(player.entityPos).horizontalLengthSquared()
                         val nextDistance = center.subtract(nextTick.pos).horizontalLengthSquared()
 
                         debugParameter("CurrentDistance") { currentDistance }
@@ -147,7 +147,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
                     (mode == Mode.CENTER || player.sqrtSpeed > 0.05) -> {
                         val center = center ?: player.blockPos.toBottomCenterPos()
                         val degrees = getDegreesRelativeToView(
-                            center.subtract(player.pos),
+                            center.subtract(player.entityPos),
                             player.yaw
                         )
                         event.directionalInput = getDirectionalInputForDegrees(

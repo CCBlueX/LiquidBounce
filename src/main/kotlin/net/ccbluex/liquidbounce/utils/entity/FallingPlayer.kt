@@ -68,7 +68,7 @@ class FallingPlayer(
         }
 
 
-        val j: Float = this.player.pitch * MathHelper.RADIANS_PER_DEGREE
+        val j: Double = this.player.pitch.toDouble() * MathHelper.RADIANS_PER_DEGREE
 
         val k = sqrt(rotationVec.x * rotationVec.x + rotationVec.z * rotationVec.z)
         val l = sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ)
@@ -86,7 +86,7 @@ class FallingPlayer(
             vec3d5 = vec3d5.add(rotationVec.x * q / k, q, rotationVec.z * q / k)
         }
 
-        if (j < 0.0f && k > 0.0) {
+        if (j < 0.0 && k > 0.0) {
             q = l * (-MathHelper.sin(j)).toDouble() * 0.04
             vec3d5 = vec3d5.add(-rotationVec.x * q / k, q * 3.2, -rotationVec.z * q / k)
         }

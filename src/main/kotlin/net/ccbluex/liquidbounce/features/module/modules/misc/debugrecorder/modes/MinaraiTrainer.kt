@@ -94,8 +94,8 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
                             from = player.eyePos
                         ).directionVector,
                         velocityDelta = current.rotationDeltaTo(next).toVec2f(),
-                        playerDiff = player.pos.subtract(player.lastPos),
-                        targetDiff = target.pos.subtract(target.lastPos),
+                        playerDiff = player.entityPos.subtract(player.lastPos),
+                        targetDiff = target.entityPos.subtract(target.lastPos),
                         age = target.age,
                         hurtTime = target.hurtTime,
                         distance = distance

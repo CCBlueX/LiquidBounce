@@ -53,7 +53,7 @@ object ModuleMobOwners : ClientModule("MobOwners", Category.RENDER) {
         val ownerId = when {
             entity is TameableEntity -> entity.ownerReference?.uuid
             entity is HorseEntity -> entity.ownerReference?.uuid
-            entity is ProjectileEntity && projectiles -> entity.ownerUuid
+            entity is ProjectileEntity && projectiles -> entity.owner?.uuid
             else -> null
         } ?: return null
 

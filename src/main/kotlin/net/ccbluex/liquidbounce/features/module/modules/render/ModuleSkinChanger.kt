@@ -42,17 +42,22 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.registerTexture
+import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.network.PlayerListEntry
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.util.SkinTextures
+import net.minecraft.entity.player.PlayerSkinType
+import net.minecraft.entity.player.SkinTextures
+import net.minecraft.util.AssetInfo
+import net.minecraft.util.Identifier
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
 object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
     /**
-     * Changes the player model by forcefully modifying [PlayerEntity.getSkinTextures],
+     * Changes the player model by forcefully modifying
+     * [net.minecraft.client.network.AbstractClientPlayerEntity.getSkin],
      * as PlayerListEntry is unreliable on some servers.
      */
     private val allowMixinAbstractClientPlayerEntity by boolean("ForceOverride", false)
@@ -102,9 +107,9 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
             private suspend fun textureSupplier(username: String): Supplier<SkinTextures> {
                 val profile = withContext(Dispatchers.IO) {
-                    val uuid = GameProfileRepository().fetchUuidByUsername(username)
+                    val uuid = GameProfileRepository.Default.fetchUuidByUsername(username)
                         ?: generateOfflinePlayerUuid(username)
-                    mc.sessionService.fetchProfile(uuid, false)?.profile
+                    mc.apiServices.sessionService.fetchProfile(uuid, false)?.profile
                         ?: GameProfile(uuid, username)
                 }
 
@@ -112,34 +117,44 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             }
         }
 
-        object File : Mode("File") {
+        object File : Mode("File"), AssetInfo.TextureAsset {
             private val image = file("Image")
 
-            private val model by enumChoice("Model", ModelChoice.WIDE)
+            private val skinType by enumChoice("Model", ModelChoice.WIDE)
 
             private val identifier = LiquidBounce.identifier("skin-changer-from-file")
 
+            override fun id() = identifier
+
+            override fun texturePath() = identifier
+
             private enum class ModelChoice(
                 override val choiceName: String,
-                val model: SkinTextures.Model,
+                val type: PlayerSkinType,
             ) : NamedChoice {
-                SLIM("Slim", SkinTextures.Model.SLIM),
-                WIDE("Default", SkinTextures.Model.WIDE),
+                SLIM("Slim", PlayerSkinType.SLIM),
+                WIDE("Default", PlayerSkinType.WIDE),
             }
 
-            override var skinTextures: Supplier<SkinTextures>? = null
+            override val skinTextures = Supplier {
+                SkinTextures(
+                    this, // body
+                    null, // cape
+                    null, // elytra
+                    skinType.type,
+                    false,
+                )
+            }
 
             init {
                 image.asStateFlow().filter { it.isFile }.debounceUntilInGame { file ->
                     // New texture will replace the old one
                     val nativeImage = withContext(Dispatchers.IO) {
-                        NativeImage.read(file.inputStream())
+                        file.inputStream().toNativeImage()
                     }
 
-                    nativeImage.registerTexture(identifier)
-
-                    skinTextures = Supplier {
-                        SkinTextures(identifier, null, null, null, model.model, false)
+                    withContext(Dispatchers.Minecraft) {
+                        nativeImage.registerTexture(identifier)
                     }
                 }
             }

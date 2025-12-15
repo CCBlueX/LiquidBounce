@@ -27,7 +27,8 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.util.SkinTextures;
+import net.minecraft.entity.player.SkinTextures;
+import net.minecraft.util.AssetInfo;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -68,8 +69,8 @@ public abstract class MixinPlayerListEntry {
         }
 
         if (capeTexture != null) {
-            return new SkinTextures(original.texture(), original.textureUrl(), capeTexture,
-                    original.elytraTexture(), original.model(), original.secure());
+            return new SkinTextures(original.body(), new AssetInfo.TextureAssetInfo(capeTexture),
+                    original.elytra(), original.model(), original.secure());
         }
 
         liquid_bounce$fetchCapeTexture();

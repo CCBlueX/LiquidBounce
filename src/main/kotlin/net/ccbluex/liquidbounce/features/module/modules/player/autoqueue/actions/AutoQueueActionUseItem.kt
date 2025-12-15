@@ -19,37 +19,16 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.AutoQueueItemMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import java.util.function.Predicate
 
 object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
 
     private val mode = choices("Mode", 0) {
-        arrayOf(Mode.Name, Mode.Item)
-    }
-
-    private sealed class Mode(name: String) : Choice(name), Predicate<ItemStack> {
-        final override val parent: ChoiceConfigurable<*>
-            get() = mode
-
-        object Name : Mode("Name") {
-            private val stackName by text("Name", "Paper")
-            override fun test(itemStack: ItemStack): Boolean =
-                itemStack.name.string.contains(stackName)
-        }
-
-        object Item : Mode("Item") {
-            private val slotItem by item("Item", Items.PAPER)
-            override fun test(itemStack: ItemStack): Boolean =
-                itemStack.isOf(slotItem)
-        }
+        arrayOf(AutoQueueItemMode.ByName(it), AutoQueueItemMode.ByItem(it))
     }
 
     override suspend fun execute() {

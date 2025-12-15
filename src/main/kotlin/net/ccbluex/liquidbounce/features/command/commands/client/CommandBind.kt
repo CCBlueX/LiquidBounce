@@ -20,15 +20,22 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.enumChoice
 import net.ccbluex.liquidbounce.features.command.builder.module
 import net.ccbluex.liquidbounce.features.command.dsl.addParam
 import net.ccbluex.liquidbounce.features.command.dsl.buildCommand
 import net.ccbluex.liquidbounce.features.command.dsl.cast
+import net.ccbluex.liquidbounce.features.command.dsl.castNotRequired
+import net.ccbluex.liquidbounce.features.command.dsl.castVarargNotRequired
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.input.availableInputKeys
 import net.ccbluex.liquidbounce.utils.input.bind
+import net.ccbluex.liquidbounce.utils.input.inputByName
+import net.ccbluex.liquidbounce.utils.input.renderText
 import net.ccbluex.liquidbounce.utils.input.unbind
+import net.ccbluex.liquidbounce.utils.kotlin.toEnumSet
 
 /**
  * Bind Command
@@ -48,9 +55,22 @@ object CommandBind : Command.Factory {
                 .required()
         }
 
+        val action = addParam {
+            enumChoice<InputBind.BindAction>("action")
+                .optional()
+        }
+
+        val modifiers = addParam {
+            enumChoice<InputBind.Modifier>("modifiers")
+                .optional()
+                .vararg()
+        }
+
         handler {
             val module = module.cast()
             val keyName = key.cast()
+            val action = action.castNotRequired() ?: module.bindValue.get().action
+            val modifiers = modifiers.castVarargNotRequired()?.toEnumSet() ?: module.bindValue.get().modifiers
 
             if (keyName.equals("none", true)) {
                 module.bindValue.unbind()
@@ -63,11 +83,11 @@ object CommandBind : Command.Factory {
             }
 
             runCatching {
-                module.bindValue.bind(keyName)
+                module.bindValue.bind(inputByName(keyName), action, modifiers)
                 ModuleClickGui.reload()
             }.onSuccess {
                 chat(
-                    regular(command.result("moduleBound", variable(module.name), variable(module.bind.keyName))),
+                    regular(command.result("moduleBound", variable(module.name), module.bind.renderText())),
                     metadata = MessageMetadata(id = "Bind#${module.name}")
                 )
             }.onFailure {

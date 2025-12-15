@@ -136,7 +136,7 @@ object CriticalsJump : Choice("Jump") {
         val (simulatedPlayerPos, simulatedTargetPos) = if (target is PlayerEntity) {
             predictPlayerPos(target, ticksTillCrit.toInt())
         } else {
-            player.pos to target.pos
+            player.entityPos to target.entityPos
         }
 
         ModuleDebug.debugParameter(ModuleCriticals, "timeToCrit", ticksTillCrit)
@@ -166,7 +166,7 @@ object CriticalsJump : Choice("Jump") {
 
     private fun calculateTicksUntilNextCrit(): Float {
         val durationToWait = player.attackCooldownProgressPerTick * 0.9F - 0.5F
-        val waitedDuration = player.lastAttackedTicks.toFloat()
+        val waitedDuration = player.ticksSinceLastAttack.toFloat()
 
         return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
     }
@@ -196,7 +196,7 @@ object CriticalsJump : Choice("Jump") {
         for (i in 0 until ticks) {
             // Rotate to the target after some time
             if (i == reactionTime) {
-                simulatedPlayer.yaw = Rotation.lookingAt(point = target.pos, from = simulatedPlayer.pos).yaw
+                simulatedPlayer.yaw = Rotation.lookingAt(point = target.entityPos, from = simulatedPlayer.pos).yaw
             }
 
             simulatedPlayer.tick()

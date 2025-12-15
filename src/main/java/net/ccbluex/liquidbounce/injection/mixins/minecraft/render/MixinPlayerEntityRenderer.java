@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.PlayerLikeEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 import org.spongepowered.asm.mixin.Mixin;
@@ -33,8 +33,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(PlayerEntityRenderer.class)
 public class MixinPlayerEntityRenderer  {
 
-    @Inject(method = "getArmPose(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/util/Hand;)Lnet/minecraft/client/render/entity/model/BipedEntityModel$ArmPose;", at = @At("HEAD"), cancellable = true)
-    private static void injectArmPose(PlayerEntity player, ItemStack stack, Hand hand, CallbackInfoReturnable<BipedEntityModel.ArmPose> cir) {
+    @Inject(method = "getArmPose(Lnet/minecraft/entity/PlayerLikeEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/util/Hand;)Lnet/minecraft/client/render/entity/model/BipedEntityModel$ArmPose;", at = @At("HEAD"), cancellable = true)
+    private static void injectArmPose(PlayerLikeEntity player, ItemStack stack, Hand hand, CallbackInfoReturnable<BipedEntityModel.ArmPose> cir) {
         if (hand == Hand.OFF_HAND && player == MinecraftClient.getInstance().player && ModuleSwordBlock.INSTANCE.shouldHideOffhand()) {
             cir.setReturnValue(BipedEntityModel.ArmPose.EMPTY);
         }

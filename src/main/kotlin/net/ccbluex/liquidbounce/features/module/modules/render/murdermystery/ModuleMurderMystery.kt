@@ -143,12 +143,12 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
 
         val col = when (playerType) {
             MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> {
-                entity.scoreboard.getTeam(entity.gameProfile.name)?.prefix = Text.literal("§b[BOW] ")
+                entity.scoreboardTeam?.prefix = Text.literal("§b[BOW] ")
                 Color4b(0, 144, 255)
             }
 
             MurderMysteryMode.PlayerType.MURDERER -> {
-                entity.scoreboard.getTeam(entity.gameProfile.name)?.prefix = Text.literal("§c[MURD] ")
+                entity.scoreboardTeam?.prefix = Text.literal("§c[MURD] ")
                 Color4b(203, 9, 9)
             }
 
@@ -169,7 +169,7 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         val isSword = MurderMysterySwordDetection.isSword(itemStack)
         val isBow = itemStack.item is BowItem
 
-        val locationSkin = entity.skinTextures.texture
+        val locationSkin = entity.skin.body.texturePath()
 
         when {
             isSword -> currentMode.handleHasSword(entity, locationSkin)

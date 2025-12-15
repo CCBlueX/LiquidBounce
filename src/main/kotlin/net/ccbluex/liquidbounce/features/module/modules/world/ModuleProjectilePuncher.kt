@@ -101,7 +101,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
                 continue
             }
 
-            val nextTickFireballPosition = entity.pos + entity.pos - entity.lastPos
+            val nextTickFireballPosition = entity.entityPos + entity.entityPos - entity.lastPos
 
             val entityBox = entity.dimensions.getBoxAt(nextTickFireballPosition)
             val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyePos)
@@ -134,7 +134,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
             return false
         }
 
-        val fireballVelocity = entity.pos - entity.lastPos
+        val fireballVelocity = entity.entityPos - entity.lastPos
 
         // If the fireball is not moving the player can obviously not be hit. Additionally the code below only works if
         // the fireball is moving.
@@ -143,7 +143,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
         }
 
         // Check if the fireball is going towards the player
-        val vecToPlayer = player.box.center - entity.pos
+        val vecToPlayer = player.box.center - entity.entityPos
 
         val dot = vecToPlayer.dotProduct(fireballVelocity)
 
@@ -152,10 +152,10 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
 
         val extendedHitbox = player.box.expand(entity.box.lengthX / 2.0)
 
-        // If the fireball was already inside of the player's hitbox, but would be moving away from the player, this
-        // would unecessarily trigger the player to attack the fireball.
-        val touchesHitbox = extendedHitbox.raycast(entity.pos, fireballVelocity * 20.0).isPresent
-        val willHitPlayer = !extendedHitbox.contains(entity.pos) && touchesHitbox
+        // If the fireball was already inside the player's hitbox, but would be moving away from the player, this
+        // would unnecessarily trigger the player to attack the fireball.
+        val touchesHitbox = extendedHitbox.raycast(entity.entityPos, fireballVelocity * 20.0).isPresent
+        val willHitPlayer = !extendedHitbox.contains(entity.entityPos) && touchesHitbox
 
         // We need two checks in order to prevent following situation: The fireball is very close to the player and
         // moving towards their feet. The moving towards player check would fail since the velocity line is not similar

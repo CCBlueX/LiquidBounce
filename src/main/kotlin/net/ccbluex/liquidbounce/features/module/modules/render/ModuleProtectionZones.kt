@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.google.common.collect.Ordering
-import com.google.common.collect.Sets
 import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.fastutil.synchronized
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
@@ -61,7 +62,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
 
     private val protBlocks by blocks(
         "ProtectionBlocks",
-        Sets.newConcurrentHashSet<Block>().apply { add(Blocks.EMERALD_BLOCK) },
+        blockSortedSetOf(Blocks.EMERALD_BLOCK).synchronized(),
     ).onChange {
         if (running) {
             onDisabled()
@@ -233,16 +234,16 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         val centers = nearestCenters(
             centers = BlockTracker.allPositions(),
             limit = Renderer.renderLimit,
-            playerPos = player.pos,
+            playerPos = player.entityPos,
         )
         if (centers.isEmpty()) return@handler
 
         val zones = computeZones(centers, world)
-        val highlightIndex = findHighlightIndex(zones, playerPos = player.pos)
+        val highlightIndex = findHighlightIndex(zones, playerPos = player.entityPos)
 
         renderEnvironmentForWorld(e.matrixStack) {
             startBatch()
-            val camOffset = mc.entityRenderDispatcher.camera.pos.negate()
+            val camOffset = mc.entityRenderDispatcher.camera?.cameraPos?.negate() ?: return@handler
             drawZones(zones, centers, highlightIndex, camOffset)
             if (holdingProt) {
                 drawIndicator(centers, zones, camOffset)

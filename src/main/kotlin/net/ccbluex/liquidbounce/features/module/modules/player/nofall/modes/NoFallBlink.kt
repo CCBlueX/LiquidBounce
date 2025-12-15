@@ -111,7 +111,7 @@ internal object NoFallBlink : NoFallMode("Blink") {
                     NotificationEvent.Severity.INFO)
                 blinkFall = true
 
-                ModuleDebug.debugGeometry(ModuleNoFall, "Ground", ModuleDebug.DebuggedPoint(player.pos,
+                ModuleDebug.debugGeometry(ModuleNoFall, "Ground", ModuleDebug.DebuggedPoint(player.entityPos,
                     Color4b(0, 0, 255, 255), size = 0.2))
                 break
             }

@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.minecraft.client.render.MapRenderState;
 import net.minecraft.client.render.MapRenderer;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.map.MapDecoration;
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,7 +45,7 @@ public class MixinMapRenderer {
     }
 
     @Inject(method = "draw", at = @At("HEAD"), cancellable = true)
-    private void hookMapContents(MapRenderState state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, boolean bl, int light, CallbackInfo ci) {
+    private void hookMapContents(MapRenderState state, MatrixStack matrices, OrderedRenderCommandQueue queue, boolean bl, int light, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.MAP_CONTENTS)) {
             ci.cancel();
         }

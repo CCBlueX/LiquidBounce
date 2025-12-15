@@ -38,11 +38,13 @@ object ColorUtils {
     }
 }
 
-fun rainbow(): Color4b {
+@JvmOverloads
+fun rainbow(alpha: Float = 1f): Color4b {
     return Color4b.ofHSB(
         hue = (System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F,
         saturation = 1F,
         brightness = 1F,
+        alpha = alpha,
     )
 }
 

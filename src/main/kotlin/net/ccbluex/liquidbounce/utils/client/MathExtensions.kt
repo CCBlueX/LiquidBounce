@@ -29,15 +29,19 @@ import org.joml.Vector2f
 import java.math.RoundingMode
 
 inline fun Float.toRadians() = this * MathHelper.RADIANS_PER_DEGREE
+inline fun Double.toRadians() = this * MathHelper.RADIANS_PER_DEGREE
 inline fun Float.toDegrees() = this * MathHelper.DEGREES_PER_RADIAN
+inline fun Double.toDegrees() = this * MathHelper.DEGREES_PER_RADIAN
 
 inline fun Float.floorToInt() = MathHelper.floor(this)
 inline fun Double.floorToInt() = MathHelper.floor(this)
 inline fun Float.ceilToInt() = MathHelper.ceil(this)
 inline fun Double.ceilToInt() = MathHelper.ceil(this)
 
-inline fun Float.fastSin() = MathHelper.sin(this)
-inline fun Float.fastCos() = MathHelper.cos(this)
+inline fun Float.fastSin() = toDouble().fastSin()
+inline fun Double.fastSin() = MathHelper.sin(this)
+inline fun Float.fastCos() = toDouble().fastCos()
+inline fun Double.fastCos() = MathHelper.cos(this)
 
 fun Box.getFace(direction: Direction): AlignedFace {
     return when (direction) {
