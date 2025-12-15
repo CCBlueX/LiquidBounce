@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.widget;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.minecraft.client.gui.DrawContext;
@@ -35,7 +34,6 @@ public class MixinEntryListWidget {
     @WrapWithCondition(method = "renderWidget",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/widget/EntryListWidget;drawHeaderAndFooterSeparators(Lnet/minecraft/client/gui/DrawContext;)V"))
     private boolean renderBackground(EntryListWidget instance, DrawContext context) {
-        // TODO(1.21.10-port): the boolean is gone, IDK what else to do.
         return HideAppearance.INSTANCE.isHidingNow();
     }
 
