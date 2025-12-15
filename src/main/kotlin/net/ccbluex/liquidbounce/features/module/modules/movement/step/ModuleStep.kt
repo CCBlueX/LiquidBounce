@@ -62,8 +62,8 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
             get() = modes
 
         @Suppress("unused")
-        private val autoJumpHandler = handler<AutoJumpEvent> { event ->
-            event.autoJump = true
+        private val autoJumpHandler = handler<AllowAutoJumpEvent> { event ->
+            event.isAllowed = true
         }
 
     }

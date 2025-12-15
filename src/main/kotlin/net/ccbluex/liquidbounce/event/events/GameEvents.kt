@@ -105,9 +105,9 @@ class UseCooldownEvent(
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 
-@Nameable("autoJump")
-class AutoJumpEvent(
-    var autoJump: Boolean,
+@Nameable("allowAutoJump")
+class AllowAutoJumpEvent(
+    var isAllowed: Boolean,
 ) : Event()
 
 /**

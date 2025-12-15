@@ -351,8 +351,8 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity implemen
     }
 
     @ModifyReturnValue(method = "isAutoJumpEnabled", at = @At("RETURN"))
-    private boolean injectLegitStep(boolean original) {
-        return EventManager.INSTANCE.callEvent(new AutoJumpEvent(original)).getAutoJump();
+    private boolean injectAutoJumpAllowed(boolean original) {
+        return EventManager.INSTANCE.callEvent(new AllowAutoJumpEvent(original)).isAllowed();
     }
 
     @Inject(method = "swingHand", at = @At("HEAD"), cancellable = true)
