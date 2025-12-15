@@ -132,7 +132,7 @@ object Esp2DMode : EspMode("2D") {
                             outlineThickness, outlineColor)
 
                         if (Border.enabled) {
-                            translate(-2 * borderThickness, 0.0f, 0.0f)
+                            translate(-2 * borderThickness, 0.0f)
                         }
                     }
 
