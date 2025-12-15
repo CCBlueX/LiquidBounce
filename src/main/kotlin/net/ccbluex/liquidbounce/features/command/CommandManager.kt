@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.command
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
+import it.unimi.dsi.fastutil.objects.ObjectArrays
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -261,6 +262,7 @@ object CommandManager : Collection<Command> by commandSet {
 
         // The index the command is in
         val idx = pair.second
+        val remainingArgsCount = args.size - idx - 1
 
         // If there are more arguments for a command that takes no parameters
         if (command.parameters.isEmpty() && idx != args.size - 1) {
@@ -271,24 +273,24 @@ object CommandManager : Collection<Command> by commandSet {
         }
 
         // If there is a required parameter after the supply of arguments ends, it is absent
-        if (args.size - idx - 1 < command.parameters.size && command.parameters[args.size - idx - 1].required) {
+        if (remainingArgsCount < command.parameters.size && command.parameters[remainingArgsCount].required) {
             throw CommandException(
                 translation(
                     "liquidbounce.commandManager.parameterRequired",
-                    command.parameters[args.size - idx - 1].name
+                    command.parameters[remainingArgsCount].name
                 ),
                 usageInfo = command.usage()
             )
         }
 
         // The values of the parameters. One for each parameter
-        val parsedParameters = arrayOfNulls<Any>(args.size - idx - 1)
+        val parsedParameters = arrayOfNulls<Any>(remainingArgsCount)
 
         // If the last parameter is a vararg, there might be no argument for it.
         // In this case, its value might be null, which is against the specification.
         // To fix this, if the last parameter is a vararg, initialize it with an empty array
-        if (command.parameters.lastOrNull()?.vararg == true && command.parameters.size > args.size - idx) {
-            parsedParameters[command.parameters.size - 1] = emptyArray<Any>()
+        if (command.parameters.lastOrNull()?.vararg == true && command.parameters.size == remainingArgsCount) {
+            parsedParameters[remainingArgsCount - 1] = ObjectArrays.EMPTY_ARRAY
         }
 
         for (i in (idx + 1) until args.size) {

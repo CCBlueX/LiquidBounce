@@ -24,9 +24,18 @@ import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.client.util.InputUtil
+import net.minecraft.text.HoverEvent
+import net.minecraft.text.Text
 import net.minecraft.util.Util
 import org.lwjgl.glfw.GLFW
 
@@ -171,12 +180,12 @@ data class InputBind(
          * Performs the platform (OS) specified render name of a modifier.
          */
         val platformRenderName: String get() = when (Util.getOperatingSystem()) {
-            Util.OperatingSystem.OSX -> when (this) {
+            Util.OperatingSystem.WINDOWS -> when (this) {
                 CONTROL -> "Ctrl"
                 SUPER -> "\u229e"
                 else -> choiceName
             }
-            Util.OperatingSystem.WINDOWS -> when (this) {
+            Util.OperatingSystem.OSX -> when (this) {
                 SHIFT -> "\u21e7"
                 CONTROL -> "^"
                 ALT -> "\u2325"
@@ -227,10 +236,30 @@ fun Value<InputBind>.bind(name: String) = set(get().copy(boundKey = inputByName(
 /**
  * Binds to the given input type and code.
  */
-fun Value<InputBind>.bind(key: InputUtil.Key, action: InputBind.BindAction) =
-    set(get().copy(boundKey = key, action = action))
+fun Value<InputBind>.bind(key: InputUtil.Key, action: InputBind.BindAction, modifiers: Set<InputBind.Modifier>) =
+    set(get().copy(boundKey = key, action = action, modifiers = modifiers))
 
 /**
  * Unbinds the key by setting it to UNKNOWN_KEY.
  */
 fun Value<InputBind>.unbind() = set(InputBind.UNBOUND)
+
+fun InputBind.renderText(): Text = buildList {
+    add(
+        inputByName(keyName).let { key ->
+            variable(key.localizedText.copy()).bold(true)
+                .copyable(copyContent = key.translationKey)
+        }
+    )
+
+    val divider = regular(" + ")
+    if (modifiers.isNotEmpty()) {
+        modifiers.forEach {
+            add(divider)
+            add(variable(it.platformRenderName).onHover(HoverEvent.ShowText(it.choiceName.asPlainText())))
+        }
+    }
+    add(regular(" ("))
+    add(variable(action.choiceName))
+    add(regular(")"))
+}.asText()
