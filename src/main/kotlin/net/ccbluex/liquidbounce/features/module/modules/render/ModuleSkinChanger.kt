@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.api.core.renderScope
 import net.ccbluex.liquidbounce.api.thirdparty.PlayerSkinApi
 import net.ccbluex.liquidbounce.authlib.utils.generateOfflinePlayerUuid
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
+import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
@@ -47,13 +48,12 @@ import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.network.PlayerListEntry
-import net.minecraft.client.session.Session
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.util.SkinTextures
-import net.minecraft.util.Identifier
+import net.minecraft.entity.player.PlayerSkinType
+import net.minecraft.entity.player.SkinTextures
+import net.minecraft.util.AssetInfo
+import java.io.IOException
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
-import java.io.IOException
 
 object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
@@ -148,19 +148,21 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
             override suspend fun uploadSkin() {
                 val uuid = withContext(Dispatchers.IO) {
-                    GameProfileRepository().fetchUuidByUsername(username.get())
+                    GameProfileRepository.Default.fetchUuidByUsername(username.get())
                 } ?: return
 
                 val profile = withContext(Dispatchers.IO) {
-                    mc.sessionService.fetchProfile(uuid, false)
+                    mc.apiServices.sessionService.fetchProfile(uuid, false)
                 } ?: return
 
-                val texture = mc.sessionService.unpackTextures(mc.sessionService.getPackedTextures(profile.profile))
+                val texture = mc.apiServices.sessionService.unpackTextures(
+                    mc.apiServices.sessionService.getPackedTextures(profile.profile)
+                )
                 val skinTexture = texture.skin ?: return
                 val variant = if (skinTexture.getMetadata("model") == "slim") {
-                    SkinTextures.Model.SLIM
+                    PlayerSkinType.SLIM
                 } else {
-                    SkinTextures.Model.WIDE
+                    PlayerSkinType.WIDE
                 }
 
                 request {
@@ -220,7 +222,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                 }
 
                 request {
-                    uploadSkin(file, model.model)
+                    uploadSkin(file, skinType.type)
                 }
             }
         }
@@ -256,11 +258,11 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
     }
 
     private fun canUploadSkin(): Boolean {
-        if (!uploadSkin.get() || mc.session.accountType == Session.AccountType.LEGACY) {
+        if (!uploadSkin.get() || mc.session.accountType == "legacy") {
             return false
         }
 
-        val sessionService = mc.sessionService
+        val sessionService = mc.apiServices.sessionService
         if (sessionService !is MixinYggdrasilMinecraftSessionServiceAccessor) {
             return false
         }
