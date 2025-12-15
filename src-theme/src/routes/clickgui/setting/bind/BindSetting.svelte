@@ -2,7 +2,6 @@
     import {createEventDispatcher, onDestroy} from "svelte";
     import type {BindModifier, BindSetting, ModuleSetting} from "../../../../integration/types";
     import {waitMatches} from "../../../../integration/ws";
-    import {getPrintableKeyName} from "../../../../integration/rest";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../../integration/events";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import BindDisplay from "./BindDisplay.svelte";
@@ -37,18 +36,6 @@
 
     let isHovered = false;
     let binding = false;
-    let printableKeyName: string | undefined;
-
-    $: {
-        if (cSetting.value.boundKey !== UNKNOWN_KEY) {
-            getPrintableKeyName(cSetting.value.boundKey)
-                .then(printableKey => {
-                    printableKeyName = printableKey.localized;
-                });
-        } else {
-            printableKeyName = undefined;
-        }
-    }
 
     /**
      * Gets the next possible event which can be used as a bind.
@@ -180,12 +167,13 @@
             {#if !binding}
                 <BindDisplay
                         bind:modifiers={cSetting.value.modifiers}
-                        bind:boundKey={printableKeyName}
+                        bind:boundKey={cSetting.value.boundKey}
                 />
             {:else if addedModifiers.size}
                 <BindDisplay
                         bind:modifiers={addedModifiers}
                         boundKey="..."
+                        literal={true}
                 />
             {:else}
                 <span>Press any key...</span>
