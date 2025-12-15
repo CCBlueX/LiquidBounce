@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.input.availableInputKeys
 import net.ccbluex.liquidbounce.utils.input.bind
 import net.ccbluex.liquidbounce.utils.input.inputByName
+import net.ccbluex.liquidbounce.utils.input.renderText
 import net.ccbluex.liquidbounce.utils.input.unbind
 import net.minecraft.client.util.InputUtil
 import net.minecraft.text.HoverEvent
@@ -96,21 +97,7 @@ object CommandBinds : Command.Factory {
                     )
                     .append(highlight(module.name).copyable())
                     .append(regular(": "))
-                    .append(
-                        inputByName(bind.keyName).let { key ->
-                            variable(key.localizedText.copy()).bold(true)
-                                .copyable(copyContent = key.translationKey)
-                        }
-                    )
-                    .apply {
-                        bind.modifiers.forEach {
-                            append(regular(" + "))
-                            append(variable(it.platformRenderName))
-                        }
-                    }
-                    .append(regular(" ("))
-                    .append(variable(bind.action.choiceName))
-                    .append(regular(")"))
+                    .append(bind.renderText())
             }
         )
 
@@ -162,29 +149,28 @@ object CommandBinds : Command.Factory {
                 .optional()
                 .build()
         )
+        .parameter(
+            ParameterBuilder.enumChoice<InputBind.Modifier>("modifiers")
+                .vararg()
+                .optional()
+                .build()
+        )
         .handler {
             val module = args[0] as ClientModule
             val keyName = args[1] as String
             val action = args.getOrNull(2) as InputBind.BindAction? ?: module.bind.action
+            val modifiers = args.getOrNull(3) as Set<InputBind.Modifier>? ?: module.bind.modifiers
 
             val bindKey = inputByName(keyName)
             if (bindKey == InputUtil.UNKNOWN_KEY) {
                 throw CommandException(command.result("unknownKey"))
             }
 
-            module.bindValue.bind(bindKey, action)
+            module.bindValue.bind(bindKey, action, modifiers)
             ModuleClickGui.reload()
             chat(
                 regular(
-                    command.result(
-                        "moduleBound", variable(module.name),
-                        textOf(
-                            variable(module.bind.keyName),
-                            regular(" ("),
-                            variable(module.bind.action.choiceName),
-                            regular(")"),
-                        )
-                    )
+                    command.result("moduleBound", variable(module.name), module.bind.renderText())
                 ), metadata = MessageMetadata(id = "Binds#${module.name}")
             )
         }
