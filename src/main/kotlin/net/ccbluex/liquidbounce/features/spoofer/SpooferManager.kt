@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
  *
  * Includes all spoofer features shown in the Multiplayer GUI.
  * Spoofers will usually allow fixes or spoof data sent to the server
- * to e.g. trick the server into thinking you are connecting from
+ * to e.g., trick the server into thinking you are connecting from
  * another client brand.
  */
 object SpooferManager : Configurable("Spoofer") {
@@ -33,7 +33,6 @@ object SpooferManager : Configurable("Spoofer") {
         tree(SpooferClient)
         tree(SpooferResourcePack)
         tree(SpooferBungeeCord)
-        tree(SpooferTranslation)
         tree(SpooferFingerprint)
     }
 }
