@@ -7,7 +7,7 @@
     import HotBar from "./elements/hotbar/HotBar.svelte";
     import Scoreboard from "./elements/Scoreboard.svelte";
     import {onMount} from "svelte";
-    import {getComponents, getGameWindow, getMetadata} from "../../integration/rest";
+    import {getClientInfo, getComponents, getGameWindow, getMetadata} from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import type {Component, Metadata} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
@@ -19,12 +19,15 @@
     import DraggableComponent from "./elements/DraggableComponent.svelte";
     import KeyBinds from "./elements/KeyBinds.svelte";
     import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
+    import {os} from "../clickgui/clickgui_store";
 
     let zoom = 100;
     let metadata: Metadata;
     let components: Component[] = [];
 
     onMount(async () => {
+        getClientInfo().then(info => os.set(info.os));
+
         const gameWindow = await getGameWindow();
         zoom = gameWindow.scaleFactor * 50;
 
