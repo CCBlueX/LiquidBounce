@@ -19,13 +19,26 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component.components
 
-import net.ccbluex.liquidbounce.integration.theme.component.Component
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak
+import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponentTweak
 import net.ccbluex.liquidbounce.utils.render.Alignment
 
-abstract class NativeComponent(
+class WebHudComponent(
     name: String,
     enabled: Boolean,
     alignment: Alignment,
-    tweaks: Array<ComponentTweak> = emptyArray()
-) : Component(name, enabled, alignment, tweaks)
+    tweaks: Array<HudComponentTweak> = emptyArray(),
+    val values: Array<JsonObject> = emptyArray()
+) : HudComponent(name, enabled, alignment, tweaks) {
+
+    override fun initConfigurable() {
+        for (value in values) {
+            json(value)
+        }
+        registerComponentListen(this)
+        super.initConfigurable()
+    }
+
+}
+

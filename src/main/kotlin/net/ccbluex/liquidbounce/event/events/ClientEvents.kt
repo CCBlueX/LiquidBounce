@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
-import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
@@ -179,7 +179,7 @@ class VirtualScreenEvent(
 class ServerPingedEvent(val server: ServerInfo) : Event(), WebSocketEvent
 
 @Nameable("componentsUpdate")
-class ComponentsUpdateEvent(val id: String? = null, val components: List<Component>) : Event(), WebSocketEvent {
+class ComponentsUpdateEvent(val id: String? = null, val components: List<HudComponent>) : Event(), WebSocketEvent {
     override val serializer get() = accessibleInteropGson
 }
 

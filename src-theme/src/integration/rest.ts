@@ -4,7 +4,7 @@ import type {
     Browser,
     ClientInfo,
     ClientUpdate,
-    Component,
+    HudComponent,
     ConfigurableSetting,
     FileSelectDialog,
     FileSelectResult,
@@ -604,7 +604,7 @@ export async function getTheme(id: string): Promise<Theme> {
 /**
  * @param id Use the ID from [getMetadata].
  */
-export async function getComponents(id: string): Promise<Component[]> {
+export async function getComponents(id: string): Promise<HudComponent[]> {
     const response = await fetch(`${API_BASE}/client/components/${id}`);
     return await response.json();
 }

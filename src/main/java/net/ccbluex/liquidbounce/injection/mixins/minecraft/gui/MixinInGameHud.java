@@ -31,9 +31,9 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
-import net.ccbluex.liquidbounce.integration.theme.component.Component;
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager;
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak;
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponent;
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager;
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponentTweak;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -84,7 +84,7 @@ public abstract class MixinInGameHud {
         EventManager.INSTANCE.callEvent(new OverlayRenderEvent(context, tickCounter.getTickProgress(false)));
 
         // Draw after overlay event
-        var component = ComponentManager.getComponentWithTweak(ComponentTweak.TWEAK_HOTBAR);
+        var component = HudComponentManager.getComponentWithTweak(HudComponentTweak.TWEAK_HOTBAR);
         if (component != null && component.getRunning() &&
                 client.interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
             drawHotbar(context, tickCounter, component);
@@ -117,7 +117,7 @@ public abstract class MixinInGameHud {
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
     private void hookFreeCamRenderCrosshairInThirdPerson(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if ((ModuleFreeCam.INSTANCE.getRunning() && ModuleFreeCam.INSTANCE.shouldDisableCameraInteract())
-                || ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_CROSSHAIR)) {
+                || HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_CROSSHAIR)) {
             ci.cancel();
         }
     }
@@ -132,28 +132,28 @@ public abstract class MixinInGameHud {
 
     @Inject(method = "renderScoreboardSidebar*", at = @At("HEAD"), cancellable = true)
     private void renderScoreboardSidebar(CallbackInfo ci) {
-        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_SCOREBOARD)) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_SCOREBOARD)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderHotbar", at = @At("HEAD"), cancellable = true)
     private void hookRenderHotbar(CallbackInfo ci) {
-        if (ComponentManager.isTweakEnabled(ComponentTweak.TWEAK_HOTBAR)) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.TWEAK_HOTBAR)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderStatusBars", at = @At("HEAD"), cancellable = true)
     private void hookRenderStatusBars(CallbackInfo ci) {
-        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_STATUS_BAR)) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_STATUS_BAR)) {
             ci.cancel();
         }
     }
 
     @ModifyReturnValue(method = "getCurrentBarType", at = @At("RETURN"))
     private InGameHud.BarType tweakExpBar(InGameHud.BarType original) {
-        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_EXP_BAR) && original == InGameHud.BarType.EXPERIENCE) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_EXP_BAR) && original == InGameHud.BarType.EXPERIENCE) {
             return InGameHud.BarType.EMPTY;
         }
         return original;
@@ -161,7 +161,7 @@ public abstract class MixinInGameHud {
 
     @WrapOperation(method = "renderMainHud", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;hasExperienceBar()Z"))
     private boolean tweakExpLevelText(ClientPlayerInteractionManager instance, Operation<Boolean> original) {
-        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_EXP_BAR)) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_EXP_BAR)) {
             return false;
         }
         return original.call(instance);
@@ -169,7 +169,7 @@ public abstract class MixinInGameHud {
 
     @Inject(method = "renderHeldItemTooltip", at = @At("HEAD"), cancellable = true)
     private void hookRenderHeldItemTooltip(CallbackInfo ci) {
-        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_HELD_ITEM_TOOL_TIP)) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_HELD_ITEM_TOOL_TIP)) {
             ci.cancel();
         }
     }
@@ -178,14 +178,14 @@ public abstract class MixinInGameHud {
     private void hookSetOverlayMessage(Text message, boolean tinted, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new OverlayMessageEvent(message, tinted));
 
-        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_OVERLAY_MESSAGE)) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_OVERLAY_MESSAGE)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderStatusEffectOverlay", at = @At("HEAD"), cancellable = true)
     private void hookRenderStatusEffectOverlay(CallbackInfo ci) {
-        if (ComponentManager.isTweakEnabled(ComponentTweak.DISABLE_STATUS_EFFECT_OVERLAY)) {
+        if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_STATUS_EFFECT_OVERLAY)) {
             ci.cancel();
         }
     }
@@ -196,7 +196,7 @@ public abstract class MixinInGameHud {
     }
 
     @Unique
-    private void drawHotbar(DrawContext context, RenderTickCounter tickCounter, Component component) {
+    private void drawHotbar(DrawContext context, RenderTickCounter tickCounter, HudComponent hudComponent) {
         var playerEntity = this.getCameraPlayer();
         if (playerEntity == null) {
             return;
@@ -204,7 +204,7 @@ public abstract class MixinInGameHud {
 
         var itemWidth = 22.5;
         var offset = 98;
-        var bounds = component.getAlignment().getBounds(0, 0);
+        var bounds = hudComponent.getAlignment().getBounds(0, 0);
 
         int center = (int) bounds.xMin();
         var y = bounds.yMin() - 12;

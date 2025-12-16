@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
-import net.ccbluex.liquidbounce.integration.theme.component.components.NativeComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.NativeHudComponent
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -48,7 +48,7 @@ import net.minecraft.util.math.Vec2f
 import java.util.EnumSet
 import kotlin.math.ceil
 
-object MinimapComponent : NativeComponent("Minimap", false, Alignment(
+object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     horizontalAlignment = Alignment.ScreenAxisX.LEFT,
     horizontalOffset = 7,
     verticalAlignment = Alignment.ScreenAxisY.TOP,
