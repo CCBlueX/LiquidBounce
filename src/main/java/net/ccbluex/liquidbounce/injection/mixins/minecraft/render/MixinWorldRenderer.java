@@ -45,8 +45,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Objects;
-
 @Mixin(WorldRenderer.class)
 public abstract class MixinWorldRenderer {
 
@@ -68,12 +66,15 @@ public abstract class MixinWorldRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     private void onRender(ObjectAllocator allocator, RenderTickCounter tickCounter, boolean renderBlockOutline, Camera camera, Matrix4f positionMatrix, Matrix4f matrix4f, Matrix4f projectionMatrix, GpuBufferSlice fogBuffer, Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
         OutlineShaderRenderer renderer = OutlineShaderRenderer.INSTANCE;
+        if (!renderer.shouldRender()) {
+            return;
+        }
 
         var matrixStack = Pools.MatStack.borrow();
         // Apply camera transformation to fix outline positioning
         matrixStack.peek().getPositionMatrix().mul(positionMatrix);
         var event = new DrawOutlinesEvent(
-            Objects.requireNonNull(renderer.prepareRenderTarget()),
+            renderer.prepareRenderTarget(),
             matrixStack,
             camera,
             tickCounter.getTickProgress(false),

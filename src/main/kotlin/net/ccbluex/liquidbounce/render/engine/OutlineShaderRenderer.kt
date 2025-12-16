@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.utils.client.inGame
 
 /**
  * For [net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP] outline mode.
@@ -30,4 +31,8 @@ object OutlineShaderRenderer : OverlayShaderRenderer(
     "Outline",
     ClientRenderPipelines.Outline,
     useDepth = false,
-)
+) {
+    override fun shouldRender(): Boolean {
+        return inGame
+    }
+}

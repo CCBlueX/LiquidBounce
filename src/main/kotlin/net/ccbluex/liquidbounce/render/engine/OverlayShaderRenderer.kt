@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.render.engine
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.systems.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
@@ -31,11 +32,11 @@ import net.minecraft.client.gl.GpuSampler
 import net.minecraft.client.gl.SimpleFramebuffer
 
 /**
- * @param pipeline should use `core/screenquad` for drawing
+ * @param blitPipeline should use `core/screenquad` for drawing
  */
 abstract class OverlayShaderRenderer(
     val name: String,
-    private val pipeline: RenderPipeline,
+    private val blitPipeline: RenderPipeline,
     private val useDepth: Boolean = false,
     private val needDefaultUniforms: Boolean = false,
 ) : MinecraftShortcuts {
@@ -44,17 +45,10 @@ abstract class OverlayShaderRenderer(
     private val sampler: GpuSampler = RenderSystem.getSamplerCache().get(FilterMode.NEAREST)
     var dirty: Boolean = false
 
-    protected open fun shouldRender(): Boolean = true
+    open fun shouldRender(): Boolean = true
 
-    /**
-     * @return null if [shouldRender] returns false
-     */
-    fun prepareRenderTarget(): Framebuffer? {
+    fun prepareRenderTarget(): Framebuffer {
         require(!dirty) { "OverlayShaderRenderer $name is dirty, draw it before starting another render pass" }
-
-        if (!shouldRender()) {
-            return null
-        }
 
         val width = mc.window.framebufferWidth
         val height = mc.window.framebufferHeight
@@ -75,23 +69,40 @@ abstract class OverlayShaderRenderer(
         ).also { framebuffer = it }
     }
 
+    protected open fun preRender() {
+        // Nothing to do
+    }
+
+    protected open fun onRender(pass: RenderPass) {
+        // Nothing to do
+    }
+
+    protected open fun postRender() {
+        // Nothing to do
+    }
+
     fun drawBlitIfDirty(target: Framebuffer) {
         if (!dirty) {
             return
         }
         dirty = false
 
+        preRender()
+
         val colorTexture = framebuffer?.colorAttachmentView
         requireNotNull(colorTexture) { "Framebuffer color attachment view is null" }
 
         target.createRenderPass({ "Overlay Shader $name blit pass" }).use { pass ->
-            pass.setPipeline(pipeline)
+            pass.setPipeline(blitPipeline)
             if (needDefaultUniforms) {
                 RenderSystem.bindDefaultUniforms(pass)
             }
             pass.bindTexture("InSampler", colorTexture, sampler)
+            onRender(pass)
             pass.draw(0, 3)
         }
+
+        postRender()
     }
 
 }
