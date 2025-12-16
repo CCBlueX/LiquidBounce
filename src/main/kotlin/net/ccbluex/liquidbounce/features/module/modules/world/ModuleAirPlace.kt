@@ -32,7 +32,12 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.item.*
+import net.minecraft.item.ArmorStandItem
+import net.minecraft.item.BlockItem
+import net.minecraft.item.FireworkRocketItem
+import net.minecraft.item.ItemStack
+import net.minecraft.item.SpawnEggItem
+
 import net.minecraft.util.hit.BlockHitResult
 
 /**
