@@ -10,6 +10,9 @@ layout(std140) uniform ThemeBackgroundData {
 // Output color
 out vec4 fragColor;
 
+// Input position
+in vec2 texCoord;
+
 // Simple hash function
 float hash(float n) {
     return fract(sin(n) * 43758.5453);
