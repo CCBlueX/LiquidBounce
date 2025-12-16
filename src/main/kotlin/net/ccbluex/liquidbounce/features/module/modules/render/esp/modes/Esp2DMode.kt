@@ -36,15 +36,18 @@ import net.minecraft.util.math.Box
 
 object Esp2DMode : EspMode("2D") {
 
-    object Outline: ToggleableConfigurable(this, "Outline", true) {
+    object Outline : ToggleableConfigurable(this, "Outline", true) {
         val thickness by float("Thickness", 1f, 1f..9f, "px")
     }
-    object Border: ToggleableConfigurable(this, "Border", true) {
+
+    object Border : ToggleableConfigurable(this, "Border", true) {
         val thickness by float("Thickness", 1f, 1f..9f, "px")
     }
+
     private val expand by float("Expand", 0.05f, 0f..0.5f)
     private val fill by boolean("Fill", true)
-    object HealthBar: ToggleableConfigurable(this, "HealthBar", true) {
+
+    object HealthBar : ToggleableConfigurable(this, "HealthBar", true) {
         val spacing by float("Spacing", 2f, 0f..32f, "px")
     }
 
@@ -79,8 +82,8 @@ object Esp2DMode : EspMode("2D") {
             val maxX = projected.maxOf { it.x }
             val minY = projected.minOf { it.y }
             val maxY = projected.maxOf { it.y }
-            var rectWidth = (maxX - minX)
-            var rectHeight = (maxY - minY)
+            val rectWidth = maxX - minX
+            val rectHeight = maxY - minY
 
             val guiScaleFactor = mc.options.guiScale.value
             val outlineThickness = Outline.thickness / guiScaleFactor
@@ -96,47 +99,63 @@ object Esp2DMode : EspMode("2D") {
 
                     if (Outline.enabled) {
                         if (Border.enabled) {
-                            drawHorizontalLine(-outlineThickness / 2 - borderThickness,
-                                rectWidth + outlineThickness / 2 + borderThickness,
-                                -outlineThickness / 2 - borderThickness,
-                                outlineThickness + 2 * borderThickness, black)
-                            drawVerticalLine(-outlineThickness / 2 - borderThickness,
-                                -outlineThickness / 2 - borderThickness,
-                                rectHeight + outlineThickness / 2 + borderThickness,
-                                outlineThickness + 2 * borderThickness, black)
-                            drawHorizontalLine(-outlineThickness / 2 - borderThickness,
-                                rectWidth + outlineThickness / 2 + borderThickness,
-                                rectHeight - outlineThickness / 2 - borderThickness,
-                                outlineThickness + 2 * borderThickness, black)
-                            drawVerticalLine(rectWidth - outlineThickness / 2 - borderThickness,
-                                -outlineThickness / 2 - borderThickness,
-                                rectHeight + outlineThickness / 2 + borderThickness,
-                                outlineThickness + 2 * borderThickness, black)
+                            drawHorizontalLine(
+                                x1 = -outlineThickness / 2 - borderThickness,
+                                x2 = rectWidth + outlineThickness / 2 + borderThickness,
+                                y = -outlineThickness / 2 - borderThickness,
+                                outlineThickness + 2 * borderThickness, black
+                            )
+                            drawVerticalLine(
+                                x = -outlineThickness / 2 - borderThickness,
+                                y1 = -outlineThickness / 2 - borderThickness,
+                                y2 = rectHeight + outlineThickness / 2 + borderThickness,
+                                outlineThickness + 2 * borderThickness, black
+                            )
+                            drawHorizontalLine(
+                                x1 = -outlineThickness / 2 - borderThickness,
+                                x2 = rectWidth + outlineThickness / 2 + borderThickness,
+                                y = rectHeight - outlineThickness / 2 - borderThickness,
+                                outlineThickness + 2 * borderThickness, black
+                            )
+                            drawVerticalLine(
+                                x = rectWidth - outlineThickness / 2 - borderThickness,
+                                y1 = -outlineThickness / 2 - borderThickness,
+                                y2 = rectHeight + outlineThickness / 2 + borderThickness,
+                                outlineThickness + 2 * borderThickness, black
+                            )
                         }
 
-                        drawHorizontalLine(-outlineThickness / 2,
-                            rectWidth + outlineThickness / 2,
-                            -outlineThickness / 2,
-                            outlineThickness, outlineColor)
-                        drawHorizontalLine(-outlineThickness / 2,
-                            rectWidth + outlineThickness / 2,
-                            rectHeight - outlineThickness / 2,
-                            outlineThickness, outlineColor)
-                        drawVerticalLine(-outlineThickness / 2,
-                            -outlineThickness / 2,
-                            rectHeight,
-                            outlineThickness, outlineColor)
-                        drawVerticalLine(rectWidth - outlineThickness / 2,
-                            -outlineThickness / 2,
-                            rectHeight,
-                            outlineThickness, outlineColor)
+                        drawHorizontalLine(
+                            x1 = -outlineThickness / 2,
+                            x2 = rectWidth + outlineThickness / 2,
+                            y = -outlineThickness / 2,
+                            outlineThickness, outlineColor
+                        )
+                        drawHorizontalLine(
+                            x1 = -outlineThickness / 2,
+                            x2 = rectWidth + outlineThickness / 2,
+                            y = rectHeight - outlineThickness / 2,
+                            outlineThickness, outlineColor
+                        )
+                        drawVerticalLine(
+                            x = -outlineThickness / 2,
+                            y1 = -outlineThickness / 2,
+                            y2 = rectHeight + outlineThickness / 2,
+                            outlineThickness, outlineColor
+                        )
+                        drawVerticalLine(
+                            x = rectWidth - outlineThickness / 2,
+                            y1 = -outlineThickness / 2,
+                            y2 = rectHeight + outlineThickness / 2,
+                            outlineThickness, outlineColor
+                        )
 
                         if (Border.enabled) {
                             translate(-2 * borderThickness, 0.0f)
                         }
                     }
 
-                    translate(-HealthBar.spacing.toFloat() / guiScaleFactor - outlineThickness, 0.0f)
+                    translate(-HealthBar.spacing / guiScaleFactor - outlineThickness, 0.0f)
 
                     if (HealthBar.enabled) {
                         val actualHealth = entity.getActualHealth()
@@ -148,15 +167,20 @@ object Esp2DMode : EspMode("2D") {
                         val healthHeight = rectHeight * healthPercentage
 
                         if (Border.enabled) {
-                            drawVerticalLine(-outlineThickness / 2 - borderThickness,
-                                -outlineThickness / 2 - borderThickness,
-                                rectHeight + outlineThickness / 2 + borderThickness,
-                                outlineThickness + 2 * borderThickness, black)
+                            drawVerticalLine(
+                                x = -outlineThickness / 2 - borderThickness,
+                                y1 = -outlineThickness / 2 - borderThickness,
+                                y2 = rectHeight + outlineThickness / 2 + borderThickness,
+                                outlineThickness + 2 * borderThickness, black
+                            )
                         }
 
-                        drawVerticalLine(-outlineThickness / 2,
-                            rectHeight - healthHeight - outlineThickness / 2,
-                            rectHeight + outlineThickness / 2, outlineThickness, healthColor)
+                        drawVerticalLine(
+                            x = -outlineThickness / 2,
+                            y1 = rectHeight - healthHeight - outlineThickness / 2,
+                            y2 = rectHeight + outlineThickness / 2,
+                            outlineThickness, healthColor
+                        )
                     }
                 }
             }
