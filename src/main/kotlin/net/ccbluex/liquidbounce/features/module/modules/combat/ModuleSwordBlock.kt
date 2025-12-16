@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ShieldItem
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.ShieldItem
 
 /**
  * This module allows the user to block with swords. This makes sense to be used on servers with ViaVersion.
@@ -35,13 +35,13 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
     private val alwaysHideShield by boolean("AlwaysHideShield", false).doNotIncludeAlways()
 
     @JvmStatic
-    val PlayerEntity.isBlockingWithOffhandShield
-        get() = isUsingItem && offHandStack.item is ShieldItem && activeItem === offHandStack
+    val Player.isBlockingWithOffhandShield
+        get() = isUsingItem && offhandItem.item is ShieldItem && useItem === offhandItem
 
     @JvmOverloads
     fun shouldHideOffhand(
-        offHandStack: ItemStack = player.offHandStack,
-        mainHandStack: ItemStack = player.mainHandStack
+        offHandStack: ItemStack = player.offhandItem,
+        mainHandStack: ItemStack = player.mainHandItem
     ): Boolean {
         if (!running && !KillAuraAutoBlock.blockVisual) {
             return false

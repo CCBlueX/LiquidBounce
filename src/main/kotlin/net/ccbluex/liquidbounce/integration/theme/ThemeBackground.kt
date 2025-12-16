@@ -38,11 +38,11 @@ import net.ccbluex.liquidbounce.utils.render.asView
 import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.writeStd140
-import net.minecraft.client.gl.UniformType
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.TextureSetup
-import net.minecraft.util.Identifier
+import com.mojang.blaze3d.shaders.UniformType
+import net.minecraft.client.gui.GuiGraphics
+import com.mojang.blaze3d.platform.NativeImage
+import net.minecraft.client.gui.render.TextureSetup
+import net.minecraft.resources.Identifier
 import java.io.Closeable
 import java.util.*
 
@@ -53,7 +53,7 @@ sealed interface ThemeBackground : Closeable {
      */
     object Minecraft : ThemeBackground {
         override fun draw(
-            context: DrawContext,
+            context: GuiGraphics,
             width: Int,
             height: Int,
             mouseX: Int,
@@ -78,7 +78,7 @@ sealed interface ThemeBackground : Closeable {
         private val textureSetup = texture.textureSetup
 
         override fun draw(
-            context: DrawContext,
+            context: GuiGraphics,
             width: Int,
             height: Int,
             mouseX: Int,
@@ -121,18 +121,18 @@ sealed interface ThemeBackground : Closeable {
         private var textureSetup: TextureSetup? = null
 
         override fun draw(
-            context: DrawContext,
+            context: GuiGraphics,
             width: Int,
             height: Int,
             mouseX: Int,
             mouseY: Int,
             delta: Float
         ): Boolean {
-            val framebufferWidth = mc.window.framebufferWidth
-            val framebufferHeight = mc.window.framebufferHeight
+            val framebufferWidth = mc.window.width
+            val framebufferHeight = mc.window.height
 
             uboSlice.writeStd140 {
-                putFloat((System.currentTimeMillis() - mc.startTime) / 1000F)
+                putFloat((System.currentTimeMillis() - mc.clientStartTimeMs) / 1000F)
                 putVec2(mouseX.toFloat(), mouseY.toFloat())
                 putVec2(framebufferWidth.toFloat(), framebufferHeight.toFloat())
             }
@@ -191,9 +191,9 @@ sealed interface ThemeBackground : Closeable {
                 )
                 backgroundView?.close()
                 backgroundView = background!!.asView()
-                textureSetup = TextureSetup.of(
+                textureSetup = TextureSetup.singleTexture(
                     backgroundView!!,
-                    RenderSystem.getSamplerCache().get(FilterMode.NEAREST),
+                    RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST),
                 )
             }
         }
@@ -239,7 +239,7 @@ sealed interface ThemeBackground : Closeable {
      */
     @Suppress("LongParameterList")
     fun draw(
-        context: DrawContext,
+        context: GuiGraphics,
         width: Int,
         height: Int,
         mouseX: Int,

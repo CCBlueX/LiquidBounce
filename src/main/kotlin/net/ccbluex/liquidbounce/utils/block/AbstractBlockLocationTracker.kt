@@ -22,10 +22,10 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.utils.math.contains
-import net.minecraft.block.BlockState
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.world.chunk.WorldChunk
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.chunk.LevelChunk
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.function.LongPredicate
@@ -90,7 +90,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         }
     }
 
-    final override fun chunkUpdate(chunk: WorldChunk) {
+    final override fun chunkUpdate(chunk: LevelChunk) {
         // NOP
     }
 
@@ -110,7 +110,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         private val lock = ReentrantReadWriteLock()
 
         final override fun allPositions() = sequence<BlockPos> {
-            val mutable = BlockPos.Mutable()
+            val mutable = BlockPos.MutableBlockPos()
             lock.read {
                 for (positions in stateAndPositions.values) {
                     val iterator = positions.longIterator()
@@ -123,7 +123,7 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         }
 
         final override fun iterate() = sequence<Map.Entry<BlockPos, T>> {
-            val mutable = BlockPos.Mutable()
+            val mutable = BlockPos.MutableBlockPos()
             var entry: FullMutableEntry<BlockPos, T>? = null
             lock.read {
                 for ((state, positions) in stateAndPositions) {

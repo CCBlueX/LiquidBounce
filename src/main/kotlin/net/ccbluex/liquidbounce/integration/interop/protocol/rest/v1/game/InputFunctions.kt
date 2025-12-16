@@ -29,16 +29,16 @@ import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpBadRequest
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
-import net.minecraft.client.util.InputUtil
+import com.mojang.blaze3d.platform.InputConstants
 
 // GET /api/v1/client/input
 @Suppress("UNUSED_PARAMETER")
 fun getInputInfo(requestObject: RequestObject) = requestObject.queryParams["key"]?.let { key ->
-    val input = InputUtil.fromTranslationKey(key)
+    val input = InputConstants.getKey(key)
 
     httpOk(JsonObject().apply {
-        addProperty("translationKey", input.translationKey)
-        addProperty("localized", input.localizedText.string)
+        addProperty("translationKey", input.name)
+        addProperty("localized", input.displayName.string)
     })
 } ?: httpBadRequest("Missing key parameter")
 
@@ -46,12 +46,12 @@ fun getInputInfo(requestObject: RequestObject) = requestObject.queryParams["key"
 @Suppress("UNUSED_PARAMETER")
 fun getKeybinds(requestObject: RequestObject) = httpOk(
     JsonArray().apply {
-        for (key in mc.options.allKeys) {
+        for (key in mc.options.keyMappings) {
             add(JsonObject().apply {
-                addProperty("bindName", key.id)
+                addProperty("bindName", key.name)
                 add("key", JsonObject().apply {
-                    addProperty("translationKey", key.boundKeyTranslationKey)
-                    addProperty("localized", key.boundKeyLocalizedText?.string)
+                    addProperty("translationKey", key.saveString())
+                    addProperty("localized", key.translatedKeyMessage?.string)
                 })
             })
         }

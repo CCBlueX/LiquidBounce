@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.stages
+package net.ccbluex.liquidbounce.features.module.modules.fun.notebot.stages
 
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NoteBlockTracker
@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NotebotEng
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.InstrumentNote
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
 
 class NotebotPlayStageHandler(
     private val availableBlocksForNote: Map<InstrumentNote, List<NoteBlockTracker>>
@@ -49,7 +49,7 @@ class NotebotPlayStageHandler(
             ModuleNotebot.sendNewProgressMessage(progressName, currentSongTick, songData.songTickLength)
 
             if (currentSongTick > songData.songTickLength) {
-                chat(ModuleNotebot.message("finished").formatted(Formatting.GREEN), ModuleNotebot)
+                chat(ModuleNotebot.message("finished").withStyle(ChatFormatting.GREEN), ModuleNotebot)
                 ModuleNotebot.enabled = false
                 return
             }

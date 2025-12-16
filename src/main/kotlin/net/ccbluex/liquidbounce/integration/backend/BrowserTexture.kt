@@ -19,7 +19,7 @@
  */
 package net.ccbluex.liquidbounce.integration.backend
 
-import net.minecraft.client.texture.TextureSetup
+import net.minecraft.client.gui.render.TextureSetup
 
 /**
  * Represents a texture used by the browser.

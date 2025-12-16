@@ -25,12 +25,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.decoration.ArmorStandEntity
-import net.minecraft.entity.mob.MobEntity
-import net.minecraft.entity.vehicle.AbstractMinecartEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.decoration.ArmorStand
+import net.minecraft.world.entity.Mob
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart
 
 /**
  * Combine Mobs
@@ -80,19 +80,19 @@ object ModuleCombineMobs : ClientModule("CombineMobs", Category.RENDER) {
 
     @JvmOverloads
     fun trackEntity(entity: Entity, forNametag: Boolean = false): Boolean {
-        val canCombine = entity is MobEntity ||
-            (entity is ArmorStandEntity && combineArmorStands) ||
-            (entity is AbstractMinecartEntity && combineMinecarts)
+        val canCombine = entity is Mob ||
+            (entity is ArmorStand && combineArmorStands) ||
+            (entity is AbstractMinecart && combineMinecarts)
         if (!canCombine) return false
 
         return (if (forNametag) nametagTracker else renderTracker)
             .getOrPut(keyFor(entity), ::Long2IntOpenHashMap)
-            .addTo(entity.blockPos.asLong(), 1) > 0
+            .addTo(entity.blockPosition().asLong(), 1) > 0
     }
 
     fun getCombinedCount(entity: Entity): Int {
         val key = keyFor(entity)
-        val pos = entity.blockPos.asLong()
+        val pos = entity.blockPosition().asLong()
 
         val count = renderTracker[key]?.getOrDefault(pos, 0) ?: 0
         if (count > 0) return count

@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 
 fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(item: Item): T? =
     findClosestSlot { it.item === item }

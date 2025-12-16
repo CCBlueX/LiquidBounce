@@ -31,27 +31,27 @@ import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroup
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.component.ComponentChanges
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.component.type.LoreComponent
-import net.minecraft.component.type.ProfileComponent
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
-import net.minecraft.text.Style
-import net.minecraft.util.Formatting
+import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.item.component.ItemLore
+import net.minecraft.world.item.component.ResolvableProfile
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Style
+import net.minecraft.ChatFormatting
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 data class Head(val name: String, val uuid: UUID, val value: String) {
 
     fun asItemStack(): ItemStack {
-        val builder = ComponentChanges.builder()
+        val builder = DataComponentPatch.builder()
 
-        builder.add(DataComponentTypes.CUSTOM_NAME, name.asPlainText(CUSTOM_NAME_STYLE))
-        builder.add(
-            DataComponentTypes.LORE,
-            LoreComponent(
+        builder.set(DataComponents.CUSTOM_NAME, name.asPlainText(CUSTOM_NAME_STYLE))
+        builder.set(
+            DataComponents.LORE,
+            ItemLore(
                 listOf(
                     "UUID: $uuid".asPlainText(UUID_STYLE),
                     "liquidbounce.net".asPlainText(CLIENT_LINK_STYLE),
@@ -67,21 +67,21 @@ data class Head(val name: String, val uuid: UUID, val value: String) {
             ),
         )
 
-        builder.add(
-            DataComponentTypes.PROFILE,
-            ProfileComponent.ofStatic(profile),
+        builder.set(
+            DataComponents.PROFILE,
+            ResolvableProfile.createResolved(profile),
         )
 
-        return ItemStack(Registries.ITEM.getEntry(Items.PLAYER_HEAD), 1, builder.build())
+        return ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(Items.PLAYER_HEAD), 1, builder.build())
     }
 
 
     companion object {
         @JvmStatic
-        private val CUSTOM_NAME_STYLE = Style.EMPTY.withFormatting(Formatting.GOLD, Formatting.BOLD)
+        private val CUSTOM_NAME_STYLE = Style.EMPTY.applyFormats(ChatFormatting.GOLD, ChatFormatting.BOLD)
 
         @JvmStatic
-        private val UUID_STYLE = Style.EMPTY.withFormatting(Formatting.GRAY)
+        private val UUID_STYLE = Style.EMPTY.applyFormat(ChatFormatting.GRAY)
 
         @JvmStatic
         private val CLIENT_LINK_STYLE = Style.EMPTY.withColor(Color4b.LIQUID_BOUNCE.toARGB())
@@ -90,10 +90,10 @@ data class Head(val name: String, val uuid: UUID, val value: String) {
 
 class HeadsItemGroup : ClientItemGroup(
     "Heads",
-    icon = { Items.SKELETON_SKULL.defaultStack },
+    icon = { Items.SKELETON_SKULL.defaultInstance },
     items = { items ->
         heads.getNow()?.let { heads ->
-            items.addAll(heads.distinctBy { it.name }.map(Head::asItemStack))
+            items.acceptAll(heads.distinctBy { it.name }.map(Head::asItemStack))
         }
     }
 ) {

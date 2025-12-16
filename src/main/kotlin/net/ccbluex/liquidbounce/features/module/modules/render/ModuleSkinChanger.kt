@@ -57,10 +57,10 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.network.PlayerListEntry
-import net.minecraft.entity.player.PlayerSkinType
-import net.minecraft.entity.player.SkinTextures
-import net.minecraft.util.AssetInfo
+import net.minecraft.client.multiplayer.PlayerInfo
+import net.minecraft.world.entity.player.PlayerModelType
+import net.minecraft.world.entity.player.PlayerSkin
+import net.minecraft.core.ClientAsset
 import java.io.IOException
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
@@ -128,7 +128,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         final override val parent: ChoiceConfigurable<*>
             get() = mode
 
-        abstract val skinTextures: Supplier<SkinTextures>?
+        abstract val skinTextures: Supplier<PlayerSkin>?
 
         abstract suspend fun uploadSkin()
 
@@ -143,17 +143,17 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                 }
             }
 
-            override var skinTextures: Supplier<SkinTextures>? = null
+            override var skinTextures: Supplier<PlayerSkin>? = null
 
-            private suspend fun textureSupplier(username: String): Supplier<SkinTextures> {
+            private suspend fun textureSupplier(username: String): Supplier<PlayerSkin> {
                 val profile = withContext(Dispatchers.IO) {
                     val uuid = GameProfileRepository.Default.fetchUuidByUsername(username)
                         ?: generateOfflinePlayerUuid(username)
-                    mc.apiServices.sessionService.fetchProfile(uuid, false)?.profile
+                    mc.services.sessionService.fetchProfile(uuid, false)?.profile
                         ?: GameProfile(uuid, username)
                 }
 
-                return PlayerListEntry.texturesSupplier(profile)
+                return PlayerInfo.createSkinLookup(profile)
             }
 
             override suspend fun uploadSkin() {
@@ -162,17 +162,17 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
                 } ?: return
 
                 val profile = withContext(Dispatchers.IO) {
-                    mc.apiServices.sessionService.fetchProfile(uuid, false)
+                    mc.services.sessionService.fetchProfile(uuid, false)
                 } ?: return
 
-                val texture = mc.apiServices.sessionService.unpackTextures(
-                    mc.apiServices.sessionService.getPackedTextures(profile.profile)
+                val texture = mc.services.sessionService.unpackTextures(
+                    mc.services.sessionService.getPackedTextures(profile.profile)
                 )
                 val skinTexture = texture.skin ?: return
                 val variant = if (skinTexture.getMetadata("model") == "slim") {
-                    PlayerSkinType.SLIM
+                    PlayerModelType.SLIM
                 } else {
-                    PlayerSkinType.WIDE
+                    PlayerModelType.WIDE
                 }
 
                 request {
@@ -181,7 +181,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             }
         }
 
-        object File : Mode("File"), AssetInfo.TextureAsset {
+        object File : Mode("File"), ClientAsset.Texture {
             private val image = file("Image")
 
             private val skinType by enumChoice("Model", ModelChoice.WIDE)
@@ -194,14 +194,14 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
             private enum class ModelChoice(
                 override val choiceName: String,
-                val type: PlayerSkinType,
+                val type: PlayerModelType,
             ) : NamedChoice {
-                SLIM("Slim", PlayerSkinType.SLIM),
-                WIDE("Default", PlayerSkinType.WIDE),
+                SLIM("Slim", PlayerModelType.SLIM),
+                WIDE("Default", PlayerModelType.WIDE),
             }
 
             override val skinTextures = Supplier {
-                SkinTextures(
+                PlayerSkin(
                     this, // body
                     null, // cape
                     null, // elytra
@@ -238,7 +238,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         }
     }
 
-    val skinTextures: Supplier<SkinTextures>? get() = mode.activeChoice.skinTextures
+    val skinTextures: Supplier<PlayerSkin>? get() = mode.activeChoice.skinTextures
 
     @JvmStatic
     fun shouldApplyChanges(): Boolean =
@@ -268,11 +268,11 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
     }
 
     private fun canUploadSkin(): Boolean {
-        if (!uploadSkin.get() || mc.session.accountType == "legacy") {
+        if (!uploadSkin.get() || mc.user.accountType == "legacy") {
             return false
         }
 
-        val sessionService = mc.apiServices.sessionService
+        val sessionService = mc.services.sessionService
         if (sessionService !is MixinYggdrasilMinecraftSessionServiceAccessor) {
             return false
         }

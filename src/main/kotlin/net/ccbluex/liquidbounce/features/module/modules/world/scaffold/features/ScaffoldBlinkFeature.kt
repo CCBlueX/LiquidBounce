@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 
 object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", false) {
 
@@ -52,7 +52,7 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
             return@handler
         }
 
-        if (!player.isOnGround || !pulseTimer.hasElapsed(pulseTime)) {
+        if (!player.onGround() || !pulseTimer.hasElapsed(pulseTime)) {
             event.action = PacketQueueManager.Action.QUEUE
         }
     }
@@ -63,22 +63,22 @@ object ScaffoldBlinkFeature : ToggleableConfigurable(ModuleScaffold, "Blink", fa
         val cond: (packet: Packet<*>?) -> Boolean
     ) : NamedChoice {
         PLACE("Place", { packet ->
-            packet is PlayerInteractBlockC2SPacket
+            packet is ServerboundUseItemOnPacket
         }),
         TOWERING("Towering", {
             ModuleScaffold.isTowering
         }),
         SNEAKING("Sneaking", {
-            player.isSneaking
+            player.isShiftKeyDown
         }),
         NOT_SNEAKING("NotSneaking", {
-            !player.isSneaking
+            !player.isShiftKeyDown
         }),
         ON_GROUND("OnGround", {
-            player.isOnGround
+            player.onGround()
         }),
         IN_AIR("InAir", {
-            !player.isOnGround
+            !player.onGround()
         })
     }
 

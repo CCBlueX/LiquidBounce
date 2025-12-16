@@ -37,13 +37,13 @@ import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.entity.Entity
-import net.minecraft.entity.ItemEntity
-import net.minecraft.entity.projectile.ArrowEntity
-import net.minecraft.entity.projectile.PersistentProjectileEntity.PickupPermission
-import net.minecraft.entity.projectile.SpectralArrowEntity
-import net.minecraft.entity.projectile.TridentEntity
-import net.minecraft.util.math.Box
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.entity.projectile.arrow.Arrow
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow.Pickup
+import net.minecraft.world.entity.projectile.arrow.SpectralArrow
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident
+import net.minecraft.world.phys.AABB
 
 /**
  * ItemESP module
@@ -91,7 +91,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        private val box = Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
+        private val box = AABB(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
 
         private val entities = mutableListOf<Entity>()
 
@@ -103,7 +103,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
             entities.clear()
-            world.entities.filterTo(entities, ::shouldRender)
+            world.entitiesForRendering().filterTo(entities, ::shouldRender)
         }
 
         @Suppress("unused")
@@ -143,13 +143,13 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
     fun shouldRender(entity: Entity?) : Boolean {
         if (entity == null) return false
 
-        val distanceSq = entity.eyePos.cameraDistanceSq()
+        val distanceSq = entity.eyePosition.cameraDistanceSq()
         if (distanceSq > maximumDistance.sq()) return false
 
         return when (entity) {
-            is ItemEntity -> filter(entity.stack.item, items)
+            is ItemEntity -> filter(entity.item.item, items)
 
-            is TridentEntity -> showTridents
+            is ThrownTrident -> showTridents
 
             // arrow checks
             // The server never sends the actual pickupType of arrows fired
@@ -159,10 +159,10 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
 
             // However, it's not completely useless:
             // arrows shot by mobs such as skeletons and pillagers are not rendered.
-            is ArrowEntity if ShowArrows.running && entity.pickupType == PickupPermission.ALLOWED ->
+            is Arrow if ShowArrows.running && entity.pickup == Pickup.ALLOWED ->
                 if (entity.color == -1) ShowArrows.regularArrows else ShowArrows.arrowsWithEffects
 
-            is SpectralArrowEntity if ShowArrows.running && entity.pickupType == PickupPermission.ALLOWED ->
+            is SpectralArrow if ShowArrows.running && entity.pickup == Pickup.ALLOWED ->
                 ShowArrows.spectralArrows
 
             else -> false

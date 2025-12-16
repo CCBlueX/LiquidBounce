@@ -29,16 +29,16 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.inventory.ViewedInventoryScreen
-import net.minecraft.client.network.OtherClientPlayerEntity
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.EquipmentSlot.MAINHAND
-import net.minecraft.entity.EquipmentSlot.OFFHAND
-import net.minecraft.entity.EquipmentSlot.Type.ANIMAL_ARMOR
-import net.minecraft.entity.EquipmentSlot.Type.HAND
-import net.minecraft.entity.EquipmentSlot.Type.HUMANOID_ARMOR
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.util.Formatting
+import net.minecraft.client.player.RemotePlayer
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.EquipmentSlot.MAINHAND
+import net.minecraft.world.entity.EquipmentSlot.OFFHAND
+import net.minecraft.world.entity.EquipmentSlot.Type.ANIMAL_ARMOR
+import net.minecraft.world.entity.EquipmentSlot.Type.HAND
+import net.minecraft.world.entity.EquipmentSlot.Type.HUMANOID_ARMOR
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.ChatFormatting
 import java.util.Locale
 import java.util.UUID
 import kotlin.collections.ArrayDeque
@@ -59,20 +59,20 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD)
     private val savePlayers by boolean("SavePlayers", false).onChanged { playerMap.clear() }
 
     private val inventoryMap = hashMapOf<UUID, TrackedInventory>()
-    val playerMap = hashMapOf<UUID, PlayerEntity>()
+    val playerMap = hashMapOf<UUID, Player>()
 
     @Suppress("unused")
     val playerEquipmentChangeHandler = handler<EntityEquipmentChangeEvent> { event ->
         val player = event.entity
-        if (player !is OtherClientPlayerEntity || ModuleAntiBot.isBot(player)) return@handler
+        if (player !is RemotePlayer || ModuleAntiBot.isBot(player)) return@handler
 
         val updatedSlot = event.equipmentSlot
         if (updatedSlot.type === ANIMAL_ARMOR) return@handler
 
         val newItemStack = event.itemStack
 
-        val mainHandStack = if (updatedSlot === MAINHAND) newItemStack else player.mainHandStack
-        val offHandStack = if (updatedSlot === OFFHAND) newItemStack else player.offHandStack
+        val mainHandStack = if (updatedSlot === MAINHAND) newItemStack else player.mainHandItem
+        val offHandStack = if (updatedSlot === OFFHAND) newItemStack else player.offhandItem
 
         val trackedInventory = inventoryMap.getOrPut(player.uuid) { TrackedInventory() }
         if (savePlayers) {
@@ -96,7 +96,7 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD)
         val offset = if (mainHandEmpty) 1 else 0
 
         for (i in range) {
-            inventory.mainStacks[i + offset] = items.getOrNull(i) ?: ItemStack.EMPTY
+            inventory.nonEquipmentItems[i + offset] = items.getOrNull(i) ?: ItemStack.EMPTY
         }
     }
 
@@ -106,11 +106,11 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD)
     private val worldChangeHandler = handler<WorldChangeEvent> { reset() }
 
     private fun reset() {
-        val players = world.players.associateBy { it.uuid }
+        val players = world.players().associateBy { it.uuid }
         inventoryMap.keys.forEach { uuid ->
             val player = players[uuid] ?: return@forEach
-            for (i in 1 until player.inventory.mainStacks.size) {
-                player.inventory.mainStacks[i] = ItemStack.EMPTY
+            for (i in 1 until player.inventory.nonEquipmentItems.size) {
+                player.inventory.nonEquipmentItems[i] = ItemStack.EMPTY
             }
         }
         inventoryMap.clear()
@@ -119,12 +119,12 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD)
 
     @Suppress("unused")
     private val itemLoreQueryHandler = handler<ItemLoreQueryEvent> { event ->
-        if (mc.currentScreen !is ViewedInventoryScreen) return@handler
+        if (mc.screen !is ViewedInventoryScreen) return@handler
         val player = CommandInvsee.viewedPlayer
         val timeStamp = inventoryMap[player]?.timeMap?.getLong(event.itemStack)?.takeIf { it != 0L } ?: return@handler
         val lastSeen = System.currentTimeMillis() - timeStamp
         event.lore.add(
-            "Last Seen: ${toMinutesSeconds(lastSeen)}".asText().formatted(Formatting.GRAY)
+            "Last Seen: ${toMinutesSeconds(lastSeen)}".asText().withStyle(ChatFormatting.GRAY)
         )
     }
 

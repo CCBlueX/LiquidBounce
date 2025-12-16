@@ -117,7 +117,7 @@ enum class FailProcedure {
                 val switchMode = switchMode.activeChoice
                 switch(switchMode.getSlot(mineTarget.blockState), mineTarget)
                 if (switchMode.getSwitchingMethod().shouldSync) {
-                    interaction.syncSelectedSlot()
+                    interaction.ensureHasSentCarriedItem()
                 }
             }
 

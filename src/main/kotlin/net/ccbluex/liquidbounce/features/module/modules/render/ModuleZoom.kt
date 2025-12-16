@@ -23,11 +23,11 @@ import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMouse
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMouseHandler
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.util.math.MathHelper
+import net.minecraft.util.Mth
 import kotlin.math.abs
 import kotlin.math.round
 
@@ -93,11 +93,11 @@ object ModuleZoom : ClientModule("Zoom", Category.RENDER, bindAction = InputBind
             disableAnimationFinished = true
         }
 
-        return MathHelper.lerp(transition.transform(factor), previousFov, targetFov)
+        return Mth.lerpInt(transition.transform(factor), previousFov, targetFov)
     }
 
     private fun getDefaultFov(): Int {
-        val fov = mc.options.fov.value
+        val fov = mc.options.fov().get()
         return if (ModuleNoFov.running) ModuleNoFov.getFov(fov) else fov
     }
 

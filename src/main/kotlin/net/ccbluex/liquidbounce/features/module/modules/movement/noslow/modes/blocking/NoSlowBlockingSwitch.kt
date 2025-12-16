@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.bl
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.blockingHand
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.isBlocking
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 
 internal object NoSlowBlockingSwitch : Choice("Switch") {
 
@@ -51,10 +51,11 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
                 TimingMode.PRE_TICK -> {
                     if (event.state == EventState.PRE) {
                         untracked {
-                            network.sendPacket(UpdateSelectedSlotC2SPacket(
+                            network.send(
+                                ServerboundSetCarriedItemPacket(
                                 (player.inventory.selectedSlot + 1) % 8)
                             )
-                            network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                            network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))
 
                             // For some reason we do not have to re-interact with the item to start blocking again.
                             // The server will still think we are blocking.
@@ -64,10 +65,11 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
                 TimingMode.POST_TICK -> {
                     if (event.state == EventState.POST) {
                         untracked {
-                            network.sendPacket(UpdateSelectedSlotC2SPacket(
+                            network.send(
+                                ServerboundSetCarriedItemPacket(
                                 (player.inventory.selectedSlot + 1) % 8)
                             )
-                            network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                            network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))
 
                             // For some reason we do not have to re-interact with the item to start blocking again.
                             // The server will still think we are blocking.
@@ -83,7 +85,8 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
                     when (event.state) {
                         EventState.PRE -> {
                             untracked {
-                                network.sendPacket(UpdateSelectedSlotC2SPacket(
+                                network.send(
+                                    ServerboundSetCarriedItemPacket(
                                     (player.inventory.selectedSlot + 1) % 8)
                                 )
                             }
@@ -91,9 +94,9 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
 
                         EventState.POST -> {
                             untracked {
-                                network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-                                interaction.sendSequencedPacket(world) { sequence ->
-                                    PlayerInteractItemC2SPacket(blockingHand, sequence, player.yaw, player.pitch)
+                                network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))
+                                interaction.startPrediction(world) { sequence ->
+                                    ServerboundUseItemPacket(blockingHand, sequence, player.yRot, player.xRot)
                                 }
                             }
                         }

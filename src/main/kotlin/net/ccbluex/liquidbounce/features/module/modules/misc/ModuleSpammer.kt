@@ -161,9 +161,9 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
         }
 
         if (text.startsWith('/')) {
-            network.sendChatCommand(text.substring(1))
+            network.sendCommand(text.substring(1))
         } else {
-            network.sendChatMessage(text)
+            network.sendChat(text)
         }
     }
 
@@ -177,7 +177,7 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
         }
 
         if (formattedText.contains("@a")) {
-            mc.networkHandler?.playerList?.mapNotNull {
+            mc.connection?.onlinePlayers?.mapNotNull {
                 it?.profile?.name.takeIf { n -> n != player.gameProfile?.name }
             }?.takeIf { it.isNotEmpty() }?.let { playerNameList ->
                 formattedText = formattedText.replace("@a") { playerNameList.random() }

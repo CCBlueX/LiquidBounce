@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * @anticheat NoCheatPlus
@@ -70,7 +70,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
 
     @Suppress("unused")
     private val keyBindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
-        if (event.keyBinding == mc.options.useKey && forceUseKey) {
+        if (event.keyBinding == mc.options.keyUse && forceUseKey) {
             event.isPressed = true
         }
     }
@@ -80,7 +80,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
         if (arrowBoost <= arrowsToShoot) {
             forceUseKey = true
             RotationManager.setRotationTarget(
-                Rotation(player.yaw, -90f),
+                Rotation(player.yRot, -90f),
                 configurable = rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = ModuleLongJump
@@ -90,20 +90,20 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
             stopMovement = true
 
             // Shoots arrow
-            if (player.itemUseTime >= charged) {
-                interaction.stopUsingItem(player)
+            if (player.ticksUsingItem >= charged) {
+                interaction.releaseUsingItem(player)
                 shotArrows++
             }
         } else {
             forceUseKey = false
             if (player.isUsingItem) {
-                interaction.stopUsingItem(player)
+                interaction.releaseUsingItem(player)
             }
 
             shotArrows = 0f
             waitTicks(5)
-            player.jump()
-            player.velocity = player.velocity.withStrafe(speed = speed.toDouble())
+            player.jumpFromGround()
+            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
             waitTicks(5)
             arrowBoost = 0f
         }
@@ -126,7 +126,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
     private val velocityHandler = handler<PacketEvent> {
         val packet = it.packet
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id && shotArrows > 0.0) {
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id && shotArrows > 0.0) {
             shotArrows--
             arrowBoost++
         }

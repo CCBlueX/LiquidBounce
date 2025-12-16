@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.input.InputTracker.timeSinceLastPress
-import net.minecraft.item.BlockItem
-import net.minecraft.item.Item
-import net.minecraft.item.ProjectileItem
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ProjectileItem
 import java.util.function.Predicate
 
 /**
@@ -42,12 +42,12 @@ object ModuleFastPlace : ClientModule("FastPlace", Category.WORLD) {
 
     @Suppress("unused")
     private val useCooldownHandler = handler<UseCooldownEvent> { event ->
-        val mainHandItem = player.mainHandStack.item
-        val offHandItem = player.offHandStack.item
+        val mainHandItem = player.mainHandItem.item
+        val offHandItem = player.offhandItem.item
 
         if (applyTo.any {
                 it.condition.test(mainHandItem) || it.condition.test(offHandItem)
-            } && (startDelay <= 0 || mc.options.useKey.timeSinceLastPress >= startDelay)) {
+            } && (startDelay <= 0 || mc.options.keyUse.timeSinceLastPress >= startDelay)) {
             event.cooldown = cooldown.random()
         }
     }

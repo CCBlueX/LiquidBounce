@@ -37,9 +37,9 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.MathHelper
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.util.Mth
 import kotlin.random.Random
 
 /**
@@ -65,16 +65,16 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
 
         object Normal : Order("Normal") {
             override fun positions(): ObjectArraySet<BlockPos> {
-                val playerHeight = MathHelper.ceil(player.height)
+                val playerHeight = Mth.ceil(player.bbHeight)
                 val result = ObjectArraySet<BlockPos>(10)
-                result += startPos.down()
+                result += startPos.below()
                 rotateSurroundings {
-                    val value = startPos.offset(it)
+                    val value = startPos.relative(it)
                     repeat(playerHeight) { i ->
-                        result += value.up(i)
+                        result += value.above(i)
                     }
                 }
-                result += startPos.up(playerHeight)
+                result += startPos.above(playerHeight)
 
                 return result
             }
@@ -106,31 +106,31 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
 
     }
 
-    private val startPos = BlockPos.Mutable()
+    private val startPos = BlockPos.MutableBlockPos()
     private var rotateClockwise = false
     private var blockList = emptySet<BlockPos>()
 
     override fun onDisabled() {
-        startPos.set(BlockPos.ORIGIN)
+        startPos.set(BlockPos.ZERO)
         blockList = emptySet()
         blockPlacer.disable()
     }
 
     override fun onEnabled() {
-        startPos.set(player.blockPos)
+        startPos.set(player.blockPosition())
         rotateClockwise = Random.nextBoolean()
         getPositions()
     }
 
     private inline fun rotateSurroundings(action: (Direction) -> Unit) {
-        var direction = player.horizontalFacing
+        var direction = player.direction
         repeat(4) {
             action(direction)
             // Next direction
             direction = if (rotateClockwise) {
-                direction.rotateYClockwise()
+                direction.clockWise
             } else {
-                direction.rotateYCounterclockwise()
+                direction.counterClockWise
             }
         }
     }
@@ -154,9 +154,9 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
 
     @Suppress("unused")
     private val movementHandler = handler<PlayerMovementTickEvent> {
-        val currentPos = player.blockPos
+        val currentPos = player.blockPosition()
 
-        if (currentPos != startPos && currentPos != startPos.up()) {
+        if (currentPos != startPos && currentPos != startPos.above()) {
             notification(name, message("positionChanged"), NotificationEvent.Severity.ERROR)
             enabled = false
         }
@@ -169,9 +169,9 @@ object ModuleBlockIn : ClientModule("BlockIn", Category.WORLD, disableOnQuit = t
         }
 
         return if (pos in blockList) {
-            blockSlots.maxByOrNull { (_, block) -> block.hardness }
+            blockSlots.maxByOrNull { (_, block) -> block.defaultDestroyTime() }
         } else {
-            blockSlots.minByOrNull { (_, block) -> block.hardness }
+            blockSlots.minByOrNull { (_, block) -> block.defaultDestroyTime() }
         }?.first
     }
 

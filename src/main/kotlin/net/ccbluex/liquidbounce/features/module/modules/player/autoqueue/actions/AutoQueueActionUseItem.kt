@@ -36,7 +36,7 @@ object AutoQueueActionUseItem : AutoQueueAction("UseItem") {
 
         SilentHotbar.selectSlotSilently(ModuleAutoQueue, slot, 20)
         waitTicks(1)
-        interaction.interactItem(player, slot.useHand)
+        interaction.useItem(player, slot.useHand)
     }
 
 }

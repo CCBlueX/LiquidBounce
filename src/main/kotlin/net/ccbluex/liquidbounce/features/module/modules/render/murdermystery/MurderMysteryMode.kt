@@ -20,25 +20,25 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.util.Identifier
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.resources.Identifier
 
 interface MurderMysteryMode {
     fun handleHasBow(
-        entity: AbstractClientPlayerEntity,
+        entity: AbstractClientPlayer,
         locationSkin: Identifier,
     )
 
     fun handleHasSword(
-        entity: AbstractClientPlayerEntity,
+        entity: AbstractClientPlayer,
         locationSkin: Identifier,
     )
 
     fun disallowsArrowDodge(): Boolean = false
 
-    fun shouldAttack(entity: AbstractClientPlayerEntity): Boolean
+    fun shouldAttack(entity: AbstractClientPlayer): Boolean
 
-    fun getPlayerType(player: AbstractClientPlayerEntity): PlayerType
+    fun getPlayerType(player: AbstractClientPlayer): PlayerType
 
     fun reset()
 

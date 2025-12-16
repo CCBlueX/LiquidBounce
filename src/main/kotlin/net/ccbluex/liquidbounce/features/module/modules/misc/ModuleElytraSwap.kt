@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isChestArmor
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 
 /**
  * ModuleElytraSwap
@@ -55,7 +55,7 @@ object ModuleElytraSwap : ClientModule(
     private val scheduleInventoryActionHandler = handler<ScheduleInventoryActionEvent>(
         EventPriorityConvention.CRITICAL_MODIFICATION
     ) { event ->
-        val elytraItem = slotsToSearch.findSlot { it.isElytra() && !it.willBreakNextUse() }
+        val elytraItem = slotsToSearch.findSlot { it.isElytra() && !it.nextDamageWillBreak() }
         val chestplateItem = slotsToSearch.findSlot { it.isChestArmor }
 
         val chestplateStack = chestplateSlot.itemStack

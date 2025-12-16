@@ -20,18 +20,18 @@
 
 package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import javax.annotation.Nullable;
 
 public interface OutlineVertexConsumerProviderSingleDrawAddition {
     /**
-     * {@link net.minecraft.client.render.OutlineVertexConsumerProvider#getBuffer(RenderLayer)} creates a consumer which
+     * {@link net.minecraft.client.renderer.OutlineBufferSource#getBuffer(RenderType)} creates a consumer which
      * renders to the outline framebuffer but also to the original framebuffer.
      * <p>
      * If you only want to render to the outline framebuffer, use this method.
      */
     @Nullable
-    VertexConsumer liquid_bounce_getSingleDrawBuffers(RenderLayer layer);
+    VertexConsumer liquid_bounce_getSingleDrawBuffers(RenderType layer);
 }

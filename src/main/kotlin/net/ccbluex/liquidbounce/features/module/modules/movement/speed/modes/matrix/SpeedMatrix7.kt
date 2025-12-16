@@ -37,12 +37,12 @@ class SpeedMatrix7(override val parent : ChoiceConfigurable<*>) : SpeedBHopBase(
     @Suppress("unused")
     private val tickHandle = tickHandler {
         if (player.moving) {
-            if (player.isOnGround) {
-                player.velocity.y = 0.419652
-                player.velocity = player.velocity.withStrafe()
+            if (player.onGround()) {
+                player.deltaMovement.y = 0.419652
+                player.setDeltaMovement(player.deltaMovement.withStrafe())
             } else {
-                if (player.velocity.x * player.velocity.x + player.velocity.z * player.velocity.z < 0.04) {
-                    player.velocity = player.velocity.withStrafe()
+                if (player.deltaMovement.x * player.deltaMovement.x + player.deltaMovement.z * player.deltaMovement.z < 0.04) {
+                    player.setDeltaMovement(player.deltaMovement.withStrafe())
                 }
             }
         }

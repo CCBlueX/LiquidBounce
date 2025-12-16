@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.text;
 
 import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition;
-import net.minecraft.client.gui.hud.ChatHudLine;
+import net.minecraft.client.GuiMessage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-@Mixin(ChatHudLine.Visible.class)
+@Mixin(GuiMessage.Line.class)
 public abstract class MixinChatHudLineVisible implements ChatMessageAddition {
 
     @Unique

@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.OverlayTargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
-import net.minecraft.item.BowItem
-import net.minecraft.item.TridentItem
+import net.minecraft.world.item.BowItem
+import net.minecraft.world.item.TridentItem
 
 /**
  * Automatically shoots with your bow when you aim correctly at an enemy or when the bow is fully charged.
@@ -60,7 +60,7 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
         targetTracker.reset()
 
         // Should check if player is using bow
-        val activeItem = player.activeItem?.item
+        val activeItem = player.useItem?.item
         if (activeItem !is BowItem && activeItem !is TridentItem) {
             return@tickHandler
         }

@@ -30,10 +30,10 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isGameProfileUnique
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import java.util.*
 
 object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
@@ -45,8 +45,8 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
 
     val packetHandler = handler<PacketEvent> {
         when (val packet = it.packet) {
-            is PlayerListS2CPacket -> mc.execute {
-                for (entry in packet.playerAdditionEntries) {
+            is ClientboundPlayerInfoUpdatePacket -> mc.execute {
+                for (entry in packet.newEntries()) {
                     val profile = entry.profile ?: continue
 
                     if (entry.latency < 2 || profile.properties?.isEmpty == false || isGameProfileUnique(profile)) {
@@ -62,7 +62,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
                 }
             }
 
-            is PlayerRemoveS2CPacket -> mc.execute {
+            is ClientboundPlayerInfoRemovePacket -> mc.execute {
                 val uuids = packet.profileIds
                 suspectList.removeAll(uuids)
                 botList.removeAll(uuids)
@@ -75,7 +75,7 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
             return@tickHandler
         }
 
-        for (entity in world.players) {
+        for (entity in world.players()) {
             if (!suspectList.contains(entity.uuid)) {
                 continue
             }
@@ -95,9 +95,9 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
         }
     }
 
-    private fun isFullyArmored(entity: PlayerEntity): Boolean {
+    private fun isFullyArmored(entity: Player): Boolean {
         return entity.armorItems.all { stack ->
-            stack.isPlayerArmor && stack.hasEnchantments()
+            stack.isPlayerArmor && stack.isEnchanted
         }
     }
 
@@ -107,11 +107,11 @@ object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
      *
      * With the help of at least 1 tick of waiting time, this function patches this "trick".
      */
-    private fun updatesArmor(entity: PlayerEntity, prevArmor: Array<ItemStack>?): Boolean {
+    private fun updatesArmor(entity: Player, prevArmor: Array<ItemStack>?): Boolean {
         return !prevArmor.contentEquals(entity.armorItems)
     }
 
-    override fun isBot(entity: PlayerEntity): Boolean {
+    override fun isBot(entity: Player): Boolean {
         return botList.contains(entity.uuid)
     }
 

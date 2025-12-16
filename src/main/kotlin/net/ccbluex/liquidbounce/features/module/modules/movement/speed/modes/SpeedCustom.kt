@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * A highly adjustable speed mode
@@ -71,8 +71,8 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             }
 
             if (horizontalAcceleration != 0f) {
-                player.velocity.x *= 1f + horizontalAcceleration
-                player.velocity.z *= 1f + horizontalAcceleration
+                player.deltaMovement.x *= 1f + horizontalAcceleration
+                player.deltaMovement.z *= 1f + horizontalAcceleration
             }
         }
 
@@ -81,8 +81,8 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             if (horizontalJumpOffModifier != 0f) {
                 waitTicks(ticksToBoostOff)
 
-                player.velocity.x *= 1f + horizontalJumpOffModifier
-                player.velocity.z *= 1f + horizontalJumpOffModifier
+                player.deltaMovement.x *= 1f + horizontalJumpOffModifier
+                player.deltaMovement.z *= 1f + horizontalJumpOffModifier
             }
         }
 
@@ -102,8 +102,8 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
                 return@handler
             }
 
-            val pullDown = if (player.velocity.y <= 0.0) pullDownDuringFall else pullDown
-            player.velocity.y -= pullDown
+            val pullDown = if (player.deltaMovement.y <= 0.0) pullDownDuringFall else pullDown
+            player.deltaMovement.y -= pullDown
         }
 
         @Suppress("unused")
@@ -139,10 +139,14 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             }
 
             when {
-                customSpeed -> player.velocity =
-                        player.velocity.withStrafe(speed = speed.toDouble(), strength = strength.toDouble())
+                customSpeed -> player.setDeltaMovement(
+                    player.deltaMovement.withStrafe(
+                        speed = speed.toDouble(),
+                        strength = strength.toDouble()
+                    )
+                )
                 else ->
-                    player.velocity = player.velocity.withStrafe(strength = strength.toDouble())
+                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = strength.toDouble()))
             }
         }
 
@@ -150,10 +154,10 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
         private val packetHandler = sequenceHandler<PacketEvent> {
             val packet = it.packet
 
-            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-                val velocityX = packet.velocity.x / 8000.0
-                val velocityY = packet.velocity.y / 8000.0
-                val velocityZ = packet.velocity.z / 8000.0
+            if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+                val velocityX = packet.movement.x / 8000.0
+                val velocityY = packet.movement.y / 8000.0
+                val velocityZ = packet.movement.z / 8000.0
 
                 ticksTimeout = velocityTimeout
 
@@ -166,7 +170,7 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
                     } else {
                         player.sqrtSpeed
                     }
-                    player.velocity = player.velocity.withStrafe(speed = speed)
+                    player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
                 }
             }
         }

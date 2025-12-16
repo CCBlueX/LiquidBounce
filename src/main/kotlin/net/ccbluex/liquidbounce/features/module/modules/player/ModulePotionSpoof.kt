@@ -23,11 +23,11 @@ import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.registry.Registries
-import net.minecraft.registry.entry.RegistryEntry
-import net.minecraft.util.Language
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Holder
+import net.minecraft.locale.Language
 
 /**
  * PotionSpoof
@@ -37,19 +37,19 @@ import net.minecraft.util.Language
 object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
 
     private class StatusEffectConfigurable(
-        val registryEntry: RegistryEntry<StatusEffect>,
+        val registryEntry: Holder<MobEffect>,
         specifiedLanguage: Map<String, String>,
     ) : ToggleableConfigurable(
         parent = this,
         // Value name (en_us)
-        name = specifiedLanguage.getOrDefault(registryEntry.value().translationKey, "Unknown"),
+        name = specifiedLanguage.getOrDefault(registryEntry.value().descriptionId, "Unknown"),
         enabled = false,
     ) {
         private val level = int("Level", 1, 1..10).onChanged {
-            instance = StatusEffectInstance(registryEntry, 0, it - 1)
+            instance = MobEffectInstance(registryEntry, 0, it - 1)
         }
 
-        var instance: StatusEffectInstance = StatusEffectInstance(registryEntry, 0, level.get() - 1)
+        var instance: MobEffectInstance = MobEffectInstance(registryEntry, 0, level.get() - 1)
             private set
     }
 
@@ -57,19 +57,19 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
         /** @see Language.create */
         val language = Language::class.java.getResourceAsStream("/assets/minecraft/lang/en_us.json").let { stream ->
             val map = HashMap<String, String>(8192)
-            Language.load(stream, map::put)
+            Language.loadFromJson(stream, map::put)
             map
         }
 
-        Registries.STATUS_EFFECT.streamEntries().map {
+        BuiltInRegistries.MOB_EFFECT.listElements().map {
             tree(StatusEffectConfigurable(it, specifiedLanguage = language))
         }.toList()
     }
 
     override fun onDisabled() {
         for (spoofedEffect in statusEffectValues) {
-            if (spoofedEffect.enabled && player.getStatusEffect(spoofedEffect.registryEntry)?.duration == 0) {
-                player.removeStatusEffect(spoofedEffect.registryEntry)
+            if (spoofedEffect.enabled && player.getEffect(spoofedEffect.registryEntry)?.duration == 0) {
+                player.removeEffect(spoofedEffect.registryEntry)
             }
         }
     }
@@ -78,14 +78,14 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
     private val tickHandler = handler<PlayerTickEvent> {
         for (effect in statusEffectValues) {
             if (effect.enabled) {
-                player.addStatusEffect(effect.instance)
-                effect.instance.effectType.value().onApplied(
+                player.addEffect(effect.instance)
+                effect.instance.effect.value().addAttributeModifiers(
                     player.attributes,
                     effect.instance.amplifier
                 )
-            } else if (player.getStatusEffect(effect.registryEntry)?.duration == 0) {
-                player.removeStatusEffect(effect.registryEntry)
-                effect.instance.effectType.value().onRemoved(player.attributes)
+            } else if (player.getEffect(effect.registryEntry)?.duration == 0) {
+                player.removeEffect(effect.registryEntry)
+                effect.instance.effect.value().removeAttributeModifiers(player.attributes)
             }
         }
     }

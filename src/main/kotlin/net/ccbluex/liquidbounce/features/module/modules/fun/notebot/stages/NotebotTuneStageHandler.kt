@@ -16,14 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.stages
+package net.ccbluex.liquidbounce.features.module.modules.fun.notebot.stages
 
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NoteBlockTracker
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.NotebotEngine
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.InstrumentNote
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
 
 class NotebotTuneStageHandler(engine: NotebotEngine) : ModuleNotebot.NotebotStageHandler {
 
@@ -44,7 +44,7 @@ class NotebotTuneStageHandler(engine: NotebotEngine) : ModuleNotebot.NotebotStag
         val untunedBlocks = blocks.filter { (block, note) -> block.currentNote != note.noteValue }
 
         if (untunedBlocks.isEmpty()) {
-            chat(ModuleNotebot.message("startPlaying").formatted(Formatting.GREEN), ModuleNotebot)
+            chat(ModuleNotebot.message("startPlaying").withStyle(ChatFormatting.GREEN), ModuleNotebot)
             engine.changeStage(NotebotPlayStageHandler(this.assignments))
 
             return

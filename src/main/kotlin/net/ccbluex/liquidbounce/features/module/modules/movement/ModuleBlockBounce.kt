@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.minecraft.block.BedBlock
-import net.minecraft.block.HoneyBlock
-import net.minecraft.block.SlimeBlock
+import net.minecraft.world.level.block.BedBlock
+import net.minecraft.world.level.block.HoneyBlock
+import net.minecraft.world.level.block.SlimeBlock
 
 /**
  * BlockBounce module
@@ -46,7 +46,7 @@ object ModuleBlockBounce : ClientModule("BlockBounce", Category.MOVEMENT) {
 
     private fun standingOnBouncyBlock(): Boolean {
         val boundingBox = player.box
-        val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.01)
+        val detectionBox = boundingBox.setMinY(boundingBox.minY - 0.01)
 
         return detectionBox.isBlockAtPosition { block ->
             block is SlimeBlock || block is BedBlock || block is HoneyBlock

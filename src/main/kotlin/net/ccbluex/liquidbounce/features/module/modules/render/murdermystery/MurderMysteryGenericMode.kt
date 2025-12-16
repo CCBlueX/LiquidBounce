@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.handItems
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.item.BowItem
-import net.minecraft.item.Items
-import net.minecraft.util.Identifier
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.world.item.BowItem
+import net.minecraft.world.item.Items
+import net.minecraft.resources.Identifier
 
 abstract class MurderMysteryGenericMode(name: String) : Choice(name), MurderMysteryMode {
     protected val bowSkins = HashSet<String>()
@@ -55,7 +55,7 @@ abstract class MurderMysteryGenericMode(name: String) : Choice(name), MurderMyst
     }
 
     override fun handleHasBow(
-        entity: AbstractClientPlayerEntity,
+        entity: AbstractClientPlayer,
         locationSkin: Identifier,
     ) {
         if (bowSkins.add(locationSkin.path)) {
@@ -65,7 +65,7 @@ abstract class MurderMysteryGenericMode(name: String) : Choice(name), MurderMyst
         }
     }
 
-    override fun getPlayerType(player: AbstractClientPlayerEntity): MurderMysteryMode.PlayerType {
+    override fun getPlayerType(player: AbstractClientPlayer): MurderMysteryMode.PlayerType {
         return when (player.skin.body.texturePath().path) {
             in murdererSkins -> MurderMysteryMode.PlayerType.MURDERER
             in bowSkins -> MurderMysteryMode.PlayerType.DETECTIVE_LIKE
@@ -73,7 +73,7 @@ abstract class MurderMysteryGenericMode(name: String) : Choice(name), MurderMyst
         }
     }
 
-    override fun shouldAttack(entity: AbstractClientPlayerEntity): Boolean {
+    override fun shouldAttack(entity: AbstractClientPlayer): Boolean {
         val targetPlayerType = getPlayerType(entity)
 
         return when (currentPlayerType) {

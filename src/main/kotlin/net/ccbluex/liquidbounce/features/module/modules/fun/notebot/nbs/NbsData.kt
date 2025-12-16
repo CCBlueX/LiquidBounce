@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs
+package net.ccbluex.liquidbounce.features.module.modules.fun.notebot.nbs
 
-import net.minecraft.block.enums.NoteBlockInstrument
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
 
 data class NbsHeader(
     val version: Byte = 0,

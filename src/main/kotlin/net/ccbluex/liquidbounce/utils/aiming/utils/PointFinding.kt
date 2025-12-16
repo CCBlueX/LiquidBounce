@@ -32,13 +32,13 @@ import net.ccbluex.liquidbounce.utils.math.geometry.PlaneSection
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.entity.projectile.ArrowEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
+import net.minecraft.world.entity.projectile.arrow.Arrow
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.ClipContext
 import org.joml.Matrix3f
 import org.joml.Vector3f
 import kotlin.jvm.optionals.getOrNull
@@ -47,29 +47,29 @@ import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
 
-val Box.edgePoints: Array<Vec3d>
+val AABB.edgePoints: Array<Vec3>
     get() = arrayOf(
-        Vec3d(minX, minY, minZ),
-        Vec3d(minX, minY, maxZ),
-        Vec3d(minX, maxY, minZ),
-        Vec3d(minX, maxY, maxZ),
-        Vec3d(maxX, minY, minZ),
-        Vec3d(maxX, minY, maxZ),
-        Vec3d(maxX, maxY, minZ),
-        Vec3d(maxX, maxY, maxZ),
+        Vec3(minX, minY, minZ),
+        Vec3(minX, minY, maxZ),
+        Vec3(minX, maxY, minZ),
+        Vec3(minX, maxY, maxZ),
+        Vec3(maxX, minY, minZ),
+        Vec3(maxX, minY, maxZ),
+        Vec3(maxX, maxY, minZ),
+        Vec3(maxX, maxY, maxZ),
     )
 
-fun Vec3d.moveTowards(otherPoint: Vec3d, fraction: Double): Vec3d {
+fun Vec3.moveTowards(otherPoint: Vec3, fraction: Double): Vec3 {
     val direction = otherPoint - this
 
-    return this + direction.multiply(fraction)
+    return this + direction.scale(fraction)
 }
 
 /**
  * Creates rotation matrices: The first allows to turn the vec (1.0, 0.0, 0.0) into the given [vec].
  * The second allows to turn the given vec into (1.0, 0.0, 0.0).
  */
-fun getRotationMatricesForVec(vec: Vec3d): Pair<Matrix3f, Matrix3f> {
+fun getRotationMatricesForVec(vec: Vec3): Pair<Matrix3f, Matrix3f> {
     val hypotenuse = hypot(vec.x, vec.z)
 
     val yawAtan = atan2(vec.z, vec.x).toFloat()
@@ -86,8 +86,8 @@ fun getRotationMatricesForVec(vec: Vec3d): Pair<Matrix3f, Matrix3f> {
  *
  * @return a list of projected points, or null if the virtual eye is inside the target box.
  */
-fun projectPointsOnBox(virtualEye: Vec3d, targetBox: Box, maxPoints: Int = 128): MutableList<Vec3d>? {
-    val list = ArrayList<Vec3d>()
+fun projectPointsOnBox(virtualEye: Vec3, targetBox: AABB, maxPoints: Int = 128): MutableList<Vec3>? {
+    val list = ArrayList<Vec3>()
 
     val success = projectPointsOnBox(virtualEye, targetBox, maxPoints) {
         list.add(it)
@@ -106,10 +106,10 @@ fun projectPointsOnBox(virtualEye: Vec3d, targetBox: Box, maxPoints: Int = 128):
  * @return `false` if the virtual eye is inside the target box.
  */
 inline fun projectPointsOnBox(
-    virtualEye: Vec3d,
-    targetBox: Box,
+    virtualEye: Vec3,
+    targetBox: AABB,
     maxPoints: Int = 128,
-    consumer: (Vec3d) -> Unit
+    consumer: (Vec3) -> Unit
 ): Boolean {
     if (targetBox.contains(virtualEye)) {
         return false
@@ -121,7 +121,7 @@ inline fun projectPointsOnBox(
     // (from the perspective of the virtual eye). This position is used to craft a the targeting frame
     val targetFrameOrigin = targetBox.edgePoints
         .mapToArray { playerToBoxLine.getNearestPointTo(it) }
-        .minBy { it.squaredDistanceTo(virtualEye) }
+        .minBy { it.distanceToSqr(virtualEye) }
         .moveTowards(virtualEye, 0.1)
 
     val plane = NormalizedPlane(targetFrameOrigin, playerToBoxLine.direction)
@@ -153,7 +153,7 @@ inline fun projectPointsOnBox(
         // Extent the point from the face on.
         val pointExtended = point.moveTowards(virtualEye, -100.0)
 
-        val pos = targetBox.raycast(virtualEye, pointExtended).getOrNull() ?: return@castPointsOnUniformly
+        val pos = targetBox.clip(virtualEye, pointExtended).getOrNull() ?: return@castPointsOnUniformly
 
         consumer(pos)
     }
@@ -179,11 +179,11 @@ inline fun projectPointsOnBox(
  */
 @Suppress("detekt:complexity.LongParameterList")
 fun findVisiblePointFromVirtualEye(
-    virtualEyes: Vec3d,
-    box: Box,
+    virtualEyes: Vec3,
+    box: AABB,
     rangeToTest: Double,
     visibilityPredicate: VisibilityPredicate = ArrowVisibilityPredicate,
-): Vec3d? {
+): Vec3? {
     val points = projectPointsOnBox(virtualEyes, box) ?: return null
 
     ModuleProjectileAimbot.debugGeometry("points") {
@@ -193,14 +193,14 @@ fun findVisiblePointFromVirtualEye(
     val rays = ArrayList<ModuleDebug.DebuggedGeometry>()
 
     val center = box.center
-    points.sortBy { it.squaredDistanceTo(center) }
+    points.sortBy { it.distanceToSqr(center) }
 
     for (spot in points) {
         val vecFromEyes = spot - virtualEyes
         val raycastTarget = vecFromEyes * 2.0 + virtualEyes
-        val spotOnBox = box.raycast(virtualEyes, raycastTarget).getOrNull() ?: continue
+        val spotOnBox = box.clip(virtualEyes, raycastTarget).getOrNull() ?: continue
 
-        val rayStart = spotOnBox.subtract(vecFromEyes.normalize().multiply(rangeToTest))
+        val rayStart = spotOnBox.subtract(vecFromEyes.normalize().scale(rangeToTest))
 
         val visible = visibilityPredicate.isVisible(rayStart, spotOnBox)
 
@@ -218,21 +218,21 @@ fun findVisiblePointFromVirtualEye(
 }
 
 object ArrowVisibilityPredicate : VisibilityPredicate {
-    override fun isVisible(eyesPos: Vec3d, targetSpot: Vec3d): Boolean {
-        val arrowEntity = ArrowEntity(
+    override fun isVisible(eyesPos: Vec3, targetSpot: Vec3): Boolean {
+        val arrowEntity = Arrow(
             world, eyesPos.x, targetSpot.y, targetSpot.z, ItemStack(Items.ARROW),
             null)
 
-        return world.raycast(
-            RaycastContext(
+        return world.clip(
+            ClipContext(
                 eyesPos,
                 targetSpot,
-                RaycastContext.ShapeType.COLLIDER,
-                RaycastContext.FluidHandling.NONE,
+                ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE,
                 arrowEntity
             )
         )?.let { it.type == HitResult.Type.MISS } ?: true
     }
 }
 
-fun Vector3f.toVec3d(): Vec3d = Vec3d(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
+fun Vector3f.toVec3d(): Vec3 = Vec3(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())

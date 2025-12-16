@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.interfaces;
 
 /**
- * Additions to {@link net.minecraft.client.gui.hud.ChatHudLine} and
- * {@link net.minecraft.client.gui.hud.ChatHudLine.Visible}.
+ * Additions to {@link net.minecraft.client.GuiMessage} and
+ * {@link net.minecraft.client.GuiMessage.Line}.
  */
 public interface ChatMessageAddition {
 

@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.Custo
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.HorizonAntiBotMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.IntaveHeavyAntiBotMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.MatrixAntiBotMode
-import net.minecraft.entity.Entity
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.player.Player
 
 object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
 
@@ -67,7 +67,7 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
     }
 
     fun isADuplicate(profile: GameProfile): Boolean {
-        return network.playerList.count { it.profile.name == profile.name && it.profile.id != profile.id } == 1
+        return network.onlinePlayers.count { it.profile.name == profile.name && it.profile.id != profile.id } == 1
     }
 
     /**
@@ -76,7 +76,7 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
      * Used to prevent false positives when a player is on a minigame such as Practice and joins a duel
      */
     fun isGameProfileUnique(profile: GameProfile): Boolean {
-        return network.playerList.count { it.profile.name == profile.name && it.profile.id == profile.id } == 1
+        return network.onlinePlayers.count { it.profile.name == profile.name && it.profile.id == profile.id } == 1
     }
 
     /**
@@ -87,11 +87,11 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
             return false
         }
 
-        if (player !is PlayerEntity) {
+        if (player !is Player) {
             return false
         }
 
-        if (literalNPC && !network.playerUuids.contains(player.uuid)) {
+        if (literalNPC && !network.onlinePlayerIds.contains(player.uuid)) {
             return true
         }
 
@@ -100,6 +100,6 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
 
     interface IAntiBotMode {
         fun reset() { }
-        fun isBot(entity: PlayerEntity): Boolean
+        fun isBot(entity: Player): Boolean
     }
 }

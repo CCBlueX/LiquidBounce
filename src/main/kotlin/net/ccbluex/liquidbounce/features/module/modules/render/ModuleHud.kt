@@ -40,8 +40,8 @@ import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.M
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.minecraft.client.gui.screen.DisconnectedScreen
-import net.minecraft.client.gui.screen.world.LevelLoadingScreen
+import net.minecraft.client.gui.screens.DisconnectedScreen
+import net.minecraft.client.gui.screens.LevelLoadingScreen
 
 /**
  * Module HUD
@@ -79,7 +79,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
     }
 
     val isBlurEffectActive
-        get() = Blur.enabled && !(mc.options.hudHidden && mc.currentScreen == null)
+        get() = Blur.enabled && !(mc.options.hideGui && mc.screen == null)
 
     private var browserSettings: BrowserSettings? = null
 

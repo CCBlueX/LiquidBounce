@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 
 import com.mojang.authlib.GameProfile
-import net.minecraft.client.world.ClientWorld
+import net.minecraft.client.multiplayer.ClientLevel
 
 /**
  * A special [FakePlayer] that moves following a recorded path
@@ -27,7 +27,7 @@ import net.minecraft.client.world.ClientWorld
  */
 class MovingFakePlayer(
     private vararg val snapshots: PosPoseSnapshot,
-    clientWorld: ClientWorld?,
+    clientWorld: ClientLevel?,
     gameProfile: GameProfile?,
 ) : FakePlayer(
     clientWorld, gameProfile,

@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.minecraft.entity.Entity
+import net.minecraft.world.entity.Entity
 import java.util.concurrent.ConcurrentHashMap
 
 object EntityTaggingManager: EventListener {

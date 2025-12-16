@@ -26,15 +26,15 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.math.levenshtein
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.network.PlayerListEntry
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.component.type.MapIdComponent
-import net.minecraft.item.FilledMapItem
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
-import net.minecraft.util.Identifier
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.client.multiplayer.PlayerInfo
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.level.saveddata.maps.MapId
+import net.minecraft.world.item.MapItem
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
+import net.minecraft.resources.Identifier
 import java.util.*
 import kotlin.math.absoluteValue
 
@@ -42,25 +42,25 @@ object MurderMysteryAssassinationMode : Choice("Assassination"), MurderMysteryMo
     override val parent
         get() = ModuleMurderMystery.modes
 
-    private var lastMap: MapIdComponent? = null
+    private var lastMap: MapId? = null
     private var currentAssassinationTarget: UUID? = null
     private var currentAssassin: UUID? = null
 
     val packetHandler =
         handler<PacketEvent> { packetEvent ->
-            val world = mc.world ?: return@handler
+            val world = mc.level ?: return@handler
 
-            if (packetEvent.packet is PlaySoundS2CPacket) {
+            if (packetEvent.packet is ClientboundSoundPacket) {
                 val packet = packetEvent.packet
 
-                if (packet.sound.value().id.toString() != "minecraft:block.note_block.basedrum") {
+                if (packet.sound.value().location.toString() != "minecraft:block.note_block.basedrum") {
                     return@handler
                 }
 
                 val expectedDistance = calculateDistanceFromWarningVolume(packet.volume)
 
                 val probablyAssassin =
-                    world.players.minByOrNull {
+                    world.players().minByOrNull {
                         (it.distanceTo(player) - expectedDistance).absoluteValue
                     } ?: return@handler
 
@@ -85,21 +85,21 @@ object MurderMysteryAssassinationMode : Choice("Assassination"), MurderMysteryMo
         }
 
     private fun assassinModeBs(
-        player: ClientPlayerEntity,
-        world: ClientWorld,
+        player: LocalPlayer,
+        world: ClientLevel,
     ) {
-        val equippedItem = player.inventory.getStack(3)
+        val equippedItem = player.inventory.getItem(3)
 
         val item = equippedItem?.item
 
-        if (item !is FilledMapItem) {
+        if (item !is MapItem) {
             // reset lastMap when map was removed (no longer in game)
             lastMap = null
             return
         }
 
-        val mapId = equippedItem.get(DataComponentTypes.MAP_ID)
-        val mapState = mapId?.let { world.getMapState(it) } ?: return
+        val mapId = equippedItem.get(DataComponents.MAP_ID)
+        val mapState = mapId?.let { world.getMapData(it) } ?: return
 
         if (mapId == lastMap) {
             return
@@ -127,33 +127,33 @@ object MurderMysteryAssassinationMode : Choice("Assassination"), MurderMysteryMo
 
     private fun findPlayerWithClosestName(
         name: String,
-        player: ClientPlayerEntity,
-    ): PlayerListEntry? {
-        return player.networkHandler.playerList.minByOrNull { netInfo ->
+        player: LocalPlayer,
+    ): PlayerInfo? {
+        return player.connection.onlinePlayers.minByOrNull { netInfo ->
             levenshtein(name, netInfo.profile.name.lowercase().trim())
         }
     }
 
     override fun handleHasBow(
-        entity: AbstractClientPlayerEntity,
+        entity: AbstractClientPlayer,
         locationSkin: Identifier,
     ) {
         // Nobody has a bow in this game mode
     }
 
     override fun handleHasSword(
-        entity: AbstractClientPlayerEntity,
+        entity: AbstractClientPlayer,
         locationSkin: Identifier,
     ) {
         // Everyone has a sword in this game mode
     }
 
-    override fun shouldAttack(entity: AbstractClientPlayerEntity): Boolean {
+    override fun shouldAttack(entity: AbstractClientPlayer): Boolean {
         // This person is either our assasin or our target. Attack them.
         return this.getPlayerType(entity) == MurderMysteryMode.PlayerType.MURDERER
     }
 
-    override fun getPlayerType(player: AbstractClientPlayerEntity): MurderMysteryMode.PlayerType {
+    override fun getPlayerType(player: AbstractClientPlayer): MurderMysteryMode.PlayerType {
         if (player.gameProfile.id == currentAssassinationTarget || player.gameProfile.id == currentAssassin) {
             return MurderMysteryMode.PlayerType.MURDERER
         }

@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
 import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.minecraft.text.Text
-import net.minecraft.text.TextVisitFactory
-import net.minecraft.util.Formatting
+import net.minecraft.network.chat.Component
+import net.minecraft.util.StringDecomposer
+import net.minecraft.ChatFormatting
 
 object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
 
@@ -38,7 +38,7 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
 
     @Suppress("unused", "CAST_NEVER_SUCCEEDS" /* succeed with mixins */)
     val chatHandler = handler<ChatReceiveEvent> { event ->
-        val string = TextVisitFactory.removeFormattingCodes(event.textData)
+        val string = StringDecomposer.getPlainText(event.textData)
 
         if (regexFilters.isNotEmpty()) {
             val content = string.subSequence(string.indexOf('>') + 1, string.length).trim()
@@ -64,18 +64,18 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
             // imitate client messages
             val id = "$string-external"
 
-            val literalText = Text.literal("")
+            val literalText = Component.literal("")
             val text = event.applyChatDecoration.invoke(event.textData)
             literalText.append(text)
 
-            val other = mc.inGameHud.chatHud.messages.find {
+            val other = mc.gui.chat.allMessages.find {
                 (it as ChatMessageAddition).`liquid_bounce$getId`() == id
             }
 
             var count = 1
             other?.let {
                 count += (other as ChatHudLineAddition).`liquid_bounce$getCount`()
-                literalText.append(" ${Formatting.GRAY}[$count]")
+                literalText.append(" ${ChatFormatting.GRAY}[$count]")
             }
 
             val data = MessageMetadata(prefix = false, id = id, remove = true, count = count)

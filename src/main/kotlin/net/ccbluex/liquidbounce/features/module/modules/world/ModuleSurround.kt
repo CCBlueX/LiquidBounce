@@ -44,12 +44,12 @@ import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.entity.getFeetBlockPos
 import net.ccbluex.liquidbounce.utils.entity.isInHole
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.block.Blocks
-import net.minecraft.entity.Entity
-import net.minecraft.entity.decoration.EndCrystalEntity
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Direction
 import org.joml.Vector2d
 import kotlin.math.abs
 import kotlin.math.ceil
@@ -159,18 +159,18 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
                 val posAsLong = entry.longKey
 
                 // find the list of current breaking data, or else return
-                val breakingProgressions = mc.worldRenderer.blockBreakingProgressions[posAsLong] ?: continue
+                val breakingProgressions = mc.levelRenderer.destructionProgress[posAsLong] ?: continue
 
                 // find the braking info that doesn't belong to us, if we mine our own surround, it should be ignored
-                val breakingInfo = breakingProgressions.lastOrNull { it.actorId != player.id } ?: continue
-                val stage = breakingInfo.stage
+                val breakingInfo = breakingProgressions.lastOrNull { it.id != player.id } ?: continue
+                val stage = breakingInfo.progress
 
                 // check if the stage is too low, if so return
                 if (stage < minDestroyProgress) {
                     continue
                 }
 
-                val pos = BlockPos.fromLong(posAsLong)
+                val pos = BlockPos.of(posAsLong)
                 // add the block to the map of blocks that are being broken
                 if (ExtraLayer.enabled && stage > 0) {
                     broken.add(pos)
@@ -230,8 +230,8 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
             CommandCenter.state = CenterHandlerState.APPLY_ON_NEXT_EVENT
         }
 
-        startY = player.entityPos.y
-        val centerBlockPos = player.blockPos.toCenterPos()
+        startY = player.position().y
+        val centerBlockPos = player.blockPosition().center
         centerPos = Vector2d(centerBlockPos.x, centerBlockPos.z)
     }
 
@@ -255,7 +255,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         val dx = abs(player.x - (centerPos?.x ?: 0.0))
         val dz = abs(player.z - (centerPos?.y ?: 0.0))
         val xzChange = DisableOn.XZ_MOVE in disableOn && (dx > 0.5 || dz > 0.5)
-        val speed = player.entityPos.subtract(player.lastX, player.lastY, player.lastZ).lengthSquared() * 20.0
+        val speed = player.position().subtract(player.xo, player.yo, player.zo).lengthSqr() * 20.0
         val highSpeed = DisableOn.XZ_SPEED in disableOn && speed >= 5.0
         if (yChange || xzChange || highSpeed) {
             enabled = false
@@ -264,7 +264,7 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (DisableOn.Y_CHANGE in disableOn && player.entityPos.y != startY) {
+        if (DisableOn.Y_CHANGE in disableOn && player.position().y != startY) {
             enabled = false
             return@handler
         }
@@ -279,10 +279,10 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
             val maxX = getMax(bb, Direction.Axis.X)
             val maxZ = getMax(bb, Direction.Axis.Z)
             setOf(
-                BlockPos.ofFloored(bb.minX, y, bb.minZ),
-                BlockPos.ofFloored(bb.minX, y, maxZ),
-                BlockPos.ofFloored(maxX, y, bb.minZ),
-                BlockPos.ofFloored(maxX, y, maxZ),
+                BlockPos.containing(bb.minX, y, bb.minZ),
+                BlockPos.containing(bb.minX, y, maxZ),
+                BlockPos.containing(maxX, y, bb.minZ),
+                BlockPos.containing(maxX, y, maxZ),
             )
         }
 
@@ -292,26 +292,26 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
 
         for (holePos in hole) {
             DIRECTIONS_EXCLUDING_UP.forEach { direction ->
-                val pos = holePos.offset(direction)
+                val pos = holePos.relative(direction)
                 if (pos in hole || !holeBlocks.add(pos)) {
                     return@forEach
                 }
 
                 val isDown = direction == Direction.DOWN
                 if (isDown && Features.DOWN in features) {
-                    holeBlocks.add(holePos.offset(direction, 2))
+                    holeBlocks.add(holePos.relative(direction, 2))
                 }
 
                 if (!isDown && (addExtraLayerBlocks || Protect.broken.contains(pos))) {
-                    holeBlocks.add(pos.offset(direction))
-                    holeBlocks.add(pos.up())
+                    holeBlocks.add(pos.relative(direction))
+                    holeBlocks.add(pos.above())
                     if (Protect.ExtraLayer.corners) {
-                        holeBlocks.add(pos.offset(direction.rotateYClockwise()))
+                        holeBlocks.add(pos.relative(direction.clockWise))
                     }
                 }
 
                 if (!isDown && Features.EXTEND in features) {
-                    pos.getBlockingEntities { it !is EndCrystalEntity && it != player }.forEach {
+                    pos.getBlockingEntities { it !is EndCrystal && it != player }.forEach {
                         getEntitySurround(it, holeBlocks, blocked, y)
                     }
                 }
@@ -342,18 +342,18 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         val maxX = getMax(bb, Direction.Axis.X)
         val maxZ = getMax(bb, Direction.Axis.Z)
         val hole = setOf(
-            BlockPos.ofFloored(bb.minX, y, bb.minZ),
-            BlockPos.ofFloored(bb.minX, y, maxZ),
-            BlockPos.ofFloored(maxX, y, bb.minZ),
-            BlockPos.ofFloored(maxX, y, maxZ),
+            BlockPos.containing(bb.minX, y, bb.minZ),
+            BlockPos.containing(bb.minX, y, maxZ),
+            BlockPos.containing(maxX, y, bb.minZ),
+            BlockPos.containing(maxX, y, maxZ),
         )
 
         blocked.addAll(hole)
 
-        val directions = if (down) DIRECTIONS_EXCLUDING_UP else Direction.HORIZONTAL
+        val directions = if (down) DIRECTIONS_EXCLUDING_UP else Direction.BY_2D_DATA
         hole.forEach {
             directions.forEach { direction ->
-                val pos = it.offset(direction)
+                val pos = it.relative(direction)
 
                 if (it !in blocked) {
                     list += pos
@@ -362,9 +362,9 @@ object ModuleSurround : ClientModule("Surround", Category.WORLD, disableOnQuit =
         }
     }
 
-    private fun getMax(boundingBox: Box, axis: Direction.Axis): Double {
-        val max = boundingBox.getMax(axis)
-        val min = boundingBox.getMin(axis)
+    private fun getMax(boundingBox: AABB, axis: Direction.Axis): Double {
+        val max = boundingBox.max(axis)
+        val min = boundingBox.min(axis)
 
         return if (max == floor(min) + 1.0) {
             min

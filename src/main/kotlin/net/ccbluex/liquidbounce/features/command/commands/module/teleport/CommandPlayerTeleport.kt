@@ -54,7 +54,7 @@ object CommandPlayerTeleport : Command.Factory, MinecraftShortcuts {
                     .build()
             )
             .handler {
-                val player = world.players.find { it.gameProfile.name.equals(args[0] as String, true) }
+                val player = world.players().find { it.gameProfile.name.equals(args[0] as String, true) }
                     ?: throw CommandException(command.result("playerNotFound"))
 
                 val y = if (ModuleTeleport.highTp) {

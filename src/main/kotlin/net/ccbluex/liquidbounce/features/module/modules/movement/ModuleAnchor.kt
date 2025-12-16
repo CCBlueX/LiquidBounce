@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.boundingBox
 import net.ccbluex.liquidbounce.utils.math.centerPointOf
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.hypot
@@ -55,7 +55,7 @@ object ModuleAnchor : ClientModule(
     private val horizontalSpeed by float("HorizontalSpeed", 0.3f, 0f..10f)
     private val verticalSpeed by float("VerticalSpeed", 0.1f, 0f..10f)
 
-    var goal: Vec3d? = null
+    var goal: Vec3? = null
 
     override fun onEnabled() {
         HoleManager.subscribe(this)
@@ -75,22 +75,22 @@ object ModuleAnchor : ClientModule(
             return@tickHandler
         }
 
-        val playerPos = player.entityPos
+        val playerPos = player.position()
         val maxDistanceSq = maxDistance.sq()
 
         // check if the current goal is still okay, don't update it then
         goal?.let { vec3d ->
-            if (vec3d.squaredDistanceTo(playerPos) > maxDistanceSq) {
+            if (vec3d.distanceToSqr(playerPos) > maxDistanceSq) {
                 return@let
             }
         }
 
         // not in a hole and no valid goal means we need to search one
         goal = HoleTracker.holes
-            .filter { hole -> hole.positions.maxY + 1 <= playerPos.y }
+            .filter { hole -> hole.positions.maxY() + 1 <= playerPos.y }
             .map { hole -> hole.positions.centerPointOf(Direction.DOWN) }
-            .filter { vec3d -> vec3d.squaredDistanceTo(playerPos) <= maxDistanceSq }
-            .minByOrNull { vec3d -> vec3d.squaredDistanceTo(playerPos) }
+            .filter { vec3d -> vec3d.distanceToSqr(playerPos) <= maxDistanceSq }
+            .minByOrNull { vec3d -> vec3d.distanceToSqr(playerPos) }
     }
 
     @Suppress("unused")
@@ -98,7 +98,7 @@ object ModuleAnchor : ClientModule(
         val goal = goal ?: return@handler
 
         // determine the desired movement
-        val delta = goal.subtract(player.entityPos)
+        val delta = goal.subtract(player.position())
 
         // apply the movement
         val movement = event.movement
@@ -106,7 +106,7 @@ object ModuleAnchor : ClientModule(
         modifyVerticalSpeed(movement, delta)
     }
 
-    private fun modifyHorizontalSpeed(movement: Vec3d, delta: Vec3d, goal: Vec3d) {
+    private fun modifyHorizontalSpeed(movement: Vec3, delta: Vec3, goal: Vec3) {
         if (horizontalSpeed == 0f) {
             // only cancel the movement if the player would fall into the hole
             val playerBB = player.boundingBox
@@ -143,7 +143,7 @@ object ModuleAnchor : ClientModule(
         movement.z = delta.z
     }
 
-    private fun modifyVerticalSpeed(movement: Vec3d, delta: Vec3d) {
+    private fun modifyVerticalSpeed(movement: Vec3, delta: Vec3) {
         if (verticalSpeed == 0f) {
             return
         }
@@ -162,7 +162,7 @@ object ModuleAnchor : ClientModule(
     }
 
     override val running: Boolean
-        get() = super.running && !player.isGliding && !player.isSpectator && !player.isSwimming
+        get() = super.running && !player.isFallFlying && !player.isSpectator && !player.isSwimming
 
     override fun horizontalDistance() = ceil(maxDistance).toInt()
 

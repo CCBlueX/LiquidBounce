@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import java.util.*
 
 /**
@@ -52,7 +52,7 @@ object ModuleNotifier : ClientModule("Notifier", Category.MISC) {
     private val uuidNameCache = hashMapOf<UUID, String>()
 
     override fun onEnabled() {
-        for (entry in network.playerList) {
+        for (entry in network.onlinePlayers) {
             uuidNameCache[entry.profile.id] = entry.profile.name
         }
     }
@@ -64,8 +64,8 @@ object ModuleNotifier : ClientModule("Notifier", Category.MISC) {
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerListS2CPacket) {
-            for (entry in packet.playerAdditionEntries) {
+        if (packet is ClientboundPlayerInfoUpdatePacket) {
+            for (entry in packet.newEntries()) {
                 val profile = entry.profile ?: continue
 
                 if (profile.name != null && profile.name.length > 2) {
@@ -81,9 +81,9 @@ object ModuleNotifier : ClientModule("Notifier", Category.MISC) {
                     }
                 }
             }
-        } else if (packet is PlayerRemoveS2CPacket) {
+        } else if (packet is ClientboundPlayerInfoRemovePacket) {
             for (uuid in packet.profileIds) {
-                val entry = network.playerList.find { it.profile.id == uuid } ?: continue
+                val entry = network.onlinePlayers.find { it.profile.id == uuid } ?: continue
 
                 if (entry.profile.name != null && entry.profile.name.length > 2) {
                     if (leaveMessages) {

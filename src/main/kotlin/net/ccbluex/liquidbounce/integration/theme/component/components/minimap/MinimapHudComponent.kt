@@ -42,13 +42,13 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.Alignment
-import net.minecraft.client.gl.RenderPipelines
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.ScreenRect
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec2f
+import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.navigation.ScreenRectangle
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec2
 import java.util.*
 import kotlin.math.ceil
 
@@ -107,7 +107,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
         val boundingBox = alignment.getBounds(minimapSize.toFloat(), minimapSize.toFloat())
 
-        val centerBB = Vec2f(
+        val centerBB = Vec2(
             boundingBox.xMin + (boundingBox.xMax - boundingBox.xMin) * 0.5F,
             boundingBox.yMin + (boundingBox.yMax - boundingBox.yMin) * 0.5F
         )
@@ -118,19 +118,19 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         val playerOffX = (playerPos.x / 16.0) % 1.0
         val playerOffZ = (playerPos.z / 16.0) % 1.0
 
-        val chunksToRenderAround = ceil(MathHelper.SQUARE_ROOT_OF_TWO * (viewDistance + 1)).toInt()
+        val chunksToRenderAround = ceil(Mth.SQRT_OF_TWO * (viewDistance + 1)).toInt()
 
         val scale = minimapSize / (2.0F * viewDistance)
 
         with(event.context) {
             val bounds = createBounds(boundingBox)
             scissorStack.withPush(bounds) {
-                matrices.withPush {
-                    matrices.translate(boundingBox.xMin + minimapSize * 0.5F, boundingBox.yMin + minimapSize * 0.5F)
-                    matrices.scale(scale, scale)
+                pose().withPush {
+                    pose().translate(boundingBox.xMin + minimapSize * 0.5F, boundingBox.yMin + minimapSize * 0.5F)
+                    pose().scale(scale, scale)
 
-                    matrices.rotate(-(playerRotation.yaw + 180.0F).toRadians())
-                    matrices.translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
+                    pose().rotate(-(playerRotation.yaw + 180.0F).toRadians())
+                    pose().translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
 
                     if (showTexture) {
                         drawMinimapTexture(bounds, ChunkPos(baseX, baseZ), chunksToRenderAround, viewDistance)
@@ -169,9 +169,9 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         }
     }
 
-    private fun DrawContext.drawShadowForBB(
+    private fun GuiGraphics.drawShadowForBB(
         boundingBox: BoundingBox2f,
-        bounds: ScreenRect,
+        bounds: ScreenRectangle,
         from: Color4b,
         to: Color4b,
         offset: Float = 3.0F,
@@ -184,35 +184,35 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             pipeline = RenderPipelines.GUI,
             bounds = bounds,
         ) { pose ->
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax).color(from)
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width).color(to)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax + width).color(to)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
+            addVertexWith2DPose(pose, boundingBox.xMin + offset, boundingBox.yMax).setColor(from)
+            addVertexWith2DPose(pose, boundingBox.xMin + offset, boundingBox.yMax + width).setColor(to)
+            addVertexWith2DPose(pose, boundingBox.xMax, boundingBox.yMax + width).setColor(to)
+            addVertexWith2DPose(pose, boundingBox.xMax, boundingBox.yMax).setColor(from)
 
-            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset).color(from)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMax).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset).color(to)
+            addVertexWith2DPose(pose, boundingBox.xMax, boundingBox.yMin + offset).setColor(from)
+            addVertexWith2DPose(pose, boundingBox.xMax, boundingBox.yMax).setColor(from)
+            addVertexWith2DPose(pose, boundingBox.xMax + width, boundingBox.yMax).setColor(to)
+            addVertexWith2DPose(pose, boundingBox.xMax + width, boundingBox.yMin + offset).setColor(to)
 
-            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax + width).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMax + width).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMax).color(to)
+            addVertexWith2DPose(pose, boundingBox.xMax, boundingBox.yMax).setColor(from)
+            addVertexWith2DPose(pose, boundingBox.xMax, boundingBox.yMax + width).setColor(to)
+            addVertexWith2DPose(pose, boundingBox.xMax + width, boundingBox.yMax + width).setColor(to)
+            addVertexWith2DPose(pose, boundingBox.xMax + width, boundingBox.yMax).setColor(to)
 
-            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax).color(to)
-            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax + width).color(to)
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width).color(to)
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax).color(from)
+            addVertexWith2DPose(pose, boundingBox.xMin + offset - width, boundingBox.yMax).setColor(to)
+            addVertexWith2DPose(pose, boundingBox.xMin + offset - width, boundingBox.yMax + width).setColor(to)
+            addVertexWith2DPose(pose, boundingBox.xMin + offset, boundingBox.yMax + width).setColor(to)
+            addVertexWith2DPose(pose, boundingBox.xMin + offset, boundingBox.yMax).setColor(from)
 
-            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset - width).color(to)
-            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset).color(from)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset - width).color(to)
+            addVertexWith2DPose(pose, boundingBox.xMax, boundingBox.yMin + offset - width).setColor(to)
+            addVertexWith2DPose(pose, boundingBox.xMax, boundingBox.yMin + offset).setColor(from)
+            addVertexWith2DPose(pose, boundingBox.xMax + width, boundingBox.yMin + offset).setColor(to)
+            addVertexWith2DPose(pose, boundingBox.xMax + width, boundingBox.yMin + offset - width).setColor(to)
         }
     }
 
-    private fun DrawContext.drawMinimapTexture(
-        bounds: ScreenRect,
+    private fun GuiGraphics.drawMinimapTexture(
+        bounds: ScreenRectangle,
         centerPos: ChunkPos,
         chunksToRenderAround: Int,
         viewDistance: Float,
@@ -229,7 +229,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                         continue
                     }
 
-                    val chunkPos = ChunkPos.toLong(centerPos.x + x, centerPos.z + y)
+                    val chunkPos = ChunkPos.asLong(centerPos.x + x, centerPos.z + y)
 
                     val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                     val fromX = x.toFloat()
@@ -237,20 +237,20 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                     val toX = fromX + 1F
                     val toY = fromY + 1F
 
-                    vertex(pose, fromX, fromY).texture(texPosition.xMin, texPosition.yMin)
-                        .color(-1)
-                    vertex(pose, fromX, toY).texture(texPosition.xMin, texPosition.yMax)
-                        .color(-1)
-                    vertex(pose, toX, toY).texture(texPosition.xMax, texPosition.yMax)
-                        .color(-1)
-                    vertex(pose, toX, fromY).texture(texPosition.xMax, texPosition.yMin)
-                        .color(-1)
+                    addVertexWith2DPose(pose, fromX, fromY).setUv(texPosition.xMin, texPosition.yMin)
+                        .setColor(-1)
+                    addVertexWith2DPose(pose, fromX, toY).setUv(texPosition.xMin, texPosition.yMax)
+                        .setColor(-1)
+                    addVertexWith2DPose(pose, toX, toY).setUv(texPosition.xMax, texPosition.yMax)
+                        .setColor(-1)
+                    addVertexWith2DPose(pose, toX, fromY).setUv(texPosition.xMax, texPosition.yMin)
+                        .setColor(-1)
                 }
             }
         }
     }
 
-    private fun DrawContext.drawEntities(
+    private fun GuiGraphics.drawEntities(
         tickDelta: Float,
         baseX: Float,
         baseZ: Float,
@@ -261,20 +261,20 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             val pos = entity.interpolateCurrentPosition(tickDelta)
             val rot = entity.interpolateCurrentRotation(tickDelta)
 
-            matrices.pushMatrix()
-            matrices.translate(pos.x.toFloat() / 16.0F - baseX, pos.z.toFloat() / 16.0F - baseZ)
-            matrices.rotate(rot.yaw.toRadians())
+            pose().pushMatrix()
+            pose().translate(pos.x.toFloat() / 16.0F - baseX, pos.z.toFloat() / 16.0F - baseZ)
+            pose().rotate(rot.yaw.toRadians())
 
             val w = 2.0f
             val h = w * 1.618f
 
-            val p1 = Vec2f(-w * 0.5f / 16.0f, -h * 0.5f / 16.0f)
-            val p2 = Vec2f(0.0f, h * 0.5f / 16.0f)
-            val p3 = Vec2f(w * 0.5f / 16.0f, -h * 0.5f / 16.0f)
+            val p1 = Vec2(-w * 0.5f / 16.0f, -h * 0.5f / 16.0f)
+            val p2 = Vec2(0.0f, h * 0.5f / 16.0f)
+            val p3 = Vec2(w * 0.5f / 16.0f, -h * 0.5f / 16.0f)
 
-            matrices.pushMatrix()
+            pose().pushMatrix()
 
-            matrices.translate(
+            pose().translate(
                 -w / 5.0F * ChunkRenderer.SUN_DIRECTION.x() / 16.0F,
                 -w / 5.0F * ChunkRenderer.SUN_DIRECTION.y() / 16.0F,
             )
@@ -286,12 +286,12 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                 p3,
                 Color4b((color.r * 0.1).toInt(), (color.g * 0.1).toInt(), (color.b * 0.1).toInt(), 200)
             )
-            matrices.popMatrix()
+            pose().popMatrix()
 
             // Entity
             drawTriangle(p1, p2, p3, color)
 
-            matrices.popMatrix()
+            pose().popMatrix()
         }
     }
 

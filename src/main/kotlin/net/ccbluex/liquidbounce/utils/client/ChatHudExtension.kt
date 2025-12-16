@@ -20,35 +20,35 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
 import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition
-import net.minecraft.client.gui.hud.ChatHud
-import net.minecraft.client.gui.hud.ChatHudLine
-import net.minecraft.client.gui.hud.MessageIndicator
-import net.minecraft.text.Text
+import net.minecraft.client.gui.components.ChatComponent
+import net.minecraft.client.GuiMessage
+import net.minecraft.client.GuiMessageTag
+import net.minecraft.network.chat.Component
 
 /**
  * Adds a message and assigns the ID to it.
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
-fun ChatHud.addMessage(message: Text, id: String?, count: Int) = mc.execute {
-    val indicator = if (mc.isConnectedToLocalServer) MessageIndicator.singlePlayer() else MessageIndicator.system()
-    val chatHudLine = ChatHudLine(mc.inGameHud.ticks, message, null, indicator)
+fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.execute {
+    val indicator = if (mc.isSingleplayer) GuiMessageTag.systemSinglePlayer() else GuiMessageTag.system()
+    val chatHudLine = GuiMessage(mc.gui.guiTicks, message, null, indicator)
     (chatHudLine as ChatMessageAddition).`liquid_bounce$setId`(id)
     (chatHudLine as ChatHudLineAddition).`liquid_bounce$setCount`(count)
     this.logChatMessage(chatHudLine)
-    this.addVisibleMessage(chatHudLine)
-    this.addMessage(chatHudLine)
+    this.addMessageToDisplayQueue(chatHudLine)
+    this.addMessageToQueue(chatHudLine)
 }
 
 /**
  * Removes all messages with the given ID.
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
-fun ChatHud.removeMessage(id: String?) = mc.execute {
-    messages.removeIf {
+fun ChatComponent.removeMessage(id: String?) = mc.execute {
+    allMessages.removeIf {
         val removable = it as? ChatMessageAddition ?: return@removeIf false
         id == removable.`liquid_bounce$getId`()
     }
-    visibleMessages.removeIf {
+    trimmedMessages.removeIf {
         val removable = it as? ChatMessageAddition ?: return@removeIf false
         id == removable.`liquid_bounce$getId`()
     }

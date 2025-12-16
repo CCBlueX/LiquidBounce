@@ -18,9 +18,10 @@
  */
 
 @file:Suppress("FunctionName", "NOTHING_TO_INLINE")
+
 package net.ccbluex.liquidbounce.additions
 
-import net.minecraft.client.Mouse
+import net.minecraft.client.MouseHandler
 
 interface MouseAddition {
 
@@ -28,5 +29,5 @@ interface MouseAddition {
 
 }
 
-inline fun Mouse.setPosition(x: Double = this.x, y: Double = this.y) =
+inline fun MouseHandler.setPosition(x: Double = this.xpos(), y: Double = this.ypos()) =
     (this as MouseAddition).`liquidbounce$setPosition`(x, y)

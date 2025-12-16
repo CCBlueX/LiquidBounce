@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBa
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 
 internal object Head : HealthBasedBuff("Head") {
 
@@ -40,7 +40,7 @@ internal object Head : HealthBasedBuff("Head") {
             && player.absorptionAmount <= maxAbsorption
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        return stack.isOf(Items.PLAYER_HEAD)
+        return stack.`is`(Items.PLAYER_HEAD)
     }
 
     override suspend fun execute(slot: HotbarItemSlot) {

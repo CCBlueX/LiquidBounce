@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.math.Vec3d
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.phys.Vec3
 
 /**
  * Does not work in server version 1.8 and below.
@@ -43,7 +43,7 @@ import net.minecraft.util.math.Vec3d
  */
 internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
 
-    private val modification by vec3d("Modification", Vec3d(1337.0, 0.0, 1337.0))
+    private val modification by vec3d("Modification", Vec3(1337.0, 0.0, 1337.0))
 
     @Volatile
     private var prevFallDistance = 0.0
@@ -70,7 +70,7 @@ internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
         }
         val packet = it.packet
 
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is ServerboundMovePlayerPacket) {
             if (packet.onGround && !prevOnGround && prevFallDistance >= playerSafeFallDistance) {
                 flag = true
                 val (dx, dy, dz) = modification
@@ -78,7 +78,7 @@ internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
                 packet.y += dy
                 packet.z += dz
                 packet.onGround = false
-                player.onLanding()
+                player.resetFallDistance()
             }
 
             prevOnGround = packet.onGround
@@ -88,7 +88,7 @@ internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
 
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(priority = MODEL_STATE) { event ->
-        if (flag && player.isOnGround) {
+        if (flag && player.onGround()) {
             event.sprint = false
         }
     }
@@ -96,7 +96,7 @@ internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
     @Suppress("unused")
     private val movementHandler = handler<MovementInputEvent> { event ->
         debugParameter("shouldJump") { flag }
-        if (flag && player.isOnGround) {
+        if (flag && player.onGround()) {
             event.jump = true
             flag = false
         }

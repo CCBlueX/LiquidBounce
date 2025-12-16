@@ -25,105 +25,105 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks.ANCIENT_DEBRIS
-import net.minecraft.block.Blocks.ANVIL
-import net.minecraft.block.Blocks.BARREL
-import net.minecraft.block.Blocks.BEACON
-import net.minecraft.block.Blocks.BLACK_SHULKER_BOX
-import net.minecraft.block.Blocks.BLAST_FURNACE
-import net.minecraft.block.Blocks.BLUE_SHULKER_BOX
-import net.minecraft.block.Blocks.BOOKSHELF
-import net.minecraft.block.Blocks.BREWING_STAND
-import net.minecraft.block.Blocks.BROWN_SHULKER_BOX
-import net.minecraft.block.Blocks.CARTOGRAPHY_TABLE
-import net.minecraft.block.Blocks.CAULDRON
-import net.minecraft.block.Blocks.CHAIN_COMMAND_BLOCK
-import net.minecraft.block.Blocks.CHEST
-import net.minecraft.block.Blocks.CHIPPED_ANVIL
-import net.minecraft.block.Blocks.CLAY
-import net.minecraft.block.Blocks.COAL_BLOCK
-import net.minecraft.block.Blocks.COAL_ORE
-import net.minecraft.block.Blocks.COMMAND_BLOCK
-import net.minecraft.block.Blocks.COMPOSTER
-import net.minecraft.block.Blocks.COPPER_BLOCK
-import net.minecraft.block.Blocks.COPPER_ORE
-import net.minecraft.block.Blocks.CRAFTING_TABLE
-import net.minecraft.block.Blocks.CYAN_SHULKER_BOX
-import net.minecraft.block.Blocks.DAMAGED_ANVIL
-import net.minecraft.block.Blocks.DEEPSLATE_COAL_ORE
-import net.minecraft.block.Blocks.DEEPSLATE_COPPER_ORE
-import net.minecraft.block.Blocks.DEEPSLATE_DIAMOND_ORE
-import net.minecraft.block.Blocks.DEEPSLATE_EMERALD_ORE
-import net.minecraft.block.Blocks.DEEPSLATE_GOLD_ORE
-import net.minecraft.block.Blocks.DEEPSLATE_IRON_ORE
-import net.minecraft.block.Blocks.DEEPSLATE_LAPIS_ORE
-import net.minecraft.block.Blocks.DEEPSLATE_REDSTONE_ORE
-import net.minecraft.block.Blocks.DIAMOND_BLOCK
-import net.minecraft.block.Blocks.DIAMOND_ORE
-import net.minecraft.block.Blocks.DISPENSER
-import net.minecraft.block.Blocks.DRAGON_EGG
-import net.minecraft.block.Blocks.DROPPER
-import net.minecraft.block.Blocks.EMERALD_BLOCK
-import net.minecraft.block.Blocks.EMERALD_ORE
-import net.minecraft.block.Blocks.ENCHANTING_TABLE
-import net.minecraft.block.Blocks.ENDER_CHEST
-import net.minecraft.block.Blocks.END_PORTAL
-import net.minecraft.block.Blocks.END_PORTAL_FRAME
-import net.minecraft.block.Blocks.FIRE
-import net.minecraft.block.Blocks.FLETCHING_TABLE
-import net.minecraft.block.Blocks.FLOWER_POT
-import net.minecraft.block.Blocks.FURNACE
-import net.minecraft.block.Blocks.GOLD_BLOCK
-import net.minecraft.block.Blocks.GOLD_ORE
-import net.minecraft.block.Blocks.GRAY_SHULKER_BOX
-import net.minecraft.block.Blocks.GREEN_SHULKER_BOX
-import net.minecraft.block.Blocks.GRINDSTONE
-import net.minecraft.block.Blocks.HOPPER
-import net.minecraft.block.Blocks.IRON_BLOCK
-import net.minecraft.block.Blocks.IRON_ORE
-import net.minecraft.block.Blocks.JUKEBOX
-import net.minecraft.block.Blocks.LAPIS_BLOCK
-import net.minecraft.block.Blocks.LAPIS_ORE
-import net.minecraft.block.Blocks.LAVA
-import net.minecraft.block.Blocks.LAVA_CAULDRON
-import net.minecraft.block.Blocks.LECTERN
-import net.minecraft.block.Blocks.LIGHT_BLUE_SHULKER_BOX
-import net.minecraft.block.Blocks.LIGHT_GRAY_SHULKER_BOX
-import net.minecraft.block.Blocks.LIME_SHULKER_BOX
-import net.minecraft.block.Blocks.LODESTONE
-import net.minecraft.block.Blocks.LOOM
-import net.minecraft.block.Blocks.MAGENTA_SHULKER_BOX
-import net.minecraft.block.Blocks.NETHERITE_BLOCK
-import net.minecraft.block.Blocks.NETHER_GOLD_ORE
-import net.minecraft.block.Blocks.NETHER_PORTAL
-import net.minecraft.block.Blocks.NETHER_QUARTZ_ORE
-import net.minecraft.block.Blocks.ORANGE_SHULKER_BOX
-import net.minecraft.block.Blocks.PINK_SHULKER_BOX
-import net.minecraft.block.Blocks.PURPLE_SHULKER_BOX
-import net.minecraft.block.Blocks.QUARTZ_BLOCK
-import net.minecraft.block.Blocks.RAW_COPPER_BLOCK
-import net.minecraft.block.Blocks.RAW_GOLD_BLOCK
-import net.minecraft.block.Blocks.RAW_IRON_BLOCK
-import net.minecraft.block.Blocks.REDSTONE_BLOCK
-import net.minecraft.block.Blocks.REDSTONE_ORE
-import net.minecraft.block.Blocks.RED_SHULKER_BOX
-import net.minecraft.block.Blocks.REPEATING_COMMAND_BLOCK
-import net.minecraft.block.Blocks.RESPAWN_ANCHOR
-import net.minecraft.block.Blocks.SHULKER_BOX
-import net.minecraft.block.Blocks.SMITHING_TABLE
-import net.minecraft.block.Blocks.SMOKER
-import net.minecraft.block.Blocks.SPAWNER
-import net.minecraft.block.Blocks.STONECUTTER
-import net.minecraft.block.Blocks.TNT
-import net.minecraft.block.Blocks.TRAPPED_CHEST
-import net.minecraft.block.Blocks.WATER
-import net.minecraft.block.Blocks.WATER_CAULDRON
-import net.minecraft.block.Blocks.WHITE_SHULKER_BOX
-import net.minecraft.block.Blocks.YELLOW_SHULKER_BOX
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks.ANCIENT_DEBRIS
+import net.minecraft.world.level.block.Blocks.ANVIL
+import net.minecraft.world.level.block.Blocks.BARREL
+import net.minecraft.world.level.block.Blocks.BEACON
+import net.minecraft.world.level.block.Blocks.BLACK_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.BLAST_FURNACE
+import net.minecraft.world.level.block.Blocks.BLUE_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.BOOKSHELF
+import net.minecraft.world.level.block.Blocks.BREWING_STAND
+import net.minecraft.world.level.block.Blocks.BROWN_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.CARTOGRAPHY_TABLE
+import net.minecraft.world.level.block.Blocks.CAULDRON
+import net.minecraft.world.level.block.Blocks.CHAIN_COMMAND_BLOCK
+import net.minecraft.world.level.block.Blocks.CHEST
+import net.minecraft.world.level.block.Blocks.CHIPPED_ANVIL
+import net.minecraft.world.level.block.Blocks.CLAY
+import net.minecraft.world.level.block.Blocks.COAL_BLOCK
+import net.minecraft.world.level.block.Blocks.COAL_ORE
+import net.minecraft.world.level.block.Blocks.COMMAND_BLOCK
+import net.minecraft.world.level.block.Blocks.COMPOSTER
+import net.minecraft.world.level.block.Blocks.COPPER_BLOCK
+import net.minecraft.world.level.block.Blocks.COPPER_ORE
+import net.minecraft.world.level.block.Blocks.CRAFTING_TABLE
+import net.minecraft.world.level.block.Blocks.CYAN_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.DAMAGED_ANVIL
+import net.minecraft.world.level.block.Blocks.DEEPSLATE_COAL_ORE
+import net.minecraft.world.level.block.Blocks.DEEPSLATE_COPPER_ORE
+import net.minecraft.world.level.block.Blocks.DEEPSLATE_DIAMOND_ORE
+import net.minecraft.world.level.block.Blocks.DEEPSLATE_EMERALD_ORE
+import net.minecraft.world.level.block.Blocks.DEEPSLATE_GOLD_ORE
+import net.minecraft.world.level.block.Blocks.DEEPSLATE_IRON_ORE
+import net.minecraft.world.level.block.Blocks.DEEPSLATE_LAPIS_ORE
+import net.minecraft.world.level.block.Blocks.DEEPSLATE_REDSTONE_ORE
+import net.minecraft.world.level.block.Blocks.DIAMOND_BLOCK
+import net.minecraft.world.level.block.Blocks.DIAMOND_ORE
+import net.minecraft.world.level.block.Blocks.DISPENSER
+import net.minecraft.world.level.block.Blocks.DRAGON_EGG
+import net.minecraft.world.level.block.Blocks.DROPPER
+import net.minecraft.world.level.block.Blocks.EMERALD_BLOCK
+import net.minecraft.world.level.block.Blocks.EMERALD_ORE
+import net.minecraft.world.level.block.Blocks.ENCHANTING_TABLE
+import net.minecraft.world.level.block.Blocks.ENDER_CHEST
+import net.minecraft.world.level.block.Blocks.END_PORTAL
+import net.minecraft.world.level.block.Blocks.END_PORTAL_FRAME
+import net.minecraft.world.level.block.Blocks.FIRE
+import net.minecraft.world.level.block.Blocks.FLETCHING_TABLE
+import net.minecraft.world.level.block.Blocks.FLOWER_POT
+import net.minecraft.world.level.block.Blocks.FURNACE
+import net.minecraft.world.level.block.Blocks.GOLD_BLOCK
+import net.minecraft.world.level.block.Blocks.GOLD_ORE
+import net.minecraft.world.level.block.Blocks.GRAY_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.GREEN_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.GRINDSTONE
+import net.minecraft.world.level.block.Blocks.HOPPER
+import net.minecraft.world.level.block.Blocks.IRON_BLOCK
+import net.minecraft.world.level.block.Blocks.IRON_ORE
+import net.minecraft.world.level.block.Blocks.JUKEBOX
+import net.minecraft.world.level.block.Blocks.LAPIS_BLOCK
+import net.minecraft.world.level.block.Blocks.LAPIS_ORE
+import net.minecraft.world.level.block.Blocks.LAVA
+import net.minecraft.world.level.block.Blocks.LAVA_CAULDRON
+import net.minecraft.world.level.block.Blocks.LECTERN
+import net.minecraft.world.level.block.Blocks.LIGHT_BLUE_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.LIGHT_GRAY_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.LIME_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.LODESTONE
+import net.minecraft.world.level.block.Blocks.LOOM
+import net.minecraft.world.level.block.Blocks.MAGENTA_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.NETHERITE_BLOCK
+import net.minecraft.world.level.block.Blocks.NETHER_GOLD_ORE
+import net.minecraft.world.level.block.Blocks.NETHER_PORTAL
+import net.minecraft.world.level.block.Blocks.NETHER_QUARTZ_ORE
+import net.minecraft.world.level.block.Blocks.ORANGE_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.PINK_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.PURPLE_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.QUARTZ_BLOCK
+import net.minecraft.world.level.block.Blocks.RAW_COPPER_BLOCK
+import net.minecraft.world.level.block.Blocks.RAW_GOLD_BLOCK
+import net.minecraft.world.level.block.Blocks.RAW_IRON_BLOCK
+import net.minecraft.world.level.block.Blocks.REDSTONE_BLOCK
+import net.minecraft.world.level.block.Blocks.REDSTONE_ORE
+import net.minecraft.world.level.block.Blocks.RED_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.REPEATING_COMMAND_BLOCK
+import net.minecraft.world.level.block.Blocks.RESPAWN_ANCHOR
+import net.minecraft.world.level.block.Blocks.SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.SMITHING_TABLE
+import net.minecraft.world.level.block.Blocks.SMOKER
+import net.minecraft.world.level.block.Blocks.SPAWNER
+import net.minecraft.world.level.block.Blocks.STONECUTTER
+import net.minecraft.world.level.block.Blocks.TNT
+import net.minecraft.world.level.block.Blocks.TRAPPED_CHEST
+import net.minecraft.world.level.block.Blocks.WATER
+import net.minecraft.world.level.block.Blocks.WATER_CAULDRON
+import net.minecraft.world.level.block.Blocks.WHITE_SHULKER_BOX
+import net.minecraft.world.level.block.Blocks.YELLOW_SHULKER_BOX
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 /**
  * XRay module
@@ -286,7 +286,7 @@ object ModuleXRay : ClientModule("XRay", Category.RENDER) {
 
         exposedOnly -> Pools.MutableBlockPos.use { pos ->
             Direction.entries.any {
-                pos.set(blockPos).move(it.vector).getState()?.isSolidBlock(world, pos) == false
+                pos.set(blockPos).move(it.unitVec3i).getState()?.isRedstoneConductor(world, pos) == false
             }
         }
 
@@ -296,7 +296,7 @@ object ModuleXRay : ClientModule("XRay", Category.RENDER) {
     fun shouldRender(state: BlockState, otherState: BlockState, side: Direction) = when {
         state.block !in blocks -> false
 
-        exposedOnly -> !state.isSideInvisible(otherState, side)
+        exposedOnly -> !state.skipRendering(otherState, side)
 
         else -> true
     }
@@ -310,18 +310,18 @@ object ModuleXRay : ClientModule("XRay", Category.RENDER) {
     }
 
     override fun onEnabled() {
-        mc.worldRenderer.reload()
+        mc.levelRenderer.allChanged()
     }
 
     override fun onDisabled() {
-        mc.worldRenderer.reload()
+        mc.levelRenderer.allChanged()
     }
 
     @Suppress("UNUSED_PARAMETER")
     fun valueChangedReload(it: Any) {
         mc.execute {
             // Reload world renderer on block list change
-            mc.worldRenderer.reload()
+            mc.levelRenderer.allChanged()
         }
     }
 

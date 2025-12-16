@@ -43,11 +43,11 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.BlockPos
 
 /**
  * AutoTool module
@@ -212,7 +212,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
     }
 
     fun switchToBreakBlock(pos: BlockPos) {
-        if (requireSneaking && !player.isSneaking || RequireNearBed.enabled && !RequireNearBed.matches()) {
+        if (requireSneaking && !player.isShiftKeyDown || RequireNearBed.enabled && !RequireNearBed.matches()) {
             return
         }
 
@@ -233,7 +233,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             !player.isCreative && durabilityCheck && SilkTouchHandler.test(blockState, stack)
         }.maxWithOrNull(
             Comparator.comparingDouble<T> {
-                it.itemStack.getMiningSpeedMultiplier(blockState).toDouble()
+                it.itemStack.getDestroySpeed(blockState).toDouble()
             }.thenDescending(ItemSlot.PREFER_NEARBY)
         ) ?: return null
 

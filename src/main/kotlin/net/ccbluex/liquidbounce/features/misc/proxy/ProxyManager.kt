@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.network.ClientConnection
+import net.minecraft.network.Connection
 
 /**
  * Proxy Manager
@@ -50,9 +50,9 @@ object ProxyManager : Configurable("proxy"), EventListener {
     val currentProxy
         get() = proxy.takeIf { proxy -> proxy.host.isNotBlank() && proxy.port > 0 }
 
-    private val clientConnections = mutableListOf<ClientConnection>()
+    private val clientConnections = mutableListOf<Connection>()
 
-    internal fun addClientConnection(connection: ClientConnection) = mc.execute {
+    internal fun addClientConnection(connection: Connection) = mc.execute {
         clientConnections.add(connection)
     }
 
@@ -124,7 +124,7 @@ object ProxyManager : Configurable("proxy"), EventListener {
     @Suppress("unused")
     private val connectionTicker = handler<GameTickEvent> {
         clientConnections.removeIf {
-            if (it.isOpen) {
+            if (it.isConnected) {
                 it.tick()
                 true
             } else {

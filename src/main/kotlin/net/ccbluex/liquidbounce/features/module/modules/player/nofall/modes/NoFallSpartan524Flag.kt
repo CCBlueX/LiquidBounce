@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * @anticheat Spartan
@@ -32,7 +32,7 @@ internal object NoFallSpartan524Flag : NoFallMode("Spartan524Flag") {
 
     val repeatable = tickHandler {
         if (player.fallDistance > 2f) {
-            network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true, player.horizontalCollision))
+            network.send(ServerboundMovePlayerPacket.StatusOnly(true, player.horizontalCollision))
             waitTicks(1)
         }
     }

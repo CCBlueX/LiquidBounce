@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.util.Hand
+import net.minecraft.world.InteractionHand
 import kotlin.random.Random
 
 /**
@@ -61,7 +61,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
         @Suppress("unused")
         val repeatable = tickHandler {
             waitTicks(10)
-            player.yaw += 180f
+            player.yRot += 180f
         }
 
         @Suppress("unused")
@@ -111,18 +111,18 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
                 }
             }),
             SWING_HAND("SwingHand", {
-                if (!player.handSwinging) {
-                    player.swingHand(Hand.MAIN_HAND)
+                if (!player.swinging) {
+                    player.swing(InteractionHand.MAIN_HAND)
                 }
             }),
             CHANGE_SLOT("ChangeSlot", {
                 player.inventory.selectedSlot = Random.nextInt(0, 9)
             }),
             YAW("Yaw", {
-                player.yaw += (-180f..180f).random()
+                player.yRot += (-180f..180f).random()
             }),
             PITCH("Pitch", {
-                player.pitch = ((-5f..5f).random() + player.pitch).coerceIn(-90f, 90f)
+                player.setXRot(((-5f..5f).random() + player.xRot).coerceIn(-90f, 90f))
             }),
             RANDOM_DIRECTION("RandomDirection", {
                 randomDirection = DirectionalInput(
@@ -163,19 +163,19 @@ object ModuleAntiAFK : ClientModule("AntiAFK", Category.PLAYER) {
 
         @Suppress("unused")
         val swingRepeatable = tickHandler {
-            if (Swing.enabled && !player.handSwinging) {
+            if (Swing.enabled && !player.swinging) {
                 waitTicks(Swing.delay)
-                player.swingHand(Hand.MAIN_HAND)
+                player.swing(InteractionHand.MAIN_HAND)
             }
         }
 
         @Suppress("unused")
         val repeatable = tickHandler {
             if (move) {
-                mc.options.forwardKey.isPressed = true
+                mc.options.keyUp.setDown(true)
             }
 
-            if (jump && player.isOnGround) {
+            if (jump && player.onGround()) {
                 once<MovementInputEvent> { event ->
                     event.jump = true
                 }

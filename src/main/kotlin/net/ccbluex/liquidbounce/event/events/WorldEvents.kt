@@ -23,20 +23,20 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.LivingEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.shape.VoxelShape
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.phys.shapes.VoxelShape
 
 @Nameable("worldChange")
-class WorldChangeEvent(val world: ClientWorld?) : Event()
+class WorldChangeEvent(val world: ClientLevel?) : Event()
 
 @Nameable("chunkUnload")
 class ChunkUnloadEvent(val pos: ChunkPos) : Event()
@@ -45,7 +45,7 @@ class ChunkUnloadEvent(val pos: ChunkPos) : Event()
 class ChunkLoadEvent(val x: Int, val z: Int) : Event()
 
 @Nameable("chunkDeltaUpdate")
-class ChunkDeltaUpdateEvent(val packet: ChunkDeltaUpdateS2CPacket) : Event()
+class ChunkDeltaUpdateEvent(val packet: ClientboundSectionBlocksUpdatePacket) : Event()
 
 @Nameable("blockChange")
 class BlockChangeEvent(val blockPos: BlockPos, val newState: BlockState) : Event()

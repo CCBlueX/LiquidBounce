@@ -47,7 +47,7 @@ internal object ReportHelperAutoReport : ToggleableConfigurable(ModuleReportHelp
 
         val selfName = player.gameProfile.name
         if (message.contains(selfName)) {
-            val another = world.players.firstNotNullOfOrNull { entity ->
+            val another = world.players().firstNotNullOfOrNull { entity ->
                 entity.gameProfile.name.takeIf { name ->
                     entity !== player && name != selfName && message.contains(name) && !FriendManager.isFriend(name)
                 }
@@ -58,7 +58,7 @@ internal object ReportHelperAutoReport : ToggleableConfigurable(ModuleReportHelp
             }
 
             waitTicks(delay.random())
-            player.networkHandler.sendChatCommand(pattern.format(another))
+            player.connection.sendCommand(pattern.format(another))
         }
     }
 

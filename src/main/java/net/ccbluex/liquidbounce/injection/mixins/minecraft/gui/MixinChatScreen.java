@@ -22,10 +22,11 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.hud.ChatHudLine;
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.util.collection.ArrayListDeque;
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatComponentAccessor;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.GuiMessage;
+import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.util.ArrayListDeque;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -40,9 +41,9 @@ public abstract class MixinChatScreen extends MixinScreen {
     /**
      * We want to close the screen before sending the message to make sure it doesn't affect commands.
      */
-    @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ChatScreen;sendMessage(Ljava/lang/String;Z)V", shift = At.Shift.BEFORE))
+    @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/ChatScreen;handleChatInput(Ljava/lang/String;Z)V", shift = At.Shift.BEFORE))
     private void fixOrder(CallbackInfoReturnable<Boolean> callbackInfo) {
-        this.client.setScreen(null);
+        this.minecraft.setScreen(null);
     }
 
     /**
@@ -50,20 +51,20 @@ public abstract class MixinChatScreen extends MixinScreen {
      *
      * @param chatText chat message by client user
      */
-    @Inject(method = "sendMessage", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "handleChatInput", at = @At("HEAD"), cancellable = true)
     private void handleChatMessage(String chatText, boolean addToHistory, CallbackInfo ci) {
         ChatSendEvent chatSendEvent = new ChatSendEvent(chatText);
 
         EventManager.INSTANCE.callEvent(chatSendEvent);
 
         if (chatSendEvent.isCancelled()) {
-            client.inGameHud.getChatHud().addToMessageHistory(chatText);
+            minecraft.gui.getChat().addRecentChat(chatText);
             ci.cancel();
         }
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"))
-    private void hookMouseClicked(Click click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
+    private void hookMouseClicked(MouseButtonEvent click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
         if (!(ModuleBetterChat.INSTANCE.getRunning() && ModuleBetterChat.Copy.INSTANCE.getRunning())) {
             return;
         }
@@ -74,10 +75,10 @@ public abstract class MixinChatScreen extends MixinScreen {
             return;
         }
 
-        var chatHud = (MixinChatHudAccessor) this.client.inGameHud.getChatHud();
+        var chatHud = (MixinChatComponentAccessor) this.minecraft.gui.getChat();
 
-        var visibleMessages = chatHud.getVisibleMessages();
-        var messageParts = new ArrayListDeque<ChatHudLine.Visible>();
+        var visibleMessages = chatHud.getTrimmedMessages();
+        var messageParts = new ArrayListDeque<GuiMessage.Line>();
         messageParts.add(visibleMessages.get(activeMessage[3]));
 
         for (int index = activeMessage[3] + 1; index < visibleMessages.size(); index++) {
@@ -98,7 +99,7 @@ public abstract class MixinChatScreen extends MixinScreen {
     // [2] - height,
     // [3] - (message) index
     @Unique
-    private int @Nullable [] getActiveMessage(Click click) {
+    private int @Nullable [] getActiveMessage(MouseButtonEvent click) {
         return null;
 //        var chatHud = (MixinChatHudAccessor & ChatHudAddition) this.client.inGameHud.getChatHud();
 //

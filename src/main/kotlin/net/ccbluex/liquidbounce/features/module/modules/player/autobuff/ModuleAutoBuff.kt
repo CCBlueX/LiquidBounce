@@ -116,7 +116,7 @@ object ModuleAutoBuff : ClientModule(
             return@tickHandler
         }
 
-        if (player.isDead || player.isCreative || player.isSpectator || player.age < 20) {
+        if (player.isDeadOrDying || player.isCreative || player.isSpectator || player.tickCount < 20) {
             return@tickHandler
         }
 

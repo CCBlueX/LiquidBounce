@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
+import net.minecraft.world.entity.player.Player
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import java.util.*
 
 /**
@@ -51,15 +51,15 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
      */
     val packetHandler = handler<PacketEvent> {
         when (val packet = it.packet) {
-            is PlayerListS2CPacket -> handleListPacket(packet)
-            is PlayerRemoveS2CPacket -> handlePlayerRemove(packet)
+            is ClientboundPlayerInfoUpdatePacket -> handleListPacket(packet)
+            is ClientboundPlayerInfoRemovePacket -> handlePlayerRemove(packet)
         }
     }
 
-    private fun handleListPacket(packet: PlayerListS2CPacket) {
-        when (packet.actions.first()) {
-            PlayerListS2CPacket.Action.ADD_PLAYER -> handlePlayerListAddPlayers(packet.entries)
-            PlayerListS2CPacket.Action.UPDATE_LATENCY -> handlePlayerListUpdateLatency(packet.entries)
+    private fun handleListPacket(packet: ClientboundPlayerInfoUpdatePacket) {
+        when (packet.actions().first()) {
+            ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER -> handlePlayerListAddPlayers(packet.entries())
+            ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LATENCY -> handlePlayerListUpdateLatency(packet.entries())
             else -> {}
         }
     }
@@ -67,7 +67,7 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
     /**
      * When a player is removed from the game, this function forgets about them.
      */
-    private fun handlePlayerRemove(packet: PlayerRemoveS2CPacket) {
+    private fun handlePlayerRemove(packet: ClientboundPlayerInfoRemovePacket) {
         for (id in packet.profileIds) {
             suspectList.remove(id)
             botList.remove(id)
@@ -81,7 +81,7 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
      */
     private const val INTAVE_BUG_FIX: Boolean = false
 
-    private fun handlePlayerListUpdateLatency(entries: MutableList<PlayerListS2CPacket.Entry>) {
+    private fun handlePlayerListUpdateLatency(entries: MutableList<ClientboundPlayerInfoUpdatePacket.Entry>) {
         if (INTAVE_BUG_FIX && entries.size > 1) {
             return
         }
@@ -107,7 +107,7 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
         }
     }
 
-    private fun handlePlayerListAddPlayers(entries: MutableList<PlayerListS2CPacket.Entry>) {
+    private fun handlePlayerListAddPlayers(entries: MutableList<ClientboundPlayerInfoUpdatePacket.Entry>) {
         for (entry in entries) {
             val profile = entry.profile ?: continue
 
@@ -119,7 +119,7 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
         }
     }
 
-    override fun isBot(entity: PlayerEntity): Boolean {
+    override fun isBot(entity: Player): Boolean {
         return botList.contains(entity.uuid)
     }
 

@@ -24,19 +24,19 @@ package net.ccbluex.liquidbounce.integration
 import com.google.common.base.Predicates
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
-import net.minecraft.client.gui.screen.DisconnectedScreen
-import net.minecraft.client.gui.screen.GameMenuScreen
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.TitleScreen
-import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen
-import net.minecraft.client.gui.screen.option.OptionsScreen
-import net.minecraft.client.gui.screen.world.CreateWorldScreen
-import net.minecraft.client.gui.screen.world.SelectWorldScreen
-import net.minecraft.client.realms.gui.screen.RealmsMainScreen
+import net.minecraft.client.gui.screens.DisconnectedScreen
+import net.minecraft.client.gui.screens.PauseScreen
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.TitleScreen
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
+import net.minecraft.client.gui.screens.multiplayer.SafetyScreen
+import net.minecraft.client.gui.screens.options.OptionsScreen
+import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen
+import com.mojang.realmsclient.RealmsMainScreen
 import java.util.function.Predicate
 
 /**
@@ -45,7 +45,7 @@ import java.util.function.Predicate
  * TODO: Do not simply replace any Lunar Screen with the title screen, if not in a world
  */
 private val Screen.isLunar
-    get() = javaClass.name.startsWith("com.moonsworth.lunar.") && mc.world == null
+    get() = javaClass.name.startsWith("com.moonsworth.lunar.") && mc.level == null
 
 enum class VirtualScreenType(
     val routeName: String,
@@ -69,8 +69,8 @@ enum class VirtualScreenType(
 
     MULTIPLAYER(
         "multiplayer",
-        recognizer = { it is MultiplayerScreen || it is MultiplayerWarningScreen },
-        open = { mc.setScreen(MultiplayerScreen(IntegrationListener.parent)) }
+        recognizer = { it is JoinMultiplayerScreen || it is SafetyScreen },
+        open = { mc.setScreen(JoinMultiplayerScreen(IntegrationListener.parent)) }
     ),
 
     MULTIPLAYER_REALMS(
@@ -90,7 +90,7 @@ enum class VirtualScreenType(
     CREATE_WORLD(
         "create_world",
         recognizer = { it is CreateWorldScreen },
-        open = { CreateWorldScreen.show(mc) {
+        open = { CreateWorldScreen.openFresh(mc) {
             mc.setScreen(IntegrationListener.parent)
         } }
     ),
@@ -105,17 +105,17 @@ enum class VirtualScreenType(
 
     GAME_MENU(
         "game_menu",
-        recognizer = { it is GameMenuScreen }
+        recognizer = { it is PauseScreen }
     ),
 
     INVENTORY(
         "inventory",
-        recognizer = { it is InventoryScreen || it is CreativeInventoryScreen }
+        recognizer = { it is InventoryScreen || it is CreativeModeInventoryScreen }
     ),
 
     CONTAINER(
         "container",
-        recognizer = { it is GenericContainerScreen }
+        recognizer = { it is ContainerScreen }
     ),
 
     DISCONNECTED("disconnected",

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.entity.LivingEntity
+import net.minecraft.world.entity.LivingEntity
 
 /**
  * Following the target on elytra.
@@ -70,7 +70,7 @@ object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
             ?.takeIf { it == target } != null
 
     override val running: Boolean
-        get() = super.running && player.isGliding
+        get() = super.running && player.isFallFlying
 
     internal val target get() = targetTracker.target
 
@@ -89,11 +89,11 @@ object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
     private val targetUpdateHandler = tickHandler {
         targetTracker.reset()
         targetTracker.selectFirst { potentialTarget ->
-            player.canSee(potentialTarget)
+            player.hasLineOfSight(potentialTarget)
         }
 
-        if (safe && !world.isSpaceEmpty(player.boundingBox.offset(player.velocity))) {
-            player.addVelocity(0.0, 0.1, 0.0)
+        if (safe && !world.noCollision(player.boundingBox.move(player.deltaMovement))) {
+            player.push(0.0, 0.1, 0.0)
         }
     }
 

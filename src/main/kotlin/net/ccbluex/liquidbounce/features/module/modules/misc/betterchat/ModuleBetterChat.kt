@@ -35,9 +35,9 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.openChat
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.minecraft.client.gui.hud.ChatHudLine
-import net.minecraft.client.gui.screen.DeathScreen
-import net.minecraft.text.CharacterVisitor
+import net.minecraft.client.GuiMessage
+import net.minecraft.client.gui.screens.DeathScreen
+import net.minecraft.util.FormattedCharSink
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -86,9 +86,9 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
         val highlight by boolean("Highlight", true)
 
         @JvmStatic
-        fun copyMessage(parts: List<ChatHudLine.Visible>, button: Int) {
+        fun copyMessage(parts: List<GuiMessage.Line>, button: Int) {
             val content = Pools.buildStringPooled {
-                val visitor = CharacterVisitor { _, _, codePoint ->
+                val visitor = FormattedCharSink { _, _, codePoint ->
                     appendCodePoint(codePoint)
                     true
                 }
@@ -103,7 +103,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
                     GLFW.GLFW_KEY_RIGHT_SHIFT
                 ) && button == GLFW.GLFW_MOUSE_BUTTON_1
             ) {
-                mc.keyboard.clipboard = content
+                mc.keyboardHandler.clipboard = content
 
                 if (notification) {
                     notification(
@@ -119,7 +119,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
 
         private fun isAnyPressed(vararg keys: Int): Boolean =
             keys.any {
-                GLFW.glfwGetKey(mc.window.handle, it) == GLFW.GLFW_PRESS
+                GLFW.glfwGetKey(mc.window.handle(), it) == GLFW.GLFW_PRESS
             }
     }
 
@@ -134,15 +134,15 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
 
     @Suppress("unused")
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> {
-        if (keepAfterDeath && mc.currentScreen !is DeathScreen) {
+        if (keepAfterDeath && mc.screen !is DeathScreen) {
             return@handler
         }
 
         val options = mc.options
         val prefix = CommandManager.Options.prefix[0]
         when (it.keyCode) {
-            options.chatKey.boundKey.code -> mc.openChat("")
-            options.commandKey.boundKey.code -> mc.openChat("/")
+            options.keyChat.key.value -> mc.openChat("")
+            options.keyCommand.key.value -> mc.openChat("/")
             prefix.code -> mc.openChat(prefix.toString())
         }
     }

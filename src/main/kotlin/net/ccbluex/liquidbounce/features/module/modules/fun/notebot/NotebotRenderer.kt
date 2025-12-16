@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
+package net.ccbluex.liquidbounce.features.module.modules.fun.notebot
 
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot.NotebotStage
 import net.ccbluex.liquidbounce.render.engine.type.Color4b

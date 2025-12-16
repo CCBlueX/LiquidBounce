@@ -205,6 +205,6 @@ class ScriptAsyncUtil(
     @ScriptApiRequired
     fun <T> launch(
         block: Supplier<T>,
-    ): Value = launch(Util.getMainWorkerExecutor(), block)
+    ): Value = launch(Util.backgroundExecutor(), block)
 
 }

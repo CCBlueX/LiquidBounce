@@ -43,10 +43,10 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findItemsInContainer
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.item.isMergeable
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.item.ItemStack
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.world.item.ItemStack
 import kotlin.math.ceil
 
 /**
@@ -135,8 +135,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
             val targetStack = it.itemStack
             when {
                 blacklist != null && it in blacklist -> 0
-                targetStack.isEmpty -> itemStack.maxCount
-                targetStack.isMergeable(itemStack) -> targetStack.maxCount - targetStack.count
+                targetStack.isEmpty -> itemStack.maxStackSize
+                targetStack.isMergeable(itemStack) -> targetStack.maxStackSize - targetStack.count
                 else -> 0
             }
         }
@@ -146,7 +146,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      */
     @Suppress("CognitiveComplexMethod")
     private fun Iterable<ItemSlot>.findPossiblePickActions(
-        screen: HandledScreen<*>,
+        screen: AbstractContainerScreen<*>,
         from: ItemSlot,
         targetBlacklist: MutableSet<ItemSlot>? = null,
     ): List<InventoryAction.Click>? {
@@ -168,7 +168,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
                 }
 
                 /* The remaining count after merged with [fromStack]. Negative -> fromStack has remaining */
-                fun mergedRemaining(target: ItemStack) = fromStack.maxCount - fromStack.count - target.count
+                fun mergedRemaining(target: ItemStack) = fromStack.maxStackSize - fromStack.count - target.count
 
                 buildList {
                     // Pick up
@@ -205,7 +205,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      */
     private fun throwItem(
         cleanupPlan: InventoryCleanupPlan,
-        screen: HandledScreen<*>,
+        screen: AbstractContainerScreen<*>,
         targetBlacklist: MutableSet<ItemSlot>,
     ): List<InventoryAction>? {
         val itemsInInv = findNonEmptySlotsInInventory()
@@ -236,7 +236,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
             val slotsInChest = slots.count { it.slotType == ItemSlotType.CONTAINER }
             val totalCount = slots.sumOf { it.itemStack.count }
 
-            val mergedStackCount = ceil(totalCount.toDouble() / id.item.maxCount.toDouble()).toInt()
+            val mergedStackCount = ceil(totalCount.toDouble() / id.item.defaultMaxStackSize.toDouble()).toInt()
 
             (slots.size - mergedStackCount).coerceAtMost(slotsInChest)
         }
@@ -252,7 +252,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private fun performQuickSwaps(
         event: ScheduleInventoryActionEvent,
         cleanupPlan: InventoryCleanupPlan,
-        screen: HandledScreen<*>
+        screen: AbstractContainerScreen<*>
     ): Boolean? {
         for (i in cleanupPlan.swaps.indices) {
             val hotbarSwap = cleanupPlan.swaps[i]
@@ -290,7 +290,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     /**
      * Either asks [ModuleInventoryCleaner] what to do or just takes everything.
      */
-    private fun createCleanupPlan(screen: HandledScreen<*>): InventoryCleanupPlan {
+    private fun createCleanupPlan(screen: AbstractContainerScreen<*>): InventoryCleanupPlan {
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
             val usefulItems = screen.findItemsInContainer()
 
@@ -317,12 +317,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     /**
      * @return the chest screen if it is open and the title matches the chest title
      */
-    private fun getChestScreen(): HandledScreen<*>? {
-        return mc.currentScreen?.takeIf { it.canBeStolen() } as HandledScreen<*>?
+    private fun getChestScreen(): AbstractContainerScreen<*>? {
+        return mc.screen?.takeIf { it.canBeStolen() } as AbstractContainerScreen<*>?
     }
 
     fun Screen.canBeStolen(): Boolean {
-        return running && this is HandledScreen<*> && this !is InventoryScreen &&
+        return running && this is AbstractContainerScreen<*> && this !is InventoryScreen &&
             checkScreenHandlerType.isValid(this) && checkScreenTitle.isValid(this)
     }
 

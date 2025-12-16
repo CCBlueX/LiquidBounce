@@ -44,12 +44,12 @@ import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.network.packet.c2s.common.CommonPongC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.common.ServerboundPongPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -110,24 +110,24 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
         // Create a simulated player from the client player, as we cannot use the player simulation cache
         // since we are going to modify the player's yaw and pitch
         val directionalInput = DirectionalInput(
-            mc.options.forwardKey.isPressedOnAny,
-            mc.options.backKey.isPressedOnAny,
-            mc.options.leftKey.isPressedOnAny,
-            mc.options.rightKey.isPressedOnAny
+            mc.options.keyUp.isPressedOnAny,
+            mc.options.keyDown.isPressedOnAny,
+            mc.options.keyLeft.isPressedOnAny,
+            mc.options.keyRight.isPressedOnAny
         )
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
             SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(
                 directionalInput,
-                mc.options.jumpKey.isPressedOnAny,
-                mc.options.sprintKey.isPressedOnAny || player.isSprinting,
-                mc.options.sneakKey.isPressedOnAny
+                mc.options.keyJump.isPressedOnAny,
+                mc.options.keySprint.isPressedOnAny || player.isSprinting,
+                mc.options.keyShift.isPressedOnAny
             )
         )
 
         // Alter the simulated player's yaw and pitch to match the camera
-        simulatedPlayer.yaw = event.camera.yaw
-        simulatedPlayer.pitch = event.camera.pitch
+        simulatedPlayer.yaw = event.camera.yRot()
+        simulatedPlayer.pitch = event.camera.xRot()
 
         // Create a cache for the simulated player
         val simulatedPlayerCache = SimulatedPlayerCache(simulatedPlayer)
@@ -144,7 +144,7 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlayerPositionLookS2CPacket) {
+        if (event.packet is ClientboundPlayerPositionPacket) {
             missedOutTick = 0
             if (disableOnFlag) {
                 if (notification) {
@@ -230,31 +230,31 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
 
         @Suppress("unused")
         private val packetEventHandler = handler<PacketEvent> { event ->
-            val yaw = RotationManager.currentRotation?.yaw ?: player.yaw
-            val pitch = RotationManager.currentRotation?.pitch ?: player.pitch
+            val yaw = RotationManager.currentRotation?.yaw ?: player.yRot
+            val pitch = RotationManager.currentRotation?.pitch ?: player.xRot
             val yawOffset = yawOffset.nextFloat()
             val pitchOffset = pitchOffset.nextFloat()
 
             when (val packet = event.packet) {
 
-                is CommonPongC2SPacket -> {
+                is ServerboundPongPacket -> {
                     if (cancelC0B) {
                         event.cancelEvent()
                     }
                 }
 
-                is PlayerInteractItemC2SPacket -> {
+                is ServerboundUseItemPacket -> {
                     event.cancelEvent()
                     sendPacketSilently(
-                        PlayerMoveC2SPacket.LookAndOnGround(
-                            ModuleEasyPearl.currentTargetRotation?.yaw ?: (player.yaw + yawOffset),
-                            ModuleEasyPearl.currentTargetRotation?.pitch ?: (player.pitch + pitchOffset),
-                            player.isOnGround,
+                        ServerboundMovePlayerPacket.Rot(
+                            ModuleEasyPearl.currentTargetRotation?.yaw ?: (player.yRot + yawOffset),
+                            ModuleEasyPearl.currentTargetRotation?.pitch ?: (player.xRot + pitchOffset),
+                            player.onGround(),
                             player.horizontalCollision
                         )
                     )
                     sendPacketSilently(
-                        PlayerInteractItemC2SPacket(
+                        ServerboundUseItemPacket(
                             packet.hand,
                             packet.sequence,
                             yaw + yawOffset,
@@ -263,26 +263,26 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
                     )
                 }
 
-                is PlayerInteractEntityC2SPacket -> {
+                is ServerboundInteractPacket -> {
                     event.cancelEvent()
                     sendPacketSilently(
-                        PlayerMoveC2SPacket.LookAndOnGround(
+                        ServerboundMovePlayerPacket.Rot(
                             yaw + yawOffset,
                             pitch + pitchOffset,
-                            player.isOnGround,
+                            player.onGround(),
                             player.horizontalCollision
                         )
                     )
                     sendPacketSilently(packet)
                 }
 
-                is PlayerInteractBlockC2SPacket -> {
+                is ServerboundUseItemOnPacket -> {
                     event.cancelEvent()
                     sendPacketSilently(
-                        PlayerMoveC2SPacket.LookAndOnGround(
+                        ServerboundMovePlayerPacket.Rot(
                             yaw + yawOffset,
                             pitch + pitchOffset,
-                            player.isOnGround,
+                            player.onGround(),
                             player.horizontalCollision
                         )
                     )

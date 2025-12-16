@@ -41,20 +41,20 @@ import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.client.gui.screen.ChatScreen
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.client.input.KeyInput
-import net.minecraft.client.option.KeyBinding
-import net.minecraft.item.ItemGroups
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
-import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
-import net.minecraft.network.packet.c2s.play.SlotChangedStateC2SPacket
+import net.minecraft.client.gui.screens.ChatScreen
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.client.input.KeyEvent
+import net.minecraft.client.KeyMapping
+import net.minecraft.world.item.CreativeModeTabs
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
+import net.minecraft.network.protocol.game.ServerboundContainerSlotStateChangedPacket
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -78,9 +78,9 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
     private val passthroughSneak by boolean("PassthroughSneak", false)
 
     // states of movement keys, using mc.options.<key>.isPressed doesn't work for some reason
-    private val movementKeys = Reference2BooleanArrayMap<KeyBinding>(
+    private val movementKeys = Reference2BooleanArrayMap<KeyMapping>(
         mc.options.run {
-            arrayOf(forwardKey, leftKey, backKey, rightKey, jumpKey, sneakKey)
+            arrayOf(keyUp, keyLeft, keyDown, keyRight, keyJump, keyShift)
         },
         BooleanArray(6),
         6
@@ -101,19 +101,19 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
         tree(InventoryMoveBlinkFeature)
     }
 
-    fun shouldHandleInputs(keyBinding: KeyBinding): Boolean {
-        val screen = mc.currentScreen ?: return true
+    fun shouldHandleInputs(keyBinding: KeyMapping): Boolean {
+        val screen = mc.screen ?: return true
 
         if (!running || screen is ChatScreen || screen.isInCreativeSearchField() || ModuleClickGui.isInSearchBar) {
             return false
         }
 
-        if (keyBinding == mc.options.sneakKey && !passthroughSneak) {
+        if (keyBinding == mc.options.keyShift && !passthroughSneak) {
             return false
         }
 
         // If we are in a handled screen, we should handle the inputs only if the undetectable option is not enabled
-        return behavior == Behaviour.NORMAL || screen !is HandledScreen<*>
+        return behavior == Behaviour.NORMAL || screen !is AbstractContainerScreen<*>
             || behavior == Behaviour.SAFE && screen is InventoryScreen
             || behavior == Behaviour.STOP_ON_ACTION
     }
@@ -126,21 +126,21 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
 
         val packet = event.packet
 
-        if (isContainerPacket(packet) && player.input.playerInput.any) {
+        if (isContainerPacket(packet) && player.input.keyPresses.any) {
             event.cancelEvent()
             once<MovementInputEvent>(READ_FINAL_STATE) {
                 it.sneak = false
                 it.jump = false
                 it.directionalInput = DirectionalInput.NONE
                 // `send` will force the Runnable to be run in next loop
-                mc.send { sendPacketSilently(packet) }
+                mc.schedule { sendPacketSilently(packet) }
             }
         }
     }
 
     @Suppress("unused")
     private val keyHandler = handler<KeyboardKeyEvent> { event ->
-        val key = movementKeys.keys.find { it.matchesKey(KeyInput(event.keyCode, event.scanCode, event.mods)) }
+        val key = movementKeys.keys.find { it.matches(KeyEvent(event.keyCode, event.scanCode, event.mods)) }
             ?: return@handler
         val pressed = shouldHandleInputs(key) && event.action != GLFW.GLFW_RELEASE
         movementKeys.put(key, pressed)
@@ -155,14 +155,14 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
      * Checks if the player is in the creative search field
      */
     private fun Screen.isInCreativeSearchField() =
-        this is CreativeInventoryScreen &&
-            CreativeInventoryScreen.selectedTab == ItemGroups.getSearchGroup()
+        this is CreativeModeInventoryScreen &&
+            CreativeModeInventoryScreen.selectedTab == CreativeModeTabs.searchTab()
 
     internal fun isContainerPacket(packet: Packet<*>?) =
-        packet is ClickSlotC2SPacket ||
-        packet is ButtonClickC2SPacket ||
-        packet is CreativeInventoryActionC2SPacket ||
-        packet is SlotChangedStateC2SPacket ||
-        packet is CloseHandledScreenC2SPacket
+        packet is ServerboundContainerClickPacket ||
+        packet is ServerboundContainerButtonClickPacket ||
+        packet is ServerboundSetCreativeModeSlotPacket ||
+        packet is ServerboundContainerSlotStateChangedPacket ||
+        packet is ServerboundContainerClosePacket
 
 }

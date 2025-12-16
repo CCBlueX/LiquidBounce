@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.`fun`
+package net.ccbluex.liquidbounce.features.module.modules.fun
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -39,7 +39,7 @@ object ModuleTwerk : ClientModule("Twerk", Category.FUN) {
      * Handles sneaking and unsneaking, has a high priority so that more important modules can override it.
      */
     val movementInputHandler = handler<MovementInputEvent>(priority = 10) {
-        val sneaking = player.age % (delay * 2) < delay
+        val sneaking = player.tickCount % (delay * 2) < delay
         it.sneak = sneaking
     }
 

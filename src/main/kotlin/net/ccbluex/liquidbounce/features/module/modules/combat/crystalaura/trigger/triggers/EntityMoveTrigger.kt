@@ -27,16 +27,16 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.world
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.PostPacketTrigger
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.network.packet.s2c.play.EntityPositionS2CPacket
+import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket
 
 /**
  * Runs placing when an entity moves.
  */
-object EntityMoveTrigger : PostPacketTrigger<EntityPositionS2CPacket>("EntityMove", true) {
+object EntityMoveTrigger : PostPacketTrigger<ClientboundTeleportEntityPacket>("EntityMove", true) {
 
-    override fun postPacketHandler(packet: EntityPositionS2CPacket) {
-        val entity = world.getEntityById(packet.entityId) ?: return
-        if (player.eyePos.squaredDistanceTo(entity.entityPos) > ModuleCrystalAura.targetTracker.maxRange.sq()) {
+    override fun postPacketHandler(packet: ClientboundTeleportEntityPacket) {
+        val entity = world.getEntity(packet.id) ?: return
+        if (player.eyePosition.distanceToSqr(entity.position()) > ModuleCrystalAura.targetTracker.maxRange.sq()) {
             return
         }
 

@@ -27,27 +27,27 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.PostPacketTrigger
 import net.ccbluex.liquidbounce.interfaces.EntitiesDestroyS2CPacketAddition
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.entity.decoration.EndCrystalEntity
-import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 
 /**
  * Runs placing when the information, that a crystal is removed is received.
  */
-object CrystalDestroyTrigger : PostPacketTrigger<EntitiesDestroyS2CPacket>("CrystalDestroy", true) {
+object CrystalDestroyTrigger : PostPacketTrigger<ClientboundRemoveEntitiesPacket>("CrystalDestroy", true) {
 
     @Suppress("unused")
     private val packetListener = handler<PacketEvent>(-1) { event ->
         val packet = event.packet
-        if (packet !is EntitiesDestroyS2CPacket) {
+        if (packet !is ClientboundRemoveEntitiesPacket) {
             return@handler
         }
 
         val maxRangeSq = SubmoduleCrystalPlacer.getMaxRange().sq()
         val containsRelevantCrystal = packet.entityIds.any {
-            val entity = world.getEntityById(it)
+            val entity = world.getEntity(it)
 
             // is the entity a crystal and in range?
-            entity is EndCrystalEntity && entity.entityPos.squaredDistanceTo(player.entityPos) <= maxRangeSq
+            entity is EndCrystal && entity.position().distanceToSqr(player.position()) <= maxRangeSq
         }
 
         // mark the packet
@@ -56,7 +56,7 @@ object CrystalDestroyTrigger : PostPacketTrigger<EntitiesDestroyS2CPacket>("Crys
         }
     }
 
-    override fun postPacketHandler(packet: EntitiesDestroyS2CPacket) {
+    override fun postPacketHandler(packet: ClientboundRemoveEntitiesPacket) {
         val packetNotRelevant = !(packet as EntitiesDestroyS2CPacketAddition).`liquid_bounce$containsCrystal`()
         if (packetNotRelevant) {
             return

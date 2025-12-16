@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.joinToText
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.withColor
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
 
 /**
  * Hide Command
@@ -71,14 +71,14 @@ object CommandHide : Command.Factory {
         .pagedQuery(
             pageSize = 8,
             header = {
-                result("hidden").withColor(Formatting.RED).bold(true)
+                result("hidden").withColor(ChatFormatting.RED).bold(true)
             },
             items = {
                 ModuleManager.filter { it.hidden }
             },
             eachRow = { _, module ->
                 "\u2B25 ".asText()
-                    .formatted(Formatting.BLUE)
+                    .withStyle(ChatFormatting.BLUE)
                     .append(variable(module.name).copyable())
                     .append(regular(" ("))
                     .append(regular(result("hidden"))) // TODO: click to unhide?

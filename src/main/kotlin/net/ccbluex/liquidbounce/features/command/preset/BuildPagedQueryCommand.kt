@@ -32,14 +32,14 @@ import net.ccbluex.liquidbounce.utils.client.onClickRun
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.client.withColor
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 import java.util.function.IntConsumer
 import kotlin.math.ceil
 
-private val TEXT_SPACE: Text = " ".asPlainText()
+private val TEXT_SPACE: Component = " ".asPlainText()
 
 @Suppress("CognitiveComplexMethod")
 private fun buildPaginationText(
@@ -48,17 +48,17 @@ private fun buildPaginationText(
     boundaryLimit: Int = 3,
     ellipsisThreshold: Int = 5,
     sendPage: IntConsumer,
-): Text {
-    fun MutableText.disabled() = withColor(Formatting.DARK_GRAY)
-    fun MutableText.pageAction(page: Int) = this
+): Component {
+    fun MutableComponent.disabled() = withColor(ChatFormatting.DARK_GRAY)
+    fun MutableComponent.pageAction(page: Int) = this
         .onHover(HoverEvent.ShowText(page.toString().asPlainText()))
         .onClickRun { sendPage.accept(page) }
 
-    val texts = mutableListOf<Text>()
+    val texts = mutableListOf<Component>()
 
     // Previous page
     texts += "\u2B9C".asText().apply {
-        if (currentPage == 1) disabled() else pageAction(currentPage - 1).withColor(Formatting.GRAY)
+        if (currentPage == 1) disabled() else pageAction(currentPage - 1).withColor(ChatFormatting.GRAY)
     }
 
     // Numeral page text (clickable)
@@ -110,7 +110,7 @@ private fun buildPaginationText(
 
     // Next page
     texts += "\u2B9E".asText().apply {
-        if (currentPage == maxPage) disabled() else pageAction(currentPage + 1).withColor(Formatting.GRAY)
+        if (currentPage == maxPage) disabled() else pageAction(currentPage + 1).withColor(ChatFormatting.GRAY)
     }
 
     return texts.joinToText(TEXT_SPACE)
@@ -128,9 +128,9 @@ private fun buildPaginationText(
  */
 fun <T> CommandBuilder.pagedQuery(
     pageSize: Int = 8,
-    header: Command.() -> Text,
+    header: Command.() -> Component,
     items: () -> Collection<T>,
-    eachRow: Command.(index: Int, T) -> Text,
+    eachRow: Command.(index: Int, T) -> Component,
 ): Command {
     require(pageSize > 0) { "pageSize must be greater than 0" }
 
@@ -139,7 +139,7 @@ fun <T> CommandBuilder.pagedQuery(
     fun Command.sendPage(currentPage: Int) {
         val msgId = "C${this.name}#PagedQuery"
         val msgMetadata = MessageMetadata(id = msgId, remove = false)
-        fun send(text: Text) = chat(text, metadata = msgMetadata)
+        fun send(text: Component) = chat(text, metadata = msgMetadata)
 
         val all = items()
         val maxPage = maxPage()
@@ -149,7 +149,7 @@ fun <T> CommandBuilder.pagedQuery(
             all.drop((currentPage - 1) * pageSize).subList(0, minOf(pageSize, all.size))
         }
 
-        mc.inGameHud.chatHud.removeMessage(msgId) // remove old
+        mc.gui.chat.removeMessage(msgId) // remove old
 
         // Header
         send(header(this))

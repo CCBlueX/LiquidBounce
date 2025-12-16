@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.Items
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Items
 
 /**
  * MiddleClickAction module
@@ -65,17 +65,17 @@ object ModuleMiddleClickAction : ClientModule(
         private var wasPressed = false
 
         val repeatable = handler<GameTickEvent> {
-            if (mc.currentScreen != null) {
+            if (mc.screen != null) {
                 wasPressed = false
                 return@handler
             }
 
-            if (player.pitch in stopOnSubmit) {
+            if (player.xRot in stopOnSubmit) {
                 wasPressed = false
                 return@handler
             }
 
-            val pickup = mc.options.pickItemKey.isPressed
+            val pickup = mc.options.keyPickItem.isDown
 
             if (pickup) {
                 // visually select the slot
@@ -119,18 +119,18 @@ object ModuleMiddleClickAction : ClientModule(
         val repeatable = handler<GameTickEvent> {
             val rotation = player.rotation
 
-            val entity = (raytraceEntity(pickUpRange.toDouble(), rotation) { it is PlayerEntity }
-                ?: return@handler).entity as PlayerEntity
+            val entity = (raytraceEntity(pickUpRange.toDouble(), rotation) { it is Player }
+                ?: return@handler).entity as Player
 
             val facesEnemy = facingEnemy(
                 toEntity = entity, rotation = rotation, range = pickUpRange.toDouble(),
                 wallsRange = 0.0
             )
 
-            val pickup = mc.options.pickItemKey.isPressed
+            val pickup = mc.options.keyPickItem.isDown
 
             if (facesEnemy && pickup && !clicked) {
-                val name = entity.nameForScoreboard
+                val name = entity.scoreboardName
 
                 if (FriendManager.isFriend(name)) {
                     FriendManager.friends.remove(FriendManager.Friend(name, null))

@@ -27,25 +27,25 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.Modul
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.hit.HitResult
+import net.minecraft.world.phys.EntityHitResult
+import net.minecraft.world.phys.HitResult
 
 object BoxDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Box") {
 
     val repeatable = tickHandler {
-        val crosshairTarget = mc.crosshairTarget
+        val crosshairTarget = mc.hitResult
 
         if (crosshairTarget?.type != HitResult.Type.ENTITY || crosshairTarget !is EntityHitResult) {
             return@tickHandler
         }
 
         recordPacket(JsonObject().apply {
-            world.entities.filter {
+            world.entitiesForRendering().filter {
                 it.shouldBeAttacked() && it.distanceTo(player) < 10.0f && crosshairTarget.entity.id == it.id
             }.minByOrNull {
                 it.distanceTo(player)
             }?.let {
-                val vector = it.box.center - crosshairTarget.pos
+                val vector = it.box.center - crosshairTarget.location
                 add("vec", JsonObject().apply {
                     addProperty("x", vector.x)
                     addProperty("y", vector.y)

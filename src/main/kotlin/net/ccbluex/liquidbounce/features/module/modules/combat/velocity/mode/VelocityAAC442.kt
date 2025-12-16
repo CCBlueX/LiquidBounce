@@ -31,9 +31,9 @@ internal object VelocityAAC442 : VelocityMode("AAC4.4.2") {
 
     @Suppress("unused")
     private val repeatable = tickHandler {
-        if (player.hurtTime > 0 && !player.isOnGround) {
-            player.velocity.x *= reduce
-            player.velocity.z *= reduce
+        if (player.hurtTime > 0 && !player.onGround()) {
+            player.deltaMovement.x *= reduce
+            player.deltaMovement.z *= reduce
         }
     }
 

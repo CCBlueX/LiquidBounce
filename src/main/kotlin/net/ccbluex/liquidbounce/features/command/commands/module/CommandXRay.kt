@@ -32,9 +32,9 @@ import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.withColor
-import net.minecraft.block.Block
-import net.minecraft.registry.Registries
-import net.minecraft.util.Formatting
+import net.minecraft.world.level.block.Block
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.ChatFormatting
 
 /**
  * XRay Command
@@ -83,15 +83,15 @@ object CommandXRay : Command.Factory {
         .begin("list")
         .pagedQuery(
             pageSize = 8,
-            header = { result("list").withColor(Formatting.RED).bold(true) },
+            header = { result("list").withColor(ChatFormatting.RED).bold(true) },
             items = {
-                ModuleXRay.blocks.sortedBy { it.translationKey }
+                ModuleXRay.blocks.sortedBy { it.descriptionId }
             },
             eachRow = { _, block ->
                 regular("\u2B25 ")
                     .append(variable(block.name).copyable())
                     .append(regular(" ("))
-                    .append(variable(Registries.BLOCK.getId(block).toString()).copyable())
+                    .append(variable(BuiltInRegistries.BLOCK.getKey(block).toString()).copyable())
                     .append(regular(")"))
             }
         )

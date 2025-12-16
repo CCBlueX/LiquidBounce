@@ -39,8 +39,8 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.world.phys.Vec3
 import kotlin.math.min
 
 /**
@@ -107,7 +107,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         }
 
         val nearbyEnemy = world.findEnemy(0f..range.endInclusive) ?: return@tickHandler
-        val currentDistance = player.entityPos.squaredDistanceTo(nearbyEnemy.entityPos)
+        val currentDistance = player.position().distanceToSqr(nearbyEnemy.position())
         val rangeSq = range.start.sq()..range.endInclusive.sq()
 
         // Find the best tick that is able to hit the target and is not too far away from the player, as well as
@@ -115,7 +115,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         var possibleTicks = tickBuffer
             .withIndex()
             .filter { (_, tick) ->
-                val distSq = tick.position.squaredDistanceTo(nearbyEnemy.entityPos)
+                val distSq = tick.position.distanceToSqr(nearbyEnemy.position())
                 distSq < currentDistance && distSq in rangeSq
             }
 
@@ -240,16 +240,16 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> {
         // Stops when you got flagged
-        if (it.packet is PlayerPositionLookS2CPacket && pauseOnFlag) {
+        if (it.packet is ClientboundPlayerPositionPacket && pauseOnFlag) {
             tickBalance = 0f
         }
     }
 
     @JvmRecord
     private data class TickData(
-        val position: Vec3d,
+        val position: Vec3,
         val fallDistance: Double,
-        val velocity: Vec3d,
+        val velocity: Vec3,
         val onGround: Boolean
     )
 

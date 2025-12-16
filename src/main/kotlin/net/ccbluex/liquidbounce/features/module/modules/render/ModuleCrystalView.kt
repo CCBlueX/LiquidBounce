@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinEndCrystalEntityModel
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinEndCrystalEntityRenderer
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinEndCrystalModel
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinEndCrystalRenderer
 
 /**
  * Module CrystalView

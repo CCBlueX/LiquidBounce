@@ -31,11 +31,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
-import net.minecraft.block.Block
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.block.Block
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Registry
+import net.minecraft.core.registries.Registries
+import net.minecraft.resources.Identifier
 import kotlin.jvm.optionals.getOrNull
 
 private fun <V : Value<*>> ParameterBuilder.Companion.value(
@@ -162,11 +162,11 @@ private fun <T : Any> ParameterBuilder.Companion.fromRegistry(
             ?: return@verifiedBy Result.Error("'$paramName' is not a valid Identifier")
 
         Result.ofNullable(
-            registry.getOptionalValue(id).getOrNull()
+            registry.getOptional(id).getOrNull()
         ) { "$sourceText is not a valid $typeName" }
     }
     .autocompletedFrom(minecraftPlaceholders = true) {
-        registry.ids.map { it.toString() }
+        registry.keySet().map { it.toString() }
     }
 
 fun ParameterBuilder.Companion.enchantment(
@@ -174,19 +174,19 @@ fun ParameterBuilder.Companion.enchantment(
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
     .autocompletedFrom(minecraftPlaceholders = true) {
-        world.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT).indexedEntries.map { it.idAsString }
+        world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).asHolderIdMap().map { it.registeredName }
     }
 
 fun ParameterBuilder.Companion.block(
     name: String = "block",
-) = fromRegistry<Block>(name, "Block", Registries.BLOCK)
+) = fromRegistry<Block>(name, "Block", BuiltInRegistries.BLOCK)
 
 fun ParameterBuilder.Companion.item(
     name: String = "item",
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
     .autocompletedFrom(minecraftPlaceholders = true) {
-        Registries.ITEM.ids.map { it.toString() }
+        BuiltInRegistries.ITEM.keySet().map { it.toString() }
     }
 
 fun ParameterBuilder.Companion.playerName(
@@ -194,7 +194,7 @@ fun ParameterBuilder.Companion.playerName(
 ) = begin<String>(name)
     .verifiedBy(STRING_VALIDATOR)
     .autocompletedFrom {
-        mc.networkHandler?.playerList?.map { it.profile.name }
+        mc.connection?.onlinePlayers?.map { it.profile.name }
     }
 
 fun ParameterBuilder.Companion.valueName(

@@ -20,11 +20,11 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.minecraft.block.BlockState
-import net.minecraft.block.FarmlandBlock
-import net.minecraft.block.SoulSandBlock
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.FarmBlock
+import net.minecraft.world.level.block.SoulSandBlock
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 enum class AutoFarmTrackedState {
     SHOULD_BE_DESTROYED,
@@ -40,13 +40,13 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
             return AutoFarmTrackedState.SHOULD_BE_DESTROYED
         }
 
-        val cache = BlockPos.Mutable()
+        val cache = BlockPos.MutableBlockPos()
         if (state.isAir) {
             // If this position is air, check placeable position below
-            val blockBelow = cache.set(pos, Direction.DOWN).getState()?.block ?: return null
+            val blockBelow = cache.setWithOffset(pos, Direction.DOWN).getState()?.block ?: return null
 
             when (blockBelow) {
-                is FarmlandBlock -> track(cache, AutoFarmTrackedState.FARMLAND)
+                is FarmBlock -> track(cache, AutoFarmTrackedState.FARMLAND)
                 is SoulSandBlock -> track(cache, AutoFarmTrackedState.SOUL_SAND)
             }
 
@@ -54,8 +54,8 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
             return null
         }
 
-        val blockBelow = cache.set(pos, Direction.DOWN).getState()?.block
-        if (blockBelow is SoulSandBlock || blockBelow is FarmlandBlock) {
+        val blockBelow = cache.setWithOffset(pos, Direction.DOWN).getState()?.block
+        if (blockBelow is SoulSandBlock || blockBelow is FarmBlock) {
             untrack(cache)
         }
 
@@ -66,9 +66,9 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
         val block = state.block
 
         // Check if air above
-        return if (cache.set(pos, Direction.UP).getState()?.isAir == true) {
+        return if (cache.setWithOffset(pos, Direction.UP).getState()?.isAir == true) {
             when (block) {
-                is FarmlandBlock -> AutoFarmTrackedState.FARMLAND
+                is FarmBlock -> AutoFarmTrackedState.FARMLAND
                 is SoulSandBlock -> AutoFarmTrackedState.SOUL_SAND
                 else -> null
             }

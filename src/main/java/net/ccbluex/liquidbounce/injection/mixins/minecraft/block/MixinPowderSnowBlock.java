@@ -19,12 +19,12 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.powdersnow.NoSlowPowderSnow;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.PowderSnowBlock;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityCollisionHandler;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.PowderSnowBlock;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -33,14 +33,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PowderSnowBlock.class)
 public class MixinPowderSnowBlock {
 
-    @Inject(method = "onEntityCollision", at = @At("HEAD"), cancellable = true)
-    private void hookEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, EntityCollisionHandler handler, boolean bl, CallbackInfo ci) {
+    @Inject(method = "entityInside", at = @At("HEAD"), cancellable = true)
+    private void hookEntityCollision(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier handler, boolean bl, CallbackInfo ci) {
         if (NoSlowPowderSnow.INSTANCE.getRunning()) {
             ci.cancel();
 
             var multiplier = NoSlowPowderSnow.INSTANCE.getMultiplier();
-            var velocity = entity.getVelocity();
-            entity.setVelocity(velocity.x * multiplier, velocity.y, velocity.z * multiplier);
+            var velocity = entity.getDeltaMovement();
+            entity.setDeltaMovement(velocity.x * multiplier, velocity.y, velocity.z * multiplier);
         }
     }
 

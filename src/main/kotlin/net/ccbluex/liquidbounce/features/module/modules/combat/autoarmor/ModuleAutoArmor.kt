@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.item.Items
+import net.minecraft.world.item.Items
 
 /**
  * AutoArmor module
@@ -90,7 +90,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", Category.COMBAT) {
      * @return false if a move was not possible, true if a move occurred
      */
     private fun equipArmorPiece(armorPiece: ArmorPiece): InventoryAction? {
-        val stackInArmor = player.inventory.getStack(armorPiece.inventorySlot)
+        val stackInArmor = player.inventory.getItem(armorPiece.inventorySlot)
 
         if (stackInArmor.item == Items.ELYTRA) {
             return null

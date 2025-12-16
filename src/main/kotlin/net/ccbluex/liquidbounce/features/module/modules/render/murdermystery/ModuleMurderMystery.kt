@@ -31,20 +31,20 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.client.sound.PositionedSoundInstance
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.decoration.ArmorStandEntity
-import net.minecraft.item.BowItem
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.s2c.play.EntityEquipmentUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerRespawnS2CPacket
-import net.minecraft.sound.SoundEvent
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.Box
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.client.resources.sounds.SimpleSoundInstance
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.decoration.ArmorStand
+import net.minecraft.world.item.BowItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
+import net.minecraft.network.protocol.game.ClientboundLoginPacket
+import net.minecraft.network.protocol.game.ClientboundRespawnPacket
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.Identifier
+import net.minecraft.world.phys.AABB
 
 object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
     var playHurt = false
@@ -72,8 +72,8 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         if (playHurt) {
             mc.soundManager.play(
-                PositionedSoundInstance.master(
-                    SoundEvent.of(Identifier.of("entity.villager.hurt")),
+                SimpleSoundInstance.forUI(
+                    SoundEvent.createVariableRangeEvent(Identifier.parse("entity.villager.hurt")),
                     1F,
                 ),
             )
@@ -83,8 +83,8 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
 
         if (playBow) {
             mc.soundManager.play(
-                PositionedSoundInstance.master(
-                    SoundEvent.of(Identifier.of("item.crossbow.shoot")),
+                SimpleSoundInstance.forUI(
+                    SoundEvent.createVariableRangeEvent(Identifier.parse("item.crossbow.shoot")),
                     1F,
                 ),
             )
@@ -94,8 +94,8 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
 
         renderEnvironmentForWorld(event.matrixStack) {
             startBatch()
-            world.entities.filterIsInstance<ArmorStandEntity>().forEach {
-                if (it.getEquippedStack(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
+            world.entitiesForRendering().filterIsInstance<ArmorStand>().forEach {
+                if (it.getItemBySlot(EquipmentSlot.MAINHAND).item is BowItem && it.isInvisible) {
                     renderDroppedBowBox(event.partialTicks, it)
                 }
             }
@@ -104,12 +104,12 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
     }
 
     val packetHandler = handler<PacketEvent> { packetEvent ->
-        val world = mc.world ?: return@handler
+        val world = mc.level ?: return@handler
 
-        if (packetEvent.packet is EntityEquipmentUpdateS2CPacket) {
-            val packet: EntityEquipmentUpdateS2CPacket = packetEvent.packet
+        if (packetEvent.packet is ClientboundSetEquipmentPacket) {
+            val packet: ClientboundSetEquipmentPacket = packetEvent.packet
 
-            packet.equipmentList
+            packet.slots
                 .filter {
                     !it.second.isEmpty && it.first in
                         arrayOf(
@@ -119,18 +119,18 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
                 }
                 .forEach {
                     val itemStack = it.second
-                    val entity = world.getEntityById(packet.entityId)
+                    val entity = world.getEntity(packet.entity)
 
                     handleItem(itemStack, entity)
                 }
         }
-        if (packetEvent.packet is GameJoinS2CPacket || packetEvent.packet is PlayerRespawnS2CPacket) {
+        if (packetEvent.packet is ClientboundLoginPacket || packetEvent.packet is ClientboundRespawnPacket) {
             this.reset()
         }
     }
 
     val tagHandler = handler<TagEntityEvent> {
-        if (it.entity !is AbstractClientPlayerEntity) {
+        if (it.entity !is AbstractClientPlayer) {
             return@handler
         }
 
@@ -143,12 +143,12 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
 
         val col = when (playerType) {
             MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> {
-                entity.scoreboardTeam?.prefix = Text.literal("§b[BOW] ")
+                setPlayerPrefix(Component.literal("§b[BOW] "))
                 Color4b(0, 144, 255)
             }
 
             MurderMysteryMode.PlayerType.MURDERER -> {
-                entity.scoreboardTeam?.prefix = Text.literal("§c[MURD] ")
+                setPlayerPrefix(Component.literal("§c[MURD] "))
                 Color4b(203, 9, 9)
             }
 
@@ -162,7 +162,7 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         itemStack: ItemStack,
         entity: Entity?,
     ) {
-        if (entity !is AbstractClientPlayerEntity) {
+        if (entity !is AbstractClientPlayer) {
             return
         }
 
@@ -177,8 +177,8 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         }
     }
 
-    private fun WorldRenderEnvironment.renderDroppedBowBox(partialTicks: Float, armorStandEntity: ArmorStandEntity) {
-        val box = Box(-0.6, 0.0, -0.6, 0.6, 2.5, 0.6)
+    private fun WorldRenderEnvironment.renderDroppedBowBox(partialTicks: Float, armorStandEntity: ArmorStand) {
+        val box = AABB(-0.6, 0.0, -0.6, 0.6, 2.5, 0.6)
         val pos = armorStandEntity.interpolateCurrentPosition(partialTicks)
 
         withPositionRelativeToCamera(pos) {
@@ -189,7 +189,7 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         }
     }
 
-    private fun shouldAttack(entityPlayer: AbstractClientPlayerEntity): Boolean {
+    private fun shouldAttack(entityPlayer: AbstractClientPlayer): Boolean {
         return this.currentMode.shouldAttack(entityPlayer)
     }
 

@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.Arm
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.RotationAxis
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.entity.HumanoidArm
+import net.minecraft.util.Mth
+import com.mojang.math.Axis
 
 /**
  * Animations module
@@ -108,7 +108,7 @@ object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = 
     @Suppress("unused")
     val strideHandler = handler<PlayerStrideEvent> { event ->
         if (airWalker) {
-            event.strideForce = 0.1.coerceAtMost(player.velocity.horizontalLength()).toFloat()
+            event.strideForce = 0.1.coerceAtMost(player.deltaMovement.horizontalDistance()).toFloat()
         }
     }
 
@@ -120,17 +120,17 @@ object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = 
         override val parent: ChoiceConfigurable<*>
             get() = blockAnimationChoice
 
-        protected fun applySwingOffset(matrices: MatrixStack, arm: Arm, swingProgress: Float) {
-            val armSide = if (arm == Arm.RIGHT) 1 else -1
-            val f = MathHelper.sin(swingProgress * swingProgress * Math.PI)
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(armSide.toFloat() * (45.0f + f * -20.0f)))
-            val g = MathHelper.sin(MathHelper.sqrt(swingProgress) * Math.PI)
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(armSide.toFloat() * g * -20.0f))
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(g * -80.0f))
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(armSide.toFloat() * -45.0f))
+        protected fun applySwingOffset(matrices: PoseStack, arm: HumanoidArm, swingProgress: Float) {
+            val armSide = if (arm == HumanoidArm.RIGHT) 1 else -1
+            val f = Mth.sin(swingProgress * swingProgress * Math.PI)
+            matrices.mulPose(Axis.YP.rotationDegrees(armSide.toFloat() * (45.0f + f * -20.0f)))
+            val g = Mth.sin(Mth.sqrt(swingProgress) * Math.PI)
+            matrices.mulPose(Axis.ZP.rotationDegrees(armSide.toFloat() * g * -20.0f))
+            matrices.mulPose(Axis.XP.rotationDegrees(g * -80.0f))
+            matrices.mulPose(Axis.YP.rotationDegrees(armSide.toFloat() * -45.0f))
         }
 
-        abstract fun transform(matrices: MatrixStack, arm: Arm, equipProgress: Float, swingProgress: Float)
+        abstract fun transform(matrices: PoseStack, arm: HumanoidArm, equipProgress: Float, swingProgress: Float)
 
     }
 
@@ -146,8 +146,8 @@ object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = 
         private val translateY by float("Y", 0.1f, 0.05f..0.3f)
         private val swingProgressScale by float("SwingScale", 0.9f, 0.1f..1.0f)
 
-        override fun transform(matrices: MatrixStack, arm: Arm, equipProgress: Float, swingProgress: Float) {
-            matrices.translate(if (arm == Arm.RIGHT) -0.1f else 0.1f, translateY, 0.0f)
+        override fun transform(matrices: PoseStack, arm: HumanoidArm, equipProgress: Float, swingProgress: Float) {
+            matrices.translate(if (arm == HumanoidArm.RIGHT) -0.1f else 0.1f, translateY, 0.0f)
             applySwingOffset(matrices, arm, swingProgress * swingProgressScale)
         }
 
@@ -161,16 +161,16 @@ object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = 
      */
     object PushdownAnimation : AnimationChoice("Pushdown") {
 
-        override fun transform(matrices: MatrixStack, arm: Arm, equipProgress: Float, swingProgress: Float) {
-            matrices.translate(if (arm == Arm.RIGHT) -0.1f else 0.1f, 0.1f, 0.0f)
+        override fun transform(matrices: PoseStack, arm: HumanoidArm, equipProgress: Float, swingProgress: Float) {
+            matrices.translate(if (arm == HumanoidArm.RIGHT) -0.1f else 0.1f, 0.1f, 0.0f)
 
-            val g = MathHelper.sin(MathHelper.sqrt(swingProgress) * Math.PI)
-            matrices.multiply(
-                RotationAxis.POSITIVE_Z.rotationDegrees(
-                    (if (arm == Arm.RIGHT) 1 else -1) * g * 10.0f
+            val g = Mth.sin(Mth.sqrt(swingProgress) * Math.PI)
+            matrices.mulPose(
+                Axis.ZP.rotationDegrees(
+                    (if (arm == HumanoidArm.RIGHT) 1 else -1) * g * 10.0f
                 )
             )
-            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(g * -35.0f))
+            matrices.mulPose(Axis.XP.rotationDegrees(g * -35.0f))
         }
 
     }

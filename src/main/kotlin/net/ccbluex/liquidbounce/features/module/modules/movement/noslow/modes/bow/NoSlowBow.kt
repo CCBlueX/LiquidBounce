@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sh
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2371
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedInvalidHand
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.minecraft.item.consume.UseAction
+import net.minecraft.world.item.ItemUseAnimation
 
 internal object NoSlowBow : NoSlowUseActionHandler("Bow") {
 
@@ -47,16 +47,16 @@ internal object NoSlowBow : NoSlowUseActionHandler("Bow") {
             }
 
             // Check if we are using a block item
-            return player.isUsingItem && player.activeItem.useAction in arrayOf(
-                UseAction.BOW,
-                UseAction.CROSSBOW,
-                UseAction.SPEAR
+            return player.isUsingItem && player.useItem.useAnimation in arrayOf(
+                ItemUseAnimation.BOW,
+                ItemUseAnimation.CROSSBOW,
+                ItemUseAnimation.SPEAR
             )
         }
 
     @Suppress("unused")
     private val noBlockInteract = tree(NoSlowNoBlockInteract(this) { action ->
-        action == UseAction.BOW || action == UseAction.CROSSBOW || action == UseAction.SPEAR
+        action == ItemUseAnimation.BOW || action == ItemUseAnimation.CROSSBOW || action == ItemUseAnimation.SPEAR
     })
 
 }

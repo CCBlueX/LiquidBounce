@@ -18,10 +18,11 @@
  */
 
 @file:Suppress("FunctionName", "NOTHING_TO_INLINE")
+
 package net.ccbluex.liquidbounce.additions
 
 import com.mojang.blaze3d.textures.GpuTexture
-import net.minecraft.client.gl.Framebuffer
+import com.mojang.blaze3d.pipeline.RenderTarget
 
 interface FramebufferAddition {
 
@@ -36,7 +37,7 @@ interface FramebufferAddition {
  *
  * @return the original color attachment
  */
-inline fun Framebuffer.setColorAttachment(texture: GpuTexture?): GpuTexture? =
+inline fun RenderTarget.setColorAttachment(texture: GpuTexture?): GpuTexture? =
     (this as FramebufferAddition).`liquidbounce$setColorAttachment`(texture)
 
 /**
@@ -44,5 +45,5 @@ inline fun Framebuffer.setColorAttachment(texture: GpuTexture?): GpuTexture? =
  *
  * @return the original depth attachment
  */
-inline fun Framebuffer.setDepthAttachment(texture: GpuTexture?): GpuTexture? =
+inline fun RenderTarget.setDepthAttachment(texture: GpuTexture?): GpuTexture? =
     (this as FramebufferAddition).`liquidbounce$setDepthAttachment`(texture)

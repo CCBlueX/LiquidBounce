@@ -30,7 +30,7 @@ import kotlinx.coroutines.cancel
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
-import net.minecraft.util.crash.CrashException
+import net.minecraft.ReportedException
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.Continuation
@@ -55,7 +55,7 @@ val EventListener.eventListenerScope: CoroutineScope
                 when (throwable) {
                     is EventListenerNotListeningException ->
                         logger.debug("{} is not listening, job cancelled", throwable.eventListener)
-                    is CrashException ->
+                    is ReportedException ->
                         ErrorHandler.fatal(throwable, additionalMessage = "CoroutineScope of $it")
                     else -> logger.error("Exception occurred in CoroutineScope of $it", throwable)
                 }

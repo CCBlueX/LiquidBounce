@@ -35,8 +35,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -72,7 +72,7 @@ internal object ElytraRotationProcessor : Configurable("Rotations"), RotationPro
 
     private inline val randomDirectionVector
         get() = with (System.currentTimeMillis() / 1000.0) {
-            Vec3d(
+            Vec3(
                 sin(this * 1.8) * 0.04 + (Math.random() - 0.5) * 0.02,
                 sin(this * 2.2) * 0.03 + (Math.random() - 0.5) * 0.015,
                 cos(this * 1.8) * 0.04 + (Math.random() - 0.5) * 0.02,
@@ -176,14 +176,14 @@ internal object ElytraRotationProcessor : Configurable("Rotations"), RotationPro
         var targetPos = prediction.predictPosition(target, rotateAt.position(target)) + randomDirectionVector * 4.0
 
         if (autoDistance) {
-            val direction = (targetPos - player.entityPos).normalize()
-            val distance = player.entityPos.squaredDistanceTo(direction)
+            val direction = (targetPos - player.position()).normalize()
+            val distance = player.position().distanceToSqr(direction)
 
             if (distance < IDEAL_DISTANCE * IDEAL_DISTANCE) {
                 targetPos -= direction * (IDEAL_DISTANCE - distance)
             }
         }
 
-        return Rotation.lookingAt(targetPos, player.entityPos)
+        return Rotation.lookingAt(targetPos, player.position())
     }
 }

@@ -26,15 +26,15 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.HealthBasedBuff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 
 internal object Gapple : HealthBasedBuff("Gapple") {
 
     private var forceUseKey = false
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        return stack.isOf(Items.GOLDEN_APPLE)
+        return stack.`is`(Items.GOLDEN_APPLE)
     }
 
     override suspend fun execute(slot: HotbarItemSlot) {
@@ -50,7 +50,7 @@ internal object Gapple : HealthBasedBuff("Gapple") {
 
     @Suppress("unused")
     private val keyBindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
-        if (event.keyBinding == mc.options.useKey && forceUseKey) {
+        if (event.keyBinding == mc.options.keyUse && forceUseKey) {
             event.isPressed = true
         }
     }
