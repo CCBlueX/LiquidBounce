@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
-import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.InputUtil
 
@@ -31,7 +31,7 @@ import net.minecraft.client.util.InputUtil
 class WindowResizeEvent(val width: Int, val height: Int) : Event()
 
 @Nameable("frameBufferResize")
-class FrameBufferResizeEvent(val width: Int, val height: Int) : Event()
+class FramebufferResizeEvent(val width: Int, val height: Int) : Event()
 
 @Nameable("mouseButton")
 class MouseButtonEvent(

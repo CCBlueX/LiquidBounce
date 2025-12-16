@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -44,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -86,7 +86,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val ignores by multiEnumChoice<Ignore>("Ignore")
     private val holdingItemsForIgnore by items(
         "HoldingItemsForIgnore",
-        ReferenceOpenHashSet.of(Items.BOW, Items.CROSSBOW, Items.TRIDENT, Items.FIRE_CHARGE, Items.ENDER_PEARL)
+        itemSortedSetOf(Items.BOW, Items.CROSSBOW, Items.TRIDENT, Items.FIRE_CHARGE, Items.ENDER_PEARL)
     )
     private val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE))
     private val pointTracker = tree(PointTracker(this))
@@ -107,12 +107,12 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         get() = requires.all { it.asBoolean }
             && !ignores.any { it.asBoolean }
             && player.health > minHealth
-            && maxEnemiesNearby == 0 || targetTracker.countTargets() <= maxEnemiesNearby
             && availableRodSlot != null
             && player.mainHandStack.item !in holdingItemsForIgnore
             && !ModuleBlink.running
             && !ModuleScaffold.running
             && !ModuleFreeze.running
+            && maxEnemiesNearby == 0 || targetTracker.countTargets() <= maxEnemiesNearby
 
     private var fishingBobberEntity by computedOn<GameTickEvent, FishingBobberEntity?>(
         priority = FIRST_PRIORITY,
@@ -210,7 +210,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         val target = targetTracker.target ?: return@handler
 
         renderEnvironmentForWorld(event.matrixStack) {
-            targetRenderer.render(this, target, event.partialTicks)
+            targetRenderer.render(target, event.partialTicks)
         }
     }
 

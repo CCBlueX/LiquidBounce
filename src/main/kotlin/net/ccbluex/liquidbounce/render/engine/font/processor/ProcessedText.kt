@@ -19,12 +19,25 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
+import it.unimi.dsi.fastutil.ints.IntList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 
 interface ProcessedText {
     val chars: List<ProcessedChar>
-    val underlines: List<IntRange>
-    val strikeThroughs: List<IntRange>
+
+    /**
+     * Elements: start char index, to char index, ...
+     *
+     * Size should be even,
+     */
+    val underlines: IntList
+
+    /**
+     * Elements: start char index, to char index, ...
+     *
+     * Size should be even,
+     */
+    val strikeThroughs: IntList
 
     @JvmRecord
     data class ProcessedChar(val char: Char, val font: Int, val obfuscated: Boolean, val color: Color4b)

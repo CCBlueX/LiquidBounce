@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
-import net.ccbluex.liquidbounce.utils.entity.prevPos
+import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.minecraft.util.hit.EntityHitResult
@@ -64,13 +64,13 @@ object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Aim
             }.minByOrNull {
                 it.distanceTo(player)
             }?.let {
-                val vector = it.pos - player.pos
+                val vector = it.entityPos - player.entityPos
                 add("vec", JsonObject().apply {
                     addProperty("x", vector.x)
                     addProperty("y", vector.y)
                     addProperty("z", vector.z)
                 })
-                val velocity = it.pos - it.prevPos
+                val velocity = it.entityPos - it.lastPos
                 add("velocity", JsonObject().apply {
                     addProperty("x", velocity.x)
                     addProperty("y", velocity.y)

@@ -28,7 +28,7 @@ import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpInternalServerError
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
-import net.ccbluex.netty.http.util.readImageAsBase64
+import net.ccbluex.netty.http.util.readAsBase64
 import net.minecraft.client.gui.screen.TitleScreen
 import net.minecraft.client.gui.screen.world.EditWorldScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
@@ -61,9 +61,9 @@ fun getWorlds(requestObject: RequestObject): FullHttpResponse {
                 addProperty("name", summary.name)
                 addProperty("displayName", summary.displayName)
                 addProperty("lastPlayed", summary.lastPlayed)
-                addProperty("gameMode", summary.levelInfo.gameMode.getName())
-                addProperty("difficulty", summary.levelInfo.difficulty.getName())
-                addProperty("icon", runCatching { readImageAsBase64(summary.iconPath) }.onFailure {
+                addProperty("gameMode", summary.levelInfo.gameMode.asString())
+                addProperty("difficulty", summary.levelInfo.difficulty.asString())
+                addProperty("icon", runCatching { summary.iconPath.readAsBase64() }.onFailure {
                     //logger.error("Failed to read icon for world ${summary.name}", it)
                 }.getOrNull())
                 addProperty("version", summary.versionInfo.versionName)
@@ -112,10 +112,12 @@ fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
                     SystemToast.addWorldAccessFailureToast(mc, request.name)
                     logger.error("Failed to access level ${request.name}", exception)
                 }
+
                 is SymlinkValidationException -> {
                     logger.warn(exception.message)
                     mc.setScreen(SymlinkWarningScreen.world { mc.setScreen(SelectWorldScreen(TitleScreen())) })
                 }
+
                 else -> {
                     logger.error("Failed to access level ${request.name}", exception)
                 }

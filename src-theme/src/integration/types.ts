@@ -17,7 +17,7 @@ export interface Metadata {
 export interface Module {
     name: string;
     category: string;
-    keyBind: number;
+    keyBind: InputBind;
     enabled: boolean;
     description: string;
     hidden: boolean;
@@ -144,6 +144,7 @@ export interface ChooseSetting extends Setting<string> {
 export interface MultiChooseSetting extends Setting<string[]> {
     choices: string[];
     canBeNone: boolean;
+    isOrderSensitive: boolean;
 }
 
 export interface ListSetting extends Setting<string[]> {
@@ -172,8 +173,13 @@ export interface TogglableSetting extends Setting<ModuleSetting[]> {
 
 export interface InputBind {
     boundKey: string;
-    action: "Toggle" | "Hold";
+    action: BindAction;
+    modifiers: BindModifier[];
 }
+
+export type BindAction = "Toggle" | "Hold";
+
+export type BindModifier = "Shift" | "Control" | "Alt" | "Super";
 
 export interface PersistentStorageItem {
     key: string;
@@ -262,9 +268,10 @@ export interface MinecraftKeybind {
 
 export interface Session {
     username: string;
-    accountType: string;
+    type: string;
+    service: string;
     avatar: string;
-    premium: boolean;
+    online: boolean;
     uuid: string;
 }
 
@@ -391,7 +398,10 @@ export enum VerticalAlignment {
     CENTER_TRANSLATED = "CenterTranslated",
 }
 
+export type OS = "linux" | "solaris" | "windows" | "mac" | "unknown";
+
 export interface ClientInfo {
+    os: OS;
     gameVersion: string;
     clientVersion: string;
     clientName: string;

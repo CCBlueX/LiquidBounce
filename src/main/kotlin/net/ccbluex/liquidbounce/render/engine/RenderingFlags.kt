@@ -25,5 +25,5 @@ object RenderingFlags {
      * flag for this
      */
     @JvmStatic
-    val isCurrentlyRenderingEntityOutline = ThreadLocal.withInitial { false }
+    val isCurrentlyRenderingEntityOutline: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
 }

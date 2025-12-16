@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.toFixed
@@ -76,10 +77,10 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                 renderer: TrajectoryInfoRenderer,
                 result: TrajectoryInfoRenderer.SimulationResult,
             ): Vec3d = when (this) {
-                OWNER -> renderer.owner.pos
+                OWNER -> renderer.owner.entityPos
                 ENTITY -> result.positions.firstOrNull()
                 LANDING -> result.positions.lastOrNull()
-            } ?: renderer.owner.pos
+            } ?: renderer.owner.entityPos
         }
 
         private val ownerName by boolean("OwnerName", true)
@@ -128,16 +129,16 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                         else -> showAt.apply(renderer, result).calcScreenPosWithOffset()
                     } ?: return@forEachIndexed
 
-                context.matrices.push()
-                context.matrices.translate(screenPos.x, screenPos.y, screenPos.z)
-                context.matrices.scale(scale, scale, 1.0F)
+                context.matrices.pushMatrix()
+                context.matrices.translate(screenPos.x, screenPos.y)
+                context.matrices.scale(scale, scale)
 
                 val text = durationUnit.apply(result.positions.size).asText()
                 if (ownerName && renderer.owner !== player) {
                     text.append(" ").append(renderer.owner.name)
                 }
                 if (distance && result.positions.isNotEmpty()) {
-                    text.append(" ${player.pos.distanceTo(result.positions.last()).toFixed(1)}m")
+                    text.append(" ${player.entityPos.distanceTo(result.positions.last()).toFixed(1)}m")
                 }
 
                 var y = 0
@@ -151,7 +152,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                 )
                 y += mc.textRenderer.fontHeight + 1
 
-                context.matrices.pop()
+                context.matrices.popMatrix()
             }
         }
     }
@@ -179,7 +180,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             val trajectoryRenderer = TrajectoryInfoRenderer(
                 owner = (it as? Ownable)?.owner ?: it,
                 velocity = it.velocity,
-                pos = it.pos,
+                pos = it.entityPos,
                 trajectoryInfo = trajectoryInfo,
                 type = TrajectoryInfoRenderer.Type.REAL,
                 renderOffset = Vec3d.ZERO

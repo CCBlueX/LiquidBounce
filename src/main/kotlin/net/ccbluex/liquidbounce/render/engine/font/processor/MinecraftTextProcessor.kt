@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
+import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.text.Style
@@ -32,8 +33,9 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
 
     private val defaultRng = Random(Random.nextLong())
 
+    @JvmField
     val TEXT_POOL = Pool(
-        initializer = { RecyclingProcessedText(ArrayList(), ArrayList(), ArrayList()) }
+        initializer = { RecyclingProcessedText(ArrayList(), IntArrayList(), IntArrayList()) }
     ) {
         it.chars.clear()
         it.underlines.clear()
@@ -41,9 +43,9 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
     }
 
     class RecyclingProcessedText(
-        override var chars: ArrayList<ProcessedText.ProcessedChar>,
-        override var underlines: ArrayList<IntRange>,
-        override var strikeThroughs: ArrayList<IntRange>,
+        override val chars: ArrayList<ProcessedText.ProcessedChar>,
+        override val underlines: IntArrayList,
+        override val strikeThroughs: IntArrayList,
     ) : ProcessedText
 
     override fun process(
@@ -89,14 +91,14 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
         val start = result.chars.size - textAsString.length
         val end = result.chars.size
 
-        val textRange = start until end
-
         if (style.isUnderlined) {
-            result.underlines.add(textRange)
+            result.underlines.add(start)
+            result.underlines.add(end)
         }
 
         if (style.isStrikethrough) {
-            result.strikeThroughs.add(textRange)
+            result.strikeThroughs.add(start)
+            result.strikeThroughs.add(end)
         }
 
         return Optional.empty()

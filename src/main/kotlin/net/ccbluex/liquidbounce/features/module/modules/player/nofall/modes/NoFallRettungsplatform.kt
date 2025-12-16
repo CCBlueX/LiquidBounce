@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
@@ -47,16 +47,19 @@ internal object NoFallRettungsplatform : NoFallMode("Rettungsplatform") {
      * We are not checking for the item name, as there are different language options causing issues.
      */
     private val itemToPlatform
-        get() = Slots.Hotbar.findClosestSlot(Items.BLAZE_ROD, Items.MAGMA_CREAM)
+        get() = Slots.OffhandWithHotbar.findClosestSlot(Items.BLAZE_ROD, Items.MAGMA_CREAM)
 
-    val repatable = tickHandler {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         if (player.fallDistance > 2f) {
             val itemToPlatform = itemToPlatform ?: return@tickHandler
 
             // Are we actually going to fall into the void?
             // todo: check if the fall damage is actually high enough to kill us
             val collision = FallingPlayer.fromPlayer(player).findCollision(90)?.pos
-            ModuleDebug.debugParameter(ModuleNoFall, "Collision", collision?.getBlock().toString())
+            ModuleNoFall.debugParameter("Collision") {
+                collision?.getBlock()
+            }
             if (collision != null && collision.getState()?.isAir == false) {
                 return@tickHandler
             }

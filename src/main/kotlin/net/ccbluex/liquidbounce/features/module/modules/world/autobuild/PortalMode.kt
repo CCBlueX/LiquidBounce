@@ -76,7 +76,7 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
     @Suppress("NestedBlockDepth", "CognitiveComplexMethod")
     private fun getPortal(): NetherPortal? {
         var result: NetherPortal? = null
-        val pos = BlockPos.ofFloored(player.pos)
+        val pos = BlockPos.ofFloored(player.entityPos)
         for (direction in Direction.HORIZONTAL) {
             for (yOffset in -1..0) {
                 for (dirOffset in 0 downTo  -1) {

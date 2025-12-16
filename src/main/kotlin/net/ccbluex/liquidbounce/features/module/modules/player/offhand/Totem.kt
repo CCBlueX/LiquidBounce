@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.ccbluex.liquidbounce.utils.world.bedRule
+import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
 import net.minecraft.block.BedBlock
 import net.minecraft.block.RespawnAnchorBlock
 import net.minecraft.entity.EntityPose
@@ -201,8 +203,8 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
                 return 0f
             }
 
-            val overworld = world.dimension.bedWorks
-            val nether = world.dimension.respawnAnchorWorks
+            val overworld = !world.bedRule.explodes
+            val nether = world.respawnAnchorWorks
             val playerPos = player.blockPos
             var maxDamage = 0f
 
@@ -223,7 +225,7 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
                     arrayOf(pos)
                 } else {
                     // a bed consists of two blocks
-                    arrayOf(pos, (block as BedBlock).getPotentialSecondBedBlock(state, pos))
+                    arrayOf(pos, block.getPotentialSecondBedBlock(state, pos))
                 }
 
                 maxDamage = maxDamage.coerceAtLeast(

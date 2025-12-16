@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraChoi
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.block.AStarPathBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -128,11 +127,12 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
         val (_, path) = pathCache ?: return@handler
 
         renderEnvironmentForWorld(matrixStack) {
-            withColor(Color4b.WHITE) {
-                drawLineStrip(positions = path.mapToArray {
+            drawLineStrip(
+                argb = Color4b.WHITE.toARGB(),
+                positions = path.mapToArray {
                     relativeToCamera(it.toVec3d(0.5, 0.5, 0.5)).toVec3()
-                })
-            }
+                }
+            )
         }
     }
 

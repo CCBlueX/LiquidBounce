@@ -91,7 +91,7 @@ object CommandHide : Command.Factory {
             chat(
                 command.result(
                     "moduleUnhidden",
-                    modules.map { variable(it.name) }.joinToText(", ".asText())
+                    modules.map { variable(it.name) }.joinToText(", ".asPlainText())
                 ),
                 metadata = MessageMetadata(id = "CHide#info")
             )
@@ -112,7 +112,7 @@ object CommandHide : Command.Factory {
             chat(
                 command.result(
                     "moduleHidden",
-                    modules.map { variable(it.name) }.joinToText(", ".asText())
+                    modules.map { variable(it.name) }.joinToText(", ".asPlainText())
                 ),
                 metadata = MessageMetadata(id = "CHide#info")
             )

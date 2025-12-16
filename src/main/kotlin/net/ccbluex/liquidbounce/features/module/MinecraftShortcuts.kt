@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import com.mojang.blaze3d.systems.GpuDevice
+import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
@@ -43,4 +45,6 @@ interface MinecraftShortcuts {
         get() = mc.networkHandler!!
     val interaction: ClientPlayerInteractionManager
         get() = mc.interactionManager!!
+    val gpuDevice: GpuDevice
+        get() = RenderSystem.getDevice()
 }

@@ -48,7 +48,7 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     val modes = choices("Mode", EspGlowMode, arrayOf(
         EspBoxMode,
         Esp2DMode,
-        EspOutlineMode,
+//        EspOutlineMode,
         EspGlowMode
     ))
 
@@ -60,6 +60,8 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
         )
     }
     private val friendColor by color("Friends", Color4b.GREEN)
+
+    internal val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)

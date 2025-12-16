@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JavaProjectCodeInsightSettings">
+    <excluded-names>
+      <!-- ShadowJar dependencies -->
+      <name>com.viaversion.viaversion.libs</name>
+      <name>com.nimbusds.jose.shaded</name>
+      <name>org.spongepowered.include</name>
+    </excluded-names>
+  </component>
+</project>

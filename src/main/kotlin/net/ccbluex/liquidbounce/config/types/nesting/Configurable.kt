@@ -46,7 +46,6 @@ import org.lwjgl.glfw.GLFW
 import java.io.File
 import java.util.*
 import java.util.function.ToIntFunction
-import kotlin.enums.EnumEntries
 
 @Suppress("TooManyFunctions")
 open class Configurable(
@@ -153,7 +152,7 @@ open class Configurable(
         return output.toTypedArray()
     }
 
-    fun getContainedValuesRecursivelyInternal(output: MutableList<Value<*>>) {
+    protected fun getContainedValuesRecursivelyInternal(output: MutableList<Value<*>>) {
         for (currentValue in this.inner) {
             if (currentValue is ToggleableConfigurable) {
                 output.add(currentValue)
@@ -229,7 +228,7 @@ open class Configurable(
         this@Configurable.inner.add(this)
     }
 
-    internal inline fun <T : MutableSet<E>, reified E> registryList(
+    internal inline fun <T : SequencedSet<E>, reified E> registryList(
         name: String,
         defaultValue: T,
         valueType: ValueType,
@@ -329,27 +328,27 @@ open class Configurable(
 
     fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR3_D)
 
-    fun <C : MutableSet<Block>> blocks(name: String, default: C) =
+    fun <C : SequencedSet<Block>> blocks(name: String, default: C) =
         registryList(name, default, ValueType.BLOCK)
 
     fun item(name: String, default: Item) = value(name, default, ValueType.ITEM)
 
-    fun <C : MutableSet<Item>> items(name: String, default: C) =
+    fun <C : SequencedSet<Item>> items(name: String, default: C) =
         registryList(name, default, ValueType.ITEM)
 
-    fun <C : MutableSet<SoundEvent>> sounds(name: String, default: C) =
+    fun <C : SequencedSet<SoundEvent>> sounds(name: String, default: C) =
         registryList(name, default, ValueType.SOUND)
 
-    fun <C : MutableSet<StatusEffect>> statusEffects(name: String, default: C) =
+    fun <C : SequencedSet<StatusEffect>> statusEffects(name: String, default: C) =
         registryList(name, default, ValueType.STATUS_EFFECT)
 
-    fun <C : MutableSet<Identifier>> clientPackets(name: String, default: C) =
+    fun <C : SequencedSet<Identifier>> clientPackets(name: String, default: C) =
         registryList(name, default, ValueType.CLIENT_PACKET)
 
-    fun <C : MutableSet<Identifier>> serverPackets(name: String, default: C) =
+    fun <C : SequencedSet<Identifier>> serverPackets(name: String, default: C) =
         registryList(name, default, ValueType.SERVER_PACKET)
 
-    fun <C : MutableSet<EntityType<*>>> entityTypes(name: String, default: C) =
+    fun <C : SequencedSet<EntityType<*>>> entityTypes(name: String, default: C) =
         registryList(name, default, ValueType.ENTITY_TYPE)
 
     @Suppress("LongParameterList")
@@ -381,7 +380,7 @@ open class Configurable(
 
     inline fun <reified T> multiEnumChoice(
         name: String,
-        default: EnumEntries<T>,
+        default: Iterable<T>,
         canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
         multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
@@ -392,14 +391,25 @@ open class Configurable(
         choices: EnumSet<T> = EnumSet.allOf(T::class.java),
         canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, default, choices as Set<T>, canBeNone)
+        multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = false)
+
+    inline fun <reified T> multiEnumChoice(
+        name: String,
+        default: SequencedSet<T>,
+        choices: EnumSet<T> = EnumSet.allOf(T::class.java),
+        canBeNone: Boolean = true,
+    ) where T : Enum<T>, T : NamedChoice =
+        multiEnumChoice(name, default, choices, canBeNone, isOrderSensitive = true)
 
     fun <T : NamedChoice> multiEnumChoice(
         name: String,
         default: MutableSet<T>,
         choices: Set<T>,
         canBeNone: Boolean,
-    ) = MultiChooseListValue(name, default, choices, canBeNone).apply { this@Configurable.inner.add(this) }
+        isOrderSensitive: Boolean,
+    ) = MultiChooseListValue(name, default, choices, canBeNone, isOrderSensitive).apply {
+        this@Configurable.inner.add(this)
+    }
 
     inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
         where T : Enum<T>, T : NamedChoice = enumChoice(name, default, EnumSet.allOf(T::class.java))
@@ -550,15 +560,21 @@ open class Configurable(
             }
 
             ValueType.MULTI_CHOOSE -> {
-                val value = valueObject["value"].asJsonArray.mapTo(hashSetOf()) { it.asString.asNamedChoice() }
-                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
-                val canBeNone = when (val json = valueObject["canBeNone"]) {
-                    null, is JsonNull -> true // default = true
+                fun parseBoolean(key: String, default: Boolean) = when (val json = valueObject[key]) {
+                    null, is JsonNull -> default
                     is JsonPrimitive, is JsonArray -> json.asBoolean
-                    else -> error("Unexpected JSON (${json.javaClass}): $json, should be boolean")
+                    else -> error("Unexpected JSON value (${json.javaClass}): $json, should be boolean")
                 }
 
-                multiEnumChoice(name, value, choices, canBeNone)
+                val canBeNone = parseBoolean(key = "canBeNone", default = true)
+                val isOrderSensitive = parseBoolean(key = "isOrderSensitive", default = false)
+
+                val value = valueObject["value"].asJsonArray.mapTo(
+                    if (isOrderSensitive) sortedSetOf() else linkedSetOf()
+                ) { it.asString.asNamedChoice() }
+                val choices = valueObject["choices"].asJsonArray.mapTo(linkedSetOf()) { it.asString.asNamedChoice() }
+
+                multiEnumChoice(name, default = value, choices, canBeNone, isOrderSensitive)
             }
 
             else -> error("Unsupported type: $type")

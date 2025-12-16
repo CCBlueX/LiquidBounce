@@ -16,13 +16,31 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+@file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
+
 package net.ccbluex.liquidbounce.utils.math
 
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Position
 import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import kotlin.math.max
 import kotlin.math.min
+
+// Box operators
+
+inline operator fun Box.plus(offset: Position): Box =
+    this.offset(offset.x, offset.y, offset.z)
+
+inline operator fun Box.minus(offset: Position): Box =
+    this.offset(-offset.x, -offset.y, -offset.z)
+
+inline operator fun Box.plus(offset: Vec3i): Box =
+    this.offset(offset.x.toDouble(), offset.y.toDouble(), offset.z.toDouble())
+
+inline operator fun Box.minus(offset: Vec3i): Box =
+    this.offset(-offset.x.toDouble(), -offset.y.toDouble(), -offset.z.toDouble())
 
 /**
  * Tests if the infinite line resulting from [start] and the point [p] will intersect this box.

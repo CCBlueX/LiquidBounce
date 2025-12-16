@@ -28,10 +28,12 @@ import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.player
+import net.minecraft.entity.Entity
 import net.minecraft.util.function.BooleanBiFunction
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import kotlin.math.abs
@@ -107,7 +109,7 @@ object CommandVClip : Command.Factory {
         }
 
         val blockPos = player.vehicle?.blockPos ?: player.blockPos
-        val pos = player.vehicle?.pos ?: player.pos
+        val pos = player.vehicle?.entityPos ?: player.entityPos
 
         var newPos = blockPos
 

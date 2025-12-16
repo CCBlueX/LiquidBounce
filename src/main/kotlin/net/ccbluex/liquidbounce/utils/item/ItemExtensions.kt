@@ -207,7 +207,7 @@ fun ItemStack.isInteractable(): Boolean {
         || item is GlassBottleItem // TODO: water between an interactable block and the player
         || item is GoatHornItem // TODO: item delay?
         || item is KnowledgeBookItem
-        || (item is SwordItem && isOlderThanOrEqual1_8)
+        || (isSword && isOlderThanOrEqual1_8)
         || item is PlaceableOnWaterItem // TODO: water between an interactable block and the player
         || item is ShieldItem
         || item is SnowballItem

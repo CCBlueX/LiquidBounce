@@ -40,7 +40,7 @@ internal object NoFallHypixelPacket : NoFallMode("HypixelPacket") {
             network.sendPacket(MovePacketType.ON_GROUND_ONLY.generatePacket().apply {
                 onGround = true
             })
-            player.fallDistance = 0F
+            player.fallDistance = 0.0
             waitTicks(1)
             Timer.requestTimerSpeed(1f, Priority.NORMAL, ModuleNoFall)
         }

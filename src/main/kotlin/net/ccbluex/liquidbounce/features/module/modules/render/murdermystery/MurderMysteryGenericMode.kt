@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.item.BowItem
 import net.minecraft.item.Items
@@ -65,7 +66,7 @@ abstract class MurderMysteryGenericMode(name: String) : Choice(name), MurderMyst
     }
 
     override fun getPlayerType(player: AbstractClientPlayerEntity): MurderMysteryMode.PlayerType {
-        return when (player.skinTextures.texture.path) {
+        return when (player.skin.body.texturePath().path) {
             in murdererSkins -> MurderMysteryMode.PlayerType.MURDERER
             in bowSkins -> MurderMysteryMode.PlayerType.DETECTIVE_LIKE
             else -> MurderMysteryMode.PlayerType.NEUTRAL

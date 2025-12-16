@@ -165,9 +165,9 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
             val currentScale = scale * scaleTransition.transform(progress)
 
             with(event.context) {
-                matrices.push()
-                matrices.translate(screenPos.x, screenPos.y, screenPos.z)
-                matrices.scale(currentScale, currentScale, 1.0F)
+                matrices.pushMatrix()
+                matrices.translate(screenPos.x, screenPos.y)
+                matrices.scale(currentScale, currentScale)
 
                 drawCenteredTextWithShadow(
                     mc.textRenderer,
@@ -176,7 +176,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
                     0,
                     particle.color.toARGB(),
                 )
-                matrices.pop()
+                matrices.popMatrix()
             }
         }
 

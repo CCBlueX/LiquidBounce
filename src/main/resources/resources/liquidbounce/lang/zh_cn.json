@@ -651,6 +651,7 @@
   "liquidbounce.module.prophuntESP.description": "在道具猎人中显示道具。",
   "liquidbounce.module.quickPerspectiveSwap.description": "允许你快速切换游戏视角。",
   "liquidbounce.module.reach.description": "允许你触及更远的距离。",
+  "liquidbounce.module.textFieldProtect.description": "当文本框中的文本匹配指定的模式时，隐藏渲染的文本。",
   "liquidbounce.module.timeShift.description": "滥用Minecraft 1.8的机制来加速恢复，并移除火焰和毒药等负面状态效果。",
   "liquidbounce.module.timeShift.messages.warningNot1_8": "警告：Time Shift（Regen、Zoot等）仅支持1.8版本的Minecraft服务器！但是，你的客户端版本可以更高（1.17+）以便绕过。",
   "liquidbounce.module.translationFix.description": "防止服务器通过原版translation漏洞得知你安装的模组。",

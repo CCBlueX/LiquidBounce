@@ -37,7 +37,7 @@ abstract class AntiVoidMode(name: String) : Choice(name) {
 
     open fun discoverRescuePosition(): Vec3d? {
         if (!ModuleAntiVoid.isLikelyFalling) {
-            return player.pos
+            return player.entityPos
         }
         return null
     }

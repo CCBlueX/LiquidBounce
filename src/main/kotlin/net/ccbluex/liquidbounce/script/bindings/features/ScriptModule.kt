@@ -132,12 +132,7 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
 
         EventManager.registerEventHook(
             clazz,
-            EventHook(
-                this,
-                {
-                    callEvent(eventName, it)
-                }
-            )
+            newEventHook { callEvent(eventName, it) }
         )
     }
 }

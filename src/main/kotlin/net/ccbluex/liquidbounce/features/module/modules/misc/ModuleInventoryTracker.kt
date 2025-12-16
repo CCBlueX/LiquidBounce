@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap
 import net.ccbluex.liquidbounce.event.events.ItemLoreQueryEvent
-import net.ccbluex.liquidbounce.event.events.PlayerEquipmentChangeEvent
+import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
@@ -66,8 +66,8 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD)
     val playerMap = hashMapOf<UUID, PlayerEntity>()
 
     @Suppress("unused")
-    val playerEquipmentChangeHandler = handler<PlayerEquipmentChangeEvent> { event ->
-        val player = event.player
+    val playerEquipmentChangeHandler = handler<EntityEquipmentChangeEvent> { event ->
+        val player = event.entity
         if (player !is OtherClientPlayerEntity || ModuleAntiBot.isBot(player)) return@handler
 
         val updatedSlot = event.equipmentSlot
@@ -100,7 +100,7 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD)
         val offset = if (mainHandEmpty) 1 else 0
 
         for (i in range) {
-            inventory.main[i + offset] = items.getOrNull(i) ?: ItemStack.EMPTY
+            inventory.mainStacks[i + offset] = items.getOrNull(i) ?: ItemStack.EMPTY
         }
     }
 
@@ -113,8 +113,8 @@ object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD)
         val players = world.players.associateBy { it.uuid }
         inventoryMap.keys.forEach { uuid ->
             val player = players[uuid] ?: return@forEach
-            for (i in 1 until player.inventory.main.size) {
-                player.inventory.main[i] = ItemStack.EMPTY
+            for (i in 1 until player.inventory.mainStacks.size) {
+                player.inventory.mainStacks[i] = ItemStack.EMPTY
             }
         }
         inventoryMap.clear()

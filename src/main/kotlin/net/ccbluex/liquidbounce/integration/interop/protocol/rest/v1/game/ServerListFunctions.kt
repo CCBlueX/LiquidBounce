@@ -48,6 +48,7 @@ import net.minecraft.client.network.ServerAddress
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.client.network.ServerInfo.ResourcePackPolicy
 import net.minecraft.client.option.ServerList
+import net.minecraft.network.NetworkingBackend
 import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
 import net.minecraft.util.Colors
@@ -83,6 +84,7 @@ fun getServers(requestObject: RequestObject) = runCatching {
 @Suppress("UNUSED_PARAMETER")
 fun postConnect(requestObject: RequestObject): FullHttpResponse {
     data class ServerConnectRequest(val address: String)
+
     val serverConnectRequest = requestObject.asJson<ServerConnectRequest>()
     val serverInfo = serverList.getByAddress(serverConnectRequest.address)
         ?: ServerInfo("Unknown Server", serverConnectRequest.address, ServerInfo.ServerType.OTHER)
@@ -99,6 +101,7 @@ fun postConnect(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun putAddServer(requestObject: RequestObject): FullHttpResponse {
     data class ServerAddRequest(val name: String, val address: String, val resourcePackPolicy: String? = null)
+
     val serverAddRequest = requestObject.asJson<ServerAddRequest>()
 
     if (!ServerAddress.isValid(serverAddRequest.address)) {
@@ -120,6 +123,7 @@ fun putAddServer(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun deleteServer(requestObject: RequestObject): FullHttpResponse {
     data class ServerRemoveRequest(val id: Int)
+
     val serverRemoveRequest = requestObject.asJson<ServerRemoveRequest>()
     val serverInfo = serverList.get(serverRemoveRequest.id)
 
@@ -138,6 +142,7 @@ fun putEditServer(requestObject: RequestObject): FullHttpResponse {
         val address: String,
         val resourcePackPolicy: String? = null
     )
+
     val serverEditRequest = requestObject.asJson<ServerEditRequest>()
     val serverInfo = serverList.get(serverEditRequest.id)
 
@@ -155,6 +160,7 @@ fun putEditServer(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postSwapServers(requestObject: RequestObject): FullHttpResponse {
     data class ServerSwapRequest(val from: Int, val to: Int)
+
     val serverSwapRequest = requestObject.asJson<ServerSwapRequest>()
 
     serverList.swapEntries(serverSwapRequest.from, serverSwapRequest.to)
@@ -166,6 +172,7 @@ fun postSwapServers(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postOrderServers(requestObject: RequestObject): FullHttpResponse {
     data class ServerOrderRequest(val order: List<Int>)
+
     val serverOrderRequest = requestObject.asJson<ServerOrderRequest>()
 
     serverOrderRequest.order.map { serverList.get(it) }
@@ -218,14 +225,14 @@ object ActiveServerList : EventListener {
 
         pingTasks += CompletableFuture.runAsync({
             try {
-                serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }) {
+                serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }, {
                     serverEntry.status =
-                        if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion) {
+                        if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion()) {
                             ServerInfo.Status.SUCCESSFUL
                         } else {
                             ServerInfo.Status.INCOMPATIBLE
                         }
-                }
+                }, NetworkingBackend.remote(true))
             } catch (unknownHostException: UnknownHostException) {
                 serverEntry.status = ServerInfo.Status.UNREACHABLE
                 serverEntry.label = cannotResolveText

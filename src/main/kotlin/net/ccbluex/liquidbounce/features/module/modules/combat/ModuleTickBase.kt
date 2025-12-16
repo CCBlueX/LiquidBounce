@@ -31,12 +31,10 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -109,7 +107,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         }
 
         val nearbyEnemy = world.findEnemy(0f..range.endInclusive) ?: return@tickHandler
-        val currentDistance = player.pos.squaredDistanceTo(nearbyEnemy.pos)
+        val currentDistance = player.entityPos.squaredDistanceTo(nearbyEnemy.entityPos)
         val rangeSq = range.start.sq()..range.endInclusive.sq()
 
         // Find the best tick that is able to hit the target and is not too far away from the player, as well as
@@ -117,7 +115,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         var possibleTicks = tickBuffer
             .withIndex()
             .filter { (_, tick) ->
-                val distSq = tick.position.squaredDistanceTo(nearbyEnemy.pos)
+                val distSq = tick.position.squaredDistanceTo(nearbyEnemy.entityPos)
                 distSq < currentDistance && distSq in rangeSq
             }
 
@@ -230,11 +228,12 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         }
 
         renderEnvironmentForWorld(event.matrixStack) {
-            withColor(lineColor) {
-                drawLineStrip(positions = tickBuffer.mapToArray { tick ->
+            drawLineStrip(
+                argb = lineColor.toARGB(),
+                positions = tickBuffer.mapToArray { tick ->
                     relativeToCamera(tick.position).toVec3()
-                })
-            }
+                }
+            )
         }
     }
 
@@ -249,7 +248,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
     @JvmRecord
     private data class TickData(
         val position: Vec3d,
-        val fallDistance: Float,
+        val fallDistance: Double,
         val velocity: Vec3d,
         val onGround: Boolean
     )

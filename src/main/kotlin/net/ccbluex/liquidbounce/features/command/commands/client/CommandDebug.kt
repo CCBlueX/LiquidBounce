@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -48,6 +49,7 @@ import net.minecraft.text.ClickEvent
 import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
+import java.net.URI
 import java.util.*
 
 /**
@@ -87,7 +89,7 @@ object CommandDebug : Command.Factory {
                 }.append(
                     Text.literal(paste)
                         .formatted(Formatting.YELLOW)
-                        .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, paste))
+                        .onClick(ClickEvent.OpenUrl(URI(paste)))
                 )
             )
         }
@@ -107,7 +109,7 @@ object CommandDebug : Command.Factory {
         })
 
         add("minecraft", JsonObject().apply {
-            addProperty("version", SharedConstants.getGameVersion().name)
+            addProperty("version", SharedConstants.getGameVersion().name())
             addProperty("protocol", SharedConstants.getProtocolVersion())
         })
 
@@ -131,7 +133,7 @@ object CommandDebug : Command.Factory {
         add("profile", JsonObject().apply {
             addProperty("name", mc.session.username)
             addProperty("uuid", mc.session.uuidOrNull.toString())
-            addProperty("type", mc.session.accountType.toString())
+            addProperty("type", mc.session.accountType)
         })
 
         add("language", JsonObject().apply {

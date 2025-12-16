@@ -40,7 +40,7 @@ object ExplodeSoundTrigger : PostPacketTrigger<PlaySoundFromEntityS2CPacket>("Ex
         world.getEntityById(packet.entityId)?.let {
             // don't place if the sound is too far away
             val maxRangeSq = SubmoduleCrystalPlacer.getMaxRange().sq()
-            if (it.pos.squaredDistanceTo(player.pos) > maxRangeSq) {
+            if (it.entityPos.squaredDistanceTo(player.entityPos) > maxRangeSq) {
                 return
             }
         }

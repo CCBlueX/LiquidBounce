@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Toggleable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -40,7 +42,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.minecraft.client.gui.screen.DisconnectedScreen
-import net.minecraft.client.gui.screen.DownloadingTerrainScreen
+import net.minecraft.client.gui.screen.world.LevelLoadingScreen
 
 /**
  * Module HUD
@@ -60,7 +62,16 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         get() = "liquidbounce.module.hud"
     private var browserBrowser: Browser? = null
 
-    private val blur by boolean("Blur", true)
+    init {
+        tree(Blur)
+    }
+
+    object Blur : ToggleableConfigurable(ModuleHud, "Blur", enabled = true) {
+        /**
+         * The range in which the blending from not-blurred to blurred occurs.
+         */
+        val alphaBlendRange by floatRange("AlphaBlendRange", 0.0F..0.75F, 0.0F..1.0F)
+    }
 
     @Suppress("unused")
     private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange { state ->
@@ -68,10 +79,8 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         state
     }
 
-    val centeredCrosshair by boolean("CenteredCrosshair", false)
-
     val isBlurEffectActive
-        get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)
+        get() = Blur.enabled && !(mc.options.hudHidden && mc.currentScreen == null)
 
     private var browserSettings: BrowserSettings? = null
 
@@ -124,7 +133,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
         // Otherwise, open the tab and set its visibility
         val browserTab = open()
-        browserTab.visible = event.screen !is DisconnectedScreen && event.screen !is DownloadingTerrainScreen
+        browserTab.visible = event.screen !is DisconnectedScreen && event.screen !is LevelLoadingScreen
     }
 
     @Suppress("unused")
@@ -156,6 +165,10 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         if (enabled && visible) {
             open()
         }
+    }
+
+    fun disableBlur() {
+        Blur.enabled = false
     }
 
 }

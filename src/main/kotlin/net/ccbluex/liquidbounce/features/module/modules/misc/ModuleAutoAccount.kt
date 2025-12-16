@@ -81,12 +81,12 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
 
     fun login() {
         chat("login")
-        network.sendCommand("$loginCommand $password")
+        network.sendChatCommand("$loginCommand $password")
     }
 
     fun register() {
         chat("register")
-        network.sendCommand("$registerCommand $password $password")
+        network.sendChatCommand("$registerCommand $password $password")
     }
 
     private inline fun <reified T : Event> createMessageHandler(

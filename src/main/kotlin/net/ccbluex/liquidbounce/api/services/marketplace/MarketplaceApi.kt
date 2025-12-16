@@ -23,11 +23,11 @@ import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.API_BRANCH
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.core.HttpClient
-import net.ccbluex.liquidbounce.api.core.toRequestBody
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.auth.addAuth
 import net.ccbluex.liquidbounce.api.models.marketplace.*
 import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
+import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
 import net.ccbluex.liquidbounce.config.gson.publicGson
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody

@@ -29,23 +29,20 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.client.font.TextRenderer
+import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
+import org.joml.Vector2fc
 import org.joml.Vector2i
-import org.joml.Vector3f
-import org.joml.component1
-import org.joml.component2
 import kotlin.math.abs
 
 private const val SLOT_SIZE = 18
@@ -63,13 +60,15 @@ class ItemStackListRenderer private constructor(
 ) {
     private var title: Text? = null
     private var titleColor: Int = 0xffffffff.toInt()
-    private val center = Vector3f(0f, 0f, 0f)
+    private var centerX = 0F
+    private var centerY = 0F
     private var scale = 1.0F
     private var rowLength = 9
-    private var backgroundColor = Int.MIN_VALUE
-    private var backgroundMargin = 2
+    private var backgroundColor = DEFAULT_BG_COLOR
+    private var backgroundOutlineColor = Color4b.TRANSPARENT
+    private var backgroundMargin = 2.0F
     private var useTexture = false
-    private var itemStackRenderer: SingleItemStackRenderer = SingleItemStackRenderer
+    private var itemStackRenderer = SingleItemStackRenderer.All
 
     // Unscaled, without margin
     private val dimensions = Vector2i()
@@ -82,22 +81,16 @@ class ItemStackListRenderer private constructor(
     }
 
     fun centerX(centerX: Float) = apply {
-        this.center.x = centerX
+        this.centerX = centerX
     }
 
     fun centerY(centerY: Float) = apply {
-        this.center.y = centerY
+        this.centerY = centerY
     }
 
-    @Deprecated("Z-index of 2D rendering is going to be removed since 1.21.6")
-    fun centerZ(centerZ: Float) = apply {
-        this.center.z = centerZ
-    }
-
-    fun center(center: Vec3) = apply {
-        this.center.x = center.x
-        this.center.y = center.y
-        this.center.z = center.z
+    fun center(center: Vector2fc) = apply {
+        this.centerX = center.x()
+        this.centerY = center.y()
     }
 
     /**
@@ -113,20 +106,27 @@ class ItemStackListRenderer private constructor(
     }
 
     @JvmOverloads
-    fun rectBackground(color: Int, margin: Int = this.backgroundMargin) = apply {
+    fun rectBackground(
+        color: Color4b,
+        outlineColor: Color4b = Color4b.TRANSPARENT,
+        margin: Float = this.backgroundMargin,
+    ) = apply {
         this.backgroundColor = color
+        this.backgroundOutlineColor = outlineColor
         this.backgroundMargin = margin
+        this.useTexture = false
     }
 
     fun textureBackground() = apply {
         this.useTexture = true
-        this.backgroundColor = Color4b.TRANSPARENT.toARGB()
-        this.backgroundMargin = 0
+        this.backgroundColor = Color4b.TRANSPARENT
+        this.backgroundOutlineColor = Color4b.TRANSPARENT
+        this.backgroundMargin = 0F
     }
 
     fun background(choice: BackgroundChoice) =
         when (choice) {
-            is BackgroundChoice.Rect -> rectBackground(choice.color.toARGB(), choice.margin)
+            is BackgroundChoice.Rect -> rectBackground(choice.fillColor, choice.outlineColor, choice.margin)
             is BackgroundChoice.Texture -> textureBackground()
         }
 
@@ -135,18 +135,19 @@ class ItemStackListRenderer private constructor(
     }
 
     private fun fillBackground(width: Int, height: Int) {
-        drawContext.fill(
+        drawContext.drawQuad(
             -backgroundMargin,
             -backgroundMargin,
             width + backgroundMargin,
             height + backgroundMargin,
-            backgroundColor
+            backgroundColor,
+            backgroundOutlineColor,
         )
     }
 
     private fun drawSlotTexture(x: Int, y: Int) {
         drawContext.drawGuiTexture(
-            RenderLayer::getGuiTextured,
+            RenderPipelines.GUI_TEXTURED,
             ID_SINGLE_SLOT,
             x,
             y,
@@ -161,41 +162,37 @@ class ItemStackListRenderer private constructor(
 
         val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
 
-        val matrices = drawContext.matrices
+        drawContext.matrices.withPush {
+            val width = dimensions.x
+            val height = dimensions.y
 
-        val width = dimensions.x
-        val height = dimensions.y
+            translate(centerX, centerY)
+            scale(scale, scale)
+            translate(-width * 0.5F, -height * 0.5F)
 
-        matrices.push()
-
-        matrices.translate(center.x, center.y, center.z)
-        matrices.scale(scale, scale, 1.0F)
-        matrices.translate(-width * 0.5F, -height * 0.5F, 0.0F)
-
-        if (!this.useTexture) {
-            fillBackground(width, height)
-        }
-
-        if (title != null) {
-            drawContext.drawCenteredTextWithShadow(textRenderer, title, width / 2, 0, titleColor)
-            matrices.translate(0F, textRenderer.fontHeight + 2F, 0F)
-        }
-
-        // render stacks
-        for ((i, stack) in stacks.withIndex()) {
-            val leftX = i % rowLength * size
-            val topY = i / rowLength * size
-            if (this.useTexture) {
-                drawSlotTexture(leftX, topY)
+            if (!useTexture) {
+                fillBackground(width, height)
             }
 
-            val diff = if (this.useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
-            with(itemStackRenderer) {
-                drawContext.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
+            if (title != null) {
+                drawContext.drawCenteredTextWithShadow(textRenderer, title, width / 2, 0, titleColor)
+                translate(0F, textRenderer.fontHeight + 2F)
+            }
+
+            // render stacks
+            for ((i, stack) in stacks.withIndex()) {
+                val leftX = i % rowLength * size
+                val topY = i / rowLength * size
+                if (useTexture) {
+                    drawSlotTexture(leftX, topY)
+                }
+
+                val diff = if (useTexture) (SLOT_SIZE - ITEM_SIZE) / 2 else 0
+                with(itemStackRenderer) {
+                    drawContext.drawItemStack(textRenderer, i, stack, leftX + diff, topY + diff)
+                }
             }
         }
-
-        matrices.pop()
     }
 
     /**
@@ -204,7 +201,7 @@ class ItemStackListRenderer private constructor(
      * [drawNow] will be called later.
      */
     @JvmOverloads
-    fun draw(immediately: Boolean = false) {
+    fun draw(rearrange: Boolean = false) {
         val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
         var width = size * minOf(stacks.size, rowLength)
         var height = size * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
@@ -216,7 +213,7 @@ class ItemStackListRenderer private constructor(
 
         this.dimensions.set(width, height)
 
-        if (immediately) {
+        if (!rearrange) {
             drawNow()
         } else {
             planned += this
@@ -224,14 +221,15 @@ class ItemStackListRenderer private constructor(
     }
 
     companion object : EventListener {
+        private val DEFAULT_BG_COLOR = Color4b(Int.MIN_VALUE, true)
+
         private val planned = ArrayList<ItemStackListRenderer>()
 
-        // y -> x -> z
-        private val comparatorVec3f = Comparator<Vector3f> { o1, o2 ->
+        // y -> x
+        private val comparator = Comparator<ItemStackListRenderer> { o1, o2 ->
             when {
-                o1.y != o2.y -> o1.y.compareTo(o2.y)
-                o1.x != o2.x -> o1.x.compareTo(o2.x)
-                else -> o1.z.compareTo(o2.z)
+                o1.centerY != o2.centerY -> o1.centerY.compareTo(o2.centerY)
+                else -> o1.centerX.compareTo(o2.centerX)
             }
         }
 
@@ -250,8 +248,10 @@ class ItemStackListRenderer private constructor(
                         val a = planned[i]
                         val b = planned[j]
 
-                        val (ax, ay) = a.center
-                        val (bx, by) = b.center
+                        val ax = a.centerX
+                        val ay = a.centerY
+                        val bx = b.centerX
+                        val by = b.centerY
                         val aw = (a.dimensions.x + a.backgroundMargin * 2) * a.scale
                         val ah = (a.dimensions.y + a.backgroundMargin * 2) * a.scale
                         val bw = (b.dimensions.x + b.backgroundMargin * 2) * b.scale
@@ -260,9 +260,9 @@ class ItemStackListRenderer private constructor(
                         val dy = (ah + bh) / 2 - abs(ay - by)
                         if (dx > 0 && dy > 0) {
                             if (dx < dy) {
-                                b.center.x = bx + (if (ax < bx) dx else -dx)
+                                b.centerX = bx + (if (ax < bx) dx else -dx)
                             } else {
-                                b.center.y = by + (if (ay < by) dy else -dy)
+                                b.centerY = by + (if (ay < by) dy else -dy)
                             }
                             moved = true
                         }
@@ -284,7 +284,7 @@ class ItemStackListRenderer private constructor(
                 }
 
                 else -> {
-                    planned.sortWith { o1, o2 -> comparatorVec3f.compare(o1.center, o2.center) }
+                    planned.sortWith(comparator)
                     adjustPlannedPositions()
                     planned.forEach { it.drawNow() }
                     planned.clear()
@@ -317,8 +317,9 @@ class ItemStackListRenderer private constructor(
 
     sealed class BackgroundChoice(name: String, override val parent: ChoiceConfigurable<*>) : Choice(name) {
         class Rect(parent: ChoiceConfigurable<*>) : BackgroundChoice("Rect", parent) {
-            val color by color("Color", Color4b(Int.MIN_VALUE, true))
-            val margin by int("Margin", 2, 0..100)
+            val fillColor by color("Color", DEFAULT_BG_COLOR)
+            val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
+            val margin by float("Margin", 2.0F, 0.0F..100.0F)
         }
 
         class Texture(parent: ChoiceConfigurable<*>) : BackgroundChoice("Texture", parent)
@@ -335,23 +336,21 @@ class ItemStackListRenderer private constructor(
     fun interface SingleItemStackRenderer {
         fun DrawContext.drawItemStack(textRenderer: TextRenderer, index: Int, stack: ItemStack, x: Int, y: Int)
 
-        companion object : SingleItemStackRenderer {
+        companion object {
 
             @JvmField
             val OnlyItem = SingleItemStackRenderer { _, _, stack, x, y ->
                 drawItem(stack, x, y)
             }
 
-            override fun DrawContext.drawItemStack(
-                textRenderer: TextRenderer,
-                index: Int,
-                stack: ItemStack,
-                x: Int,
-                y: Int,
-            ) {
+            @JvmField
+            val All = SingleItemStackRenderer { textRenderer, _, stack, x, y ->
                 drawItem(stack, x, y)
                 drawStackOverlay(textRenderer, stack, x, y)
             }
+
+            @JvmField
+            val ForOtherPlayer = of(drawItemBar = true, drawStackCount = true, drawCooldownProgress = false)
 
             @JvmStatic
             fun of(
@@ -359,16 +358,14 @@ class ItemStackListRenderer private constructor(
                 drawStackCount: Boolean = true,
                 drawCooldownProgress: Boolean = true,
             ): SingleItemStackRenderer {
-                if (!drawItemBar && !drawStackCount && !drawCooldownProgress) return OnlyItem
-                if (drawItemBar && drawStackCount && drawCooldownProgress) return this
-
                 return SingleItemStackRenderer { textRenderer, index, stack, x, y ->
+                    if (stack.isEmpty) return@SingleItemStackRenderer
                     drawItem(stack, x, y)
-                    matrices.push()
-                    if (drawItemBar) drawItemBar(stack, x, y)
-                    if (drawStackCount) drawStackCount(textRenderer, stack, x, y, null)
-                    if (drawCooldownProgress) drawCooldownProgress(stack, x, y)
-                    matrices.pop()
+                    matrices.withPush {
+                        if (drawItemBar) drawItemBar(stack, x, y)
+                        if (drawStackCount) drawStackCount(textRenderer, stack, x, y, null)
+                        if (drawCooldownProgress) drawCooldownProgress(stack, x, y)
+                    }
                 }
             }
         }

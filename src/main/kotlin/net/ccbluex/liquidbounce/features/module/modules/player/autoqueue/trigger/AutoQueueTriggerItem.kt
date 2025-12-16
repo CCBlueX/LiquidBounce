@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger
 
+import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.AutoQueueItemMode
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 
 /**
@@ -29,17 +30,19 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 object AutoQueueTriggerItem : AutoQueueTrigger("Item") {
 
     /**
-     * The [itemName] of the item when to trigger the queue,
+     * The [mode] of the item when to trigger the queue,
      * which can be a different item than we use in the [AutoQueueTriggerItem] action.
      *
      * The name also can be a custom name of the item and does not have to be matching,
      * and only contains the text.
      */
-    private val itemName by text("Name", "Paper")
+    private val mode = choices("Mode", 0) {
+        arrayOf(AutoQueueItemMode.ByName(it), AutoQueueItemMode.ByItem(it))
+    }
 
     override val isTriggered: Boolean
-        get() = Slots.Hotbar.findSlot { itemStack ->
-            itemStack.name.string.contains(itemName)
+        get() = Slots.OffhandWithHotbar.findSlot { itemStack ->
+            mode.activeChoice.test(itemStack)
         } != null
 
 }

@@ -55,7 +55,7 @@ public enum VfpCompatibility1_8 {
         });
     }
 
-    public void sendPlayerInput(Float sideways, Float forwards, boolean jumping, boolean sneaking) {
+    public void sendPlayerInput(float sideways, float forwards, boolean jumping, boolean sneaking) {
         writePacket(ServerboundPackets1_8.PLAYER_INPUT, packet -> {
             packet.write(Types.FLOAT, sideways);
             packet.write(Types.FLOAT, forwards);

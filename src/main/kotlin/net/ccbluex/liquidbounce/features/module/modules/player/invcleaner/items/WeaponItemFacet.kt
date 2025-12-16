@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
+import net.ccbluex.liquidbounce.utils.item.asItemFacetComparator
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
@@ -39,14 +40,14 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
          * Estimates damage for different enchantments. Note that sharpness is already considered by
          * `ItemStack.attackDamage`
          */
-        val DAMAGE_ESTIMATOR =
+        private val DAMAGE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.BANE_OF_ARTHROPODS, 2.0f * 0.1f),
                 // Knockback deals no damage, but it allows us to deal more damage because we don't get hit as often.
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.2f),
             )
-        val SECONDARY_VALUE_ESTIMATOR =
+        private val SECONDARY_VALUE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
@@ -56,11 +57,11 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
         private val COMPARATOR =
             ComparatorChain<WeaponItemFacet>(
-                compareBy { estimateDamage(it) },
-                compareBy { SECONDARY_VALUE_ESTIMATOR.estimateValue(it.itemStack) },
+                Comparator.comparingDouble(::estimateDamage),
+                SECONDARY_VALUE_ESTIMATOR.asItemFacetComparator(),
                 compareByCondition { it.itemStack.isSword },
                 PREFER_BETTER_DURABILITY,
-                compareBy { it.itemStack.get(DataComponentTypes.ENCHANTABLE)?.value ?: 0 },
+                Comparator.comparingInt { it.itemStack.get(DataComponentTypes.ENCHANTABLE)?.value ?: 0 },
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )

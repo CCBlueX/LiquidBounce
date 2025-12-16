@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition
 import net.ccbluex.liquidbounce.interfaces.InputAddition
@@ -29,11 +30,13 @@ import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
+import net.minecraft.block.Blocks
 import net.minecraft.block.EntityShapeContext
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.input.Input
@@ -49,10 +52,14 @@ import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.mob.CreeperEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.projectile.PersistentProjectileEntity
 import net.minecraft.entity.vehicle.TntMinecartEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.item.ShieldItem
 import net.minecraft.item.consume.UseAction
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket
+import net.minecraft.registry.tag.DamageTypeTags
 import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.util.Hand
 import net.minecraft.util.PlayerInput
@@ -65,6 +72,60 @@ import net.minecraft.world.World
 import net.minecraft.world.explosion.ExplosionBehavior
 import net.minecraft.world.explosion.ExplosionImpl
 import kotlin.math.*
+
+// Copied from 1.21.4
+val Entity.isInsideWaterOrBubbleColumn: Boolean
+    get() = this.isTouchingWater || this.blockStateAtPos.isOf(Blocks.BUBBLE_COLUMN)
+
+inline var Input.movementForward: Float
+    get() = movementInput.y
+    set(value) {
+        (this as InputAddition).`liquid_bounce$setMovementInput`(movementInput.copy(y = value))
+    }
+
+inline var Input.movementSideways: Float
+    get() = movementInput.x
+    set(value) {
+        (this as InputAddition).`liquid_bounce$setMovementInput`(movementInput.copy(x = value))
+    }
+
+val LivingEntity.handItems: Array<ItemStack>
+    get() = arrayOf(mainHandStack, offHandStack)
+
+val LivingEntity.armorItems: Array<ItemStack>
+    get() = arrayOf(
+        getEquippedStack(EquipmentSlot.FEET),
+        getEquippedStack(EquipmentSlot.LEGS),
+        getEquippedStack(EquipmentSlot.CHEST),
+        getEquippedStack(EquipmentSlot.HEAD),
+    )
+
+val LivingEntity.equippedItems: Array<ItemStack>
+    get() = EquipmentSlot.entries.mapToArray { this.getEquippedStack(it) }
+
+fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
+    val entity = source.source
+    var bl = false
+    if (entity is PersistentProjectileEntity) {
+        if (entity.pierceLevel > 0.toByte()) {
+            bl = true
+        }
+    }
+
+    val itemStack = blockingItem
+    if (!source.isIn(DamageTypeTags.BYPASSES_SHIELD) && itemStack?.item is ShieldItem && !bl) {
+        val vec3d = source.position
+        if (vec3d != null) {
+            val vec3d2 = getRotationVector(0f, headYaw)
+            val vec3d3 = vec3d.relativize(entityPos).copy(y = 0.0).normalize()
+            return vec3d3.dotProduct(vec3d2) < 0.0
+        }
+    }
+
+    return false
+}
+
+// Copied from 1.21.4 END
 
 val Entity.netherPosition: Vec3d
     get() = if (world.registryKey == World.NETHER) {
@@ -120,7 +181,7 @@ fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
         this.dimensions
             .getBoxAt(position)
             .expand(-0.05, 0.0, -0.05)
-            .offset(0.0, (this.fallDistance - this.stepHeight).toDouble(), 0.0)
+            .offset(0.0, this.fallDistance - this.stepHeight, 0.0)
 
     return world.isSpaceEmpty(this, hitbox)
 }
@@ -128,7 +189,7 @@ fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
 fun ClientPlayerEntity.isCloseToEdge(
     directionalInput: DirectionalInput,
     distance: Double = 0.1,
-    pos: Vec3d = this.pos,
+    pos: Vec3d = this.entityPos,
 ): Boolean {
     val alpha = (getMovementDirectionOfInput(this.yaw, directionalInput) + 90.0F).toRadians()
     val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
@@ -243,17 +304,23 @@ fun Vec3d.withStrafe(
     return Vec3d(x, y, z)
 }
 
-val Entity.prevPos: Vec3d
-    get() = Vec3d(this.prevX, this.prevY, this.prevZ)
+val Entity.lastPos: Vec3d
+    get() = Vec3d(lastX, lastY, lastZ)
 
 val Entity.rotation: Rotation
     get() = Rotation(this.yaw, this.pitch, true)
 
 val ClientPlayerEntity.lastRotation: Rotation
-    get() = Rotation(this.lastYaw, this.lastPitch, true)
+    get() = Rotation(this.lastYawClient, this.lastPitchClient, true)
 
 val Entity.box: Box
     get() = boundingBox.expand(targetingMargin.toDouble())
+
+val cameraEyePos: Vec3d get() = (mc.cameraEntity ?: player).eyePos
+
+fun Position.cameraDistanceSq() = cameraEyePos.squaredDistanceTo(x, y, z)
+
+fun Vec3i.cameraDistanceSq() = cameraEyePos.squaredDistanceTo(x.toDouble(), y.toDouble(), z.toDouble())
 
 /**
  * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
@@ -271,7 +338,7 @@ fun Entity.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
 }
 
 fun Entity.squareBoxedDistanceTo(entity: Entity, offsetPos: Vec3d): Double {
-    return this.box.offset(offsetPos - this.pos).squaredBoxedDistanceTo(entity.eyePos)
+    return this.box.offset(offsetPos - this.entityPos).squaredBoxedDistanceTo(entity.eyePos)
 }
 
 fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
@@ -282,7 +349,7 @@ fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
 
 fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3d {
     if (this.age == 0) {
-        return this.pos
+        return this.entityPos
     }
 
     return Vec3d(
@@ -298,8 +365,8 @@ fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
     }
 
     return Rotation(
-        this.prevYaw + (this.yaw - this.prevYaw) * tickDelta,
-        this.prevPitch + (this.pitch - this.prevPitch) * tickDelta,
+        lastYaw + (this.yaw - lastYaw) * tickDelta,
+        lastPitch + (this.pitch - lastPitch) * tickDelta,
     )
 }
 
@@ -341,7 +408,7 @@ fun getNearestPointOnSide(from: Vec3d, box: Box, side: Direction): Vec3d {
  */
 @Suppress("detekt:all")
 fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreShield: Boolean = false): Float {
-    val world = this.world
+    val world = this.entityWorld
 
     if (this.isAlwaysInvulnerableTo(source)) {
         return 0.0F
@@ -393,16 +460,16 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
 
 fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
     return when (entity) {
-        is EndCrystalEntity -> getDamageFromExplosion(entity.pos, 6f, 12f, 144f)
-        is TntEntity -> getDamageFromExplosion(entity.pos.add(0.0, 0.0625, 0.0), 4f, 8f, 64f)
+        is EndCrystalEntity -> getDamageFromExplosion(entity.entityPos, 6f, 12f, 144f)
+        is TntEntity -> getDamageFromExplosion(entity.entityPos.add(0.0, 0.0625, 0.0), 4f, 8f, 64f)
         is TntMinecartEntity -> {
             val d = 5f
-            getDamageFromExplosion(entity.pos, 4f + d * 1.5f)
+            getDamageFromExplosion(entity.entityPos, 4f + d * 1.5f)
         }
 
         is CreeperEntity -> {
             val f = if (entity.isCharged) 2f else 1f
-            getDamageFromExplosion(entity.pos, entity.explosionRadius * f)
+            getDamageFromExplosion(entity.entityPos, entity.explosionRadius * f)
         }
 
         else -> 0f
@@ -471,9 +538,10 @@ fun LivingEntity.getExposureToExplosion(
     val shapeContext = entityBoundingBox1?.let {
         EntityShapeContext(
             isDescending,
+            false, // TODO: is this correct?
             entityBoundingBox1.minY,
             mainHandStack,
-            ::canWalkOnFluid,
+            canWalkOnFluid(null),
             this
         )
     } ?: ShapeContext.of(this)
@@ -551,14 +619,15 @@ fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
     return health
 }
 
+private val HEALTH_KEYWORDS = listOf("❤", "HP", "Health", "Здоровья", "Здоровье")
+
 fun LivingEntity.hasHealthScoreboard(): Boolean {
     if (this == player) return false
 
     val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME) ?: return false
-    val displayName = objective.displayName
+    val displayName = objective.displayName?.string ?: return false
 
-    return (displayName?.string.let { name -> name != null && listOf("❤", "HP", "Health", "Здоровья", "Здоровье")
-        .any { name.contains(it) } })
+    return HEALTH_KEYWORDS.any { displayName.contains(it) }
 }
 
 private fun LivingEntity.getHealthFromScoreboard(): Float? {
@@ -570,7 +639,7 @@ private fun LivingEntity.getHealthFromScoreboard(): Float? {
 }
 
 fun Entity.getBoundingBoxAt(pos: Vec3d): Box {
-    return boundingBox.offset(pos - this.pos)
+    return boundingBox.offset(pos - this.entityPos)
 }
 
 /**
@@ -589,7 +658,7 @@ fun Entity.doesNotCollideBelow(until: Double = -64.0): Boolean {
 /**
  * Check if the entity box collides with any block in the world at the given [pos].
  */
-fun Entity.doesCollideAt(pos: Vec3d = player.pos): Boolean {
+fun Entity.doesCollideAt(pos: Vec3d = player.entityPos): Boolean {
     return !world.getBlockCollisions(this, getBoundingBoxAt(pos)).all(VoxelShapes.empty()::equals)
 }
 
@@ -597,7 +666,7 @@ fun Entity.doesCollideAt(pos: Vec3d = player.pos): Boolean {
  * Check if the entity is likely falling to the void based on the given position and bounding box.
  */
 fun Entity.wouldFallIntoVoid(pos: Vec3d, voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
-    val offsetBb = boundingBox.offset(pos - this.pos)
+    val offsetBb = boundingBox.offset(pos - this.entityPos)
 
     if (pos.y < voidLevel || offsetBb.minY < voidLevel) {
         return true

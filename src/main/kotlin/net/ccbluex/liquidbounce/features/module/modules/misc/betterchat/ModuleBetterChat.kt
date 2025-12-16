@@ -76,6 +76,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
 
     private val autoTranslate by multiEnumChoice<ChatReceiveEvent.ChatType>("AutoTranslate")
 
+    // FIXME(1.21.11)
     object Copy : ToggleableConfigurable(this, "Copy", true) {
         private val notification by boolean("Notificate", true)
         val highlight by boolean("Highlight", true)
@@ -122,7 +123,7 @@ object ModuleBetterChat : ClientModule("BetterChat", Category.RENDER, aliases = 
         tree(AppendPrefix)
         tree(AppendSuffix)
         tree(AntiSpam)
-        tree(Copy)
+//        tree(Copy)
     }
 
     var antiChatClearPaused = false

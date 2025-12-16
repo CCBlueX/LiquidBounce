@@ -53,7 +53,7 @@ object CommandCenter : Command.Factory, EventListener {
             }
 
             val pos = player.blockPos.toCenterPos()
-            val delta = player.pos.subtract(pos)
+            val delta = player.entityPos.subtract(pos)
             it.x = delta.x
             it.y = delta.y
             it.z = delta.z

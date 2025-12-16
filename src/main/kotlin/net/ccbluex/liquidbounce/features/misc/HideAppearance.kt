@@ -102,7 +102,8 @@ object HideAppearance : EventListener {
         mc.updateWindowTitle()
         mc.window.setIcon(
             mc.defaultResourcePack,
-            if (SharedConstants.getGameVersion().isStable) Icons.RELEASE else Icons.SNAPSHOT)
+            if (SharedConstants.getGameVersion().stable()) Icons.RELEASE else Icons.SNAPSHOT
+        )
     }
 
     @Suppress("unused")

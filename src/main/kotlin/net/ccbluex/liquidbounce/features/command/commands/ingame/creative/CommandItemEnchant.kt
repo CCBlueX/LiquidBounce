@@ -176,7 +176,7 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
     }
 
     private fun creativeOrThrow(command: Command) {
-        if (mc.interactionManager?.hasCreativeInventory() == false) {
+        if (!player.isCreative) {
             throw CommandException(command.resultWithTree("mustBeCreative"))
         }
     }

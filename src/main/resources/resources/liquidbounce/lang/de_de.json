@@ -651,5 +651,7 @@
   "liquidbounce.module.translation.description": "Einrichten eines automatischen Übersetzers für den Client.",
   "liquidbounce.module.betterTitle.description": "Verbesserungen am Titel und Untertitel.",
   "liquidbounce.module.potionSpoof.description": "Erlaubt dem Spieler, Effekte zu erhalten, ohne einen Trank zu benutzen.",
-  "liquidbounce.module.goldSrcMovement.description": "Half-Life 1 (GoldSrc) Bewegung: HL1 Reibung/Beschleunigung, klassisches A/D-Bunnyhopping, HL-Leitern und Wasser."
+  "liquidbounce.module.goldSrcMovement.description": "Half-Life 1 (GoldSrc) Bewegung: HL1 Reibung/Beschleunigung, klassisches A/D-Bunnyhopping, HL-Leitern und Wasser.",
+  "liquidbounce.module.newChunks.description": "Hebt Chunks hervor, die wahrscheinlich neu generiert wurden."
+
 }

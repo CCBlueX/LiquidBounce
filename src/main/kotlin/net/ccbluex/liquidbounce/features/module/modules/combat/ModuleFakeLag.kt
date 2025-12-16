@@ -158,7 +158,7 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
             // Flush on knockback
             is EntityVelocityUpdateS2CPacket -> {
                 if (packet.entityId == player.id
-                    && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)
+                    && (packet.velocity.x != 0.0 || packet.velocity.y != 0.0 || packet.velocity.z != 0.0)
                 ) {
                     chronometer.reset()
                     return@handler
@@ -222,10 +222,10 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
                     it.box.intersects(playerBox)
                 }
                 val serverDistance = entities.minOfOrNull {
-                    it.pos.distanceTo(position)
+                    it.entityPos.distanceTo(position)
                 } ?: return@handler
                 val clientDistance = entities.minOfOrNull {
-                    it.pos.distanceTo(player.pos)
+                    it.entityPos.distanceTo(player.entityPos)
                 } ?: return@handler
 
                 // If the server position is not closer than the client position, we keep lagging.

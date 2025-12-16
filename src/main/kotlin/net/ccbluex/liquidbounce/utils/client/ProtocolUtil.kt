@@ -44,8 +44,10 @@ val usesViaFabricPlus = runCatching {
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
-val defaultProtocolVersion = ClientProtocolVersion(SharedConstants.getGameVersion().name,
-    SharedConstants.getGameVersion().protocolVersion)
+val defaultProtocolVersion = ClientProtocolVersion(
+    SharedConstants.getGameVersion().name(),
+    SharedConstants.getGameVersion().protocolVersion()
+)
 
 val protocolVersion: ClientProtocolVersion
     get() = runCatching {
@@ -94,7 +96,7 @@ val isOlderThanOrEquals1_7_10: Boolean
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_7_10
     }.onFailure {
-        logger.error("Failed to check if the server is using 1.7.10", it)
+        logger.error("Failed to check if the server is using 1.7.10-", it)
     }.getOrDefault(false)
 
 val isNewerThanOrEquals1_16: Boolean
@@ -103,6 +105,14 @@ val isNewerThanOrEquals1_16: Boolean
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_16
     }.onFailure {
         logger.error("Failed to check if the server is using 1.16+", it)
+    }.getOrDefault(false)
+
+val isNewerThanOrEquals1_21_6: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_6
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.21.6+", it)
     }.getOrDefault(false)
 
 val isOlderThanOrEqual1_11_1: Boolean

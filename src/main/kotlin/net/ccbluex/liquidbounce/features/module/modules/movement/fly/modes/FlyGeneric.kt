@@ -147,7 +147,7 @@ internal object FlyCreative : Choice("Creative") {
 
     val packetHandler = handler<PacketEvent> { event ->
         if (shouldFlyDown() && event.packet is PlayerMoveC2SPacket) {
-            event.packet.y = player.lastBaseY - 0.04
+            event.packet.y = player.lastYClient - 0.04
         }
     }
 
@@ -222,9 +222,9 @@ internal object FlyExplosion : Choice("Explosion") {
         // Check if this is a regular velocity update
         if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
             // Modify packet according to the specified values
-            packet.velocityX = 0
-            packet.velocityY = (packet.velocityY * vertical).toInt()
-            packet.velocityZ = 0
+            packet.velocity.x = 0.0
+            packet.velocity.y = packet.velocity.y * vertical
+            packet.velocity.z = 0.0
 
             waitTicks(1)
             strafeSince = startStrafe

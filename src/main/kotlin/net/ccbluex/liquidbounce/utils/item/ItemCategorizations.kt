@@ -48,6 +48,9 @@ val ItemStack.isBundle
 val ItemStack.isSword
     get() = this.isIn(ItemTags.SWORDS)
 
+val ItemStack.isSpear
+    get() = this.isIn(ItemTags.SPEARS)
+
 val ItemStack.isPickaxe
     get() = this.isIn(ItemTags.PICKAXES)
 
@@ -97,3 +100,11 @@ val ItemStack.armorValue
 
 val ItemStack.armorKnockbackResistance
     get() = this.getAttributeValue(EntityAttributes.KNOCKBACK_RESISTANCE)
+
+// Shield
+
+/**
+ * @see Items.SHIELD
+ */
+val ItemStack.blocksAttacksComponent
+    get() = this.get(DataComponentTypes.BLOCKS_ATTACKS)

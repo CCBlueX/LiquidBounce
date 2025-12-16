@@ -15,19 +15,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.texture.NativeImage
+import net.ccbluex.liquidbounce.utils.render.textureSetup
+import net.ccbluex.liquidbounce.utils.render.uploadRect
 import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.texture.TextureSetup
 import net.minecraft.util.math.ChunkPos
 import org.joml.Vector2i
-import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.function.BiConsumer
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
@@ -46,28 +50,30 @@ private const val MAX_ATLAS_POSITIONS: Int = ATLAS_SIZE * ATLAS_SIZE - 1
 private val NOT_LOADED_ATLAS_POSITION = MinimapTextureAtlasManager.AtlasPosition(0, 0)
 
 class MinimapTextureAtlasManager {
-    private val texture = NativeImageBackedTexture(ATLAS_SIZE * 16, ATLAS_SIZE * 16, false)
-    private val availableAtlasPositions: ArrayBlockingQueue<AtlasPosition>
-    private val dirtyAtlasPositions = hashSetOf<AtlasPosition>()
-    private val chunkPosAtlasPosMap = hashMapOf<ChunkPos, AtlasPosition>()
+    private val texture = NativeImageBackedTexture(
+        { "$CLIENT_NAME MinimapTexture" },
+        ATLAS_SIZE * 16, ATLAS_SIZE * 16, false
+    )
 
-    private val lock = ReentrantReadWriteLock()
-
-    private var allocated = false
-
-    init {
-        val atlasPositions = ArrayList<AtlasPosition>(MAX_ATLAS_POSITIONS)
+    private val availableAtlasPositions = ObjectArrayList<AtlasPosition>(MAX_ATLAS_POSITIONS).apply {
         for (x in 0 until ATLAS_SIZE) {
             for (y in 0 until ATLAS_SIZE) {
                 if (x == 0 && y == 0) {
                     continue
                 }
 
-                atlasPositions.add(AtlasPosition(x, y))
+                add(AtlasPosition(x, y))
             }
         }
-        availableAtlasPositions = ArrayBlockingQueue(MAX_ATLAS_POSITIONS, false, atlasPositions)
+    }
+    private val dirtyAtlasPositions = ObjectOpenHashSet<AtlasPosition>()
+    private val chunkPosAtlasPosMap = Long2ObjectOpenHashMap<AtlasPosition>() // key -> ChunkPos
 
+    private val lock = ReentrantReadWriteLock()
+
+    private var allocated = false
+
+    init {
         for (x in 0..15) {
             for (y in 0..15) {
                 val color = if ((x and 1) xor (y and 1) == 0) Color4b.BLACK.toARGB() else Color4b.WHITE.toARGB()
@@ -79,19 +85,18 @@ class MinimapTextureAtlasManager {
         this.dirtyAtlasPositions.add(NOT_LOADED_ATLAS_POSITION)
     }
 
-    private fun allocate(chunkPos: ChunkPos): AtlasPosition {
-        val atlasPosition = availableAtlasPositions.take() ?: error("No more space in the texture atlas!")
-
-        lock.write {
-            chunkPosAtlasPosMap[chunkPos] = atlasPosition
+    private fun allocate(chunkPos: Long): AtlasPosition {
+        return lock.write {
+            val atlasPosition =
+                availableAtlasPositions.removeLastOrNull() ?: error("No more space in the texture atlas!")
+            chunkPosAtlasPosMap.put(chunkPos, atlasPosition)
+            atlasPosition
         }
-
-        return atlasPosition
     }
 
-    fun deallocate(chunkPos: ChunkPos) {
+    fun deallocate(chunkPos: Long) {
         lock.write {
-            chunkPosAtlasPosMap.remove(chunkPos)?.apply(availableAtlasPositions::add)
+            chunkPosAtlasPosMap.remove(chunkPos)?.apply(availableAtlasPositions::push)
         }
     }
 
@@ -103,21 +108,21 @@ class MinimapTextureAtlasManager {
         }
     }
 
-    fun getOrNotLoadedTexture(chunkPos: ChunkPos): AtlasPosition {
+    fun getOrNotLoadedTexture(chunkPos: Long): AtlasPosition {
         return get(chunkPos) ?: NOT_LOADED_ATLAS_POSITION
     }
 
-    fun get(chunkPos: ChunkPos): AtlasPosition? {
+    fun get(chunkPos: Long): AtlasPosition? {
         return lock.read { chunkPosAtlasPosMap[chunkPos] }
     }
 
-    private fun getOrAllocate(chunkPos: ChunkPos): AtlasPosition {
+    private fun getOrAllocate(chunkPos: Long): AtlasPosition {
         return chunkPosAtlasPosMap[chunkPos] ?: allocate(chunkPos)
     }
 
     fun editChunk(
-        chunkPos: ChunkPos,
-        editor: (NativeImageBackedTexture, AtlasPosition) -> Unit,
+        chunkPos: Long,
+        editor: BiConsumer<NativeImageBackedTexture, AtlasPosition>,
     ) {
         val atlasPosition = getOrAllocate(chunkPos)
 
@@ -125,21 +130,19 @@ class MinimapTextureAtlasManager {
             dirtyAtlasPositions.add(atlasPosition)
         }
 
-        editor(texture, atlasPosition)
+        editor.accept(texture, atlasPosition)
     }
 
     /**
      * Uploads texture changes to the GPU
      *
-     * @return the GLid of the texture
+     * @return the [TextureSetup] of the texture
      */
-    fun prepareRendering(): Int {
+    fun prepareRendering(): TextureSetup {
         lock.read {
             if (this.dirtyAtlasPositions.isEmpty()) {
-                return this.texture.glId
+                return this.texture.textureSetup
             }
-
-            this.texture.bindTexture()
 
             val dirtyChunks = this.dirtyAtlasPositions.size
 
@@ -153,7 +156,7 @@ class MinimapTextureAtlasManager {
             this.dirtyAtlasPositions.clear()
         }
 
-        return this.texture.glId
+        return this.texture.textureSetup
     }
 
     private fun uploadFullTexture() {
@@ -163,34 +166,20 @@ class MinimapTextureAtlasManager {
     }
 
     private fun uploadOnlyDirtyPositions() {
-        val image = this.texture.image!!
-
         for (dirtyAtlasPosition in this.dirtyAtlasPositions) {
-            val chunkImage = NativeImage(16, 16, false)
-
-            chunkImage.use {
-                image.copyRect(
-                    chunkImage,
-                    dirtyAtlasPosition.baseXOnAtlas, dirtyAtlasPosition.baseYOnAtlas,
-                    0, 0,
-                    16, 16,
-                    false, false
-                )
-
-                chunkImage.upload(
-                    0,
-                    dirtyAtlasPosition.baseXOnAtlas, dirtyAtlasPosition.baseYOnAtlas,
-                    0, 0,
-                    16, 16,
-                    false
-                )
-            }
+            this.texture.uploadRect(
+                mipLevel = 0,
+                x = dirtyAtlasPosition.baseXOnAtlas,
+                y = dirtyAtlasPosition.baseYOnAtlas,
+                width = 16, height = 16,
+            )
         }
     }
 
+    @JvmRecord
     data class AtlasPosition(private val x: Int, private val y: Int) {
-        val baseXOnAtlas: Int = x shl 4
-        val baseYOnAtlas: Int = y shl 4
+        val baseXOnAtlas: Int get() = x shl 4
+        val baseYOnAtlas: Int get() = y shl 4
 
         val uv: BoundingBox2f
             get() {

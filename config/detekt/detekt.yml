@@ -45,6 +45,8 @@ exceptions:
 style:
 #  UnusedImports:
 #    active: true
+  DestructuringDeclarationWithTooManyEntries:
+    maxDestructuringEntries: 4
   MagicNumber:
     active: false
   ReturnCount:
@@ -62,6 +64,19 @@ style:
     allowedNames: '_|ignored|expected|serialVersionUID|.+Handler\d*|repeatable'
   ForbiddenMethodCall:
     active: true
+    methods:
+      - 'kotlin.io.print'
+      - 'kotlin.io.println'
+      - 'java.math.BigDecimal.<init>(kotlin.Double)'
+      - 'java.math.BigDecimal.<init>(kotlin.String)'
+      - 'kotlin.system.measureTimeMillis'
+      # glBindTexture: replace with GlStateManager._bindTexture(), because everything else will mess up the internal state handling.
+      - 'org.lwjgl.opengl.GL11.glBindTexture'
+      # Java stuffs
+      - 'java.util.Vector.<init>()'
+      - 'java.util.Stack.<init>()'
+      - 'java.util.LinkedList.<init>()'
+      - 'java.util.Hashtable.<init>()'
   BracesOnIfStatements:
     active: true
     singleLine: 'never'

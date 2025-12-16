@@ -20,15 +20,23 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.scoreboard.ScoreboardEntry;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
+
+import java.util.Comparator;
 
 @Mixin(InGameHud.class)
 public interface MixinInGameHudAccessor {
 
     @Accessor("HOTBAR_SELECTION_TEXTURE")
     static Identifier getHotbarSelectionTexture() {
+        throw new AssertionError();
+    }
+
+    @Accessor("SCOREBOARD_ENTRY_COMPARATOR")
+    static Comparator<ScoreboardEntry> getScoreboardEntryComparator() {
         throw new AssertionError();
     }
 

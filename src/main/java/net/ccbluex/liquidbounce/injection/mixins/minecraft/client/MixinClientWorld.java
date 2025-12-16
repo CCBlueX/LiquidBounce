@@ -27,11 +27,16 @@ import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.particle.BlockParticleEffect;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.util.collection.Pool;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -48,7 +53,7 @@ public class MixinClientWorld {
         return original;
     }
 
-    @Inject(method = "addParticle(Lnet/minecraft/particle/ParticleEffect;DDDDDD)V", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "addParticleClient(Lnet/minecraft/particle/ParticleEffect;DDDDDD)V", at = @At("HEAD"), cancellable = true)
     private void injectNoExplosionParticles(ParticleEffect parameters, double x, double y, double z, double velocityX, double velocityY, double velocityZ, CallbackInfo ci) {
         var type = parameters.getType();
         if (!ModuleAntiBlind.canRender(DoRender.EXPLOSION_PARTICLES) && (type == ParticleTypes.EXPLOSION || type == ParticleTypes.EXPLOSION_EMITTER)) {
@@ -61,4 +66,17 @@ public class MixinClientWorld {
         EventManager.INSTANCE.callEvent(new WorldEntityRemoveEvent(entity));
     }
 
+    @Inject(method = "addBlockParticleEffects", at = @At("HEAD"), cancellable = true)
+    private void hookAddBlockParticleEffects(Vec3d center, float radius, int blockCount, Pool<BlockParticleEffect> particles, CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.BLOCK_BREAK_PARTICLES)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "addBlockBreakParticles", at = @At("HEAD"), cancellable = true)
+    private void hookAddBlockBreakParticles(BlockPos pos, BlockState state, CallbackInfo ci) {
+        if (!ModuleAntiBlind.canRender(DoRender.BLOCK_BREAK_PARTICLES)) {
+            ci.cancel();
+        }
+    }
 }

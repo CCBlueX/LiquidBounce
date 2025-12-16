@@ -48,7 +48,7 @@ fun getKeybinds(requestObject: RequestObject) = httpOk(
     JsonArray().apply {
         for (key in mc.options.allKeys) {
             add(JsonObject().apply {
-                addProperty("bindName", key.translationKey)
+                addProperty("bindName", key.id)
                 add("key", JsonObject().apply {
                     addProperty("translationKey", key.boundKeyTranslationKey)
                     addProperty("localized", key.boundKeyLocalizedText?.string)

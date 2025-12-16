@@ -156,7 +156,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
             val target = ModuleKillAura.targetTracker.target
                 ?: ModuleAimbot.targetTracker.target
                 ?: targetSelector.targets().firstOrNull() ?: return@handler
-            val distance = hypot(player.pos.x - target.pos.x, player.pos.z - target.pos.z)
+            val distance = hypot(player.entityPos.x - target.entityPos.x, player.entityPos.z - target.entityPos.z)
 
             // return if we're too far
             if (distance > followRange) {
@@ -176,9 +176,9 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
             }
 
             val speed = player.sqrtSpeed
-            val strafeYaw = atan2(target.pos.z - player.pos.z, target.pos.x - player.pos.x)
+            val strafeYaw = atan2(target.entityPos.z - player.entityPos.z, target.entityPos.x - player.entityPos.x)
             var strafeVec = computeDirectionVec(strafeYaw, distance, speed, targetSelector.maxRange, direction)
-            var pointCoords = player.pos.add(strafeVec)
+            var pointCoords = player.entityPos.add(strafeVec)
 
             if (!Validation.validatePoint(pointCoords)) {
                 if (!AdaptiveRange.enabled) {
@@ -188,7 +188,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
                     var currentRange = AdaptiveRange.rangeStep
                     while (!Validation.validatePoint(pointCoords)) {
                         strafeVec = computeDirectionVec(strafeYaw, distance, speed, currentRange, direction)
-                        pointCoords = player.pos.add(strafeVec)
+                        pointCoords = player.entityPos.add(strafeVec)
                         currentRange += AdaptiveRange.rangeStep
                         if (currentRange > AdaptiveRange.maxRange) {
                             direction = -direction

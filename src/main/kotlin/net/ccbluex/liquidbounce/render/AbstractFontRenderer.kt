@@ -20,16 +20,13 @@ package net.ccbluex.liquidbounce.render
 
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.text.Text
 
 abstract class AbstractFontRenderer<T : ProcessedText> {
     abstract val size: Float
     abstract val height: Float
-
-    /**
-     * Must be called before rendering
-     */
-    abstract fun begin()
 
     /**
      * Draws a string with minecraft font markup to this object.
@@ -39,21 +36,17 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
      * @return The width of the font, without considering the scaling
      */
     @Suppress("LongParameterList")
+    context(ctx: DrawContext)
     abstract fun draw(
         text: T,
         x0: Float,
         y0: Float,
         shadow: Boolean = false,
-        z: Float = 0.0f,
         scale: Float = 1.0f
     ): Float
 
-    abstract fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T
+    fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T = process(text.asPlainText(), defaultColor)
     abstract fun process(text: Text, defaultColor: Color4b = Color4b.WHITE): T
-
-    /**
-     */
-    abstract fun commit(environment: RenderEnvironment)
 
     /**
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting

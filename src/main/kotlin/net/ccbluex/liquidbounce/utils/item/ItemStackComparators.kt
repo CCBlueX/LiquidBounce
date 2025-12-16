@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.block.Block
@@ -29,13 +31,18 @@ import net.minecraft.util.math.BlockPos
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
+fun Comparator<ItemStack>.asItemFacetComparator(): Comparator<ItemFacet> =
+    Comparator { a, b -> this.compare(a.itemStack, b.itemStack) }
+
+fun Comparator<ItemStack>.asItemSlotComparator(): Comparator<ItemSlot> =
+    Comparator { a, b -> this.compare(a.itemStack, b.itemStack) }
+
 object PreferFavourableBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
         return compareValueByCondition(o1, o2) {
-            return@compareValueByCondition !ScaffoldBlockItemSelection.isBlockUnfavourable(it)
+            !ScaffoldBlockItemSelection.isBlockUnfavourable(it)
         }
     }
-
 }
 
 object PreferSolidBlocks : Comparator<ItemStack> {
@@ -43,10 +50,9 @@ object PreferSolidBlocks : Comparator<ItemStack> {
         return compareValueByCondition(o1, o2) {
             val defaultState = (it.item as BlockItem).block.defaultState
 
-            return@compareValueByCondition defaultState.isSolid
+            defaultState.isSolidBlock(mc.world!!, BlockPos.ORIGIN)
         }
     }
-
 }
 
 object PreferFullCubeBlocks : Comparator<ItemStack> {
@@ -54,7 +60,7 @@ object PreferFullCubeBlocks : Comparator<ItemStack> {
         return compareValueByCondition(o1, o2) {
             val defaultState = (it.item as BlockItem).block.defaultState
 
-            return@compareValueByCondition defaultState.isFullCube(mc.world!!, BlockPos.ORIGIN)
+            defaultState.isFullCube(mc.world!!, BlockPos.ORIGIN)
         }
     }
 
@@ -127,10 +133,16 @@ class PreferStackSize private constructor(val higher: Boolean) : Comparator<Item
     }
 
     companion object {
+        /**
+         * Fewer items first
+         */
         @JvmField
-        val MORE = PreferStackSize(true)
+        val PREFER_FEWER = PreferStackSize(true)
 
+        /**
+         * More items first
+         */
         @JvmField
-        val LESS = PreferStackSize(false)
+        val PREFER_MORE = PreferStackSize(false)
     }
 }

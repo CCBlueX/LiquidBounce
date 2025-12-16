@@ -22,48 +22,12 @@ package net.ccbluex.liquidbounce.additions
 
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.item.ItemStack
-import net.minecraft.util.Identifier
-import java.util.function.Function
 
 /**
  * Addition to [net.minecraft.client.gui.DrawContext].
  */
 interface DrawContextAddition {
-
-
-    /**
-     * drawTexture with floats
-     */
-    @Suppress("LongParameterList")
-    fun `liquid_bounce$drawTexture`(
-        renderLayers: Function<Identifier, RenderLayer>,
-        texture: Identifier,
-        x: Float,
-        y: Float,
-        width: Int,
-        height: Int,
-    )
-
-    /**
-     * drawTexturedQuad with floats
-     */
-    @Suppress("LongParameterList")
-    fun `liquid_bounce$drawTexturedQuad`(
-        renderLayers: Function<Identifier, RenderLayer>,
-        texture: Identifier,
-        x1: Float,
-        x2: Float,
-        y1: Float,
-        y2: Float,
-        u1: Float,
-        u2: Float,
-        v1: Float,
-        v2: Float,
-        color: Int,
-    )
-
 
     fun `liquidbounce$drawItemBar`(stack: ItemStack, x: Int, y: Int)
 
@@ -94,4 +58,10 @@ internal inline fun DrawContext.drawStackCount(
 internal inline fun DrawContext.drawCooldownProgress(stack: ItemStack, x: Int, y: Int) =
     (this as DrawContextAddition).`liquidbounce$drawCooldownProgress`(stack, x, y)
 
-
+// Removed in 1.21.9, copied from 1.21.8
+fun DrawContext.drawBorder(x: Int, y: Int, width: Int, height: Int, color: Int) {
+    fill(x, y, x + width, y + 1, color)
+    fill(x, y + height - 1, x + width, y + height, color)
+    fill(x, y + 1, x + 1, y + height - 1, color)
+    fill(x + width - 1, y + 1, x + width, y + height - 1, color)
+}

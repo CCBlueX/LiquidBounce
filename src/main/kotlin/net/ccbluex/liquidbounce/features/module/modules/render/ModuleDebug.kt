@@ -45,12 +45,10 @@ import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import java.awt.Color
 
 /**
  * Rotations module
@@ -88,9 +86,10 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                 .getSnapshotsBetween(0 until this.ticksToPredict)
 
             renderEnvironmentForWorld(event.matrixStack) {
-                withColor(Color4b.BLUE) {
-                    drawLineStrip(positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() })
-                }
+                drawLineStrip(
+                    Color4b.BLUE.toARGB(),
+                    positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() },
+                )
             }
         }
 
@@ -113,49 +112,43 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         private val screenRenderHandler = handler<OverlayRenderEvent> { event ->
             val context = event.context
 
-            renderEnvironmentForGUI(event) {
-                with(context) {
-                    var posX = 300
-                    var posY = 500
+            with(context) {
+                var posX = 300
+                var posY = 500
 
-                    fontRenderer.draw(
-                        fontRenderer.process("Graph"),
-                        posX.toFloat(),
-                        posY.toFloat(),
-                        shadow = true,
-                        scale = 0.3f
+                fontRenderer.draw(
+                    fontRenderer.process("Graph"),
+                    posX.toFloat(),
+                    posY.toFloat(),
+                    shadow = true,
+                    scale = 0.3f
+                )
+
+                curve.xAxis.range.step(0.1f).forEachFloat { x ->
+                    var y = curve.transform(x)
+                    this.drawQuad(
+                        posX + x,
+                        posY - y,
+                        posX + x + 1,
+                        posY - y + 1,
+                        Color4b.GREEN
                     )
-
-                    curve.xAxis.range.step(0.1f).forEachFloat { x ->
-                        var y = curve.transform(x)
-                        this.fill(
-                            posX + x,
-                            posY - y,
-                            posX + x + 1,
-                            posY - y + 1,
-                            0.0f,
-                            Color4b.GREEN.toARGB()
-                        )
-                    }
-
-                    val points = curve.get()
-                    for (point in curve.get()) {
-                        var x = point[0]
-                        var y = point[1]
-
-                        this.fill(
-                            posX + x - 2,
-                            posY - y - 2,
-                            posX + x + 2,
-                            posY - y + 2,
-                            0.0f,
-                            Color4b.WHITE.toARGB()
-                        )
-                    }
                 }
-                fontRenderer.commit(this)
-            }
 
+                val points = curve.get()
+                for (point in curve.get()) {
+                    var x = point[0]
+                    var y = point[1]
+
+                    this.drawQuad(
+                        posX + x - 2,
+                        posY - y - 2,
+                        posX + x + 2,
+                        posY - y + 2,
+                        Color4b.WHITE
+                    )
+                }
+            }
         }
 
     }
@@ -184,9 +177,11 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
 
         renderEnvironmentForWorld(matrixStack) {
+            startBatch()
             debuggedGeometry.values.forEach { geometry ->
                 geometry.render(this)
             }
+            commitBatch()
         }
     }
 
@@ -239,51 +234,53 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             return@handler
         }
 
-        renderEnvironmentForGUI(event) {
-            /**
-             * Separate the debugged owner from its parameter
-             * Structure should be like this:
-             * Owner ->
-             *   Parameter Name: Parameter Value
-             *   Parameter Name: Parameter Value
-             *   Parameter Name: Parameter Value
-             */
-            val textList = mutableListOf<Text>()
+        /**
+         * Separate the debugged owner from its parameter
+         * Structure should be like this:
+         * Owner ->
+         *   Parameter Name: Parameter Value
+         *   Parameter Name: Parameter Value
+         *   Parameter Name: Parameter Value
+         */
+        val textList = mutableListOf<Text>()
 
-            val debuggedOwners = debugParameters.keys.groupBy { it.owner }
+        val debuggedOwners = debugParameters.keys.groupBy { it.owner }
 
-            val currentTime = System.currentTimeMillis()
+        val currentTime = System.currentTimeMillis()
 
-            fun ownerName(owner: DebuggedOwner): MutableText {
-                return when (owner) {
-                    is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
-                    is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
-                    is EventListener -> owner.parent()?.let { ownerName(it) } ?: "".asText()
-                        .append("::".asText().formatted(Formatting.GRAY))
-                        .append(
-                            owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true)
-                        )
+        fun ownerName(owner: DebuggedOwner): Text {
+            return when (owner) {
+                is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
+                is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
+                is EventListener -> listOfNotNull(
+                    owner.parent()?.let { ownerName(it) },
+                    "::".asPlainText(Formatting.GRAY),
+                    owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true),
+                ).asText()
 
-                    is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asText()
-                        ?.formatted(Formatting.GRAY) ?: owner.toString().asText()
+                is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asPlainText(Formatting.GRAY)
+                    ?: owner.toString().asPlainText()
 
-                    else -> owner.javaClass.simpleName.asText().formatted(Formatting.BLUE)
-                }
+                else -> owner.javaClass.simpleName.asPlainText(Formatting.BLUE)
             }
+        }
 
-            debuggedOwners.forEach { (owner, parameter) ->
-                textList += ownerName(owner)
+        debuggedOwners.forEach { (owner, parameter) ->
+            textList += ownerName(owner)
 
-                parameter.forEach { debuggedParameter ->
-                    val parameterName = debuggedParameter.name
-                    val parameterCapture = debugParameters[debuggedParameter] ?: return@forEach
-                    val duration = (currentTime - parameterCapture.time) / 1000
-                    textList += "$parameterName: ".asText().formatted(Formatting.WHITE)
-                        .append(parameterCapture.value.toString().asText().formatted(Formatting.GREEN))
-                        .append(" [${duration}s ago]".asText().formatted(Formatting.GRAY))
-                }
+            parameter.forEach { debuggedParameter ->
+                val parameterName = debuggedParameter.name
+                val parameterCapture = debugParameters[debuggedParameter] ?: return@forEach
+                val duration = (currentTime - parameterCapture.time) / 1000
+                textList += textOf(
+                    "$parameterName: ".asPlainText(Formatting.WHITE),
+                    parameterCapture.value.toString().asPlainText(Formatting.GREEN),
+                    " [${duration}s ago]".asPlainText(Formatting.GRAY),
+                )
             }
+        }
 
+        with(event.context) {
             // Draw
             fontRenderer.draw(
                 fontRenderer.process("Debugging"),
@@ -303,8 +300,6 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                     scale = 0.17f
                 )
             }
-
-            fontRenderer.commit(this)
         }
     }
 
@@ -343,7 +338,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
     fun getArrayEntryColor(idx: Int, length: Int): Color4b {
         val hue = idx.toFloat() / length.toFloat()
-        return Color4b(Color.getHSBColor(hue, 1f, 1f)).with(a = 32)
+        return Color4b.ofHSB(hue, 1f, 1f).with(a = 32)
     }
 
     sealed interface DebuggedGeometry {
@@ -363,31 +358,43 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
 
         override fun render(env: WorldRenderEnvironment) {
-            env.withColor(color) {
-                this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
-            }
+            env.drawLine(
+                env.relativeToCamera(from).toVec3(),
+                env.relativeToCamera(to).toVec3(),
+                color.toARGB(),
+            )
         }
     }
 
-    class DebuggedQuad(val p1: Vec3d, val p2: Vec3d, override val color: Color4b) : DebuggedGeometry {
+    class DebuggedTriangle(
+        val p1: Vec3d,
+        val p2: Vec3d,
+        val p3: Vec3d,
+        override val color: Color4b,
+    ) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
-            env.withColor(color) {
-                this.drawQuad(relativeToCamera(p1).toVec3(), relativeToCamera(p2).toVec3())
-            }
+            env.drawTriangle(
+                p1 = env.relativeToCamera(p1).toVec3(),
+                p2 = env.relativeToCamera(p2).toVec3(),
+                p3 = env.relativeToCamera(p2).toVec3(),
+                argb = color.toARGB(),
+            )
         }
     }
 
     class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
-            env.withColor(color) {
-                this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
-            }
+            env.drawLine(
+                env.relativeToCamera(from).toVec3(),
+                env.relativeToCamera(to).toVec3(),
+                color.toARGB(),
+            )
         }
     }
 
     open class DebuggedBox(val box: Box, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
-            env.drawBox(box.offset(env.camera.pos.negate()), color)
+            env.drawBox(box.offset(env.camera.cameraPos.negate()), color)
         }
     }
 
