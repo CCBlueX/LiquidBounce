@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.aiming.utils.toVec3d
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -71,7 +71,7 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
     fun calculateScreenPos(
         pos: Vec3d,
         cameraPos: Vec3d = mc.gameRenderer.camera.cameraPos,
-    ): Vec3? {
+    ): Vec3f? {
         val transformedPos = cacheVec3f.set(pos).sub(cameraPos)
             .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix))
 
@@ -81,7 +81,7 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
         val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
             .mul(guiScaleMul * mc.framebuffer.textureWidth, guiScaleMul * mc.framebuffer.textureHeight, 1.0F)
 
-        return if (transformedPos.z < 1.0F) Vec3(screenPos.x, screenPos.y, transformedPos.z) else null
+        return if (transformedPos.z < 1.0F) Vec3f(screenPos.x, screenPos.y, transformedPos.z) else null
     }
 
     @JvmStatic

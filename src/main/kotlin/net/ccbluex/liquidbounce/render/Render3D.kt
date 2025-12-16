@@ -26,7 +26,7 @@ import com.mojang.blaze3d.textures.GpuTextureView
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.Camera
@@ -90,14 +90,14 @@ class WorldRenderEnvironment(
     val matrixStack: MatrixStack,
     val camera: Camera,
 ) : RenderEnvironment(framebuffer) {
-    fun relativeToCamera(pos: Vec3): Vec3d = pos.relativeTo(camera)
+    fun relativeToCamera(pos: Vec3f): Vec3d = pos.relativeTo(camera)
 
     fun relativeToCamera(pos: Position): Vec3d = pos.relativeTo(camera)
 
     fun relativeToCamera(pos: Vec3i): Vec3d = pos.relativeTo(camera)
 }
 
-fun Vec3.relativeTo(camera: Camera): Vec3d = Vec3d(
+fun Vec3f.relativeTo(camera: Camera): Vec3d = Vec3d(
     x - camera.cameraPos.x,
     y - camera.cameraPos.y,
     z - camera.cameraPos.z,

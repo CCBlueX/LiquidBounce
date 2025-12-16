@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.client.asText
@@ -105,7 +105,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
 
         val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
-            fun Vec3d.calcScreenPosWithOffset(): Vec3? {
+            fun Vec3d.calcScreenPosWithOffset(): Vec3f? {
                 return WorldToScreen.calculateScreenPos(add(renderOffset))
             }
 
@@ -122,7 +122,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                             else -> {
                                 val centerX = mc.window.scaledWidth * 0.5F
                                 val centerY = mc.window.scaledHeight * 0.5F
-                                Vec3(centerX + 50F, centerY + index * (mc.textRenderer.fontHeight + 1), 0F)
+                                Vec3f(centerX + 50F, centerY + index * (mc.textRenderer.fontHeight + 1), 0F)
                             }
                         }
 

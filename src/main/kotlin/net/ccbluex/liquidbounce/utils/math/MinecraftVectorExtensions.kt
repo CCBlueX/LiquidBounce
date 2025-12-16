@@ -20,7 +20,7 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.minecraft.util.math.*
 
 inline operator fun Vec2f.component1() = this.x
@@ -118,7 +118,7 @@ inline fun Vec3i.toVec3d(
     zOffset: Double = 0.0,
 ): Vec3d = Vec3d(x + xOffset, y + yOffset, z + zOffset)
 
-inline fun Vec3d.toVec3(): Vec3 = Vec3(this.x, this.y, this.z)
+inline fun Vec3d.toVec3(): Vec3f = Vec3f(this.x, this.y, this.z)
 
 @Deprecated("use this.toBlockPos instead", replaceWith = ReplaceWith("this.toBlockPos"))
 inline fun Vec3d.toVec3i(): Vec3i = toBlockPos()

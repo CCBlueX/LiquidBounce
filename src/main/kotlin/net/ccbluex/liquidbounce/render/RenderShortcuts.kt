@@ -24,12 +24,11 @@ package net.ccbluex.liquidbounce.render
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
@@ -244,7 +243,7 @@ fun drawMesh(
 /**
  * Draws a line with endpoint [p1] and [p2] and color [argb].
  */
-fun WorldRenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
+fun WorldRenderEnvironment.drawLine(p1: Vec3f, p2: Vec3f, argb: Int) =
     drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
         vertex(matrix, p1.x, p1.y, p1.z).color(argb)
         vertex(matrix, p2.x, p2.y, p2.z).color(argb)
@@ -255,7 +254,7 @@ fun WorldRenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
  *
  * @param lines The vectors representing the lines.
  */
-fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3) {
+fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3f) {
     drawLines(
         lines,
         pipeline = ClientRenderPipelines.Lines,
@@ -268,7 +267,7 @@ fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3) {
  *
  * @param positions The vectors representing the line strip.
  */
-fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3) {
+fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3f) {
     drawLines(
         positions,
         pipeline = ClientRenderPipelines.LineStrip,
@@ -283,7 +282,7 @@ fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3) {
  * @param pipeline The render pipeline for the lines.
  */
 private fun WorldRenderEnvironment.drawLines(
-    lines: Array<out Vec3>,
+    lines: Array<out Vec3f>,
     pipeline: RenderPipeline,
     argb: Int,
 ) {
@@ -320,7 +319,7 @@ fun WorldRenderEnvironment.drawSquareTexture(
         .color(argb)
 }
 
-fun WorldRenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3, argb: Int) {
+fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: Int) {
     drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
         vertex(matrix, p1.x, p1.y, p1.z).color(argb)
         vertex(matrix, p2.x, p2.y, p2.z).color(argb)
@@ -446,7 +445,7 @@ fun WorldRenderEnvironment.drawPlane(
  * @param vertices The four vectors to draw the quad
  * @param colors The colors for the vertices
  */
-private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3>, colors: Array<Color4b>) {
+private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3f>, colors: Array<Color4b>) {
     require(vertices.size == colors.size) { "there must be a color for every vertex" }
     require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
     drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
@@ -532,37 +531,37 @@ fun WorldRenderEnvironment.drawGradientSides(
 
     drawGradientQuad(
         arrayOf(
-            Vec3(box.minX, 0.0, box.minZ),
-            Vec3(box.minX, height, box.minZ),
-            Vec3(box.maxX, height, box.minZ),
-            Vec3(box.maxX, 0.0, box.minZ),
+            Vec3f(box.minX, 0.0, box.minZ),
+            Vec3f(box.minX, height, box.minZ),
+            Vec3f(box.maxX, height, box.minZ),
+            Vec3f(box.maxX, 0.0, box.minZ),
         ),
         vertexColors
     )
     drawGradientQuad(
         arrayOf(
-            Vec3(box.maxX, 0.0, box.minZ),
-            Vec3(box.maxX, height, box.minZ),
-            Vec3(box.maxX, height, box.maxZ),
-            Vec3(box.maxX, 0.0, box.maxZ),
+            Vec3f(box.maxX, 0.0, box.minZ),
+            Vec3f(box.maxX, height, box.minZ),
+            Vec3f(box.maxX, height, box.maxZ),
+            Vec3f(box.maxX, 0.0, box.maxZ),
         ),
         vertexColors
     )
     drawGradientQuad(
         arrayOf(
-            Vec3(box.maxX, 0.0, box.maxZ),
-            Vec3(box.maxX, height, box.maxZ),
-            Vec3(box.minX, height, box.maxZ),
-            Vec3(box.minX, 0.0, box.maxZ),
+            Vec3f(box.maxX, 0.0, box.maxZ),
+            Vec3f(box.maxX, height, box.maxZ),
+            Vec3f(box.minX, height, box.maxZ),
+            Vec3f(box.minX, 0.0, box.maxZ),
         ),
         vertexColors
     )
     drawGradientQuad(
         arrayOf(
-            Vec3(box.minX, 0.0, box.maxZ),
-            Vec3(box.minX, height, box.maxZ),
-            Vec3(box.minX, height, box.minZ),
-            Vec3(box.minX, 0.0, box.minZ),
+            Vec3f(box.minX, 0.0, box.maxZ),
+            Vec3f(box.minX, height, box.maxZ),
+            Vec3f(box.minX, height, box.minZ),
+            Vec3f(box.minX, 0.0, box.minZ),
         ),
         vertexColors
     )

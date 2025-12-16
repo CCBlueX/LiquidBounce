@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -261,7 +261,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         }
 
         renderEnvironmentForWorld(event.matrixStack) {
-            val eyeVector = Vec3(0.0, 0.0, 1.0)
+            val eyeVector = Vec3f(0.0, 0.0, 1.0)
                 .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
                 .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 

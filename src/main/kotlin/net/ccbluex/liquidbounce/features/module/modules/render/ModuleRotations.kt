@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations.s
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -115,7 +115,7 @@ object ModuleRotations : ClientModule("Rotations", Category.RENDER) {
                 partialTicks.toDouble()
             )
 
-            val eyeVector = Vec3(0.0, 0.0, 1.0)
+            val eyeVector = Vec3f(0.0, 0.0, 1.0)
                 .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
                 .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
@@ -123,14 +123,14 @@ object ModuleRotations : ClientModule("Rotations", Category.RENDER) {
                 renderEnvironmentForWorld(matrixStack) {
                     drawLineStrip(
                         vectorLine.toARGB(),
-                        eyeVector, eyeVector + Vec3(interpolatedRotationVec * 100.0)
+                        eyeVector, eyeVector + Vec3f(interpolatedRotationVec * 100.0)
                     )
                 }
             }
 
             if (drawVectorDot) {
                 renderEnvironmentForWorld(matrixStack) {
-                    val vector = eyeVector + Vec3(interpolatedRotationVec * 100.0)
+                    val vector = eyeVector + Vec3f(interpolatedRotationVec * 100.0)
                     drawBox(Box.of(vector.toVec3d(), 2.5, 2.5, 2.5), vectorDot)
                 }
             }
