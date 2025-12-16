@@ -52,7 +52,7 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
 
     fun getOrCreateBuffer(pipeline: RenderPipeline): BufferBuilder {
         return if (isBatchMode) {
-            batchBuffer.computeIfAbsent(pipeline, ClientTessellator::begin)
+            batchBuffer.computeIfAbsent(pipeline, ClientTesselator::begin)
         } else {
             Tesselator.getInstance().begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
         }
@@ -71,7 +71,7 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
         batchBuffer.fastIterator().forEach { (pipeline, bufferBuilder) ->
             bufferBuilder.build()?.let {
                 draw(pipeline, it)
-                ClientTessellator.allocator(pipeline).clear()
+                ClientTesselator.allocator(pipeline).clear()
             }
         }
         batchBuffer.clear()

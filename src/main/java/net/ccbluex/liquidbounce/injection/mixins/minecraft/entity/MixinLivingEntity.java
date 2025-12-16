@@ -244,7 +244,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
                 ModuleScaffold.INSTANCE.getTowerMode().getActiveChoice().getRunning();
 
         if (noJumpDelay || towerActive) {
-            noJumpDelay = 0;
+            this.noJumpDelay = 0;
         }
     }
 

@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -46,14 +45,14 @@ public class MixinKeyboardHandler {
      * Hook key event
      */
     @Inject(method = "keyPress", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", shift = At.Shift.BEFORE, ordinal = 0))
-    private void hookKeyboardKey(long window, int action, KeyEvent input, CallbackInfo ci) {
+    private void hookKeyboardKey(long l, int action, net.minecraft.client.input.KeyEvent keyEvent, CallbackInfo ci) {
         // does if (window == this.client.getWindow().getHandle())
-        var inputKey = InputConstants.getKey(input);
+        var inputKey = InputConstants.getKey(keyEvent);
 
         EventManager.INSTANCE.callEvent(new KeyboardKeyEvent(
-            inputKey, input.key(),
-            input.scancode(), action,
-            input.modifiers(), this.minecraft.screen
+            inputKey, keyEvent.key(),
+            keyEvent.scancode(), action,
+            keyEvent.modifiers(), this.minecraft.screen
         ));
         if (minecraft.screen == null) {
             EventManager.INSTANCE.callEvent(new KeyEvent(inputKey, action));

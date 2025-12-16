@@ -25,7 +25,7 @@ import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
 
-object ClientTessellator {
+object ClientTesselator {
 
     private const val BUFFER_SIZE = 0xC0000
 
