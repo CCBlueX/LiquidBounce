@@ -151,7 +151,7 @@ object CommandModels : Command.Factory {
         return CommandBuilder
             .begin("browse")
             .handler {
-                Util.platform.openFile(modelsFolder)
+                Util.getPlatform().openFile(modelsFolder)
                 chat(regular("Location: "), clickablePath(modelsFolder))
             }
             .build()

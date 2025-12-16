@@ -252,7 +252,7 @@ abstract class BaseYawTargetPositionFactory(
             return face.from
         }
 
-        val yaw = Mth.wrapDegrees(player.direction)
+        val yaw = Mth.wrapDegrees(player.yRot)
         val angle = getAngle()
         val highTargetYaw = Math.toRadians(Mth.wrapDegrees(yaw + angle).toDouble()).toFloat()
         val lowTargetYaw = Math.toRadians(Mth.wrapDegrees(yaw - angle).toDouble()).toFloat()

@@ -99,7 +99,7 @@ fun raytraceBlock(
         start,
         end,
         pos,
-        state.getShape(mc.level, pos, CollisionContext.of(mc.player)),
+        state.getShape(mc.level!!, pos, CollisionContext.of(mc.player!!)),
         state,
     )
 }
@@ -202,7 +202,7 @@ fun facingBlock(
     val searchedPos =
         mc.level?.clip(
             ClipContext(
-                eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player,
+                eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player!!,
             ),
         ) ?: return false
 

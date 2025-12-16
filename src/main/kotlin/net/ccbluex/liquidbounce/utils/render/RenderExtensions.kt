@@ -256,8 +256,11 @@ fun NativeImage.registerTexture(identifier: Identifier) {
 inline fun InputStream.toNativeImage(): NativeImage = NativeImage.read(this)
 
 @JvmOverloads
-inline fun NativeImage.asTexture(nameSupplier: Supplier<String>? = null) =
-    DynamicTexture(nameSupplier, this)
+inline fun NativeImage.asTexture(
+    nameSupplier: Supplier<String> = Supplier {
+        "Texture NativeImage@${this.hashCode()} (${this.width}x${this.height})"
+    },
+) = DynamicTexture(nameSupplier, this)
 
 val AbstractTexture.textureSetup: TextureSetup
     get() = TextureSetup.singleTexture(textureView, sampler)

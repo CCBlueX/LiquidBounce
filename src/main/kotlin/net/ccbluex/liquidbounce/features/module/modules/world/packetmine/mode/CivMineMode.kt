@@ -65,7 +65,7 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
             ServerboundPlayerActionPacket(
                 ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                 mineTarget.targetPos,
-                mineTarget.direction,
+                mineTarget.direction!!,
                 sequence,
             )
         }
@@ -102,7 +102,7 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
             ServerboundPlayerActionPacket(
                 ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                 mineTarget.targetPos,
-                mineTarget.direction,
+                mineTarget.direction!!,
                 sequence,
             )
         }

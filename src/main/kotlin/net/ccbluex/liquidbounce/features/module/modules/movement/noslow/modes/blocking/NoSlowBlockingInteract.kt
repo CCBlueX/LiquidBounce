@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.modes
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.blockingHand
-import net.ccbluex.liquidbounce.utils.client.InteractionTracker.isBlocking
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
@@ -39,7 +38,7 @@ internal object NoSlowBlockingInteract : Choice("Interact") {
 
     @Suppress("unused")
     val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
-        if (isBlocking) {
+        blockingHand?.let { blockingHand ->
             if (event.state == EventState.POST) {
                 untracked {
                     network.send(ServerboundSetCarriedItemPacket(player.inventory.selectedSlot))

@@ -169,7 +169,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
             nextCategorySlot,
             0,
             ClickType.PICKUP,
-            mc.player
+            mc.player!!
         )
 
         if (ModuleDebug.running) {
@@ -189,7 +189,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
             itemSlot,
             0,
             ClickType.PICKUP,
-            mc.player
+            mc.player!!
         )
 
         if (ModuleDebug.running) {
@@ -236,7 +236,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
                 slot,
                 0,
                 ClickType.PICKUP,
-                mc.player
+                mc.player!!
             )
 
             if (ModuleDebug.running) {

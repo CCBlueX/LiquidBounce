@@ -313,7 +313,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                     if (currentStepHeight > 1.25) {
                         waitTicks(5)
                         if (alternateBypass) {
-                            player.isOnGround = true
+                            player.setOnGround(true)
                         } else {
                             player.deltaMovement.y = 0.42
                         }

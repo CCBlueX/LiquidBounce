@@ -45,8 +45,8 @@ val usesViaFabricPlus = runCatching {
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
 val defaultProtocolVersion = ClientProtocolVersion(
-    SharedConstants.currentVersion.name(),
-    SharedConstants.currentVersion.protocolVersion()
+    SharedConstants.getCurrentVersion().name(),
+    SharedConstants.getCurrentVersion().protocolVersion()
 )
 
 val protocolVersion: ClientProtocolVersion

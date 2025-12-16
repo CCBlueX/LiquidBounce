@@ -106,12 +106,12 @@ class SimulatedArrow(
                 val canBeHit = !it.isSpectator && it.isAlive
 
                 if (canBeHit && (it.isPickable || arrowEntity != mc.player && it == arrowEntity)) {
-                    if (arrowEntity.isPassengerOfSameVehicle(it)) return@getEntityCollision false
+                    if (arrowEntity.isPassengerOfSameVehicle(it)) return@getEntityHitResult false
                 } else {
-                    return@getEntityCollision false
+                    return@getEntityHitResult false
                 }
 
-                return@getEntityCollision true
+                return@getEntityHitResult true
             }
 
             // Check if arrow is landing

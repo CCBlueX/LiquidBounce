@@ -147,7 +147,7 @@ private val ACCEPTED_BLOCK_TAGS =
         BlockTags.SNOW,
     )
 
-private fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagKey<T>>): Map<Identifier, Identifier> {
+private fun <T : Any> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagKey<T>>): Map<Identifier, Identifier> {
     val map = hashMapOf<Identifier, Identifier>()
 
     for (acceptedTag in tagKeys) {

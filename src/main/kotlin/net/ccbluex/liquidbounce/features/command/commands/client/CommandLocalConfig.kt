@@ -116,7 +116,7 @@ object CommandLocalConfig : Command.Factory {
         .build()
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
-        Util.platform.openFile(ConfigSystem.userConfigsFolder)
+        Util.getPlatform().openFile(ConfigSystem.userConfigsFolder)
         chat(regular(command.result("browse", clickablePath(ConfigSystem.userConfigsFolder))))
     }.build()
 

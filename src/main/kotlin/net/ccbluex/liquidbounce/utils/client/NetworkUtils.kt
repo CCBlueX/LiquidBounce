@@ -137,12 +137,12 @@ fun MultiPlayerGameMode.interactItem(
 
     this.ensureHasSentCarriedItem()
     val mutableObject = MutableObject<InteractionResult>()
-    this.startPrediction(world, PredictiveAction { sequence: Int ->
+    this.startPrediction(world) { sequence ->
         val playerInteractItemC2SPacket = ServerboundUseItemPacket(hand, sequence, yaw, pitch)
         val itemStack = player.getItemInHand(hand)
         if (player.cooldowns.isOnCooldown(itemStack)) {
             mutableObject.setValue(InteractionResult.PASS)
-            return@SequencedPacketCreator playerInteractItemC2SPacket
+            return@startPrediction playerInteractItemC2SPacket
         }
 
         val typedActionResult = itemStack.use(world, player, hand)
@@ -159,14 +159,14 @@ fun MultiPlayerGameMode.interactItem(
         }
 
         mutableObject.setValue(typedActionResult)
-        return@SequencedPacketCreator playerInteractItemC2SPacket
-    })
+        return@startPrediction playerInteractItemC2SPacket
+    }
 
-    return mutableObject.value
+    return mutableObject.get()
 }
 
 fun handlePacket(packet: Packet<*>) =
-    runCatching { (packet as Packet<ClientGamePacketListener>).handle(mc.connection) }
+    runCatching { (packet as Packet<ClientGamePacketListener>).handle(mc.connection!!) }
 
 fun sendPacketSilently(packet: Packet<*>) {
     // hack fix for the packet handler not being called on Rotation Manager for tracking

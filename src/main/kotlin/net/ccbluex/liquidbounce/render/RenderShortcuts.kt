@@ -169,9 +169,8 @@ fun RenderEnvironment.draw(pipeline: RenderPipeline, builtBuffer: MeshData) = dr
     pipeline,
     builtBuffer,
     this.framebuffer,
-    this.shaderColor.toVector4f(),
-    { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
-    this.shaderTextures::get,
+    shaderColor = this.shaderColor.toVector4f(),
+    shaderTextureProvider = this.shaderTextures::get,
 )
 
 /**
@@ -184,7 +183,7 @@ fun drawMesh(
     builtBuffer: MeshData,
     framebuffer: RenderTarget = mc.mainRenderTarget,
     shaderColor: Vector4f = Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
-    renderPassLabelGetter: Supplier<String>? = null,
+    renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
     shaderTextureProvider: IntFunction<GpuTextureView?> = IntFunction { null },
 ) = builtBuffer.use { buffer ->
     val gpuBufferSlice = RenderSystem.getDynamicUniforms()
@@ -202,12 +201,12 @@ fun drawMesh(
         gpuBuffer2 = shapeIndexBuffer.getBuffer(buffer.drawState().indexCount)
         indexType = shapeIndexBuffer.type()
     } else {
-        gpuBuffer2 = pipeline.vertexFormat.uploadImmediateIndexBuffer(buffer.indexBuffer())
+        gpuBuffer2 = pipeline.vertexFormat.uploadImmediateIndexBuffer(buffer.indexBuffer()!!)
         indexType = buffer.drawState().indexType
     }
 
     val colorTexture = RenderSystem.outputColorTextureOverride
-        ?: framebuffer.colorTextureView
+        ?: framebuffer.colorTextureView!!
     val depthTexture = RenderSystem.outputDepthTextureOverride
         ?: framebuffer.depthTextureView.takeIf { framebuffer.useDepth }
 

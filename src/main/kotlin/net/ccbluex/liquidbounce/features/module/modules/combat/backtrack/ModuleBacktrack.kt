@@ -164,7 +164,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
                 is ClientboundTeleportEntityPacket ->
                     Vec3(packet.change.position.x, packet.change.position.y, packet.change.position.z)
                 else -> (packet as ClientboundEntityPositionSyncPacket).values.position()
-            }
+            } ?: return@handler
             position?.setBase(pos)
 
             // Is the target's actual position closer than its tracked position?

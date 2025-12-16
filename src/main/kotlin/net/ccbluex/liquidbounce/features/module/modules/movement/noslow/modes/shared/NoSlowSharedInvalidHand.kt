@@ -35,7 +35,7 @@ internal class NoSlowSharedInvalidHand(override val parent: ChoiceConfigurable<*
 
         if (!event.isCancelled && event.origin == TransferOrigin.OUTGOING && packet is ServerboundUseItemPacket) {
             event.cancelEvent()
-            sendPacketSilently(ServerboundUseItemPacket(null, packet.sequence, packet.xRot, packet.yRot))
+            sendPacketSilently(ServerboundUseItemPacket(TODO("FIXME"), packet.sequence, packet.yRot, packet.xRot))
         }
     }
 

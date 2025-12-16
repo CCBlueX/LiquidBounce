@@ -223,7 +223,7 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
                 ServerboundPlayerActionPacket(
                     ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
                     mineTarget.targetPos,
-                    mineTarget.direction,
+                    mineTarget.direction!!,
                     sequence
                 )
             }

@@ -53,7 +53,7 @@ object CommandInvsee : Command.Factory {
             .handler {
                 val inputName = args[0] as String
                 val playerID = network.onlinePlayers.find { it.profile.name.equals(inputName, true) }?.profile?.id
-                val player = { world.getPlayerByUUID(playerID) ?: ModuleInventoryTracker.playerMap[playerID] }
+                val player = { playerID?.let(world::getPlayerByUUID) ?: ModuleInventoryTracker.playerMap[playerID] }
 
                 if (playerID == null || player() == null) {
                     throw CommandException(command.result("playerNotFound", inputName))

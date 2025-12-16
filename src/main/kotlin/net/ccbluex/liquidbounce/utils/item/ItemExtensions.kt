@@ -181,7 +181,7 @@ private fun Item.getAttributeValue(attribute: Holder<Attribute>): Double {
         .getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY)
         .forEach(EquipmentSlot.MAINHAND) { attrib, modifier ->
             if (attrib != attribute) {
-                return@applyModifiers
+                return@forEach
             }
 
             attribInstance.addTransientModifier(modifier)

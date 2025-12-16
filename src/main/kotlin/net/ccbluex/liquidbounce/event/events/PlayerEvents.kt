@@ -83,7 +83,11 @@ class PlayerSneakMultiplier(var multiplier: Double) : Event()
 class PlayerInteractItemEvent : CancellableEvent()
 
 @Nameable("playerInteractedItem")
-class PlayerInteractedItemEvent(val player: Player, val hand: InteractionHand, val actionResult: InteractionResult) : Event()
+class PlayerInteractedItemEvent(
+    val player: Player,
+    val hand: InteractionHand,
+    val actionResult: InteractionResult,
+) : Event()
 
 @Nameable("playerStrafe")
 class PlayerVelocityStrafe(val movementInput: Vec3, val speed: Float, val yaw: Float, var velocity: Vec3) : Event()

@@ -114,7 +114,7 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
 
             val metadata = packet.status()
             serverMetadata = metadata
-            startTime = Util.millis
+            startTime = Util.getMillis()
             clientConnection.send(ServerboundPingRequestPacket(startTime))
             logger.info("Proxy Metadata [$host:$port]: ${metadata.description.string}")
         }
@@ -122,7 +122,7 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
         override fun handlePongResponse(packet: ClientboundPongResponsePacket) {
             scope.launch {
                 val serverMetadata = serverMetadata ?: error("Received ping result without metadata")
-                val ping = Util.millis - startTime
+                val ping = Util.getMillis() - startTime
                 logger.info("Proxy Ping [$host:$port]: $ping ms")
 
                 runCatching {

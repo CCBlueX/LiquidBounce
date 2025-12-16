@@ -178,7 +178,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
         return super.mouseReleased(click)
     }
 
-    override fun render(context: GuiGraphics?, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         ModuleDroneControl.currentTarget = null
 
         this.focusedEntity?.let {
@@ -212,7 +212,7 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
     }
 
     @Suppress("detekt:EmptyFunctionBlock")
-    override fun renderBackground(context: GuiGraphics?, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun renderBackground(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
 
     }
 

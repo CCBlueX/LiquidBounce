@@ -69,7 +69,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
             // if one of the neighbor blocks becomes air, invalidate the hole
             holes.removeIf { it.positions.iterate().any { p -> p.distManhattan(pos) == 1 } }
         } else {
-            holes.removeIf { pos isInside it.blockInvalidators }
+            holes.removeIf { it.blockInvalidators.isInside(pos) }
         }
 
         // Check new ones

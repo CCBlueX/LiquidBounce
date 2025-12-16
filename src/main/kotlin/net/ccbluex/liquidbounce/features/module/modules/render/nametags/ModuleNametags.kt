@@ -91,7 +91,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
         val maximumDistanceSquared = maximumDistance.sq()
 
         for (entity in RenderedEntities) {
-            if (entity.distanceToSqr(mc.cameraEntity) > maximumDistanceSquared) {
+            if (entity.distanceToSqr(mc.cameraEntity!!) > maximumDistanceSquared) {
                 continue
             }
 
@@ -101,7 +101,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     }
 
     private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
-        nametag.entity.distanceToSqr(mc.cameraEntity)
+        nametag.entity.distanceToSqr(mc.cameraEntity!!)
     }
 
 }

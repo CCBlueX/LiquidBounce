@@ -43,7 +43,7 @@ object InteractionTracker : EventListener {
         private set
     private var doNotHandle = false
 
-    internal fun untracked(block: () -> Unit) {
+    internal inline fun untracked(block: () -> Unit) {
         doNotHandle = true
         runCatching {
             block()

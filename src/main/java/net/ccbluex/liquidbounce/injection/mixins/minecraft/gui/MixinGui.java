@@ -129,10 +129,7 @@ public abstract class MixinGui {
         }
     }
 
-
-    // TODO(Ravel): wildcard and regex target are not supported
-// TODO(Ravel): wildcard and regex target are not supported
-    @Inject(method = "renderScoreboardSidebar*", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "renderScoreboardSidebar", at = @At("HEAD"), cancellable = true)
     private void renderScoreboardSidebar(CallbackInfo ci) {
         if (HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_SCOREBOARD)) {
             ci.cancel();

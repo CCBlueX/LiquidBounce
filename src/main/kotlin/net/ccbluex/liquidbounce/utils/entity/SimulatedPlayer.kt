@@ -367,7 +367,7 @@ class SimulatedPlayer(
         }
     }
 
-    private fun applyMovementInput(movementInput: Vec3?, slipperiness: Float): Vec3 {
+    private fun applyMovementInput(movementInput: Vec3, slipperiness: Float): Vec3 {
         this.updateVelocity(this.getMovementSpeed(slipperiness), movementInput)
         this.velocity = applyClimbingSpeed(this.velocity)
         this.velocity = applyWebSpeed(this.velocity)
@@ -386,7 +386,7 @@ class SimulatedPlayer(
         return vec3d
     }
 
-    private fun updateVelocity(speed: Float, movementInput: Vec3?) {
+    private fun updateVelocity(speed: Float, movementInput: Vec3) {
         val vec3d = Entity.getInputVector(movementInput, speed, this.yaw)
 
         this.velocity += vec3d
@@ -871,7 +871,7 @@ class SimulatedPlayer(
         return instance
     }
 
-    fun getAttributeValue(attribute: Holder<Attribute?>?): Double {
+    fun getAttributeValue(attribute: Holder<Attribute>): Double {
         return player.attributes.getValue(attribute)
     }
 

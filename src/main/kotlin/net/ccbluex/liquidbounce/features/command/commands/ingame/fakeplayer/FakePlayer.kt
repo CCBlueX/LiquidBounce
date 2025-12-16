@@ -33,11 +33,11 @@ import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
 /**
  * This class represents a Fake Player implementing
  * attackability and assured totem pops instead of death
- * into [OtherClientPlayerEntity].
+ * into [RemotePlayer].
  */
 open class FakePlayer(
-    clientWorld: ClientLevel?,
-    gameProfile: GameProfile?,
+    clientWorld: ClientLevel,
+    gameProfile: GameProfile,
 ) : RemotePlayer(
     clientWorld,
     gameProfile
@@ -78,11 +78,11 @@ open class FakePlayer(
             addEffect(MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 0))
             setHealth(1.0f)
 
-            val packet = ClientboundEntityEventPacket(LivingEntity::class.java.cast(this), 35.toByte())
+            val packet = ClientboundEntityEventPacket(this, 35.toByte())
             val event = PacketEvent(TransferOrigin.INCOMING, packet, true)
             callEvent(event)
             if (!event.isCancelled) {
-                mc.execute { packet.handle(mc.connection) }
+                mc.execute { packet.handle(mc.connection!!) }
             }
         }
     }
@@ -110,7 +110,7 @@ open class FakePlayer(
         /* nope */
     }
 
-    override fun remove(reason: RemovalReason?) {
+    override fun remove(reason: RemovalReason) {
         super.remove(reason)
     }
 

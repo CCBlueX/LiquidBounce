@@ -132,8 +132,8 @@ private class ItemTextureRenderer(
         mc.blockRenderer, // No operation
         vertexConsumers,
         mc.atlasManager, // No operation
-        null, // No operation
-        null, // No operation
+        mc.gameRenderer.renderBuffers.outlineBufferSource(), // No operation
+        mc.gameRenderer.renderBuffers.crumblingBufferSource(), // No operation
         mc.font, // No operation
     )
 

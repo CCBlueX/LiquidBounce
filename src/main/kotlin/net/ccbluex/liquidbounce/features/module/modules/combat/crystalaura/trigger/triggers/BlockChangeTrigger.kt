@@ -57,7 +57,7 @@ object BlockChangeTrigger : PostPacketTrigger<ClientboundBlockUpdatePacket>("Blo
         val rangeSq = max(SubmoduleCrystalPlacer.getMaxRange(), SubmoduleCrystalDestroyer.getMaxRange()).sq() + 1.0
         packet.runUpdates { blockPos, blockState ->
             if (blockState.isAir && tickIfInRange(blockPos, eyePos, rangeSq)) {
-                return@visitUpdates
+                return@runUpdates
             }
         }
     }

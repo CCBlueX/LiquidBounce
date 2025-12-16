@@ -38,7 +38,7 @@ object ServerInfoSerializer : JsonSerializer<ServerData> {
         add("playerCountLabel", context.serialize(src.status))
         add("version", context.serialize(src.version))
         addProperty("protocolVersion", src.protocol)
-        addProperty("protocolVersionMatches", src.protocol == SharedConstants.currentVersion.protocolVersion())
+        addProperty("protocolVersionMatches", src.protocol == SharedConstants.getCurrentVersion().protocolVersion())
         addProperty("ping", src.ping)
         add("players", JsonObject().apply {
             addProperty("max", src.players?.max)

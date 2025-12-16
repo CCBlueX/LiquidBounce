@@ -110,10 +110,9 @@ class ClientLanguage(private val translations: Map<String, String>) : Language()
      * Be careful when using this method that it will not cause a stack overflow.
      * Use [getTranslation] instead.
      */
-    override fun getOrDefault(key: String, fallback: String?) = getTranslation(key)
+    override fun getOrDefault(key: String, fallback: String) = getTranslation(key)
         ?: LanguageManager.getCommonLanguage()?.getTranslation(key)
         ?: fallback
-        ?: key
 
     override fun has(key: String) = translations.containsKey(key)
 

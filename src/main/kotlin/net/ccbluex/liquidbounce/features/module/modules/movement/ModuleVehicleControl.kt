@@ -108,7 +108,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
         vehicle.setDeltaMovement(
             vehicle.deltaMovement
                 .copy(y = verticalSpeed)
-                .withStrafe(yaw = player.direction, speed = horizontalSpeed)
+                .withStrafe(yaw = player.yRot, speed = horizontalSpeed)
         )
     }
 

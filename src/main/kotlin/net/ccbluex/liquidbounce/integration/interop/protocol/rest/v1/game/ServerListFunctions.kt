@@ -227,7 +227,7 @@ object ActiveServerList : EventListener {
             try {
                 serverListPinger.pingServer(serverEntry, { mc.execute(serverList::save) }, {
                     serverEntry.setState(
-                        if (serverEntry.protocol == SharedConstants.currentVersion.protocolVersion()) {
+                        if (serverEntry.protocol == SharedConstants.getCurrentVersion().protocolVersion()) {
                             ServerData.State.SUCCESSFUL
                         } else {
                             ServerData.State.INCOMPATIBLE

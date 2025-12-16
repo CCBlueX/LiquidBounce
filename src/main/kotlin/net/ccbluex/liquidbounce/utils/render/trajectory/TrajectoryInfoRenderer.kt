@@ -211,7 +211,7 @@ class TrajectoryInfoRenderer(
                 owner
             )
         )
-        if (blockHitResult != null && blockHitResult.type != HitResult.Type.MISS) {
+        if (blockHitResult.type != HitResult.Type.MISS) {
             return blockHitResult to blockHitResult.location
         }
 
@@ -225,7 +225,7 @@ class TrajectoryInfoRenderer(
                 val canCollide = !it.isSpectator && it.isAlive
                 val shouldCollide = it.isPickable || owner !== player && it === player
 
-                return@getEntityCollision canCollide && shouldCollide && !owner.isPassengerOfSameVehicle(it)
+                return@getEntityHitResult canCollide && shouldCollide && !owner.isPassengerOfSameVehicle(it)
             },
             if (owner is Projectile) ProjectileUtil.computeMargin(owner) else 0f,
         )

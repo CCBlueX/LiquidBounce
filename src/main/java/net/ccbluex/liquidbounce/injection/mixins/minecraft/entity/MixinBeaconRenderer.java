@@ -32,10 +32,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BeaconRenderer.class)
 public class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwner> {
-    // TODO(Ravel): wildcard and regex target are not supported
-// TODO(Ravel): wildcard and regex target are not supported
     @Inject(
-            method = "render*",
+            method = "submit*",
             at = @At("HEAD"),
             cancellable = true
     )

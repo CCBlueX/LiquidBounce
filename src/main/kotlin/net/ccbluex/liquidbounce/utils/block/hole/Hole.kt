@@ -41,7 +41,7 @@ data class Hole(
         }
     }
 
-    operator fun contains(pos: Vec3i): Boolean = pos isInside positions
+    operator fun contains(pos: Vec3i): Boolean = positions.isInside(pos)
 
     enum class Type(val size: Int) {
         ONE_ONE(1),

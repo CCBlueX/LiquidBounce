@@ -36,6 +36,7 @@ import net.minecraft.core.registries.Registries
 import net.minecraft.core.Holder
 import net.minecraft.world.InteractionHand
 import net.minecraft.resources.Identifier
+import kotlin.jvm.optionals.getOrNull
 import kotlin.math.min
 
 /**
@@ -167,7 +168,7 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
         }
 
 
-    private fun sendItemPacket(itemStack: ItemStack?) {
+    private fun sendItemPacket(itemStack: ItemStack) {
         network.send(
             ServerboundSetCreativeModeSlotPacket(
                 36 + player.inventory.selectedSlot, itemStack
@@ -188,17 +189,14 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
             throw CommandException(command.resultWithTree("mustHoldItem"))
         }
 
-        return itemStack!!
+        return itemStack
     }
 
     private fun enchantmentByName(enchantmentName: String, command: Command): Holder<Enchantment> {
-        val identifier = Identifier.tryParse(enchantmentName)
         val registry = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
-        val enchantment = registry.get(identifier).orElseThrow {
-            CommandException(command.resultWithTree("enchantmentNotExists", enchantmentName))
-        }
-
-        return enchantment
+        return Identifier.tryParse(enchantmentName)?.let { identifier ->
+            registry.get(identifier).getOrNull()
+        } ?: throw CommandException(command.resultWithTree("enchantmentNotExists", enchantmentName))
     }
 
     private fun enchantAnyLevel(item: ItemStack, enchantment: Holder<Enchantment>, level: Int?) {

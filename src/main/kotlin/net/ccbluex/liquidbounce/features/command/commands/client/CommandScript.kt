@@ -65,12 +65,12 @@ object CommandScript : Command.Factory {
             return@handler
         }
 
-        Util.platform.openFile(scriptFile)
+        Util.getPlatform().openFile(scriptFile)
         chat(regular(command.result("opened", variable(name))))
     }.build()
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
-        Util.platform.openFile(ScriptManager.root)
+        Util.getPlatform().openFile(ScriptManager.root)
         chat(regular(command.result("browse", clickablePath(ScriptManager.root))))
     }.build()
 

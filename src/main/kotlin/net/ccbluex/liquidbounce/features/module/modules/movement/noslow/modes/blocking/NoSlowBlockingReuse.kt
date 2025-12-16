@@ -44,7 +44,7 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
 
     @Suppress("unused")
     private val networkTickHandler = handler<PlayerNetworkMovementTickEvent> { event ->
-        if (isBlocking) {
+        blockingHand?.let { blockingHand ->
             when (timingMode) {
                 TimingMode.PRE_TICK -> {
                     if (event.state == EventState.PRE) {
@@ -98,7 +98,7 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
         }
 
 
-        if (isBlocking) {
+        blockingHand?.let { blockingHand ->
             when (event.state) {
                 EventState.PRE -> {
 

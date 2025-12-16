@@ -33,7 +33,7 @@ import kotlin.io.path.div
 import kotlin.math.min
 import kotlin.system.exitProcess
 
-private val MAX_STACKTRACE_LINES = when (Util.platform) {
+private val MAX_STACKTRACE_LINES = when (Util.getPlatform()) {
     WINDOWS -> 3
     else -> 1
 }

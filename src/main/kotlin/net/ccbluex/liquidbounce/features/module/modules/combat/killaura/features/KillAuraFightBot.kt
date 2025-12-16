@@ -160,7 +160,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
 
         val contextAllowsJump = context.combatTarget != null && context.combatTarget.outOfDistance
             && !context.combatTarget.outOfDanger
-        val goal = calculateGoalPosition(context)
+        val goal = calculateGoalPosition(context) ?: return
         val leaderAllowsJump = LeaderFollower.running && player.position().distanceTo(goal) > LeaderFollower.radius
 
         if (contextAllowsJump || leaderAllowsJump) {

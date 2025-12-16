@@ -35,7 +35,7 @@ object ImmediateMineMode : MineMode("Immediate", canManuallyChange = false, canA
             ServerboundPlayerActionPacket(
                 ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                 mineTarget.targetPos,
-                mineTarget.direction,
+                mineTarget.direction!!,
                 sequence,
             )
         }

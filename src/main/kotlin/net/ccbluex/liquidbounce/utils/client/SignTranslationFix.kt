@@ -90,11 +90,11 @@ fun filterNonVanillaText(text: Component): Component {
 class SuppressedKeybindTextContent(key: String) : KeybindContents(key) {
     private val translated: Component = Component.nullToEmpty(key)
 
-    override fun <T : Any?> visit(visitor: FormattedText.ContentConsumer<T>?): Optional<T> {
+    override fun <T : Any> visit(visitor: FormattedText.ContentConsumer<T>): Optional<T> {
         return translated.visit(visitor)
     }
 
-    override fun <T : Any?> visit(visitor: FormattedText.StyledContentConsumer<T>?, style: Style?): Optional<T> {
+    override fun <T : Any> visit(visitor: FormattedText.StyledContentConsumer<T>, style: Style): Optional<T> {
         return translated.visit(visitor, style)
     }
 }
@@ -104,11 +104,11 @@ class SuppressedTranslatableTextContent(key: String, fallback: String?, args: Ar
 
     private val translated: Component = Component.nullToEmpty(fallback ?: key)
 
-    override fun <T : Any?> visit(visitor: FormattedText.ContentConsumer<T>?): Optional<T> {
+    override fun <T : Any> visit(visitor: FormattedText.ContentConsumer<T>): Optional<T> {
         return translated.visit(visitor)
     }
 
-    override fun <T : Any?> visit(visitor: FormattedText.StyledContentConsumer<T>?, style: Style?): Optional<T> {
+    override fun <T : Any> visit(visitor: FormattedText.StyledContentConsumer<T>, style: Style): Optional<T> {
         return translated.visit(visitor, style)
     }
 }

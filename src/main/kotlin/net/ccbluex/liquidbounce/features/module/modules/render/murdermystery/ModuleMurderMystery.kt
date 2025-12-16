@@ -143,12 +143,12 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
 
         val col = when (playerType) {
             MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> {
-                setPlayerPrefix(Component.literal("§b[BOW] "))
+                entity.team?.setPlayerPrefix(Component.literal("§b[BOW] "))
                 Color4b(0, 144, 255)
             }
 
             MurderMysteryMode.PlayerType.MURDERER -> {
-                setPlayerPrefix(Component.literal("§c[MURD] "))
+                entity.team?.setPlayerPrefix(Component.literal("§c[MURD] "))
                 Color4b(203, 9, 9)
             }
 

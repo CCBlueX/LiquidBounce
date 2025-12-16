@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.modes
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.blockingHand
-import net.ccbluex.liquidbounce.utils.client.InteractionTracker.isBlocking
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
@@ -46,7 +45,7 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
         // But as we know from experience often things are not done correctly on anti-cheats.
         // Main-hand blocking only applies when using VFP 1.8 client-side protocol translation.
 
-        if (isBlocking) {
+        blockingHand?.let { blockingHand ->
             when (timingMode) {
                 TimingMode.PRE_TICK -> {
                     if (event.state == EventState.PRE) {

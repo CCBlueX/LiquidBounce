@@ -482,7 +482,7 @@ inline fun AABB.collideBlockIntersects(
             return true
         }
 
-        val shape = blockState.getCollisionShape(mc.level, blockPos)
+        val shape = blockState.getCollisionShape(mc.level!!, blockPos)
 
         if (shape.isEmpty) {
             continue
@@ -508,7 +508,7 @@ fun BlockState.canBeReplacedWith(
 ): Boolean {
     val placementContext =
         BlockPlaceContext(
-            mc.player,
+            mc.player!!,
             InteractionHand.MAIN_HAND,
             usedStack,
             BlockHitResult(Vec3.atLowerCornerOf(pos), Direction.UP, pos, false),

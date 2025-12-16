@@ -179,7 +179,7 @@ data class InputBind(
         /**
          * Performs the platform (OS) specified render name of a modifier.
          */
-        val platformRenderName: String get() = when (Util.platform) {
+        val platformRenderName: String get() = when (Util.getPlatform()) {
             Util.OS.WINDOWS -> when (this) {
                 CONTROL -> "Ctrl"
                 SUPER -> "\u229e"

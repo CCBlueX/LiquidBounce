@@ -72,7 +72,7 @@ accessible method net/minecraft/world/entity/Entity isInvulnerableToBase (Lnet/m
 
 accessible field net/minecraft/client/Options modelParts Ljava/util/Set;
 
-accessible method net/minecraft/world/entity/player/Player getVelocityMultiplier ()F
+accessible method net/minecraft/world/entity/player/Player getBlockSpeedFactor ()F
 accessible method net/minecraft/world/entity/player/Player getEnchantedDamage (Lnet/minecraft/world/entity/Entity;FLnet/minecraft/world/damagesource/DamageSource;)F
 accessible class net/minecraft/world/item/ItemCooldowns$CooldownInstance
 accessible field net/minecraft/world/entity/LivingEntity autoSpinAttackDmg F
@@ -191,6 +191,7 @@ accessible field com/mojang/blaze3d/opengl/GlStateManager writeFbo I
 
 accessible method com/mojang/blaze3d/opengl/GlCommandEncoder getDevice ()Lcom/mojang/blaze3d/opengl/GlDevice;
 accessible field net/minecraft/client/renderer/GameRenderer resourcePool Lcom/mojang/blaze3d/resource/CrossFrameResourcePool;
+accessible field net/minecraft/client/renderer/GameRenderer renderBuffers Lnet/minecraft/client/renderer/RenderBuffers;
 
 accessible class net/minecraft/client/renderer/OutlineBufferSource$EntityOutlineGenerator
 accessible method net/minecraft/client/renderer/OutlineBufferSource$EntityOutlineGenerator <init> (Lcom/mojang/blaze3d/vertex/VertexConsumer;I)V

@@ -91,8 +91,8 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
 
                 pos = player.position()
                 player.setPos(player.position().x + 1152, player.position().y, player.position().z + 1152)
-            } else if (pos != null) {
-                player.setPos(pos)
+            } else {
+                pos?.let(player::setPos)
             }
         }
     }

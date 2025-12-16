@@ -42,7 +42,7 @@ import java.util.*
 // GET /api/v1/client/info
 @Suppress("UNUSED_PARAMETER")
 fun getClientInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("os", Util.platform.telemetryName())
+    addProperty("os", Util.getPlatform().telemetryName())
     addProperty("gameVersion", mc.launchedVersion)
     addProperty("clientVersion", LiquidBounce.clientVersion)
     addProperty("clientName", LiquidBounce.CLIENT_NAME)
@@ -102,7 +102,7 @@ fun postBrowse(requestObject: RequestObject): FullHttpResponse {
 
     val url = POSSIBLE_URL_TARGETS[target] ?: return httpForbidden("Unknown target")
 
-    Util.platform.openUri(url)
+    Util.getPlatform().openUri(url)
     return httpNoContent()
 }
 
@@ -127,7 +127,7 @@ fun postBrowsePath(requestObject: RequestObject): FullHttpResponse {
         else -> return httpForbidden("Invalid file type")
     }
 
-    Util.platform.openFile(directoryToOpen)
+    Util.getPlatform().openFile(directoryToOpen)
     return httpNoContent()
 }
 

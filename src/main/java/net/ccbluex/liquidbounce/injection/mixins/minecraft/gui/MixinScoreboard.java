@@ -41,8 +41,6 @@ public abstract class MixinScoreboard {
     @Nullable
     public abstract PlayerTeam getPlayersTeam(String scoreHolderName);
 
-
-    // TODO(Ravel): target method addObjective is ambiguous
     @ModifyExpressionValue(method = "addObjective", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/objects/Object2ObjectMap;containsKey(Ljava/lang/Object;)Z", remap = false))
     private boolean noCrash(boolean original) {
         var antiExploit = ModuleAntiExploit.INSTANCE;

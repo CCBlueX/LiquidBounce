@@ -55,12 +55,12 @@ object ScriptInteractionUtil {
             return
         }
 
-        mc.gameMode?.interact(mc.player, entity, hand)
+        mc.gameMode?.interact(mc.player!!, entity, hand)
     }
 
     @JvmName("useItem")
     fun useItem(hand: InteractionHand) {
-        mc.gameMode?.useItem(mc.player, hand)
+        mc.gameMode?.useItem(mc.player!!, hand)
     }
 
     /**

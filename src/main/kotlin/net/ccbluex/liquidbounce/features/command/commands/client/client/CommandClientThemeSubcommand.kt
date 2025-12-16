@@ -53,7 +53,7 @@ object CommandClientThemeSubcommand {
         .build()
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
-        Util.platform.openFile(ThemeManager.themesFolder)
+        Util.getPlatform().openFile(ThemeManager.themesFolder)
         chat(regular("Location: "), clickablePath(ThemeManager.themesFolder))
     }.build()
 

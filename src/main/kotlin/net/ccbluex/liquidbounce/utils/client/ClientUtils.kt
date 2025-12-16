@@ -32,4 +32,4 @@ val inGame: Boolean
 /**
  * Open uri in browser
  */
-fun browseUrl(url: String) = Util.platform.openUri(url)
+fun browseUrl(url: String) = Util.getPlatform().openUri(url)

@@ -26,7 +26,7 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Registry
 import java.util.*
 
-fun <T> Registry<T>.asComparator(): Comparator<T> = compareBy(this::getKey)
+fun <T : Any> Registry<T>.asComparator(): Comparator<T> = compareBy(this::getKey)
 
 private val ITEM_REGISTRY_COMPARATOR = BuiltInRegistries.ITEM.asComparator()
 private val BLOCK_REGISTRY_COMPARATOR = BuiltInRegistries.BLOCK.asComparator()

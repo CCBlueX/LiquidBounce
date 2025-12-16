@@ -76,7 +76,7 @@ fun fromPlayer(entity: AbstractClientPlayer): PosPoseSnapshot {
 }
 
 fun fromPlayerMotion(entity: AbstractClientPlayer): PosPoseSnapshot {
-    val playerInventory = Inventory(null, EntityEquipment())
+    val playerInventory = Inventory(entity, EntityEquipment())
     playerInventory.replaceWith(entity.inventory)
     return PosPoseSnapshot(
         entity.x,
@@ -97,7 +97,7 @@ fun fromPlayerMotion(entity: AbstractClientPlayer): PosPoseSnapshot {
         entity.yHeadRot,
         entity.yHeadRotO,
         entity.pose,
-        entity.swingingArm ?: InteractionHand.MAIN_HAND,
+        entity.swingingArm,
         playerInventory,
         entity.walkAnimation.position
     )

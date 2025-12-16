@@ -26,7 +26,7 @@ import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.INVENTORY_LOCATION
-import net.minecraft.client.gui.screens.inventory.InventoryScreen.drawEntity
+import net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse
 import net.minecraft.client.input.KeyEvent
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack

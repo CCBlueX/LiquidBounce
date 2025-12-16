@@ -27,8 +27,8 @@ import net.minecraft.client.multiplayer.ClientLevel
  */
 class MovingFakePlayer(
     private vararg val snapshots: PosPoseSnapshot,
-    clientWorld: ClientLevel?,
-    gameProfile: GameProfile?,
+    clientWorld: ClientLevel,
+    gameProfile: GameProfile,
 ) : FakePlayer(
     clientWorld, gameProfile,
 ) {

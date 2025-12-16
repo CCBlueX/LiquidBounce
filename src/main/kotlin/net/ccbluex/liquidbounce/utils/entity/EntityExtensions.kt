@@ -251,9 +251,8 @@ fun LocalPlayer.canStep(height: Double = 1.0): Boolean {
     }
 
     val box = this.boundingBox
-    val direction = this.direction
 
-    val angle = Math.toRadians(direction.toDouble())
+    val angle = Math.toRadians(this.yRot.toDouble())
     val xOffset = -sin(angle) * 0.1
     val zOffset = cos(angle) * 0.1
 
@@ -550,16 +549,14 @@ fun LivingEntity.getExposureToExplosion(
     entityBoundingBox: AABB?
 ): Float {
     val entityBoundingBox1 = entityBoundingBox ?: boundingBox
-    val shapeContext = entityBoundingBox1?.let {
-        EntityCollisionContext(
-            isDescending,
-            false, // TODO: is this correct?
-            entityBoundingBox1.minY,
-            mainHandItem,
-            canStandOnFluid(null),
-            this
-        )
-    } ?: CollisionContext.of(this)
+    val shapeContext = EntityCollisionContext(
+        isDescending,
+        false, // TODO: is this correct?
+        entityBoundingBox1.minY,
+        mainHandItem,
+        false,
+        this
+    )
 
     val stepX = 1.0 / ((entityBoundingBox1.maxX - entityBoundingBox1.minX) * 2.0 + 1.0)
     val stepY = 1.0 / ((entityBoundingBox1.maxY - entityBoundingBox1.minY) * 2.0 + 1.0)

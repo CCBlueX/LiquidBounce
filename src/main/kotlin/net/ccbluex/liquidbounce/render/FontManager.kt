@@ -47,7 +47,7 @@ object FontManager {
      */
     private val COMMON_FONT by AsyncLazy {
         runCatching {
-            when (Util.platform) {
+            when (Util.getPlatform()) {
                 WINDOWS -> systemFont("Segoe UI")
                 OSX -> systemFont("Helvetica")
                 LINUX -> systemFont("DejaVu Sans")
@@ -63,7 +63,7 @@ object FontManager {
      */
     private val CJK_FONT by AsyncLazy {
         runCatching {
-            when (Util.platform) {
+            when (Util.getPlatform()) {
                 WINDOWS -> systemFont("Microsoft YaHei")
                 OSX -> systemFont("PingFang SC")
                 LINUX -> systemFont("Noto Sans CJK")

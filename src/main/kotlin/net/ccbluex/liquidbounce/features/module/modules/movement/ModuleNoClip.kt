@@ -54,7 +54,7 @@ object ModuleNoClip : ClientModule("NoClip", Category.MOVEMENT) {
         noClipSet = true
         player.noPhysics = true
         player.fallDistance = 0.0
-        player.isOnGround = false
+        player.setOnGround(false)
 
         val speed = speed.toDouble()
         player.controlledVehicle?.let {

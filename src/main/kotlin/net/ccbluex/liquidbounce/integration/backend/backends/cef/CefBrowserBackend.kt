@@ -154,7 +154,7 @@ class CefBrowserBackend : BrowserBackend, EventListener {
         }
 
         // Check if acceleration is supported
-        val system = Util.platform
+        val system = Util.getPlatform()
         isAccelerationSupported = when (system) {
             Util.OS.WINDOWS -> {
                 // Check if required OpenGL extensions for D3D11 shared texture interop are supported

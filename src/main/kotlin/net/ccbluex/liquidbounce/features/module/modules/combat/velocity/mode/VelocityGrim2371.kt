@@ -141,7 +141,7 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
             }
         }
 
-        if (hitResult != null) {
+        hitResult?.let { hitResult ->
             delay = false
 
             PacketQueueManager.flush(TransferOrigin.INCOMING)
@@ -170,7 +170,7 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
 
             freezeTicks = 0
             waitForUpdate = true
-            hitResult = null
+            this.hitResult = null
             needClick = false
         }
 

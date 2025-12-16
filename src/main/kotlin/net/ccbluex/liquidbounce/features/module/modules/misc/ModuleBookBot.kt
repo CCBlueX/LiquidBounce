@@ -107,7 +107,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
 
     private fun isCandidate(itemStack: ItemStack): Boolean {
         return itemStack.item == Items.WRITABLE_BOOK &&
-            itemStack.get(DataComponents.WRITABLE_BOOK_CONTENT)?.pages?.isEmpty() == true
+            itemStack.get(DataComponents.WRITABLE_BOOK_CONTENT)?.pages()?.isEmpty() == true
     }
 
     private val randomBook get() = Slots.All.findSlot(::isCandidate)

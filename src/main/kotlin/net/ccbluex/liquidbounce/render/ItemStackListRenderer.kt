@@ -174,7 +174,7 @@ class ItemStackListRenderer private constructor(
                 fillBackground(width, height)
             }
 
-            if (title != null) {
+            title?.let { title ->
                 drawContext.drawCenteredString(textRenderer, title, width / 2, 0, titleColor)
                 translate(0F, textRenderer.lineHeight + 2F)
             }
@@ -206,7 +206,7 @@ class ItemStackListRenderer private constructor(
         var width = size * minOf(stacks.size, rowLength)
         var height = size * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
 
-        if (title != null) {
+        title?.let { title ->
             width = maxOf(width, textRenderer.width(title))
             height += textRenderer.lineHeight + (if (stacks.isEmpty()) 0 else 2)
         }

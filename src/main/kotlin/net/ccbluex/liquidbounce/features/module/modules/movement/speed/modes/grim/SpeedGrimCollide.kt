@@ -64,7 +64,7 @@ class SpeedGrimCollide(override val parent: ChoiceConfigurable<*>) : Choice("Gri
         }
 
         // Grim gives 0.08 leniency per entity which is customizable by speed.
-        val yaw = Math.toRadians(player.direction.toDouble())
+        val yaw = Math.toRadians(player.yRot.toDouble())
         val boost = this.speed * collisions
         player.push(-sin(yaw) * boost, 0.0, cos(yaw) * boost)
     }

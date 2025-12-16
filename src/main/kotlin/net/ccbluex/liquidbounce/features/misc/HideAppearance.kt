@@ -102,7 +102,7 @@ object HideAppearance : EventListener {
         mc.updateTitle()
         mc.window.setIcon(
             mc.vanillaPackResources,
-            if (SharedConstants.currentVersion.stable()) IconSet.RELEASE else IconSet.SNAPSHOT
+            if (SharedConstants.getCurrentVersion().stable()) IconSet.RELEASE else IconSet.SNAPSHOT
         )
     }
 
