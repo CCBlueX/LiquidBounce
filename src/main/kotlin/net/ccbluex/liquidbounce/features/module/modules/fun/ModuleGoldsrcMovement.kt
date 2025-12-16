@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
+import it.unimi.dsi.fastutil.doubles.DoubleDoublePair
+import net.ccbluex.fastutil.pair
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -26,6 +28,12 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.entity.Entity
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
+import net.ccbluex.liquidbounce.utils.client.fastCos
+import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.entity.movementForward
+import net.ccbluex.liquidbounce.utils.entity.movementSideways
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.*
@@ -42,6 +50,7 @@ import kotlin.math.*
  * - Ledgegrab/glidestep: downward collision probe to stick to ground.
  * - Optional buffered jump (matches goldsqource toggle) for consistent hop chaining.
  */
+@Suppress("TooManyFunctions")
 object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
 
     // Unit conversions and constants (ported from goldsqource)
@@ -76,9 +85,19 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
     private var previousYaw: Float = 0.0f
     private var jumping: Boolean = false
     private var jumped: Boolean = false
-    private var baseVelocities = mutableListOf<Pair<Double, Double>>()
+    private val baseVelocities = mutableListOf<DoubleDoublePair>()
     private var hlVelX: Double = 0.0
     private var hlVelZ: Double = 0.0
+
+    override fun onDisabled() {
+        previousYaw = 0.0f
+        jumping = false
+        jumped = false
+        baseVelocities.clear()
+        hlVelX = 0.0
+        hlVelZ = 0.0
+        super.onDisabled()
+    }
 
     private fun getBaseSpeedCurrent(): Double {
         var result = player.movementSpeed.toDouble()
@@ -97,23 +116,23 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
     }
 
     private fun horizontalSpeed(): Double {
-        return sqrt(hlVelX * hlVelX + hlVelZ * hlVelZ)
+        return hypot(hlVelX, hlVelZ)
     }
 
-    private fun movementDirection(sidemove: Double, forwardmove: Double): Pair<Double, Double> {
-        val preSpeed = sidemove * sidemove + forwardmove * forwardmove
-        if (preSpeed <= 0.0) return 0.0 to 0.0
+    private fun movementDirection(sideMove: Double, forwardMove: Double): DoubleDoublePair {
+        val preSpeed = sideMove * sideMove + forwardMove * forwardMove
+        if (preSpeed <= 0.0) return 0.0 pair 0.0
 
         var speed = sqrt(preSpeed)
         speed = if (speed <= 0.0) 1.0 else 1.0 / speed
 
-        val sm = sidemove * speed
-        val fm = forwardmove * speed
-        val f1 = sin(player.yaw * Math.PI / 180.0)
-        val f2 = cos(player.yaw * Math.PI / 180.0)
+        val sm = sideMove * speed
+        val fm = forwardMove * speed
+        val f1 = player.yaw.toRadians().fastSin()
+        val f2 = player.yaw.toRadians().fastCos()
         val wishX = sm * f2 - fm * f1
         val wishZ = fm * f2 + sm * f1
-        return wishX to wishZ
+        return wishX pair wishZ
     }
 
     private fun applyFriction() {
@@ -229,7 +248,7 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
         val forwardmove = event.movementInput.z
         val wishdir = movementDirection(sidemove, forwardmove)
         val wishspeed = event.speed.toDouble() * 2.15
-        baseVelocities.add(wishdir.first * wishspeed to wishdir.second * wishspeed)
+        baseVelocities.add(wishdir.leftDouble() * wishspeed pair wishdir.rightDouble() * wishspeed)
 
         // Seed HL velocity state from current player velocity when starting movement collection
         if (hlVelX == 0.0 && hlVelZ == 0.0) {
@@ -251,7 +270,7 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
         // Water movement
         if (player.isTouchingWater && !player.abilities.flying) {
             val waterWish = if (wishspeed > 0.0) getBaseSpeedCurrent() * waterSpeedScale.toDouble() else 0.0
-            waterAccelerate(waterWish, wishdir.first, wishdir.second, waterAcceleration.toDouble())
+            waterAccelerate(waterWish, wishdir.leftDouble(), wishdir.rightDouble(), waterAcceleration.toDouble())
             applyWaterFriction()
             // Simple vertical damping to mimic buoyancy
             val yNew = player.velocity.y * 0.8 - 0.005
@@ -264,7 +283,7 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
         // Ladder movement (HL1-like)
         if (player.isClimbing) {
             val climbingPos = player.climbingPos.orElse(null)
-            val blockState = player.world.getBlockState(climbingPos)
+            val blockState = world.getBlockState(climbingPos)
             if (!blockState.isAir && blockState.block is net.minecraft.block.LadderBlock) {
                 val facing = blockState.get(net.minecraft.block.LadderBlock.FACING)
                 val ladderNormal = Vec3d(
@@ -273,8 +292,7 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
                     facing.offsetZ.toDouble()
                 )
 
-                var speed = 200.0 * FROM_QUAKE * FRAMETIME
-                speed = min(speed, getBaseSpeedMax())
+                val speed = (200.0 * FROM_QUAKE * FRAMETIME).coerceAtMost(getBaseSpeedMax())
 
                 if (jumping) {
                     val jumpOff = Vec3d(
@@ -301,7 +319,7 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
                         val cross = ladderNormal.multiply(normal)
                         var lateral = velocity.subtract(cross)
                         tmp = ladderNormal.crossProduct(perp)
-                        val wishdirVec = Vec3d(wishdir.first, 0.0, wishdir.second)
+                        val wishdirVec = Vec3d(wishdir.leftDouble(), 0.0, wishdir.rightDouble())
                         val movingAwayFromLadder = ladderNormal.dotProduct(wishdirVec) > 0
                         if (!player.isOnGround || !movingAwayFromLadder) {
                             lateral = lateral.add(ladderNormal.multiply(-MAX_CLIMB_SPEED * FROM_QUAKE * FRAMETIME))
@@ -333,7 +351,7 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
         if (onGroundForReal) {
             applyFriction()
             if (wishspeed != 0.0) {
-                accelerate(wishspeed, wishdir.first, wishdir.second, acceleration.toDouble())
+                accelerate(wishspeed, wishdir.leftDouble(), wishdir.rightDouble(), acceleration.toDouble())
             }
 
             if (baseVelocities.isNotEmpty()) {
@@ -341,8 +359,8 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
                 var z = hlVelZ
                 val speedMod = if (getBaseSpeedMax() != 0.0) wishspeed / getBaseSpeedMax() else 0.0
                 for (base in baseVelocities) {
-                    x += base.first * speedMod
-                    z += base.second * speedMod
+                    x += base.leftDouble() * speedMod
+                    z += base.rightDouble() * speedMod
                 }
                 hlVelX = x
                 hlVelZ = z
@@ -353,17 +371,17 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
             val d = savedYaw - previousYaw
             if (d > 180f) savedYaw -= 360f else if (d < -180f) savedYaw += 360f
             for (i in 1..5) {
-                val t = i / 5.0
-                player.yaw = MathHelper.lerp(t, previousYaw.toDouble(), savedYaw.toDouble()).toFloat()
+                val t = i / 5.0F
+                player.yaw = MathHelper.lerp(t, previousYaw, savedYaw)
                 val wishdirAir = movementDirection(sidemove, forwardmove)
-                airAccelerate(wishspeed, wishdirAir.first, wishdirAir.second, airAcceleration.toDouble())
+                airAccelerate(wishspeed, wishdirAir.leftDouble(), wishdirAir.rightDouble(), airAcceleration.toDouble())
             }
             player.yaw = realYaw
         }
 
         applyHardCap()
-        player.velocity = Vec3d(hlVelX, player.velocity.y, hlVelZ)
-        event.movement = Vec3d(hlVelX, event.movement.y, hlVelZ)
+        player.velocity = player.velocity.copy(x = hlVelX, z = hlVelZ)
+        event.movement = event.movement.copy(x = hlVelX, z = hlVelZ)
         previousYaw = player.yaw
     }
 
@@ -377,15 +395,14 @@ object ModuleGoldsrcMovement : ClientModule("GoldSrcMovement", Category.FUN) {
         // 200 ups threshold and non-negative vertical velocity
         if (player.velocity.y * TICKRATE * TO_QUAKE >= 200.0 || player.velocity.y < 0.0) return@handler
 
-        val list = player.world.getEntityCollisions(null, player.boundingBox.stretch(event.movementVec))
+        val list = world.getEntityCollisions(null, player.boundingBox.stretch(event.movementVec))
         val down = -(4.0 * FROM_QUAKE)
         val downAdjust =
-            Entity.adjustMovementForCollisions(null, Vec3d(0.0, down, 0.0), player.boundingBox, player.world, list)
+            Entity.adjustMovementForCollisions(null, Vec3d(0.0, down, 0.0), player.boundingBox, world, list)
         if (downAdjust.y > down) {
-            event.adjustedVec = Vec3d(event.adjustedVec.x, event.adjustedVec.y + downAdjust.y, event.adjustedVec.z)
-            player.velocity = Vec3d(player.velocity.x, 0.0, player.velocity.z)
+            event.adjustedVec = event.adjustedVec.add(0.0, downAdjust.y, 0.0)
+            player.velocity = player.velocity.copy(y = 0.0)
         }
     }
 
-    
 }
