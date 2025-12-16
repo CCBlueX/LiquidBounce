@@ -31,7 +31,7 @@ import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import net.minecraft.util.hit.EntityHitResult
-import java.util.SequencedSet
+import java.util.*
 
 /**
  * Skip crosshair entity targets.

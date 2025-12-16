@@ -39,7 +39,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import kotlin.math.*
+import kotlin.math.acos
+import kotlin.math.round
 
 object ScaffoldMovementPlanner {
     private const val MAX_LAST_PLACE_BLOCKS: Int = 4

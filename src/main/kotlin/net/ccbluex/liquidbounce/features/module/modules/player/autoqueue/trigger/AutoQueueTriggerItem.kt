@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger
 
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.AutoQueueItemMode
+import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger.AutoQueueTriggerItem.mode
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 
 /**

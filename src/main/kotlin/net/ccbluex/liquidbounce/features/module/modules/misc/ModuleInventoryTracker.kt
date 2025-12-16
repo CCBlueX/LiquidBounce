@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap
-import net.ccbluex.liquidbounce.event.events.ItemLoreQueryEvent
 import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent
+import net.ccbluex.liquidbounce.event.events.ItemLoreQueryEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
@@ -33,20 +33,16 @@ import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.EquipmentSlot.MAINHAND
 import net.minecraft.entity.EquipmentSlot.OFFHAND
-import net.minecraft.entity.EquipmentSlot.Type.*
+import net.minecraft.entity.EquipmentSlot.Type.ANIMAL_ARMOR
+import net.minecraft.entity.EquipmentSlot.Type.HAND
+import net.minecraft.entity.EquipmentSlot.Type.HUMANOID_ARMOR
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Formatting
 import java.util.Locale
 import java.util.UUID
 import kotlin.collections.ArrayDeque
-import kotlin.collections.associateBy
-import kotlin.collections.forEach
-import kotlin.collections.get
 import kotlin.collections.getOrNull
-import kotlin.collections.getOrPut
-import kotlin.collections.hashMapOf
-import kotlin.collections.set
 
 /**
  * Module InventoryTracker

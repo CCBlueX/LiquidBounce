@@ -27,8 +27,23 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.projectile.AbstractFireballEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.entity.projectile.TridentEntity
-import net.minecraft.entity.projectile.thrown.*
-import net.minecraft.item.*
+import net.minecraft.entity.projectile.thrown.EggEntity
+import net.minecraft.entity.projectile.thrown.EnderPearlEntity
+import net.minecraft.entity.projectile.thrown.ExperienceBottleEntity
+import net.minecraft.entity.projectile.thrown.PotionEntity
+import net.minecraft.entity.projectile.thrown.SnowballEntity
+import net.minecraft.item.BowItem
+import net.minecraft.item.CrossbowItem
+import net.minecraft.item.EggItem
+import net.minecraft.item.EnderPearlItem
+import net.minecraft.item.ExperienceBottleItem
+import net.minecraft.item.FireChargeItem
+import net.minecraft.item.FishingRodItem
+import net.minecraft.item.Item
+import net.minecraft.item.SnowballItem
+import net.minecraft.item.ThrowablePotionItem
+import net.minecraft.item.TridentItem
+import net.minecraft.item.WindChargeItem
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 

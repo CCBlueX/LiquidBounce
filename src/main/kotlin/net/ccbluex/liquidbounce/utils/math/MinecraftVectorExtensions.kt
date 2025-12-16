@@ -21,7 +21,14 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.minecraft.util.math.*
+import net.minecraft.util.math.BlockBox
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.ChunkPos
+import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Position
+import net.minecraft.util.math.Vec2f
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 
 inline operator fun Vec2f.component1() = this.x
 inline operator fun Vec2f.component2() = this.y

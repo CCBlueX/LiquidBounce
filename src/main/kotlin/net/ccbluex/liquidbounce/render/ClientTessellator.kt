@@ -24,7 +24,6 @@ import com.mojang.blaze3d.textures.GpuTextureView
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.util.BufferAllocator
-import kotlin.jvm.JvmStatic
 
 object ClientTessellator {
 

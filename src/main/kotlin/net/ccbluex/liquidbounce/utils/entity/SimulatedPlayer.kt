@@ -36,7 +36,11 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
-import net.minecraft.block.*
+import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
+import net.minecraft.block.LadderBlock
+import net.minecraft.block.PowderSnowBlock
+import net.minecraft.block.TrapdoorBlock
 import net.minecraft.client.input.Input
 import net.minecraft.entity.Entity
 import net.minecraft.entity.MovementType

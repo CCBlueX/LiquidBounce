@@ -28,7 +28,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Drink
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Gapple
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Head
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Pot
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Refill
+import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Soup
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager

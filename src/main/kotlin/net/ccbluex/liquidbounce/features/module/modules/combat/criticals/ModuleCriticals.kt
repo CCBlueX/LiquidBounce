@@ -26,7 +26,11 @@ import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsBlink
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsJump
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsPacket
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
@@ -37,7 +41,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.minecraft.block.CobwebBlock
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffects.*
+import net.minecraft.entity.effect.StatusEffects.BLINDNESS
+import net.minecraft.entity.effect.StatusEffects.LEVITATION
+import net.minecraft.entity.effect.StatusEffects.SLOW_FALLING
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
 /**

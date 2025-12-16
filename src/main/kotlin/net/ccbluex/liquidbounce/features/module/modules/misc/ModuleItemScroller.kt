@@ -25,11 +25,11 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.client.util.InputUtil
+import net.minecraft.client.util.Window
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.slot.Slot
 import net.minecraft.screen.slot.SlotActionType
 import org.lwjgl.glfw.GLFW
-import net.minecraft.client.util.Window
 
 fun interface MouseClick {
     operator fun invoke(callbackSlot: Slot?, slotId: Int, mouseButton: Int, actionType: SlotActionType)

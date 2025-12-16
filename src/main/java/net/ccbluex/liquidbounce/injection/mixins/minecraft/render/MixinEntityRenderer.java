@@ -20,7 +20,11 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.ccbluex.liquidbounce.features.module.modules.render.*;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMobOwners;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTNTTimer;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode;
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;

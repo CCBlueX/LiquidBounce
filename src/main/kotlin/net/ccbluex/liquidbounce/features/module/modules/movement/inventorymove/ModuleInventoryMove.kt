@@ -50,7 +50,11 @@ import net.minecraft.client.input.KeyInput
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.item.ItemGroups
 import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
+import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
+import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
+import net.minecraft.network.packet.c2s.play.SlotChangedStateC2SPacket
 import org.lwjgl.glfw.GLFW
 
 /**

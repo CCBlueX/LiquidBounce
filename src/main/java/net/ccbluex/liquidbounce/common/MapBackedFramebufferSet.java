@@ -24,8 +24,9 @@ import net.minecraft.client.gl.PostEffectProcessor;
 import net.minecraft.client.util.Handle;
 import net.minecraft.util.Identifier;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
+
+import javax.annotation.Nullable;
 
 /**
  * Stupid class, but Minecraft needed one more abstraction...

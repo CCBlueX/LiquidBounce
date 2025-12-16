@@ -20,12 +20,19 @@ package net.ccbluex.liquidbounce.utils.combat
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.objectLinkedSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.RangedValue
-import net.ccbluex.liquidbounce.config.types.ValueType.*
+import net.ccbluex.liquidbounce.config.types.ValueType.FLOAT
+import net.ccbluex.liquidbounce.config.types.ValueType.FLOAT_RANGE
+import net.ccbluex.liquidbounce.config.types.ValueType.INT
+import net.ccbluex.liquidbounce.config.types.ValueType.INT_RANGE
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.DummyRangedValueProvider
+import net.ccbluex.liquidbounce.utils.client.NoneRangedValueProvider
+import net.ccbluex.liquidbounce.utils.client.RangedValueProvider
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.sq

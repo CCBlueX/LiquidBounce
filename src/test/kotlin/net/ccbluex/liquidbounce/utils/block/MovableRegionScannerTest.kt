@@ -20,7 +20,8 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.minecraft.util.math.BlockBox
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 

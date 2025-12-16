@@ -1,11 +1,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.gl;
 
-import com.mojang.logging.LogUtils;
 import net.minecraft.client.gl.GlDebug;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 

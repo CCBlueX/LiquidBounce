@@ -21,8 +21,7 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
-import java.util.Collections
-import java.util.EnumMap
+import java.util.*
 import kotlin.experimental.ExperimentalTypeInference
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =

@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.uploadRect
 import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.client.texture.TextureSetup
-import net.minecraft.util.math.ChunkPos
 import org.joml.Vector2i
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.function.BiConsumer

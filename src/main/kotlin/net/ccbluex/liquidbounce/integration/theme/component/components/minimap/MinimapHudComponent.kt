@@ -27,9 +27,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.integration.theme.component.components.NativeHudComponent
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.createBounds
+import net.ccbluex.liquidbounce.render.drawCustomElement
+import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -45,7 +49,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec2f
-import java.util.EnumSet
+import java.util.*
 import kotlin.math.ceil
 
 object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(

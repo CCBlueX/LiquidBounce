@@ -24,7 +24,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.minecraft.block.*
+import net.minecraft.block.AbstractPressurePlateBlock
+import net.minecraft.block.Block
+import net.minecraft.block.CactusBlock
+import net.minecraft.block.CobwebBlock
+import net.minecraft.block.FireBlock
+import net.minecraft.block.MagmaBlock
+import net.minecraft.block.SweetBerryBushBlock
 import net.minecraft.fluid.FluidState
 import net.minecraft.fluid.Fluids
 import net.minecraft.util.math.BlockPos

@@ -33,7 +33,14 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongDa
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.removeMessage
+import net.ccbluex.liquidbounce.utils.client.textLoadingBar
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.block.enums.NoteBlockInstrument
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.text.MutableText

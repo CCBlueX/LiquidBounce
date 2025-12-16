@@ -35,9 +35,14 @@ import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.SAMPLER_NAMES
 import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.render.*
+import net.minecraft.client.render.BuiltBuffer
+import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.math.*
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector3fc

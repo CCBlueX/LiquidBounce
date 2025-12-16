@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import java.util.function.Predicate
-import kotlin.text.contains
 
 sealed class AutoQueueItemMode(
     final override val parent: ChoiceConfigurable<*>,

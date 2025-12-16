@@ -26,7 +26,14 @@ import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.text.*
+import net.minecraft.text.MutableText
+import net.minecraft.text.OrderedText
+import net.minecraft.text.PlainTextContent
+import net.minecraft.text.Style
+import net.minecraft.text.Text
+import net.minecraft.text.TextColor
+import net.minecraft.text.TextContent
+import net.minecraft.text.TranslatableTextContent
 import net.minecraft.util.Formatting
 import java.util.*
 import java.util.regex.Pattern

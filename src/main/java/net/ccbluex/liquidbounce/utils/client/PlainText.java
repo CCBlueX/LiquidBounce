@@ -19,7 +19,17 @@
 
 package net.ccbluex.liquidbounce.utils.client;
 
-import net.minecraft.text.*;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
+import net.minecraft.text.CharacterVisitor;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.OrderedText;
+import net.minecraft.text.PlainTextContent;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.text.TextContent;
+import net.minecraft.text.TextVisitFactory;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,9 +37,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
-
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 /**
  * A plain and immutable {@link Text}, {@link OrderedText} and {@link CharSequence}.

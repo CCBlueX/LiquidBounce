@@ -23,7 +23,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.Modul
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleBasePlace
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer.getMaxRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer.oldVersion
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.AirAboveCondition
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.AirOldVersionCondition
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.BasePlaceCondition
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.OnlyAboveCondition
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.PredictBlockageCondition
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.ValidHeightCondition
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal

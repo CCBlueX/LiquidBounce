@@ -22,7 +22,10 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
-import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket.Status.*
+import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket.Status.ACCEPTED
+import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket.Status.DECLINED
+import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket.Status.FAILED_DOWNLOAD
+import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket.Status.SUCCESSFULLY_LOADED
 import net.minecraft.network.packet.s2c.common.ResourcePackSendS2CPacket
 
 /**
