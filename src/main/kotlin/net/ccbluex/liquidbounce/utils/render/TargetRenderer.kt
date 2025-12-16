@@ -18,14 +18,19 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawCircleOutline
+import net.ccbluex.liquidbounce.render.drawGradientCircle
+import net.ccbluex.liquidbounce.render.drawSquareTexture
+import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
@@ -94,18 +99,17 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         context(env: WorldRenderEnvironment)
         override fun render(entity: Entity, partialTicks: Float) {
             env.matrixStack.push()
-            mc.gameRenderer.lightmapTextureManager.disable()
 
-            env.matrixStack.translate(mc.gameRenderer.camera.pos.negate())
+            env.matrixStack.translate(mc.gameRenderer.camera.cameraPos.negate())
 
-            val interpolated = entity.pos.interpolate(entity.lastRenderPos(), partialTicks.toDouble())
+            val interpolated = entity.entityPos.interpolate(entity.lastRenderPos(), partialTicks.toDouble())
                 .add(0.2, 1.25, 0.0)
 
             env.matrixStack.translate(interpolated)
 
             with(env) {
-                RenderSystem.setShaderTexture(0, ghostModeTexture.glTextureView)
                 startBatch()
+                shaderTextures[0] = ghostModeTexture.glTextureView
                 drawParticle(
                     { sin, cos -> Vec3d(sin, cos, -cos) },
                     { sin, cos -> Vec3d(-sin, -cos, cos) }
@@ -123,7 +127,6 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 commitBatch()
             }
 
-            mc.gameRenderer.lightmapTextureManager.enable()
             env.matrixStack.pop()
         }
 

@@ -21,10 +21,10 @@
 package net.ccbluex.liquidbounce.event.events
 
 import io.netty.channel.ChannelPipeline
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.minecraft.network.packet.Packet
 

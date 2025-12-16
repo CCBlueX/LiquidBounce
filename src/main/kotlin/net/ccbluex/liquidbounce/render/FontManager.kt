@@ -25,7 +25,9 @@ import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.util.Util
-import net.minecraft.util.Util.OperatingSystem.*
+import net.minecraft.util.Util.OperatingSystem.LINUX
+import net.minecraft.util.Util.OperatingSystem.OSX
+import net.minecraft.util.Util.OperatingSystem.WINDOWS
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File

@@ -22,12 +22,17 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
-import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.*;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
 import net.ccbluex.liquidbounce.additions.MouseAddition;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent;
+import net.ccbluex.liquidbounce.event.events.MouseCursorEvent;
+import net.ccbluex.liquidbounce.event.events.MouseRotationEvent;
+import net.ccbluex.liquidbounce.event.events.MouseScrollEvent;
+import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import net.minecraft.client.input.MouseInput;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.InputUtil;
 import org.spongepowered.asm.mixin.Final;
@@ -56,19 +61,20 @@ public class MixinMouse implements MouseAddition {
     public void liquidbounce$setPosition(double x, double y) {
         this.x = x;
         this.y = y;
-        InputUtil.setCursorParameters(this.client.getWindow().getHandle(), InputUtil.GLFW_CURSOR_NORMAL, this.x, this.y);
+        InputUtil.setCursorParameters(this.client.getWindow(), InputUtil.GLFW_CURSOR_NORMAL, this.x, this.y);
     }
 
     /**
      * Hook mouse button event
      */
     @Inject(method = "onMouseButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
-    private void hookMouseButton(long window, int button, int action, int mods, CallbackInfo callbackInfo) {
+    private void hookMouseButton(long window, MouseInput input, int action, CallbackInfo ci) {
+        final var button = input.button();
         EventManager.INSTANCE.callEvent(new MouseButtonEvent(
                 InputUtil.Type.MOUSE.createFromCode(button),
                 button,
                 action,
-                mods,
+                input.modifiers(),
                 this.client.currentScreen
         ));
     }

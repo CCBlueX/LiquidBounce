@@ -38,7 +38,11 @@ import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
-import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSignC2SPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket
@@ -158,7 +162,7 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
             // Flush on knockback
             is EntityVelocityUpdateS2CPacket -> {
                 if (packet.entityId == player.id
-                    && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)
+                    && (packet.velocity.x != 0.0 || packet.velocity.y != 0.0 || packet.velocity.z != 0.0)
                 ) {
                     chronometer.reset()
                     return@handler
@@ -222,10 +226,10 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
                     it.box.intersects(playerBox)
                 }
                 val serverDistance = entities.minOfOrNull {
-                    it.pos.distanceTo(position)
+                    it.entityPos.distanceTo(position)
                 } ?: return@handler
                 val clientDistance = entities.minOfOrNull {
-                    it.pos.distanceTo(player.pos)
+                    it.entityPos.distanceTo(player.entityPos)
                 } ?: return@handler
 
                 // If the server position is not closer than the client position, we keep lagging.

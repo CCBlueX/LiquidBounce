@@ -18,7 +18,11 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.authlib.Authlib
 import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
@@ -32,9 +36,18 @@ import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.util.Util
 import net.minecraft.util.crash.CrashException
-import okhttp3.*
+import okhttp3.Cache
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Dispatcher
+import okhttp3.Headers
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import okhttp3.coroutines.executeAsync
 import okio.BufferedSource
 import okio.sink

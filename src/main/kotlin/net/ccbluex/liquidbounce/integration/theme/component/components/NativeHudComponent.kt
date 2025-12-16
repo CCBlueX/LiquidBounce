@@ -17,12 +17,15 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-plugins {
-    kotlin("jvm")
-}
+package net.ccbluex.liquidbounce.integration.theme.component.components
 
-version = rootProject.version
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponentTweak
+import net.ccbluex.liquidbounce.utils.render.Alignment
 
-kotlin {
-    jvmToolchain(8)
-}
+abstract class NativeHudComponent(
+    name: String,
+    enabled: Boolean,
+    alignment: Alignment,
+    tweaks: Array<HudComponentTweak> = emptyArray()
+) : HudComponent(name, enabled, alignment, tweaks)

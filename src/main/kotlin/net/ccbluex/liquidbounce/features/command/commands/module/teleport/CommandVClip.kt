@@ -107,7 +107,7 @@ object CommandVClip : Command.Factory {
         }
 
         val blockPos = player.vehicle?.blockPos ?: player.blockPos
-        val pos = player.vehicle?.pos ?: player.pos
+        val pos = player.vehicle?.entityPos ?: player.entityPos
 
         var newPos = blockPos
 

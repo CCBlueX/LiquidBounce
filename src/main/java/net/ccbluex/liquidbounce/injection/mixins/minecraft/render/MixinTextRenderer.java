@@ -44,7 +44,7 @@ public abstract class MixinTextRenderer {
     }
 
     @Redirect(
-        method = "prepare(Lnet/minecraft/text/OrderedText;FFIZI)Lnet/minecraft/client/font/TextRenderer$GlyphDrawable;",
+        method = "prepare(Lnet/minecraft/text/OrderedText;FFIZZI)Lnet/minecraft/client/font/TextRenderer$GlyphDrawable;",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/text/OrderedText;accept(Lnet/minecraft/text/CharacterVisitor;)Z")
     )
     private boolean injectNameProtectB(OrderedText orderedText, CharacterVisitor visitor) {

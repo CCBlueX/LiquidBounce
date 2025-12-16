@@ -20,8 +20,6 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.truffle;
 
-import java.net.URI;
-
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.js.builtins.commonjs.NpmCompatibleESModuleLoader;
 import com.oracle.truffle.js.runtime.JSRealm;
@@ -33,6 +31,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.net.URI;
 
 @Mixin(NpmCompatibleESModuleLoader.class)
 public abstract class MixinNpmCompatibleESModuleLoader extends DefaultESModuleLoader {

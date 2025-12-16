@@ -24,9 +24,14 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.GenericColorMode
+import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
+import net.ccbluex.liquidbounce.render.GenericStaticColorMode
+import net.ccbluex.liquidbounce.render.drawLines
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.longLines
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -93,7 +98,7 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
         val camera = mc.gameRenderer.camera
 
         renderEnvironmentForWorld(matrixStack) {
-            val eyeVector = Vec3(0.0, 0.0, 1.0)
+            val eyeVector = Vec3f(0.0, 0.0, 1.0)
                 .rotatePitch(-camera.pitch.toRadians())
                 .rotateYaw(-camera.yaw.toRadians())
 
@@ -101,7 +106,7 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
                 startBatch()
                 val maxDistanceSq = maximumDistance.sq()
                 for (entity in RenderedEntities) {
-                    val distanceSq = entity.pos.cameraDistanceSq().toFloat()
+                    val distanceSq = entity.entityPos.cameraDistanceSq().toFloat()
                     if (distanceSq > maxDistanceSq) {
                         continue
                     }

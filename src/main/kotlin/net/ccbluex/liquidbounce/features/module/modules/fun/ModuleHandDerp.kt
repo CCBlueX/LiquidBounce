@@ -20,13 +20,12 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinPlayerEntityAccessor
 import net.minecraft.network.packet.c2s.common.ClientOptionsC2SPacket
 import net.minecraft.network.packet.c2s.common.SyncedClientOptions
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -81,7 +80,7 @@ object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
         val packet = it.packet
         if (silent && packet is EntityTrackerUpdateS2CPacket &&
             packet.trackedValues.any { data ->
-                data.id == MixinPlayerEntityAccessor.getTrackedMainArm().id }) {
+                data.id == mc.options.mainArm.value.id }) {
             it.cancelEvent()
         }
     }

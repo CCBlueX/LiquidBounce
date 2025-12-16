@@ -54,7 +54,7 @@ object TrapPlayerSimulation {
 
             val predictedPos = predictedState.firstNotNullOfOrNull {
                 if (wasAirborne && it.onGround) {
-                    return@firstNotNullOfOrNull PredictedPlayerPos(it.pos, ticks, enemy.pos, false)
+                    return@firstNotNullOfOrNull PredictedPlayerPos(it.pos, ticks, enemy.entityPos, false)
                 }
 
                 wasAirborne = !enemy.isOnGround
@@ -64,7 +64,7 @@ object TrapPlayerSimulation {
             } ?: PredictedPlayerPos(
                 null,
                 null,
-                enemy.pos,
+                enemy.entityPos,
                 enemy.velocity.lengthSquared() < 0.05
             )
 
@@ -83,14 +83,14 @@ object TrapPlayerSimulation {
     }
 
     /**
-     * Searches for a position where a trap could be layed. Currently that is just the landing position of
+     * Searches for a position where a trap could be laid. Currently, that is just the landing position of
      * a jumping/falling player.
      *
      * @return position for the trap. `null` if the trap should not be placed.
      */
     fun findPosForTrap(target: LivingEntity, isTargetLocked: Boolean): Vec3d? {
         if (target !is PlayerEntity) {
-            return target.pos
+            return target.entityPos
         }
 
         val simulationCache = this.predictedPlayerStatesCache[target] ?: return null

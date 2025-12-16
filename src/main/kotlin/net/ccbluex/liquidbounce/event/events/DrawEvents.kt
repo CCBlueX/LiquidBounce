@@ -20,8 +20,8 @@
 
 package net.ccbluex.liquidbounce.event.events
 
-import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.annotations.Nameable
+import net.ccbluex.liquidbounce.event.Event
 import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.Camera

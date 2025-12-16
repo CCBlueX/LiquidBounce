@@ -22,8 +22,13 @@ package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
-import net.ccbluex.liquidbounce.render.engine.font.*
+import net.ccbluex.liquidbounce.render.engine.font.AtlasSliceHandle
+import net.ccbluex.liquidbounce.render.engine.font.DynamicAtlasAllocator
+import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion
+import net.ccbluex.liquidbounce.render.engine.font.GlyphRenderInfo
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.texture.NativeImage

@@ -69,10 +69,10 @@ object ModuleMaceKill : ClientModule("MaceKill", Category.COMBAT) {
         }
 
         // Teleport to the calculated height
-        player.warp(player.pos.add(0.0, height.toDouble(), 0.0), onGround = false)
+        player.warp(player.entityPos.add(0.0, height.toDouble(), 0.0), onGround = false)
 
         // Make sure we get back to the ground
-        player.warp(player.pos, onGround = false)
+        player.warp(player.entityPos, onGround = false)
     }
 
     /**

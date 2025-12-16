@@ -22,7 +22,6 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
@@ -240,7 +239,7 @@ fun DrawContext.drawTriangle(
 
 @Suppress("LongParameterList")
 inline fun DrawContext.drawTexQuad(
-    texture: GpuTextureView,
+    textureSetup: TextureSetup,
     x0: Float,
     y0: Float,
     x1: Float,
@@ -264,7 +263,7 @@ inline fun DrawContext.drawTexQuad(
             v2,
             argb,
             pipeline,
-            TextureSetup.withoutGlTexture(texture),
+            textureSetup,
             copyPose(),
             this.scissorStack.peekLast(),
             createBounds(x0, y0, x1 - x0, y1 - y0),

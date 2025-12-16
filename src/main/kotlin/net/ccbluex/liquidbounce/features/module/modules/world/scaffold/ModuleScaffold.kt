@@ -37,18 +37,35 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFa
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.RotationTimingMode.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.RotationTimingMode.NORMAL
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.RotationTimingMode.ON_TICK
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.RotationTimingMode.ON_TICK_SNAP
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.considerInventory
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAccelerationFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAutoBlockFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBlinkFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldCeilingFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldJumpStrafe
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldLedgeExtension
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldMovementPrediction
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSpeedLimiterFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSprintControlFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStrafeFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ledge
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldBreezilyTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldExpandTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldGodBridgeTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldDownFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldEagleFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerHypixel
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -61,7 +78,13 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.item.PreferAverageHardBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferFavourableBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferFullCubeBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferSolidBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.item.PreferWalkableBlocks
+import net.ccbluex.liquidbounce.utils.item.getBlock
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.copy
@@ -71,8 +94,13 @@ import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.block.Block
 import net.minecraft.entity.EntityPose
-import net.minecraft.item.*
+import net.minecraft.item.BlockItem
+import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
+import net.minecraft.item.ItemUsageContext
+import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
@@ -235,6 +263,8 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     private var startY = 0
     private var jumps = 0
 
+    private var nextBlock: Block? = null
+
     val blockCount: Int
         get() {
             fun ItemStack.blockCount() = if (isValidBlock(this)) this.count else 0
@@ -302,12 +332,15 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         NoFallBlink.waitUntilGround = false
         ScaffoldMovementPlanner.reset()
         SilentHotbar.resetSlot(this)
-        updateRenderCount()
+        nextBlock = null
+        updateRenderCount(null)
         forceSneak = 0
         renderer.clearSilently()
     }
 
-    private fun updateRenderCount(count: Int? = null) = EventManager.callEvent(BlockCountChangeEvent(count))
+    private fun updateRenderCount(count: Int?) {
+        EventManager.callEvent(BlockCountChangeEvent(nextBlock, count))
+    }
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
@@ -316,14 +349,17 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         val blockInHotbar = findBestValidHotbarSlotForTarget()
 
         val bestStack = if (blockInHotbar == null) {
+            nextBlock = null
             ItemStack(Items.SANDSTONE, 64)
         } else {
-            player.inventory.getStack(blockInHotbar)
+            player.inventory.getStack(blockInHotbar).also {
+                nextBlock = it.getBlock()
+            }
         }
 
         val optimalLine = this.currentOptimalLine
 
-        val predictedPos = ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine) ?: player.pos
+        val predictedPos = ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine) ?: player.entityPos
         // Check if the player is probably going to sneak at the predicted position
         val predictedPose =
             if (ScaffoldEagleFeature.enabled && ScaffoldEagleFeature.shouldEagle(DirectionalInput(player.input))) {
@@ -466,7 +502,6 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         debugParameter("WasTowering") { wasTowering }
 
         val target = currentTarget
-
 
         val computedRotation = if (target != null) {
             technique.activeChoice.getRotations(target)

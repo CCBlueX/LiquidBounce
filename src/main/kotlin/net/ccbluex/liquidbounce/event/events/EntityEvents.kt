@@ -20,9 +20,9 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.utils.combat.EntityTargetClassification
 import net.ccbluex.liquidbounce.utils.combat.EntityTargetingInfo
 import net.ccbluex.liquidbounce.utils.kotlin.Priority

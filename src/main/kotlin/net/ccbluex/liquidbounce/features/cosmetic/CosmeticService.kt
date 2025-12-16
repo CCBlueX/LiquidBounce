@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.toMD5
-import net.minecraft.client.session.Session
 import java.util.*
 
 /**
@@ -192,7 +191,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
         val session = event.session
 
         // Check if the account is valid
-        if (session.accountType == Session.AccountType.LEGACY || session.accessToken.length < 2) {
+        if (session.accessToken.length < 2) {
             return@handler
         }
         val uuid = session.uuidOrNull ?: return@handler

@@ -29,10 +29,14 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.longLines
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -42,7 +46,17 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.block.BlockRenderType
 import net.minecraft.block.BlockState
-import net.minecraft.block.entity.*
+import net.minecraft.block.entity.AbstractFurnaceBlockEntity
+import net.minecraft.block.entity.BarrelBlockEntity
+import net.minecraft.block.entity.BlockEntity
+import net.minecraft.block.entity.BrewingStandBlockEntity
+import net.minecraft.block.entity.ChestBlockEntity
+import net.minecraft.block.entity.CrafterBlockEntity
+import net.minecraft.block.entity.DecoratedPotBlockEntity
+import net.minecraft.block.entity.DispenserBlockEntity
+import net.minecraft.block.entity.EnderChestBlockEntity
+import net.minecraft.block.entity.HopperBlockEntity
+import net.minecraft.block.entity.ShulkerBoxBlockEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.passive.AbstractDonkeyEntity
 import net.minecraft.entity.vehicle.ChestBoatEntity
@@ -74,7 +88,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         fun shouldRender(entity: Entity): Boolean =
             this.running
-                && entity.pos.cameraDistanceSq() < maximumDistance.sq()
+                && entity.entityPos.cameraDistanceSq() < maximumDistance.sq()
 
         object Chest : ChestType("Chest", Color4b(0, 100, 255))
         object EnderChest : ChestType("EnderChest", Color4b(Color.MAGENTA))
@@ -261,7 +275,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         }
 
         renderEnvironmentForWorld(event.matrixStack) {
-            val eyeVector = Vec3(0.0, 0.0, 1.0)
+            val eyeVector = Vec3f(0.0, 0.0, 1.0)
                 .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
                 .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
@@ -279,7 +293,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     }
 
     @JvmStatic
-    fun Entity.categorize(): ChestType? {
+    fun Entity?.categorize(): ChestType? {
         return when (this) {
             // This includes any storage type minecart entity including ChestMinecartEntity
             is HopperMinecartEntity -> ChestType.Hopper
@@ -292,7 +306,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     }
 
     @JvmStatic
-    fun BlockEntity.categorize(): ChestType? {
+    fun BlockEntity?.categorize(): ChestType? {
         return when (this) {
             is ChestBlockEntity, is BarrelBlockEntity -> ChestType.Chest
             is EnderChestBlockEntity -> ChestType.EnderChest

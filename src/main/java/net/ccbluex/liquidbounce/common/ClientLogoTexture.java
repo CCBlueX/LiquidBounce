@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.resource.metadata.TextureResourceMetadata;
+import net.minecraft.client.texture.MipmapStrategy;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.ReloadableTexture;
 import net.minecraft.client.texture.TextureContents;
@@ -53,7 +54,7 @@ public final class ClientLogoTexture extends ReloadableTexture {
         try (var stream = LiquidBounce.class.getResourceAsStream("/resources/liquidbounce/logo_banner.png")) {
             var nativeImage = NativeImage.read(Objects.requireNonNull(stream));
 
-            return new TextureContents(nativeImage, new TextureResourceMetadata(true, false));
+            return new TextureContents(nativeImage, new TextureResourceMetadata(true, false, MipmapStrategy.AUTO, TextureResourceMetadata.DEFAULT_ALPHA_CUTOFF_BIAS));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

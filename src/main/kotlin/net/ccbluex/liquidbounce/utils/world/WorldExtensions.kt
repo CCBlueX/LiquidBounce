@@ -17,28 +17,20 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.integration.theme.component.components
+package net.ccbluex.liquidbounce.utils.world
 
-import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.integration.theme.component.Component
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak
-import net.ccbluex.liquidbounce.utils.render.Alignment
+import net.minecraft.world.World
+import net.minecraft.world.attribute.BedRule
+import net.minecraft.world.attribute.EnvironmentAttributes
 
-class WebComponent(
-    name: String,
-    enabled: Boolean,
-    alignment: Alignment,
-    tweaks: Array<ComponentTweak> = emptyArray(),
-    val values: Array<JsonObject> = emptyArray()
-) : Component(name, enabled, alignment, tweaks) {
+/**
+ * @return if water and ice evaporates in this world (e.g. nether)
+ */
+val World.waterEvaporates: Boolean
+    get() = this.environmentAttributes.getAttributeValue(EnvironmentAttributes.WATER_EVAPORATES_GAMEPLAY)
 
-    override fun initConfigurable() {
-        for (value in values) {
-            json(value)
-        }
-        registerComponentListen(this)
-        super.initConfigurable()
-    }
+val World.bedRule: BedRule
+    get() = this.environmentAttributes.getAttributeValue(EnvironmentAttributes.BED_RULE_GAMEPLAY)
 
-}
-
+val World.respawnAnchorWorks: Boolean
+    get() = this.environmentAttributes.getAttributeValue(EnvironmentAttributes.RESPAWN_ANCHOR_WORKS_GAMEPLAY)

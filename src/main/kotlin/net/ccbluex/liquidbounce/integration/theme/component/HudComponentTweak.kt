@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 /**
  * A set of tweaks that can be applied to the Original HUD by the component
  */
-enum class ComponentTweak(override val choiceName: String) : NamedChoice {
+enum class HudComponentTweak(override val choiceName: String) : NamedChoice {
 
     /**
      * Disables the Item Hotbar and draws only the items instead

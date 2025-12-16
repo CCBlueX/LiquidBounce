@@ -21,9 +21,9 @@
 package net.ccbluex.liquidbounce.config.util
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.ChooseListValue
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 
 object AutoCompletionProvider {
 

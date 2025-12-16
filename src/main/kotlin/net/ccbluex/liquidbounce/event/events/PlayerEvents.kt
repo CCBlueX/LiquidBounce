@@ -20,11 +20,11 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
-import net.ccbluex.liquidbounce.annotations.Nameable
 import net.minecraft.entity.MovementType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.fluid.Fluid

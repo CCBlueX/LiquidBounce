@@ -41,7 +41,7 @@ object MurderMysteryInfectionMode : MurderMysteryGenericMode("Infection") {
                         player.handItems.any { stack -> stack.item == Items.ARROW }
                 }
                 .forEach { playerEntity ->
-                    handleHasBow(playerEntity, playerEntity.skinTextures.texture)
+                    handleHasBow(playerEntity, playerEntity.skin.body.texturePath())
                 }
         }
 

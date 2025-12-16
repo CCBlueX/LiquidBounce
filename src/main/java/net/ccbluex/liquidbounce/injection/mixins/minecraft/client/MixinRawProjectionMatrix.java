@@ -35,7 +35,7 @@ public abstract class MixinRawProjectionMatrix {
         method = "<init>",
         at = @At(
             value = "INVOKE",
-            target = "Lcom/mojang/blaze3d/systems/GpuDevice;createBuffer(Ljava/util/function/Supplier;II)Lcom/mojang/blaze3d/buffers/GpuBuffer;"
+            target = "Lcom/mojang/blaze3d/systems/GpuDevice;createBuffer(Ljava/util/function/Supplier;IJ)Lcom/mojang/blaze3d/buffers/GpuBuffer;"
         ),
         index = 1
     )

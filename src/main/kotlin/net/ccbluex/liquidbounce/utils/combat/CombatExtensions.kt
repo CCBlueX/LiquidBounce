@@ -30,11 +30,17 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.interaction
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.minecraft.client.option.Perspective
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.entity.Attackable
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
@@ -92,7 +98,7 @@ enum class Targets(override val choiceName: String) : NamedChoice {
     FRIENDS("Friends");
 }
 
-fun EnumSet<Targets>.shouldAttack(entity: Entity): Boolean {
+private fun EnumSet<Targets>.shouldAttack(entity: Entity): Boolean {
     val info = EntityTaggingManager.getTag(entity).targetingInfo
 
     return when {
@@ -102,7 +108,7 @@ fun EnumSet<Targets>.shouldAttack(entity: Entity): Boolean {
     }
 }
 
-fun EnumSet<Targets>.shouldShow(entity: Entity): Boolean {
+private fun EnumSet<Targets>.shouldShow(entity: Entity): Boolean {
     if (entity === player) {
         return Targets.SELF in this &&
             (mc.options.perspective !== Perspective.FIRST_PERSON || ModuleFreeCam.enabled || ModuleFreeLook.enabled)
@@ -156,7 +162,7 @@ fun Entity.shouldBeShown(enemyConf: EnumSet<Targets> = ModuleTargets.visual) =
 
 @JvmOverloads
 fun Entity.shouldBeAttacked(enemyConf: EnumSet<Targets> = ModuleTargets.combat) =
-    enemyConf.shouldAttack(this)
+    this is Attackable && enemyConf.shouldAttack(this)
 
 /**
  * Find the best enemy in the current world in a specific range.
@@ -249,7 +255,7 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
         }
 
         // Reset cooldown
-        resetLastAttackedTicks()
+        this.ticksSinceLastAttack = 0
 
         // Swing after attacking (on 1.9+)
         if (!isOlderThanOrEqual1_8) {

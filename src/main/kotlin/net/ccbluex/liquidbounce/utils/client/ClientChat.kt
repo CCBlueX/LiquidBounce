@@ -31,7 +31,12 @@ import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.screen.ChatScreen
-import net.minecraft.text.*
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
+import net.minecraft.text.MutableText
+import net.minecraft.text.Style
+import net.minecraft.text.Text
+import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
 import java.io.File
 
@@ -118,7 +123,7 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableT
         val color = startColor.interpolateTo(endColor, factor)
 
         newText.append(
-            char.toString().asText().withColor(color.toARGB())
+            char.toString().asPlainText(Style.EMPTY + color)
         )
     }
 }
@@ -154,8 +159,8 @@ fun MutableText.bypassNameProtection(): MutableText = styled {
  * Open a [ChatScreen] with given text,
  * or set the text of current [ChatScreen]
  */
-fun MinecraftClient.openChat(text: String) = send {
-    (currentScreen as? MixinChatScreenAccessor)?.chatField?.setText(text) ?: setScreen(ChatScreen(text))
+fun MinecraftClient.openChat(text: String, draft: Boolean = false) = send {
+    (currentScreen as? MixinChatScreenAccessor)?.chatField?.setText(text) ?: setScreen(ChatScreen(text, draft))
 }
 
 private val defaultMessageMetadata = MessageMetadata()

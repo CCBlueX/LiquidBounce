@@ -33,6 +33,7 @@ import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.ClickEvent;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -47,6 +48,7 @@ public abstract class MixinScreen implements ScreenAddition {
     @Shadow
     protected abstract void remove(Element child);
 
+    @Final
     @Shadow
     protected TextRenderer textRenderer;
     @Shadow
@@ -57,6 +59,7 @@ public abstract class MixinScreen implements ScreenAddition {
     @Shadow
     protected abstract <T extends Element & Drawable> T addDrawableChild(T drawableElement);
 
+    @Final
     @Shadow
     @Nullable
     protected MinecraftClient client;
@@ -64,7 +67,7 @@ public abstract class MixinScreen implements ScreenAddition {
     @Shadow
     private boolean screenInitialized;
 
-    @Inject(method = "init(Lnet/minecraft/client/MinecraftClient;II)V", at = @At("TAIL"))
+    @Inject(method = "init(II)V", at = @At("TAIL"))
     private void objInit(CallbackInfo ci) {
         if (!LiquidBounce.INSTANCE.isInitialized()) {
             return;

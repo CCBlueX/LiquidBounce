@@ -33,6 +33,6 @@ sealed class EspMode(
         get() = modes
 
     fun shouldRender(entity: Entity?): Boolean {
-        return entity != null && entity.pos.cameraDistanceSq() < ModuleESP.maximumDistance.sq()
+        return entity != null && entity.entityPos.cameraDistanceSq() < ModuleESP.maximumDistance.sq()
     }
 }

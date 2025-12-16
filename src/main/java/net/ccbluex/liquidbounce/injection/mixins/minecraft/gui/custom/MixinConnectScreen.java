@@ -21,6 +21,8 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
+import static net.ccbluex.liquidbounce.utils.client.TextExtensionsKt.hideSensitiveAddress;
+
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent;
@@ -50,8 +52,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-
-import static net.ccbluex.liquidbounce.utils.client.TextExtensionsKt.hideSensitiveAddress;
 
 @Mixin(ConnectScreen.class)
 public abstract class MixinConnectScreen extends MixinScreen {

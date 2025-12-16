@@ -20,9 +20,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -33,11 +33,20 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelLowHop
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.any
+import net.ccbluex.liquidbounce.utils.entity.initial
+import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.untransformed
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.util.math.Vec3d
 import java.lang.Math.toDegrees
-import kotlin.math.*
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.floor
+import kotlin.math.hypot
+import kotlin.math.sin
 
 /**
  * Target Strafe Module
@@ -156,7 +165,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
             val target = ModuleKillAura.targetTracker.target
                 ?: ModuleAimbot.targetTracker.target
                 ?: targetSelector.targets().firstOrNull() ?: return@handler
-            val distance = hypot(player.pos.x - target.pos.x, player.pos.z - target.pos.z)
+            val distance = hypot(player.entityPos.x - target.entityPos.x, player.entityPos.z - target.entityPos.z)
 
             // return if we're too far
             if (distance > followRange) {
@@ -176,9 +185,9 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
             }
 
             val speed = player.sqrtSpeed
-            val strafeYaw = atan2(target.pos.z - player.pos.z, target.pos.x - player.pos.x)
+            val strafeYaw = atan2(target.entityPos.z - player.entityPos.z, target.entityPos.x - player.entityPos.x)
             var strafeVec = computeDirectionVec(strafeYaw, distance, speed, targetSelector.maxRange, direction)
-            var pointCoords = player.pos.add(strafeVec)
+            var pointCoords = player.entityPos.add(strafeVec)
 
             if (!Validation.validatePoint(pointCoords)) {
                 if (!AdaptiveRange.enabled) {
@@ -188,7 +197,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
                     var currentRange = AdaptiveRange.rangeStep
                     while (!Validation.validatePoint(pointCoords)) {
                         strafeVec = computeDirectionVec(strafeYaw, distance, speed, currentRange, direction)
-                        pointCoords = player.pos.add(strafeVec)
+                        pointCoords = player.entityPos.add(strafeVec)
                         currentRange += AdaptiveRange.rangeStep
                         if (currentRange > AdaptiveRange.maxRange) {
                             direction = -direction

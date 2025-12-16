@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -107,7 +107,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         }
 
         val nearbyEnemy = world.findEnemy(0f..range.endInclusive) ?: return@tickHandler
-        val currentDistance = player.pos.squaredDistanceTo(nearbyEnemy.pos)
+        val currentDistance = player.entityPos.squaredDistanceTo(nearbyEnemy.entityPos)
         val rangeSq = range.start.sq()..range.endInclusive.sq()
 
         // Find the best tick that is able to hit the target and is not too far away from the player, as well as
@@ -115,7 +115,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
         var possibleTicks = tickBuffer
             .withIndex()
             .filter { (_, tick) ->
-                val distSq = tick.position.squaredDistanceTo(nearbyEnemy.pos)
+                val distSq = tick.position.squaredDistanceTo(nearbyEnemy.entityPos)
                 distSq < currentDistance && distSq in rangeSq
             }
 

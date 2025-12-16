@@ -122,19 +122,11 @@ dependencies {
     // Minecraft Authlib
     includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
 
-    // Multi module
-    api(project(":liquid-bounce-inbuilt-annotations"))
-    include(project(":liquid-bounce-inbuilt-annotations"))
-
     // JCEF Support
     val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
     modApi(mcef)
     include(mcef)
-    includeDependency("net.ccbluex:netty-httpserver:2.4.2")
-    // MacOS native (Linux native is included in game)
-    includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
-    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
-    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-x86_64")
+    includeDependency("net.ccbluex:netty-httpserver:2.5.0")
 
     // Discord RPC Support
     includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")

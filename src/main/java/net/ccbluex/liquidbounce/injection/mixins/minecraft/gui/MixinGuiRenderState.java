@@ -19,9 +19,12 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
+import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
+
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.ccbluex.liquidbounce.utils.render.LiquidBounceGuiElementRenderState;
-import net.minecraft.client.gui.render.state.*;
+import net.minecraft.client.gui.render.state.GuiElementRenderState;
+import net.minecraft.client.gui.render.state.GuiRenderState;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -33,8 +36,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-
-import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
 
 @SuppressWarnings("rawtypes")
 @Mixin(GuiRenderState.class)

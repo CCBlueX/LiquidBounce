@@ -84,7 +84,7 @@ object FlyNcpClip : Choice("NcpClip") {
         }
 
         if (startPos == null) {
-            startPosition = player.pos
+            startPosition = player.entityPos
 
             // Wait until there is a vertical collision
             tickUntil { collidesVertical() }
@@ -126,7 +126,7 @@ object FlyNcpClip : Choice("NcpClip") {
             // Disable the module if the player is on ground again
             ModuleFly.enabled = false
             return@tickHandler
-        } else if (startPos.distanceTo(player.pos) > maximumDistance) {
+        } else if (startPos.distanceTo(player.entityPos) > maximumDistance) {
             if (shouldLag) {
                 // If we are lagging, we might abuse this to get us back to safety
                 PacketQueueManager.cancel()

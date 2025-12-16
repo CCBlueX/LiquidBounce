@@ -22,7 +22,9 @@ import com.google.gson.GsonBuilder
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ItemInfo
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopConfig
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopElement
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionNode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ItemConditionNode
 import net.ccbluex.liquidbounce.utils.client.logger

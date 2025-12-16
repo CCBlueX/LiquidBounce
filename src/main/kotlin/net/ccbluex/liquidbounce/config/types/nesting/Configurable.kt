@@ -22,9 +22,22 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
-import net.ccbluex.liquidbounce.config.types.*
+import net.ccbluex.liquidbounce.config.types.BindValue
+import net.ccbluex.liquidbounce.config.types.ChooseListValue
+import net.ccbluex.liquidbounce.config.types.CurveValue
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis
+import net.ccbluex.liquidbounce.config.types.FileDialogMode
+import net.ccbluex.liquidbounce.config.types.FileValue
+import net.ccbluex.liquidbounce.config.types.ItemListValue
+import net.ccbluex.liquidbounce.config.types.ListValue
+import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
+import net.ccbluex.liquidbounce.config.types.MutableListValue
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.NamedChoice.Companion.asNamedChoice
+import net.ccbluex.liquidbounce.config.types.RangedValue
+import net.ccbluex.liquidbounce.config.types.RegistryListValue
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
@@ -46,7 +59,6 @@ import org.lwjgl.glfw.GLFW
 import java.io.File
 import java.util.*
 import java.util.function.ToIntFunction
-import kotlin.enums.EnumEntries
 
 @Suppress("TooManyFunctions")
 open class Configurable(
@@ -381,7 +393,7 @@ open class Configurable(
 
     inline fun <reified T> multiEnumChoice(
         name: String,
-        default: EnumEntries<T>,
+        default: Iterable<T>,
         canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
         multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)

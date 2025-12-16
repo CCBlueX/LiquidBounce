@@ -16,16 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.interfaces;
 
-/**
- * Additions to {@link net.minecraft.client.render.LightmapTextureManager}.
- */
-public interface LightmapTextureManagerAddition {
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-    /**
-     * Restores the last light map.
-     */
-    void liquid_bounce$restoreLightMap();
+import net.minecraft.client.Mouse;
+import net.minecraft.client.input.MouseInput;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
+@Mixin(Mouse.class)
+public interface MixinMouseAccessor {
+    @Accessor("lastMouseClick")
+    void setLastMouseClick(Mouse.MouseClickTime lastMouseClick);
+
+    @Accessor("lastMouseButton")
+    void setLastMouseButton(@MouseInput.ButtonCode int lastMouseButton);
 }

@@ -15,24 +15,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.player.PlayerEntity;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.gen.Accessor;
+package net.ccbluex.liquidbounce.render.engine
 
-@Mixin(PlayerEntity.class)
-public interface MixinPlayerEntityAccessor {
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.utils.client.inGame
 
-    /*
-        * Used to get the TrackedData of the arm
-     */
-    @Accessor("MAIN_ARM")
-    static TrackedData<Byte> getTrackedMainArm() {
-        throw new AssertionError();
+/**
+ * For [net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP] outline mode.
+ *
+ * @see net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
+ */
+object OutlineShaderRenderer : OverlayShaderRenderer(
+    "Outline",
+    ClientRenderPipelines.Outline,
+    useDepth = false,
+) {
+    override fun shouldRender(): Boolean {
+        return inGame
     }
-
 }

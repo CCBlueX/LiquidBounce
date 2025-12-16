@@ -21,7 +21,7 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 
@@ -30,7 +30,7 @@ import net.ccbluex.netty.http.util.httpOk
 fun getComponents(requestObject: RequestObject) =
     httpOk(
         accessibleInteropGson.toJsonTree(
-            ComponentManager.getComponents(requestObject.params["id"])
+            HudComponentManager.getComponents(requestObject.params["id"])
         ).asJsonArray
     )
 

@@ -21,12 +21,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog
 
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -111,9 +111,9 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
         val packet = event.packet
 
         if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-            val velocityX = packet.velocityX / 8000.0
-            val velocityY = packet.velocityY / 8000.0
-            val velocityZ = packet.velocityZ / 8000.0
+            val velocityX = packet.velocity.x / 8000.0
+            val velocityY = packet.velocity.y / 8000.0
+            val velocityZ = packet.velocity.z / 8000.0
 
             waitTicks(1)
 

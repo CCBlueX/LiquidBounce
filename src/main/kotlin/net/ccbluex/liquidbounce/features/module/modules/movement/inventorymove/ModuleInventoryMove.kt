@@ -46,10 +46,15 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.client.input.KeyInput
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.item.ItemGroups
 import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.packet.c2s.play.ButtonClickC2SPacket
+import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
+import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
+import net.minecraft.network.packet.c2s.play.SlotChangedStateC2SPacket
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -135,7 +140,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
 
     @Suppress("unused")
     private val keyHandler = handler<KeyboardKeyEvent> { event ->
-        val key = movementKeys.keys.find { it.matchesKey(event.keyCode, event.scanCode) }
+        val key = movementKeys.keys.find { it.matchesKey(KeyInput(event.keyCode, event.scanCode, event.mods)) }
             ?: return@handler
         val pressed = shouldHandleInputs(key) && event.action != GLFW.GLFW_RELEASE
         movementKeys.put(key, pressed)

@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.event.events
 
 import com.google.gson.annotations.SerializedName
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
@@ -32,13 +33,13 @@ import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
-import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
-import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.minecraft.block.Block
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.world.GameMode
 
@@ -91,7 +92,7 @@ class GameModeChangeEvent(val gameMode: GameMode) : Event(), WebSocketEvent
 class TargetChangeEvent(val target: PlayerData?) : Event(), WebSocketEvent
 
 @Nameable("blockCountChange")
-class BlockCountChangeEvent(val count: Int?) : Event(), WebSocketEvent
+class BlockCountChangeEvent(val nextBlock: Block?, val count: Int?) : Event(), WebSocketEvent
 
 @Nameable("bedStateChange")
 class BedStateChangeEvent(val bedStates: Collection<BedState>) : Event(), WebSocketEvent
@@ -178,7 +179,7 @@ class VirtualScreenEvent(
 class ServerPingedEvent(val server: ServerInfo) : Event(), WebSocketEvent
 
 @Nameable("componentsUpdate")
-class ComponentsUpdateEvent(val id: String? = null, val components: List<Component>) : Event(), WebSocketEvent {
+class ComponentsUpdateEvent(val id: String? = null, val components: List<HudComponent>) : Event(), WebSocketEvent {
     override val serializer get() = accessibleInteropGson
 }
 

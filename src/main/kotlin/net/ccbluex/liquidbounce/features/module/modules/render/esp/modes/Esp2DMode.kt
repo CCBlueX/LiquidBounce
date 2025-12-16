@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
@@ -35,11 +36,26 @@ import net.minecraft.util.math.Box
 
 object Esp2DMode : EspMode("2D") {
 
-    private val outline by boolean("Outline", true)
-    private val border by boolean("Border", true)
+    object Outline : ToggleableConfigurable(this, "Outline", true) {
+        val thickness by float("Thickness", 1f, 1f..9f, "px")
+    }
+
+    object Border : ToggleableConfigurable(this, "Border", true) {
+        val thickness by float("Thickness", 1f, 1f..9f, "px")
+    }
+
     private val expand by float("Expand", 0.05f, 0f..0.5f)
     private val fill by boolean("Fill", true)
-    private val healthBar by boolean("HealthBar", true)
+
+    object HealthBar : ToggleableConfigurable(this, "HealthBar", true) {
+        val spacing by float("Spacing", 2f, 0f..32f, "px")
+    }
+
+    init {
+        tree(Outline)
+        tree(Border)
+        tree(HealthBar)
+    }
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
@@ -66,8 +82,12 @@ object Esp2DMode : EspMode("2D") {
             val maxX = projected.maxOf { it.x }
             val minY = projected.minOf { it.y }
             val maxY = projected.maxOf { it.y }
-            var rectWidth = (maxX - minX)
-            var rectHeight = (maxY - minY)
+            val rectWidth = maxX - minX
+            val rectHeight = maxY - minY
+
+            val guiScaleFactor = mc.options.guiScale.value
+            val outlineThickness = Outline.thickness / guiScaleFactor
+            val borderThickness = Border.thickness / guiScaleFactor
 
             with(event.context) {
                 matrices.withPush {
@@ -77,27 +97,67 @@ object Esp2DMode : EspMode("2D") {
                         drawQuad(0.0f, 0.0f, rectWidth, rectHeight, fillColor = baseColor)
                     }
 
-                    if (outline) {
-                        if (border) {
-                            drawHorizontalLine(0.0f, rectWidth, 0.0f, 1.5f, black)
-                            drawVerticalLine(0.0f, 0.0f, rectHeight, 1.5f, black)
-                            drawHorizontalLine(0.0f, rectWidth, rectHeight, 1.5f, black)
-                            drawVerticalLine(rectWidth, 0.0f, rectHeight + 1.5f, 1.5f, black)
-
-                            translate(0.5f, 0.5f)
+                    if (Outline.enabled) {
+                        if (Border.enabled) {
+                            drawHorizontalLine(
+                                x1 = -outlineThickness / 2 - borderThickness,
+                                x2 = rectWidth + outlineThickness / 2 + borderThickness,
+                                y = -outlineThickness / 2 - borderThickness,
+                                outlineThickness + 2 * borderThickness, black
+                            )
+                            drawVerticalLine(
+                                x = -outlineThickness / 2 - borderThickness,
+                                y1 = -outlineThickness / 2 - borderThickness,
+                                y2 = rectHeight + outlineThickness / 2 + borderThickness,
+                                outlineThickness + 2 * borderThickness, black
+                            )
+                            drawHorizontalLine(
+                                x1 = -outlineThickness / 2 - borderThickness,
+                                x2 = rectWidth + outlineThickness / 2 + borderThickness,
+                                y = rectHeight - outlineThickness / 2 - borderThickness,
+                                outlineThickness + 2 * borderThickness, black
+                            )
+                            drawVerticalLine(
+                                x = rectWidth - outlineThickness / 2 - borderThickness,
+                                y1 = -outlineThickness / 2 - borderThickness,
+                                y2 = rectHeight + outlineThickness / 2 + borderThickness,
+                                outlineThickness + 2 * borderThickness, black
+                            )
                         }
 
-                        drawHorizontalLine(0.0f, rectWidth, 0.0f, 0.5f, outlineColor)
-                        drawHorizontalLine(0.0f, rectWidth, rectHeight, 0.5f, outlineColor)
-                        drawVerticalLine(0.0f, 0.0f, rectHeight, 0.5f, outlineColor)
-                        drawVerticalLine(rectWidth, 0.0f, rectHeight + 0.5f, 0.5f, outlineColor)
+                        drawHorizontalLine(
+                            x1 = -outlineThickness / 2,
+                            x2 = rectWidth + outlineThickness / 2,
+                            y = -outlineThickness / 2,
+                            outlineThickness, outlineColor
+                        )
+                        drawHorizontalLine(
+                            x1 = -outlineThickness / 2,
+                            x2 = rectWidth + outlineThickness / 2,
+                            y = rectHeight - outlineThickness / 2,
+                            outlineThickness, outlineColor
+                        )
+                        drawVerticalLine(
+                            x = -outlineThickness / 2,
+                            y1 = -outlineThickness / 2,
+                            y2 = rectHeight + outlineThickness / 2,
+                            outlineThickness, outlineColor
+                        )
+                        drawVerticalLine(
+                            x = rectWidth - outlineThickness / 2,
+                            y1 = -outlineThickness / 2,
+                            y2 = rectHeight + outlineThickness / 2,
+                            outlineThickness, outlineColor
+                        )
 
-                        if (border) {
-                            translate(-0.5f, -0.5f)
+                        if (Border.enabled) {
+                            translate(-2 * borderThickness, 0.0f)
                         }
                     }
 
-                    if (healthBar) {
+                    translate(-HealthBar.spacing / guiScaleFactor - outlineThickness, 0.0f)
+
+                    if (HealthBar.enabled) {
                         val actualHealth = entity.getActualHealth()
                         val maxHealth = entity.maxHealth.coerceAtLeast(1f) // prevent division by zero
                         val healthPercentage = (actualHealth / maxHealth).coerceIn(0f..1f)
@@ -106,12 +166,21 @@ object Esp2DMode : EspMode("2D") {
                             .interpolateTo(Color4b.GREEN, healthPercentage.toDouble())
                         val healthHeight = rectHeight * healthPercentage
 
-                        translate(-3.0f, 0.0f)
-
-                        if (border) {
-                            drawVerticalLine(0.0f, 0.0f, rectHeight + 1.5f, 1.5f, black)
+                        if (Border.enabled) {
+                            drawVerticalLine(
+                                x = -outlineThickness / 2 - borderThickness,
+                                y1 = -outlineThickness / 2 - borderThickness,
+                                y2 = rectHeight + outlineThickness / 2 + borderThickness,
+                                outlineThickness + 2 * borderThickness, black
+                            )
                         }
-                        drawVerticalLine(0.5f, rectHeight + 1f, rectHeight - healthHeight + 0.5f, 0.5f, healthColor)
+
+                        drawVerticalLine(
+                            x = -outlineThickness / 2,
+                            y1 = rectHeight - healthHeight - outlineThickness / 2,
+                            y2 = rectHeight + outlineThickness / 2,
+                            outlineThickness, healthColor
+                        )
                     }
                 }
             }

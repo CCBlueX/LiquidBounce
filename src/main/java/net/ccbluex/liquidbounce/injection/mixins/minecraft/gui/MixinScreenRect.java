@@ -24,7 +24,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.minecraft.client.gui.ScreenRect;
-import org.joml.Matrix3x2f;
+import org.joml.Matrix3x2fc;
 import org.joml.Vector2f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -55,9 +55,7 @@ public abstract class MixinScreenRect {
         at = @At("RETURN")
     )
     private void recycleVec_transform(
-        Matrix3x2f transformation, CallbackInfoReturnable<ScreenRect> cir,
-        @Local(ordinal = 0) Vector2f v0,
-        @Local(ordinal = 1) Vector2f v1
+        Matrix3x2fc matrix, CallbackInfoReturnable<ScreenRect> cir, @Local(ordinal = 0) Vector2f v0, @Local(ordinal = 1) Vector2f v1
     ) {
         Pools.Vec2f.recycle(v0);
         Pools.Vec2f.recycle(v1);
@@ -68,11 +66,8 @@ public abstract class MixinScreenRect {
         at = @At("RETURN")
     )
     private void recycleVec_transformEachVertex(
-        Matrix3x2f transformation, CallbackInfoReturnable<ScreenRect> cir,
-        @Local(ordinal = 0) Vector2f v0,
-        @Local(ordinal = 1) Vector2f v1,
-        @Local(ordinal = 2) Vector2f v2,
-        @Local(ordinal = 3) Vector2f v3
+        Matrix3x2fc matrix, CallbackInfoReturnable<ScreenRect> cir, @Local(ordinal = 0) Vector2f v0,
+        @Local(ordinal = 1) Vector2f v1, @Local(ordinal = 2) Vector2f v2, @Local(ordinal = 3) Vector2f v3
     ) {
         Pools.Vec2f.recycle(v0);
         Pools.Vec2f.recycle(v1);

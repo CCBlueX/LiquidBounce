@@ -21,7 +21,11 @@ package net.ccbluex.liquidbounce.script.bindings.api
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptSetting
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.Hand
-import net.minecraft.util.math.*
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.RotationAxis
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.Value
 import java.util.concurrent.ConcurrentHashMap

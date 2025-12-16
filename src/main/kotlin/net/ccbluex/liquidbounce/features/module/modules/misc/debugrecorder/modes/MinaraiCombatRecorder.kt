@@ -46,7 +46,12 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.entity.isBlockAction
+import net.ccbluex.liquidbounce.utils.entity.lastPos
+import net.ccbluex.liquidbounce.utils.entity.lastRotation
+import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.util.math.Box
@@ -116,8 +121,8 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
                 previousVector = previous.directionVector,
                 targetVector = targetRotation.directionVector,
                 velocityDelta = current.rotationDeltaTo(next).toVec2f(),
-                playerDiff = player.pos.subtract(player.lastPos),
-                targetDiff = target.pos.subtract(target.lastPos),
+                playerDiff = player.entityPos.subtract(player.lastPos),
+                targetDiff = target.entityPos.subtract(target.lastPos),
                 age = fight.ticks,
                 hurtTime = target.hurtTime,
                 distance = player.squaredBoxedDistanceTo(target).toFloat()

@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.event.events.KeyboardCharEvent;
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent;
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.input.CharInput;
+import net.minecraft.client.input.KeyInput;
 import net.minecraft.client.util.InputUtil;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -44,11 +46,15 @@ public class MixinKeyboard {
      * Hook key event
      */
     @Inject(method = "onKey", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", shift = At.Shift.BEFORE, ordinal = 0))
-    private void hookKeyboardKey(long window, int key, int scancode, int action, int modifiers, CallbackInfo callback) {
+    private void hookKeyboardKey(long window, int action, KeyInput input, CallbackInfo ci) {
         // does if (window == this.client.getWindow().getHandle())
-        var inputKey = InputUtil.fromKeyCode(key, scancode);
+        var inputKey = InputUtil.fromKeyCode(input);
 
-        EventManager.INSTANCE.callEvent(new KeyboardKeyEvent(inputKey, key, scancode, action, modifiers, this.client.currentScreen));
+        EventManager.INSTANCE.callEvent(new KeyboardKeyEvent(
+            inputKey, input.key(),
+            input.scancode(), action,
+            input.modifiers(), this.client.currentScreen
+        ));
         if (client.currentScreen == null) {
             EventManager.INSTANCE.callEvent(new KeyEvent(inputKey, action));
         }
@@ -58,9 +64,9 @@ public class MixinKeyboard {
      * Hook char event
      */
     @Inject(method = "onChar", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;currentScreen:Lnet/minecraft/client/gui/screen/Screen;", shift = At.Shift.BEFORE))
-    private void hookKeyboardChar(long window, int codePoint, int modifiers, CallbackInfo callback) {
+    private void hookKeyboardChar(long window, CharInput input, CallbackInfo ci) {
         // does if (window == this.client.getWindow().getHandle())
-        EventManager.INSTANCE.callEvent(new KeyboardCharEvent(codePoint, modifiers));
+        EventManager.INSTANCE.callEvent(new KeyboardCharEvent(input.codepoint(), input.modifiers()));
     }
 
 }

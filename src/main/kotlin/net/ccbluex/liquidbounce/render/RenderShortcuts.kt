@@ -28,17 +28,21 @@ import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.UV2f
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.SAMPLER_NAMES
 import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.render.*
+import net.minecraft.client.render.BuiltBuffer
+import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.math.*
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector3fc
@@ -46,6 +50,8 @@ import org.joml.Vector4f
 import org.lwjgl.opengl.GL11C
 import java.util.OptionalDouble
 import java.util.OptionalInt
+import java.util.function.IntFunction
+import java.util.function.Supplier
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -154,45 +160,41 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
 
     if (!isBatchMode) {
         buffer.endNullable()?.let {
-            pipeline.draw(it)
+            draw(pipeline, it)
         }
     }
 }
 
-private inline fun WorldRenderEnvironment.drawTexQuads(
-    texture: GpuTextureView,
-    drawer: VertexConsumer.(Matrix4f) -> Unit
-) {
-    val matrix = matrixStack.peek().positionMatrix
-
-    val buffer = getOrCreateBuffer(texture)
-
-    drawer(buffer, matrix)
-
-    if (!isBatchMode) {
-        buffer.endNullable()?.let {
-            RenderSystem.setShaderTexture(0, texture)
-            ClientRenderPipelines.TexQuads.draw(it)
-        }
-    }
-}
+fun RenderEnvironment.draw(pipeline: RenderPipeline, builtBuffer: BuiltBuffer) = drawMesh(
+    pipeline,
+    builtBuffer,
+    this.framebuffer,
+    this.shaderColor.toVector4f(),
+    { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
+    this.shaderTextures::get,
+)
 
 /**
- * copied from RenderLayer.MultiPhase.draw(BuiltBuffer)
- * @see RenderLayer.MultiPhase.draw
+ * copied from RenderLayer.draw(BuiltBuffer) (1.21.5-10: RenderLayer.MultiPhase.draw)
+ * @see RenderLayer.draw
  */
-context(env: RenderEnvironment)
 @Suppress("detekt:all")
-fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
+fun drawMesh(
+    pipeline: RenderPipeline,
+    builtBuffer: BuiltBuffer,
+    framebuffer: Framebuffer = mc.framebuffer,
+    shaderColor: Vector4f = Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
+    renderPassLabelGetter: Supplier<String>? = null,
+    shaderTextureProvider: IntFunction<GpuTextureView?> = IntFunction { null },
+) = builtBuffer.use { buffer ->
     val gpuBufferSlice = RenderSystem.getDynamicUniforms()
         .write(
             RenderSystem.getModelViewMatrix(),
-            Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
-            RenderSystem.getModelOffset(),
-            RenderSystem.getTextureMatrix(),
-            RenderSystem.getShaderLineWidth(),
+            shaderColor,
+            Vector3f(),
+            Matrix4f(),
         )
-    val gpuBuffer = vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
+    val gpuBuffer = pipeline.vertexFormat.uploadImmediateVertexBuffer(buffer.buffer)
     val gpuBuffer2: GpuBuffer
     val indexType: VertexFormat.IndexType
     if (buffer.sortedBuffer == null) {
@@ -200,32 +202,30 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         gpuBuffer2 = shapeIndexBuffer.getIndexBuffer(buffer.drawParameters.indexCount)
         indexType = shapeIndexBuffer.indexType
     } else {
-        gpuBuffer2 = vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
+        gpuBuffer2 = pipeline.vertexFormat.uploadImmediateIndexBuffer(buffer.sortedBuffer)
         indexType = buffer.drawParameters.indexType
     }
 
-//    val colorTexture = RenderSystem.outputColorTextureOverride
-//        ?: env.framebuffer.colorAttachmentView
-//    val depthTexture = RenderSystem.outputDepthTextureOverride
-//        ?: env.framebuffer.depthAttachmentView.takeIf { env.framebuffer.useDepthAttachment }
-//
-//    gpuDevice.createCommandEncoder().createRenderPass(
-//        { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
-//        colorTexture,
-//        OptionalInt.empty(),
-//        depthTexture,
-//        OptionalDouble.empty(),
-//    ).use { renderPass ->
-    env.framebuffer.createRenderPass().use { renderPass ->
-        // TODO: render pass extra actions
-        renderPass.setPipeline(this)
+    val colorTexture = RenderSystem.outputColorTextureOverride
+        ?: framebuffer.colorAttachmentView
+    val depthTexture = RenderSystem.outputDepthTextureOverride
+        ?: framebuffer.depthAttachmentView.takeIf { framebuffer.useDepthAttachment }
+
+    gpuDevice.createCommandEncoder().createRenderPass(
+        renderPassLabelGetter,
+        colorTexture,
+        OptionalInt.empty(),
+        depthTexture,
+        OptionalDouble.empty(),
+    ).use { renderPass ->
+        renderPass.setPipeline(pipeline)
         val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
-        if (scissorState.method_72091()) {
+        if (scissorState.isEnabled) {
             renderPass.enableScissor(
-                scissorState.method_72092(),
-                scissorState.method_72093(),
-                scissorState.method_72094(),
-                scissorState.method_72095()
+                scissorState.x,
+                scissorState.y,
+                scissorState.width,
+                scissorState.height
             )
         }
 
@@ -233,8 +233,8 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
         renderPass.setUniform("DynamicTransforms", gpuBufferSlice)
         renderPass.setVertexBuffer(0, gpuBuffer)
 
-        for (i in 0..11) {
-            val gpuTexture = RenderSystem.getShaderTexture(i)
+        for (i in 0 until RenderEnvironment.TEXTURE_COUNT) {
+            val gpuTexture = shaderTextureProvider.apply(i)
             if (gpuTexture != null) {
                 renderPass.bindSampler(SAMPLER_NAMES[i], gpuTexture)
             }
@@ -248,7 +248,7 @@ fun RenderPipeline.draw(builtBuffer: BuiltBuffer) = builtBuffer.use { buffer ->
 /**
  * Draws a line with endpoint [p1] and [p2] and color [argb].
  */
-fun WorldRenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
+fun WorldRenderEnvironment.drawLine(p1: Vec3f, p2: Vec3f, argb: Int) =
     drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
         vertex(matrix, p1.x, p1.y, p1.z).color(argb)
         vertex(matrix, p2.x, p2.y, p2.z).color(argb)
@@ -259,7 +259,7 @@ fun WorldRenderEnvironment.drawLine(p1: Vec3, p2: Vec3, argb: Int) =
  *
  * @param lines The vectors representing the lines.
  */
-fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3) {
+fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3f) {
     drawLines(
         lines,
         pipeline = ClientRenderPipelines.Lines,
@@ -272,7 +272,7 @@ fun WorldRenderEnvironment.drawLines(argb: Int, vararg lines: Vec3) {
  *
  * @param positions The vectors representing the line strip.
  */
-fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3) {
+fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3f) {
     drawLines(
         positions,
         pipeline = ClientRenderPipelines.LineStrip,
@@ -287,7 +287,7 @@ fun WorldRenderEnvironment.drawLineStrip(argb: Int, vararg positions: Vec3) {
  * @param pipeline The render pipeline for the lines.
  */
 private fun WorldRenderEnvironment.drawLines(
-    lines: Array<out Vec3>,
+    lines: Array<out Vec3f>,
     pipeline: RenderPipeline,
     argb: Int,
 ) {
@@ -324,31 +324,7 @@ fun WorldRenderEnvironment.drawSquareTexture(
         .color(argb)
 }
 
-fun WorldRenderEnvironment.drawTextureQuad(
-    textureView: GpuTextureView,
-    pos1: Vector3fc,
-    uv1: UV2f = UV2f(0f, 0f),
-    pos2: Vector3fc,
-    uv2: UV2f = UV2f(1f, 1f),
-    argb: Int,
-) {
-    drawTexQuads(textureView) { matrix ->
-        vertex(matrix, pos1.x(), pos2.y(), pos1.z())
-            .texture(uv1.u, uv2.v)
-            .color(argb)
-        vertex(matrix, pos2.x(), pos2.y(), pos2.z())
-            .texture(uv2.u, uv2.v)
-            .color(argb)
-        vertex(matrix, pos2.x(), pos1.y(), pos2.z())
-            .texture(uv2.u, uv1.v)
-            .color(argb)
-        vertex(matrix, pos1.x(), pos1.y(), pos1.z())
-            .texture(uv1.u, uv1.v)
-            .color(argb)
-    }
-}
-
-fun WorldRenderEnvironment.drawTriangle(p1: Vec3, p2: Vec3, p3: Vec3, argb: Int) {
+fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: Int) {
     drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
         vertex(matrix, p1.x, p1.y, p1.z).color(argb)
         vertex(matrix, p2.x, p2.y, p2.z).color(argb)
@@ -474,7 +450,7 @@ fun WorldRenderEnvironment.drawPlane(
  * @param vertices The four vectors to draw the quad
  * @param colors The colors for the vertices
  */
-private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3>, colors: Array<Color4b>) {
+private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3f>, colors: Array<Color4b>) {
     require(vertices.size == colors.size) { "there must be a color for every vertex" }
     require(vertices.size % 4 == 0) { "vertices must be dividable by 4" }
     drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
@@ -560,37 +536,37 @@ fun WorldRenderEnvironment.drawGradientSides(
 
     drawGradientQuad(
         arrayOf(
-            Vec3(box.minX, 0.0, box.minZ),
-            Vec3(box.minX, height, box.minZ),
-            Vec3(box.maxX, height, box.minZ),
-            Vec3(box.maxX, 0.0, box.minZ),
+            Vec3f(box.minX, 0.0, box.minZ),
+            Vec3f(box.minX, height, box.minZ),
+            Vec3f(box.maxX, height, box.minZ),
+            Vec3f(box.maxX, 0.0, box.minZ),
         ),
         vertexColors
     )
     drawGradientQuad(
         arrayOf(
-            Vec3(box.maxX, 0.0, box.minZ),
-            Vec3(box.maxX, height, box.minZ),
-            Vec3(box.maxX, height, box.maxZ),
-            Vec3(box.maxX, 0.0, box.maxZ),
+            Vec3f(box.maxX, 0.0, box.minZ),
+            Vec3f(box.maxX, height, box.minZ),
+            Vec3f(box.maxX, height, box.maxZ),
+            Vec3f(box.maxX, 0.0, box.maxZ),
         ),
         vertexColors
     )
     drawGradientQuad(
         arrayOf(
-            Vec3(box.maxX, 0.0, box.maxZ),
-            Vec3(box.maxX, height, box.maxZ),
-            Vec3(box.minX, height, box.maxZ),
-            Vec3(box.minX, 0.0, box.maxZ),
+            Vec3f(box.maxX, 0.0, box.maxZ),
+            Vec3f(box.maxX, height, box.maxZ),
+            Vec3f(box.minX, height, box.maxZ),
+            Vec3f(box.minX, 0.0, box.maxZ),
         ),
         vertexColors
     )
     drawGradientQuad(
         arrayOf(
-            Vec3(box.minX, 0.0, box.maxZ),
-            Vec3(box.minX, height, box.maxZ),
-            Vec3(box.minX, height, box.minZ),
-            Vec3(box.minX, 0.0, box.minZ),
+            Vec3f(box.minX, 0.0, box.maxZ),
+            Vec3f(box.minX, height, box.maxZ),
+            Vec3f(box.minX, height, box.minZ),
+            Vec3f(box.minX, 0.0, box.minZ),
         ),
         vertexColors
     )

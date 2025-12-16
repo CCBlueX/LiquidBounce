@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast.shouldRecast
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.Items

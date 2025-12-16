@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow
 
+import it.unimi.dsi.fastutil.floats.FloatFloatImmutablePair
 import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -59,18 +60,26 @@ object ModuleNoSlow : ClientModule("NoSlow", Category.MOVEMENT) {
     @Suppress("unused")
     private val multiplierHandler = handler<PlayerUseMultiplier> { event ->
         val action = player.activeItem.useAction ?: return@handler
-        val mul = multiplier(action)
+        val mul = multiplier(action, event.forward, event.sideways)
 
         event.forward = mul.firstFloat()
         event.sideways = mul.secondFloat()
     }
 
-    private fun multiplier(action: UseAction) = when (action) {
-        UseAction.NONE -> NoSlowUseActionHandler.DEFAULT_USE_MUL
-        UseAction.EAT, UseAction.DRINK -> NoSlowConsume.getMultiplier()
-        UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN, UseAction.BRUSH -> NoSlowBlock.getMultiplier()
-        UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR -> NoSlowBow.getMultiplier()
-        UseAction.BUNDLE -> NoSlowBundle.getMultiplier()
+    private fun multiplier(action: UseAction, forward: Float, sideways: Float) = when (action) {
+        UseAction.NONE -> FloatFloatImmutablePair(forward, sideways)
+        UseAction.EAT, UseAction.DRINK -> NoSlowConsume.getMultiplier(forward, sideways)
+        UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN, UseAction.BRUSH -> NoSlowBlock.getMultiplier(
+            forward,
+            sideways
+        )
+
+        UseAction.BOW, UseAction.TRIDENT, UseAction.CROSSBOW, UseAction.SPEAR -> NoSlowBow.getMultiplier(
+            forward,
+            sideways
+        )
+
+        UseAction.BUNDLE -> NoSlowBundle.getMultiplier(forward, sideways)
     }
 
 }

@@ -130,7 +130,7 @@ object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
     fun isSafeForRescue(pos: Vec3d): Boolean {
         val boundingBox = player.boundingBox
             // Change position to the snapshot position
-            .offset(pos.subtract(player.pos))
+            .offset(pos.subtract(player.entityPos))
             .withMinY(voidThreshold.toDouble())
 
         // If no collision is detected within a threshold beyond which falling

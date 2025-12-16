@@ -20,17 +20,61 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArmorItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArrowItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BlockItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BowItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.CrossbowItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.FoodItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MaceItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MiningToolItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PotionItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PrimitiveItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.RodItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ShieldItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SpearItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SwordItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ThrowableItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.VirtualItemSlot
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.item.ArmorComparator
+import net.ccbluex.liquidbounce.utils.item.ArmorKitParameters
+import net.ccbluex.liquidbounce.utils.item.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.foodComponent
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
+import net.ccbluex.liquidbounce.utils.item.isAxe
+import net.ccbluex.liquidbounce.utils.item.isFood
+import net.ccbluex.liquidbounce.utils.item.isHoe
+import net.ccbluex.liquidbounce.utils.item.isMiningTool
+import net.ccbluex.liquidbounce.utils.item.isPickaxe
+import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
+import net.ccbluex.liquidbounce.utils.item.isShovel
+import net.ccbluex.liquidbounce.utils.item.isSpear
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
-import net.minecraft.item.*
+import net.minecraft.item.ArrowItem
+import net.minecraft.item.BlockItem
+import net.minecraft.item.BowItem
+import net.minecraft.item.BucketItem
+import net.minecraft.item.CrossbowItem
+import net.minecraft.item.EggItem
+import net.minecraft.item.EnderPearlItem
+import net.minecraft.item.FishingRodItem
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.item.MaceItem
+import net.minecraft.item.PotionItem
+import net.minecraft.item.ShieldItem
+import net.minecraft.item.SnowballItem
+import net.minecraft.item.WindChargeItem
 import java.util.function.Predicate
 
 @JvmRecord
@@ -59,6 +103,7 @@ enum class ItemType(
     ARMOR(true, allocationPriority = Priority.IMPORTANT_FOR_PLAYER_LIFE),
     SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
     WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
+    SPEAR(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
     MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
     BOW(true),
     CROSSBOW(true),
@@ -93,6 +138,7 @@ enum class ItemSortChoice(
 ) : NamedChoice {
     SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
     WEAPON("Weapon", ItemCategory(ItemType.WEAPON, 0)),
+    SPEAR("Spear", ItemCategory(ItemType.SPEAR, 0)),
     MACE("Mace", ItemCategory(ItemType.MACE, 0), {
         it.item is MaceItem
     }),
@@ -238,6 +284,8 @@ class ItemCategorization(
                     itemStack.isPlayerArmor -> add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
 
                     itemStack.isSword -> add(SwordItemFacet(slot))
+
+                    itemStack.isSpear -> add(SpearItemFacet(slot))
 
                     itemStack.item is MaceItem -> add(MaceItemFacet(slot))
 

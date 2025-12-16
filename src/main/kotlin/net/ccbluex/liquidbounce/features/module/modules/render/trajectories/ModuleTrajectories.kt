@@ -28,10 +28,10 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.toFixed
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
@@ -77,10 +77,10 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                 renderer: TrajectoryInfoRenderer,
                 result: TrajectoryInfoRenderer.SimulationResult,
             ): Vec3d = when (this) {
-                OWNER -> renderer.owner.pos
+                OWNER -> renderer.owner.entityPos
                 ENTITY -> result.positions.firstOrNull()
                 LANDING -> result.positions.lastOrNull()
-            } ?: renderer.owner.pos
+            } ?: renderer.owner.entityPos
         }
 
         private val ownerName by boolean("OwnerName", true)
@@ -105,7 +105,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
 
         val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
-            fun Vec3d.calcScreenPosWithOffset(): Vec3? {
+            fun Vec3d.calcScreenPosWithOffset(): Vec3f? {
                 return WorldToScreen.calculateScreenPos(add(renderOffset))
             }
 
@@ -122,7 +122,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                             else -> {
                                 val centerX = mc.window.scaledWidth * 0.5F
                                 val centerY = mc.window.scaledHeight * 0.5F
-                                Vec3(centerX + 50F, centerY + index * (mc.textRenderer.fontHeight + 1), 0F)
+                                Vec3f(centerX + 50F, centerY + index * (mc.textRenderer.fontHeight + 1), 0F)
                             }
                         }
 
@@ -138,7 +138,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
                     text.append(" ").append(renderer.owner.name)
                 }
                 if (distance && result.positions.isNotEmpty()) {
-                    text.append(" ${player.pos.distanceTo(result.positions.last()).toFixed(1)}m")
+                    text.append(" ${player.entityPos.distanceTo(result.positions.last()).toFixed(1)}m")
                 }
 
                 var y = 0
@@ -180,7 +180,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
             val trajectoryRenderer = TrajectoryInfoRenderer(
                 owner = (it as? Ownable)?.owner ?: it,
                 velocity = it.velocity,
-                pos = it.pos,
+                pos = it.entityPos,
                 trajectoryInfo = trajectoryInfo,
                 type = TrajectoryInfoRenderer.Type.REAL,
                 renderOffset = Vec3d.ZERO

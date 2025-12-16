@@ -13,7 +13,11 @@ import net.ccbluex.liquidbounce.lang.LanguageManager.knownLanguages
 import net.ccbluex.liquidbounce.lang.LanguageManager.languageMap
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.text.*
+import net.minecraft.text.MutableText
+import net.minecraft.text.OrderedText
+import net.minecraft.text.StringVisitable
+import net.minecraft.text.Style
+import net.minecraft.text.TextVisitFactory
 import net.minecraft.util.Language
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap

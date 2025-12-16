@@ -28,7 +28,13 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
@@ -167,7 +173,8 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             isOnRightSide = floor(player.x + cos(movingYaw.toRadians()) * 0.5) != floor(player.x) ||
                 floor(player.z + sin(movingYaw.toRadians()) * 0.5) != floor(player.z)
 
-            val posInDirection = player.pos.offset(Direction.fromHorizontalDegrees(movingYaw.toDouble()), 0.6)
+            val posInDirection = player.entityPos
+                .offset(Direction.fromHorizontalDegrees(movingYaw.toDouble()), 0.6)
                 .toBlockPos()
 
             val isLeaningOffBlock = player.blockPos.down().getState()?.isAir == true

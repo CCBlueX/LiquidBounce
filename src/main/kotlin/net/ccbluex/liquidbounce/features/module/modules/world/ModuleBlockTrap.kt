@@ -179,8 +179,8 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
         override val choiceName: String,
         val comparator: Comparator<BlockPos>
     ) : NamedChoice {
-        CLOSEST("Closest", compareBy { it.getSquaredDistance(player.pos) }),
-        FURTHEST("Furthest", compareByDescending { it.getSquaredDistance(player.pos) }),
+        CLOSEST("Closest", compareBy { it.getSquaredDistance(player.entityPos) }),
+        FURTHEST("Furthest", compareByDescending { it.getSquaredDistance(player.entityPos) }),
         HIGHEST("Highest", compareByDescending { it.y }),
         LOWEST("Lowest", compareBy { it.y })
     }

@@ -62,7 +62,7 @@ fun inputByName(name: String): InputUtil.Key {
  * @return `true` if the key is pressed; otherwise, `false`.
  */
 val InputUtil.Key.isPressed get() =
-    InputUtil.isKeyPressed(mc.window.handle, this.code)
+    InputUtil.isKeyPressed(mc.window, this.code)
 
 /**
  * Reduces a full key name (e.g., "key.keyboard.a") to its minimal form (e.g., "a").
@@ -107,7 +107,7 @@ fun ActionResult.shouldSwingHand() = this is ActionResult.Success && this.swingS
  */
 fun InputUtil.Key.toModifierOrNull(): InputBind.Modifier? {
     return if (this.category == InputUtil.Type.KEYSYM) {
-        InputBind.Modifier.KEY_CODE_LOOKUP[this.code]
+        InputBind.Modifier.of(this.code)
     } else {
         null
     }

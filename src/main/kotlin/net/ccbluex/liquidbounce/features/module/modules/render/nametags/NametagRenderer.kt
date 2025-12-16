@@ -19,7 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.NametagEnchantmentRenderer.drawEntityEnchantments
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -91,7 +92,7 @@ internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float)
 
     // Draw enchantments directly for the entity (regardless of whether items are shown)
     if (NametagEnchantmentRenderer.running && nametag.entity is LivingEntity) {
-        val entityPos = nametag.entity.pos
+        val entityPos = nametag.entity.entityPos
         val worldX = entityPos.x.toFloat()
         val worldY = (entityPos.y + nametag.entity.height + 0.5f).toFloat()
 

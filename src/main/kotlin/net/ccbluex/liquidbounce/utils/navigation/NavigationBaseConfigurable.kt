@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.navigation
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.MinecraftAutoJumpEvent
+import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -82,7 +82,7 @@ abstract class NavigationBaseConfigurable<T>(
      * @return Calculated directional input
      */
     private fun calculateDirectionalInput(currentInput: DirectionalInput, goal: Vec3d): DirectionalInput {
-        val degrees = getDegreesRelativeToView(goal.subtract(player.pos), player.yaw)
+        val degrees = getDegreesRelativeToView(goal.subtract(player.entityPos), player.yaw)
         return getDirectionalInputForDegrees(currentInput, degrees, deadAngle = 20.0F)
     }
 
@@ -127,9 +127,9 @@ abstract class NavigationBaseConfigurable<T>(
     }
 
     @Suppress("unused")
-    private val autoJumpHandler = handler<MinecraftAutoJumpEvent> { event ->
+    private val autoJumpHandler = handler<AllowAutoJumpEvent> { event ->
         if (autoJump) {
-            event.autoJump = true
+            event.isAllowed = true
         }
     }
 

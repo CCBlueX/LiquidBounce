@@ -21,7 +21,13 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import com.google.gson.stream.JsonWriter
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.ALL_EVENT_CLASSES
+import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.EventHook
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.eventName
+import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.util.Util
@@ -71,10 +77,11 @@ internal object SocketEventListener : EventListener {
     }
 
     private fun writeToSockets(event: Event) = Util.getMainWorkerExecutor().execute {
+        val eventName = event.javaClass.eventName
         val json = writeBuffer.get().runCatching {
             JsonWriter(this).use { writer ->
                 writer.beginObject()
-                writer.name("name").value(event.javaClass.eventName)
+                writer.name("name").value(eventName)
                 writer.name("event")
                 (event as WebSocketEvent).serializer.toJson(event, event.javaClass, writer)
                 writer.endObject()
@@ -84,8 +91,8 @@ internal object SocketEventListener : EventListener {
             logger.error("Failed to serialize event $event", it)
         }.getOrNull() ?: return@execute
 
-        httpServer.webSocketController.broadcast(json) { _, t ->
-            logger.error("WebSocket event broadcast failed, JSON: $json", t)
+        httpServer.webSocketController!!.broadcast(json) { _, t ->
+            logger.error("WebSocket event broadcast failed, event: $eventName", t)
         }
     }
 

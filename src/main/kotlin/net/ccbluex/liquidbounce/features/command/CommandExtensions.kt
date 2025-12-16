@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command
 
-import java.util.SortedMap
+import java.util.*
 
 internal fun SortedMap<String, Command>.putCommand(command: Command) {
     fun putCommand(name: String, command: Command) {

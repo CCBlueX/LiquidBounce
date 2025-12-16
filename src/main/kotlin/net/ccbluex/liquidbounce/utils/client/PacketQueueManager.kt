@@ -22,11 +22,18 @@ import com.google.common.collect.Queues
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.GameRenderTaskQueueEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
@@ -168,7 +175,7 @@ object PacketQueueManager : EventListener {
             // Use LiquidBounce accent color
             drawLineStrip(
                 argb = Color4b.LIQUID_BOUNCE.toARGB(),
-                positions = positions.mapToArray { vec3d -> Vec3(relativeToCamera(vec3d)) },
+                positions = positions.mapToArray { vec3d -> Vec3f(relativeToCamera(vec3d)) },
             )
         }
 

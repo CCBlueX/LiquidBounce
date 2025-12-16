@@ -31,7 +31,11 @@ import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.Mod
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.CachedPlayerSimulation
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation
+import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -112,7 +116,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         maxTicks: Int = 80,
         hitboxExpansion: Double = 0.7,
     ): HitInfo? {
-        val simulatedArrows = arrows.map { SimulatedArrow(world, it.pos, it.velocity, false) }
+        val simulatedArrows = arrows.map { SimulatedArrow(world, it.entityPos, it.velocity, false) }
 
         for (i in 0 until maxTicks) {
             simulatedPlayer.tick()

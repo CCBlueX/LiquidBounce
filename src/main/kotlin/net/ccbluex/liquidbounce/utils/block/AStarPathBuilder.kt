@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3i
-import java.util.Comparator
 
 private class Node(val position: Vec3i, var parent: Node? = null) {
     var g = 0

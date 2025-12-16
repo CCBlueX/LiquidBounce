@@ -24,10 +24,9 @@ import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.minecraft.text.StringVisitable.StyledVisitor
 import net.minecraft.text.Style
 import net.minecraft.text.Text
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.util.*
-import kotlin.collections.ArrayList
+import java.util.Optional
 
 class LegacyTextSanitizerTest {
 

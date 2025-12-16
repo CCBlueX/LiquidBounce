@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
+import static net.minecraft.util.math.MathHelper.RADIANS_PER_DEGREE;
+
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -42,8 +44,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import static net.minecraft.util.math.MathHelper.RADIANS_PER_DEGREE;
 
 @Mixin(KeyboardInput.class)
 public abstract class MixinKeyboardInput extends MixinInput {

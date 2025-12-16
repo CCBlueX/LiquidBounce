@@ -22,8 +22,12 @@ import net.ccbluex.liquidbounce.LiquidBounce.logger
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
-import net.ccbluex.liquidbounce.utils.math.*
+import net.ccbluex.liquidbounce.utils.math.average
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.util.math.Vec3d
@@ -48,7 +52,7 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
 
         val lineDirAngle = atan2(optimalLine.direction.z, optimalLine.direction.x).toFloat()
 
-        val unrotatedOffset = (player.pos - fallOffPoint).rotateY(lineDirAngle)
+        val unrotatedOffset = (player.entityPos - fallOffPoint).rotateY(lineDirAngle)
 
         val x = getAvgPlacementPos()
 
@@ -91,7 +95,7 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
         // If the next placement point is far in the future. Don't predict for now
         val fallOffPoint = getFallOffPositionOnLine(optimalLine) ?: return null
 
-        val fallOffPointToPlayer = fallOffPoint - player.pos
+        val fallOffPointToPlayer = fallOffPoint - player.entityPos
 
         val offset = when (val last = getAvgPlacementPos()) {
             null -> {
@@ -114,7 +118,7 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
     fun getFallOffPositionOnLine(optimalLine: Line): Vec3d? {
         // TODO Check if the player is moving away from the line and implement another prediction method for that case
 
-        val nearestPosToPlayer = optimalLine.getNearestPointTo(player.pos)
+        val nearestPosToPlayer = optimalLine.getNearestPointTo(player.entityPos)
 
         val fromLine = nearestPosToPlayer.add(0.0, -0.1, 0.0)
         val toLine = fromLine + optimalLine.direction.normalize().multiply(3.0)

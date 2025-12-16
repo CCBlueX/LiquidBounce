@@ -22,11 +22,17 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerStepEvent
+import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -39,7 +45,7 @@ import net.ccbluex.liquidbounce.utils.entity.canStep
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.stat.Stats
-import java.util.EnumSet
+import java.util.*
 
 /**
  * Step module
@@ -62,8 +68,8 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
             get() = modes
 
         @Suppress("unused")
-        private val autoJumpHandler = handler<MinecraftAutoJumpEvent> { event ->
-            event.autoJump = true
+        private val autoJumpHandler = handler<AllowAutoJumpEvent> { event ->
+            event.isAllowed = true
         }
 
     }

@@ -21,8 +21,11 @@ package net.ccbluex.liquidbounce.utils.render.placement
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.EMPTY_BOX
+import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.minecraft.util.math.BlockPos

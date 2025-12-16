@@ -16,14 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.render.engine
 
-object RenderingFlags {
-    /**
-     * Because newer versions or mods like sodium might rely on multiple threads to render entities
-     * it might be unstable to use a non-sync
-     * flag for this
-     */
-    @JvmStatic
-    val isCurrentlyRenderingEntityOutline: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
+package net.ccbluex.liquidbounce.injection.mixins.authlib;
+
+import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
+
+@Mixin(YggdrasilMinecraftSessionService.class)
+public interface MixinYggdrasilMinecraftSessionServiceAccessor {
+    @Accessor(remap = false)
+    String getBaseUrl();
 }

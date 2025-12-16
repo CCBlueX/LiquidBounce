@@ -25,13 +25,13 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -222,9 +222,9 @@ internal object FlyExplosion : Choice("Explosion") {
         // Check if this is a regular velocity update
         if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
             // Modify packet according to the specified values
-            packet.velocityX = 0
-            packet.velocityY = (packet.velocityY * vertical).toInt()
-            packet.velocityZ = 0
+            packet.velocity.x = 0.0
+            packet.velocity.y = packet.velocity.y * vertical
+            packet.velocity.z = 0.0
 
             waitTicks(1)
             strafeSince = startStrafe

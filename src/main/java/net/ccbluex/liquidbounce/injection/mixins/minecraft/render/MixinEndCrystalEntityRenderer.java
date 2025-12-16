@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(EndCrystalEntityRenderer.class)
 public abstract class MixinEndCrystalEntityRenderer {
 
-    @WrapOperation(method = "render(Lnet/minecraft/client/render/entity/state/EndCrystalEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;scale(FFF)V"))
+    @WrapOperation(method = "render(Lnet/minecraft/client/render/entity/state/EndCrystalEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/render/state/CameraRenderState;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;scale(FFF)V"))
     public void injectScale(MatrixStack instance, float x, float y, float z, Operation<Void> original) {
         var crystalView = ModuleCrystalView.INSTANCE;
         if (crystalView.getRunning()) {

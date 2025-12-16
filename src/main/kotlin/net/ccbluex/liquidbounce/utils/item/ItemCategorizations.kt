@@ -48,6 +48,9 @@ val ItemStack.isBundle
 val ItemStack.isSword
     get() = this.isIn(ItemTags.SWORDS)
 
+val ItemStack.isSpear
+    get() = this.isIn(ItemTags.SPEARS)
+
 val ItemStack.isPickaxe
     get() = this.isIn(ItemTags.PICKAXES)
 

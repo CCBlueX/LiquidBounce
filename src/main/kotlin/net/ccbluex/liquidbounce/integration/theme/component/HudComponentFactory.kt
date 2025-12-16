@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.integration.theme.component
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
-import net.ccbluex.liquidbounce.integration.theme.component.components.WebComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.WebHudComponent
 import net.ccbluex.liquidbounce.utils.render.Alignment
 
-abstract class ComponentFactory {
+abstract class HudComponentFactory {
 
     abstract val name: String
     abstract val enabled: Boolean
@@ -39,16 +39,16 @@ abstract class ComponentFactory {
      * @param tweaks Optional tweaks array
      * @param values Optional values array
      */
-    class JsonComponentFactory(
+    class JsonHudComponentFactory(
         override val name: String,
         override val enabled: Boolean,
         override val singleton: Boolean,
         private val alignment: JsonObject,
-        private val tweaks: Array<ComponentTweak>?,
+        private val tweaks: Array<HudComponentTweak>?,
         private val values: Array<JsonObject>?
-    ) : ComponentFactory() {
+    ) : HudComponentFactory() {
 
-        override fun createComponent(): WebComponent = WebComponent(
+        override fun createComponent(): WebHudComponent = WebHudComponent(
             name,
             enabled,
             accessibleInteropGson.fromJson(alignment, Alignment::class.java),
@@ -65,12 +65,12 @@ abstract class ComponentFactory {
      * @param enabled Whether the component is enabled
      * @param function Function producing the component
      */
-    class NativeComponentFactory(
+    class NativeHudComponentFactory(
         override val name: String,
         override val enabled: Boolean = false,
         override val singleton: Boolean = false,
-        private val function: () -> Component
-    ) : ComponentFactory() {
+        private val function: () -> HudComponent
+    ) : HudComponentFactory() {
         override fun createComponent() = function()
     }
 
@@ -79,5 +79,5 @@ abstract class ComponentFactory {
      *
      * @return Component instance
      */
-    abstract fun createComponent(): Component
+    abstract fun createComponent(): HudComponent
 }

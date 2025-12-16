@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.client.util.InputUtil
+import net.minecraft.client.util.Window
 import net.minecraft.screen.ScreenHandler
 import net.minecraft.screen.slot.Slot
 import net.minecraft.screen.slot.SlotActionType
@@ -55,11 +56,11 @@ object ModuleItemScroller : ClientModule("ItemScroller", Category.MISC) {
         chronometer.reset()
     }
 
-    fun canPerformScroll(handle: Long): Boolean {
-        return (InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_LEFT_SHIFT)
-                        || InputUtil.isKeyPressed(handle, GLFW.GLFW_KEY_RIGHT_SHIFT))
+    fun canPerformScroll(window: Window): Boolean {
+        return (InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_LEFT_SHIFT)
+                        || InputUtil.isKeyPressed(window, GLFW.GLFW_KEY_RIGHT_SHIFT))
                 && this.running
-                && GLFW.glfwGetMouseButton(handle, GLFW.GLFW_MOUSE_BUTTON_1) == GLFW.GLFW_PRESS
+                && GLFW.glfwGetMouseButton(window.handle, GLFW.GLFW_MOUSE_BUTTON_1) == GLFW.GLFW_PRESS
                 && chronometer.hasAtLeastElapsed(delay.random() * 50L);
     }
 }

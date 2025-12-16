@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -155,7 +155,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
                     } else {
                         // We are already in the vehicle on the server-side, but our client does not know that, so
                         // we force the client to enter the vehicle again
-                        player.startRiding(vehicle, true)
+                        player.startRiding(vehicle, true, true)
                     }
                 } else {
                     chat(warning(message("vehicleGone")))

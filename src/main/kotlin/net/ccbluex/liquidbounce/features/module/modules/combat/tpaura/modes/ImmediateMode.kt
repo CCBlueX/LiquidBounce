@@ -20,11 +20,11 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes
 
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.desyncPlayerPosition
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.stuckChronometer
@@ -51,8 +51,10 @@ object ImmediateMode : TpAuraChoice("Immediate") {
             return@tickHandler
         }
 
-        val playerPosition = player.pos
-        val enemyPosition = targetSelector.targets().minByOrNull { it.squaredBoxedDistanceTo(playerPosition) }?.pos
+        val playerPosition = player.entityPos
+        val enemyPosition = targetSelector.targets()
+            .minByOrNull { it.squaredBoxedDistanceTo(playerPosition) }
+            ?.entityPos
             ?: return@tickHandler
 
         travel(enemyPosition)
@@ -67,7 +69,7 @@ object ImmediateMode : TpAuraChoice("Immediate") {
         renderEnvironmentForWorld(matrixStack) {
             desyncPlayerPosition?.let { playerPosition ->
                 drawLine(
-                    relativeToCamera(player.pos.add(0.0, 1.0, 0.0)).toVec3(),
+                    relativeToCamera(player.entityPos.add(0.0, 1.0, 0.0)).toVec3(),
                     relativeToCamera(playerPosition.add(0.0, 1.0, 0.0)).toVec3(),
                     Color4b.WHITE.toARGB(),
                 )

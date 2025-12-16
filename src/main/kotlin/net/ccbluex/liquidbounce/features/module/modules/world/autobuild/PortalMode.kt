@@ -20,11 +20,11 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.block.Blocks
 import net.minecraft.item.BlockItem
@@ -76,7 +76,7 @@ object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
     @Suppress("NestedBlockDepth", "CognitiveComplexMethod")
     private fun getPortal(): NetherPortal? {
         var result: NetherPortal? = null
-        val pos = BlockPos.ofFloored(player.pos)
+        val pos = BlockPos.ofFloored(player.entityPos)
         for (direction in Direction.HORIZONTAL) {
             for (yOffset in -1..0) {
                 for (dirOffset in 0 downTo  -1) {

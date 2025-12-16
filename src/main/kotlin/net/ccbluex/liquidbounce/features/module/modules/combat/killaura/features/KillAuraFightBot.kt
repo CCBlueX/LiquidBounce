@@ -27,7 +27,11 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.doesCollideAt
+import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
+import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
 import net.minecraft.entity.Entity
@@ -103,10 +107,10 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
      * Creates combat context
      */
     override fun createNavigationContext(): CombatContext {
-        val playerPosition = player.pos
+        val playerPosition = player.entityPos
 
         val combatTarget = targetTracker.target?.let { entity ->
-            val distance = playerPosition.distanceTo(entity.pos)
+            val distance = playerPosition.distanceTo(entity.entityPos)
             val range = min(ModuleKillAura.range, distance.toFloat())
             val outOfDistance = distance > opponentRange
 
@@ -133,7 +137,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
         if (LeaderFollower.running && LeaderFollower.username.isNotEmpty()) {
             val leader = world.players.find { it.gameProfile.name == LeaderFollower.username }
             if (leader != null) {
-                return calculateLeaderGoalPosition(leader.pos, context.playerPosition)
+                return calculateLeaderGoalPosition(leader.entityPos, context.playerPosition)
             }
         }
 
@@ -157,7 +161,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
         val contextAllowsJump = context.combatTarget != null && context.combatTarget.outOfDistance
             && !context.combatTarget.outOfDanger
         val goal = calculateGoalPosition(context)
-        val leaderAllowsJump = LeaderFollower.running && player.pos.distanceTo(goal) > LeaderFollower.radius
+        val leaderAllowsJump = LeaderFollower.running && player.entityPos.distanceTo(goal) > LeaderFollower.radius
 
         if (contextAllowsJump || leaderAllowsJump) {
             event.jump = true
@@ -201,14 +205,14 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
 
     private fun calculateAttackPosition(context: CombatContext, combatTarget: CombatTarget): Vec3d {
         val target = combatTarget.entity
-        val targetLookPosition = target.pos.add(
+        val targetLookPosition = target.entityPos.add(
             combatTarget.targetRotation.directionVector * combatTarget.range.toDouble()
         )
 
         return (-180..180 step 10)
             .mapNotNull { yaw ->
                 val rotation = Rotation(yaw = yaw.toFloat(), pitch = 0.0F)
-                val position = target.pos.add(rotation.directionVector * combatTarget.range.toDouble())
+                val position = target.entityPos.add(rotation.directionVector * combatTarget.range.toDouble())
 
                 // Check if this point collides with a block
                 if (player.doesCollideAt(position)) {

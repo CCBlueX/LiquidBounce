@@ -23,9 +23,6 @@ import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.repeat
-import net.minecraft.client.gui.widget.TextFieldWidget
-import net.minecraft.text.OrderedText
-import java.util.function.BiFunction
 
 /**
  * TextFieldProtect Module
@@ -44,23 +41,11 @@ object ModuleTextFieldProtect : ClientModule("TextFieldProtect", Category.MISC) 
 
     private const val MASK_CHAR = '*'
 
-    fun getWrappedRenderTextProvider(
-        textFieldWidget: TextFieldWidget,
-        original: BiFunction<String, Int, OrderedText>,
-    ): BiFunction<String, Int, OrderedText> {
-        if (!running) return original
-
-        return BiFunction<String, Int, OrderedText> { t, u ->
-            val fullText = textFieldWidget.text
-
-            val wrapped = if (patterns.none { it.matches(fullText) }) {
-                fullText
-            } else {
-                MASK_CHAR.repeat(t.length)
-            }
-
-            original.apply(wrapped, u)
+    fun protect(input: String, firstCharacterIndex: Int): String {
+        return if (patterns.none { it.matches(input) }) {
+            input
+        } else {
+            MASK_CHAR.repeat(firstCharacterIndex)
         }
     }
-
 }

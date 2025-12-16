@@ -22,46 +22,46 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
+import net.minecraft.client.render.block.entity.BlockEntityRenderManager;
+import net.minecraft.client.render.block.entity.state.BlockEntityRenderState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
-@Mixin(BlockEntityRenderDispatcher.class)
+@Mixin(BlockEntityRenderManager.class)
 public class MixinBlockEntityRenderDispatcher {
 
     /**
      * Inject StorageESP glow effect
+     *
      * @author 1zuna
      */
     @ModifyArg(
-            method = "render(Lnet/minecraft/client/render/block/entity/BlockEntityRenderer;Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/util/math/Vec3d;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/block/entity/BlockEntityRenderer;render(Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IILnet/minecraft/util/math/Vec3d;)V")
+            method = "render",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/block/entity/BlockEntityRenderer;render(Lnet/minecraft/client/render/block/entity/state/BlockEntityRenderState;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/command/OrderedRenderCommandQueue;Lnet/minecraft/client/render/state/CameraRenderState;)V")
     )
-    private static <T extends BlockEntity> VertexConsumerProvider render(
-            VertexConsumerProvider vertexConsumerProvider,
-            @Local(argsOnly = true) T blockEntity
+    private static <S extends BlockEntityRenderState> S render(
+        S state, @Local(argsOnly = true) S blockEntityRenderState
     ) {
-        if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
-            var type = ModuleStorageESP.categorize(blockEntity);
+        var client = MinecraftClient.getInstance();
+        if (ModuleStorageESP.Glow.INSTANCE.getRunning() && client.world != null) {
+            var type = ModuleStorageESP.categorize(client.world.getBlockEntity(blockEntityRenderState.pos));
 
-            if (type != null && type.shouldRender(blockEntity.getPos())) {
+            if (type != null && type.shouldRender(blockEntityRenderState.pos)) {
                 var color = type.getColor();
 
                 if (!color.isTransparent()) {
-                    var outlineVertexConsumerProvider = MinecraftClient.getInstance().getBufferBuilders()
-                            .getOutlineVertexConsumers();
-                    outlineVertexConsumerProvider.setColor(color.r(), color.g(), color.b(), 255);
+                    var outlineVertexConsumerProvider = client.getBufferBuilders()
+                        .getOutlineVertexConsumers();
+                    outlineVertexConsumerProvider.setColor(color.toARGB());
                     OutlineFlag.drawOutline = true;
-                    return outlineVertexConsumerProvider;
+                    return state;
                 }
             }
         }
 
-        return vertexConsumerProvider;
+        return state;
     }
 
 }

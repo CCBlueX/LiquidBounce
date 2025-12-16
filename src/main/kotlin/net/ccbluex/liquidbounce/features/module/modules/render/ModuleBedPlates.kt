@@ -136,7 +136,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val beds = ArrayList<BedStateRenderState>()
 
     private fun updateAndSortBeds() {
-        val cameraPos = (mc.cameraEntity ?: mc.player ?: return).pos
+        val cameraPos = (mc.cameraEntity ?: mc.player ?: return).entityPos
         beds.forEach { renderState ->
             val bedState = renderState.bedState
             renderState.distance = bedState.pos.distanceTo(cameraPos)
@@ -227,7 +227,6 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                         drawItem(stack, x, y)
                         val countString = stack.count.toString()
                         matrices.withPush {
-                            translate(0.0F, 0.0F)
                             // draw layer text
                             if (!compact) {
                                 drawText(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, textShadow)

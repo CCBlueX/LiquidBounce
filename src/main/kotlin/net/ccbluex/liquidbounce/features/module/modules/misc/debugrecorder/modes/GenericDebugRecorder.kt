@@ -69,7 +69,7 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
     fun debugObject(entity: Entity): JsonElement {
         return JsonObject().apply {
             addProperty("id", entity.id)
-            add("pos", entity.pos.toJson())
+            add("pos", entity.entityPos.toJson())
             add("velocity", entity.velocity.toJson())
         }
     }

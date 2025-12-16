@@ -28,9 +28,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock.
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinInGameHudAccessor
-import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.armorItems
+import net.ccbluex.liquidbounce.utils.entity.getActualHealth
+import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
+import net.ccbluex.liquidbounce.utils.entity.netherPosition
+import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpNoContent
@@ -102,13 +105,13 @@ data class PlayerData(
         fun fromPlayer(player: PlayerEntity) = PlayerData(
             ModuleNameProtect.replace(player.nameForScoreboard),
             player.uuidAsString,
-            player.world.registryKey.value,
-            player.pos,
+            player.entityWorld.registryKey.value,
+            player.entityPos,
             player.netherPosition,
             player.blockPos,
             player.velocity,
             player.inventory.selectedSlot,
-            if (mc.player === player) interaction.currentGameMode else GameMode.DEFAULT,
+            player.gameMode ?: GameMode.DEFAULT,
             player.health.fixNaN(),
             player.getActualHealth().fixNaN(),
             player.maxHealth.fixNaN(),
@@ -126,7 +129,9 @@ data class PlayerData(
             player.mainHandStack,
             if (player == mc.player && shouldHideOffhand() && hideShieldSlot) ItemStack.EMPTY else player.offHandStack,
             player.armorItems.toList(),
-            if (mc.player === player) ScoreboardData.fromScoreboard(player.scoreboard) else null
+            ScoreboardData.fromScoreboard(
+                player.entityWorld.scoreboard
+            )
         )
     }
 

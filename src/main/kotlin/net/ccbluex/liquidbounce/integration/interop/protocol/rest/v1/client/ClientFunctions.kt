@@ -29,7 +29,11 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.*
+import net.ccbluex.netty.http.util.httpBadRequest
+import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpNoContent
+import net.ccbluex.netty.http.util.httpNotFound
+import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.util.Util
 import java.io.File
 import java.net.URI

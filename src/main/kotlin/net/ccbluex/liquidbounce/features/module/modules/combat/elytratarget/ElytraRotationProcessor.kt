@@ -176,14 +176,14 @@ internal object ElytraRotationProcessor : Configurable("Rotations"), RotationPro
         var targetPos = prediction.predictPosition(target, rotateAt.position(target)) + randomDirectionVector * 4.0
 
         if (autoDistance) {
-            val direction = (targetPos - player.pos).normalize()
-            val distance = player.pos.squaredDistanceTo(direction)
+            val direction = (targetPos - player.entityPos).normalize()
+            val distance = player.entityPos.squaredDistanceTo(direction)
 
             if (distance < IDEAL_DISTANCE * IDEAL_DISTANCE) {
                 targetPos -= direction * (IDEAL_DISTANCE - distance)
             }
         }
 
-        return Rotation.lookingAt(targetPos, player.pos)
+        return Rotation.lookingAt(targetPos, player.entityPos)
     }
 }

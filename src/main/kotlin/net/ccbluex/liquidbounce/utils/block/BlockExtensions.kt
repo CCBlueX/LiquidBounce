@@ -28,11 +28,67 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.render.FULL_BOX
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.interaction
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
 import net.ccbluex.liquidbounce.utils.math.iterator
+import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.block.*
+import net.minecraft.block.AbstractBlock
+import net.minecraft.block.AbstractChestBlock
+import net.minecraft.block.AbstractFurnaceBlock
+import net.minecraft.block.AnvilBlock
+import net.minecraft.block.BarrelBlock
+import net.minecraft.block.BeaconBlock
+import net.minecraft.block.BedBlock
+import net.minecraft.block.BellBlock
+import net.minecraft.block.Block
+import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
+import net.minecraft.block.BrewingStandBlock
+import net.minecraft.block.ButtonBlock
+import net.minecraft.block.CakeBlock
+import net.minecraft.block.CandleCakeBlock
+import net.minecraft.block.CartographyTableBlock
+import net.minecraft.block.CaveVines
+import net.minecraft.block.CaveVinesBodyBlock
+import net.minecraft.block.CaveVinesHeadBlock
+import net.minecraft.block.ChestBlock
+import net.minecraft.block.ComparatorBlock
+import net.minecraft.block.ComposterBlock
+import net.minecraft.block.CrafterBlock
+import net.minecraft.block.CraftingTableBlock
+import net.minecraft.block.DaylightDetectorBlock
+import net.minecraft.block.DecoratedPotBlock
+import net.minecraft.block.DispenserBlock
+import net.minecraft.block.DoorBlock
+import net.minecraft.block.DoubleBlockProperties
+import net.minecraft.block.DragonEggBlock
+import net.minecraft.block.EnchantingTableBlock
+import net.minecraft.block.FenceGateBlock
+import net.minecraft.block.FlowerPotBlock
+import net.minecraft.block.GrindstoneBlock
+import net.minecraft.block.HopperBlock
+import net.minecraft.block.HorizontalFacingBlock
+import net.minecraft.block.JukeboxBlock
+import net.minecraft.block.LecternBlock
+import net.minecraft.block.LeverBlock
+import net.minecraft.block.LightBlock
+import net.minecraft.block.NoteBlock
+import net.minecraft.block.OperatorBlock
+import net.minecraft.block.RedstoneWireBlock
+import net.minecraft.block.RepeaterBlock
+import net.minecraft.block.RespawnAnchorBlock
+import net.minecraft.block.ShulkerBoxBlock
+import net.minecraft.block.SideShapeType
+import net.minecraft.block.SlabBlock
+import net.minecraft.block.StairsBlock
+import net.minecraft.block.StonecutterBlock
+import net.minecraft.block.SweetBerryBushBlock
+import net.minecraft.block.TrapdoorBlock
 import net.minecraft.entity.Entity
 import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.fluid.Fluids
@@ -44,7 +100,13 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.function.BooleanBiFunction
 import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.*
+import net.minecraft.util.math.BlockBox
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Position
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
@@ -97,8 +159,6 @@ val BlockPos.outlineBox: Box
 
 val BlockPos.collisionShape: VoxelShape
     get() = this.getState()!!.getCollisionShape(world, this)
-
-fun VoxelShape.offset(pos: Vec3i): VoxelShape = offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 
 fun VoxelShape.getClosestSquaredDistanceTo(position: Position): Double {
     var minDistanceSq = Double.MAX_VALUE
@@ -602,7 +662,7 @@ fun doBreak(
 
     if (interaction.updateBlockBreakingProgress(blockPos, direction)) {
         swingMode.swing(Hand.MAIN_HAND)
-        mc.particleManager.addBlockBreakingParticles(blockPos, direction)
+        world.spawnBlockBreakingParticle(blockPos, direction)
     }
 }
 
@@ -678,14 +738,14 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
 val BlockState?.isInteractable: Boolean get() = this?.block?.isInteractable(this) ?: false
 
 fun BlockPos.isBlockedByEntities(): Boolean {
-    val posBox = FULL_BOX.offset(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
+    val posBox = FULL_BOX + this
     return world.entities.any {
         it.boundingBox.intersects(posBox)
     }
 }
 
 inline fun BlockPos.getBlockingEntities(include: (Entity) -> Boolean = { true }): List<Entity> {
-    val posBox = FULL_BOX.offset(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
+    val posBox = FULL_BOX + this
     return world.entities.filter {
         it.boundingBox.intersects(posBox) &&
             include.invoke(it)
@@ -701,7 +761,7 @@ fun BlockPos.isBlockedByEntitiesReturnCrystal(
 ): BooleanObjectPair<EndCrystalEntity?> {
     var blocked = false
 
-    val posBox = box.offset(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
+    val posBox = box + this
     world.entities.forEach {
         if (it.boundingBox.intersects(posBox) && (excludeIds == null || it.id !in excludeIds)) {
             if (it is EndCrystalEntity) {

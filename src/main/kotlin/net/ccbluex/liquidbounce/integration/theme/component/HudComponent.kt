@@ -30,11 +30,11 @@ import java.util.*
 /**
  * Represents a HUD component
  */
-abstract class Component(
+abstract class HudComponent(
     name: String,
     enabled: Boolean,
     alignment: Alignment = Alignment.center(),
-    val tweaks: Array<ComponentTweak> = emptyArray()
+    val tweaks: Array<HudComponentTweak> = emptyArray()
 ) : ToggleableConfigurable(parent = ModuleHud, name = name, enabled = enabled) {
 
     val id: UUID = UUID.randomUUID()
@@ -46,7 +46,7 @@ abstract class Component(
                 registerComponentListen(v)
             } else {
                 v.onChanged {
-                    ComponentManager.updateComponents()
+                    HudComponentManager.updateComponents()
                 }
             }
         }

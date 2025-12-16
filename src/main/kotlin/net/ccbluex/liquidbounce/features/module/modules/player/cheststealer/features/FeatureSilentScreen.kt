@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.Modu
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer.canBeStolen
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.BackgroundChoice.Companion.backgroundChoices
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
@@ -62,7 +62,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             doNotIncludeAlways()
         }
 
-        private fun getRenderPos(): Vec3? {
+        private fun getRenderPos(): Vec3f? {
             val pos = lastInteractedBlock ?: return null
             val state = pos.getState() ?: return null
             val anotherPartDirection = state.anotherChestPartDirection()

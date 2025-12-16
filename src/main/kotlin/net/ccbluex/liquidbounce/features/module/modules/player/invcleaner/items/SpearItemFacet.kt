@@ -15,17 +15,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
-package net.ccbluex.liquidbounce.integration.theme.component.components
+package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import net.ccbluex.liquidbounce.integration.theme.component.Component
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak
-import net.ccbluex.liquidbounce.utils.render.Alignment
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 
-abstract class NativeComponent(
-    name: String,
-    enabled: Boolean,
-    alignment: Alignment,
-    tweaks: Array<ComponentTweak> = emptyArray()
-) : Component(name, enabled, alignment, tweaks)
+/**
+ * Specialization of weapon type. Used in order to allow the user to specify that they want a sword and not an axe
+ * or something.
+ *
+ * TODO: Add enchantment-based comparator
+ */
+class SpearItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
+    override val category: ItemCategory = ItemCategory(ItemType.SPEAR, 0)
+}

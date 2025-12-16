@@ -20,21 +20,32 @@ package net.ccbluex.liquidbounce.features.module.modules.world.traps.traps
 
 import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.module.modules.world.traps.*
+import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeInfo
+import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
+import net.ccbluex.liquidbounce.features.module.modules.world.traps.IntentTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap.targetTracker
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.NearestRotationTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PositionFactoryConfiguration
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
-import net.minecraft.entity.*
+import net.minecraft.entity.EntityPose
+import net.minecraft.entity.LivingEntity
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.*
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 
 class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebIntentData>(
     parent,
@@ -82,7 +93,7 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
         val offsetsForTargets = findOffsetsForTarget(
             targetPos,
             target.getDimensions(EntityPose.STANDING),
-            target.pos.subtract(target.lastPos),
+            target.entityPos.subtract(target.lastPos),
             slot.itemStack.item == Items.COBWEB
         )
 
@@ -95,7 +106,7 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
                 NearestRotationTargetPositionFactory(PositionFactoryConfiguration(player.eyePos, 0.5))
             ),
             stackToPlaceWith = slot.itemStack,
-            PlayerLocationOnPlacement(position = player.pos),
+            PlayerLocationOnPlacement(position = player.entityPos),
         )
 
         return findBestBlockPlacementTarget(blockPos, options)

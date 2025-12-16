@@ -1,22 +1,21 @@
 accessWidener	v1	named
 
 accessible field net/minecraft/entity/AreaEffectCloudEntity potionContentsComponent Lnet/minecraft/component/type/PotionContentsComponent;
-
 accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
 mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
-accessible field net/minecraft/client/MinecraftClient authenticationService Lcom/mojang/authlib/yggdrasil/YggdrasilAuthenticationService;
 accessible field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/session/ProfileKeys;
 mutable field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/client/session/ProfileKeys;
 accessible field net/minecraft/client/MinecraftClient attackCooldown I
-
-accessible field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
-mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
+accessible field net/minecraft/client/MinecraftClient apiServices Lnet/minecraft/util/ApiServices;
+mutable field net/minecraft/client/MinecraftClient apiServices Lnet/minecraft/util/ApiServices;
 
 accessible method net/minecraft/entity/LivingEntity tickActiveItemStack ()V
+accessible field net/minecraft/util/Arm id I
 
 mutable field net/minecraft/util/math/Vec3d x D
 mutable field net/minecraft/util/math/Vec3d y D
 mutable field net/minecraft/util/math/Vec3d z D
+accessible method net/minecraft/block/EntityShapeContext <init> (ZZDLnet/minecraft/item/ItemStack;ZLnet/minecraft/entity/Entity;)V
 
 mutable field net/minecraft/network/packet/c2s/common/KeepAliveC2SPacket id J
 accessible field net/minecraft/network/packet/c2s/common/KeepAliveC2SPacket id J
@@ -34,7 +33,6 @@ accessible field net/minecraft/client/network/ClientPlayerEntity ticksSinceLastP
 accessible field net/minecraft/client/network/ClientPlayerEntity usingItem Z
 accessible field net/minecraft/client/network/ClientPlayerEntity riding Z
 accessible field net/minecraft/client/network/ClientPlayerEntity activeHand Lnet/minecraft/util/Hand;
-accessible field net/minecraft/client/network/ClientPlayerEntity field_3938 I
 accessible method net/minecraft/client/network/ClientPlayerEntity sendMovementPackets ()V
 
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket x D
@@ -67,7 +65,7 @@ accessible field net/minecraft/network/packet/c2s/common/ResourcePackStatusC2SPa
 accessible field net/minecraft/item/BucketItem fluid Lnet/minecraft/fluid/Fluid;
 
 accessible field net/minecraft/client/option/KeyBinding boundKey Lnet/minecraft/client/util/InputUtil$Key;
-accessible field net/minecraft/entity/LivingEntity lastAttackedTicks I
+accessible field net/minecraft/entity/LivingEntity ticksSinceLastAttack I
 accessible field net/minecraft/entity/LivingEntity jumping Z
 accessible field net/minecraft/entity/LivingEntity jumpingCooldown I
 accessible method net/minecraft/entity/Entity isAlwaysInvulnerableTo (Lnet/minecraft/entity/damage/DamageSource;)Z
@@ -80,14 +78,6 @@ accessible class net/minecraft/entity/player/ItemCooldownManager$Entry
 accessible field net/minecraft/entity/LivingEntity riptideAttackDamage F
 accessible method net/minecraft/entity/Entity movementInputToVelocity (Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;
 accessible method net/minecraft/util/math/Box traceCollisionSide (Lnet/minecraft/util/math/Box;Lnet/minecraft/util/math/Vec3d;[DLnet/minecraft/util/math/Direction;DDD)Lnet/minecraft/util/math/Direction;
-
-accessible field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityX I
-accessible field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityY I
-accessible field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityZ I
-
-mutable field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityX I
-mutable field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityY I
-mutable field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityZ I
 
 accessible field net/minecraft/client/world/ClientChunkManager chunks Lnet/minecraft/client/world/ClientChunkManager$ClientChunkMap;
 accessible field net/minecraft/world/chunk/WorldChunk loadedToWorld Z
@@ -111,6 +101,7 @@ accessible field net/minecraft/client/gl/PostEffectProcessor passes Ljava/util/L
 
 accessible field net/minecraft/network/ClientConnection channel Lio/netty/channel/Channel;
 
+accessible class net/minecraft/client/Mouse$MouseClickTime
 accessible method net/minecraft/client/input/KeyboardInput getMovementMultiplier (ZZ)F
 
 accessible field net/minecraft/client/option/KeyBinding timesPressed I
@@ -130,9 +121,6 @@ accessible field net/minecraft/entity/TrackedPosition pos Lnet/minecraft/util/ma
 
 accessible field net/minecraft/client/gui/hud/PlayerListHud header Lnet/minecraft/text/Text;
 accessible field net/minecraft/client/gui/hud/PlayerListHud footer Lnet/minecraft/text/Text;
-
-accessible class net/minecraft/client/render/OutlineVertexConsumerProvider$OutlineVertexConsumer
-accessible method net/minecraft/client/render/OutlineVertexConsumerProvider$OutlineVertexConsumer <init> (Lnet/minecraft/client/render/VertexConsumer;IIII)V
 
 accessible field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parameter I
 mutable field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parameter I
@@ -154,7 +142,6 @@ accessible method net/minecraft/client/gui/hud/ChatHud addMessage (Lnet/minecraf
 
 accessible method net/minecraft/text/TextColor <init> (ILjava/lang/String;)V
 
-accessible field net/minecraft/client/MinecraftClient renderTaskQueue Ljava/util/Queue;
 accessible field net/minecraft/client/MinecraftClient startTime J
 
 accessible field net/minecraft/util/math/Direction HORIZONTAL [Lnet/minecraft/util/math/Direction;
@@ -162,8 +149,6 @@ accessible field net/minecraft/util/math/Direction HORIZONTAL [Lnet/minecraft/ut
 accessible field net/minecraft/client/util/InputUtil$Type map Lit/unimi/dsi/fastutil/ints/Int2ObjectMap;
 
 accessible method net/minecraft/client/network/ClientPlayerInteractionManager syncSelectedSlot ()V
-
-accessible method net/minecraft/block/EntityShapeContext <init> (ZZDLnet/minecraft/item/ItemStack;Ljava/util/function/Predicate;Lnet/minecraft/entity/Entity;)V
 
 accessible method net/minecraft/entity/Entity unsetRemoved ()V
 
@@ -206,3 +191,6 @@ accessible field com/mojang/blaze3d/opengl/GlStateManager writeFbo I
 
 accessible method net/minecraft/client/gl/GlCommandEncoder getBackend ()Lnet/minecraft/client/gl/GlBackend;
 accessible field net/minecraft/client/render/GameRenderer pool Lnet/minecraft/client/util/Pool;
+
+accessible class net/minecraft/client/render/OutlineVertexConsumerProvider$OutlineVertexConsumer
+accessible method net/minecraft/client/render/OutlineVertexConsumerProvider$OutlineVertexConsumer <init> (Lnet/minecraft/client/render/VertexConsumer;I)V

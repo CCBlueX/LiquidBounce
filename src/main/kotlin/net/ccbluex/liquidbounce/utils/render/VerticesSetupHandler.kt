@@ -26,5 +26,5 @@ import org.joml.Matrix3x2f
  * @see LambdaSimpleGuiElementRenderState
  */
 fun interface VerticesSetupHandler {
-    fun VertexConsumer.setupVertices(pose: Matrix3x2f, depth: Float)
+    fun VertexConsumer.setupVertices(pose: Matrix3x2f)
 }

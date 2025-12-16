@@ -22,12 +22,12 @@ package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.fea
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -53,6 +53,10 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import java.util.function.BooleanSupplier
+import kotlin.collections.Set
+import kotlin.collections.hashSetOf
+import kotlin.collections.none
+import kotlin.collections.plusAssign
 
 /**
  * ChestAura feature

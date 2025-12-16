@@ -26,10 +26,14 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
-import net.ccbluex.liquidbounce.integration.theme.component.components.NativeComponent
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.integration.theme.component.components.NativeHudComponent
+import net.ccbluex.liquidbounce.render.createBounds
+import net.ccbluex.liquidbounce.render.drawCustomElement
+import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
@@ -41,15 +45,14 @@ import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.minecraft.client.gl.RenderPipelines
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.ScreenRect
-import net.minecraft.client.texture.TextureSetup
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.ChunkPos
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec2f
-import java.util.EnumSet
+import java.util.*
 import kotlin.math.ceil
 
-object MinimapComponent : NativeComponent("Minimap", false, Alignment(
+object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
     horizontalAlignment = Alignment.ScreenAxisX.LEFT,
     horizontalOffset = 7,
     verticalAlignment = Alignment.ScreenAxisY.TOP,
@@ -180,33 +183,31 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
         drawCustomElement(
             pipeline = RenderPipelines.GUI,
             bounds = bounds,
-        ) { pose, depth ->
-            val z = depth // - 1.0F
+        ) { pose ->
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax).color(from)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
 
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax, z).color(from)
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset).color(from)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset).color(to)
 
-            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset, z).color(from)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMax, z).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset, z).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax).color(from)
+            vertex(pose, boundingBox.xMax, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMax).color(to)
 
-            vertex(pose, boundingBox.xMax, boundingBox.yMax, z).color(from)
-            vertex(pose, boundingBox.xMax, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMax, z).color(to)
+            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax).color(to)
+            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width).color(to)
+            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax).color(from)
 
-            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax, z).color(to)
-            vertex(pose, boundingBox.xMin + offset - width, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax + width, z).color(to)
-            vertex(pose, boundingBox.xMin + offset, boundingBox.yMax, z).color(from)
-
-            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset - width, z).color(to)
-            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset, z).color(from)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset, z).color(to)
-            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset - width, z).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset - width).color(to)
+            vertex(pose, boundingBox.xMax, boundingBox.yMin + offset).color(from)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset).color(to)
+            vertex(pose, boundingBox.xMax + width, boundingBox.yMin + offset - width).color(to)
         }
     }
 
@@ -218,9 +219,9 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
     ) {
         drawCustomElement(
             pipeline = RenderPipelines.GUI_TEXTURED,
-            textureSetup = TextureSetup.withoutGlTexture(ChunkRenderer.prepareRendering()),
+            textureSetup = ChunkRenderer.prepareRendering(),
             bounds = bounds,
-        ) { pose, depth ->
+        ) { pose ->
             for (x in -chunksToRenderAround..chunksToRenderAround) {
                 for (y in -chunksToRenderAround..chunksToRenderAround) {
                     // Don't render too much
@@ -228,7 +229,7 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                         continue
                     }
 
-                    val chunkPos = ChunkPos(centerPos.x + x, centerPos.z + y)
+                    val chunkPos = ChunkPos.toLong(centerPos.x + x, centerPos.z + y)
 
                     val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                     val fromX = x.toFloat()
@@ -236,13 +237,13 @@ object MinimapComponent : NativeComponent("Minimap", false, Alignment(
                     val toX = fromX + 1F
                     val toY = fromY + 1F
 
-                    vertex(pose, fromX, fromY, depth).texture(texPosition.xMin, texPosition.yMin)
+                    vertex(pose, fromX, fromY).texture(texPosition.xMin, texPosition.yMin)
                         .color(-1)
-                    vertex(pose, fromX, toY, depth).texture(texPosition.xMin, texPosition.yMax)
+                    vertex(pose, fromX, toY).texture(texPosition.xMin, texPosition.yMax)
                         .color(-1)
-                    vertex(pose, toX, toY, depth).texture(texPosition.xMax, texPosition.yMax)
+                    vertex(pose, toX, toY).texture(texPosition.xMax, texPosition.yMax)
                         .color(-1)
-                    vertex(pose, toX, fromY, depth).texture(texPosition.xMax, texPosition.yMin)
+                    vertex(pose, toX, fromY).texture(texPosition.xMax, texPosition.yMin)
                         .color(-1)
                 }
             }

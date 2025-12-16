@@ -23,8 +23,17 @@ import com.llamalad7.mixinextras.sugar.Cancellable;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.common.ChunkUpdateFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.*;
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.*;
+import net.ccbluex.liquidbounce.event.events.ChunkDeltaUpdateEvent;
+import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent;
+import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent;
+import net.ccbluex.liquidbounce.event.events.DeathEvent;
+import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent;
+import net.ccbluex.liquidbounce.event.events.TitleEvent;
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.BlockChangeTrigger;
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.CrystalDestroyTrigger;
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.CrystalSpawnTrigger;
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.EntityMoveTrigger;
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.ExplodeSoundTrigger;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerSpigotSpam;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 import net.ccbluex.liquidbounce.features.module.modules.player.Limit;
@@ -34,7 +43,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.ccbluex.liquidbounce.utils.kotlin.Priority;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
+import net.minecraft.client.gui.screen.world.LevelLoadingScreen;
 import net.minecraft.client.network.ClientCommonNetworkHandler;
 import net.minecraft.client.network.ClientConnectionState;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -42,7 +51,19 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkThreadUtils;
-import net.minecraft.network.packet.s2c.play.*;
+import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.ClearTitleS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityPositionS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
+import net.minecraft.network.packet.s2c.play.GameStateChangeS2CPacket;
+import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlaySoundFromEntityS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -152,7 +173,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
      */
     @Inject(method = "onTitleClear", at = @At(value = "HEAD"), cancellable = true)
     private void hookOnTitleClear(ClearTitleS2CPacket packet, CallbackInfo ci) {
-        NetworkThreadUtils.forceMainThread(packet, (ClientPlayNetworkHandler) (Object) this, this.client);
+        NetworkThreadUtils.forceMainThread(packet, (ClientPlayPacketListener) this, this.client.getPacketApplyBatcher());
         var event = new TitleEvent.Clear(packet.shouldReset());
         EventManager.INSTANCE.callEvent(event);
         if (event.isCancelled()) {
@@ -231,14 +252,14 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
 
     private ThreadLocal<Rotation> rotationThreadLocal = ThreadLocal.withInitial(() -> null);
 
-    @Inject(method = "onPlayerPositionLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;setPosition(Lnet/minecraft/entity/player/PlayerPosition;Ljava/util/Set;Lnet/minecraft/entity/Entity;Z)Z"))
+    @Inject(method = "onPlayerPositionLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;setPosition(Lnet/minecraft/entity/EntityPosition;Ljava/util/Set;Lnet/minecraft/entity/Entity;Z)Z"))
     private void injectPlayerPositionLook(PlayerPositionLookS2CPacket packet, CallbackInfo ci, @Local PlayerEntity playerEntity) {
         rotationThreadLocal.set(new Rotation(playerEntity.getYaw(), playerEntity.getPitch(), true));
     }
 
     @Inject(method = "onPlayerPositionLook", at = @At("RETURN"))
     private void injectNoRotateSet(PlayerPositionLookS2CPacket packet, CallbackInfo ci, @Local PlayerEntity playerEntity) {
-        if (!ModuleNoRotateSet.INSTANCE.getRunning() || MinecraftClient.getInstance().currentScreen instanceof DownloadingTerrainScreen) {
+        if (!ModuleNoRotateSet.INSTANCE.getRunning() || MinecraftClient.getInstance().currentScreen instanceof LevelLoadingScreen) {
             return;
         }
 

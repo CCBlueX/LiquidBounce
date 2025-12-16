@@ -26,7 +26,7 @@ import net.minecraft.text.StringVisitable.StyledVisitor
 import net.minecraft.text.Style
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
-import java.util.*
+import java.util.Optional
 
 /**
  * This is a utility class which degenerates legacy formatting which is contained in new minecraft formatting

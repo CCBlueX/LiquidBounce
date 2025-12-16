@@ -21,16 +21,42 @@ package net.ccbluex.liquidbounce.features.command
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
+import it.unimi.dsi.fastutil.objects.ObjectArrays
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.command.CommandManager.getSubCommand
-import net.ccbluex.liquidbounce.features.command.commands.client.*
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandBind
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandBinds
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandClear
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandContainers
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandDebug
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandFriend
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandHelp
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandHide
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandLocalConfig
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandPanic
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandScript
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandTargets
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandToggle
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandValue
 import net.ccbluex.liquidbounce.features.command.commands.client.client.CommandClient
 import net.ccbluex.liquidbounce.features.command.commands.client.marketplace.CommandMarketplace
 import net.ccbluex.liquidbounce.features.command.commands.deeplearn.CommandModels
-import net.ccbluex.liquidbounce.features.command.commands.ingame.*
-import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.*
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCenter
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandCoordinates
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandPing
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandRemoteView
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandSay
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandServerInfo
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandTps
+import net.ccbluex.liquidbounce.features.command.commands.ingame.CommandUsername
+import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemEnchant
+import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemGive
+import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemRename
+import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemSkull
+import net.ccbluex.liquidbounce.features.command.commands.ingame.creative.CommandItemStack
 import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoAccount
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
@@ -261,6 +287,7 @@ object CommandManager : Collection<Command> by commandSet {
 
         // The index the command is in
         val idx = pair.second
+        val remainingArgsCount = args.size - idx - 1
 
         // If there are more arguments for a command that takes no parameters
         if (command.parameters.isEmpty() && idx != args.size - 1) {
@@ -271,24 +298,24 @@ object CommandManager : Collection<Command> by commandSet {
         }
 
         // If there is a required parameter after the supply of arguments ends, it is absent
-        if (args.size - idx - 1 < command.parameters.size && command.parameters[args.size - idx - 1].required) {
+        if (remainingArgsCount < command.parameters.size && command.parameters[remainingArgsCount].required) {
             throw CommandException(
                 translation(
                     "liquidbounce.commandManager.parameterRequired",
-                    command.parameters[args.size - idx - 1].name
+                    command.parameters[remainingArgsCount].name
                 ),
                 usageInfo = command.usage()
             )
         }
 
         // The values of the parameters. One for each parameter
-        val parsedParameters = arrayOfNulls<Any>(args.size - idx - 1)
+        val parsedParameters = arrayOfNulls<Any>(remainingArgsCount)
 
         // If the last parameter is a vararg, there might be no argument for it.
         // In this case, its value might be null, which is against the specification.
         // To fix this, if the last parameter is a vararg, initialize it with an empty array
-        if (command.parameters.lastOrNull()?.vararg == true && command.parameters.size > args.size - idx) {
-            parsedParameters[command.parameters.size - 1] = emptyArray<Any>()
+        if (command.parameters.lastOrNull()?.vararg == true && command.parameters.size == remainingArgsCount) {
+            parsedParameters[remainingArgsCount - 1] = ObjectArrays.EMPTY_ARRAY
         }
 
         for (i in (idx + 1) until args.size) {

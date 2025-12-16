@@ -65,7 +65,7 @@ private fun getDimensions(width: Float, height: Float, eyeHeight: Float): Entity
         .withEyeHeight(eyeHeight)
         .withAttachments(EntityAttachments.builder().add(
             EntityAttachmentType.VEHICLE,
-            PlayerEntity.VEHICLE_ATTACHMENT_POS))
+            PlayerEntity.VEHICLE_ATTACHMENT))
 }
 
 @Suppress("unused") /* Used as settings */

@@ -37,9 +37,11 @@ open class ItemCooldown : Configurable("ItemCooldown", aliases = listOf("Cooldow
      * Calculates the current cooldown progress.
      *
      * This can be out of percentage range [0, 1] to allow for higher minimum cooldowns.
+     *
+     * @see net.minecraft.entity.player.PlayerEntity.getAttackCooldownProgress
      */
     fun cooldownProgress(baseTime: Int = 0) =
-        (player.lastAttackedTicks + baseTime).toFloat() / player.attackCooldownProgressPerTick
+        (player.ticksSinceLastAttack + baseTime).toFloat() / player.attackCooldownProgressPerTick
 
     /**
      * Generates a new cooldown based on the range that was set by the user.

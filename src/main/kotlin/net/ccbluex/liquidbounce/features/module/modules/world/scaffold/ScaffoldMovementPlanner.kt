@@ -39,7 +39,8 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import kotlin.math.*
+import kotlin.math.acos
+import kotlin.math.round
 
 object ScaffoldMovementPlanner {
     private const val MAX_LAST_PLACE_BLOCKS: Int = 4
@@ -74,7 +75,7 @@ object ScaffoldMovementPlanner {
         }
 
         // We try to make the player run on this line
-        val optimalLine = Line(Vec3d(lineBaseBlock.x + 0.5, player.pos.y, lineBaseBlock.z + 0.5), direction)
+        val optimalLine = Line(Vec3d(lineBaseBlock.x + 0.5, player.entityPos.y, lineBaseBlock.z + 0.5), direction)
 
         // Debug optimal line
         ModuleScaffold.debugGeometry("optimalLine") {
@@ -134,7 +135,7 @@ object ScaffoldMovementPlanner {
 
         for (xOffset in offsetsToTry) {
             for (zOffset in offsetsToTry) {
-                val playerPos = player.pos.toBlockPos(xOffset, -1.0, zOffset)
+                val playerPos = player.entityPos.toBlockPos(xOffset, -1.0, zOffset)
 
                 val isEmpty = playerPos.getState()?.getCollisionShape(world, playerPos)?.isEmpty ?: true
 

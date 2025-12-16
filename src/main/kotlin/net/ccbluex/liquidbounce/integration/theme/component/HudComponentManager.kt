@@ -26,23 +26,23 @@ import net.ccbluex.liquidbounce.event.events.ComponentsUpdateEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
 
-object ComponentManager {
+object HudComponentManager {
 
-    val nativeComponents = listOf(MinimapComponent)
+    val nativeComponents = listOf(MinimapHudComponent)
 
-    val components: List<Component>
+    val components: List<HudComponent>
         get() = nativeComponents + ThemeManager.theme.components
 
     @JvmStatic
-    fun isTweakEnabled(tweak: ComponentTweak) = ModuleHud.running && !HideAppearance.isHidingNow &&
+    fun isTweakEnabled(tweak: HudComponentTweak) = ModuleHud.running && !HideAppearance.isHidingNow &&
         components.any { component ->
             component.enabled && component.tweaks.contains(tweak)
         }
 
     @JvmStatic
-    fun getComponentWithTweak(tweak: ComponentTweak): Component? {
+    fun getComponentWithTweak(tweak: HudComponentTweak): HudComponent? {
         if (!ModuleHud.running || HideAppearance.isHidingNow) {
             return null
         }
@@ -52,7 +52,7 @@ object ComponentManager {
         }
     }
 
-    fun getComponents(id: String?): List<Component> {
+    fun getComponents(id: String?): List<HudComponent> {
         if (id == null) {
             return components
         }
