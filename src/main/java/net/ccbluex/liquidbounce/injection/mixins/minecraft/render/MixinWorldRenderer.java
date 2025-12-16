@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
-import net.ccbluex.liquidbounce.render.engine.OutlineFramebufferHolder;
+import net.ccbluex.liquidbounce.render.engine.OutlineShaderRenderer;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
@@ -44,6 +44,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Objects;
 
 @Mixin(WorldRenderer.class)
 public abstract class MixinWorldRenderer {
@@ -65,16 +67,23 @@ public abstract class MixinWorldRenderer {
 
     @Inject(method = "render", at = @At("HEAD"))
     private void onRender(ObjectAllocator allocator, RenderTickCounter tickCounter, boolean renderBlockOutline, Camera camera, Matrix4f positionMatrix, Matrix4f matrix4f, Matrix4f projectionMatrix, GpuBufferSlice fogBuffer, Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
+        OutlineShaderRenderer renderer = OutlineShaderRenderer.INSTANCE;
+
         var matrixStack = Pools.MatStack.borrow();
         // Apply camera transformation to fix outline positioning
         matrixStack.peek().getPositionMatrix().mul(positionMatrix);
-
-        var event = new DrawOutlinesEvent(OutlineFramebufferHolder.prepare(), matrixStack, camera, tickCounter.getTickProgress(false), DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
+        var event = new DrawOutlinesEvent(
+            Objects.requireNonNull(renderer.prepareRenderTarget()),
+            matrixStack,
+            camera,
+            tickCounter.getTickProgress(false),
+            DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE
+        );
         EventManager.INSTANCE.callEvent(event);
         Pools.MatStack.recycle(matrixStack);
 
         if (event.getDirtyFlag()) {
-            OutlineFramebufferHolder.setDirty(true);
+            renderer.setDirty(true);
         }
     }
 
@@ -87,7 +96,7 @@ public abstract class MixinWorldRenderer {
     @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
     private void onDrawOutlines(GpuBufferSlice gpuBufferSlice, WorldRenderState worldRenderState, Profiler profiler,
         Matrix4f matrix4f, Handle handle, Handle handle2, boolean bl, Handle handle3, Handle handle4, CallbackInfo ci) {
-        OutlineFramebufferHolder.drawIfDirty(this.client.getFramebuffer());
+        OutlineShaderRenderer.INSTANCE.drawBlitIfDirty(this.client.getFramebuffer());
     }
 
     @Inject(method = "method_62214", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V", shift = At.Shift.BEFORE))

@@ -99,7 +99,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             putFloat(ModuleHud.Blur.alphaBlendRange.endInclusive)
         }
 
-        mc.framebuffer.createRenderPass().use { pass ->
+        mc.framebuffer.createRenderPass({ "GUI blur pass" }).use { pass ->
             pass.setPipeline(ClientRenderPipelines.GuiBlur)
             pass.bindTexture("texture0", mc.framebuffer.colorAttachmentView, overlaySampler)
             pass.bindTexture("overlay", overlayFramebuffer.colorAttachmentView, overlaySampler)
@@ -129,7 +129,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         }
     }
 
-    fun getBlurRadiusFactor(): Float {
+    private fun getBlurRadiusFactor(): Float {
         val isScreenOpen = !hasNoFullScreen()
 
         if (isScreenOpen && !wasScreenOpen) {

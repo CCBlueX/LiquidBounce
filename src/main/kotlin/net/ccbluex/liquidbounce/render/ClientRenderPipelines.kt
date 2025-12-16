@@ -193,7 +193,7 @@ object ClientRenderPipelines {
     val Outline = newPipeline("outline") {
         screenQuad()
         withFragmentShader(ClientShaders.OUTLINE_FSH_ID)
-        withSampler("texture0")
+        withSampler("InSampler")
         withBlend(BlendFunction.ENTITY_OUTLINE_BLIT)
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
     }

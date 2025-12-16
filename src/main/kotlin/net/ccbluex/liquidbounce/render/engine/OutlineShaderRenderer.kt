@@ -16,14 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.render.engine
 
-object RenderingFlags {
-    /**
-     * Because newer versions or mods like sodium might rely on multiple threads to render entities
-     * it might be unstable to use a non-sync
-     * flag for this
-     */
-    @JvmStatic
-    val isCurrentlyRenderingEntityOutline: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
-}
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+
+/**
+ * For [net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP] outline mode.
+ *
+ * @see net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
+ */
+object OutlineShaderRenderer : OverlayShaderRenderer(
+    "Outline",
+    ClientRenderPipelines.Outline,
+    useDepth = false,
+)
