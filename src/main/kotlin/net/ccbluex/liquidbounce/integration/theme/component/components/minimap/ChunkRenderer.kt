@@ -139,7 +139,8 @@ object ChunkRenderer {
                     return AIR_COLOR
                 }
 
-                val baseColor = surfaceBlockState.getMapColor(chunk, surfaceBlockPos).calculateARGBColor(Brightness.HIGH)
+                val baseColor = surfaceBlockState.getMapColor(chunk, surfaceBlockPos)
+                    .calculateARGBColor(Brightness.HIGH)
 
                 val color = Color(baseColor)
 

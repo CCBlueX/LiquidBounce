@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.block.hole
 
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap
+import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
@@ -53,11 +54,15 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
     val holes = ConcurrentSkipListSet<Hole>()
     private val mutable by ThreadLocal.withInitial(BlockPos::MutableBlockPos)
     private val BLAST_RESISTANT_BLOCKS: Set<Block> by lazy {
-        BuiltInRegistries.BLOCK.filterTo(hashSetOf()) { it.explosionResistance >= 600 && it.explosionResistance < 3_600_000 }
+        BuiltInRegistries.BLOCK.filterTo(referenceHashSetOf()) {
+            it.explosionResistance >= 600 && it.explosionResistance < 3_600_000
+        }
     }
 
     private val INDESTRUCTIBLE_BLOCKS: Set<Block> by lazy {
-        BuiltInRegistries.BLOCK.filterTo(hashSetOf()) { it.explosionResistance >= 3_600_000 }
+        BuiltInRegistries.BLOCK.filterTo(referenceHashSetOf()) {
+            it.explosionResistance >= 3_600_000
+        }
     }
 
     override val shouldCallRecordBlockOnChunkUpdate: Boolean
@@ -144,11 +149,19 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                 2 -> {
                     val (direction1, direction2) = Direction.BY_2D_DATA.filterTo(ArrayList(2)) { it !in surroundings }
 
-                    if (!buffer.checkState(mutableLocal.setWithOffset(pos, direction1), direction1, direction2.opposite)) {
+                    if (!buffer.checkState(
+                            mutableLocal.setWithOffset(pos, direction1),
+                            direction1, direction2.opposite
+                        )
+                    ) {
                         continue
                     }
 
-                    if (!buffer.checkState(mutableLocal.setWithOffset(pos, direction2), direction2, direction1.opposite)) {
+                    if (!buffer.checkState(
+                            mutableLocal.setWithOffset(pos, direction2),
+                            direction2, direction1.opposite
+                        )
+                    ) {
                         continue
                     }
 

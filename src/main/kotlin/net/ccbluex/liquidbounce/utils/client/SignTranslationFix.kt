@@ -71,7 +71,9 @@ fun filterNonVanillaText(text: Component): Component {
             if (VanillaTranslationRecognizer.vanillaTranslations.contains(translationKey)) {
                 MutableComponent.create(content)
             } else {
-                MutableComponent.create(SuppressedTranslatableTextContent(translationKey, content.fallback, content.args))
+                MutableComponent.create(
+                    SuppressedTranslatableTextContent(translationKey, content.fallback, content.args)
+                )
             }
         }
 
@@ -99,7 +101,7 @@ class SuppressedKeybindTextContent(key: String) : KeybindContents(key) {
     }
 }
 
-class SuppressedTranslatableTextContent(key: String, fallback: String?, args: Array<Any>) :
+private class SuppressedTranslatableTextContent(key: String, fallback: String?, args: Array<Any>) :
     TranslatableContents(key, fallback, args) {
 
     private val translated: Component = Component.nullToEmpty(fallback ?: key)

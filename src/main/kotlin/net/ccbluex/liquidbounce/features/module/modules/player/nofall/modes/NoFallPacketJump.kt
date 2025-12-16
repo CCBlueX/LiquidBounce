@@ -33,6 +33,7 @@ internal object NoFallPacketJump : NoFallMode("PacketJump") {
     private val fallDistance = choices("FallDistance", Smart, arrayOf(Smart, Constant))
     private val timing = choices("Timing", Landing, arrayOf(Landing, Falling))
 
+    @Volatile
     private var falling = false
 
     val tickHandler = handler<PlayerTickEvent> {
@@ -48,7 +49,9 @@ internal object NoFallPacketJump : NoFallMode("PacketJump") {
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (timing.activeChoice is Landing && event.packet is ServerboundMovePlayerPacket && event.packet.onGround && falling) {
+        if (timing.activeChoice is Landing &&
+            event.packet is ServerboundMovePlayerPacket && event.packet.onGround && falling
+        ) {
             falling = false
             network.send(packetType.generatePacket().apply {
                 x = player.xo

@@ -71,8 +71,10 @@ object ModuleFastBreak : ClientModule("FastBreak", Category.WORLD) {
 
             val packet = it.packet
 
-            if (packet is ServerboundPlayerActionPacket && packet.action == ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK) {
-                val blockPos = packet.pos ?: return@handler
+            if (packet is ServerboundPlayerActionPacket &&
+                packet.action == ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK
+            ) {
+                val blockPos = packet.pos
 
                 // Abort block break on the block above (which we are not breaking)
                 network.send(

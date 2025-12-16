@@ -136,7 +136,8 @@ class DodgePlanner(
         useTimer: Boolean,
     ): DodgePlan {
         // The part of the velocity that is effective for the dodge
-        val effectiveVelocity = player.deltaMovement.length() * similarity(player.deltaMovement, optimalDodgePosRelativeToPlayer)
+        val effectiveVelocity = player.deltaMovement.length() *
+            similarity(player.deltaMovement, optimalDodgePosRelativeToPlayer)
         // Rotations enable sprint
         val travelTimeWithRotation = distanceToTravel / (0.13)
 

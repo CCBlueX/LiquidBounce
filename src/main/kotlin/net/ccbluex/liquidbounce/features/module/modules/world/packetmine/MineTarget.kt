@@ -73,7 +73,13 @@ class MineTarget(val targetPos: BlockPos) {
             direction ?: Direction.DOWN
         }
 
-        network.send(ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, targetPos, dir))
+        network.send(
+            ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK,
+                targetPos,
+                dir,
+            )
+        )
     }
 
     override fun equals(other: Any?): Boolean {

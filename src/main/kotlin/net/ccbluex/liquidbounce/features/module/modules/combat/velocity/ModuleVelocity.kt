@@ -97,7 +97,9 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = list
             return@sequenceHandler
         }
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id || packet is ClientboundExplodePacket) {
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id
+            || packet is ClientboundExplodePacket
+        ) {
             // When delay is above 0, we will delay the velocity update
             if (delay.last > 0) {
                 event.cancelEvent()

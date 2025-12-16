@@ -110,14 +110,14 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
             if (player.onGround()) {
                 val groundMin = GROUND_CONSTANT + SPEED_CONSTANT * speedMultiplier
 
-                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(groundMin)))
+                player.deltaMovement = player.deltaMovement.withStrafe(
+                    speed = player.sqrtSpeed.coerceAtLeast(groundMin)
+                )
             } else if (shouldStrafeInAir) {
                 val airMin = AIR_CONSTANT + SPEED_CONSTANT * speedMultiplier
-                player.setDeltaMovement(
-                    player.deltaMovement.withStrafe(
-                        strength = 0.7,
-                        speed = player.sqrtSpeed.coerceAtLeast(airMin)
-                    )
+                player.deltaMovement = player.deltaMovement.withStrafe(
+                    strength = 0.7,
+                    speed = player.sqrtSpeed.coerceAtLeast(airMin)
                 )
             }
         }
@@ -127,7 +127,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         }
 
         if (player.hurtTime >= 1 && damageBoost) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(0.5)))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(0.5))
         }
     }
 

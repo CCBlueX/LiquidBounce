@@ -39,7 +39,9 @@ object ModuleAutoF5 : ClientModule("AutoF5", Category.RENDER) {
     private val perspectiveHandler = handler<PerspectiveEvent> { event ->
         val screen = mc.screen
 
-        if (screen is AbstractContainerScreen<*> && checkScreenHandlerType.isValid(screen) && checkScreenTitle.isValid(screen)) {
+        if (screen is AbstractContainerScreen<*>
+            && checkScreenHandlerType.isValid(screen) && checkScreenTitle.isValid(screen)
+        ) {
             event.perspective = CameraType.THIRD_PERSON_BACK
         }
     }

@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import net.ccbluex.liquidbounce.utils.client.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
@@ -44,7 +45,6 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.effect.MobEffects.BLINDNESS
 import net.minecraft.world.effect.MobEffects.LEVITATION
 import net.minecraft.world.effect.MobEffects.SLOW_FALLING
-import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 
 /**
  * Criticals module
@@ -89,7 +89,7 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
             priority = CRITICAL_MODIFICATION
         ) { event ->
             if (stopSprinting == StopSprintingMode.ON_ATTACK && player.wasSprinting) {
-                network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
+                sendStopSprinting()
                 player.wasSprinting = false
             }
         }

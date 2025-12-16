@@ -218,7 +218,7 @@ object InventoryManager : EventListener {
     }
 
     /**
-     * Called when a click occurred. Can be tracked by listening for [ClickSlotC2SPacket]
+     * Called when a click occurred. Can be tracked by listening for [ServerboundContainerClickPacket]
      */
     @JvmStatic
     fun clickOccurred() {
@@ -227,7 +227,7 @@ object InventoryManager : EventListener {
     }
 
     /**
-     * Called when the inventory was opened. Can be tracked by listening for [OpenScreenS2CPacket]
+     * Called when the inventory was opened. Can be tracked by listening for [ClientboundOpenScreenPacket]
      */
     @JvmStatic
     fun inventoryOpened() {
@@ -255,7 +255,9 @@ object InventoryManager : EventListener {
             }
         }
 
-        if (packet is ServerboundContainerClosePacket || packet is ClientboundContainerClosePacket || packet is ClientboundOpenScreenPacket) {
+        if (packet is ServerboundContainerClosePacket || packet is ClientboundContainerClosePacket
+            || packet is ClientboundOpenScreenPacket
+        ) {
             // Prevent closing inventory (no other screen!) if it is already closed
             if (!isInventoryOpenServerSide && packet is ServerboundContainerClosePacket && packet.containerId == 0) {
                 event.cancelEvent()

@@ -48,18 +48,23 @@ class SpeedVulcan286(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase
         val speedLevel = (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
 
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (goingSideways) 0.3345 else 0.3355 * (1 + speedLevel * 0.3819)))
+        player.deltaMovement = player.deltaMovement.withStrafe(
+            speed = if (goingSideways) 0.3345 else 0.3355 * (1 + speedLevel * 0.3819)
+        )
+
         waitTicks(1)
         if (player.isSprinting) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (goingSideways) 0.3235 else 0.3284 * (1 + speedLevel * 0.355)))
+            player.deltaMovement = player.deltaMovement.withStrafe(
+                speed = if (goingSideways) 0.3235 else 0.3284 * (1 + speedLevel * 0.355)
+            )
         }
 
         waitTicks(2)
-        player.setDeltaMovement(player.deltaMovement.copy(y = -0.376))
+        player.deltaMovement = player.deltaMovement.copy(y = -0.376)
 
         waitTicks(2)
         if (player.flyDist > 0.298) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.298))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = 0.298)
         }
     }
 

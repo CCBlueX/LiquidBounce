@@ -203,7 +203,9 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        if (packet is ServerboundPlayerActionPacket && packet.action == ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK) {
+        if (packet is ServerboundPlayerActionPacket
+            && packet.action == ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK
+        ) {
             lastFinishBreak = System.currentTimeMillis()
         }
     }

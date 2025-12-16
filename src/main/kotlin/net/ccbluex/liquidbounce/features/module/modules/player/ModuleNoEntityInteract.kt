@@ -39,7 +39,10 @@ import java.util.*
 object ModuleNoEntityInteract : ClientModule("NoEntityInteract", Category.PLAYER) {
 
     private fun defaultEntityTypes(): SequencedSet<EntityType<*>> {
-        return objectRBTreeSetOf(BuiltInRegistries.ENTITY_TYPE.asComparator(), EntityType.VILLAGER, EntityType.ARMOR_STAND)
+        return objectRBTreeSetOf(
+            BuiltInRegistries.ENTITY_TYPE.asComparator(),
+            EntityType.VILLAGER, EntityType.ARMOR_STAND
+        )
     }
 
     private fun defaultHoldingItems(): SequencedSet<Item> {

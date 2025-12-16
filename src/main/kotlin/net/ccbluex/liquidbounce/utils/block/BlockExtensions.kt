@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.block.AbstractChestBlock
 import net.minecraft.world.level.block.AbstractFurnaceBlock
 import net.minecraft.world.level.block.AnvilBlock
@@ -115,9 +114,6 @@ import java.util.function.Consumer
 import kotlin.math.ceil
 import kotlin.math.floor
 
-@JvmField
-val DEFAULT_BLOCK_STATE: BlockState = Blocks.AIR.defaultBlockState()
-
 fun Vec3i.toBlockPos() = BlockPos(this)
 
 fun BlockPos.getState() = mc.level?.getBlockState(this)
@@ -166,7 +162,8 @@ fun VoxelShape.getClosestSquaredDistanceTo(position: Position): Double {
         val nearestX = position.x().coerceIn(minX, maxX)
         val nearestY = position.y().coerceIn(minY, maxY)
         val nearestZ = position.z().coerceIn(minZ, maxZ)
-        val distanceSq = (position.x() - nearestX).sq() + (position.y() - nearestY).sq() + (position.z() - nearestZ).sq()
+        val distanceSq = (position.x() - nearestX).sq() +
+            (position.y() - nearestY).sq() + (position.z() - nearestZ).sq()
         if (distanceSq < minDistanceSq) {
             minDistanceSq = distanceSq
         }
@@ -347,7 +344,7 @@ fun BlockPos.getSortedSphere(radius: Float): Array<BlockPos> {
 }
 
 /**
- * Basically [BlockView.raycast] but this method allows us to exclude blocks using [exclude].
+ * Basically [BlockGetter.raycast] but this method allows us to exclude blocks using [exclude].
  */
 @Suppress("SpellCheckingInspection", "CognitiveComplexMethod")
 fun BlockGetter.raycast(
@@ -719,7 +716,8 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
     return this is BedBlock || this is AbstractChestBlock<*> || this is AbstractFurnaceBlock || this is AnvilBlock
         || this is BarrelBlock || this is BeaconBlock || this is BellBlock || this is BrewingStandBlock
         || this is ButtonBlock || this is CakeBlock && player.foodData.needsFood() || this is CandleCakeBlock
-        || this is CartographyTableBlock || this is CaveVinesPlantBlock && blockState?.getValue(CaveVines.BERRIES) ?: true
+        || this is CartographyTableBlock
+        || this is CaveVinesPlantBlock && blockState?.getValue(CaveVines.BERRIES) ?: true
         || this is CaveVinesBlock && blockState?.getValue(CaveVines.BERRIES) ?: true
         || this is ComparatorBlock || this is ComposterBlock && (blockState?.getValue(ComposterBlock.LEVEL) ?: 8) == 8
         || this is CrafterBlock || this is CraftingTableBlock || this is DaylightDetectorBlock
@@ -732,7 +730,8 @@ fun Block?.isInteractable(blockState: BlockState?): Boolean {
         // when we hold glow stone or are not in the nether and the anchor is charged, but it'd be too error-prone when
         // it would be checked as the player can quickly switch to glow stone
         || this is ShulkerBoxBlock || this is StonecutterBlock
-        || this is SweetBerryBushBlock && (blockState?.getValue(SweetBerryBushBlock.AGE) ?: 2) > 1 || this is TrapDoorBlock
+        || this is SweetBerryBushBlock && (blockState?.getValue(SweetBerryBushBlock.AGE) ?: 2) > 1
+        || this is TrapDoorBlock
 }
 
 val BlockState?.isInteractable: Boolean get() = this?.block?.isInteractable(this) ?: false

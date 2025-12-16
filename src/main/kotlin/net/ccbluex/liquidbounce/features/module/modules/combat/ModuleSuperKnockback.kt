@@ -33,6 +33,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
+import net.ccbluex.liquidbounce.utils.client.sendStartSprinting
+import net.ccbluex.liquidbounce.utils.client.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.entity.isInsideWaterOrBubbleColumn
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
@@ -41,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 
 /**
  * SuperKnockback module
@@ -97,12 +98,12 @@ object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, al
                 && !ModuleCriticals.wouldDoCriticalHit()
             ) {
                 if (player.isSprinting) {
-                    network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
+                    sendStopSprinting()
                 }
 
-                network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING))
-                network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
-                network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING))
+                sendStartSprinting()
+                sendStopSprinting()
+                sendStartSprinting()
 
                 player.isSprinting = true
                 player.wasSprinting = true

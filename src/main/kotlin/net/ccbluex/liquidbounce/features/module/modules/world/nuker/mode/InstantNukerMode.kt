@@ -63,7 +63,12 @@ object InstantNukerMode : Choice("Instant") {
 
         for ((pos, _) in targets) {
             interaction.startPrediction(world) { sequence ->
-                ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, sequence)
+                ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
+                    pos,
+                    Direction.DOWN,
+                    sequence
+                )
             }
 
             swingMode.swing(InteractionHand.MAIN_HAND)

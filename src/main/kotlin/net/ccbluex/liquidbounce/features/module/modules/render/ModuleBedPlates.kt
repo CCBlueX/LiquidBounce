@@ -106,7 +106,8 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
             override fun test(block: Block): Boolean {
                 val state = block.defaultBlockState()
-                return !(state.isAir || !state.isRedstoneConductor(world, BlockPos.ZERO) && block !in WHITELIST_NON_SOLID)
+                return !(state.isAir ||
+                    !state.isRedstoneConductor(world, BlockPos.ZERO) && block !in WHITELIST_NON_SOLID)
             }
         }
 
@@ -229,7 +230,14 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                         pose().withPush {
                             // draw layer text
                             if (!compact) {
-                                drawString(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, textShadow)
+                                drawString(
+                                    textRenderer,
+                                    ROMAN_NUMERALS[surroundingBlock.layer],
+                                    x,
+                                    y,
+                                    color,
+                                    textShadow,
+                                )
                             }
                             // drawStackCount, with custom color (copied from DrawContext)
                             drawString(

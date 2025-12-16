@@ -73,7 +73,9 @@ internal object VelocityGrim2344 : VelocityMode("Grim2344-117") {
             }
             network.send(
                 ServerboundPlayerActionPacket(
-                    ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, player.blockPosition(), player.direction.opposite
+                    ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
+                    player.blockPosition(),
+                    player.direction.opposite
                 )
             )
             canCancel = false

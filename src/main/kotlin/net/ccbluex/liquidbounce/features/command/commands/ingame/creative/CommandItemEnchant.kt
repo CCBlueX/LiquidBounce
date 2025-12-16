@@ -75,7 +75,9 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
 
                         sendItemPacket(itemStack)
                         chat(
-                            regular(command.resultWithTree("enchantedItem", enchantment.registeredName, level ?: "max")),
+                            regular(
+                                command.resultWithTree("enchantedItem", enchantment.registeredName, level ?: "max")
+                            ),
                             metadata = MessageMetadata(id = "CItemEnchant#info")
                         )
                     }

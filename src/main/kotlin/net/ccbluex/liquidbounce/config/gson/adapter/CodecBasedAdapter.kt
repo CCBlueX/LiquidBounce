@@ -42,7 +42,8 @@ import java.lang.reflect.Type
  */
 class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, JsonDeserializer<T> {
 
-    private val jsonOps get() = (mc.level?.registryAccess() ?: RegistryAccess.EMPTY).createSerializationContext(JsonOps.INSTANCE)
+    private val jsonOps
+        get() = (mc.level?.registryAccess() ?: RegistryAccess.EMPTY).createSerializationContext(JsonOps.INSTANCE)
 
     override fun deserialize(
         jsonElement: JsonElement?,

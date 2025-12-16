@@ -119,7 +119,9 @@ enum class Sorting(
     VANILLA("Vanilla", null),
     PING("Ping", Comparator.comparingInt { it.latency }),
     LENGTH("NameLength", Comparator.comparingInt { it.profile.name.length }),
-    SCORE_LENGTH("DisplayNameLength", Comparator.comparingInt { (it.tabListDisplayName ?: PlainText.EMPTY).string.length }),
+    SCORE_LENGTH("DisplayNameLength", Comparator.comparingInt {
+        (it.tabListDisplayName ?: PlainText.EMPTY).string.length
+    }),
     ALPHABETICAL("Alphabetical", Comparator.comparing { it.profile.name }),
     REVERSE_ALPHABETICAL("ReverseAlphabetical", Comparator.comparing({ it.profile.name }, Comparator.reverseOrder())),
     NONE("None", { _, _ -> 0 })

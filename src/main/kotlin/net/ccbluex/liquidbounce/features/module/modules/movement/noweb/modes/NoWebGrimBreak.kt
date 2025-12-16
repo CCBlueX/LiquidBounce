@@ -39,9 +39,15 @@ object NoWebGrimBreak : NoWebMode("Grim2365") {
     override fun handleEntityCollision(pos: BlockPos): Boolean {
         if (breakOnWorld) world.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState())
 
-        val start = ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN)
-        val abort = ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN)
-        val finish = ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
+        val start = ServerboundPlayerActionPacket(
+            ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN
+        )
+        val abort = ServerboundPlayerActionPacket(
+            ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN
+        )
+        val finish = ServerboundPlayerActionPacket(
+            ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN
+        )
 
         network.send(start)
         network.send(abort)

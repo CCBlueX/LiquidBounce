@@ -57,7 +57,7 @@ fun inputByName(name: String): InputConstants.Key {
  * Checks whether this key is currently pressed.
  *
  * This extension property uses the current window handle to determine if
- * the key represented by this [InputUtil.Key] is being pressed.
+ * the key represented by this [InputConstants.Key] is being pressed.
  *
  * @return `true` if the key is pressed; otherwise, `false`.
  */
@@ -98,7 +98,8 @@ val availableMouseKeys: Set<String>
 
 val availableInputKeys: Set<String> = availableKeyboardKeys + availableMouseKeys + "none"
 
-fun InteractionResult.shouldSwingHand() = this is InteractionResult.Success && this.swingSource == InteractionResult.SwingSource.CLIENT
+fun InteractionResult.shouldSwingHand() =
+    this is InteractionResult.Success && this.swingSource == InteractionResult.SwingSource.CLIENT
 
 /**
  * Try to parse the key into [InputBind.Modifier] instance.

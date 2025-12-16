@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
-import net.minecraft.client.multiplayer.prediction.PredictiveAction
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.UseOnContext
@@ -40,6 +39,7 @@ import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.InteractionHand
@@ -58,6 +58,14 @@ internal fun sendStopSneaking() {
     if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) return
 
     network.sendPacket(PlayerSneakPacket.STOP)
+}
+
+fun sendStartSprinting() {
+    network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING))
+}
+
+fun sendStopSprinting() {
+    network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
 }
 
 @Suppress("LongParameterList")
@@ -123,7 +131,7 @@ fun clickBlockWithSlot(
 }
 
 /**
- * [ClientPlayerInteractionManager.interactItem] but with custom rotations.
+ * [MultiPlayerGameMode.interactItem] but with custom rotations.
  */
 fun MultiPlayerGameMode.interactItem(
     player: Player,

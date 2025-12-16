@@ -29,10 +29,12 @@ import java.lang.reflect.Type
 
 object InputUtilAdapter : JsonSerializer<InputConstants.Key>, JsonDeserializer<InputConstants.Key> {
 
-    override fun serialize(src: InputConstants.Key, typeOfSrc: Type, context: JsonSerializationContext) =
-        JsonPrimitive(src.name)
+    override fun serialize(
+        src: InputConstants.Key, typeOfSrc: Type, context: JsonSerializationContext
+    ) = JsonPrimitive(src.name)
 
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): InputConstants.Key =
-        InputConstants.getKey(json.asString)
+    override fun deserialize(
+        json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?
+    ): InputConstants.Key = InputConstants.getKey(json.asString)
 
 }

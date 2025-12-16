@@ -42,8 +42,10 @@ object FloorNukerArea : NukerArea("Floor") {
 
     @Suppress("detekt:CognitiveComplexMethod")
     override fun lookupTargets(radius: Float, count: Int?): List<Pair<BlockPos, BlockState>> {
-        val (startX, startY, startZ) = if (relativeToPlayer) startPosition.offset(player.blockPosition()) else startPosition
-        val (endX, endY, endZ) = if (relativeToPlayer) endPosition.offset(player.blockPosition()) else endPosition
+        val (startX, startY, startZ) =
+            if (relativeToPlayer) startPosition.offset(player.blockPosition()) else startPosition
+        val (endX, endY, endZ) =
+            if (relativeToPlayer) endPosition.offset(player.blockPosition()) else endPosition
 
         val start = BlockPos.MutableBlockPos(startX, startY, startZ)
         val end = BlockPos.MutableBlockPos(endX, endY, endZ)

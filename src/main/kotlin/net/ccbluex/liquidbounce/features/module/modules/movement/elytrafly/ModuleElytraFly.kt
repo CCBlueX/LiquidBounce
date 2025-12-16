@@ -97,7 +97,9 @@ object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
 
         if (stop && player.isFallFlying) {
             player.stopFallFlying()
-            network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING))
+            network.send(
+                ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+            )
             needsToRestart = false
             return@tickHandler
         }
@@ -112,7 +114,9 @@ object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
             val modeDoesNotPreventStopping = activeChoice !is ElytraFlyModeStatic ||
                 !activeChoice.durabilityExploitNotWhileMove || !player.moving
             if (durabilityExploit && modeDoesNotPreventStopping) {
-                network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING))
+                network.send(
+                    ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+                )
                 needsToRestart = true
             }
         } else if (
@@ -126,7 +130,9 @@ object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
             // Jump must be off due to abnormal speed boosts
             player.input.set(jump = false)
             player.startFallFlying()
-            network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING))
+            network.send(
+                ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+            )
         }
     }
 

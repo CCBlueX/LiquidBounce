@@ -74,7 +74,9 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
         val packet = event.packet
 
         // Check if this is a regular velocity update
-        if ((packet is ClientboundSetEntityMotionPacket && packet.id == player.id) || packet is ClientboundExplodePacket) {
+        if ((packet is ClientboundSetEntityMotionPacket && packet.id == player.id)
+            || packet is ClientboundExplodePacket
+        ) {
             if (OnlyFacing.enabled && !shouldStrafe) {
                 return@sequenceHandler
             }

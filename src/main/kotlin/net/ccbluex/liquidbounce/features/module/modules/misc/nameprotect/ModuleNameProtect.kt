@@ -107,11 +107,11 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             emptyList()
         }
 
-        val playerName = player.gameProfile?.name ?: mc.user.name
+        val playerName = player.gameProfile.name ?: mc.user.name
 
         val otherPlayers = if (ReplaceOthers.enabled) {
-            network.onlinePlayers?.mapNotNull { playerListEntry ->
-                val otherName = playerListEntry?.profile?.name
+            network.onlinePlayers.mapNotNull { playerListEntry ->
+                val otherName = playerListEntry.profile.name
 
                 if (otherName != playerName) otherName else null
             }
@@ -125,10 +125,12 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         )
     }
 
-    private val stringMappingCache = LfuCache<String, String>(DEFAULT_CACHE_SIZE)
-    private val orderedTextMappingCache = LfuCache<FormattedCharSequence, WrappedOrderedText>(DEFAULT_CACHE_SIZE) { _, v ->
-        mappedCharListPool.recycle(v.mappedCharacters)
-    }
+    private val stringMappingCache =
+        LfuCache<String, String>(DEFAULT_CACHE_SIZE)
+    private val orderedTextMappingCache =
+        LfuCache<FormattedCharSequence, WrappedOrderedText>(DEFAULT_CACHE_SIZE) { _, v ->
+            mappedCharListPool.recycle(v.mappedCharacters)
+        }
     private val mappedCharListPool = Pool(
         initializer = { ObjectArrayList(128) },
         finalizer = ObjectArrayList<MappedCharacter>::clear,
@@ -181,7 +183,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         }
 
     /**
-     * Wraps an [OrderedText] to apply name protection.
+     * Wraps an [FormattedCharSequence] to apply name protection.
      */
     private fun uncachedWrap(original: FormattedCharSequence): WrappedOrderedText {
         val mappedCharacters = mappedCharListPool.borrow()

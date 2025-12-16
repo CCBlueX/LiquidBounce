@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.entity.projectile.ProjectileUtil
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.AABB
@@ -68,11 +67,14 @@ class SimulatedArrow(
         return null
     }
 
+    @Suppress("CognitiveComplexMethod")
     private fun updateCollision(pos: Vec3, newPos: Vec3): HitResult? {
         val world = this.world
 
-        val arrowEntity = Arrow(this.world, this.pos.x, this.pos.y, this.pos.z, ItemStack(Items.ARROW),
-            null)
+        val arrowEntity = Arrow(
+            this.world, this.pos.x, this.pos.y, this.pos.z,
+            Items.ARROW.defaultInstance, null
+        )
 
         // Get landing position
         val blockHitResult = world.clip(
@@ -120,11 +122,7 @@ class SimulatedArrow(
             }
         }
 
-        if (blockHitResult != null && blockHitResult.type != HitResult.Type.MISS) {
-            return blockHitResult
-        }
-
-        return null
+        return blockHitResult.takeIf { it.type != HitResult.Type.MISS }
     }
 
     @Suppress("FunctionOnlyReturningConstant")

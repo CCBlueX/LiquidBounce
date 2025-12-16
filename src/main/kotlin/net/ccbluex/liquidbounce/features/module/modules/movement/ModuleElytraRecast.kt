@@ -56,7 +56,9 @@ object ModuleElytraRecast : ClientModule("ElytraRecast", Category.MOVEMENT) {
     fun recastElytra(): Boolean {
         if (shouldRecast) {
             player.startFallFlying()
-            network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING))
+            network.send(
+                ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+            )
             return true
         }
 

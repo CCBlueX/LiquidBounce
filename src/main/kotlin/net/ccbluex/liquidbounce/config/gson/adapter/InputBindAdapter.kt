@@ -63,7 +63,10 @@ object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind>
         }
 
         val jsonObject = json.asJsonObject
-        val boundKey = context.deserialize<InputConstants.Key>(jsonObject.get("boundKey"), InputConstants.Key::class.java)
+        val boundKey = context.deserialize<InputConstants.Key>(
+            jsonObject.get("boundKey"),
+            InputConstants.Key::class.java
+        )
         val actionStr = jsonObject.string("action")
         val action = InputBind.BindAction.entries.find { it.choiceName.equals(actionStr, ignoreCase = true) }
             ?: InputBind.BindAction.TOGGLE

@@ -49,11 +49,7 @@ fun rayTraceCollidingBlocks(start: Vec3, end: Vec3): BlockHitResult? {
         )
     )
 
-    if (result == null || result.type != HitResult.Type.BLOCK) {
-        return null
-    }
-
-    return result
+    return result.takeIf { it.type == HitResult.Type.BLOCK }
 }
 
 fun raytraceEntity(
@@ -186,7 +182,8 @@ fun facingEnemy(
 
     val distance = cameraVec.distanceToSqr(entityHitResult.location)
 
-    return distance <= rangeSquared && canSeePointFrom(cameraVec, entityHitResult.location) || distance <= wallsRangeSquared
+    return distance <= wallsRangeSquared
+        || distance <= rangeSquared && canSeePointFrom(cameraVec, entityHitResult.location)
 }
 
 /**

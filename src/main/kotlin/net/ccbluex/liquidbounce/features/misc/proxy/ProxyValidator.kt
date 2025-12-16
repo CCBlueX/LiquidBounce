@@ -146,7 +146,11 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
         override fun isAcceptingMessages() = clientConnection.isConnected
     }
 
-    clientConnection.initiateServerboundStatusConnection(serverAddress.host, serverAddress.port, clientQueryPacketListener)
+    clientConnection.initiateServerboundStatusConnection(
+        serverAddress.host,
+        serverAddress.port,
+        clientQueryPacketListener
+    )
     clientConnection.send(ServerboundStatusRequestPacket.INSTANCE)
     logger.info("Sent query request via proxy [$host:$port]")
 }.onFailure { throwable -> failure(throwable) }

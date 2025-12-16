@@ -173,7 +173,9 @@ class DroneControlScreen : Screen("BowAimbot Control Panel".asPlainText()) {
             10000.0
         )
 
-        this.focusedEntity = target?.let { EntityFocusData(it.entity, it.location.y, it.location.y - it.entity.position().y) }
+        this.focusedEntity = target?.let {
+            EntityFocusData(it.entity, it.location.y, it.location.y - it.entity.position().y)
+        }
 
         return super.mouseReleased(click)
     }

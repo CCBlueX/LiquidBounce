@@ -26,7 +26,9 @@ internal object ElytraFlyModeVanilla : ElytraFlyMode("Vanilla") {
 
     override fun onTick() {
         if (player.moving) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = ModuleElytraFly.Speed.horizontal.toDouble()))
+            player.deltaMovement = player.deltaMovement.withStrafe(
+                speed = ModuleElytraFly.Speed.horizontal.toDouble()
+            )
         }
 
         player.deltaMovement.y = when {

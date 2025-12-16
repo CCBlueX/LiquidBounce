@@ -59,7 +59,7 @@ object ModuleNoSlow : ClientModule("NoSlow", Category.MOVEMENT) {
 
     @Suppress("unused")
     private val multiplierHandler = handler<PlayerUseMultiplier> { event ->
-        val action = player.useItem.useAnimation ?: return@handler
+        val action = player.useItem.useAnimation
         val mul = multiplier(action, event.forward, event.sideways)
 
         event.forward = mul.firstFloat()
@@ -69,12 +69,14 @@ object ModuleNoSlow : ClientModule("NoSlow", Category.MOVEMENT) {
     private fun multiplier(action: ItemUseAnimation, forward: Float, sideways: Float) = when (action) {
         ItemUseAnimation.NONE -> FloatFloatImmutablePair(forward, sideways)
         ItemUseAnimation.EAT, ItemUseAnimation.DRINK -> NoSlowConsume.getMultiplier(forward, sideways)
-        ItemUseAnimation.BLOCK, ItemUseAnimation.SPYGLASS, ItemUseAnimation.TOOT_HORN, ItemUseAnimation.BRUSH -> NoSlowBlock.getMultiplier(
+        ItemUseAnimation.BLOCK, ItemUseAnimation.SPYGLASS,
+        ItemUseAnimation.TOOT_HORN, ItemUseAnimation.BRUSH -> NoSlowBlock.getMultiplier(
             forward,
             sideways
         )
 
-        ItemUseAnimation.BOW, ItemUseAnimation.TRIDENT, ItemUseAnimation.CROSSBOW, ItemUseAnimation.SPEAR -> NoSlowBow.getMultiplier(
+        ItemUseAnimation.BOW, ItemUseAnimation.TRIDENT,
+        ItemUseAnimation.CROSSBOW, ItemUseAnimation.SPEAR -> NoSlowBow.getMultiplier(
             forward,
             sideways
         )
