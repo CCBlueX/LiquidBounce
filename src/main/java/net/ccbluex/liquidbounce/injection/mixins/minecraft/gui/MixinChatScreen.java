@@ -22,10 +22,9 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatComponentAccessor;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.ArrayListDeque;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,25 +38,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinChatScreen extends MixinScreen {
 
     /**
-     * We want to close the screen before sending the message to make sure it doesn't affect commands.
-     */
-    @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/ChatScreen;handleChatInput(Ljava/lang/String;Z)V", shift = At.Shift.BEFORE))
-    private void fixOrder(CallbackInfoReturnable<Boolean> callbackInfo) {
-        this.minecraft.setScreen(null);
-    }
-
-    /**
      * Handle user chat messages
      *
      * @param chatText chat message by client user
      */
     @Inject(method = "handleChatInput", at = @At("HEAD"), cancellable = true)
     private void handleChatMessage(String chatText, boolean addToHistory, CallbackInfo ci) {
-        ChatSendEvent chatSendEvent = new ChatSendEvent(chatText);
-
-        EventManager.INSTANCE.callEvent(chatSendEvent);
-
-        if (chatSendEvent.isCancelled()) {
+        if (EventManager.INSTANCE.callEvent(new ChatSendEvent(chatText)).isCancelled()) {
             minecraft.gui.getChat().addRecentChat(chatText);
             ci.cancel();
         }
