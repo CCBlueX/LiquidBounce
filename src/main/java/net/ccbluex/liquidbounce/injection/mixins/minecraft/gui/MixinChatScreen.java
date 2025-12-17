@@ -55,6 +55,7 @@ public abstract class MixinChatScreen extends MixinScreen {
         ChatSendEvent chatSendEvent = new ChatSendEvent(chatText);
 
         EventManager.INSTANCE.callEvent(chatSendEvent);
+        client.inGameHud.getChatHud().discardDraft();
 
         if (chatSendEvent.isCancelled()) {
             client.inGameHud.getChatHud().addToMessageHistory(chatText);
