@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.world.effect.MobEffects
 
 object SpeedPotionEffectChoice : ModuleSpeed.PotionEffectChoice("Speed") {
     private val levelRange by intRange("LevelRange", 1..2, 0..4)
 
     override fun checkPotionEffects(): Boolean {
-        val level = mc.player?.getStatusEffect(StatusEffects.SPEED)?.amplifier?.plus(1) ?: 0
+        val level = mc.player?.getEffect(MobEffects.SPEED)?.amplifier?.plus(1) ?: 0
         return level in levelRange
     }
 }
@@ -33,7 +33,7 @@ object SlownessPotionEffectChoice : ModuleSpeed.PotionEffectChoice("Slowness") {
     private val levelRange by intRange("LevelRange", 1..2, 0..4)
 
     override fun checkPotionEffects(): Boolean {
-        val level = mc.player?.getStatusEffect(StatusEffects.SLOWNESS)?.amplifier?.plus(1) ?: 0
+        val level = mc.player?.getEffect(MobEffects.SLOWNESS)?.amplifier?.plus(1) ?: 0
         return level in levelRange
     }
 }
@@ -54,8 +54,8 @@ object BothEffectsChoice : ModuleSpeed.PotionEffectChoice("Both") {
     }
 
     override fun checkPotionEffects(): Boolean {
-        val speedLevel = mc.player?.getStatusEffect(StatusEffects.SPEED)?.amplifier?.plus(1) ?: 0
-        val slownessLevel = mc.player?.getStatusEffect(StatusEffects.SLOWNESS)?.amplifier?.plus(1) ?: 0
+        val speedLevel = mc.player?.getEffect(MobEffects.SPEED)?.amplifier?.plus(1) ?: 0
+        val slownessLevel = mc.player?.getEffect(MobEffects.SLOWNESS)?.amplifier?.plus(1) ?: 0
 
         return getMultiplier(speedLevel, slownessLevel) in boostRange
     }

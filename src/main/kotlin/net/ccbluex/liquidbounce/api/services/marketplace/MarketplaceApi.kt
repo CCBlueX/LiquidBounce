@@ -25,7 +25,11 @@ import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.auth.addAuth
-import net.ccbluex.liquidbounce.api.models.marketplace.*
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemRevision
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceReview
+import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceRevisionDependency
 import net.ccbluex.liquidbounce.api.models.pagination.PaginatedResponse
 import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
 import net.ccbluex.liquidbounce.config.gson.publicGson

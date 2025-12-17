@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.text.Text
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.network.chat.Component
 import java.util.function.BiPredicate
 
 /**
@@ -42,11 +42,11 @@ object ModuleGUICloser : ClientModule("GUICloser", Category.MISC, aliases = list
     private val mode by enumChoice("Mode", Mode.MATCHES)
     private val filters by regexList("Filter", mutableSetOf(Regex("^Vote$")))
 
-    private enum class Mode(override val choiceName: String) : NamedChoice, BiPredicate<Regex, Text> {
+    private enum class Mode(override val choiceName: String) : NamedChoice, BiPredicate<Regex, Component> {
         MATCHES("Matches"),
         CONTAINS("Contains");
 
-        override fun test(regex: Regex, text: Text): Boolean = when (this) {
+        override fun test(regex: Regex, text: Component): Boolean = when (this) {
             MATCHES -> regex.matches(text.string)
             CONTAINS -> regex.containsMatchIn(text.string)
         }
@@ -54,13 +54,13 @@ object ModuleGUICloser : ClientModule("GUICloser", Category.MISC, aliases = list
 
     private val printScreenTitle by boolean("PrintScreenTitle", false).doNotIncludeAlways()
 
-    private fun isInFilter(entry: Text) = filters.any { regex ->
+    private fun isInFilter(entry: Component) = filters.any { regex ->
         mode.test(regex, entry)
     }
 
     @Suppress("unused")
     private val openScreenHandler = handler<ScreenEvent> {
-        val screen = it.screen as? HandledScreen<*> ?: return@handler
+        val screen = it.screen as? AbstractContainerScreen<*> ?: return@handler
 
         if (isInFilter(screen.title)) {
             it.cancelEvent()

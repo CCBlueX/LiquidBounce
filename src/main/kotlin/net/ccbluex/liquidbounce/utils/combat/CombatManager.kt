@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
 
 /**
  * A rotation manager
@@ -92,7 +92,7 @@ object CombatManager : EventListener {
         if (entity is LivingEntity && entity.shouldBeAttacked()) {
             duringCombat = PAUSE_COMBAT
 
-            if (entity is PlayerEntity) {
+            if (entity is Player) {
                 EventManager.callEvent(TargetChangeEvent(PlayerData.fromPlayer(entity)))
             }
         }

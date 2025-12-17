@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
 

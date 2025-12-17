@@ -20,14 +20,14 @@
 package net.ccbluex.liquidbounce.utils.render;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import net.minecraft.client.gui.ScreenRect;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.texture.TextureSetup;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.render.TextureSetup;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
 /**
- * Float version of {@link net.minecraft.client.gui.render.state.TexturedQuadGuiElementRenderState}
+ * Float version of {@link net.minecraft.client.gui.render.state.BlitRenderState}
  */
 public record TexQuadGuiElementRenderState(
     float x0,
@@ -42,15 +42,15 @@ public record TexQuadGuiElementRenderState(
     RenderPipeline pipeline,
     TextureSetup textureSetup,
     Matrix3x2f pose,
-    @Nullable ScreenRect scissorArea,
-    @Nullable ScreenRect bounds
+    @Nullable ScreenRectangle scissorArea,
+    @Nullable ScreenRectangle bounds
 ) implements LiquidBounceGuiElementRenderState {
     @Override
-    public void setupVertices(VertexConsumer vertices) {
-        vertices.vertex(pose, x0, y0).texture(u1, v1).color(argb);
-        vertices.vertex(pose, x0, y1).texture(u1, v2).color(argb);
-        vertices.vertex(pose, x1, y1).texture(u2, v2).color(argb);
-        vertices.vertex(pose, x1, y0).texture(u2, v1).color(argb);
+    public void buildVertices(VertexConsumer vertices) {
+        vertices.addVertexWith2DPose(pose, x0, y0).setUv(u1, v1).setColor(argb);
+        vertices.addVertexWith2DPose(pose, x0, y1).setUv(u1, v2).setColor(argb);
+        vertices.addVertexWith2DPose(pose, x1, y1).setUv(u2, v2).setColor(argb);
+        vertices.addVertexWith2DPose(pose, x1, y0).setUv(u2, v1).setColor(argb);
     }
 
 }

@@ -23,9 +23,9 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
-import net.minecraft.client.gui.screen.world.LevelLoadingScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.screen.ScreenTexts;
+import net.minecraft.client.gui.screens.LevelLoadingScreen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.CommonComponents;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -40,8 +40,8 @@ public abstract class MixinLevelLoadingScreen extends MixinScreen {
             return;
         }
 
-        addDrawableChild(ButtonWidget.builder(ScreenTexts.PROCEED, button -> this.client.setScreen(null))
-                .dimensions(this.width / 2 - 100, this.height / 4 + 120 + 12, 200, 20)
+        addRenderableWidget(Button.builder(CommonComponents.GUI_PROCEED, button -> this.minecraft.setScreen(null))
+                .bounds(this.width / 2 - 100, this.height / 4 + 120 + 12, 200, 20)
                 .build());
     }
 

@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
-import java.util.SequencedSet
+import java.util.*
 
 open class ListValue<T : MutableCollection<E>, E>(
     name: String,

@@ -36,10 +36,10 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
 import net.ccbluex.liquidbounce.utils.client.toText
 import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.minecraft.text.CharacterVisitor
-import net.minecraft.text.OrderedText
-import net.minecraft.text.Style
-import net.minecraft.text.Text
+import net.minecraft.util.FormattedCharSink
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
 
 private const val DEFAULT_CACHE_SIZE = 512
 
@@ -107,11 +107,11 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
             emptyList()
         }
 
-        val playerName = player.gameProfile?.name ?: mc.session.username
+        val playerName = player.gameProfile.name ?: mc.user.name
 
         val otherPlayers = if (ReplaceOthers.enabled) {
-            network.playerList?.mapNotNull { playerListEntry ->
-                val otherName = playerListEntry?.profile?.name
+            network.onlinePlayers.mapNotNull { playerListEntry ->
+                val otherName = playerListEntry.profile.name
 
                 if (otherName != playerName) otherName else null
             }
@@ -125,10 +125,12 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         )
     }
 
-    private val stringMappingCache = LfuCache<String, String>(DEFAULT_CACHE_SIZE)
-    private val orderedTextMappingCache = LfuCache<OrderedText, WrappedOrderedText>(DEFAULT_CACHE_SIZE) { _, v ->
-        mappedCharListPool.recycle(v.mappedCharacters)
-    }
+    private val stringMappingCache =
+        LfuCache<String, String>(DEFAULT_CACHE_SIZE)
+    private val orderedTextMappingCache =
+        LfuCache<FormattedCharSequence, WrappedOrderedText>(DEFAULT_CACHE_SIZE) { _, v ->
+            mappedCharListPool.recycle(v.mappedCharacters)
+        }
     private val mappedCharListPool = Pool(
         initializer = { ObjectArrayList(128) },
         finalizer = ObjectArrayList<MappedCharacter>::clear,
@@ -137,7 +139,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
     fun replace(original: String): String =
         when {
             !running -> original
-            mc.isOnThread -> stringMappingCache.getOrPut(original) { uncachedReplace(original) }
+            mc.isSameThread -> stringMappingCache.getOrPut(original) { uncachedReplace(original) }
             else -> uncachedReplace(original)
         }
 
@@ -173,17 +175,17 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         }
     }
 
-    fun wrap(original: OrderedText): OrderedText =
+    fun wrap(original: FormattedCharSequence): FormattedCharSequence =
         when {
             !running -> original
-            mc.isOnThread -> orderedTextMappingCache.getOrPut(original) { uncachedWrap(original) }
+            mc.isSameThread -> orderedTextMappingCache.getOrPut(original) { uncachedWrap(original) }
             else -> uncachedWrap(original)
         }
 
     /**
-     * Wraps an [OrderedText] to apply name protection.
+     * Wraps an [FormattedCharSequence] to apply name protection.
      */
-    private fun uncachedWrap(original: OrderedText): WrappedOrderedText {
+    private fun uncachedWrap(original: FormattedCharSequence): WrappedOrderedText {
         val mappedCharacters = mappedCharListPool.borrow()
 
         val originalCharacters = mappedCharListPool.borrow()
@@ -254,8 +256,9 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
         @JvmField val codePoint: Int,
     )
 
-    private class WrappedOrderedText(@JvmField val mappedCharacters: ObjectArrayList<MappedCharacter>) : OrderedText {
-        override fun accept(visitor: CharacterVisitor): Boolean {
+    private class WrappedOrderedText(@JvmField val mappedCharacters: ObjectArrayList<MappedCharacter>) :
+        FormattedCharSequence {
+        override fun accept(visitor: FormattedCharSink): Boolean {
             for (index in 0 until mappedCharacters.size) {
                 val char = mappedCharacters[index] as MappedCharacter
                 if (!visitor.accept(index, char.style, char.codePoint)) {
@@ -273,7 +276,7 @@ object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
  * 1. Degenerates legacy formatting into new formatting [LegacyTextSanitizer]
  * 2. Applies [ModuleNameProtect] - if needed
  */
-fun Text.sanitizeForeignInput(): Text {
+fun Component.sanitizeForeignInput(): Component {
     val degeneratedText = LegacyTextSanitizer.SanitizedLegacyText(this)
 
     if (!ModuleNameProtect.running) {

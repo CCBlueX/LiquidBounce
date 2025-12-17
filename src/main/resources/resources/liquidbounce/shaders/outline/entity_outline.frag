@@ -8,18 +8,18 @@
 in vec2 texCoord;
 out vec4 fragColor;
 
-uniform sampler2D texture0;
+uniform sampler2D InSampler;
 
 void main() {
     vec2 uv = texCoord.xy;
 
-    vec4 color = textureLod(texture0, uv, 0.0);
+    vec4 color = textureLod(InSampler, uv, 0.0);
     if (color.a != 0.0) {
         // inside of the entity
         discard;
     }
 
-    vec2 texelSize = vec2(1.0) / textureSize(texture0, 0).xy;
+    vec2 texelSize = vec2(1.0) / textureSize(InSampler, 0).xy;
     vec3 outColor = vec3(0.0);
     float outAlpha = 0.0;
     int iterations = 0;
@@ -36,7 +36,7 @@ void main() {
             float y = 1.0 * float(iy);
 
             vec2 offset = vec2(texelSize.x * x, texelSize.y * y);
-            vec4 positionColor = textureLod(texture0, uv + offset, 0.0);
+            vec4 positionColor = textureLod(InSampler, uv + offset, 0.0);
 
             float distance = length(vec2(x, y));
             float weight = max(0.0, 1.0 - (distance / 7.08));

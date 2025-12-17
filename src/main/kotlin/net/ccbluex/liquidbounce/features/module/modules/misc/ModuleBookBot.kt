@@ -33,14 +33,14 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.component.type.WrittenBookContentComponent
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.BookUpdateC2SPacket
-import net.minecraft.text.RawFilteredPair
-import net.minecraft.text.Style
-import net.minecraft.text.Text
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.item.component.WrittenBookContent
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.game.ServerboundEditBookPacket
+import net.minecraft.server.network.Filterable
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
 import okio.buffer
 import okio.source
 import java.util.*
@@ -107,7 +107,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
 
     private fun isCandidate(itemStack: ItemStack): Boolean {
         return itemStack.item == Items.WRITABLE_BOOK &&
-            itemStack.get(DataComponentTypes.WRITABLE_BOOK_CONTENT)?.pages?.isEmpty() == true
+            itemStack.get(DataComponents.WRITABLE_BOOK_CONTENT)?.pages()?.isEmpty() == true
     }
 
     private val randomBook get() = Slots.All.findSlot(::isCandidate)
@@ -119,7 +119,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
             return@handler
         }
 
-        if (!isCandidate(player.mainHandStack)) {
+        if (!isCandidate(player.mainHandItem)) {
             event.schedule(
                 inventoryConstraints, InventoryAction.Click.performSwap(
                 from = book,
@@ -156,7 +156,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
      * @see GenerationMode.generate
      */
     private fun writeBook() {
-        if (!isCandidate(player.mainHandStack)) {
+        if (!isCandidate(player.mainHandItem)) {
             return
         }
 
@@ -166,7 +166,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
             .iterator()
 
         bookBuilder.buildBookContent(generator) {
-            mc.textRenderer.textHandler.widthRetriever.getWidth(it, Style.EMPTY)
+            mc.font.splitter.widthProvider.getWidth(it, Style.EMPTY)
         }
         bookBuilder.writeBook()
 
@@ -185,7 +185,7 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
         private val pageAmount: Int = generationMode.activeChoice.pages
 
         private val pages = ArrayList<String>(pageAmount)
-        private val filteredPages = ArrayList<RawFilteredPair<Text>>(pageAmount)
+        private val filteredPages = ArrayList<Filterable<Component>>(pageAmount)
 
         /**
          * @source <a href="https://github.com/MeteorDevelopment/meteor-client/blob/2025789457e5b4c0671f04f0d3c7e0d91a31765c/src/main/java/meteordevelopment/meteorclient/systems/modules/misc/BookBot.java#L252-L326">code section</a>
@@ -246,15 +246,15 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
         }
 
         fun addPage(page: String) {
-            filteredPages.add(RawFilteredPair.of(Text.literal(page)))
+            filteredPages.add(Filterable.passThrough(Component.literal(page)))
             pages.add(page)
         }
 
         fun writeBook() {
-            player.mainHandStack.set(
-                DataComponentTypes.WRITTEN_BOOK_CONTENT,
-                WrittenBookContentComponent(
-                    RawFilteredPair.of(title),
+            player.mainHandItem.set(
+                DataComponents.WRITTEN_BOOK_CONTENT,
+                WrittenBookContent(
+                    Filterable.passThrough(title),
                     player.gameProfile.name,
                     0,
                     filteredPages,
@@ -262,8 +262,8 @@ object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit =
                 )
             )
 
-            player.networkHandler.sendPacket(
-                BookUpdateC2SPacket(
+            player.connection.send(
+                ServerboundEditBookPacket(
                     player.inventory.selectedSlot,
                     pages,
                     if (Sign.enabled) Optional.of(title) else Optional.empty()

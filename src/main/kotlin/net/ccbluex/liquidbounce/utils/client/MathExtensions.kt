@@ -21,58 +21,58 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Direction
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 import org.joml.Vector2f
 import java.math.RoundingMode
 
-inline fun Float.toRadians() = this * MathHelper.RADIANS_PER_DEGREE
-inline fun Double.toRadians() = this * MathHelper.RADIANS_PER_DEGREE
-inline fun Float.toDegrees() = this * MathHelper.DEGREES_PER_RADIAN
-inline fun Double.toDegrees() = this * MathHelper.DEGREES_PER_RADIAN
+inline fun Float.toRadians() = this * Mth.DEG_TO_RAD
+inline fun Double.toRadians() = this * Mth.DEG_TO_RAD
+inline fun Float.toDegrees() = this * Mth.RAD_TO_DEG
+inline fun Double.toDegrees() = this * Mth.RAD_TO_DEG
 
-inline fun Float.floorToInt() = MathHelper.floor(this)
-inline fun Double.floorToInt() = MathHelper.floor(this)
-inline fun Float.ceilToInt() = MathHelper.ceil(this)
-inline fun Double.ceilToInt() = MathHelper.ceil(this)
+inline fun Float.floorToInt() = Mth.floor(this)
+inline fun Double.floorToInt() = Mth.floor(this)
+inline fun Float.ceilToInt() = Mth.ceil(this)
+inline fun Double.ceilToInt() = Mth.ceil(this)
 
 inline fun Float.fastSin() = toDouble().fastSin()
-inline fun Double.fastSin() = MathHelper.sin(this)
+inline fun Double.fastSin() = Mth.sin(this)
 inline fun Float.fastCos() = toDouble().fastCos()
-inline fun Double.fastCos() = MathHelper.cos(this)
+inline fun Double.fastCos() = Mth.cos(this)
 
-fun Box.getFace(direction: Direction): AlignedFace {
+fun AABB.getFace(direction: Direction): AlignedFace {
     return when (direction) {
         Direction.DOWN -> AlignedFace(
-            Vec3d(this.minX, this.minY, this.minZ),
-            Vec3d(this.maxX, this.minY, this.maxZ)
+            Vec3(this.minX, this.minY, this.minZ),
+            Vec3(this.maxX, this.minY, this.maxZ)
         )
 
         Direction.UP -> AlignedFace(
-            Vec3d(this.minX, this.maxY, this.minZ),
-            Vec3d(this.maxX, this.maxY, this.maxZ)
+            Vec3(this.minX, this.maxY, this.minZ),
+            Vec3(this.maxX, this.maxY, this.maxZ)
         )
 
         Direction.SOUTH -> AlignedFace(
-            Vec3d(this.minX, this.minY, this.maxZ),
-            Vec3d(this.maxX, this.maxY, this.maxZ)
+            Vec3(this.minX, this.minY, this.maxZ),
+            Vec3(this.maxX, this.maxY, this.maxZ)
         )
 
         Direction.NORTH -> AlignedFace(
-            Vec3d(this.minX, this.minY, this.minZ),
-            Vec3d(this.maxX, this.maxY, this.minZ)
+            Vec3(this.minX, this.minY, this.minZ),
+            Vec3(this.maxX, this.maxY, this.minZ)
         )
 
         Direction.EAST -> AlignedFace(
-            Vec3d(this.maxX, this.minY, this.minZ),
-            Vec3d(this.maxX, this.maxY, this.maxZ)
+            Vec3(this.maxX, this.minY, this.minZ),
+            Vec3(this.maxX, this.maxY, this.maxZ)
         )
 
         Direction.WEST -> AlignedFace(
-            Vec3d(this.minX, this.minY, this.minZ),
-            Vec3d(this.minX, this.maxY, this.maxZ)
+            Vec3(this.minX, this.minY, this.minZ),
+            Vec3(this.minX, this.maxY, this.maxZ)
         )
     }
 }

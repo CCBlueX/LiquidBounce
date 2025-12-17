@@ -35,8 +35,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import java.util.EnumSet
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import java.util.*
 
 /**
  * AutoDisable module
@@ -84,7 +84,7 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
 
     @Suppress("unused")
     private val worldChangesHandler = handler<PacketEvent> {
-        if (it.packet is PlayerPositionLookS2CPacket && DisableOn.FLAG in disableOn) {
+        if (it.packet is ClientboundPlayerPositionPacket && DisableOn.FLAG in disableOn) {
             disableAndNotify("flag")
         }
     }

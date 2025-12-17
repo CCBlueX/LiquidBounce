@@ -19,13 +19,19 @@
 package net.ccbluex.liquidbounce.api.services.auth
 
 import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.ChannelFactory
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.channel.socket.SocketChannel
-import io.netty.handler.codec.http.*
+import io.netty.handler.codec.http.DefaultFullHttpResponse
+import io.netty.handler.codec.http.FullHttpRequest
+import io.netty.handler.codec.http.HttpHeaderNames
+import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.handler.codec.http.HttpResponseStatus
+import io.netty.handler.codec.http.HttpServerCodec
+import io.netty.handler.codec.http.HttpVersion
+import io.netty.handler.codec.http.QueryStringDecoder
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_AUTHORIZE_URL
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_CLIENT_ID
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount

@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
-import net.minecraft.block.BlockState
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.core.BlockPos
 
 abstract class GenericColorMode<in T>(name: String): Choice(name) {
     abstract fun getColor(param: T): Color4b
@@ -59,7 +59,7 @@ class MapColorMode(
     override fun getColor(param: Pair<BlockPos, BlockState>): Color4b {
         val (pos, state) = param
 
-        return Color4b(state.getMapColor(world, pos).color).with(a = alpha)
+        return Color4b(state.getMapColor(world, pos).col).with(a = alpha)
     }
 
 }

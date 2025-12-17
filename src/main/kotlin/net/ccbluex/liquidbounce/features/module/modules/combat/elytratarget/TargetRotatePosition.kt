@@ -21,18 +21,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.phys.Vec3
 
 @Suppress("unused")
 internal enum class TargetRotatePosition(
     override val choiceName: String,
-    val position: (LivingEntity) -> Vec3d
+    val position: (LivingEntity) -> Vec3
 ) : NamedChoice {
     EYES("Eyes", { target ->
-        target.eyePos
+        target.eyePosition
     }),
     CENTER("Center", { target ->
-        target.entityPos.add(0.0, target.height / 2.0, 0.0)
+        target.position().add(0.0, target.bbHeight / 2.0, 0.0)
     })
 }

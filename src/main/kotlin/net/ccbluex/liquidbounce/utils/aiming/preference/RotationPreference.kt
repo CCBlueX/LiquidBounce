@@ -19,14 +19,14 @@
 package net.ccbluex.liquidbounce.utils.aiming.preference
 
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 interface RotationPreference : Comparator<Rotation> {
 
-    fun getPreferredSpot(eyesPos: Vec3d, range: Double, ): Vec3d
+    fun getPreferredSpot(eyesPos: Vec3, range: Double, ): Vec3
 
-    fun getPreferredSpotOnBox(box: Box, eyesPos: Vec3d, range: Double): Vec3d {
+    fun getPreferredSpotOnBox(box: AABB, eyesPos: Vec3, range: Double): Vec3 {
         return getPreferredSpot(eyesPos, range)
     }
 

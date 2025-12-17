@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
 interface PlayerSimulation {
-    val pos: Vec3d
+    val pos: Vec3
 
     fun tick()
 }

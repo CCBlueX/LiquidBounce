@@ -37,9 +37,9 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.entity.Entity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.phys.Vec3
 
 object CriticalsJump : Choice("Jump") {
 
@@ -84,11 +84,11 @@ object CriticalsJump : Choice("Jump") {
         }
 
         val enemies = world.findEnemies(0f..range)
-            .filter { (entity, _) -> !canBeSeen || player.canSee(entity) }
+            .filter { (entity, _) -> !canBeSeen || player.hasLineOfSight(entity) }
 
         // Change the jump motion only if the jump is a normal jump (small jumps, i.e. honey blocks
         // are not affected) and currently.
-        if (enemies.isNotEmpty() && player.isOnGround) {
+        if (enemies.isNotEmpty() && player.onGround()) {
             event.jump = true
             adjustNextJump = true
         }
@@ -117,26 +117,26 @@ object CriticalsJump : Choice("Jump") {
             return false
         }
 
-        if (player.isGliding) {
+        if (player.isFallFlying) {
             return false
         }
 
-        if (!allowsCriticalHit() || player.velocity.y < -0.08) {
+        if (!allowsCriticalHit() || player.deltaMovement.y < -0.08) {
             return false
         }
 
         val nextPossibleCrit = calculateTicksUntilNextCrit()
         val gravity = 0.08
-        val ticksTillFall = (player.velocity.y / gravity).toFloat()
+        val ticksTillFall = (player.deltaMovement.y / gravity).toFloat()
         val ticksTillCrit = nextPossibleCrit.coerceAtLeast(ticksTillFall)
         val hitProbability = 0.75f
         val damageOnCrit = 0.5f * hitProbability
         val damageLostWaiting = getCooldownDamageFactor(player, ticksTillCrit)
 
-        val (simulatedPlayerPos, simulatedTargetPos) = if (target is PlayerEntity) {
+        val (simulatedPlayerPos, simulatedTargetPos) = if (target is Player) {
             predictPlayerPos(target, ticksTillCrit.toInt())
         } else {
-            player.entityPos to target.entityPos
+            player.position() to target.position()
         }
 
         ModuleDebug.debugParameter(ModuleCriticals, "timeToCrit", ticksTillCrit)
@@ -165,14 +165,14 @@ object CriticalsJump : Choice("Jump") {
     }
 
     private fun calculateTicksUntilNextCrit(): Float {
-        val durationToWait = player.attackCooldownProgressPerTick * 0.9F - 0.5F
-        val waitedDuration = player.ticksSinceLastAttack.toFloat()
+        val durationToWait = player.currentItemAttackStrengthDelay * 0.9F - 0.5F
+        val waitedDuration = player.attackStrengthTicker.toFloat()
 
         return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
     }
 
-    private fun getCooldownDamageFactor(player: PlayerEntity, tickDelta: Float): Float {
-        val base = ((tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
+    private fun getCooldownDamageFactor(player: Player, tickDelta: Float): Float {
+        val base = ((tickDelta + 0.5f) / player.currentItemAttackStrengthDelay)
 
         return (0.2f + base * base * 0.8f).coerceAtMost(1.0f)
     }
@@ -181,7 +181,7 @@ object CriticalsJump : Choice("Jump") {
      * This function simulates a chase between the player and the target. The target continues its motion, the player
      * too but changes their rotation to the target after some reaction time.
      */
-    private fun predictPlayerPos(target: PlayerEntity, ticks: Int): Pair<Vec3d, Vec3d> {
+    private fun predictPlayerPos(target: Player, ticks: Int): Pair<Vec3, Vec3> {
         // Ticks until the player
         val reactionTime = 10
 
@@ -196,7 +196,7 @@ object CriticalsJump : Choice("Jump") {
         for (i in 0 until ticks) {
             // Rotate to the target after some time
             if (i == reactionTime) {
-                simulatedPlayer.yaw = Rotation.lookingAt(point = target.entityPos, from = simulatedPlayer.pos).yaw
+                simulatedPlayer.yaw = Rotation.lookingAt(point = target.position(), from = simulatedPlayer.pos).yaw
             }
 
             simulatedPlayer.tick()
@@ -219,10 +219,10 @@ object CriticalsJump : Choice("Jump") {
             player.x,
             player.y,
             player.z,
-            player.velocity.x,
-            player.velocity.y + initialMotion,
-            player.velocity.z,
-            player.yaw
+            player.deltaMovement.x,
+            player.deltaMovement.y + initialMotion,
+            player.deltaMovement.z,
+            player.yRot
         ).findCollision((ticksTillFall * 3.0f).toInt())?.tick
 
         if (ticksTillNextOnGround == null) {

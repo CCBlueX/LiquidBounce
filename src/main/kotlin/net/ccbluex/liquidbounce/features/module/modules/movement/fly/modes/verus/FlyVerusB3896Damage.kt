@@ -23,8 +23,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.veru
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * @anticheat Verus
@@ -50,13 +50,17 @@ internal object FlyVerusB3896Damage : Choice("VerusB3896Damage") {
     private var gotDamage = false
 
     override fun enable() {
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false,
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false,
             player.horizontalCollision))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z, false,
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y + 3.25, player.z, false,
             player.horizontalCollision))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false,
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false,
             player.horizontalCollision))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true,
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true,
             player.horizontalCollision))
     }
 
@@ -84,8 +88,8 @@ internal object FlyVerusB3896Damage : Choice("VerusB3896Damage") {
             return@tickHandler
         }
 
-        player.velocity = player.velocity.withStrafe(speed = 9.95)
-        player.velocity.y = 0.0
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 9.95))
+        player.deltaMovement.y = 0.0
         Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE_2, ModuleFly)
     }
 

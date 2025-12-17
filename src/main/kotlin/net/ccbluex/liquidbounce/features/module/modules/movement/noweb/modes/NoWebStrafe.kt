@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.ModuleNoW
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 /**
  * Bypassing Vulcan't Anti Cheat's All Version(6/27/2025)
@@ -47,12 +47,12 @@ object NoWebStrafe : NoWebMode("Strafe") {
 
     override fun handleEntityCollision(pos: BlockPos): Boolean {
         if (player.moving) {
-            if (player.isOnGround || !onlyGround) {
-                player.velocity = player.velocity.withStrafe(strength.toDouble())
+            if (player.onGround() || !onlyGround) {
+                player.setDeltaMovement(player.deltaMovement.withStrafe(strength.toDouble()))
             }
 
             if (motionY.enabled) {
-                player.velocity.y = motionY.motionStrength.toDouble()
+                player.deltaMovement.y = motionY.motionStrength.toDouble()
             }
         }
         return false

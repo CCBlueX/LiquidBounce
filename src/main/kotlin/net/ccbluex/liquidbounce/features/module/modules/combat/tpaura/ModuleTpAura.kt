@@ -37,22 +37,22 @@ import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
 object ModuleTpAura : ClientModule("TpAura", Category.COMBAT, disableOnQuit = true) {
 
     private val attackRange by float("AttackRange", 4.2f, 3f..5f)
 
-    val clicker = tree(Clicker(this, mc.options.attackKey))
+    val clicker = tree(Clicker(this, mc.options.keyAttack))
     val mode = choices("Mode", AStarMode, arrayOf(AStarMode, ImmediateMode))
     val targetSelector = tree(TargetSelector(TargetPriority.HURT_TIME))
 
     val stuckChronometer = Chronometer()
-    var desyncPlayerPosition: Vec3d? = null
+    var desyncPlayerPosition: Vec3? = null
 
     @Suppress("unused")
     private val attackRepeatable = tickHandler {
-        val position = desyncPlayerPosition ?: player.entityPos
+        val position = desyncPlayerPosition ?: player.position()
 
         clicker.click {
             val enemy = targetSelector.targets().firstOrNull {

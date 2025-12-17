@@ -104,7 +104,7 @@ class CleanupPlanGenerator(
             if (stack.isEmpty) {
                 continue
             }
-            if (!stack.isStackable || stack.count >= stack.maxCount) {
+            if (!stack.isStackable || stack.count >= stack.maxStackSize) {
                 continue
             }
 

@@ -25,22 +25,24 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.enabled
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.mode
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.entity.Entity
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.entity.Entity
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 internal object KillAuraNotifyWhenFail {
 
-    internal val failedHits = ArrayDeque<ObjectLongMutablePair<Vec3d>>()
+    internal val failedHits = ArrayDeque<ObjectLongMutablePair<Vec3>>()
     var failedHitsIncrement = 0
 
     object Box : Choice("Box") {
@@ -70,8 +72,8 @@ internal object KillAuraNotifyWhenFail {
 
         when (mode.activeChoice) {
             Box -> {
-                val centerDistance = entity.box.center.subtract(player.eyePos).length()
-                val boxSpot = player.eyePos.add(rotation.directionVector.multiply(centerDistance))
+                val centerDistance = entity.box.center.subtract(player.eyePosition).length()
+                val boxSpot = player.eyePosition.add(rotation.directionVector.scale(centerDistance))
 
                 failedHits.add(ObjectLongMutablePair(boxSpot, 0L))
             }
@@ -81,13 +83,13 @@ internal object KillAuraNotifyWhenFail {
                 val pitch = Sound.pitch
 
                 world.playSound(player, player.x, player.y, player.z, SoundEvents.UI_BUTTON_CLICK.value(),
-                    player.soundCategory, Sound.volume / 100f, pitch
+                    player.soundSource, Sound.volume / 100f, pitch
                 )
             }
         }
     }
 
-    internal fun renderFailedHits(matrixStack: MatrixStack) {
+    internal fun renderFailedHits(matrixStack: PoseStack) {
         if (failedHits.isEmpty() || (!enabled || !Box.isSelected)) {
             failedHits.clear()
             return
@@ -129,6 +131,6 @@ internal object KillAuraNotifyWhenFail {
         }
     }
 
-    private val POINT_BOX = Box(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
+    private val POINT_BOX = AABB(0.0, 0.0, 0.0, 0.05, 0.05, 0.05)
 
 }

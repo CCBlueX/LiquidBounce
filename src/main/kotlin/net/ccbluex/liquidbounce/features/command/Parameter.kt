@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.lang.translation
-import net.minecraft.text.MutableText
+import net.minecraft.network.chat.MutableComponent
 
 /**
  * Provides autocompletion for one specific parameter
@@ -60,7 +60,7 @@ class Parameter<T : Any>(
     private val translationBaseKey: String
         get() = "${command?.translationBaseKey}.parameter.$name"
 
-    val description: MutableText
+    val description: MutableComponent
         get() = translation("$translationBaseKey.description")
 
     fun interface Verificator<T : Any> {

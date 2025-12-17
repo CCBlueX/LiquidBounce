@@ -29,22 +29,22 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.minecraft.client.gui.screen.TitleScreen
-import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
-import net.minecraft.client.network.ServerAddress
-import net.minecraft.client.network.ServerInfo
-import net.minecraft.network.packet.c2s.play.RequestCommandCompletionsC2SPacket
-import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket
-import net.minecraft.network.packet.s2c.common.CustomPayloadS2CPacket
-import net.minecraft.network.packet.s2c.config.SelectKnownPacksS2CPacket
-import net.minecraft.network.packet.s2c.login.LoginHelloS2CPacket
-import net.minecraft.network.packet.s2c.play.CommandSuggestionsS2CPacket
-import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
-import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
+import net.minecraft.client.gui.screens.TitleScreen
+import net.minecraft.client.gui.screens.ConnectScreen
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
+import net.minecraft.client.multiplayer.resolver.ServerAddress
+import net.minecraft.client.multiplayer.ServerData
+import net.minecraft.network.protocol.game.ServerboundCommandSuggestionPacket
+import net.minecraft.network.protocol.common.ClientboundPingPacket
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket
+import net.minecraft.network.protocol.configuration.ClientboundSelectKnownPacks
+import net.minecraft.network.protocol.login.ClientboundHelloPacket
+import net.minecraft.network.protocol.game.ClientboundCommandSuggestionsPacket
+import net.minecraft.network.protocol.game.ClientboundLoginPacket
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.resources.Identifier
 import java.net.InetAddress
 import java.util.TreeSet
 import kotlin.collections.ArrayDeque
@@ -70,7 +70,7 @@ object ServerObserver : EventListener {
         "negativity"
     )
 
-    var serverInfo: ServerInfo? = null
+    var serverInfo: ServerData? = null
         private set
     var serverAddress: ServerAddress? = null
         private set
@@ -101,13 +101,13 @@ object ServerObserver : EventListener {
     var plugins: Set<String>? = null
         private set
 
-    val formattedPluginList: List<Text>?
+    val formattedPluginList: List<Component>?
         get() = plugins?.map { pluginName ->
             pluginName.asPlainText(
                 if (knownAntiCheats.contains(pluginName)) {
-                    Formatting.GREEN
+                    ChatFormatting.GREEN
                 } else {
-                    Formatting.RED
+                    ChatFormatting.RED
                 }
             )
         }
@@ -124,11 +124,11 @@ object ServerObserver : EventListener {
      */
     fun reconnect() {
         val serverInfo = serverInfo ?: error("no known last server")
-        val serverAddress = ServerAddress.parse(serverInfo.address)
+        val serverAddress = ServerAddress.parseString(serverInfo.ip)
 
         mc.execute {
-            ConnectScreen.connect(
-                MultiplayerScreen(TitleScreen()),
+            ConnectScreen.startConnecting(
+                JoinMultiplayerScreen(TitleScreen()),
                 mc,
                 serverAddress,
                 serverInfo,
@@ -151,18 +151,18 @@ object ServerObserver : EventListener {
     suspend fun captureCommandSuggestions(timeout: Duration): Boolean {
         this.plugins = null
         val completionId = Random.nextInt(0, 32767)
-        network.sendPacket(RequestCommandCompletionsC2SPacket(completionId, "/"))
+        network.send(ServerboundCommandSuggestionPacket(completionId, "/"))
         /**
          * Server sends a command suggestions packet with a list of commands.
          * These commands are usually prefixed with the plugin name and a colon.
          */
         val packet = waitMatchesWithTimeout<PacketEvent>(timeout, priority = FIRST_PRIORITY) {
-            it.packet is CommandSuggestionsS2CPacket && it.packet.id == completionId
+            it.packet is ClientboundCommandSuggestionsPacket && it.packet.id == completionId
         }?.packet ?: return false
 
-        packet as CommandSuggestionsS2CPacket
+        packet as ClientboundCommandSuggestionsPacket
 
-        this.plugins = packet.suggestions.list.mapNotNullTo(objectRBTreeSetOf()) { cmd ->
+        this.plugins = packet.toSuggestions().list.mapNotNullTo(objectRBTreeSetOf()) { cmd ->
             val command = cmd.text.split(":")
 
             if (command.size > 1) {
@@ -175,7 +175,7 @@ object ServerObserver : EventListener {
     }
 
     suspend fun requestHostingInformation() {
-        val hostAddress: String = this.serverAddress?.address ?: return
+        val hostAddress: String = this.serverAddress?.host ?: return
         val ipAddress: InetAddress = try {
             // If it's already an IP address, it will parse it directly
             // If it's a domain name, it will resolve it to an IP address
@@ -197,7 +197,7 @@ object ServerObserver : EventListener {
              * The world time update packet should be sent once every second.
              * This allows us to calculate the TPS (ticks per second) of the server.
              */
-            is WorldTimeUpdateS2CPacket -> {
+            is ClientboundSetTimePacket -> {
                 if (wasDisconnected && intervals.isEmpty()) {
                     wasDisconnected = false
                     chronometer.reset()
@@ -230,7 +230,7 @@ object ServerObserver : EventListener {
              *
              * @author nekosarekawaii
              */
-            is SelectKnownPacksS2CPacket -> {
+            is ClientboundSelectKnownPacks -> {
                 for (knownPack in packet.knownPacks()) {
                     if (knownPack.isVanilla && knownPack.id() == "core") { // Works for 1.20.5+ servers
                         this.serverVersion = knownPack.version()
@@ -243,12 +243,12 @@ object ServerObserver : EventListener {
              * Server sents a hello packet with the server id and public key,
              * as well as if the server is cracked or not.
              */
-            is LoginHelloS2CPacket -> {
+            is ClientboundHelloPacket -> {
                 // The Server ID is not often present and likely reserved for official servers.
                 if (packet.serverId.isNotEmpty()) {
                     this.serverId = packet.serverId
                 }
-                this.serverType = if (packet.needsAuthentication()) {
+                this.serverType = if (packet.shouldAuthenticate()) {
                     ServerType.PREMIUM
                 } else {
                     ServerType.CRACKED
@@ -258,20 +258,20 @@ object ServerObserver : EventListener {
             /**
              * Watches for the payload channels that are being used by the server.
              */
-            is CustomPayloadS2CPacket -> {
+            is ClientboundCustomPayloadPacket -> {
                 val payload = packet.payload
-                payloadChannels.add(payload.id.id)
+                payloadChannels.add(payload.type().id)
             }
 
-            is CommonPingS2CPacket -> if (isCapturingTransactions) {
-                transactions.add(packet.parameter)
+            is ClientboundPingPacket -> if (isCapturingTransactions) {
+                transactions.add(packet.id)
                 if (transactions.size >= 5) {
                     ModuleAntiCheatDetect.completed()
                     isCapturingTransactions = false
                 }
             }
 
-            is GameJoinS2CPacket -> {
+            is ClientboundLoginPacket -> {
                 transactions.clear()
                 isCapturingTransactions = true
             }

@@ -25,7 +25,9 @@ import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.util.Util
-import net.minecraft.util.Util.OperatingSystem.*
+import net.minecraft.util.Util.OS.LINUX
+import net.minecraft.util.Util.OS.OSX
+import net.minecraft.util.Util.OS.WINDOWS
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
@@ -45,7 +47,7 @@ object FontManager {
      */
     private val COMMON_FONT by AsyncLazy {
         runCatching {
-            when (Util.getOperatingSystem()) {
+            when (Util.getPlatform()) {
                 WINDOWS -> systemFont("Segoe UI")
                 OSX -> systemFont("Helvetica")
                 LINUX -> systemFont("DejaVu Sans")
@@ -61,7 +63,7 @@ object FontManager {
      */
     private val CJK_FONT by AsyncLazy {
         runCatching {
-            when (Util.getOperatingSystem()) {
+            when (Util.getPlatform()) {
                 WINDOWS -> systemFont("Microsoft YaHei")
                 OSX -> systemFont("PingFang SC")
                 LINUX -> systemFont("Noto Sans CJK")

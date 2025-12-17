@@ -20,15 +20,21 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.entity.EntityPose
-import net.minecraft.item.ItemStack
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.Vec3
+import net.minecraft.core.Vec3i
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -40,8 +46,8 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
     private val expandLength by int("Length", 4, 1..10, "blocks")
 
     override fun findPlacementTarget(
-        predictedPos: Vec3d,
-        predictedPose: EntityPose,
+        predictedPos: Vec3,
+        predictedPose: Pose,
         optimalLine: Line?,
         bestStack: ItemStack
     ): BlockPlacementTarget? {
@@ -68,9 +74,9 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
     }
 
     override fun getRotations(target: BlockPlacementTarget?): Rotation? {
-        val blockCenter = target?.placedBlock?.toCenterPos() ?: return null
+        val blockCenter = target?.placedBlock?.center ?: return null
 
-        return Rotation.lookingAt(point = blockCenter, from = player.eyePos)
+        return Rotation.lookingAt(point = blockCenter, from = player.eyePosition)
     }
 
     override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
@@ -83,7 +89,7 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
         return target.blockHitResult
     }
 
-    private fun expandPos(position: Vec3d, expand: Int, yaw: Float = player.yaw) = position.toBlockPos().add(
+    private fun expandPos(position: Vec3, expand: Int, yaw: Float = player.yRot) = position.toBlockPos().offset(
         (-sin(yaw.toRadians()) * expand).toInt(),
         0,
         (cos(yaw.toRadians()) * expand).toInt()

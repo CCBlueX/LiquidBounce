@@ -18,7 +18,13 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext

@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * SpoofGround mode for the NoFall module.
@@ -38,11 +38,11 @@ internal object NoFallSpoofGround : NoFallMode("SpoofGround") {
         val packet = it.packet
 
         // Check if the packet is a PlayerMoveC2SPacket
-        if (packet is PlayerMoveC2SPacket && player.fallDistance >= fallDistance.activeChoice.value) {
+        if (packet is ServerboundMovePlayerPacket && player.fallDistance >= fallDistance.activeChoice.value) {
             // Modify the 'onGround' flag to true, preventing fall damage
             packet.onGround = true
             if (resetFallDistance) {
-                player.onLanding()
+                player.resetFallDistance()
             }
         }
     }

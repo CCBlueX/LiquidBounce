@@ -21,9 +21,26 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.*
-import net.minecraft.entity.EntityPose
-import net.minecraft.item.Items
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlocksMC
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallCancel
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallForceJump
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallGrim2371
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallHypixel
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallHypixelPacket
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallMLG
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallPacket
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallPacketJump
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallRettungsplatform
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallSpartan524Flag
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallSpoofGround
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallSpoofLanding
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVerus
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVulcan
+import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVulcanTP
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.Items
 import java.util.function.BooleanSupplier
 
 /**
@@ -79,14 +96,14 @@ object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
          * With Elytra - we don't want to reduce fall damage.
          */
         WHILE_GLIDING("WhileGliding") {
-            override fun getAsBoolean() = player.isGliding && player.isInPose(EntityPose.GLIDING)
+            override fun getAsBoolean() = player.isFallFlying && player.hasPose(Pose.FALL_FLYING)
         },
 
         /**
          * Check if we are holding a mace
          */
         WITH_MACE("WithMace") {
-            override fun getAsBoolean() = player.mainHandStack.item == Items.MACE
+            override fun getAsBoolean() = player.mainHandItem.item == Items.MACE
         };
     }
 }

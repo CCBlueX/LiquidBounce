@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigge
 
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
-import java.util.EnumSet
+import java.util.*
 
 /**
  * Can be used for different server that use paper to join a game

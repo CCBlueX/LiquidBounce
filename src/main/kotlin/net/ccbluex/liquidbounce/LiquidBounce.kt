@@ -20,8 +20,15 @@
 package net.ccbluex.liquidbounce
 
 import com.mojang.blaze3d.systems.RenderSystem
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.future.future
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.ApiConfig
 import net.ccbluex.liquidbounce.api.core.ioScope
@@ -69,8 +76,12 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.PostRotationExecutor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.GitInfo
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker
+import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.input.InputTracker
@@ -80,10 +91,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.resource.ReloadableResourceManagerImpl
-import net.minecraft.resource.ResourceReloader
-import net.minecraft.resource.SynchronousResourceReloader
-import net.minecraft.util.Identifier
+import net.minecraft.server.packs.resources.ReloadableResourceManager
+import net.minecraft.server.packs.resources.PreparableReloadListener
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener
+import net.minecraft.resources.Identifier
 import java.io.InputStream
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -156,7 +167,7 @@ object LiquidBounce : EventListener {
      * Creates an [net.minecraft.util.Identifier] starts with [CLIENT_NAME].
      */
     @JvmStatic
-    fun identifier(path: String): Identifier = Identifier.of(CLIENT_NAME.lowercase(Locale.ROOT), path)
+    fun identifier(path: String): Identifier = Identifier.fromNamespaceAndPath(CLIENT_NAME.lowercase(Locale.ROOT), path)
 
     /**
      * Gets client resource.
@@ -452,7 +463,7 @@ object LiquidBounce : EventListener {
             logger.info("Client Branch: $clientBranch")
             logger.info("Operating System: ${System.getProperty("os.name")} (${System.getProperty("os.version")})")
             logger.info("Java Version: ${System.getProperty("java.version")}")
-            logger.info("Screen Resolution: ${mc.window.width}x${mc.window.height}")
+            logger.info("Screen Resolution: ${mc.window.screenWidth}x${mc.window.screenHeight}")
             logger.info("Refresh Rate: ${mc.window.refreshRate} Hz")
 
             // Initialize event manager
@@ -460,9 +471,9 @@ object LiquidBounce : EventListener {
 
             // Register resource reloader
             val resourceManager = mc.resourceManager
-            if (resourceManager is ReloadableResourceManagerImpl) {
-                resourceManager.registerReloader(ClientResourceReloader)
-                resourceManager.registerReloader(ThemeManager.reloader)
+            if (resourceManager is ReloadableResourceManager) {
+                resourceManager.registerReloadListener(ClientResourceReloader)
+                resourceManager.registerReloadListener(ThemeManager.reloader)
             } else {
                 logger.warn("Failed to register resource reloader!")
 
@@ -471,7 +482,7 @@ object LiquidBounce : EventListener {
                     workerDispatcher = Dispatchers.Default,
                     renderThreadDispatcher = Dispatchers.Minecraft,
                 ).thenRun {
-                    ThemeManager.reloader.reload(resourceManager)
+                    ThemeManager.reloader.onResourceManagerReload(resourceManager)
                 }
             }
         }.onFailure {
@@ -498,14 +509,14 @@ object LiquidBounce : EventListener {
      * @see SynchronousResourceReloader
      * @see ResourceReloader
      */
-    private object ClientResourceReloader : ResourceReloader {
+    private object ClientResourceReloader : PreparableReloadListener {
         override fun reload(
-            store: ResourceReloader.Store,
+            store: PreparableReloadListener.SharedState,
             prepareExecutor: Executor,
-            synchronizer: ResourceReloader.Synchronizer,
+            synchronizer: PreparableReloadListener.PreparationBarrier,
             applyExecutor: Executor
         ): CompletableFuture<Void> {
-            return synchronizer.whenPrepared(net.minecraft.util.Unit.INSTANCE)
+            return synchronizer.wait(net.minecraft.util.Unit.INSTANCE)
                 .thenCompose {
                     val prepareDispatcher = prepareExecutor.asCoroutineDispatcher()
                     val applyDispatcher = applyExecutor.asCoroutineDispatcher()

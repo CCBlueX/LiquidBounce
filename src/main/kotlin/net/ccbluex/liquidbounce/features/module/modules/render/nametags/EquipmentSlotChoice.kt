@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.minecraft.entity.EquipmentSlot
+import net.minecraft.world.entity.EquipmentSlot
 
 enum class EquipmentSlotChoice(
     override val choiceName: String,

@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slime.NoSlowSlime;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.SlimeBlock;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.SlimeBlock;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -32,17 +32,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(SlimeBlock.class)
 public class MixinSlimeBlock {
 
-    @Inject(method = "bounce", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "bounceUp", at = @At("HEAD"), cancellable = true)
     private void hookBounce(Entity entity, CallbackInfo ci) {
         if (NoSlowSlime.INSTANCE.getRunning()) {
-            if (entity.getVelocity().y == -0.0784000015258789 || entity.getVelocity().y == -0.001567998535156222) {
+            if (entity.getDeltaMovement().y == -0.0784000015258789 || entity.getDeltaMovement().y == -0.001567998535156222) {
                 ci.cancel();
             }
         }
     }
 
-    @Inject(method = "onSteppedOn", at = @At("HEAD"), cancellable = true)
-    private void hookStep(World world, BlockPos pos, BlockState state, Entity entity, CallbackInfo ci) {
+    @Inject(method = "stepOn", at = @At("HEAD"), cancellable = true)
+    private void hookStep(Level world, BlockPos pos, BlockState state, Entity entity, CallbackInfo ci) {
         if (NoSlowSlime.INSTANCE.getRunning()) {
             ci.cancel();
         }

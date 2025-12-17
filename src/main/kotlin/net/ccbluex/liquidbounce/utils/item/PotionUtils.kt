@@ -20,10 +20,10 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.item.ItemStack
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.item.ItemStack
 
-fun ItemStack.getPotionEffects(): Iterable<StatusEffectInstance> {
-    return this.get(DataComponentTypes.POTION_CONTENTS)?.effects ?: emptyList()
+fun ItemStack.getPotionEffects(): Iterable<MobEffectInstance> {
+    return this.get(DataComponents.POTION_CONTENTS)?.allEffects ?: emptyList()
 }

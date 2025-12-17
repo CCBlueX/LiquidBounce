@@ -32,7 +32,7 @@ internal object SpiderVanilla : Choice("Vanilla") {
 
     val repeatable = tickHandler {
         if (player.horizontalCollision) {
-            player.velocity.y = motion.toDouble()
+            player.deltaMovement.y = motion.toDouble()
         }
     }
 }

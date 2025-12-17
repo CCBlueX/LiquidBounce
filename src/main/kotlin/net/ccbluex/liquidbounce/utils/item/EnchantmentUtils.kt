@@ -18,22 +18,22 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.component.type.ItemEnchantmentsComponent
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.entry.RegistryEntry
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.item.enchantment.ItemEnchantments
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.Holder
 
-fun ItemStack.removeEnchantment(enchantment: RegistryEntry<Enchantment>) {
-    val enchantmentComponent = get(DataComponentTypes.ENCHANTMENTS) ?: return
+fun ItemStack.removeEnchantment(enchantment: Holder<Enchantment>) {
+    val enchantmentComponent = get(DataComponents.ENCHANTMENTS) ?: return
 
-    val builder = ItemEnchantmentsComponent.Builder(enchantmentComponent)
+    val builder = ItemEnchantments.Mutable(enchantmentComponent)
 
-    builder.remove { it == enchantment }
+    builder.removeIf { it == enchantment }
 
-    set(DataComponentTypes.ENCHANTMENTS, builder.build())
+    set(DataComponents.ENCHANTMENTS, builder.toImmutable())
 }
 
 fun ItemStack.clearEnchantments() {
-    set(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT)
+    set(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY)
 }

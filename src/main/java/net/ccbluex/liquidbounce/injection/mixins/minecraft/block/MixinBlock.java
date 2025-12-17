@@ -23,16 +23,16 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockSlipperinessMultiplierEvent;
 import net.ccbluex.liquidbounce.event.events.BlockVelocityMultiplierEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.Direction;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.Direction;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(Block.class)
 public class MixinBlock {
 
-    @ModifyReturnValue(method = "shouldDrawSide", at = @At("RETURN"))
+    @ModifyReturnValue(method = "shouldRenderFace", at = @At("RETURN"))
     private static boolean injectXRay(boolean original, BlockState state, BlockState otherState, Direction side) {
         var xRay = ModuleXRay.INSTANCE;
         if (xRay.getRunning()) {
@@ -47,7 +47,7 @@ public class MixinBlock {
      *
      * @return
      */
-    @ModifyReturnValue(method = "getVelocityMultiplier", at = @At("RETURN"))
+    @ModifyReturnValue(method = "getSpeedFactor", at = @At("RETURN"))
     private float hookVelocityMultiplier(float original) {
         final var multiplierEvent = EventManager.INSTANCE.callEvent(new BlockVelocityMultiplierEvent((Block) (Object) this, original));
         return multiplierEvent.getMultiplier();
@@ -58,7 +58,7 @@ public class MixinBlock {
      *
      * @return
      */
-    @ModifyReturnValue(method = "getSlipperiness", at = @At("RETURN"))
+    @ModifyReturnValue(method = "getFriction", at = @At("RETURN"))
     private float hookSlipperinessMultiplier(float original) {
         final var slipperinessEvent = EventManager.INSTANCE.callEvent(new BlockSlipperinessMultiplierEvent((Block) (Object) this, original));
         return slipperinessEvent.getSlipperiness();

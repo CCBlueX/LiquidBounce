@@ -19,49 +19,49 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.component.type.FoodComponent
-import net.minecraft.component.type.ToolComponent
-import net.minecraft.entity.attribute.EntityAttributes
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.item.consume.UseAction
-import net.minecraft.registry.tag.ItemTags
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.food.FoodProperties
+import net.minecraft.world.item.component.Tool
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.ItemUseAnimation
+import net.minecraft.tags.ItemTags
 
 val ItemStack.isConsumable: Boolean
     get() = this.isFood || this.item == Items.POTION || this.item == Items.MILK_BUCKET
 
 val ItemStack.isFood: Boolean
-    get() = foodComponent != null && this.useAction == UseAction.EAT
+    get() = foodComponent != null && this.useAnimation == ItemUseAnimation.EAT
 
-val ItemStack.foodComponent: FoodComponent?
-    get() = this.get(DataComponentTypes.FOOD)
+val ItemStack.foodComponent: FoodProperties?
+    get() = this.get(DataComponents.FOOD)
 
-val ItemStack.toolComponent: ToolComponent?
-    get() = this.get(DataComponentTypes.TOOL)
+val ItemStack.toolComponent: Tool?
+    get() = this.get(DataComponents.TOOL)
 
 val ItemStack.isBundle
-    get() = this.isIn(ItemTags.BUNDLES)
+    get() = this.`is`(ItemTags.BUNDLES)
 
 // Tools
 
 val ItemStack.isSword
-    get() = this.isIn(ItemTags.SWORDS)
+    get() = this.`is`(ItemTags.SWORDS)
 
 val ItemStack.isSpear
-    get() = this.isIn(ItemTags.SPEARS)
+    get() = this.`is`(ItemTags.SPEARS)
 
 val ItemStack.isPickaxe
-    get() = this.isIn(ItemTags.PICKAXES)
+    get() = this.`is`(ItemTags.PICKAXES)
 
 val ItemStack.isAxe
-    get() = this.isIn(ItemTags.AXES)
+    get() = this.`is`(ItemTags.AXES)
 
 val ItemStack.isShovel
-    get() = this.isIn(ItemTags.SHOVELS)
+    get() = this.`is`(ItemTags.SHOVELS)
 
 val ItemStack.isHoe
-    get() = this.isIn(ItemTags.HOES)
+    get() = this.`is`(ItemTags.HOES)
 
 /**
  * Replacement of 1.21.4 `MiningToolItem`
@@ -72,34 +72,34 @@ val ItemStack.isMiningTool
 // Armors
 
 val ItemStack.isFootArmor
-    get() = this.isIn(ItemTags.FOOT_ARMOR)
+    get() = this.`is`(ItemTags.FOOT_ARMOR)
 
 val ItemStack.isLegArmor
-    get() = this.isIn(ItemTags.LEG_ARMOR)
+    get() = this.`is`(ItemTags.LEG_ARMOR)
 
 val ItemStack.isChestArmor
-    get() = this.isIn(ItemTags.CHEST_ARMOR)
+    get() = this.`is`(ItemTags.CHEST_ARMOR)
 
 val ItemStack.isHeadArmor
-    get() = this.isIn(ItemTags.HEAD_ARMOR)
+    get() = this.`is`(ItemTags.HEAD_ARMOR)
 
 val ItemStack.isPlayerArmor
     get() = isFootArmor || isLegArmor || isChestArmor || isHeadArmor
 
 val ItemStack.equippableComponent
-    get() = this.get(DataComponentTypes.EQUIPPABLE)
+    get() = this.get(DataComponents.EQUIPPABLE)
 
 val ItemStack.equipmentSlot
     get() = this.equippableComponent?.slot
 
 val ItemStack.armorToughness
-    get() = this.getAttributeValue(EntityAttributes.ARMOR_TOUGHNESS)
+    get() = this.getAttributeValue(Attributes.ARMOR_TOUGHNESS)
 
 val ItemStack.armorValue
-    get() = this.getAttributeValue(EntityAttributes.ARMOR)
+    get() = this.getAttributeValue(Attributes.ARMOR)
 
 val ItemStack.armorKnockbackResistance
-    get() = this.getAttributeValue(EntityAttributes.KNOCKBACK_RESISTANCE)
+    get() = this.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE)
 
 // Shield
 
@@ -107,4 +107,4 @@ val ItemStack.armorKnockbackResistance
  * @see Items.SHIELD
  */
 val ItemStack.blocksAttacksComponent
-    get() = this.get(DataComponentTypes.BLOCKS_ATTACKS)
+    get() = this.get(DataComponents.BLOCKS_ATTACKS)

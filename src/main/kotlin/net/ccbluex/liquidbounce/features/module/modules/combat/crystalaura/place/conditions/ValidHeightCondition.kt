@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.plac
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.CandidateCache
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementCondition
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementContext
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 /**
  * Crystals only deal damage if they are placed below the target, because obsidian or bedrock base blocks will block the

@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.ConstantPositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.EntityDimensions
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.phys.Vec3
 
 /**
  * Calculates the shooting angle which hits the supplied target
@@ -35,19 +35,19 @@ import net.minecraft.util.math.Vec3d
 abstract class ProjectileAngleCalculator {
     abstract fun calculateAngleFor(
         projectileInfo: TrajectoryInfo,
-        sourcePos: Vec3d,
+        sourcePos: Vec3,
         targetPosFunction: PositionExtrapolation,
         targetShape: EntityDimensions,
     ): Rotation?
 
     fun calculateAngleForStaticTarget(
         projectileInfo: TrajectoryInfo,
-        target: Vec3d,
+        target: Vec3,
         shape: EntityDimensions
     ): Rotation? {
         return this.calculateAngleFor(
             projectileInfo,
-            sourcePos = player.eyePos,
+            sourcePos = player.eyePosition,
             targetPosFunction = ConstantPositionExtrapolation(target),
             targetShape = shape
         )
@@ -56,7 +56,7 @@ abstract class ProjectileAngleCalculator {
     fun calculateAngleForEntity(projectileInfo: TrajectoryInfo, entity: LivingEntity): Rotation? {
         return this.calculateAngleFor(
             projectileInfo,
-            sourcePos = player.eyePos,
+            sourcePos = player.eyePosition,
             targetPosFunction = PositionExtrapolation.getBestForEntity(entity),
             targetShape = entity.dimensions
         )

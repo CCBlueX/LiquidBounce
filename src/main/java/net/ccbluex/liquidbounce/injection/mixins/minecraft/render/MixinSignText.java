@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
-import net.minecraft.block.entity.SignText;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.level.block.entity.SignText;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,14 +37,14 @@ import java.util.function.Function;
 public class MixinSignText {
 
     @Unique
-    private static final OrderedText[] LIQUIDBOUNCE$EMPTY = new OrderedText[4];
+    private static final FormattedCharSequence[] LIQUIDBOUNCE$EMPTY = new FormattedCharSequence[4];
 
     static {
-        Arrays.fill(LIQUIDBOUNCE$EMPTY, OrderedText.EMPTY);
+        Arrays.fill(LIQUIDBOUNCE$EMPTY, FormattedCharSequence.EMPTY);
     }
 
-    @Inject(method = "getOrderedMessages", at = @At("HEAD"), cancellable = true)
-    private void injectNoSignRender(boolean filtered, Function<Text, OrderedText> messageOrderer, CallbackInfoReturnable<OrderedText[]> cir) {
+    @Inject(method = "getRenderMessages", at = @At("HEAD"), cancellable = true)
+    private void injectNoSignRender(boolean filtered, Function<Component, FormattedCharSequence> messageOrderer, CallbackInfoReturnable<FormattedCharSequence[]> cir) {
         if (!ModuleAntiBlind.canRender(DoRender.SIGN_TEXT)) {
             cir.setReturnValue(LIQUIDBOUNCE$EMPTY);
         }

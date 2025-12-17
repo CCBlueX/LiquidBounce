@@ -21,21 +21,23 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
+import com.llamalad7.mixinextras.injector.ModifyReceiver;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ServerPingedEvent;
-import net.minecraft.client.network.ServerInfo;
+import net.minecraft.client.multiplayer.ServerData;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(targets = "net.minecraft.client.network.MultiplayerServerListPinger$1")
+@Mixin(targets = "net.minecraft.client.multiplayer.ServerStatusPinger$1")
 public class MixinMultiplayerServerListPinger {
 
-    @Redirect(method = "onPingResult",
-            at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ServerInfo;ping:J"))
-    private void onPingResult$onPingResult(ServerInfo instance, long value) {
+    @ModifyReceiver(method = "handlePongResponse",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/multiplayer/ServerData;ping:J", opcode = Opcodes.PUTFIELD))
+    private ServerData onPingResult$onPingResult(ServerData instance, long value) {
         instance.ping = value;
         EventManager.INSTANCE.callEvent(new ServerPingedEvent(instance));
+        return instance;
     }
 
 }

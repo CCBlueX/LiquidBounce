@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
 import net.ccbluex.liquidbounce.utils.inventory.syncId
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.item.Items
-import net.minecraft.screen.slot.SlotActionType
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.item.Items
+import net.minecraft.world.inventory.ClickType
 
 internal object ReportHelperAutoConfirm : ToggleableConfigurable(ModuleReportHelper, "AutoConfirm", false) {
 
@@ -41,17 +41,17 @@ internal object ReportHelperAutoConfirm : ToggleableConfigurable(ModuleReportHel
         final override val parent: ChoiceConfigurable<*>
             get() = mode
 
-        protected abstract fun onScreenUpdated(screen: HandledScreen<*>)
+        protected abstract fun onScreenUpdated(screen: AbstractContainerScreen<*>)
 
         init {
             sequenceHandler<ScreenEvent> { event ->
                 val screen = event.screen
-                if (screen !is HandledScreen<*>) {
+                if (screen !is AbstractContainerScreen<*>) {
                     return@sequenceHandler
                 }
 
                 // Wait for screen update
-                if (tickConditional(5) { mc.currentScreen === screen }) {
+                if (tickConditional(5) { mc.screen === screen }) {
                     return@sequenceHandler
                 }
 
@@ -74,27 +74,27 @@ internal object ReportHelperAutoConfirm : ToggleableConfigurable(ModuleReportHel
             18, 19, 20, 21, 22, 23, 24, 25, 26
         )
 
-        override fun onScreenUpdated(screen: HandledScreen<*>) {
+        override fun onScreenUpdated(screen: AbstractContainerScreen<*>) {
             val slots = screen.getSlotsInContainer()
             if (slots.size != 27 || emptyIndices.any { !slots[it].itemStack.isEmpty }) {
                 return
             }
 
-            if (!slots[11].itemStack.isOf(Items.GREEN_TERRACOTTA) ||
-                !slots[13].itemStack.isOf(Items.PLAYER_HEAD) ||
-                !slots[15].itemStack.isOf(Items.RED_TERRACOTTA)) {
+            if (!slots[11].itemStack.`is`(Items.GREEN_TERRACOTTA) ||
+                !slots[13].itemStack.`is`(Items.PLAYER_HEAD) ||
+                !slots[15].itemStack.`is`(Items.RED_TERRACOTTA)) {
                 return
             }
 
-            interaction.clickSlot(
+            interaction.handleInventoryMouseClick(
                 screen.syncId,
                 11,
                 0,
-                SlotActionType.PICKUP,
+                ClickType.PICKUP,
                 player,
             )
 
-            player.closeScreen()
+            player.clientSideCloseContainer()
         }
     }
 
@@ -104,23 +104,23 @@ internal object ReportHelperAutoConfirm : ToggleableConfigurable(ModuleReportHel
      * DiamondSword = report as hack
      */
     private object Heypixel : Mode("Heypixel") {
-        override fun onScreenUpdated(screen: HandledScreen<*>) {
+        override fun onScreenUpdated(screen: AbstractContainerScreen<*>) {
             val slots = screen.getSlotsInContainer()
             if (slots.size != 9) {
                 return
             }
 
-            val diamondSwordId = slots.firstOrNull { it.itemStack.isOf(Items.DIAMOND_SWORD) } ?: return
+            val diamondSwordId = slots.firstOrNull { it.itemStack.`is`(Items.DIAMOND_SWORD) } ?: return
 
-            interaction.clickSlot(
+            interaction.handleInventoryMouseClick(
                 screen.syncId,
                 diamondSwordId.slotInContainer,
                 0,
-                SlotActionType.PICKUP,
+                ClickType.PICKUP,
                 player,
             )
 
-            player.closeScreen()
+            player.clientSideCloseContainer()
         }
     }
 }

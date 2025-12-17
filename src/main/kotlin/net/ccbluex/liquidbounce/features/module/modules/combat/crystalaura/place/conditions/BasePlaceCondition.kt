@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.Submo
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.CandidateCache
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementCondition
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementContext
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 /**
  * Positions are only considered if they're obsidian or bedrock because that are the only blocks you can place

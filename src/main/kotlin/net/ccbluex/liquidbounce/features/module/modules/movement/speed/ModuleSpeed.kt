@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
@@ -207,7 +207,7 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
             !(ModuleScaffold.running || ModuleFly.running)
         }),
         WHILE_SNEAKING("WhileSneaking", {
-            !player.isSneaking
+            !player.isShiftKeyDown
         })
     }
 }

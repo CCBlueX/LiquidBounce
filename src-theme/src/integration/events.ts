@@ -1,6 +1,6 @@
 import type {
     BedState,
-    Component,
+    HudComponent,
     ConfigurableSetting,
     ItemStack, MinecraftKey, MinecraftKeyboardKey, MinecraftMouseKey,
     PlayerData,
@@ -108,7 +108,7 @@ export interface ScaleFactorChangeEvent {
 
 export interface ComponentsUpdateEvent {
     id: string | null;
-    components: Component[];
+    components: HudComponent[];
 }
 
 export interface ClientPlayerDataEvent {

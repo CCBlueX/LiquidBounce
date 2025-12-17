@@ -30,7 +30,13 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isFallDamageBlocking
-import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
@@ -39,10 +45,10 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
-import net.minecraft.block.Blocks
-import net.minecraft.item.Items
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.item.Items
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
 
 internal object NoFallMLG : NoFallMode("MLG") {
     private val minFallDist by float("MinFallDistance", 5f, 2f..50f)
@@ -188,7 +194,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
             return null
         }
 
-        return findPlacementPlanAtPos(collision.up(), itemForMLG)
+        return findPlacementPlanAtPos(collision.above(), itemForMLG)
     }
 
     private fun findPlacementPlanAtPos(
@@ -203,7 +209,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
                 ),
                 FaceHandlingOptions(CenterTargetPositionFactory),
                 stackToPlaceWith = item.itemStack,
-                PlayerLocationOnPlacement(position = player.entityPos),
+                PlayerLocationOnPlacement(position = player.position()),
             )
 
         val bestPlacementPlan = findBestBlockPlacementTarget(pos, options) ?: return null

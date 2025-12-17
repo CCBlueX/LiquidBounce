@@ -39,13 +39,13 @@ class SpeedIntave14Fast(override val parent: ChoiceConfigurable<*>) : SpeedBHopB
     private val tickHandler = tickHandler {
         when (player.airTicks) {
             1 -> {
-                player.velocity.x *= 1.04
-                player.velocity.z *= 1.04
+                player.deltaMovement.x *= 1.04
+                player.deltaMovement.z *= 1.04
             }
 
             2, 3, 4 -> {
-                player.velocity.x *= 1.02
-                player.velocity.z *= 1.02
+                player.deltaMovement.x *= 1.02
+                player.deltaMovement.z *= 1.02
             }
         }
 

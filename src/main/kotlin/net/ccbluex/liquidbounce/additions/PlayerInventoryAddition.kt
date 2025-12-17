@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.additions
 
-import net.minecraft.entity.player.PlayerInventory
+import net.minecraft.world.entity.player.Inventory
 
 interface PlayerInventoryAddition {
     /**
@@ -30,5 +30,5 @@ interface PlayerInventoryAddition {
     fun `liquid_bounce$getRealSelectedSlot`(): Int
 }
 
-inline val PlayerInventory.realSelectedSlot: Int
+inline val Inventory.realSelectedSlot: Int
     get() = (this as PlayerInventoryAddition).`liquid_bounce$getRealSelectedSlot`()

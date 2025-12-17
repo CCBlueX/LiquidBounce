@@ -21,18 +21,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.verus
 
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.entity.MovementType
+import net.minecraft.world.entity.MoverType
 
 /**
  * @anticheat Verus
@@ -43,14 +43,14 @@ class SpeedVerusB3882(override val parent: ChoiceConfigurable<*>) : SpeedBHopBas
 
     @Suppress("unused")
     private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
-        player.velocity.x *= 1.1
-        player.velocity.z *= 1.1
+        player.deltaMovement.x *= 1.1
+        player.deltaMovement.z *= 1.1
     }
 
     @Suppress("unused")
     private val moveHandler = handler<PlayerMoveEvent> { event ->
         // Might just strafe when player controls itself
-        if (event.type == MovementType.SELF && player.moving) {
+        if (event.type == MoverType.SELF && player.moving) {
             event.movement = event.movement.withStrafe(strength = 1.0)
         }
     }

@@ -20,8 +20,11 @@ package net.ccbluex.liquidbounce.event
 
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.function.Consumer
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class EventHookRegistryTest {
 

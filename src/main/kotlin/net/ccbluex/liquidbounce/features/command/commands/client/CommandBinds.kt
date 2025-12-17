@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoice
@@ -30,16 +30,27 @@ import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.highlight
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.onClickRun
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.withColor
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.input.availableInputKeys
 import net.ccbluex.liquidbounce.utils.input.bind
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.ccbluex.liquidbounce.utils.input.renderText
 import net.ccbluex.liquidbounce.utils.input.unbind
-import net.minecraft.client.util.InputUtil
-import net.minecraft.text.HoverEvent
-import net.minecraft.util.Formatting
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.ChatFormatting
 
 /**
  * Binds Command
@@ -73,7 +84,7 @@ object CommandBinds : Command.Factory {
         .pagedQuery(
             pageSize = 8,
             header = {
-                result("bindings").withColor(Formatting.RED).bold(true)
+                result("bindings").withColor(ChatFormatting.RED).bold(true)
             },
             items = {
                 ModuleManager.filter { !it.bind.isUnbound }
@@ -81,7 +92,7 @@ object CommandBinds : Command.Factory {
             eachRow = { _, module ->
                 val bind = module.bind
                 "\u2B25 ".asText()
-                    .formatted(Formatting.BLUE)
+                    .withStyle(ChatFormatting.BLUE)
                     .append(
                         markAsError("[\u2715] ")
                             .onHover(
@@ -162,7 +173,7 @@ object CommandBinds : Command.Factory {
             val modifiers = args.getOrNull(3) as Set<InputBind.Modifier>? ?: module.bind.modifiers
 
             val bindKey = inputByName(keyName)
-            if (bindKey == InputUtil.UNKNOWN_KEY) {
+            if (bindKey == InputConstants.UNKNOWN) {
                 throw CommandException(command.result("unknownKey"))
             }
 

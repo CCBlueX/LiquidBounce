@@ -22,8 +22,13 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.playerName
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.util.Formatting
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
+import net.minecraft.ChatFormatting
 import org.apache.commons.lang3.StringUtils
 
 /**
@@ -48,14 +53,14 @@ object CommandCoordinates : Command.Factory {
                     )
                     .handler {
                         val name = args[0] as String
-                        network.sendChatMessage("/msg $name ${getCoordinates(fancy = true)}")
+                        network.sendChat("/msg $name ${getCoordinates(fancy = true)}")
                     }
                     .build()
             )
             .subcommand(
                 CommandBuilder.begin("copy")
                     .handler {
-                        mc.keyboard.clipboard = getCoordinates()
+                        mc.keyboardHandler.clipboard = getCoordinates()
                         chat(command.result("success"), command)
                     }
                     .build()
@@ -63,7 +68,7 @@ object CommandCoordinates : Command.Factory {
             .subcommand(
                 CommandBuilder.begin("info")
                     .handler {
-                        chat(getCoordinates().asPlainText(Formatting.GRAY), command)
+                        chat(getCoordinates().asPlainText(ChatFormatting.GRAY), command)
                     }
                     .build()
             )
@@ -71,8 +76,8 @@ object CommandCoordinates : Command.Factory {
     }
 
     private fun getCoordinates(fancy: Boolean = false): String {
-        val pos = player.blockPos
-        val dimension = StringUtils.capitalize(world.registryKey.value.path)
+        val pos = player.blockPosition()
+        val dimension = StringUtils.capitalize(world.dimension().identifier().path)
         val start = if (fancy) "My coordinates are: " else ""
         return start +
             "x: ${pos.x}, y: ${pos.y}, z: ${pos.z} " +

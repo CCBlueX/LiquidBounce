@@ -19,13 +19,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.NametagEnchantmentRenderer.drawEntityEnchantments
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.player
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.entity.LivingEntity
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.world.entity.LivingEntity
 
 private const val NAMETAG_PADDING: Int = 15
 
@@ -36,7 +37,7 @@ private const val BACKGROUND_Y_OFFSET_TOP = -0.1f
 private const val BACKGROUND_Y_OFFSET_BOTTOM = 1.1f
 private const val BACKGROUND_X_PADDING = 0.2f * FONT_SIZE
 
-internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float) {
+internal fun GuiGraphics.drawNametag(nametag: Nametag, posX: Float, posY: Float) {
     if (nametag.items.any { !it.isEmpty }) {
         val currentItemStackRenderer = if (NametagEquipment.showInfo) {
             if (nametag.entity === player) {
@@ -59,16 +60,16 @@ internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float)
 
     val scale = BASE_SCALE_FACTOR * ModuleNametags.scale
 
-    matrices.pushMatrix()
-    matrices.translate(posX, posY)
-    matrices.scale(scale, scale)
+    pose().pushMatrix()
+    pose().translate(posX, posY)
+    pose().scale(scale, scale)
 
     val fontRenderer = ModuleNametags.fontRenderer
     val processedText = fontRenderer.process(nametag.text)
     val textWidth = fontRenderer.getStringWidth(processedText, shadow = true)
 
     // Make the model view matrix center the text when rendering
-    matrices.translate(-textWidth * 0.5f, -fontRenderer.height * 0.5f)
+    pose().translate(-textWidth * 0.5f, -fontRenderer.height * 0.5f)
 
     val x1 = -BACKGROUND_X_OFFSET
     val y1 = fontRenderer.height * BACKGROUND_Y_OFFSET_TOP
@@ -91,9 +92,9 @@ internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float)
 
     // Draw enchantments directly for the entity (regardless of whether items are shown)
     if (NametagEnchantmentRenderer.running && nametag.entity is LivingEntity) {
-        val entityPos = nametag.entity.entityPos
+        val entityPos = nametag.entity.position()
         val worldX = entityPos.x.toFloat()
-        val worldY = (entityPos.y + nametag.entity.height + 0.5f).toFloat()
+        val worldY = (entityPos.y + nametag.entity.bbHeight + 0.5f).toFloat()
 
         drawEntityEnchantments(
             nametag.entity,
@@ -102,5 +103,5 @@ internal fun DrawContext.drawNametag(nametag: Nametag, posX: Float, posY: Float)
         )
     }
 
-    matrices.popMatrix()
+    pose().popMatrix()
 }

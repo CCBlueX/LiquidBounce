@@ -26,13 +26,13 @@ import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import org.lwjgl.glfw.GLFW
 
 object DebugCPSRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("CPS") {
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet !is HandSwingC2SPacket) {
+        if (event.packet !is ServerboundSwingPacket) {
             return@handler
         }
 

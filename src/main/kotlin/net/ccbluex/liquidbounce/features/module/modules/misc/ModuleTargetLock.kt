@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.client.network.AbstractClientPlayerEntity
+import net.minecraft.client.player.AbstractClientPlayer
 
 /**
  * TargetLock module
@@ -55,7 +55,7 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
     private sealed class LockChoice(name: String) : Choice(name) {
         override val parent: ChoiceConfigurable<*>
             get() = mode
-        abstract fun isLockedOn(playerEntity: AbstractClientPlayerEntity): Boolean
+        abstract fun isLockedOn(playerEntity: AbstractClientPlayer): Boolean
     }
 
     private object Filter : LockChoice("Filter") {
@@ -68,7 +68,7 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
             BLACKLIST("Blacklist")
         }
 
-        override fun isLockedOn(playerEntity: AbstractClientPlayerEntity): Boolean {
+        override fun isLockedOn(playerEntity: AbstractClientPlayer): Boolean {
             val name = playerEntity.gameProfile.name
 
             return when (filterType) {
@@ -98,7 +98,7 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
 
         @Suppress("unused")
         private val attackHandler = handler<AttackEntityEvent> { event ->
-            val target = event.entity as? AbstractClientPlayerEntity ?: return@handler
+            val target = event.entity as? AbstractClientPlayer ?: return@handler
 
             if (!lockList.containsKey(target.id)) {
                 notification(
@@ -112,7 +112,7 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
 
         @Suppress("unused")
         private val cleanUpTask = tickHandler {
-            if (player.isDead) {
+            if (player.isDeadOrDying) {
                 lockList.clear()
                 return@tickHandler
             }
@@ -122,9 +122,9 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
                 val entityId = it.intKey
                 val time = it.longValue
                 // Remove if entity is out of range
-                val entity = world.getEntityById(entityId) as? AbstractClientPlayerEntity ?: return@removeIf true
+                val entity = world.getEntity(entityId) as? AbstractClientPlayer ?: return@removeIf true
 
-                if (entity.isRemoved || entity.squaredDistanceTo(player) > outOfRange.sq()) {
+                if (entity.isRemoved || entity.distanceToSqr(player) > outOfRange.sq()) {
                     notification(
                         "TargetLock",
                         message("outOfRange", entity.gameProfile.name),
@@ -147,7 +147,7 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
             }
         }
 
-        override fun isLockedOn(playerEntity: AbstractClientPlayerEntity): Boolean {
+        override fun isLockedOn(playerEntity: AbstractClientPlayer): Boolean {
             val entityId = playerEntity.id
 
             if (lockList.isEmpty()) {
@@ -164,7 +164,7 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
 
     @Suppress("unused")
     private val tagEntityEvent = handler<TagEntityEvent> { event ->
-        if (event.entity !is AbstractClientPlayerEntity || this@ModuleTargetLock.isLockedOn(event.entity)) {
+        if (event.entity !is AbstractClientPlayer || this@ModuleTargetLock.isLockedOn(event.entity)) {
             return@handler
         }
 
@@ -178,7 +178,7 @@ object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
     /**
      * Check if [entity] is in your focus
      */
-    private fun isLockedOn(entity: AbstractClientPlayerEntity): Boolean {
+    private fun isLockedOn(entity: AbstractClientPlayer): Boolean {
         if (!running) {
             return false
         }

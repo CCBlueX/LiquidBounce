@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 
 /**
  * SmoothCamera module
@@ -34,7 +34,7 @@ object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER) {
 
     private val factor by float("Factor", 0.2f, 0.0f..1.0f)
 
-    var smoothPos: Vec3d = Vec3d.ZERO
+    var smoothPos: Vec3 = Vec3.ZERO
         private set
     var smoothYaw = 0f
         private set
@@ -42,13 +42,13 @@ object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER) {
         private set
 
     override fun onDisabled() {
-        smoothPos = Vec3d.ZERO
+        smoothPos = Vec3.ZERO
         smoothYaw = 0f
         smoothPitch = 0f
     }
 
     @JvmStatic
-    fun cameraUpdate(yaw: Float, pitch: Float, pos: Vec3d) {
+    fun cameraUpdate(yaw: Float, pitch: Float, pos: Vec3) {
         if (!running) return
 
         if (smoothPos.isLikelyZero) {
@@ -60,7 +60,7 @@ object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER) {
         val eased = factor
 
         smoothPos = smoothPos.lerp(pos, eased.toDouble())
-        smoothYaw += MathHelper.wrapDegrees(yaw - smoothYaw) * eased
+        smoothYaw += Mth.wrapDegrees(yaw - smoothYaw) * eased
         smoothPitch += (pitch - smoothPitch) * eased
     }
 

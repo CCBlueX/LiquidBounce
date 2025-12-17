@@ -29,15 +29,15 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
-import net.ccbluex.liquidbounce.integration.theme.component.Component
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.JsonComponentFactory
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponentFactory.JsonHudComponentFactory
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.resource.ResourceManager
-import net.minecraft.resource.SynchronousResourceReloader
+import com.mojang.blaze3d.platform.NativeImage
+import net.minecraft.server.packs.resources.ResourceManager
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
@@ -59,7 +59,7 @@ class Theme private constructor(val origin: Origin, url: String) :
                 "${AuthMiddleware.AUTH_COOKIE_NAME}=${AuthMiddleware.AUTH_CODE}"
             )
             .build()
-    ), Closeable, SynchronousResourceReloader {
+    ), Closeable, ResourceManagerReloadListener {
 
     enum class Origin(override val choiceName: String, val external: Boolean) : NamedChoice {
         RESOURCE("resource", false),
@@ -82,9 +82,9 @@ class Theme private constructor(val origin: Origin, url: String) :
         }
     }
 
-    private var _components: List<Component>? = null
+    private var _components: List<HudComponent>? = null
 
-    val components: List<Component>
+    val components: List<HudComponent>
         get() = requireNotNull(_components) { "components not loaded" }
 
     var settings: Configurable
@@ -95,7 +95,7 @@ class Theme private constructor(val origin: Origin, url: String) :
     private suspend fun loadComponents() {
         _components = metadata.components.mapNotNull { name ->
             val componentFactory = runCatching {
-                get<JsonComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
+                get<JsonHudComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
             }.onFailure {
                 logger.warn("Failed to load component $name", it)
             }.getOrNull() ?: return@mapNotNull null
@@ -225,7 +225,7 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     fun isOverlaySupported(name: String?) = name != null && metadata.overlays.contains(name)
 
-    override fun reload(manager: ResourceManager) {
+    override fun onResourceManagerReload(manager: ResourceManager) {
         themeBackgroundShader?.onResourceReload()
         themeBackgroundTexture?.onResourceReload()
         logger.info("Reloaded theme '${metadata.name}'.")

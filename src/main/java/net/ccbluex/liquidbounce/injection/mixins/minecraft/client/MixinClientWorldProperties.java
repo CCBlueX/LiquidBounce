@@ -21,14 +21,14 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.multiplayer.ClientLevel;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(ClientWorld.Properties.class)
+@Mixin(ClientLevel.ClientLevelData.class)
 public class MixinClientWorldProperties {
 
-    @ModifyReturnValue(method = "getTimeOfDay", at = @At("RETURN"))
+    @ModifyReturnValue(method = "getDayTime", at = @At("RETURN"))
     private long injectOverrideTime(long original) {
         return ModuleCustomAmbience.getTime(original);
     }

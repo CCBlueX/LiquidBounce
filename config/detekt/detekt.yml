@@ -43,8 +43,6 @@ exceptions:
     active: false
 
 style:
-#  UnusedImports:
-#    active: true
   DestructuringDeclarationWithTooManyEntries:
     maxDestructuringEntries: 4
   MagicNumber:
@@ -56,8 +54,10 @@ style:
   LoopWithTooManyJumpStatements:
     active: true
     maxJumpCount: 3
+  #  UnusedImports:
+  #    active: true
   WildcardImport:
-    active: false
+    active: true
   ForbiddenComment:
     active: false
   UnusedPrivateProperty:

@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 /**
  * NoClip module
@@ -52,28 +52,28 @@ object ModuleNoClip : ClientModule("NoClip", Category.MOVEMENT) {
         }
 
         noClipSet = true
-        player.noClip = true
+        player.noPhysics = true
         player.fallDistance = 0.0
-        player.isOnGround = false
+        player.setOnGround(false)
 
         val speed = speed.toDouble()
-        player.controllingVehicle?.let {
-            it.noClip = true
+        player.controlledVehicle?.let {
+            it.noPhysics = true
 
             if (!ModuleVehicleControl.running) {
-                it.velocity = it.velocity.withStrafe(speed = speed)
-                it.velocity.y = when {
-                    mc.options.jumpKey.isPressed -> speed
-                    mc.options.sneakKey.isPressed -> -speed
+                it.setDeltaMovement(it.deltaMovement.withStrafe(speed = speed))
+                it.deltaMovement.y = when {
+                    mc.options.keyJump.isDown -> speed
+                    mc.options.keyShift.isDown -> -speed
                     else -> 0.0
                 }
             }
         } ?: run {
-            player.velocity = player.velocity.withStrafe(speed = speed)
+            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
 
-            player.velocity.y = when {
-                mc.options.jumpKey.isPressed -> speed
-                mc.options.sneakKey.isPressed -> -speed
+            player.deltaMovement.y = when {
+                mc.options.keyJump.isDown -> speed
+                mc.options.keyShift.isDown -> -speed
                 else -> 0.0
             }
         }
@@ -81,7 +81,7 @@ object ModuleNoClip : ClientModule("NoClip", Category.MOVEMENT) {
 
     val packetHandler = handler<PacketEvent> { event ->
         // Setback detection
-        if (event.packet is PlayerPositionLookS2CPacket && disableOnSetback && !paused()) {
+        if (event.packet is ClientboundPlayerPositionPacket && disableOnSetback && !paused()) {
             chat(markAsError(this.message("setbackDetected")))
             enabled = false
         }
@@ -89,10 +89,10 @@ object ModuleNoClip : ClientModule("NoClip", Category.MOVEMENT) {
 
     override fun onDisabled() {
         noClipSet = false
-        player.noClip = false
-        player.controllingVehicle?.let { it.noClip = false }
+        player.noPhysics = false
+        player.controlledVehicle?.let { it.noPhysics = false }
     }
 
-    fun paused() = onlyInVehicle && mc.player?.controllingVehicle == null
+    fun paused() = onlyInVehicle && mc.player?.controlledVehicle == null
 
 }

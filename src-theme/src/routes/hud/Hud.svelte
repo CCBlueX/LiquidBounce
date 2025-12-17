@@ -9,7 +9,7 @@
     import {onMount} from "svelte";
     import {getComponents, getGameWindow, getMetadata} from "../../integration/rest";
     import {listen} from "../../integration/ws";
-    import type {Component, Metadata} from "../../integration/types";
+    import type {HudComponent, Metadata} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
     import type {ComponentsUpdateEvent, ScaleFactorChangeEvent} from "../../integration/events";
     import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
@@ -22,7 +22,7 @@
 
     let zoom = 100;
     let metadata: Metadata;
-    let components: Component[] = [];
+    let components: HudComponent[] = [];
 
     onMount(async () => {
         const gameWindow = await getGameWindow();

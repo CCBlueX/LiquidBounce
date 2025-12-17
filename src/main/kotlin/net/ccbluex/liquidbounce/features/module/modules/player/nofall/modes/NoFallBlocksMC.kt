@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 internal object NoFallBlocksMC : NoFallMode("BlocksMC") {
 
@@ -33,25 +33,25 @@ internal object NoFallBlocksMC : NoFallMode("BlocksMC") {
     const val MIN_AGE = 20 * 5
 
     override val running: Boolean
-        get() = super.running && player.age > MIN_AGE
+        get() = super.running && player.tickCount > MIN_AGE
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (player.velocity.y < -0.7) {
+        if (player.deltaMovement.y < -0.7) {
             shouldClip = true
-            fallMotion = player.velocity.y
+            fallMotion = player.deltaMovement.y
         }
     }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
-            is PlayerMoveC2SPacket -> {
-                if (player.isOnGround && shouldClip) {
+            is ServerboundMovePlayerPacket -> {
+                if (player.onGround() && shouldClip) {
                     packet.y -= 0.1
                 }
             }
-            is PlayerPositionLookS2CPacket -> shouldClip = false
+            is ClientboundPlayerPositionPacket -> shouldClip = false
         }
     }
 

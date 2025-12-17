@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.modes
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.entity.Entity
+import net.minecraft.world.entity.Entity
 
 sealed class EspMode(
     name: String,
@@ -33,6 +33,6 @@ sealed class EspMode(
         get() = modes
 
     fun shouldRender(entity: Entity?): Boolean {
-        return entity != null && entity.entityPos.cameraDistanceSq() < ModuleESP.maximumDistance.sq()
+        return entity != null && entity.position().cameraDistanceSq() < ModuleESP.maximumDistance.sq()
     }
 }

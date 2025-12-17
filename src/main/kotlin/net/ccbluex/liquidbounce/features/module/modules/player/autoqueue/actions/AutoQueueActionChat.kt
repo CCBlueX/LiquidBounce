@@ -32,9 +32,9 @@ object AutoQueueActionChat : AutoQueueAction("Chat") {
 
         messages.forEach { message ->
             if (message.startsWith("/")) {
-                network.sendChatCommand(message.substring(1))
+                network.sendCommand(message.substring(1))
             } else {
-                network.sendChatMessage(message)
+                network.sendChat(message)
             }
 
             delay(messageDelay.random().toLong())

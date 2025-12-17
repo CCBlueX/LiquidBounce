@@ -23,11 +23,11 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
-import net.minecraft.client.gui.screen.DisconnectedScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.TitleScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.screens.DisconnectedScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -41,18 +41,18 @@ public abstract class MixinDisconnectedScreen extends MixinScreen {
 
     @Shadow
     @Final
-    private static Text TO_TITLE_TEXT;
+    private static Component TO_TITLE;
 
     @Shadow
     @Final
-    private Text buttonLabel;
+    private Component buttonText;
 
     @Shadow
     @Final
     private Screen parent;
 
     @Unique
-    private ButtonWidget disconnectButton;
+    private Button disconnectButton;
 
     @Inject(method = "init", at = @At("HEAD"))
     private void injectButtons(final CallbackInfo callback) {
@@ -67,14 +67,14 @@ public abstract class MixinDisconnectedScreen extends MixinScreen {
          */
         int x = this.width - 140;
         int y = this.height - 30;
-        disconnectButton = (this.client.isMultiplayerEnabled() ?
-                ButtonWidget.builder(this.buttonLabel, button -> this.client.setScreen(this.parent)) :
-                ButtonWidget.builder(TO_TITLE_TEXT, button -> this.client.setScreen(new TitleScreen()))
-        ).dimensions(x, y, 120, 20).build();
-        addDrawableChild(disconnectButton);
+        disconnectButton = (this.minecraft.allowsMultiplayer() ?
+                Button.builder(this.buttonText, button -> this.minecraft.setScreen(this.parent)) :
+                Button.builder(TO_TITLE, button -> this.minecraft.setScreen(new TitleScreen()))
+        ).bounds(x, y, 120, 20).build();
+        addRenderableWidget(disconnectButton);
     }
 
-    @Inject(method = "refreshWidgetPositions", at = @At("HEAD"))
+    @Inject(method = "repositionElements", at = @At("HEAD"))
     private void moveButtons(final CallbackInfo callback) {
         if (disconnectButton != null) {
             // fixes button position

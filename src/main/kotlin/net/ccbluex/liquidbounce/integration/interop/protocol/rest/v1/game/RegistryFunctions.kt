@@ -34,16 +34,16 @@ import net.ccbluex.liquidbounce.utils.network.packetRegistry
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpOk
-import net.minecraft.item.BlockItem
-import net.minecraft.item.Items
-import net.minecraft.network.NetworkSide
-import net.minecraft.registry.DefaultedRegistry
-import net.minecraft.registry.Registries
-import net.minecraft.registry.tag.BlockTags
-import net.minecraft.registry.tag.ItemTags
-import net.minecraft.registry.tag.TagKey
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.PacketFlow
+import net.minecraft.core.DefaultedRegistry
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.tags.BlockTags
+import net.minecraft.tags.ItemTags
+import net.minecraft.tags.TagKey
+import net.minecraft.resources.Identifier
+import net.minecraft.core.BlockPos
 import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
@@ -147,18 +147,21 @@ private val ACCEPTED_BLOCK_TAGS =
         BlockTags.SNOW,
     )
 
-private fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagKey<T>>): Map<Identifier, Identifier> {
+private fun <T : Any> constructMap(
+    registry: DefaultedRegistry<T>,
+    tagKeys: Array<TagKey<T>>,
+): Map<Identifier, Identifier> {
     val map = hashMapOf<Identifier, Identifier>()
 
     for (acceptedTag in tagKeys) {
-        val get = registry.getOptional(acceptedTag).getOrNull() ?: continue
+        val get = registry.get(acceptedTag).getOrNull() ?: continue
 
         get.forEach {
-            val itemId = registry.getId(it.value())
+            val itemId = registry.getKey(it.value())
 
-            val prev = map.putIfAbsent(itemId, acceptedTag.id)
+            val prev = map.putIfAbsent(itemId, acceptedTag.location)
             if (prev != null) {
-                logger.warn("Duplicate $itemId in ${acceptedTag.id} in $prev")
+                logger.warn("Duplicate $itemId in ${acceptedTag.location} in $prev")
 
                 return@forEach
             }
@@ -178,8 +181,8 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
         ?: return httpForbidden("Missing registry name parameter")
     when (registryName.lowercase(Locale.ENGLISH)) {
         "blocks" -> {
-            Registries.BLOCK.forEach { block ->
-                val id = Registries.BLOCK.getId(block)
+            BuiltInRegistries.BLOCK.forEach { block ->
+                val id = BuiltInRegistries.BLOCK.getKey(block)
                 add(id.toString(), JsonObject().apply {
                     addProperty("name", block.name.string)
                     addProperty("icon", iconUrl(id))
@@ -188,8 +191,8 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
         }
 
         "items" -> {
-            Registries.ITEM.forEach { item ->
-                val id = Registries.ITEM.getId(item)
+            BuiltInRegistries.ITEM.forEach { item ->
+                val id = BuiltInRegistries.ITEM.getKey(item)
                 add(id.toString(), JsonObject().apply {
                     addProperty("name", item.name.string)
                     addProperty("icon", iconUrl(id))
@@ -198,33 +201,33 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
         }
 
         "sounds" -> {
-            val soundDiscId = Registries.ITEM.getId(Items.MUSIC_DISC_13)
+            val soundDiscId = BuiltInRegistries.ITEM.getKey(Items.MUSIC_DISC_13)
 
-            Registries.SOUND_EVENT.forEach { soundEvent ->
-                val id = Registries.SOUND_EVENT.getId(soundEvent)
+            BuiltInRegistries.SOUND_EVENT.forEach { soundEvent ->
+                val id = BuiltInRegistries.SOUND_EVENT.getKey(soundEvent)
                 add(id.toString(), JsonObject().apply {
-                    addProperty("name", soundEvent.id.toName())
+                    addProperty("name", soundEvent.location.toName())
                     addProperty("icon", iconUrl(soundDiscId))
                 })
             }
         }
 
         "statuseffects" -> {
-            val potionId = Registries.ITEM.getId(Items.POTION)
+            val potionId = BuiltInRegistries.ITEM.getKey(Items.POTION)
 
-            Registries.STATUS_EFFECT.forEach { effect ->
-                val id = Registries.STATUS_EFFECT.getId(effect)
+            BuiltInRegistries.MOB_EFFECT.forEach { effect ->
+                val id = BuiltInRegistries.MOB_EFFECT.getKey(effect)
                 add(id.toString(), JsonObject().apply {
-                    addProperty("name", effect.name.string)
+                    addProperty("name", effect.displayName.string)
                     addProperty("icon", iconUrl(potionId))
                 })
             }
         }
 
         "clientpackets" -> {
-            val iconId = Registries.ITEM.getId(Items.PAPER)
+            val iconId = BuiltInRegistries.ITEM.getKey(Items.PAPER)
 
-            packetRegistry[NetworkSide.SERVERBOUND]?.forEach { packetId ->
+            packetRegistry[PacketFlow.SERVERBOUND]?.forEach { packetId ->
                 add(packetId.toString(), JsonObject().apply {
                     addProperty("name", packetId.toName())
                     addProperty("icon", iconUrl(iconId))
@@ -233,9 +236,9 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
         }
 
         "serverpackets" -> {
-            val iconId = Registries.ITEM.getId(Items.PAPER)
+            val iconId = BuiltInRegistries.ITEM.getKey(Items.PAPER)
 
-            packetRegistry[NetworkSide.CLIENTBOUND]?.forEach { packetId ->
+            packetRegistry[PacketFlow.CLIENTBOUND]?.forEach { packetId ->
                 add(packetId.toString(), JsonObject().apply {
                     addProperty("name", packetId.toName())
                     addProperty("icon", iconUrl(iconId))
@@ -244,20 +247,20 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
         }
 
         "entity_type" -> {
-            Registries.ENTITY_TYPE.forEach { entityType ->
-                val id = Registries.ENTITY_TYPE.getId(entityType)
+            BuiltInRegistries.ENTITY_TYPE.forEach { entityType ->
+                val id = BuiltInRegistries.ENTITY_TYPE.getKey(entityType)
                 add(id.toString(), JsonObject().apply {
-                    addProperty("name", entityType.name.string)
+                    addProperty("name", entityType.description.string)
                     addProperty("icon", iconUrl(id)) // TODO: fix icon
                 })
             }
         }
 
         "screen_handler" -> {
-            val iconId = Registries.ITEM.getId(Items.CHEST)
+            val iconId = BuiltInRegistries.ITEM.getKey(Items.CHEST)
             val converter = CaseFormat.LOWER_UNDERSCORE.converterTo(CaseFormat.UPPER_CAMEL)
-            Registries.SCREEN_HANDLER.forEach { screenHandlerType ->
-                val id = Registries.SCREEN_HANDLER.getId(screenHandlerType) ?: return@forEach
+            BuiltInRegistries.MENU.forEach { screenHandlerType ->
+                val id = BuiltInRegistries.MENU.getKey(screenHandlerType) ?: return@forEach
                 add(id.toString(), JsonObject().apply {
                     addProperty("name", converter.convert(id.toName()))
                     addProperty("icon", iconUrl(iconId)) // TODO: better icon?
@@ -285,7 +288,7 @@ fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply 
         ?: return httpForbidden("Missing registry name parameter")
     when (registryName.lowercase(Locale.ENGLISH)) {
         "items" -> {
-            for ((k, v) in constructMap(Registries.ITEM, ACCEPTED_ITEM_TAGS)) {
+            for ((k, v) in constructMap(BuiltInRegistries.ITEM, ACCEPTED_ITEM_TAGS)) {
                 add(
                     k.toString(),
                     JsonObject().apply {
@@ -298,16 +301,16 @@ fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply 
 
         "blocks" -> {
             val parentMap = hashMapOf<Identifier, Identifier>()
-            val world = mc.world ?: return httpForbidden("No world")
+            val world = mc.level ?: return httpForbidden("No world")
 
-            Registries.BLOCK.forEach { block ->
-                val pickStack = block.getPickStack(world, BlockPos.ORIGIN, block.defaultState, false)
-                val id = Registries.BLOCK.getId(block)
+            BuiltInRegistries.BLOCK.forEach { block ->
+                val pickStack = block.getCloneItemStack(world, BlockPos.ZERO, block.defaultBlockState(), false)
+                val id = BuiltInRegistries.BLOCK.getKey(block)
 
                 when (val item = pickStack.item) {
                     is BlockItem -> {
                         if (item.block != block) {
-                            parentMap[id] = Registries.BLOCK.getId(item.block)
+                            parentMap[id] = BuiltInRegistries.BLOCK.getKey(item.block)
                         }
                     }
 
@@ -319,10 +322,10 @@ fun getRegistryGroups(requestObject: RequestObject) = httpOk(JsonObject().apply 
                 }
             }
 
-            val constructedMap = constructMap(Registries.BLOCK, ACCEPTED_BLOCK_TAGS)
+            val constructedMap = constructMap(BuiltInRegistries.BLOCK, ACCEPTED_BLOCK_TAGS)
 
-            Registries.BLOCK.forEach { block ->
-                val id = Registries.BLOCK.getId(block)
+            BuiltInRegistries.BLOCK.forEach { block ->
+                val id = BuiltInRegistries.BLOCK.getKey(block)
 
                 val obj = when (id) {
                     in parentMap -> JsonObject().apply {

@@ -39,7 +39,7 @@ object FlyFireballOnEdgeTrigger : Choice("OnEdge") {
     val inputHandler = handler<MovementInputEvent>(
         priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
     ) { event ->
-        val shouldBeActive = player.isOnGround && !player.isSneaking
+        val shouldBeActive = player.onGround() && !player.isShiftKeyDown
 
         if (shouldBeActive && player.isCloseToEdge(event.directionalInput, edgeDistance.toDouble())) {
             FlyFireball.wasTriggered = true

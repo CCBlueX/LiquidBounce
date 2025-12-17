@@ -45,10 +45,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.minecraft.SharedConstants
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.Text
-import net.minecraft.text.TextColor
-import net.minecraft.util.Formatting
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.TextColor
+import net.minecraft.ChatFormatting
 import java.net.URI
 import java.util.*
 
@@ -84,11 +84,11 @@ object CommandDebug : Command.Factory {
             buffer.clear()
 
             chat(
-                Text.literal("Debug information has been uploaded to: ").styled { style ->
-                    style.withColor(TextColor.fromFormatting(Formatting.GREEN))
+                Component.literal("Debug information has been uploaded to: ").withStyle { style ->
+                    style.withColor(TextColor.fromLegacyFormat(ChatFormatting.GREEN))
                 }.append(
-                    Text.literal(paste)
-                        .formatted(Formatting.YELLOW)
+                    Component.literal(paste)
+                        .withStyle(ChatFormatting.YELLOW)
                         .onClick(ClickEvent.OpenUrl(URI(paste)))
                 )
             )
@@ -109,7 +109,7 @@ object CommandDebug : Command.Factory {
         })
 
         add("minecraft", JsonObject().apply {
-            addProperty("version", SharedConstants.getGameVersion().name())
+            addProperty("version", SharedConstants.getCurrentVersion().name())
             addProperty("protocol", SharedConstants.getProtocolVersion())
         })
 
@@ -131,21 +131,21 @@ object CommandDebug : Command.Factory {
         })
 
         add("profile", JsonObject().apply {
-            addProperty("name", mc.session.username)
-            addProperty("uuid", mc.session.uuidOrNull.toString())
-            addProperty("type", mc.session.accountType)
+            addProperty("name", mc.user.name)
+            addProperty("uuid", mc.user.profileId.toString())
+            addProperty("type", mc.user.accountType)
         })
 
         add("language", JsonObject().apply {
-            addProperty("language", mc.languageManager.language)
+            addProperty("language", mc.languageManager.selected)
             addProperty("clientLanguage", LanguageManager.languageIdentifier)
         })
 
         add("server", JsonObject().apply {
-            mc.currentServerEntry?.let {
+            mc.currentServer?.let {
                 addProperty("name", it.name)
-                addProperty("address", it.address)
-                addProperty("protocol", it.protocolVersion)
+                addProperty("address", it.ip)
+                addProperty("protocol", it.protocol)
             }
         })
 

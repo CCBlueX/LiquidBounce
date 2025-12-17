@@ -26,10 +26,15 @@ import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.client.gui.hud.InGameHud
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.highlight
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
+import net.minecraft.client.gui.Gui
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 
 object ModuleBetterTitle : ClientModule(
     "BetterTitle", Category.RENDER, aliases = listOf("BetterSubtitle")
@@ -83,7 +88,7 @@ private enum class ShowIn(
         )
     }),
     MESSAGE("Message", { type, event, result ->
-        result.translation.asPlainText(Formatting.WHITE).let {
+        result.translation.asPlainText(ChatFormatting.WHITE).let {
             event.text = it
             type.setText(it)
         }
@@ -97,12 +102,12 @@ private enum class TitleType(
      * Doesn't use [InGameHud.setTitle] and [InGameHud.setSubtitle] because
      * this will cause reset of the stayIn timer
      */
-    val setText: (Text) -> Unit
+    val setText: (Component) -> Unit
 ) : NamedChoice {
     TITLE("Title", {
-        mc.inGameHud.title = it
+        mc.gui.title = it
     }),
     SUBTITLE("Subtitle", {
-        mc.inGameHud.subtitle = it
+        mc.gui.subtitle = it
     })
 }

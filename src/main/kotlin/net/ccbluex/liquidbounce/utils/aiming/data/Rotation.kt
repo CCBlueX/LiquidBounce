@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -41,25 +41,25 @@ data class Rotation(
         val ZERO = Rotation(0f, 0f)
 
         @JvmStatic
-        fun lookingAt(point: Vec3d, from: Vec3d): Rotation {
+        fun lookingAt(point: Vec3, from: Vec3): Rotation {
             return fromRotationVec(point.subtract(from))
         }
 
         @JvmStatic
-        fun fromRotationVec(lookVec: Vec3d): Rotation {
+        fun fromRotationVec(lookVec: Vec3): Rotation {
             val diffX = lookVec.x
             val diffY = lookVec.y
             val diffZ = lookVec.z
 
             return Rotation(
-                MathHelper.wrapDegrees(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f),
-                MathHelper.wrapDegrees((-Math.toDegrees(atan2(diffY, hypot(diffX, diffZ)))).toFloat())
+                Mth.wrapDegrees(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f),
+                Mth.wrapDegrees((-Math.toDegrees(atan2(diffY, hypot(diffX, diffZ)))).toFloat())
             )
         }
     }
 
-    val directionVector: Vec3d
-        get() = Vec3d.fromPolar(pitch, yaw)
+    val directionVector: Vec3
+        get() = Vec3.directionFromRotation(pitch, yaw)
 
     /**
      * Fixes GCD and Modulo 360° at yaw
