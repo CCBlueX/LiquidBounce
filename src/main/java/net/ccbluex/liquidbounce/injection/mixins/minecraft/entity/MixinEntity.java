@@ -146,7 +146,12 @@ public abstract class MixinEntity {
         }
     }
 
-    @ModifyReturnValue(method = "getEyePosition", at = @At("RETURN"))
+    @ModifyReturnValue(method = "getEyePosition()Lnet/minecraft/world/phys/Vec3;", at = @At("RETURN"))
+    private Vec3 hookFreeCamModifiedRaycast(Vec3 original) {
+        return ModuleFreeCam.INSTANCE.modifyRaycast(original, (Entity) (Object) this, 1.0F);
+    }
+
+    @ModifyReturnValue(method = "getEyePosition(F)Lnet/minecraft/world/phys/Vec3;", at = @At("RETURN"))
     private Vec3 hookFreeCamModifiedRaycast(Vec3 original, float tickDelta) {
         return ModuleFreeCam.INSTANCE.modifyRaycast(original, (Entity) (Object) this, tickDelta);
     }

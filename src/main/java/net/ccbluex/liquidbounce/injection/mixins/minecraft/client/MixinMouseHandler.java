@@ -107,12 +107,12 @@ public class MixinMouseHandler implements MouseAddition {
         return original || ModuleZoom.INSTANCE.getRunning();
     }
 
-    @ModifyExpressionValue(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingSpyglass()Z"))
+    @ModifyExpressionValue(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isScoping()Z"))
     private boolean injectZoomCondition2(boolean original) {
         return original || ModuleZoom.INSTANCE.getRunning();
     }
 
-    @WrapWithCondition(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;changeLookDirection(DD)V"), require = 1, allow = 1)
+    @WrapWithCondition(method = "turnPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;turn(DD)V"), require = 1, allow = 1)
     private boolean modifyMouseRotationInput(LocalPlayer instance, double cursorDeltaX, double cursorDeltaY) {
         final MouseRotationEvent event = new MouseRotationEvent(cursorDeltaX, cursorDeltaY);
         EventManager.INSTANCE.callEvent(event);

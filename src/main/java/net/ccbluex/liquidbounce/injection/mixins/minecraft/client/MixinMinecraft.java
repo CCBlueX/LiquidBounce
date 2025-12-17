@@ -157,7 +157,7 @@ public abstract class MixinMinecraft {
      *
      * @param callback not needed
      */
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;onResolutionChanged()V"))
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;resizeDisplay()V"))
     private void startClient(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(ClientStartEvent.INSTANCE);
     }
@@ -322,7 +322,7 @@ public abstract class MixinMinecraft {
         EventManager.INSTANCE.callEvent(GameRenderTaskQueueEvent.INSTANCE);
     }
 
-    @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;runTasks()V", shift = At.Shift.BEFORE))
+    @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;runAllTasks()V", shift = At.Shift.BEFORE))
     private void hookPacketProcess(CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(TickPacketProcessEvent.INSTANCE);
     }

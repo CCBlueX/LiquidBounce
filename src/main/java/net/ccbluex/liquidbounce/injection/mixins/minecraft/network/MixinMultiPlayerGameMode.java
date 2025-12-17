@@ -114,12 +114,12 @@ public abstract class MixinMultiPlayerGameMode {
         ModuleAutoBow.onStopUsingItem();
     }
 
-    @Inject(method = "setLocalMode", at = @At("RETURN"))
+    @Inject(method = "setLocalMode(Lnet/minecraft/world/level/GameType;)V", at = @At("RETURN"))
     private void setGameMode(GameType gameMode, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new GameModeChangeEvent(gameMode));
     }
 
-    @Inject(method = "setLocalMode", at = @At("RETURN"))
+    @Inject(method = "setLocalMode(Lnet/minecraft/world/level/GameType;Lnet/minecraft/world/level/GameType;)V", at = @At("RETURN"))
     private void setGameModes(GameType gameMode, GameType previousGameMode, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new GameModeChangeEvent(gameMode));
     }

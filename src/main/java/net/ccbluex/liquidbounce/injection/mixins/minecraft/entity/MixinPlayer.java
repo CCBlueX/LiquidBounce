@@ -76,7 +76,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
      * There are a few velocity changes when attacking an entity, which could be easily detected by anti-cheats when a different server-side rotation is applied.
      */
     @ModifyExpressionValue(method = {"causeExtraKnockback",
-        "doSweepAttack"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getYaw()F"))
+        "doSweepAttack"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;getYRot()F"))
     private float hookFixRotation(float original) {
         if ((Object) this != Minecraft.getInstance().player) {
             return original;
@@ -112,7 +112,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     }
 
     @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/world/entity/player/Player;hasStatusEffect(Lnet/minecraft/core/Holder;)Z"))
+            target = "Lnet/minecraft/world/entity/player/Player;hasEffect(Lnet/minecraft/core/Holder;)Z"))
     private boolean injectFatigueNoSlow(boolean original) {
         if ((Object) this == Minecraft.getInstance().player && ModuleNoSlowBreak.getMiningFatigue()) {
             return false;
@@ -123,7 +123,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
 
 
     @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/world/entity/player/Player;isSubmergedIn(Lnet/minecraft/tags/TagKey;)Z"))
+            target = "Lnet/minecraft/world/entity/player/Player;isEyeInFluid(Lnet/minecraft/tags/TagKey;)Z"))
     private boolean injectWaterNoSlow(boolean original) {
         if ((Object) this == Minecraft.getInstance().player && ModuleNoSlowBreak.getWater()) {
             return false;
@@ -133,7 +133,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     }
 
     @ModifyExpressionValue(method = "getDestroySpeed", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/world/entity/player/Player;isOnGround()Z"))
+            target = "Lnet/minecraft/world/entity/player/Player;onGround()Z"))
     private boolean injectOnAirNoSlow(boolean original) {
         if ((Object) this == Minecraft.getInstance().player) {
             if (ModuleNoSlowBreak.getOnAir()) {

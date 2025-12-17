@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class MixinItem {
 
     @ModifyExpressionValue(method = "getPlayerPOVHitResult", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/world/entity/player/Player;getRotationVector(FF)Lnet/minecraft/world/phys/Vec3;"))
+            target = "Lnet/minecraft/world/entity/player/Player;calculateViewVector(FF)Lnet/minecraft/world/phys/Vec3;"))
     private static Vec3 hookFixRotation(Vec3 original, Level world, Player player, ClipContext.Fluid fluidHandling) {
         if (player == Minecraft.getInstance().player) {
             var rotation = RotationManager.INSTANCE.getCurrentRotation();

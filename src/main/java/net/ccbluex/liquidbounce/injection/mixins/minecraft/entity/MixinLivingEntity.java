@@ -182,7 +182,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         return jumpEvent.getMotion();
     }
 
-    @ModifyExpressionValue(method = "jumpFromGround", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYaw()F"))
+    @ModifyExpressionValue(method = "jumpFromGround", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getYRot()F"))
     private float hookJumpYaw(float original) {
         // Replaces ((Object) this) != MinecraftClient.getInstance().player
         if (jumpEvent == null) {
@@ -279,7 +279,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     /**
      * Gliding using modified-rotation
      */
-    @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getPitch()F"))
+    @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot()F"))
     private float hookModifyFallFlyingPitch(float original) {
         if ((Object) this != Minecraft.getInstance().player) {
             return original;
@@ -305,7 +305,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     /**
      * Gliding using modified-rotation
      */
-    @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getRotationVector()Lnet/minecraft/world/phys/Vec3;"))
+    @ModifyExpressionValue(method = "updateFallFlyingMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 hookModifyFallFlyingRotationVector(Vec3 original) {
         if ((Object) this != Minecraft.getInstance().player) {
             return original;

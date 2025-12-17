@@ -136,7 +136,7 @@ public abstract class MixinItemInHandRenderer {
         return equipProgress;
     }
 
-    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getMainHandStack()Lnet/minecraft/world/item/ItemStack;"))
+    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getMainHandItem()Lnet/minecraft/world/item/ItemStack;"))
     private ItemStack injectSilentHotbar(ItemStack original) {
         if (ModuleSilentHotbar.INSTANCE.getRunning()) {
             // noinspection DataFlowIssue
@@ -146,7 +146,7 @@ public abstract class MixinItemInHandRenderer {
         return original;
     }
 
-    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getHandEquippingProgress(F)F"))
+    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getItemSwapScale(F)F"))
     private float injectSilentHotbarNoCooldown(float original) {
         if (ModuleSilentHotbar.INSTANCE.getRunning() && ModuleSilentHotbar.INSTANCE.getNoCooldownProgress() && SilentHotbar.INSTANCE.isSlotModified()) {
             return 1f;
@@ -218,7 +218,7 @@ public abstract class MixinItemInHandRenderer {
 
     @ModifyExpressionValue(method = "renderArmWithItem", at = @At(
         value = "INVOKE",
-        target = "Lnet/minecraft/client/player/AbstractClientPlayer;getActiveHand()Lnet/minecraft/world/InteractionHand;",
+        target = "Lnet/minecraft/client/player/AbstractClientPlayer;getUsedItemHand()Lnet/minecraft/world/InteractionHand;",
         ordinal = 1
     ))
     private InteractionHand hookActiveHand(InteractionHand original, @Local(argsOnly = true) AbstractClientPlayer entity) {
@@ -232,7 +232,7 @@ public abstract class MixinItemInHandRenderer {
 
     @ModifyExpressionValue(method = "renderArmWithItem", at = @At(
         value = "INVOKE",
-        target = "Lnet/minecraft/client/player/AbstractClientPlayer;getItemUseTimeLeft()I",
+        target = "Lnet/minecraft/client/player/AbstractClientPlayer;getUseItemRemainingTicks()I",
         ordinal = 2
     ))
     private int hookItemUseItem(int original, @Local(argsOnly = true) AbstractClientPlayer entity) {

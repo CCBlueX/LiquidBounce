@@ -43,7 +43,7 @@ public abstract class MixinFireworkRocketEntity implements FireworkRocketEntityA
     @Shadow
     private LivingEntity attachedToEntity;
 
-    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getRotationVector()Lnet/minecraft/world/phys/Vec3;"))
+    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 getRotationVector(Vec3 original) {
         if (attachedToEntity != Minecraft.getInstance().player) {
             return original;

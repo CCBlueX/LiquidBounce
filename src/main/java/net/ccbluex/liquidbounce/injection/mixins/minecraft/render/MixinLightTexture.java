@@ -99,7 +99,7 @@ public abstract class MixinLightTexture {
     }
 
     // Turns off blinking when the darkness effect is active.
-    @Redirect(method = "updateLightTexture", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getEffectFadeFactor(Lnet/minecraft/core/Holder;F)F"))
+    @Redirect(method = "updateLightTexture", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getEffectBlendFactor(Lnet/minecraft/core/Holder;F)F"))
     private float injectAntiDarkness(LocalPlayer instance, Holder<MobEffect> registryEntry, float v) {
         if (!ModuleAntiBlind.canRender(DoRender.DARKNESS) && registryEntry == MobEffects.DARKNESS) {
             return 0f;

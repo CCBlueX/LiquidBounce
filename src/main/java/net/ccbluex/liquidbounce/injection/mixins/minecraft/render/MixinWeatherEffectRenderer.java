@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(WeatherEffectRenderer.class)
 public abstract class MixinWeatherEffectRenderer {
 
-    @ModifyExpressionValue(method = "tickRainParticles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainGradient(F)F"))
+    @ModifyExpressionValue(method = "tickRainParticles", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;getRainLevel(F)F"))
     private float ambientPrecipitation2(float original) {
         var moduleCustomAmbience = ModuleCustomAmbience.INSTANCE;
         if (moduleCustomAmbience.getRunning() && moduleCustomAmbience.getWeather().get() == ModuleCustomAmbience.WeatherType.SNOWY) {

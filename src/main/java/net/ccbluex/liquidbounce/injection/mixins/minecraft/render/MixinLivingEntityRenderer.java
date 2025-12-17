@@ -122,7 +122,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         return original;
     }
 
-    @ModifyExpressionValue(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getLerpedPitch(F)F"))
+    @ModifyExpressionValue(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getXRot(F)F"))
     private float hookPitch(float original, LivingEntity entity, S state, float tickDelta) {
         if (entity != Minecraft.getInstance().player) {
             return original;

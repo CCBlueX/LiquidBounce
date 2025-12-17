@@ -51,7 +51,7 @@ public abstract class MixinScoreboard {
         }
     }
 
-    @Inject(method = "removePlayerFromTeam", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "removePlayerFromTeam(Ljava/lang/String;Lnet/minecraft/world/scores/PlayerTeam;)V", at = @At("HEAD"), cancellable = true)
     private void noCrash2(String scoreHolderName, PlayerTeam team, CallbackInfo ci) {
         var antiExploit = ModuleAntiExploit.INSTANCE;
         if (antiExploit.getRunning() && antiExploit.getVfpScoreboardFix() && getPlayersTeam(scoreHolderName) != team) {

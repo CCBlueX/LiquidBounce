@@ -183,7 +183,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements ClientPlay
         return eventMotion.getZ();
     }
 
-    @ModifyExpressionValue(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isOnGround()Z"))
+    @ModifyExpressionValue(method = "sendPosition", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;onGround()Z"))
     private boolean modifyOnGround(boolean original) {
         return eventMotion.getGround();
     }
@@ -342,7 +342,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements ClientPlay
     // Silent rotations (Rotation Manager)
 
     @ModifyExpressionValue(method = {"sendPosition",
-        "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getYaw()F"))
+        "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getYRot()F"))
     private float hookSilentRotationYaw(float original) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
@@ -353,7 +353,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements ClientPlay
     }
 
     @ModifyExpressionValue(method = {"sendPosition",
-        "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getPitch()F"))
+        "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;getXRot()F"))
     private float hookSilentRotationPitch(float original) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
@@ -418,7 +418,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements ClientPlay
     }
 
     // canStartSprinting calls canSprint(boolean) which then checks for blindness
-    @ModifyExpressionValue(method = "isSprintingPossible(Z)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;hasBlindnessEffect()Z"))
+    @ModifyExpressionValue(method = "isSprintingPossible(Z)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isMobilityRestricted()Z"))
     private boolean hookSprintIgnoreBlindness(boolean original) {
         return !ModuleSprint.INSTANCE.getShouldIgnoreBlindness() && original;
     }
