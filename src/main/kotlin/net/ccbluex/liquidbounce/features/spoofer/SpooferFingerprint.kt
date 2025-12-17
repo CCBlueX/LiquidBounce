@@ -28,7 +28,4 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
  *
  * To combat this, we simply use a new cache directory for each UUID that we use.
  */
-object SpooferFingerprint : ToggleableConfigurable(name = "FingerprintSpoofer", enabled = true) {
-    override val running: Boolean
-        get() = super.running && !SpooferManager.usesExploitPreventer
-}
+object SpooferFingerprint : ToggleableConfigurable(name = "FingerprintSpoofer", enabled = true)
