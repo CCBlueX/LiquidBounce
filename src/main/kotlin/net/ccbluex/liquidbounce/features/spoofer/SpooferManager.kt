@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.spoofer
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.utils.client.exploitpreventer.ExpCompatibility
 
 /**
  * Spoofer Manager
@@ -29,10 +30,31 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
  * another client brand.
  */
 object SpooferManager : Configurable("Spoofer") {
+
+    val usesExploitPreventer = runCatching {
+        Class.forName("com.nikoverflow.exploitpreventer.ExploitPreventer")
+        true
+    }.getOrDefault(false)
+
     init {
         tree(SpooferClient)
         tree(SpooferResourcePack)
         tree(SpooferBungeeCord)
-        tree(SpooferFingerprint)
+
+        if (usesExploitPreventer) {
+            registerExpModules()
+        } else {
+            // Exploit Preventer comes with a fingerprint spoofer
+            tree(SpooferFingerprint)
+        }
     }
+
+    private fun registerExpModules() {
+        val modules = ExpCompatibility.INSTANCE.modules ?: return
+
+        for ((expEnumName, expDisplayName) in modules) {
+            tree(SpooferExploitPreventerModule(expEnumName, expDisplayName))
+        }
+    }
+
 }
