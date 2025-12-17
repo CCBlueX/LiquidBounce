@@ -27,7 +27,7 @@ plugins {
     id("fabric-loom")
     kotlin("jvm")
     id("com.gorylenko.gradle-git-properties") version "2.5.4"
-    id("io.gitlab.arturbosch.detekt") version "1.23.8"
+    id("io.gitlab.arturbosch.detekt") version "2.0.0-alpha.1"
     id("com.github.node-gradle.node") version "7.1.0"
     id("org.jetbrains.dokka") version "2.1.0"
 }
@@ -297,6 +297,7 @@ tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
 
     // Minecraft 1.21.1 upwards uses Java 21.
+    // Minecraft 26.1 upwards uses Java 25.
     options.release = 21
 }
 
@@ -362,7 +363,7 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(21)
-        freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
+        freeCompilerArgs.add("-Xexplicit-backing-fields")
         freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
