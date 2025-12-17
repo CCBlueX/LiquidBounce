@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.multiplayer.ClientLevel
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
@@ -53,17 +52,20 @@ open class FakePlayer(
         this.xo = snapshot.lastX
         this.yo = snapshot.lastY
         this.zo = snapshot.lastZ
+        this.xOld = snapshot.lastX
+        this.yOld = snapshot.lastY
+        this.zOld = snapshot.lastZ
         this.swinging = snapshot.handSwinging
         this.swingTime = snapshot.handSwingTicks
         this.attackAnim = snapshot.handSwingProgress
-        this.yRotO = snapshot.yaw
-        this.setYRot(snapshot.lastYaw)
-        this.xRotO = snapshot.pitch
-        this.setXRot(snapshot.lastPitch)
-        this.yBodyRotO = snapshot.bodyYaw
-        this.yBodyRot = snapshot.lastBodyYaw
-        this.yHeadRotO = snapshot.headYaw
-        this.yHeadRot = snapshot.lastHeadYaw
+        this.yRot = snapshot.yaw
+        this.yRotO = snapshot.lastYaw
+        this.xRot = snapshot.pitch
+        this.xRotO = snapshot.lastPitch
+        this.yBodyRot = snapshot.bodyYaw
+        this.yBodyRotO = snapshot.lastBodyYaw
+        this.yHeadRot = snapshot.headYaw
+        this.yHeadRotO = snapshot.lastHeadYaw
         this.pose = snapshot.pose
         this.swingingArm = snapshot.preferredHand
         this.inventory.replaceWith(snapshot.inventory)
@@ -112,6 +114,14 @@ open class FakePlayer(
 
     override fun remove(reason: RemovalReason) {
         super.remove(reason)
+    }
+
+    /**
+     * [org.jspecify.annotations.NullMarked] makes the parameter of [equals]
+     * in Java parent class notnull, but the Kotlin compiler expects it to be nullable.
+     */
+    override fun equals(other: Any?): Boolean {
+        return other != null && super.equals(other)
     }
 
 }

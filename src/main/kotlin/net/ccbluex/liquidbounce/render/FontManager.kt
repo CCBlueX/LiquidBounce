@@ -97,13 +97,12 @@ object FontManager {
      */
     const val DEFAULT_FONT_SIZE: Float = 43f
 
+    private var _glyphManager: FontGlyphPageManager? = null
     /**
      * The glyph manager that is responsible for managing the glyph pages.
      */
-    var glyphManager: FontGlyphPageManager
-        field: FontGlyphPageManager? = null
-        private set
-        get() = requireNotNull(field) { "Glyph manager was not initialized yet!" }
+    val glyphManager: FontGlyphPageManager
+        get() = requireNotNull(_glyphManager) { "Glyph manager was not initialized yet!" }
 
     /**
      * Returns the font by the given name.
@@ -111,7 +110,7 @@ object FontManager {
     internal fun fontFace(name: String) = fontFaces[name]
 
     internal fun createGlyphManager() {
-        glyphManager = FontGlyphPageManager(
+        _glyphManager = FontGlyphPageManager(
             baseFonts = fontFaces.values,
             additionalFonts = setOfNotNull(CJK_FONT)
         )

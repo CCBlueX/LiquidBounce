@@ -323,7 +323,7 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
 
         val shouldTargetBlock = mode.activeChoice.shouldTarget(blockPos, state)
         // stop when the block is clicked again
-        val isCancelledByUser = blockPos.equals(_target?.targetPos)
+        val isCancelledByUser = blockPos == _target?.targetPos
 
         _target = if (shouldTargetBlock && world.worldBorder.isWithinBounds(blockPos) && !isCancelledByUser) {
             MineTarget(blockPos)
