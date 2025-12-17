@@ -46,7 +46,8 @@ object ThemeManager : Configurable("theme") {
 
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
 
-    val themes = mutableListOf<Theme>()
+    val themes: List<Theme>
+        field = mutableListOf()
     val themeIds get() = themes.map { theme -> theme.metadata.id }
 
     private var currentTheme by text("Theme", "liquidbounce").onChanged {
@@ -111,7 +112,7 @@ object ThemeManager : Configurable("theme") {
     suspend fun load() {
         fun Theme.addIfUnloaded() {
             if (themes.none { it.metadata.id.equals(this.metadata.id, true) }) {
-                themes += this
+                themes.add(this)
             } else {
                 logger.warn("Theme with ID '${this.metadata.id}' is already loaded, skipping duplicate.")
             }

@@ -68,14 +68,13 @@ class Theme private constructor(val origin: Origin, url: String) :
         REMOTE("remote", true)
     }
 
-    var metadata: ThemeMetadata
-        field: ThemeMetadata? = null
-        private set
-        get() = requireNotNull(field) { "metadata not loaded" }
+    private var _metadata: ThemeMetadata? = null
+    val metadata: ThemeMetadata
+        get() = requireNotNull(_metadata) { "metadata not loaded" }
 
     private suspend fun loadMetadata() {
         try {
-            metadata = get<ThemeMetadata>("/metadata.json").apply { checkNotNull() }
+            _metadata = get<ThemeMetadata>("/metadata.json").apply { checkNotNull() }
         } catch (e: Exception) {
             logger.error("Failed to load theme metadata", e)
             throw IllegalStateException("Failed to load theme metadata", e)
@@ -83,14 +82,12 @@ class Theme private constructor(val origin: Origin, url: String) :
     }
 
     private var _components: List<HudComponent>? = null
-
     val components: List<HudComponent>
         get() = requireNotNull(_components) { "components not loaded" }
 
-    var settings: Configurable
-        field: Configurable? = null
-        private set
-        get() = requireNotNull(field) { "settings not loaded" }
+    private var _settings: Configurable? = null
+    val settings: Configurable
+        get() = requireNotNull(_settings) { "settings not loaded" }
 
     private suspend fun loadComponents() {
         _components = metadata.components.mapNotNull { name ->
@@ -112,7 +109,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             check(count == 1) { "Found duplicated component name '$name'" }
         }
 
-        settings = Configurable(metadata.id.capitalize()).apply {
+        _settings = Configurable(metadata.id.capitalize()).apply {
             metadata.values?.let { values ->
                 for (value in values) {
                     json(value)
