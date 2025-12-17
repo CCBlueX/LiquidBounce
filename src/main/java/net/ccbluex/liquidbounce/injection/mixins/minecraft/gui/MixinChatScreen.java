@@ -22,10 +22,9 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatComponentAccessor;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.ArrayListDeque;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -56,7 +55,7 @@ public abstract class MixinChatScreen extends MixinScreen {
         ChatSendEvent chatSendEvent = new ChatSendEvent(chatText);
 
         EventManager.INSTANCE.callEvent(chatSendEvent);
-        client.inGameHud.getChatHud().discardDraft();
+        minecraft.gui.getChat().discardDraft();
 
         if (chatSendEvent.isCancelled()) {
             minecraft.gui.getChat().addRecentChat(chatText);
