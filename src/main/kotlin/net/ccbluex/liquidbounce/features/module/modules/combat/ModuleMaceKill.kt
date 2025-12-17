@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.warp
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
-import net.minecraft.item.Items
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.item.Items
+import net.minecraft.world.phys.shapes.Shapes
 import kotlin.math.abs
 import kotlin.math.ceil
 
@@ -47,7 +47,7 @@ object ModuleMaceKill : ClientModule("MaceKill", Category.COMBAT) {
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         // Check if player is holding a mace
-        val mainHandStack = player.mainHandStack
+        val mainHandStack = player.mainHandItem
 
         if (mainHandStack.item != Items.MACE) {
             // Auto Select Mace
@@ -65,14 +65,14 @@ object ModuleMaceKill : ClientModule("MaceKill", Category.COMBAT) {
             }
         } else {
             // Do it at least twice to neutralize horizontal distance
-            repeat(2) { player.warp(null, onGround = player.isOnGround) }
+            repeat(2) { player.warp(null, onGround = player.onGround()) }
         }
 
         // Teleport to the calculated height
-        player.warp(player.entityPos.add(0.0, height.toDouble(), 0.0), onGround = false)
+        player.warp(player.position().add(0.0, height.toDouble(), 0.0), onGround = false)
 
         // Make sure we get back to the ground
-        player.warp(player.entityPos, onGround = false)
+        player.warp(player.position(), onGround = false)
     }
 
     /**
@@ -88,10 +88,10 @@ object ModuleMaceKill : ClientModule("MaceKill", Category.COMBAT) {
         val boundingBox = player.boundingBox
         for (i in fallHeight downTo 1) {
             // Offset bounding box by i blocks
-            val newBoundingBox = boundingBox.offset(0.0, i.toDouble(), 0.0)
+            val newBoundingBox = boundingBox.move(0.0, i.toDouble(), 0.0)
 
             // Check if the player would collide with a block
-            if (world.getBlockCollisions(player, newBoundingBox).all(VoxelShapes.empty()::equals)) {
+            if (world.getBlockCollisions(player, newBoundingBox).all(Shapes.empty()::equals)) {
                 return i
             }
         }

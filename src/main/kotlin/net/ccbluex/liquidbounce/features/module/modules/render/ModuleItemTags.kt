@@ -50,13 +50,13 @@ import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.component.ComponentChanges
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.entity.Entity
-import net.minecraft.entity.ItemEntity
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.Vec3
 
 /**
  * ItemTags module
@@ -70,7 +70,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
     private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
     private val scale by float("Scale", 1.5F, 0.25F..4F)
-    private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+    private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
     private val rowLength by int("RowLength", 100, 1..100)
     private val preventOverlap by boolean("PreventOverlap", true)
 
@@ -113,7 +113,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     }
 
     private val itemStackComparator: Comparator<ItemStack> =
-        PreferStackSize.PREFER_MORE.thenComparing { it.item.translationKey }
+        PreferStackSize.PREFER_MORE.thenComparing { it.item.descriptionId }
 
     @Suppress("unused")
     private enum class MergeMode(
@@ -174,8 +174,8 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         val maxDistSquared = maximumDistance.sq()
 
         @Suppress("UNCHECKED_CAST")
-        val entities = world.entities.filter {
-            it is ItemEntity && it.eyePos.cameraDistanceSq() < maxDistSquared && filter(it.stack.item, items)
+        val entities = world.entitiesForRendering().filter {
+            it is ItemEntity && it.eyePosition.cameraDistanceSq() < maxDistSquared && filter(it.item.item, items)
         } as List<ItemEntity>
 
         computeEntityClusters(entities, clusteredEntities)
@@ -208,14 +208,14 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
             if (Shulker.enabled) {
                 result.stacks.forEach { stack ->
-                    val containerComponent = stack[DataComponentTypes.CONTAINER] ?: return@forEach
-                    val stacks = containerComponent.streamNonEmpty().toTypedArray()
+                    val containerComponent = stack[DataComponents.CONTAINER] ?: return@forEach
+                    val stacks = containerComponent.nonEmptyStream().toTypedArray()
                     if (stacks.isEmpty()) {
                         return@forEach
                     }
 
                     event.context.drawItemStackList(if (Shulker.mergeStacks) mergeMode.merge(stacks) else stacks)
-                        .title(stack.name.takeIf { Shulker.showTitle })
+                        .title(stack.hoverName.takeIf { Shulker.showTitle })
                         .centerX(renderPos.x)
                         .centerY(renderPos.y)
                         .rectBackground(backgroundColor)
@@ -228,7 +228,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     }
 
     private class ClusteredEntities(@JvmField val entities: List<Entity>, @JvmField val stacks: Array<ItemStack>) {
-        fun interpolateCurrentCenterPosition(tickDelta: Float): Vec3d {
+        fun interpolateCurrentCenterPosition(tickDelta: Float): Vec3 {
             return entities.map { entity ->
                 entity.interpolateCurrentPosition(tickDelta)
             }.average()
@@ -247,7 +247,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
 
             // `entity` will also be added
             val group = entities.filter { other ->
-                other !in visited && entity.squaredDistanceTo(other) < radiusSquared
+                other !in visited && entity.distanceToSqr(other) < radiusSquared
             }
 
             visited.addAll(group)
@@ -258,7 +258,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         output.clear()
         output.ensureCapacity(groups.size)
         groups.mapTo(output) { entities ->
-            ClusteredEntities(entities, mergeMode.merge(entities.mapToArray { it.stack }))
+            ClusteredEntities(entities, mergeMode.merge(entities.mapToArray { it.item }))
         }
     }
 

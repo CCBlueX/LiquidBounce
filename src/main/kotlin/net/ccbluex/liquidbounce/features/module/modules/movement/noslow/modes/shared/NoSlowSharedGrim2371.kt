@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 
 /**
  * Bypassing Grim 2.3.71
@@ -42,10 +42,10 @@ internal class NoSlowSharedGrim2371(override val parent: ChoiceConfigurable<*>) 
         repeat(2) {
             waitTicks(1)
             shouldPreventNoSlow = false
-            interaction.sendSequencedPacket(world) { sequence ->
-                PlayerInteractItemC2SPacket(
-                    player.getActiveHand(), sequence,
-                    player.yaw, player.pitch
+            interaction.startPrediction(world) { sequence ->
+                ServerboundUseItemPacket(
+                    player.usedItemHand, sequence,
+                    player.yRot, player.xRot
                 )
             }
         }

@@ -31,16 +31,16 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.client.font.TextRenderer
-import net.minecraft.client.gl.RenderPipelines
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.client.gui.Font
+import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.Identifier
 import org.joml.Vector2fc
 import org.joml.Vector2i
 import kotlin.math.abs
@@ -51,14 +51,14 @@ private const val ITEM_SIZE = 16
 /**
  * @see net.minecraft.client.gui.screen.StatsScreen.SLOT_TEXTURE
  */
-private val ID_SINGLE_SLOT = Identifier.ofVanilla("container/slot")
+private val ID_SINGLE_SLOT = Identifier.withDefaultNamespace("container/slot")
 
 @Suppress("TooManyFunctions")
 class ItemStackListRenderer private constructor(
-    private val drawContext: DrawContext,
+    private val drawContext: GuiGraphics,
     private val stacks: List<ItemStack>,
 ) {
-    private var title: Text? = null
+    private var title: Component? = null
     private var titleColor: Int = 0xffffffff.toInt()
     private var centerX = 0F
     private var centerY = 0F
@@ -72,10 +72,10 @@ class ItemStackListRenderer private constructor(
 
     // Unscaled, without margin
     private val dimensions = Vector2i()
-    private val textRenderer = mc.textRenderer
+    private val textRenderer = mc.font
 
     @JvmOverloads
-    fun title(title: Text?, color: Int = this.titleColor) = apply {
+    fun title(title: Component?, color: Int = this.titleColor) = apply {
         this.title = title
         this.titleColor = color
     }
@@ -146,7 +146,7 @@ class ItemStackListRenderer private constructor(
     }
 
     private fun drawSlotTexture(x: Int, y: Int) {
-        drawContext.drawGuiTexture(
+        drawContext.blitSprite(
             RenderPipelines.GUI_TEXTURED,
             ID_SINGLE_SLOT,
             x,
@@ -162,7 +162,7 @@ class ItemStackListRenderer private constructor(
 
         val size = if (this.useTexture) SLOT_SIZE else ITEM_SIZE
 
-        drawContext.matrices.withPush {
+        drawContext.pose().withPush {
             val width = dimensions.x
             val height = dimensions.y
 
@@ -174,9 +174,9 @@ class ItemStackListRenderer private constructor(
                 fillBackground(width, height)
             }
 
-            if (title != null) {
-                drawContext.drawCenteredTextWithShadow(textRenderer, title, width / 2, 0, titleColor)
-                translate(0F, textRenderer.fontHeight + 2F)
+            title?.let { title ->
+                drawContext.drawCenteredString(textRenderer, title, width / 2, 0, titleColor)
+                translate(0F, textRenderer.lineHeight + 2F)
             }
 
             // render stacks
@@ -206,9 +206,9 @@ class ItemStackListRenderer private constructor(
         var width = size * minOf(stacks.size, rowLength)
         var height = size * (stacks.size / rowLength + if (stacks.size % rowLength != 0) 1 else 0)
 
-        if (title != null) {
-            width = maxOf(width, textRenderer.getWidth(title))
-            height += textRenderer.fontHeight + (if (stacks.isEmpty()) 0 else 2)
+        title?.let { title ->
+            width = maxOf(width, textRenderer.width(title))
+            height += textRenderer.lineHeight + (if (stacks.isEmpty()) 0 else 2)
         }
 
         this.dimensions.set(width, height)
@@ -300,13 +300,13 @@ class ItemStackListRenderer private constructor(
 
         @JvmStatic
         @JvmName("create")
-        fun DrawContext.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderer {
+        fun GuiGraphics.drawItemStackList(stacks: List<ItemStack>): ItemStackListRenderer {
             return ItemStackListRenderer(this, stacks)
         }
 
         @JvmStatic
         @JvmName("create")
-        fun DrawContext.drawItemStackList(stacks: Array<ItemStack>): ItemStackListRenderer =
+        fun GuiGraphics.drawItemStackList(stacks: Array<ItemStack>): ItemStackListRenderer =
             drawItemStackList(stacks.asList())
 
         @JvmStatic
@@ -334,19 +334,19 @@ class ItemStackListRenderer private constructor(
     }
 
     fun interface SingleItemStackRenderer {
-        fun DrawContext.drawItemStack(textRenderer: TextRenderer, index: Int, stack: ItemStack, x: Int, y: Int)
+        fun GuiGraphics.drawItemStack(textRenderer: Font, index: Int, stack: ItemStack, x: Int, y: Int)
 
         companion object {
 
             @JvmField
             val OnlyItem = SingleItemStackRenderer { _, _, stack, x, y ->
-                drawItem(stack, x, y)
+                renderItem(stack, x, y)
             }
 
             @JvmField
             val All = SingleItemStackRenderer { textRenderer, _, stack, x, y ->
-                drawItem(stack, x, y)
-                drawStackOverlay(textRenderer, stack, x, y)
+                renderItem(stack, x, y)
+                renderItemDecorations(textRenderer, stack, x, y)
             }
 
             @JvmField
@@ -360,8 +360,8 @@ class ItemStackListRenderer private constructor(
             ): SingleItemStackRenderer {
                 return SingleItemStackRenderer { textRenderer, index, stack, x, y ->
                     if (stack.isEmpty) return@SingleItemStackRenderer
-                    drawItem(stack, x, y)
-                    matrices.withPush {
+                    renderItem(stack, x, y)
+                    pose().withPush {
                         if (drawItemBar) drawItemBar(stack, x, y)
                         if (drawStackCount) drawStackCount(textRenderer, stack, x, y, null)
                         if (drawCooldownProgress) drawCooldownProgress(stack, x, y)

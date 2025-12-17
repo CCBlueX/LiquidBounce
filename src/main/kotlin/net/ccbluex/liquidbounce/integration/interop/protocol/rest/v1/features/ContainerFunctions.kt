@@ -31,30 +31,30 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.component.ComponentChanges
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
-import net.minecraft.registry.Registries
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
+import net.minecraft.core.registries.BuiltInRegistries
 
 // GET /api/v1/container
 fun getContainerInfo() = httpOk(JsonObject().apply {
-    val screenHandler = mc.currentScreen
+    val screenHandler = mc.screen
 
-    if (screenHandler is GenericContainerScreen) {
-        val inventory = screenHandler.screenHandler.inventory
+    if (screenHandler is ContainerScreen) {
+        val inventory = screenHandler.menu.container
 
-        if (inventory !is SimpleInventory) {
+        if (inventory !is SimpleContainer) {
             return httpForbidden("Not a simple inventory")
         }
 
-        addProperty("syncId", screenHandler.screenHandler.syncId)
+        addProperty("syncId", screenHandler.menu.containerId)
         addProperty("title", screenHandler.title.string)
-        addProperty("slots", screenHandler.screenHandler.rows * 9)
-        addProperty("emptySlots", inventory.heldStacks.count { it.isEmpty })
-        addProperty("rows", screenHandler.screenHandler.rows)
+        addProperty("slots", screenHandler.menu.rowCount * 9)
+        addProperty("emptySlots", inventory.items.count { it.isEmpty })
+        addProperty("rows", screenHandler.menu.rowCount)
     } else {
         return httpForbidden("Not a container")
     }
@@ -66,15 +66,15 @@ fun postGiveItem(): FullHttpResponse {
         return httpForbidden("Must be in creative mode")
     }
 
-    val screenHandler = mc.currentScreen
+    val screenHandler = mc.screen
 
-    if (screenHandler !is GenericContainerScreen) {
+    if (screenHandler !is ContainerScreen) {
         return httpForbidden("Not a container")
     }
 
-    val inventory = screenHandler.screenHandler.inventory
+    val inventory = screenHandler.menu.container
 
-    if (inventory !is SimpleInventory) {
+    if (inventory !is SimpleContainer) {
         return httpForbidden("Not a simple inventory")
     }
 
@@ -91,18 +91,18 @@ fun postGiveItem(): FullHttpResponse {
     return httpNoContent()
 }
 
-private fun giveItem(components: ComponentChanges): FullHttpResponse? {
-    val itemStack = ItemStack(Registries.ITEM.getEntry(Items.CHEST), 1, components)
+private fun giveItem(components: DataComponentPatch): FullHttpResponse? {
+    val itemStack = ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(Items.CHEST), 1, components)
 
-    val emptySlot = player.inventory.emptySlot
+    val emptySlot = player.inventory.freeSlot
 
     if (emptySlot == -1) {
         return httpForbidden("No empty slot")
     }
 
-    player.inventory.setStack(emptySlot, itemStack)
-    network.sendPacket(
-        CreativeInventoryActionC2SPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot, itemStack)
+    player.inventory.setItem(emptySlot, itemStack)
+    network.send(
+        ServerboundSetCreativeModeSlotPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot, itemStack)
     )
 
     return null
@@ -110,12 +110,12 @@ private fun giveItem(components: ComponentChanges): FullHttpResponse? {
 
 // POST /api/v1/container/store
 fun postStoreItem(): FullHttpResponse {
-    val screenHandler = mc.currentScreen
+    val screenHandler = mc.screen
 
-    return if (screenHandler is GenericContainerScreen) {
-        val inventory = screenHandler.screenHandler.inventory
+    return if (screenHandler is ContainerScreen) {
+        val inventory = screenHandler.menu.container
 
-        if (inventory !is SimpleInventory) {
+        if (inventory !is SimpleContainer) {
             return httpForbidden("Not a simple inventory")
         }
 

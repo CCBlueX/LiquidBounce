@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.common;
 
 public final class ChunkUpdateFlag {
     /**
-     * Marks if the client world is processing a {@link net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket}.
+     * Marks if the client world is processing a {@link net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket}.
      */
     public static volatile boolean chunkDeltaUpdating = false;
 }

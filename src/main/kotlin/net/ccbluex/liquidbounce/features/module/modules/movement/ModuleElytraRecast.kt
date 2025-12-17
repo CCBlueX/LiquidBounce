@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast.shouldRecast
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 
 /**
  * Elytra recast module
@@ -41,11 +41,11 @@ object ModuleElytraRecast : ClientModule("ElytraRecast", Category.MOVEMENT) {
 
     private val shouldRecast: Boolean
         get() {
-            val itemStack = player.getEquippedStack(EquipmentSlot.CHEST)
+            val itemStack = player.getItemBySlot(EquipmentSlot.CHEST)
 
-            return !player.abilities.flying && !player.hasVehicle() && !player.isClimbing &&
-                !player.isTouchingWater && !player.hasStatusEffect(StatusEffects.LEVITATION) &&
-                itemStack.isOf(Items.ELYTRA) && !itemStack.willBreakNextUse() && mc.options.jumpKey.isPressed
+            return !player.abilities.flying && !player.isPassenger && !player.onClimbable() &&
+                !player.isInWater && !player.hasEffect(MobEffects.LEVITATION) &&
+                itemStack.`is`(Items.ELYTRA) && !itemStack.nextDamageWillBreak() && mc.options.keyJump.isDown
         }
 
     /**
@@ -55,8 +55,10 @@ object ModuleElytraRecast : ClientModule("ElytraRecast", Category.MOVEMENT) {
      */
     fun recastElytra(): Boolean {
         if (shouldRecast) {
-            player.startGliding()
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_FALL_FLYING))
+            player.startFallFlying()
+            network.send(
+                ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+            )
             return true
         }
 

@@ -42,16 +42,16 @@ import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.ChestBlock
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.ChestBlock
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.BlockPos
 import java.util.function.BooleanSupplier
 import kotlin.collections.Set
 import kotlin.collections.hashSetOf
@@ -139,14 +139,14 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
         fun isUnblockedChestOrNotChest(state: BlockState, pos: BlockPos): Boolean {
             if (state.block !is ChestBlock) return true
-            if (ChestBlock.isChestBlocked(world, pos)) return false
+            if (ChestBlock.isChestBlockedAt(world, pos)) return false
 
-            return !ChestBlock.isChestBlocked(world, pos.offset(state.anotherChestPartDirection() ?: return true))
+            return !ChestBlock.isChestBlockedAt(world, pos.relative(state.anotherChestPartDirection() ?: return true))
         }
 
         val searchRadius = interactionRange + 1
         val searchRadiusSquared = searchRadius * searchRadius
-        val playerEyesPosition = player.eyePos
+        val playerEyesPosition = player.eyePosition
 
         if (notDuringCombat && CombatManager.isInCombat) {
             currentTargetBlock = null
@@ -163,7 +163,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
         // Find the next block to interact with
         for ((blockPos, state) in nearbyStorageBlocks) {
             val (rotation, _) = raytraceBlockRotation(
-                player.eyePos,
+                player.eyePosition,
                 blockPos,
                 state,
                 range = interactionRange.toDouble(),
@@ -194,9 +194,9 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(READ_FINAL_STATE) { event ->
-        if (trackManualInteractions && event.packet is PlayerInteractBlockC2SPacket && !event.isCancelled) {
+        if (trackManualInteractions && event.packet is ServerboundUseItemOnPacket && !event.isCancelled) {
             mc.execute {
-                track(event.packet.blockHitResult.blockPos)
+                track(event.packet.hitResult.blockPos)
             }
         }
     }
@@ -204,7 +204,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     // Task that repeats to interact with the target block
     @Suppress("unused")
     private val interactionRepeatableTask = tickHandler {
-        if (mc.currentScreen is HandledScreen<*>) {
+        if (mc.screen is AbstractContainerScreen<*>) {
             // Do not proceed if a screen is open which implies player might be in a GUI
             return@tickHandler
         }
@@ -226,20 +226,20 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
         }
 
         // Attempt to interact with the block
-        if (interaction.interactBlock(player, Hand.MAIN_HAND, rayTraceResult) == ActionResult.SUCCESS) {
+        if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult) == InteractionResult.SUCCESS) {
             // Swing hand visually if the setting is enabled, else send packet for the action
             if (shouldDisplayVisualSwing) {
-                player.swingHand(Hand.MAIN_HAND)
+                player.swing(InteractionHand.MAIN_HAND)
             } else {
-                network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+                network.send(ServerboundSwingPacket(InteractionHand.MAIN_HAND))
             }
 
             var wasInteractionSuccessful = false
 
             if (AwaitContainerSettings.enabled) {
                 tickConditional(AwaitContainerSettings.retryTimeout) {
-                    val currentScreen = mc.currentScreen
-                    if (currentScreen is HandledScreen<*>) { // TODO: check if the inner type matches?
+                    val currentScreen = mc.screen
+                    if (currentScreen is AbstractContainerScreen<*>) { // TODO: check if the inner type matches?
                         // Interaction was successful if the inventory screen is open
                         wasInteractionSuccessful = true
                         true
@@ -268,7 +268,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
     private fun track(blockPos: BlockPos) {
         fun BlockPos.recordAnotherChestPart(state: BlockState?) {
-            interactedBlocksSet += offset(state.anotherChestPartDirection() ?: return)
+            interactedBlocksSet += relative(state.anotherChestPartDirection() ?: return)
         }
 
         interactedBlocksSet += blockPos

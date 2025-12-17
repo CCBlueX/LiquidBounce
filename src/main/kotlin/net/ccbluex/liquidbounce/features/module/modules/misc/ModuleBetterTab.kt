@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.PlainText
-import net.minecraft.client.network.PlayerListEntry
+import net.minecraft.client.multiplayer.PlayerInfo
 
 /**
  * ModuleBetterTab
@@ -92,17 +92,17 @@ class PlayerFilter: Configurable("Filter") {
 
     private val names by regexList("Names", linkedSetOf())
 
-    fun isInFilter(entry: PlayerListEntry) = names.any { regex ->
+    fun isInFilter(entry: PlayerInfo) = names.any { regex ->
         filterBy.any { filter -> filter.matches(entry, regex) }
     }
 
     @Suppress("unused")
     private enum class Filter(
         override val choiceName: String,
-        val matches: PlayerListEntry.(Regex) -> Boolean
+        val matches: PlayerInfo.(Regex) -> Boolean
     ) : NamedChoice {
         DISPLAY_NAME("DisplayName", { regex ->
-            this.displayName?.string?.let { regex.matches(it) } ?: false
+            this.tabListDisplayName?.string?.let { regex.matches(it) } ?: false
         }),
 
         PLAYER_NAME("PlayerName", { regex ->
@@ -114,12 +114,14 @@ class PlayerFilter: Configurable("Filter") {
 @Suppress("unused")
 enum class Sorting(
     override val choiceName: String,
-    val comparator: Comparator<PlayerListEntry>?
+    val comparator: Comparator<PlayerInfo>?
 ) : NamedChoice {
     VANILLA("Vanilla", null),
     PING("Ping", Comparator.comparingInt { it.latency }),
     LENGTH("NameLength", Comparator.comparingInt { it.profile.name.length }),
-    SCORE_LENGTH("DisplayNameLength", Comparator.comparingInt { (it.displayName ?: PlainText.EMPTY).string.length }),
+    SCORE_LENGTH("DisplayNameLength", Comparator.comparingInt {
+        (it.tabListDisplayName ?: PlainText.EMPTY).string.length
+    }),
     ALPHABETICAL("Alphabetical", Comparator.comparing { it.profile.name }),
     REVERSE_ALPHABETICAL("ReverseAlphabetical", Comparator.comparing({ it.profile.name }, Comparator.reverseOrder())),
     NONE("None", { _, _ -> 0 })

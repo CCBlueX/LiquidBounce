@@ -20,16 +20,16 @@
 package net.ccbluex.liquidbounce.utils.aiming.point.exempts
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
 enum class ExemptBoxPart(override val choiceName: String) : NamedChoice, ExemptPoint {
 
     HEAD("Head") {
         override fun predicate(
             context: ExemptContext,
-            point: Vec3d
+            point: Vec3
         ): Boolean {
-            val length = context.box.lengthY / entries.size
+            val length = context.box.ysize / entries.size
             return point.y <= context.box.maxY &&
                 point.y > context.box.maxY - length
         }
@@ -37,9 +37,9 @@ enum class ExemptBoxPart(override val choiceName: String) : NamedChoice, ExemptP
     BODY("Body") {
         override fun predicate(
             context: ExemptContext,
-            point: Vec3d
+            point: Vec3
         ): Boolean {
-            val length = context.box.lengthY / entries.size
+            val length = context.box.ysize / entries.size
             return point.y <= context.box.maxY - length &&
                 point.y >= context.box.minY + length
         }
@@ -47,9 +47,9 @@ enum class ExemptBoxPart(override val choiceName: String) : NamedChoice, ExemptP
     FEET("Feet") {
         override fun predicate(
             context: ExemptContext,
-            point: Vec3d
+            point: Vec3
         ): Boolean {
-            val length = context.box.lengthY / entries.size
+            val length = context.box.ysize / entries.size
             return  point.y >= context.box.minY &&
                 point.y < context.box.minY + length
         }

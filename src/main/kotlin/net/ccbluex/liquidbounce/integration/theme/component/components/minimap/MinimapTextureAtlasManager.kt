@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.uploadRect
-import net.minecraft.client.texture.NativeImageBackedTexture
-import net.minecraft.client.texture.TextureSetup
+import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.client.gui.render.TextureSetup
 import org.joml.Vector2i
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.function.BiConsumer
@@ -49,7 +49,7 @@ private const val MAX_ATLAS_POSITIONS: Int = ATLAS_SIZE * ATLAS_SIZE - 1
 private val NOT_LOADED_ATLAS_POSITION = MinimapTextureAtlasManager.AtlasPosition(0, 0)
 
 class MinimapTextureAtlasManager {
-    private val texture = NativeImageBackedTexture(
+    private val texture = DynamicTexture(
         { "$CLIENT_NAME MinimapTexture" },
         ATLAS_SIZE * 16, ATLAS_SIZE * 16, false
     )
@@ -77,7 +77,7 @@ class MinimapTextureAtlasManager {
             for (y in 0..15) {
                 val color = if ((x and 1) xor (y and 1) == 0) Color4b.BLACK.toARGB() else Color4b.WHITE.toARGB()
 
-                this.texture.image!!.setColorArgb(x, y, color)
+                this.texture.pixels!!.setPixel(x, y, color)
             }
         }
 
@@ -121,7 +121,7 @@ class MinimapTextureAtlasManager {
 
     fun editChunk(
         chunkPos: Long,
-        editor: BiConsumer<NativeImageBackedTexture, AtlasPosition>,
+        editor: BiConsumer<DynamicTexture, AtlasPosition>,
     ) {
         val atlasPosition = getOrAllocate(chunkPos)
 

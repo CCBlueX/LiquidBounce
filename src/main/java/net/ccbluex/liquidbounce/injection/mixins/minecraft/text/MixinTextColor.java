@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.text;
 
 import com.google.common.base.Objects;
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions;
-import net.minecraft.text.TextColor;
+import net.minecraft.network.chat.TextColor;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -44,7 +44,7 @@ public class MixinTextColor implements ClientTextColorAdditions {
     private @Nullable String name;
     @Shadow
     @Final
-    private int rgb;
+    private int value;
     @Unique
     private boolean bypassesNameProtect = false;
 
@@ -55,7 +55,7 @@ public class MixinTextColor implements ClientTextColorAdditions {
 
     @Override
     public TextColor liquid_bounce$withNameProtectionBypass() {
-        var textColor = new TextColor(this.rgb, this.name);
+        var textColor = new TextColor(this.value, this.name);
 
         ((ClientTextColorAdditions) ((Object) textColor)).liquid_bounce$setBypassingNameProtection(true);
 
@@ -81,7 +81,7 @@ public class MixinTextColor implements ClientTextColorAdditions {
      */
     @Overwrite
     public int hashCode() {
-        return Objects.hashCode(this.name, this.rgb, this.bypassesNameProtect);
+        return Objects.hashCode(this.name, this.value, this.bypassesNameProtect);
     }
 
 }

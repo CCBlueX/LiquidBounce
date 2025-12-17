@@ -44,8 +44,8 @@ class Alignment(
         width: Float,
         height: Float,
     ): BoundingBox2f {
-        val screenWidth = mc.window.scaledWidth.toFloat()
-        val screenHeight = mc.window.scaledHeight.toFloat()
+        val screenWidth = mc.window.guiScaledWidth.toFloat()
+        val screenHeight = mc.window.guiScaledHeight.toFloat()
 
         val x = when (horizontalAlignment) {
             ScreenAxisX.LEFT -> horizontalOffset.toFloat()

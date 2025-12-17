@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
 import it.unimi.dsi.fastutil.objects.ReferenceSet
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.item.BlockItem
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.registry.Registries
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.Items
+import net.minecraft.core.registries.BuiltInRegistries
 
 const val WOOL_ID           = "wool"
 const val TERRACOTTA_ID     = "terracotta"
@@ -69,12 +69,13 @@ fun String.isArmorItem() : Boolean {
     return this.substringBefore(':') in ARMOR_ITEMS
 }
 
-fun GenericContainerScreen.stacks(): List<String> {
-    return this.screenHandler.slots
+fun ContainerScreen.stacks(): List<String> {
+    return this.menu.slots
         .filter {
-            !it.stack.isEmpty &&
-            it.inventory === this.screenHandler.inventory }
-        .mapNotNull { Registries.ITEM.getId(it.stack.item).path }
+            !it.item.isEmpty &&
+            it.container === this.menu.container
+        }
+        .mapNotNull { BuiltInRegistries.ITEM.getKey(it.item.item).path }
 }
 
 private val WOOL_BLOCKS: Set<Item> = ReferenceSet.of(
@@ -138,4 +139,4 @@ private val ARMOR_ITEMS: Set<String> = arrayOf(
     Items.IRON_BOOTS,
     Items.DIAMOND_BOOTS,
     Items.NETHERITE_BOOTS
-).mapTo(hashSetOf()) { Registries.ITEM.getId(it).path }
+).mapTo(hashSetOf()) { BuiltInRegistries.ITEM.getKey(it).path }

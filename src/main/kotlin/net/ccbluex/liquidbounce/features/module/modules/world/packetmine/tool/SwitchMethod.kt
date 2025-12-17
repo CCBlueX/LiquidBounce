@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.network.PickFromInventoryPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 enum class SwitchMethod(override val choiceName: String, val shouldSync: Boolean) : NamedChoice, MinecraftShortcuts {
 

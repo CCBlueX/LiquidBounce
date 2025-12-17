@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.item.Items
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.item.Items
 
 
 /**
@@ -44,21 +44,21 @@ class SpeedSpartanV4043(override val parent: ChoiceConfigurable<*>) : Choice("Sp
 
     @Suppress("unused")
     private val moveHandler = handler<PlayerMoveEvent> { event ->
-        if (!player.input.playerInput.forward) {
+        if (!player.input.keyPresses.forward) {
             return@handler
         }
 
-        val wearingLeatherBoots = player.getEquippedStack(EquipmentSlot.FEET).isOf(Items.LEATHER_BOOTS)
+        val wearingLeatherBoots = player.getItemBySlot(EquipmentSlot.FEET).`is`(Items.LEATHER_BOOTS)
         val horizontalMove = if (wearingLeatherBoots) 1.8 else 1.3
 
-        if (player.isOnGround) {
-            event.movement.x = player.velocity.x * horizontalMove
-            event.movement.z = player.velocity.z * horizontalMove
+        if (player.onGround()) {
+            event.movement.x = player.deltaMovement.x * horizontalMove
+            event.movement.z = player.deltaMovement.z * horizontalMove
 
             repeat(4) {
-                player.jump()
+                player.jumpFromGround()
             }
-            event.movement.y = player.jumpVelocity.toDouble()
+            event.movement.y = player.jumpPower.toDouble()
         }
     }
 }
@@ -77,27 +77,27 @@ class SpeedSpartanV4043FastFall(override val parent: ChoiceConfigurable<*>) : Ch
 
     @Suppress("unused")
     private val moveHandler = handler<PlayerMoveEvent> { event ->
-        if (!player.input.playerInput.forward) {
+        if (!player.input.keyPresses.forward) {
             return@handler
         }
 
-        val wearingLeatherBoots = player.getEquippedStack(EquipmentSlot.FEET).isOf(Items.LEATHER_BOOTS)
+        val wearingLeatherBoots = player.getItemBySlot(EquipmentSlot.FEET).`is`(Items.LEATHER_BOOTS)
         val horizontalMove = if (wearingLeatherBoots) 1.2 else 1.05
         val jumps = if (wearingLeatherBoots) 7 else 3
 
-        if (player.isOnGround) {
-            event.movement.x = player.velocity.x * horizontalMove
-            event.movement.z = player.velocity.z * horizontalMove
+        if (player.onGround()) {
+            event.movement.x = player.deltaMovement.x * horizontalMove
+            event.movement.z = player.deltaMovement.z * horizontalMove
 
             repeat(jumps) {
-                player.jump()
+                player.jumpFromGround()
             }
 
             event.movement.y = 0.42
         } else if (player.airTicks == 1) {
             Timer.requestTimerSpeed(0.5f, Priority.NORMAL, ModuleSpeed, 0)
 
-            network.sendPacket(MovePacketType.FULL.generatePacket().apply { // for some reason full works best
+            network.send(MovePacketType.FULL.generatePacket().apply { // for some reason full works best
                 onGround = true
             })
 

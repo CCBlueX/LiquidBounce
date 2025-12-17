@@ -24,12 +24,12 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MinecraftClientAccessor
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MinecraftAccessor
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isInteractable
 import net.ccbluex.liquidbounce.utils.item.isInteractable
-import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.world.phys.BlockHitResult
 
 /**
  * NoBlockInteract module
@@ -56,14 +56,14 @@ object ModuleNoBlockInteract : ClientModule("NoBlockInteract", Category.PLAYER) 
     @Suppress("unused")
     private val handleGameTick = handler<GameTickEvent> {
         if (interacting) {
-            (mc as MinecraftClientAccessor).callDoItemUse()
+            (mc as MinecraftAccessor).callStartUseItem()
             interacting = false
             sneaking = false
         }
     }
 
     fun shouldSneak(blockHitResult: BlockHitResult): Boolean {
-        if (player.isSneaking) {
+        if (player.isShiftKeyDown) {
             return false
         }
 
@@ -72,6 +72,6 @@ object ModuleNoBlockInteract : ClientModule("NoBlockInteract", Category.PLAYER) 
             return false
         }
 
-        return player.mainHandStack.isInteractable() || player.offHandStack.isInteractable()
+        return player.mainHandItem.isInteractable() || player.offhandItem.isInteractable()
     }
 }

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import static net.minecraft.util.math.MathHelper.RADIANS_PER_DEGREE;
+import static net.minecraft.util.Mth.DEG_TO_RAD;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -31,12 +31,12 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.ccbluex.liquidbounce.utils.input.InputTracker;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.input.KeyboardInput;
-import net.minecraft.client.option.GameOptions;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.util.PlayerInput;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.KeyboardInput;
+import net.minecraft.client.Options;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,17 +46,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(KeyboardInput.class)
-public abstract class MixinKeyboardInput extends MixinInput {
+public abstract class MixinKeyboardInput extends MixinClientInput {
 
     @Shadow
     @Final
-    private GameOptions settings;
+    private Options options;
 
     /**
      * Hook inventory move module
      */
-    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
-    private boolean hookInventoryMove(KeyBinding instance, Operation<Boolean> original) {
+    @WrapOperation(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;isDown()Z"))
+    private boolean hookInventoryMove(KeyMapping instance, Operation<Boolean> original) {
         return original.call(instance) ||
                 ModuleInventoryMove.INSTANCE.shouldHandleInputs(instance)
                         && InputTracker.INSTANCE.isPressedOnAny(instance);
@@ -68,16 +68,16 @@ public abstract class MixinKeyboardInput extends MixinInput {
      */
     @Inject(method = "tick", at = @At("HEAD"))
     private void hookInventoryMoveSprint(CallbackInfo ci) {
-        if (ModuleInventoryMove.INSTANCE.shouldHandleInputs(this.settings.sprintKey)) {
-            this.settings.sprintKey.setPressed(InputTracker.INSTANCE.isPressedOnAny(this.settings.sprintKey));
+        if (ModuleInventoryMove.INSTANCE.shouldHandleInputs(this.options.keySprint)) {
+            this.options.keySprint.setDown(InputTracker.INSTANCE.isPressedOnAny(this.options.keySprint));
         }
     }
 
-    @ModifyExpressionValue(method = "tick", at = @At(value = "NEW", target = "(ZZZZZZZ)Lnet/minecraft/util/PlayerInput;"))
-    private PlayerInput modifyInput(PlayerInput original) {
+    @ModifyExpressionValue(method = "tick", at = @At(value = "NEW", target = "(ZZZZZZZ)Lnet/minecraft/world/entity/player/Input;"))
+    private Input modifyInput(Input original) {
         this.initial = original;
 
-        var event = new MovementInputEvent(new DirectionalInput(original), original.jump(), original.sneak());
+        var event = new MovementInputEvent(new DirectionalInput(original), original.jump(), original.shift());
         EventManager.INSTANCE.callEvent(event);
         var untransformedDirectionalInput = event.getDirectionalInput();
         var directionalInput = transformDirection(untransformedDirectionalInput);
@@ -86,7 +86,7 @@ public abstract class MixinKeyboardInput extends MixinInput {
         EventManager.INSTANCE.callEvent(sprintEvent);
 
         // Store the untransformed input for later use
-        this.untransformed = new PlayerInput(
+        this.untransformed = new Input(
                 untransformedDirectionalInput.getForwards(),
                 untransformedDirectionalInput.getBackwards(),
                 untransformedDirectionalInput.getLeft(),
@@ -96,7 +96,7 @@ public abstract class MixinKeyboardInput extends MixinInput {
                 sprintEvent.getSprint()
         );
 
-        return new PlayerInput(
+        return new Input(
                 directionalInput.getForwards(),
                 directionalInput.getBackwards(),
                 directionalInput.getLeft(),
@@ -109,24 +109,24 @@ public abstract class MixinKeyboardInput extends MixinInput {
 
     @Unique
     private DirectionalInput transformDirection(DirectionalInput input) {
-        var player = MinecraftClient.getInstance().player;
+        var player = Minecraft.getInstance().player;
         var rotation = RotationManager.INSTANCE.getCurrentRotation();
         var configurable = RotationManager.INSTANCE.getActiveRotationTarget();
 
-        float z = KeyboardInput.getMovementMultiplier(input.getForwards(), input.getBackwards());
-        float x = KeyboardInput.getMovementMultiplier(input.getLeft(), input.getRight());
+        float z = KeyboardInput.calculateImpulse(input.getForwards(), input.getBackwards());
+        float x = KeyboardInput.calculateImpulse(input.getLeft(), input.getRight());
 
         if (configurable == null || configurable.getMovementCorrection() != MovementCorrection.SILENT
                 || rotation == null || player == null) {
             return input;
         }
 
-        float deltaYaw = player.getYaw() - rotation.getYaw();
+        float deltaYaw = player.getYRot() - rotation.getYaw();
 
-        float newX = x * MathHelper.cos(deltaYaw * RADIANS_PER_DEGREE) - z *
-                MathHelper.sin(deltaYaw * RADIANS_PER_DEGREE);
-        float newZ = z * MathHelper.cos(deltaYaw * RADIANS_PER_DEGREE) + x *
-                MathHelper.sin(deltaYaw * RADIANS_PER_DEGREE);
+        float newX = x * Mth.cos(deltaYaw * DEG_TO_RAD) - z *
+                Mth.sin(deltaYaw * DEG_TO_RAD);
+        float newZ = z * Mth.cos(deltaYaw * DEG_TO_RAD) + x *
+                Mth.sin(deltaYaw * DEG_TO_RAD);
 
         var movementSideways = Math.round(newX);
         var movementForward = Math.round(newZ);

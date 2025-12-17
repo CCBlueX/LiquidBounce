@@ -19,21 +19,21 @@
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.utils.client.world
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityPose
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.registry.entry.RegistryEntry
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.core.Holder
+import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.sqrt
 
 @Suppress("LongParameterList")
 class FallingPlayer(
-    private val player: ClientPlayerEntity,
+    private val player: LocalPlayer,
     var x: Double,
     var y: Double,
     var z: Double,
@@ -43,42 +43,42 @@ class FallingPlayer(
     private val yaw: Float
 ) {
     companion object {
-        fun fromPlayer(player: ClientPlayerEntity): FallingPlayer {
+        fun fromPlayer(player: LocalPlayer): FallingPlayer {
             return FallingPlayer(
                 player,
                 player.x,
                 player.y,
                 player.z,
-                player.velocity.x,
-                player.velocity.y,
-                player.velocity.z,
-                player.yaw
+                player.deltaMovement.x,
+                player.deltaMovement.y,
+                player.deltaMovement.z,
+                player.yRot
             )
         }
     }
 
     private var simulatedTicks: Int = 0
 
-    private fun calculateForTick(rotationVec: Vec3d) {
+    private fun calculateForTick(rotationVec: Vec3) {
         var d = 0.08
         val bl: Boolean = motionY <= 0.0
 
-        if (bl && hasStatusEffect(StatusEffects.SLOW_FALLING)) {
+        if (bl && hasStatusEffect(MobEffects.SLOW_FALLING)) {
             d = 0.01
         }
 
 
-        val j: Double = this.player.pitch.toDouble() * MathHelper.RADIANS_PER_DEGREE
+        val j: Double = this.player.xRot.toDouble() * Mth.DEG_TO_RAD
 
         val k = sqrt(rotationVec.x * rotationVec.x + rotationVec.z * rotationVec.z)
         val l = sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ)
 
         val m = rotationVec.length()
-        var n = MathHelper.cos(j)
+        var n = Mth.cos(j)
 
         n = (n.toDouble() * n.toDouble() * 1.0.coerceAtMost(m / 0.4)).toFloat()
 
-        var vec3d5 = Vec3d(this.motionX, this.motionY, this.motionZ).add(0.0, d * (-1.0 + n.toDouble() * 0.75), 0.0)
+        var vec3d5 = Vec3(this.motionX, this.motionY, this.motionZ).add(0.0, d * (-1.0 + n.toDouble() * 0.75), 0.0)
 
         var q: Double
         if (vec3d5.y < 0.0 && k > 0.0) {
@@ -87,7 +87,7 @@ class FallingPlayer(
         }
 
         if (j < 0.0 && k > 0.0) {
-            q = l * (-MathHelper.sin(j)).toDouble() * 0.04
+            q = l * (-Mth.sin(j)).toDouble() * 0.04
             vec3d5 = vec3d5.add(-rotationVec.x * q / k, q * 3.2, -rotationVec.z * q / k)
         }
 
@@ -96,8 +96,8 @@ class FallingPlayer(
         }
 
         vec3d5.add(
-            Entity.movementInputToVelocity(
-                Vec3d(
+            Entity.getInputVector(
+                Vec3(
                     this.player.input.movementSideways.toDouble() * 0.98,
                     0.0,
                     this.player.input.movementForward.toDouble() * 0.98
@@ -107,7 +107,7 @@ class FallingPlayer(
             )
         )
 
-        val velocityCoFactor: Float = this.player.velocityMultiplier
+        val velocityCoFactor: Float = this.player.blockSpeedFactor
 
         this.motionX = vec3d5.x * 0.9900000095367432 * velocityCoFactor
         this.motionY = vec3d5.y * 0.9800000190734863
@@ -120,25 +120,25 @@ class FallingPlayer(
         this.simulatedTicks++
     }
 
-    private fun hasStatusEffect(effect: RegistryEntry<StatusEffect>): Boolean {
-        val instance = player.getStatusEffect(effect) ?: return false
+    private fun hasStatusEffect(effect: Holder<MobEffect>): Boolean {
+        val instance = player.getEffect(effect) ?: return false
 
         return instance.duration >= this.simulatedTicks
     }
 
     fun findCollision(ticks: Int): CollisionResult? {
-        val rotationVec = player.rotationVector
+        val rotationVec = player.lookAngle
 
         for (i in 0 until ticks) {
-            val start = Vec3d(x, y, z)
+            val start = Vec3(x, y, z)
 
             calculateForTick(rotationVec)
 
-            val end = Vec3d(x, y, z)
+            val end = Vec3(x, y, z)
 
-            val box = player.getDimensions(EntityPose.STANDING).getBoxAt(start).stretch(end.subtract(start))
+            val box = player.getDimensions(Pose.STANDING).makeBoundingBox(start).expandTowards(end.subtract(start))
 
-            world.findSupportingBlockPos(player, box).getOrNull()?.let {
+            world.findSupportingBlock(player, box).getOrNull()?.let {
                 return CollisionResult(it, i)
             }
         }

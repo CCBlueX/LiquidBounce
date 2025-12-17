@@ -37,17 +37,17 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.block.DoorBlock
-import net.minecraft.block.FenceGateBlock
-import net.minecraft.block.TrapdoorBlock
-import net.minecraft.client.option.KeyBinding
-import net.minecraft.entity.Entity
-import net.minecraft.item.BlockItem
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.registry.Registries
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.EntityHitResult
+import net.minecraft.world.level.block.DoorBlock
+import net.minecraft.world.level.block.FenceGateBlock
+import net.minecraft.world.level.block.TrapDoorBlock
+import net.minecraft.client.KeyMapping
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.EntityHitResult
 
 /**
  * AutoClicker module
@@ -59,7 +59,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
 
     object AttackButton : ToggleableConfigurable(this, "Attack", true) {
 
-        val clicker = tree(Clicker(this, mc.options.attackKey))
+        val clicker = tree(Clicker(this, mc.options.keyAttack))
 
         internal val requiresNoInput by boolean("RequiresNoInput", false)
         internal val delayOnBroken by boolean("DelayOnBroken", true)
@@ -90,7 +90,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         }
 
         fun isOnObjective(): Boolean {
-            val crosshair = mc.crosshairTarget
+            val crosshair = mc.hitResult
 
             return when (objectiveType) {
                 ObjectiveType.ENEMY -> crosshair is EntityHitResult && crosshair.entity.shouldBeAttacked()
@@ -101,7 +101,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         }
 
         fun isWeaponSelected(): Boolean {
-            val stack = player.mainHandStack
+            val stack = player.mainHandItem
 
             return when (weapon) {
                 Weapon.SWORD -> stack.isSword
@@ -124,7 +124,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 }
 
                 Use.STOP -> {
-                    interaction.stopUsingItem(player)
+                    interaction.releaseUsingItem(player)
                     waitTicks(delayPostStopUse)
                     true
                 }
@@ -140,7 +140,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                     return@handler
                 }
 
-                val target = mc.crosshairTarget as? EntityHitResult ?: return@handler
+                val target = mc.hitResult as? EntityHitResult ?: return@handler
                 if (criticalsSelectionMode.shouldStopSprinting(clicker, target.entity)) {
                     event.sprint = false
                 }
@@ -150,7 +150,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
     }
 
     object UseButton : ToggleableConfigurable(this, "Use", false) {
-        val clicker = tree(Clicker(this, mc.options.useKey, null))
+        val clicker = tree(Clicker(this, mc.options.keyUse, null))
         internal val holdingItemsForIgnore by items(
             "HoldingItemsForIgnore",
             default = itemSortedSetOf(
@@ -163,8 +163,8 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
         )
         internal val blocksForIgnore by blocks(
             "BlocksForIgnore",
-            default = Registries.BLOCK.filterTo(blockSortedSetOf()) {
-                it is DoorBlock || it is FenceGateBlock || it is TrapdoorBlock
+            default = BuiltInRegistries.BLOCK.filterTo(blockSortedSetOf()) {
+                it is DoorBlock || it is FenceGateBlock || it is TrapDoorBlock
             },
         )
         internal val delayStart by boolean("DelayStart", false)
@@ -192,10 +192,10 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
     }
 
     val attack: Boolean
-        get() = mc.options.attackKey.isPressedOnAny || AttackButton.requiresNoInput
+        get() = mc.options.keyAttack.isPressedOnAny || AttackButton.requiresNoInput
 
     val use: Boolean
-        get() = mc.options.useKey.isPressedOnAny || UseButton.requiresNoInput
+        get() = mc.options.keyUse.isPressedOnAny || UseButton.requiresNoInput
 
     @Volatile
     private var lastFinishBreak = 0L
@@ -203,7 +203,9 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        if (packet is PlayerActionC2SPacket && packet.action == PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK) {
+        if (packet is ServerboundPlayerActionPacket
+            && packet.action == ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK
+        ) {
             lastFinishBreak = System.currentTimeMillis()
         }
     }
@@ -216,7 +218,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             }
 
             // Check if the player is breaking a block, if so, return
-            if (interaction.isBreakingBlock) {
+            if (interaction.isDestroying) {
                 return@run
             }
 
@@ -224,7 +226,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 return@run
             }
 
-            val crosshairTarget = mc.crosshairTarget
+            val crosshairTarget = mc.hitResult
             if (crosshairTarget is EntityHitResult) {
                 ModuleAutoWeapon.onTarget(crosshairTarget.entity)
 
@@ -233,7 +235,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 }
             }
 
-            if (player.usingItem) {
+            if (player.startedUsingItem) {
                 val encounterItemUse = encounterItemUse()
 
                 if (encounterItemUse) {
@@ -242,7 +244,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             }
 
             clicker.click {
-                KeyBinding.onKeyPressed(mc.options.attackKey.boundKey)
+                KeyMapping.click(mc.options.keyAttack.key)
                 true
             }
         }
@@ -255,8 +257,8 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 return@run
             }
 
-            val mainHandStack = player.mainHandStack
-            val offHandStack = player.offHandStack
+            val mainHandStack = player.mainHandItem
+            val offHandStack = player.offhandItem
             if (mainHandStack.item in SPECIAL_ITEMS_FOR_IGNORE && mainHandStack.customName != null) {
                 return@run
             }
@@ -269,9 +271,9 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
                 return@run
             }
 
-            val crosshairTarget = mc.crosshairTarget
+            val crosshairTarget = mc.hitResult
             if (crosshairTarget is BlockHitResult) {
-                val blockState = mc.world?.getBlockState(crosshairTarget.blockPos)
+                val blockState = mc.level?.getBlockState(crosshairTarget.blockPos)
                 if (blockState?.block in blocksForIgnore) {
                     return@run
                 }
@@ -284,7 +286,7 @@ object ModuleAutoClicker : ClientModule("AutoClicker", Category.COMBAT, aliases 
             }
 
             clicker.click {
-                KeyBinding.onKeyPressed(mc.options.useKey.boundKey)
+                KeyMapping.click(mc.options.keyUse.key)
                 true
             }
         }

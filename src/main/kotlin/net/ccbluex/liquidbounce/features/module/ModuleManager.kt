@@ -281,7 +281,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     @Suppress("unused")
     private val keyboardKeyHandler = handler<KeyboardKeyEvent> { event ->
         when (event.action) {
-            GLFW.GLFW_PRESS -> if (mc.currentScreen == null) {
+            GLFW.GLFW_PRESS -> if (mc.screen == null) {
                 filter { m ->
                     m.bind.matchesKey(event.keyCode, event.scanCode) && m.bind.matchesModifiers(event.mods)
                 }.forEach { m ->
@@ -303,7 +303,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     @Suppress("unused")
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
         when (event.action) {
-            GLFW.GLFW_PRESS -> if (mc.currentScreen == null) {
+            GLFW.GLFW_PRESS -> if (mc.screen == null) {
                 filter { m -> m.bind.matchesMouse(event.button) && m.bind.matchesModifiers(event.mods) }
                     .forEach { m ->
                         m.enabled = !m.running || m.bind.action == InputBind.BindAction.HOLD

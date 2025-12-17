@@ -26,15 +26,15 @@ import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.text.MutableText
-import net.minecraft.text.OrderedText
-import net.minecraft.text.PlainTextContent
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.text.TextColor
-import net.minecraft.text.TextContent
-import net.minecraft.text.TranslatableTextContent
-import net.minecraft.util.Formatting
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.network.chat.contents.PlainTextContents
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.TextColor
+import net.minecraft.network.chat.ComponentContents
+import net.minecraft.network.chat.contents.TranslatableContents
+import net.minecraft.ChatFormatting
 import java.util.*
 import java.util.regex.Pattern
 
@@ -44,45 +44,45 @@ fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
 
-inline fun String.asTextContent(): TextContent = PlainTextContent.of(this)
+inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(this)
 
 /**
  * Returns a [MutableText] from the receiver.
  * If you just need a [Text], use [asPlainText] instead.
  */
-inline fun String.asText(): MutableText = Text.literal(this)
+inline fun String.asText(): MutableComponent = Component.literal(this)
 
 /**
  * Returns an immutable [Text] from the receiver.
  */
-inline fun String.asPlainText(): Text = PlainText.of(this, Style.EMPTY)
+inline fun String.asPlainText(): Component = PlainText.of(this, Style.EMPTY)
 
 /**
  * Returns an immutable [Text] from the receiver with [style].
  */
-inline fun String.asPlainText(style: Style): Text = PlainText.of(this, style)
+inline fun String.asPlainText(style: Style): Component = PlainText.of(this, style)
 
 /**
  * Returns an immutable [Text] from the receiver with [formatting].
  */
-inline fun String.asPlainText(formatting: Formatting): Text = PlainText.of(this, formatting)
+inline fun String.asPlainText(formatting: ChatFormatting): Component = PlainText.of(this, formatting)
 
-inline operator fun Style.plus(formatting: Formatting): Style = withFormatting(formatting)
+inline operator fun Style.plus(formatting: ChatFormatting): Style = applyFormat(formatting)
 
 inline operator fun Style.plus(color: TextColor): Style = withColor(color)
 
 inline operator fun Style.plus(color: Color4b): Style = withColor(color.toTextColor())
 
-inline fun List<Text>.asText(): Text = TextList.of(this)
+inline fun List<Component>.asText(): Component = TextList.of(this)
 
-inline fun Array<out Text>.asText(): Text = TextList.of(this.unmodifiable())
+inline fun Array<out Component>.asText(): Component = TextList.of(this.unmodifiable())
 
-inline fun textOf(vararg parts: Text): Text = parts.asText()
+inline fun textOf(vararg parts: Component): Component = parts.asText()
 
-fun OrderedText.toText(): Text {
-    if (this is Text) return this
+fun FormattedCharSequence.toText(): Component {
+    if (this is Component) return this
 
-    val parts = mutableListOf<Text>()
+    val parts = mutableListOf<Component>()
 
     var currentStyle = Style.EMPTY
     val currentText = Pools.StringBuilder.borrow()
@@ -112,25 +112,25 @@ fun OrderedText.toText(): Text {
     return parts.asText()
 }
 
-fun Text.processContent(): Text {
-    fun translateOrSelf(content: TextContent): TextContent =
-        (content as? TranslatableTextContent)?.toTranslatedString()?.asTextContent() ?: content
+fun Component.processContent(): Component {
+    fun translateOrSelf(content: ComponentContents): ComponentContents =
+        (content as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: content
 
-    val content = this.content
+    val content = this.contents
     val processedContent = translateOrSelf(content)
 
-    val processedSiblings = siblings.map(Text::processContent)
+    val processedSiblings = siblings.map(Component::processContent)
 
     return if (processedContent === content && processedSiblings == siblings) {
         this
     } else {
-        MutableText.of(processedContent).setStyle(style).apply {
+        MutableComponent.create(processedContent).setStyle(style).apply {
             siblings.addAll(processedSiblings)
         }
     }
 }
 
-fun TranslatableTextContent.toTranslatedString(): String = buildString {
+fun TranslatableContents.toTranslatedString(): String = buildString {
     visit {
         append(it)
 
@@ -242,13 +242,13 @@ fun String.hideSensitiveAddress(): String {
 }
 
 @JvmRecord
-data class ColoredChar(val char: Char, val color: Formatting) {
+data class ColoredChar(val char: Char, val color: ChatFormatting) {
     init {
-        requireNotNull(color.colorValue) { "The formatting must be a color formatting!" }
+        requireNotNull(color.color) { "The formatting must be a color formatting!" }
     }
 }
 
-inline fun Char.colored(color: Formatting) = ColoredChar(this, color)
+inline fun Char.colored(color: ChatFormatting) = ColoredChar(this, color)
 
 fun Char.repeat(n: Int): String = CharArray(n) { this }.concatToString()
 
@@ -257,10 +257,10 @@ fun Char.repeat(n: Int): String = CharArray(n) { this }.concatToString()
  */
 fun textLoadingBar(
     percent: Int,
-    progress: ColoredChar = '█'.colored(Formatting.WHITE),
-    remaining: ColoredChar = '░'.colored(Formatting.DARK_GRAY),
+    progress: ColoredChar = '█'.colored(ChatFormatting.WHITE),
+    remaining: ColoredChar = '░'.colored(ChatFormatting.DARK_GRAY),
     length: Int = 10
-): Text {
+): Component {
     val clampedPercent = percent.coerceIn(0, 100)
     val filledBars = clampedPercent * length / 100
 

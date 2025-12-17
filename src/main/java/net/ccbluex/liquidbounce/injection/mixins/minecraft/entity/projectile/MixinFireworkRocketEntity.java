@@ -27,10 +27,10 @@ import net.ccbluex.liquidbounce.additions.FireworkRocketEntityAddition;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleExtendedFirework;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.projectile.FireworkRocketEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.FireworkRocketEntity;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -41,11 +41,11 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 @Mixin(FireworkRocketEntity.class)
 public abstract class MixinFireworkRocketEntity implements FireworkRocketEntityAddition {
     @Shadow
-    private LivingEntity shooter;
+    private LivingEntity attachedToEntity;
 
-    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getRotationVector()Lnet/minecraft/util/math/Vec3d;"))
-    private Vec3d getRotationVector(Vec3d original) {
-        if (shooter != MinecraftClient.getInstance().player) {
+    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getLookAngle()Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 getRotationVector(Vec3 original) {
+        if (attachedToEntity != Minecraft.getInstance().player) {
             return original;
         }
 
@@ -59,9 +59,9 @@ public abstract class MixinFireworkRocketEntity implements FireworkRocketEntityA
         return rotation.getDirectionVector();
     }
 
-    @ModifyArgs(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;", ordinal = 0))
-    private void hookExtendedFirework(Args args, @Local(ordinal = 0) Vec3d rotation, @Local(ordinal = 1) Vec3d velocity) {
-        if (shooter != MinecraftClient.getInstance().player
+    @ModifyArgs(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(DDD)Lnet/minecraft/world/phys/Vec3;", ordinal = 0))
+    private void hookExtendedFirework(Args args, @Local(ordinal = 0) Vec3 rotation, @Local(ordinal = 1) Vec3 velocity) {
+        if (attachedToEntity != Minecraft.getInstance().player
                 || !ModuleExtendedFirework.INSTANCE.getRunning()
         ) return;
 
@@ -73,6 +73,6 @@ public abstract class MixinFireworkRocketEntity implements FireworkRocketEntityA
 
     @Override
     public @Nullable LivingEntity liquidbounce$getShooter() {
-        return shooter;
+        return attachedToEntity;
     }
 }

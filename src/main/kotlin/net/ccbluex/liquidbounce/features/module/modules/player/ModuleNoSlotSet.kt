@@ -24,17 +24,17 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.network.packet.s2c.play.UpdateSelectedSlotS2CPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket
 
 object ModuleNoSlotSet : ClientModule("NoSlotSet", Category.PLAYER) {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet !is UpdateSelectedSlotS2CPacket) {
+        if (event.packet !is ClientboundSetHeldSlotPacket) {
             return@handler
         }
 
         event.cancelEvent()
-        player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(SilentHotbar.serversideSlot))
+        player.connection.send(ServerboundSetCarriedItemPacket(SilentHotbar.serversideSlot))
     }
 }

@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * NoFallForceJump mode for the NoFall module.
@@ -47,31 +47,31 @@ internal object NoFallForceJump : NoFallMode("ForceJump") {
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket && player.fallDistance > fallDistance) {
+        if (packet is ServerboundMovePlayerPacket && player.fallDistance > fallDistance) {
             if (!jumpTriggered && collidesBottomVertical()) {
                 forceJump()
             }
         }
 
-        if (player.isOnGround) {
+        if (player.onGround()) {
             jumpTriggered = false
         }
     }
 
     private fun collidesBottomVertical() =
-        world.getBlockCollisions(player, player.boundingBox.offset(0.0, (-blockDistance).toDouble(), 0.0))
+        world.getBlockCollisions(player, player.boundingBox.move(0.0, (-blockDistance).toDouble(), 0.0))
             .any { shape ->
-                shape != VoxelShapes.empty()
+                shape != Shapes.empty()
             }
 
     /**
      * Forces the player to jump by setting their velocity.
      */
     private fun forceJump() {
-        player.jump()
+        player.jumpFromGround()
 
-        val velocity = player.velocity
-        player.velocity = Vec3d(velocity.x, jumpHeight.toDouble(), velocity.z)
+        val velocity = player.deltaMovement
+        player.setDeltaMovement(Vec3(velocity.x, jumpHeight.toDouble(), velocity.z))
         jumpTriggered = true
     }
 }

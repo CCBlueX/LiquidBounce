@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.entity.TntEntity
-import net.minecraft.util.math.MathHelper
+import net.minecraft.world.entity.item.PrimedTnt
+import net.minecraft.util.Mth
 import java.text.DecimalFormat
 import java.util.function.IntFunction
 import kotlin.math.sin
@@ -80,7 +80,7 @@ object ModuleTNTTimer : ClientModule("TNTTimer", Category.RENDER) {
                 val screenPos = WorldToScreen.calculateScreenPos(pos) ?: return@forEach
 
                 // Yellow #ffff00 -> Red #ff0000
-                val color = Color4b(255, MathHelper.floor(255F * tnt.fuse / DEFAULT_FUSE).coerceAtMost(255), 0)
+                val color = Color4b(255, Mth.floor(255F * tnt.fuse / DEFAULT_FUSE).coerceAtMost(255), 0)
 
                 val text = "".asText()
                     .append(timeUnit.apply(tnt.fuse).asText().withColor(color.toTextColor()))
@@ -111,13 +111,13 @@ object ModuleTNTTimer : ClientModule("TNTTimer", Category.RENDER) {
      * Cycle light periodically according to the remaining time (`fuse`). The less time left, the faster the cycle.
      */
     fun getTntColor(fuse: Int): Color4b {
-        val red = MathHelper.floor(255.0 * (1.0 + 0.5 * sin(2400.0 / (12 + fuse)))).coerceIn(0, 255)
+        val red = Mth.floor(255.0 * (1.0 + 0.5 * sin(2400.0 / (12 + fuse)))).coerceIn(0, 255)
         return Color4b(red, 0, 0)
     }
 
-    private val tntEntities by computedOn<GameTickEvent, MutableSet<TntEntity>>(ReferenceOpenHashSet()) { _, set ->
+    private val tntEntities by computedOn<GameTickEvent, MutableSet<PrimedTnt>>(ReferenceOpenHashSet()) { _, set ->
         set.clear()
-        world.entities.filterIsInstanceTo(set)
+        world.entitiesForRendering().filterIsInstanceTo(set)
         set
     }
 

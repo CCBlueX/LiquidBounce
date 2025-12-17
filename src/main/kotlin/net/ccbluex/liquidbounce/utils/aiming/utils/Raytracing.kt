@@ -25,35 +25,31 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.block.BlockState
-import net.minecraft.block.ShapeContext
-import net.minecraft.entity.Entity
-import net.minecraft.entity.projectile.ProjectileUtil
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.projectile.ProjectileUtil
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.EntityHitResult
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.ClipContext
 import kotlin.math.max
 
-fun rayTraceCollidingBlocks(start: Vec3d, end: Vec3d): BlockHitResult? {
-    val result = mc.world!!.raycast(
-        RaycastContext(
+fun rayTraceCollidingBlocks(start: Vec3, end: Vec3): BlockHitResult? {
+    val result = mc.level!!.clip(
+        ClipContext(
             start,
             end,
-            RaycastContext.ShapeType.COLLIDER,
-            RaycastContext.FluidHandling.ANY,
+            ClipContext.Block.COLLIDER,
+            ClipContext.Fluid.ANY,
             mc.player!!
         )
     )
 
-    if (result == null || result.type != HitResult.Type.BLOCK) {
-        return null
-    }
-
-    return result
+    return result.takeIf { it.type == HitResult.Type.BLOCK }
 }
 
 fun raytraceEntity(
@@ -63,19 +59,19 @@ fun raytraceEntity(
 ): EntityHitResult? {
     val entity = mc.cameraEntity ?: return null
 
-    val cameraVec = entity.eyePos
+    val cameraVec = entity.eyePosition
     val rotationVec = rotation.directionVector
 
     val vec3d3 = cameraVec.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
-    val box = entity.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
+    val box = entity.boundingBox.expandTowards(rotationVec.scale(range)).inflate(1.0, 1.0, 1.0)
 
     val hitResult =
-        ProjectileUtil.raycast(
+        ProjectileUtil.getEntityHitResult(
             entity,
             cameraVec,
             vec3d3,
             box,
-            { !it.isSpectator && it.canHit() && filter(it) },
+            { !it.isSpectator && it.isPickable && filter(it) },
             range * range,
         )
 
@@ -90,49 +86,49 @@ fun raytraceBlock(
 ): BlockHitResult? {
     val entity: Entity = mc.cameraEntity ?: return null
 
-    val start = entity.eyePos
+    val start = entity.eyePosition
     val rotationVec = rotation.directionVector
 
     val end = start.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
 
-    return mc.world?.raycastBlock(
+    return mc.level?.clipWithInteractionOverride(
         start,
         end,
         pos,
-        state.getOutlineShape(mc.world, pos, ShapeContext.of(mc.player)),
+        state.getShape(mc.level!!, pos, CollisionContext.of(mc.player!!)),
         state,
     )
 }
 
 fun raycast(
     rotation: Rotation = RotationManager.currentRotation ?: player.rotation,
-    range: Double = max(player.blockInteractionRange, player.entityInteractionRange),
+    range: Double = max(player.blockInteractionRange(), player.entityInteractionRange()),
     includeFluids: Boolean = false,
     tickDelta: Float = 1f,
 ): BlockHitResult {
     return raycast(
         range = range,
         includeFluids = includeFluids,
-        start = player.getCameraPosVec(tickDelta),
+        start = player.getEyePosition(tickDelta),
         direction = rotation.directionVector
     )
 }
 
 fun raycast(
-    range: Double = max(player.blockInteractionRange, player.entityInteractionRange),
+    range: Double = max(player.blockInteractionRange(), player.entityInteractionRange()),
     includeFluids: Boolean = false,
-    start: Vec3d,
-    direction: Vec3d,
+    start: Vec3,
+    direction: Vec3,
     entity: Entity = mc.cameraEntity!!,
 ): BlockHitResult {
     val end = start.add(direction.x * range, direction.y * range, direction.z * range)
 
-    return world.raycast(
-        RaycastContext(
+    return world.clip(
+        ClipContext(
             start,
             end,
-            RaycastContext.ShapeType.OUTLINE,
-            if (includeFluids) RaycastContext.FluidHandling.ANY else RaycastContext.FluidHandling.NONE,
+            ClipContext.Block.OUTLINE,
+            if (includeFluids) ClipContext.Fluid.ANY else ClipContext.Fluid.NONE,
             entity,
         ),
     )
@@ -144,11 +140,11 @@ fun raycast(
  * @see player#canSee
  */
 fun canSeePointFrom(
-    eyes: Vec3d,
-    vec3: Vec3d,
-) = world.raycast(
-    RaycastContext(
-        eyes, vec3, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, player,
+    eyes: Vec3,
+    vec3: Vec3,
+) = world.clip(
+    ClipContext(
+        eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player,
     ),
 ).type == HitResult.Type.MISS
 
@@ -170,46 +166,47 @@ fun facingEnemy(
     range: Double,
     wallsRange: Double,
 ): Boolean {
-    val cameraVec = fromEntity.eyePos
+    val cameraVec = fromEntity.eyePosition
     val rotationVec = rotation.directionVector
 
     val rangeSquared = range.sq()
     val wallsRangeSquared = wallsRange.sq()
 
     val vec3d3 = cameraVec.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
-    val box = fromEntity.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
+    val box = fromEntity.boundingBox.expandTowards(rotationVec.scale(range)).inflate(1.0, 1.0, 1.0)
 
     val entityHitResult =
-        ProjectileUtil.raycast(
-            fromEntity, cameraVec, vec3d3, box, { !it.isSpectator && it.canHit() && it == toEntity }, rangeSquared,
+        ProjectileUtil.getEntityHitResult(
+            fromEntity, cameraVec, vec3d3, box, { !it.isSpectator && it.isPickable && it == toEntity }, rangeSquared,
         ) ?: return false
 
-    val distance = cameraVec.squaredDistanceTo(entityHitResult.pos)
+    val distance = cameraVec.distanceToSqr(entityHitResult.location)
 
-    return distance <= rangeSquared && canSeePointFrom(cameraVec, entityHitResult.pos) || distance <= wallsRangeSquared
+    return distance <= wallsRangeSquared
+        || distance <= rangeSquared && canSeePointFrom(cameraVec, entityHitResult.location)
 }
 
 /**
  * Allows you to check if a point is behind a wall
  */
 fun facingBlock(
-    eyes: Vec3d,
-    vec3: Vec3d,
+    eyes: Vec3,
+    vec3: Vec3,
     blockPos: BlockPos,
     expectedSide: Direction? = null,
     expectedMaxRange: Double? = null,
 ): Boolean {
     val searchedPos =
-        mc.world?.raycast(
-            RaycastContext(
-                eyes, vec3, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, mc.player,
+        mc.level?.clip(
+            ClipContext(
+                eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player!!,
             ),
         ) ?: return false
 
-    if (searchedPos.type != HitResult.Type.BLOCK || (expectedSide != null && searchedPos.side != expectedSide)) {
+    if (searchedPos.type != HitResult.Type.BLOCK || (expectedSide != null && searchedPos.direction != expectedSide)) {
         return false
     }
-    if (expectedMaxRange != null && searchedPos.pos.squaredDistanceTo(eyes) > expectedMaxRange * expectedMaxRange) {
+    if (expectedMaxRange != null && searchedPos.location.distanceToSqr(eyes) > expectedMaxRange * expectedMaxRange) {
         return false
     }
 

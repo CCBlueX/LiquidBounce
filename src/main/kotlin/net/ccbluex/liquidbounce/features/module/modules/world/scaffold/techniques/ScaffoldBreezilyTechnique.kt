@@ -37,10 +37,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.entity.EntityPose
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
 import kotlin.math.floor
 import kotlin.math.round
 
@@ -55,8 +55,8 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
     )
 
     override fun findPlacementTarget(
-        predictedPos: Vec3d,
-        predictedPose: EntityPose,
+        predictedPos: Vec3,
+        predictedPose: Pose,
         optimalLine: Line?,
         bestStack: ItemStack
     ): BlockPlacementTarget? {
@@ -77,11 +77,11 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
     private val handleMovementInput = handler<MovementInputEvent>(
         priority = EventPriorityConvention.SAFETY_FEATURE
     ) { event ->
-        if (!event.directionalInput.forwards || player.isSneaking) {
+        if (!event.directionalInput.forwards || player.isShiftKeyDown) {
             return@handler
         }
 
-        if (player.blockPos.down().getState()!!.isAir) {
+        if (player.blockPosition().below().getState()!!.isAir) {
             lastAirTime = System.currentTimeMillis()
         } else if (System.currentTimeMillis() - lastAirTime > 500) {
             return@handler
@@ -92,7 +92,7 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
 
         val ma = 1 - currentEdgeDistanceRandom
         var currentSideways = 0f
-        when (Direction.fromHorizontalDegrees(player.yaw.toDouble())) {
+        when (Direction.fromYRot(player.yRot.toDouble())) {
             Direction.SOUTH -> {
                 if (modX > ma) currentSideways = 1f
                 if (modX < currentEdgeDistanceRandom) currentSideways = -1f
@@ -137,7 +137,7 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
             return getRotationForNoInput(target)
         }
 
-        val direction = getMovementDirectionOfInput(player.yaw, rawInput) + 180
+        val direction = getMovementDirectionOfInput(player.yRot, rawInput) + 180
 
         // Round to 45°-steps (NORTH, NORTH_EAST, etc.)
         val movingYaw = round(direction / 45) * 45

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.script.asArray
 import net.ccbluex.liquidbounce.script.asDoubleArray
 import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.input.inputByName
-import net.minecraft.client.util.InputUtil
+import com.mojang.blaze3d.platform.InputConstants
 import org.graalvm.polyglot.Value as PolyglotValue
 
 /**
@@ -112,7 +112,7 @@ object ScriptSetting {
     }
 
     @JvmName("key")
-    fun key(value: PolyglotValue): Value<InputUtil.Key> {
+    fun key(value: PolyglotValue): Value<InputConstants.Key> {
         val name = value.getMember("name").asString()
         val default = inputByName(value.getMember("default").asString())
 

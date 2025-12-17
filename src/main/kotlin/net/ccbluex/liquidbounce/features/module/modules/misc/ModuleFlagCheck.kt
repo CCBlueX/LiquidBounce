@@ -35,9 +35,9 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
-import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.world.phys.Vec3
 import org.apache.commons.lang3.StringUtils
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -75,7 +75,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
         private var color by color("Color", Color4b.RED.with(a = 100).darker())
         private var outlineColor by color("OutlineColor", Color4b.RED.darker())
 
-        val wireframePlayer = WireframePlayer(Vec3d.ZERO, 0f, 0f)
+        val wireframePlayer = WireframePlayer(Vec3.ZERO, 0f, 0f)
         var creationTime = 0L
         var finished = true
 
@@ -85,7 +85,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
 
         @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> {
-            if (finished || notInFirstPerson && mc.options.perspective.isFirstPerson) {
+            if (finished || notInFirstPerson && mc.options.cameraType.isFirstPerson) {
                 return@handler
             }
 
@@ -123,15 +123,15 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (player.age <= 25) {
+        if (player.tickCount <= 25) {
             return@handler
         }
 
         when (val packet = event.packet) {
-            is PlayerPositionLookS2CPacket -> {
+            is ClientboundPlayerPositionPacket -> {
                 val change = packet.change
-                val deltaYaw = calculateAngleDelta(change.yaw, lastYaw)
-                val deltaPitch = calculateAngleDelta(change.pitch, lastPitch)
+                val deltaYaw = calculateAngleDelta(change.yRot, lastYaw)
+                val deltaPitch = calculateAngleDelta(change.xRot, lastPitch)
 
                 flagCount.incrementAndGet()
                 if (deltaYaw >= 90 || deltaPitch >= 90) {
@@ -142,13 +142,13 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
 
                 Render.reset()
                 val position = change.position
-                Render.wireframePlayer.setPosRot(position.x, position.y, position.z, change.yaw, change.pitch)
+                Render.wireframePlayer.setPosRot(position.x, position.y, position.z, change.yRot, change.xRot)
 
-                lastYaw = player.headYaw
-                lastPitch = player.pitch
+                lastYaw = player.yHeadRot
+                lastPitch = player.xRot
             }
 
-            is DisconnectS2CPacket -> {
+            is ClientboundDisconnectPacket -> {
                 flagCount.getAndSet(0)
             }
         }
@@ -161,7 +161,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
         }
 
         val invalidHeath = player.health <= 0f && player.isAlive
-        val invalidHunger = player.hungerManager.foodLevel <= 0
+        val invalidHunger = player.foodData.foodLevel <= 0
 
         if (!invalidHeath && !invalidHunger) {
             return@tickHandler

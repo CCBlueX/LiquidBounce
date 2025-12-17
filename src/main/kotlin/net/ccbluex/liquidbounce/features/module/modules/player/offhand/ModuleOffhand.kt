@@ -43,14 +43,14 @@ import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import org.lwjgl.glfw.GLFW
 import java.util.function.Predicate
 
@@ -135,17 +135,17 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
             return@handler
         }
 
-        when (it.key.code) {
-            Gapple.gappleBind.code -> Mode.GAPPLE.onBindPress()
-            Crystal.crystalBind.code -> Mode.CRYSTAL.onBindPress()
-            Strength.strengthBind.code -> {
+        when (it.key.value) {
+            Gapple.gappleBind.value -> Mode.GAPPLE.onBindPress()
+            Crystal.crystalBind.value -> Mode.CRYSTAL.onBindPress()
+            Strength.strengthBind.value -> {
                 // since we can't cycle to strength, its status has to be checked here
                 if (Strength.enabled) {
                     Mode.STRENGTH.onBindPress()
                 }
             }
 
-            cycleSlots.code -> {
+            cycleSlots.value -> {
                 val entries = Mode.entries
                 val startIndex = staticMode.ordinal
                 var index = (startIndex + 1) % entries.size
@@ -222,17 +222,17 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
             val selectedSlot = player.inventory.selectedSlot
             val targetSlot = from.hotbarSlot
             if (selectedSlot != targetSlot) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(targetSlot))
+                network.send(ServerboundSetCarriedItemPacket(targetSlot))
             }
-            network.sendPacket(
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND,
-                    BlockPos.ORIGIN,
+            network.send(
+                ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND,
+                    BlockPos.ZERO,
                     Direction.DOWN
                 )
             )
             if (selectedSlot != targetSlot) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(selectedSlot))
+                network.send(ServerboundSetCarriedItemPacket(selectedSlot))
             }
             emptyList()
         } else {
@@ -272,15 +272,15 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
             override fun canCycleTo() = Totem.enabled
         },
         STRENGTH("Strength", Predicate { stack ->
-            stack.isOf(Items.POTION) && stack.getPotionEffects().any { it.effectType == StatusEffects.STRENGTH }
+            stack.`is`(Items.POTION) && stack.getPotionEffects().any { it.effect == MobEffects.STRENGTH }
         }) {
             override fun shouldEquip(): Boolean {
                 val killAura = Strength.onlyWhileKa && !ModuleKillAura.running
-                if (!Strength.enabled || killAura || player.hasStatusEffect(StatusEffects.STRENGTH)) {
+                if (!Strength.enabled || killAura || player.hasEffect(MobEffects.STRENGTH)) {
                     return false
                 }
 
-                return player.mainHandStack.isSword || !Strength.onlyWhileHoldingSword
+                return player.mainHandItem.isSword || !Strength.onlyWhileHoldingSword
             }
         },
         GAPPLE("Gapple", Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE) {
@@ -289,7 +289,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
                     return false
                 }
 
-                if (player.mainHandStack.isSword && Gapple.WhileHoldingSword.enabled) {
+                if (player.mainHandItem.isSword && Gapple.WhileHoldingSword.enabled) {
                     return if (Gapple.WhileHoldingSword.onlyWhileKa) {
                         ModuleKillAura.running
                     } else {
@@ -325,7 +325,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
             modeName: String,
             item: Item,
             fallBackItem: Item? = null,
-        ) : this(modeName, { it.isOf(item) }, fallBackItem?.let { item -> { it.isOf(item) } })
+        ) : this(modeName, { it.`is`(item) }, fallBackItem?.let { item -> { it.`is`(item) } })
 
         private var modeBeforeDirectSwitch: Mode? = null
 
@@ -358,7 +358,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
                 return null
             }
 
-            if (item.test(player.offHandStack)) {
+            if (item.test(player.offhandItem)) {
                 return OffHandSlot
             }
 
@@ -370,7 +370,7 @@ object ModuleOffhand : ClientModule("Offhand", Category.PLAYER, aliases = listOf
 
             var itemSlot = slots.findSlot(item::test)
             if (itemSlot == null && fallBackItem != null) {
-                if (fallBackItem.test(player.offHandStack)) {
+                if (fallBackItem.test(player.offhandItem)) {
                     return OffHandSlot
                 }
 

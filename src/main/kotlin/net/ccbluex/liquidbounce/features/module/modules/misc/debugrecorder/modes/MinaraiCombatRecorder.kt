@@ -52,9 +52,9 @@ import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.minecraft.entity.LivingEntity
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.util.math.Box
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.world.phys.AABB
 
 /**
  * Records combat behavior
@@ -80,8 +80,8 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
     }
 
     private val doNotTrack
-        get() = player.abilities.allowFlying || player.isSpectator ||
-            player.isDead || player.abilities.flying
+        get() = player.abilities.mayfly || player.isSpectator ||
+            player.isDeadOrDying || player.abilities.flying
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
@@ -89,7 +89,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
             return@handler
         }
 
-        if (interaction.isBreakingBlock || player.isUsingItem && !player.isBlockAction) {
+        if (interaction.isDestroying || player.isUsingItem && !player.isBlockAction) {
             reset()
             return@handler
         }
@@ -102,7 +102,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
         val targets = targetTracker.targets()
 
         for (target in targets) {
-            val targetRotation = Rotation.lookingAt(point = target.eyePos, from = player.eyePos)
+            val targetRotation = Rotation.lookingAt(point = target.eyePosition, from = player.eyePosition)
 
             if (targetEntityId != target.id) {
                 // Check if we are moving towards the target
@@ -121,8 +121,8 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
                 previousVector = previous.directionVector,
                 targetVector = targetRotation.directionVector,
                 velocityDelta = current.rotationDeltaTo(next).toVec2f(),
-                playerDiff = player.entityPos.subtract(player.lastPos),
-                targetDiff = target.entityPos.subtract(target.lastPos),
+                playerDiff = player.position().subtract(player.lastPos),
+                targetDiff = target.position().subtract(target.lastPos),
                 age = fight.ticks,
                 hurtTime = target.hurtTime,
                 distance = player.squaredBoxedDistanceTo(target).toFloat()
@@ -153,12 +153,12 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
         var inactivity = 0
         var buffer: MutableList<TrainingData>? = null
         tickUntil {
-            if (entity.isDead || entity.isRemoved || doNotTrack) {
+            if (entity.isDeadOrDying || entity.isRemoved || doNotTrack) {
                 return@tickUntil true
             }
 
             val rotation = RotationManager.currentRotation ?: player.rotation
-            val distance = player.eyePos.distanceTo(entity.eyePos) + 1.0
+            val distance = player.eyePosition.distanceTo(entity.eyePosition) + 1.0
             debugParameter("Distance") { distance }
             val raytraceTarget = raytraceEntity(distance, rotation) { e ->
                 e == entity
@@ -192,15 +192,15 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
             startBatch()
             targetTracker.targets().forEach { entity ->
                 val pos = entity.interpolateCurrentPosition(event.partialTicks)
-                val eyePos = pos.add(0.0, entity.standingEyeHeight.toDouble(), 0.0)
-                val box = Box(
+                val eyePos = pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)
+                val box = AABB(
                     0.0,
-                    entity.standingEyeHeight.toDouble(),
+                    entity.eyeHeight.toDouble(),
                     0.0,
                     0.0,
-                    entity.standingEyeHeight.toDouble(),
+                    entity.eyeHeight.toDouble(),
                     0.0
-                ).expand(0.1)
+                ).inflate(0.1)
 
                 val color = if (targetEntityId == entity.id) {
                     Color4b.GREEN
@@ -227,7 +227,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
         val packet = event.packet
 
         when (packet) {
-            is PlayerInteractBlockC2SPacket -> reset()
+            is ServerboundUseItemOnPacket -> reset()
         }
     }
 

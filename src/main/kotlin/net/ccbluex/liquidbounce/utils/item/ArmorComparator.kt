@@ -22,12 +22,12 @@ import net.ccbluex.liquidbounce.utils.client.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.RegistryKey
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.item.ItemStack
+import net.minecraft.resources.ResourceKey
 
 class ArmorParameter(val defensePoints: Float, val toughness: Float)
 
@@ -91,7 +91,7 @@ class ArmorComparator(
     private val durabilityThreshold : Int = Int.MIN_VALUE
 ) : Comparator<ArmorPiece> {
     companion object {
-        private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
+        private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<ResourceKey<Enchantment>> = arrayOf(
             Enchantments.PROTECTION,
             Enchantments.PROJECTILE_PROTECTION,
             Enchantments.FIRE_PROTECTION,
@@ -99,7 +99,7 @@ class ArmorComparator(
         )
         private val ENCHANTMENT_FACTORS = floatArrayOf(1.2f, 0.4f, 0.39f, 0.38f)
         private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(0.04f, 0.08f, 0.15f, 0.08f)
-        private val OTHER_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
+        private val OTHER_ENCHANTMENTS: Array<ResourceKey<Enchantment>> = arrayOf(
             Enchantments.FEATHER_FALLING,
             Enchantments.THORNS,
             Enchantments.RESPIRATION,
@@ -114,7 +114,7 @@ class ArmorComparator(
         compareByDescending { getThresholdedDamageReduction(it.itemSlot.itemStack).roundToDecimalPlaces(3) },
         compareBy { getEnchantmentThreshold(it.itemSlot.itemStack).roundToDecimalPlaces(3) },
         compareBy { it.itemSlot.itemStack.getEnchantmentCount() },
-        compareBy { it.itemSlot.itemStack.get(DataComponentTypes.ENCHANTABLE)?.value ?: 0 },
+        compareBy { it.itemSlot.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
         compareByCondition(ArmorPiece::isAlreadyEquipped),
         compareByCondition(ArmorPiece::isReachableByHand)
     )

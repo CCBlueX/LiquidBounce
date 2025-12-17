@@ -34,16 +34,16 @@ import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 
 
 data class PositionFactoryConfiguration(
-    val eyePos: Vec3d,
+    val eyePos: Vec3,
     /**
      * Random number [[-1;1]]. Can also be constant.
      */
@@ -58,13 +58,13 @@ sealed class FaceTargetPositionFactory {
      * Samples a position (relative to [targetPos]).
      * @param face is relative to origin.
      */
-    abstract fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3d?
+    abstract fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3?
 
     /**
      * Trims a face to be only as wide as the config allows it to be
      */
     protected fun trimFace(face: AlignedFace): AlignedFace {
-        val offsets = face.dimensions.multiply(0.15)
+        val offsets = face.dimensions.scale(0.15)
 
         var rangeX = face.from.x + offsets.x..face.to.x - offsets.x
         var rangeY = face.from.y + offsets.y..face.to.y - offsets.y
@@ -81,12 +81,12 @@ sealed class FaceTargetPositionFactory {
         }
 
         val trimmedFace = AlignedFace(
-            Vec3d(
+            Vec3(
                 face.from.x.coerceIn(rangeX),
                 face.from.y.coerceIn(rangeY),
                 face.from.z.coerceIn(rangeZ),
             ),
-            Vec3d(
+            Vec3(
                 face.to.x.coerceIn(rangeX),
                 face.to.y.coerceIn(rangeY),
                 face.to.z.coerceIn(rangeZ),
@@ -102,7 +102,7 @@ sealed class FaceTargetPositionFactory {
  * Always targets the point with the nearest rotation angle to the current rotation angle
  */
 class NearestRotationTargetPositionFactory(val config: PositionFactoryConfiguration) : FaceTargetPositionFactory() {
-    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3d {
+    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         val trimmedFace = trimFace(face)
 
         return aimAtNearestPointToRotationLine(targetPos, trimmedFace)
@@ -111,8 +111,8 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
     fun aimAtNearestPointToRotationLine(
         targetPos: BlockPos,
         face: AlignedFace
-    ): Vec3d {
-        if (MathHelper.approximatelyEquals(face.area, 0.0)) {
+    ): Vec3 {
+        if (Mth.equal(face.area, 0.0)) {
             return face.from
         }
 
@@ -123,10 +123,11 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
         val pointOnFace = face.nearestPointTo(rotationLine)
 
         ModuleScaffold.debugGeometry("targetFace") {
-            ModuleDebug.DebuggedBox(Box(
+            ModuleDebug.DebuggedBox(
+                AABB(
                 face.from,
                 face.to
-            ).offset(Vec3d.of(targetPos)), Color4b(255, 0, 0, 255))
+            ).move(Vec3.atLowerCornerOf(targetPos)), Color4b(255, 0, 0, 255))
         }
 
         ModuleScaffold.debugGeometry("targetPoint") {
@@ -158,37 +159,37 @@ class StabilizedRotationTargetPositionFactory(
     val config: PositionFactoryConfiguration,
     private val optimalLine: Line?
 ) : FaceTargetPositionFactory() {
-    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3d {
-        val trimmedFace = trimFace(face).offset(Vec3d.of(targetPos))
+    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
+        val trimmedFace = trimFace(face).offset(Vec3.atLowerCornerOf(targetPos))
 
         val targetFace = getTargetFace(player, trimmedFace) ?: trimmedFace
 
         return NearestRotationTargetPositionFactory(this.config).aimAtNearestPointToRotationLine(
             targetPos,
-            targetFace.offset(Vec3d.of(targetPos).negate())
+            targetFace.offset(Vec3.atLowerCornerOf(targetPos).reverse())
         )
     }
 
     private fun getTargetFace(
-        player: ClientPlayerEntity,
+        player: LocalPlayer,
         trimmedFace: AlignedFace
     ): AlignedFace? {
         val optimalLine = optimalLine ?: return null
 
-        val nearsetPointToOptimalLine = optimalLine.getNearestPointTo(player.entityPos)
-        val directionToOptimalLine = player.entityPos.subtract(nearsetPointToOptimalLine).normalize()
+        val nearsetPointToOptimalLine = optimalLine.getNearestPointTo(player.position())
+        val directionToOptimalLine = player.position().subtract(nearsetPointToOptimalLine).normalize()
 
         val optimalLineFromPlayer = Line(config.eyePos, optimalLine.direction)
         val collisionWithFacePlane = trimmedFace.toPlane().intersection(optimalLineFromPlayer) ?: return null
 
-        val b = player.entityPos.add(directionToOptimalLine.multiply(2.0))
+        val b = player.position().add(directionToOptimalLine.scale(2.0))
 
-        val cropBox = Box(
+        val cropBox = AABB(
             collisionWithFacePlane.x,
-            player.entityPos.y - 2.0,
+            player.position().y - 2.0,
             collisionWithFacePlane.z,
             b.x,
-            player.entityPos.y + 1.0,
+            player.position().y + 1.0,
             b.z,
         )
 
@@ -204,7 +205,7 @@ class StabilizedRotationTargetPositionFactory(
 }
 
 object RandomTargetPositionFactory : FaceTargetPositionFactory() {
-    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3d {
+    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         val trimmedFace = trimFace(face)
 
         return trimmedFace.randomPointOnFace()
@@ -212,7 +213,7 @@ object RandomTargetPositionFactory : FaceTargetPositionFactory() {
 }
 
 object CenterTargetPositionFactory : FaceTargetPositionFactory() {
-    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3d {
+    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         return face.center
     }
 }
@@ -224,12 +225,12 @@ abstract class BaseYawTargetPositionFactory(
     private val yawTolerance: Float = 5f
 ) : FaceTargetPositionFactory() {
 
-    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3d {
+    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         ModuleDebug.debugParameter(PositionFactoryDebug, "TargetPos", targetPos)
         val trimmedFace = trimFace(face)
 
         // If the player is not moving, we can just aim at the nearest point
-        return if (!player.input.playerInput.any) {
+        return if (!player.input.keyPresses.any) {
             return aimAtNearestPointToRotationLine(targetPos, trimmedFace)
         } else {
             aimAtNearestPointToYaw(targetPos, trimmedFace) ?: aimAtNearestPointToRotationLine(targetPos, trimmedFace)
@@ -244,17 +245,17 @@ abstract class BaseYawTargetPositionFactory(
     protected fun aimAtNearestPointToYaw(
         targetPos: BlockPos,
         face: AlignedFace
-    ): Vec3d? {
-        if (MathHelper.approximatelyEquals(face.area, 0.0)) {
+    ): Vec3? {
+        if (Mth.equal(face.area, 0.0)) {
             ModuleDebug.debugParameter(PositionFactoryDebug, "FaceArea", face.area)
             ModuleDebug.debugParameter(PositionFactoryDebug, "ReturnedPoint", face.from)
             return face.from
         }
 
-        val yaw = MathHelper.wrapDegrees(player.direction)
+        val yaw = Mth.wrapDegrees(player.yRot)
         val angle = getAngle()
-        val highTargetYaw = Math.toRadians(MathHelper.wrapDegrees(yaw + angle).toDouble()).toFloat()
-        val lowTargetYaw = Math.toRadians(MathHelper.wrapDegrees(yaw - angle).toDouble()).toFloat()
+        val highTargetYaw = Math.toRadians(Mth.wrapDegrees(yaw + angle).toDouble()).toFloat()
+        val lowTargetYaw = Math.toRadians(Mth.wrapDegrees(yaw - angle).toDouble()).toFloat()
 
         ModuleDebug.debugParameter(PositionFactoryDebug, "PlayerYaw", yaw)
         ModuleDebug.debugParameter(PositionFactoryDebug, "Angle", angle)
@@ -263,14 +264,14 @@ abstract class BaseYawTargetPositionFactory(
 
         val highPlane = NormalizedPlane.fromParams(
             config.eyePos - targetPos,
-            Vec3d(0.0, 0.0, 1.0).rotateY(highTargetYaw),
-            Vec3d(0.0, 1.0, 0.0)
+            Vec3(0.0, 0.0, 1.0).yRot(highTargetYaw),
+            Vec3(0.0, 1.0, 0.0)
         )
 
         val lowPlane = NormalizedPlane.fromParams(
             config.eyePos - targetPos,
-            Vec3d(0.0, 0.0, 1.0).rotateY(lowTargetYaw),
-            Vec3d(0.0, 1.0, 0.0)
+            Vec3(0.0, 0.0, 1.0).yRot(lowTargetYaw),
+            Vec3(0.0, 1.0, 0.0)
         )
 
         val highIntersectLine = face.toPlane().intersection(highPlane)
@@ -313,28 +314,28 @@ abstract class BaseYawTargetPositionFactory(
         return result
     }
 
-    private fun findClosestPointToYaw(lineSegment: LineSegment, targetYaw: Float): Vec3d {
+    private fun findClosestPointToYaw(lineSegment: LineSegment, targetYaw: Float): Vec3 {
         val start = lineSegment.endPoints.first
         val end = lineSegment.endPoints.second
         val direction = end.subtract(start).normalize()
 
         val startYaw = calculateYaw(start)
         val endYaw = calculateYaw(end)
-        val yawDiff = MathHelper.wrapDegrees(endYaw - startYaw)
-        val targetYawDiff = MathHelper.wrapDegrees(targetYaw - startYaw)
+        val yawDiff = Mth.wrapDegrees(endYaw - startYaw)
+        val targetYawDiff = Mth.wrapDegrees(targetYaw - startYaw)
         val t = if (yawDiff != 0f) targetYawDiff / yawDiff else 0f
-        return start.add(direction.multiply(t.toDouble().coerceIn(0.0, 1.0)))
+        return start.add(direction.scale(t.toDouble().coerceIn(0.0, 1.0)))
     }
 
-    private fun calculateYaw(point: Vec3d): Float {
+    private fun calculateYaw(point: Vec3): Float {
         val dx = point.x - config.eyePos.x
         val dz = point.z - config.eyePos.z
-        return MathHelper.atan2(dz, dx).toFloat()
+        return Mth.atan2(dz, dx).toFloat()
     }
 
-    private fun calculateYawDifference(point: Vec3d, targetYaw: Float): Float {
+    private fun calculateYawDifference(point: Vec3, targetYaw: Float): Float {
         val pointYaw = calculateYaw(point)
-        return abs(MathHelper.wrapDegrees(pointYaw - targetYaw))
+        return abs(Mth.wrapDegrees(pointYaw - targetYaw))
     }
 
     protected abstract fun getAngle(): Float
@@ -356,11 +357,11 @@ class EdgePointTargetPositionFactory(
     val config: PositionFactoryConfiguration,
 ) : FaceTargetPositionFactory() {
 
-    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3d {
+    override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3 {
         val trimmedFace = trimFace(face)
 
         // If the player is not moving, we can just aim at the nearest point
-        return if (!player.input.playerInput.any) {
+        return if (!player.input.keyPresses.any) {
             return aimAtNearestPointToRotationLine(targetPos, trimmedFace)
         } else {
             aimAtFurthestPointToPlayerPosition(targetPos, trimmedFace)
@@ -376,18 +377,18 @@ class EdgePointTargetPositionFactory(
     private fun aimAtFurthestPointToPlayerPosition(
         targetPos: BlockPos,
         face: AlignedFace
-    ): Vec3d? {
-        val box = Box(face.from, face.to)
+    ): Vec3? {
+        val box = AABB(face.from, face.to)
         val edge = box.edgePoints.maxByOrNull { edge ->
-            edge.squaredDistanceTo(player.entityPos - player.blockPos)
+            edge.distanceToSqr(player.position() - player.blockPosition())
         } ?: return null
 
         ModuleScaffold.debugGeometry("Face") {
             ModuleDebug.DebuggedBox(
-                Box(
+                AABB(
                     face.from,
                     face.to
-                ).offset(Vec3d.of(targetPos)), Color4b(255, 0, 0, 255)
+                ).move(Vec3.atLowerCornerOf(targetPos)), Color4b(255, 0, 0, 255)
             )
         }
 

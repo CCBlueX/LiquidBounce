@@ -37,9 +37,9 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.range
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.MathHelper
+import net.minecraft.world.entity.Entity
+import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
 import kotlin.math.max
 import kotlin.math.min
 
@@ -120,14 +120,14 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
         // step one: find all block positions to around the bounding box
         val boundingBox = target.boundingBox
         val result = mutableSetOf<BlockPos>()
-        val xRange = MathHelper.floor(boundingBox.minX - 1.0)..MathHelper.floor(boundingBox.maxX + 1.0)
-        val yRange = MathHelper.floor(boundingBox.minY - 1.0)..MathHelper.floor(boundingBox.maxY + 1.0)
-        val zRange = MathHelper.floor(boundingBox.minZ - 1.0)..MathHelper.floor(boundingBox.maxZ + 1.0)
+        val xRange = Mth.floor(boundingBox.minX - 1.0)..Mth.floor(boundingBox.maxX + 1.0)
+        val yRange = Mth.floor(boundingBox.minY - 1.0)..Mth.floor(boundingBox.maxY + 1.0)
+        val zRange = Mth.floor(boundingBox.minZ - 1.0)..Mth.floor(boundingBox.maxZ + 1.0)
 
         // ranges used to check if a position is in the bounding box
-        val bbXRange = MathHelper.floor(boundingBox.minX)..MathHelper.floor(boundingBox.maxX)
-        val bbYRange = MathHelper.floor(boundingBox.minY)..MathHelper.floor(boundingBox.maxY)
-        val bbZRange = MathHelper.floor(boundingBox.minZ)..MathHelper.floor(boundingBox.maxZ)
+        val bbXRange = Mth.floor(boundingBox.minX)..Mth.floor(boundingBox.maxX)
+        val bbYRange = Mth.floor(boundingBox.minY)..Mth.floor(boundingBox.maxY)
+        val bbZRange = Mth.floor(boundingBox.minZ)..Mth.floor(boundingBox.maxZ)
 
         range(xRange step 1, yRange step 1, zRange step 1) { x, y, z ->
             // continue if the position is in the box or outside on two or more axes
@@ -161,10 +161,10 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
             when {
                 DoublePlace.BELOW in doublePlace
                     && PlaceAt.FLOOR in placeAt
-                    && pos.y == lowestY -> additions.add(pos.down())
+                    && pos.y == lowestY -> additions.add(pos.below())
 
                 DoublePlace.ABOVE in doublePlace
-                    && pos.y == highestY -> additions.add(pos.up())
+                    && pos.y == highestY -> additions.add(pos.above())
             }
         }
 
@@ -179,8 +179,8 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
         override val choiceName: String,
         val comparator: Comparator<BlockPos>
     ) : NamedChoice {
-        CLOSEST("Closest", compareBy { it.getSquaredDistance(player.entityPos) }),
-        FURTHEST("Furthest", compareByDescending { it.getSquaredDistance(player.entityPos) }),
+        CLOSEST("Closest", compareBy { it.distToCenterSqr(player.position()) }),
+        FURTHEST("Furthest", compareByDescending { it.distToCenterSqr(player.position()) }),
         HIGHEST("Highest", compareByDescending { it.y }),
         LOWEST("Lowest", compareBy { it.y })
     }

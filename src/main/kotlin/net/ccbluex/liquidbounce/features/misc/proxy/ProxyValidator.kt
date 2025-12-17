@@ -33,18 +33,18 @@ import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.api.thirdparty.IpInfoApi
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
-import net.minecraft.client.network.Address
-import net.minecraft.client.network.AllowedAddressResolver
-import net.minecraft.client.network.ServerAddress
-import net.minecraft.network.ClientConnection
-import net.minecraft.network.DisconnectionInfo
-import net.minecraft.network.NetworkSide
-import net.minecraft.network.listener.ClientQueryPacketListener
-import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
-import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
-import net.minecraft.network.packet.s2c.query.PingResultS2CPacket
-import net.minecraft.network.packet.s2c.query.QueryResponseS2CPacket
-import net.minecraft.server.ServerMetadata
+import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress
+import net.minecraft.client.multiplayer.resolver.ServerNameResolver
+import net.minecraft.client.multiplayer.resolver.ServerAddress
+import net.minecraft.network.Connection
+import net.minecraft.network.DisconnectionDetails
+import net.minecraft.network.protocol.PacketFlow
+import net.minecraft.network.protocol.status.ClientStatusPacketListener
+import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket
+import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket
+import net.minecraft.network.protocol.ping.ClientboundPongResponsePacket
+import net.minecraft.network.protocol.status.ClientboundStatusResponsePacket
+import net.minecraft.network.protocol.status.ServerStatus
 import net.minecraft.util.Util
 import java.net.InetSocketAddress
 import kotlin.jvm.optionals.getOrNull
@@ -84,14 +84,14 @@ private const val PING_TIMEOUT = 5
 fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCatching {
     logger.info("Request ping server via proxy... [$host:$port]")
 
-    val serverAddress = ServerAddress.parse(PING_SERVER)
-    val socketAddress: InetSocketAddress = AllowedAddressResolver.DEFAULT.resolve(serverAddress)
-        .map(Address::getInetSocketAddress)
+    val serverAddress = ServerAddress.parseString(PING_SERVER)
+    val socketAddress: InetSocketAddress = ServerNameResolver.DEFAULT.resolveAddress(serverAddress)
+        .map(ResolvedServerAddress::asInetSocketAddress)
         .getOrNull()
         ?: error("Failed to resolve $PING_SERVER")
     logger.info("Resolved ping server [$PING_SERVER]: $socketAddress")
 
-    val clientConnection = ClientConnection(NetworkSide.CLIENTBOUND)
+    val clientConnection = Connection(PacketFlow.CLIENTBOUND)
     val channelFuture = connect(socketAddress, true, clientConnection)
         .syncUninterruptibly()
 
@@ -101,28 +101,28 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
     // Add to tick list
     ProxyManager.addClientConnection(clientConnection)
 
-    val clientQueryPacketListener = object : ClientQueryPacketListener {
+    val clientQueryPacketListener = object : ClientStatusPacketListener {
 
-        private var serverMetadata: ServerMetadata? = null
+        private var serverMetadata: ServerStatus? = null
         private var startTime = 0L
 
-        override fun onResponse(packet: QueryResponseS2CPacket) {
+        override fun handleStatusResponse(packet: ClientboundStatusResponsePacket) {
             if (serverMetadata != null) {
                 failure(IllegalStateException("Received multiple responses from server"))
                 return
             }
 
-            val metadata = packet.metadata()
+            val metadata = packet.status()
             serverMetadata = metadata
-            startTime = Util.getMeasuringTimeMs()
-            clientConnection.send(QueryPingC2SPacket(startTime))
+            startTime = Util.getMillis()
+            clientConnection.send(ServerboundPingRequestPacket(startTime))
             logger.info("Proxy Metadata [$host:$port]: ${metadata.description.string}")
         }
 
-        override fun onPingResult(packet: PingResultS2CPacket) {
+        override fun handlePongResponse(packet: ClientboundPongResponsePacket) {
             scope.launch {
                 val serverMetadata = serverMetadata ?: error("Received ping result without metadata")
-                val ping = Util.getMeasuringTimeMs() - startTime
+                val ping = Util.getMillis() - startTime
                 logger.info("Proxy Ping [$host:$port]: $ping ms")
 
                 runCatching {
@@ -137,24 +137,28 @@ fun Proxy.check(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) = runCat
             }
         }
 
-        override fun onDisconnected(info: DisconnectionInfo) {
+        override fun onDisconnect(info: DisconnectionDetails) {
             if (this.serverMetadata == null) {
                 failure(IllegalStateException("Disconnected before receiving metadata"))
             }
         }
 
-        override fun isConnectionOpen() = clientConnection.isOpen
+        override fun isAcceptingMessages() = clientConnection.isConnected
     }
 
-    clientConnection.connect(serverAddress.address, serverAddress.port, clientQueryPacketListener)
-    clientConnection.send(QueryRequestC2SPacket.INSTANCE)
+    clientConnection.initiateServerboundStatusConnection(
+        serverAddress.host,
+        serverAddress.port,
+        clientQueryPacketListener
+    )
+    clientConnection.send(ServerboundStatusRequestPacket.INSTANCE)
     logger.info("Sent query request via proxy [$host:$port]")
 }.onFailure { throwable -> failure(throwable) }
 
 private fun Proxy.connect(
     address: InetSocketAddress,
     useEpoll: Boolean,
-    connection: ClientConnection
+    connection: Connection
 ): ChannelFuture {
     return Bootstrap().clientChannelAndGroup(useEpoll).handler(object : ChannelInitializer<Channel>() {
         override fun initChannel(channel: Channel) {
@@ -165,8 +169,8 @@ private fun Proxy.connect(
             val channelPipeline = channel.pipeline().addLast("timeout", ReadTimeoutHandler(PING_TIMEOUT))
             // Assign proxy before [ClientConnection.addHandlers] to avoid overriding the proxy
             channelPipeline.addFirst("proxy", handler())
-            ClientConnection.addHandlers(channelPipeline, NetworkSide.CLIENTBOUND, false, null)
-            connection.addFlowControlHandler(channelPipeline)
+            Connection.configureSerialization(channelPipeline, PacketFlow.CLIENTBOUND, false, null)
+            connection.configurePacketHandler(channelPipeline)
         }
     }).connect(address.address, address.port)
 }

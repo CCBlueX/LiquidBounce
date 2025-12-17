@@ -38,21 +38,21 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
-import net.minecraft.client.option.Perspective
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket
-import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
-import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
-import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
-import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket
-import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.CameraType
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.handshake.ClientIntentionPacket
+import net.minecraft.network.protocol.game.ServerboundChatPacket
+import net.minecraft.network.protocol.game.ServerboundChatCommandPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket
+import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
+import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentLinkedQueue
 
 /**
@@ -67,16 +67,16 @@ object PacketQueueManager : EventListener {
     val positions
         get() = packetQueue
             .map { snapshot -> snapshot.packet }
-            .filterIsInstance<PlayerMoveC2SPacket>()
-            .filter { playerMoveC2SPacket -> playerMoveC2SPacket.changePosition }
-            .map { playerMoveC2SPacket -> Vec3d(playerMoveC2SPacket.x, playerMoveC2SPacket.y, playerMoveC2SPacket.z) }
+            .filterIsInstance<ServerboundMovePlayerPacket>()
+            .filter { playerMoveC2SPacket -> playerMoveC2SPacket.hasPos }
+            .map { playerMoveC2SPacket -> Vec3(playerMoveC2SPacket.x, playerMoveC2SPacket.y, playerMoveC2SPacket.z) }
 
     val isLagging
         get() = packetQueue.isNotEmpty()
 
     @Suppress("unused")
     private val flushHandler = handler<GameRenderTaskQueueEvent> {
-        if (mc.networkHandler?.connection?.isOpen != true) {
+        if (mc.connection?.connection?.isConnected != true) {
             packetQueue.clear()
             return@handler
         }
@@ -88,7 +88,7 @@ object PacketQueueManager : EventListener {
 
     @Suppress("unused")
     private val flushReceiveHandler = handler<TickPacketProcessEvent> {
-        if (mc.networkHandler?.connection?.isOpen != true) {
+        if (mc.connection?.connection?.isConnected != true) {
             packetQueue.clear()
             return@handler
         }
@@ -121,28 +121,28 @@ object PacketQueueManager : EventListener {
 
         when (packet) {
 
-            is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket -> {
+            is ClientIntentionPacket, is ServerboundStatusRequestPacket, is ServerboundPingRequestPacket -> {
                 return@handler
             }
 
             // Ignore message-related packets
-            is ChatMessageC2SPacket, is GameMessageS2CPacket, is CommandExecutionC2SPacket -> {
+            is ServerboundChatPacket, is ClientboundSystemChatPacket, is ServerboundChatCommandPacket -> {
                 return@handler
             }
 
             // Flush on teleport or disconnect
-            is PlayerPositionLookS2CPacket, is DisconnectS2CPacket -> {
+            is ClientboundPlayerPositionPacket, is ClientboundDisconnectPacket -> {
                 flush(origin)
                 return@handler
             }
 
             // Ignore own hurt sounds
-            is PlaySoundS2CPacket if packet.sound.value() == SoundEvents.ENTITY_PLAYER_HURT -> {
+            is ClientboundSoundPacket if packet.sound.value() == SoundEvents.PLAYER_HURT -> {
                 return@handler
             }
 
             // Flush on own death
-            is HealthUpdateS2CPacket if packet.health <= 0 -> {
+            is ClientboundSetHealthPacket if packet.health <= 0 -> {
                 flush(origin)
                 return@handler
             }
@@ -179,8 +179,8 @@ object PacketQueueManager : EventListener {
             )
         }
 
-        val perspectiveEvent = EventManager.callEvent(PerspectiveEvent(mc.options.perspective))
-        if (perspectiveEvent.perspective != Perspective.FIRST_PERSON) {
+        val perspectiveEvent = EventManager.callEvent(PerspectiveEvent(mc.options.cameraType))
+        if (perspectiveEvent.perspective != CameraType.FIRST_PERSON) {
             val pos = positions.firstOrNull() ?: return@handler
             val rotation = RotationManager.actualServerRotation
 
@@ -213,7 +213,7 @@ object PacketQueueManager : EventListener {
                 val snapshot = next()
                 val packet = snapshot.packet
 
-                if (packet is PlayerMoveC2SPacket && packet.changePosition) {
+                if (packet is ServerboundMovePlayerPacket && packet.hasPos) {
                     counter += 1
                 }
 
@@ -229,12 +229,12 @@ object PacketQueueManager : EventListener {
 
     fun cancel() {
         positions.firstOrNull()?.let { pos ->
-            player.setPosition(pos)
+            player.setPos(pos)
         }
 
         for (snapshot in packetQueue) {
             when (snapshot.packet) {
-                is PlayerMoveC2SPacket -> continue
+                is ServerboundMovePlayerPacket -> continue
                 else -> flushSnapshot(snapshot)
             }
         }

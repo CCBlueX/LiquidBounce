@@ -39,10 +39,10 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.world.bedRule
 import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
-import net.minecraft.block.BedBlock
-import net.minecraft.block.RespawnAnchorBlock
-import net.minecraft.entity.EntityPose
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.BedBlock
+import net.minecraft.world.level.block.RespawnAnchorBlock
+import net.minecraft.world.entity.Pose
+import net.minecraft.core.BlockPos
 
 internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
@@ -102,7 +102,7 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
          * Predicts explosions from beds and respawn anchors.
          */
         private val explosionDamageBlocks by boolean("PredictExplosionDamageBlocks", false).onChanged {
-            sphere = BlockPos.ORIGIN.getSortedSphere(10f)
+            sphere = BlockPos.ZERO.getSortedSphere(10f)
         }
 
         private object FallDamage : ToggleableConfigurable(this, "PredictFallDamage", true) {
@@ -114,15 +114,15 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
                     return 0f
                 }
 
-                if (ignoreElytra && player.isGliding && player.isInPose(EntityPose.GLIDING)) {
+                if (ignoreElytra && player.isFallFlying && player.hasPose(Pose.FALL_FLYING)) {
                     return 0f
                 }
 
                 val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
                 if (collision != null && !collision.isFallDamageBlocking()) {
                     return player.getEffectiveDamage(
-                        player.damageSources.fall(),
-                        player.computeFallDamage(player.fallDistance, 1f).toFloat()
+                        player.damageSources().fall(),
+                        player.calculateFallDamage(player.fallDistance, 1f).toFloat()
                     )
                 }
 
@@ -193,7 +193,7 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
             var maxDamage = 0f
 
-            world.entities.forEach {
+            world.entitiesForRendering().forEach {
                 val damageFromEntity = player.getExplosionDamageFromEntity(it)
 
                 // find the maximum damage that could be applied to player
@@ -215,11 +215,11 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 
             val overworld = !world.bedRule.explodes
             val nether = world.respawnAnchorWorks
-            val playerPos = player.blockPos
+            val playerPos = player.blockPosition()
             var maxDamage = 0f
 
             sphere!!.forEach {
-                val pos = it.add(playerPos)
+                val pos = it.offset(playerPos)
                 val block = pos.getBlock()
                 val state = pos.getState()!!
 
@@ -269,7 +269,7 @@ internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
             return false
         }
 
-        if (player.isCreative || player.isSpectator || player.isDead) {
+        if (player.isCreative || player.isSpectator || player.isDeadOrDying) {
             return false
         }
 

@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 import kotlin.math.min
 
 /**
@@ -72,7 +72,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
     class OnEdge(override val parent: ChoiceConfigurable<Choice>) : Choice("OnEdge") {
 
         private val edgeDistance by float("Distance", 0.1f, 0.1f..0.5f)
-        private var center: Vec3d? = null
+        private var center: Vec3? = null
 
         private enum class Mode(override val choiceName: String) : NamedChoice {
             STOP("Stop"),
@@ -98,7 +98,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
         val inputHandler = handler<MovementInputEvent>(
             priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
         ) { event ->
-            val shouldBeActive = player.isOnGround && !event.sneak
+            val shouldBeActive = player.onGround() && !event.sneak
             if (shouldBeActive) {
                 val isOnEdge = player.isCloseToEdge(
                     event.directionalInput,
@@ -114,8 +114,8 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
                             ModuleDebug.DebuggedPoint(center, Color4b.BLUE, 0.05)
                         }
 
-                        val currentDistance = center.subtract(player.entityPos).horizontalLengthSquared()
-                        val nextDistance = center.subtract(nextTick.pos).horizontalLengthSquared()
+                        val currentDistance = center.subtract(player.position()).horizontalDistanceSqr()
+                        val nextDistance = center.subtract(nextTick.pos).horizontalDistanceSqr()
 
                         debugParameter("CurrentDistance") { currentDistance }
                         debugParameter("NextDistance") { nextDistance }
@@ -145,10 +145,10 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
                         event.jump = false
                     }
                     (mode == Mode.CENTER || player.sqrtSpeed > 0.05) -> {
-                        val center = center ?: player.blockPos.toBottomCenterPos()
+                        val center = center ?: player.blockPosition().bottomCenter
                         val degrees = getDegreesRelativeToView(
-                            center.subtract(player.entityPos),
-                            player.yaw
+                            center.subtract(player.position()),
+                            player.yRot
                         )
                         event.directionalInput = getDirectionalInputForDegrees(
                             DirectionalInput.NONE,
@@ -175,7 +175,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
             }
 
             // Find last good position to stand on
-            val blockPos = player.blockPos.toBottomCenterPos()
+            val blockPos = player.blockPosition().bottomCenter
             if (!player.wouldBeCloseToFallOff(blockPos)) {
                 center = blockPos
             }

@@ -24,31 +24,31 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.AABB
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 
 // pixels / (16 + 16)
-private val LIMB = Box(0.0, 0.0, 0.0, 0.125, 0.375, 0.125)
-private val BODY = Box(0.0, 0.0, 0.0, 0.25, 0.375, 0.125)
-private val HEAD = Box(0.0, 0.0, 0.0, 0.25, 0.25, 0.25)
+private val LIMB = AABB(0.0, 0.0, 0.0, 0.125, 0.375, 0.125)
+private val BODY = AABB(0.0, 0.0, 0.0, 0.25, 0.375, 0.125)
+private val HEAD = AABB(0.0, 0.0, 0.0, 0.25, 0.25, 0.25)
 
-private val RENDER_LEFT_LEG: Box = LIMB.offset(-LIMB.maxX, 0.0, 0.0)
-private val RENDER_RIGHT_LEG: Box = LIMB
-private val RENDER_BODY: Box = BODY.offset(-LIMB.maxX, LIMB.maxY, 0.0)
-private val RENDER_LEFT_ARM: Box = LIMB.offset(-2 * LIMB.maxX, LIMB.maxY, 0.0)
-private val RENDER_RIGHT_ARM: Box = LIMB.offset(BODY.maxX - LIMB.maxX, LIMB.maxY, 0.0)
-private val RENDER_HEAD: Box = HEAD.offset(-LIMB.maxX, LIMB.maxY * 2, -HEAD.maxZ * 0.25)
+private val RENDER_LEFT_LEG: AABB = LIMB.move(-LIMB.maxX, 0.0, 0.0)
+private val RENDER_RIGHT_LEG: AABB = LIMB
+private val RENDER_BODY: AABB = BODY.move(-LIMB.maxX, LIMB.maxY, 0.0)
+private val RENDER_LEFT_ARM: AABB = LIMB.move(-2 * LIMB.maxX, LIMB.maxY, 0.0)
+private val RENDER_RIGHT_ARM: AABB = LIMB.move(BODY.maxX - LIMB.maxX, LIMB.maxY, 0.0)
+private val RENDER_HEAD: AABB = HEAD.move(-LIMB.maxX, LIMB.maxY * 2, -HEAD.maxZ * 0.25)
 
-data class WireframePlayer(private var pos: Vec3d, private var yaw: Float, private var pitch: Float) {
+data class WireframePlayer(private var pos: Vec3, private var yaw: Float, private var pitch: Float) {
 
     fun render(event: WorldRenderEvent, color: Color4b, outlineColor: Color4b) {
         renderEnvironmentForWorld(event.matrixStack) {
             startBatch()
             withPositionRelativeToCamera(pos) {
-                val matrix = matrixStack.peek().positionMatrix
-                val yRot = -MathHelper.wrapDegrees(yaw)
+                val matrix = matrixStack.last().pose()
+                val yRot = -Mth.wrapDegrees(yaw)
                 matrix.rotate(Quaternionf().rotationY(yRot.toRadians()))
                 matrix.scale(1.9f)
 
@@ -69,7 +69,7 @@ data class WireframePlayer(private var pos: Vec3d, private var yaw: Float, priva
     }
 
     fun setPosRot(x: Double, y: Double, z: Double, yaw: Float, pitch: Float) {
-        this.pos = Vec3d(x, y, z)
+        this.pos = Vec3(x, y, z)
         this.yaw = yaw
         this.pitch = pitch
     }

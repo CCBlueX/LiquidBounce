@@ -41,10 +41,10 @@ import net.ccbluex.liquidbounce.utils.client.plus
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.Style
-import net.minecraft.util.Formatting
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.Style
+import net.minecraft.ChatFormatting
 import net.minecraft.util.Util
 import java.time.Instant
 import java.time.ZoneId
@@ -116,7 +116,7 @@ object CommandLocalConfig : Command.Factory {
         .build()
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
-        Util.getOperatingSystem().open(ConfigSystem.userConfigsFolder)
+        Util.getPlatform().openFile(ConfigSystem.userConfigsFolder)
         chat(regular(command.result("browse", clickablePath(ConfigSystem.userConfigsFolder))))
     }.build()
 
@@ -125,7 +125,7 @@ object CommandLocalConfig : Command.Factory {
         .pagedQuery(
             pageSize = 8,
             header = {
-                "Local Configs:".asPlainText(Style.EMPTY + Color4b.LIQUID_BOUNCE + Formatting.BOLD)
+                "Local Configs:".asPlainText(Style.EMPTY + Color4b.LIQUID_BOUNCE + ChatFormatting.BOLD)
             },
             items = {
                 ConfigSystem.userConfigsFolder.listFiles { _, name ->
@@ -141,7 +141,7 @@ object CommandLocalConfig : Command.Factory {
                     .format(AutoSettings.FORMATTER)
 
                 textOf(
-                    "\u2B25 ".asPlainText(Formatting.BLUE),
+                    "\u2B25 ".asPlainText(ChatFormatting.BLUE),
                     variable(file.name)
                         .onClick(
                             ClickEvent.SuggestCommand(
@@ -151,8 +151,8 @@ object CommandLocalConfig : Command.Factory {
                         .onHover(
                             HoverEvent.ShowText(
                                 textOf(
-                                    "Click to load ".asPlainText(Formatting.GRAY),
-                                    fileNameWithoutSuffix.asPlainText(Formatting.AQUA),
+                                    "Click to load ".asPlainText(ChatFormatting.GRAY),
+                                    fileNameWithoutSuffix.asPlainText(ChatFormatting.AQUA),
                                 )
                             )
                         ),

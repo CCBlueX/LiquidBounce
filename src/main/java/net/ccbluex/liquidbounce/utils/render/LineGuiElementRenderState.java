@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.utils.render;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
-import net.minecraft.client.gui.ScreenRect;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.texture.TextureSetup;
-import net.minecraft.util.math.Vec2f;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.world.phys.Vec2;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
@@ -32,8 +32,8 @@ public record LineGuiElementRenderState(
     float[] points,
     int argb,
     Matrix3x2f pose,
-    @Nullable ScreenRect scissorArea,
-    @Nullable ScreenRect bounds
+    @Nullable ScreenRectangle scissorArea,
+    @Nullable ScreenRectangle bounds
 ) implements LiquidBounceGuiElementRenderState {
 
     public LineGuiElementRenderState {
@@ -43,11 +43,11 @@ public record LineGuiElementRenderState(
     }
 
     public LineGuiElementRenderState(
-        Vec2f[] points,
+        Vec2[] points,
         int argb,
         Matrix3x2f pose,
-        @Nullable ScreenRect scissorArea,
-        @Nullable ScreenRect bounds
+        @Nullable ScreenRectangle scissorArea,
+        @Nullable ScreenRectangle bounds
     ) {
         this(
             flat(points),
@@ -59,11 +59,11 @@ public record LineGuiElementRenderState(
     }
 
     @Override
-    public void setupVertices(VertexConsumer vertices) {
+    public void buildVertices(VertexConsumer vertices) {
         for (int i = 0; i < points.length; i += 2) {
             float x = points[i];
             float y = points[i + 1];
-            vertices.vertex(pose, x, y).color(argb);
+            vertices.addVertexWith2DPose(pose, x, y).setColor(argb);
         }
     }
 
@@ -74,13 +74,13 @@ public record LineGuiElementRenderState(
 
     @Override
     public TextureSetup textureSetup() {
-        return TextureSetup.empty();
+        return TextureSetup.noTexture();
     }
 
-    private static float[] flat(Vec2f[] points) {
+    private static float[] flat(Vec2[] points) {
         float[] flatPoints = new float[points.length << 1];
         for (int i = 0; i < points.length; i++) {
-            Vec2f point = points[i];
+            Vec2 point = points[i];
             flatPoints[i << 1] = point.x;
             flatPoints[(i << 1) | 1] = point.y;
         }

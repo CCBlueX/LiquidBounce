@@ -49,8 +49,8 @@ import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
-import net.minecraft.text.ClickEvent
-import net.minecraft.util.Formatting
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.ChatFormatting
 import okio.appendingSink
 import okio.buffer
 import java.io.File
@@ -124,7 +124,7 @@ object CommandExecutor : EventListener {
             }.invokeOnCompletion {
                 running.set(false)
                 progressJob.cancel()
-                mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
+                mc.gui.chat.removeMessage(progressMessageMetadata.id)
             }
         }
     }
@@ -150,9 +150,9 @@ object CommandExecutor : EventListener {
     internal fun handleExceptions(e: Throwable) {
         when (e) {
             is CommandException -> {
-                mc.inGameHud.chatHud.removeMessage("CommandManager#error")
+                mc.gui.chat.removeMessage("CommandManager#error")
                 val data = MessageMetadata(id = "CommandManager#error", remove = false)
-                chat(e.text.formatted(Formatting.RED), metadata = data)
+                chat(e.text.withStyle(ChatFormatting.RED), metadata = data)
 
                 if (!e.usageInfo.isNullOrEmpty()) {
                     chat(highlight("Usage: ").bold(true), metadata = data)
@@ -163,7 +163,7 @@ object CommandExecutor : EventListener {
                     for (usage in e.usageInfo) {
                         chat(
                             "\u2B25 ".asText()
-                                .formatted(Formatting.BLUE)
+                                .withStyle(ChatFormatting.BLUE)
                                 .append(regular(CommandManager.Options.prefix + usage))
                                 .onClick(ClickEvent.SuggestCommand(CommandManager.Options.prefix + usage)),
                             metadata = data

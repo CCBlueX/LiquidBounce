@@ -22,15 +22,17 @@ package net.ccbluex.liquidbounce.utils.client;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import net.minecraft.text.CharacterVisitor;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.PlainTextContent;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextContent;
-import net.minecraft.text.TextVisitFactory;
-import net.minecraft.util.Formatting;
+import net.minecraft.network.chat.FormattedText.ContentConsumer;
+import net.minecraft.network.chat.FormattedText.StyledContentConsumer;
+import net.minecraft.util.FormattedCharSink;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.contents.PlainTextContents;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.util.StringDecomposer;
+import net.minecraft.ChatFormatting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,23 +41,23 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 /**
- * A plain and immutable {@link Text}, {@link OrderedText} and {@link CharSequence}.
+ * A plain and immutable {@link Component}, {@link FormattedCharSequence} and {@link CharSequence}.
  */
 public record PlainText(
-        @NotNull PlainTextContent content,
+        @NotNull PlainTextContents content,
         @NotNull Style style
-) implements Text, OrderedText, CharSequence {
+) implements Component, FormattedCharSequence, CharSequence {
 
-    public static final PlainText EMPTY = new PlainText(PlainTextContent.EMPTY, Style.EMPTY);
-    public static final PlainText SPACE = new PlainText(PlainTextContent.of(" "), Style.EMPTY);
-    public static final PlainText NEW_LINE = new PlainText(PlainTextContent.of("\n"), Style.EMPTY);
+    public static final PlainText EMPTY = new PlainText(PlainTextContents.EMPTY, Style.EMPTY);
+    public static final PlainText SPACE = new PlainText(PlainTextContents.create(" "), Style.EMPTY);
+    public static final PlainText NEW_LINE = new PlainText(PlainTextContents.create("\n"), Style.EMPTY);
 
-    public PlainText(@NotNull PlainTextContent content) {
+    public PlainText(@NotNull PlainTextContents content) {
         this(content, Style.EMPTY);
     }
 
-    public static @NotNull PlainText of(@NotNull PlainTextContent content, @NotNull Style style) {
-        return content.string().isEmpty() && style.isEmpty()
+    public static @NotNull PlainText of(@NotNull PlainTextContents content, @NotNull Style style) {
+        return content.text().isEmpty() && style.isEmpty()
                 ? EMPTY
                 : new PlainText(content, style);
     }
@@ -63,53 +65,53 @@ public record PlainText(
     public static @NotNull PlainText of(@NotNull String content, @NotNull Style style) {
         return content.isEmpty() && style.isEmpty()
                 ? EMPTY
-                : new PlainText(PlainTextContent.of(content), style);
+                : new PlainText(PlainTextContents.create(content), style);
     }
 
-    public static @NotNull PlainText of(@NotNull String content, @NotNull Formatting formatting) {
-        return of(content, Style.EMPTY.withFormatting(formatting));
+    public static @NotNull PlainText of(@NotNull String content, @NotNull ChatFormatting formatting) {
+        return of(content, Style.EMPTY.applyFormat(formatting));
     }
 
     public @NotNull String string() {
-        return content.string();
+        return content.text();
     }
 
     @Override
-    public boolean contains(Text text) {
+    public boolean contains(Component text) {
         if (text == null) return false;
         if (text.equals(this)) return true;
-        List<Text> sameStyle = style.isEmpty() ? text.withoutStyle() : getWithStyle(this.getStyle());
+        List<Component> sameStyle = style.isEmpty() ? text.toFlatList() : toFlatList(this.getStyle());
         return sameStyle.isEmpty() || sameStyle.size() == 1 && sameStyle.getFirst().equals(this);
     }
 
     @Override
-    public List<Text> getWithStyle(Style style) {
+    public List<Component> toFlatList(Style style) {
         return singletonList(this.style.equals(style) ? this : of(this.content, style));
     }
 
     @Override
-    public List<Text> withoutStyle() {
-        return getWithStyle(Style.EMPTY);
+    public List<Component> toFlatList() {
+        return toFlatList(Style.EMPTY);
     }
 
     @Override
-    public MutableText copy() {
-        return copyContentOnly().setStyle(this.style);
+    public MutableComponent copy() {
+        return plainCopy().setStyle(this.style);
     }
 
     @Override
-    public MutableText copyContentOnly() {
-        return MutableText.of(content);
+    public MutableComponent plainCopy() {
+        return MutableComponent.create(content);
     }
 
     @Override
-    public String asTruncatedString(int length) {
+    public String getString(int length) {
         final String string = string();
         return string.length() <= length ? string : string.substring(0, length);
     }
 
     @Override
-    public @Nullable String getLiteralString() {
+    public @Nullable String tryCollapseToString() {
         return this.style.isEmpty() ? this.string() : null;
     }
 
@@ -119,7 +121,7 @@ public record PlainText(
     }
 
     @Override
-    public TextContent getContent() {
+    public ComponentContents getContents() {
         return this.content;
     }
 
@@ -129,27 +131,27 @@ public record PlainText(
     }
 
     @Override
-    public List<Text> getSiblings() {
+    public List<Component> getSiblings() {
         return emptyList();
     }
 
     @Override
-    public OrderedText asOrderedText() {
+    public FormattedCharSequence getVisualOrderText() {
         return this;
     }
 
     @Override
-    public boolean accept(CharacterVisitor visitor) {
-        return TextVisitFactory.visitFormatted(string(), this.style, visitor);
+    public boolean accept(FormattedCharSink visitor) {
+        return StringDecomposer.iterateFormatted(string(), this.style, visitor);
     }
 
     @Override
-    public <T> Optional<T> visit(StyledVisitor<T> styledVisitor, Style style) {
-        return styledVisitor.accept(this.style.withParent(style), string());
+    public <T> Optional<T> visit(StyledContentConsumer<T> styledVisitor, Style style) {
+        return styledVisitor.accept(this.style.applyTo(style), string());
     }
 
     @Override
-    public <T> Optional<T> visit(Visitor<T> visitor) {
+    public <T> Optional<T> visit(ContentConsumer<T> visitor) {
         return visitor.accept(string());
     }
 

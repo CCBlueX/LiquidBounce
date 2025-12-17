@@ -20,14 +20,14 @@ package net.ccbluex.liquidbounce.render.engine.type
 
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
-import net.minecraft.util.math.Position
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.core.Position
+import net.minecraft.world.phys.Vec3
+import net.minecraft.core.Vec3i
 
 @JvmRecord
 data class Vec3f(val x: Float, val y: Float, val z: Float) {
     constructor(x: Double, y: Double, z: Double) : this(x.toFloat(), y.toFloat(), z.toFloat())
-    constructor(vec: Position) : this(vec.x, vec.y, vec.z)
+    constructor(vec: Position) : this(vec.x(), vec.y(), vec.z())
     constructor(vec: Vec3i) : this(vec.x.toFloat(), vec.y.toFloat(), vec.z.toFloat())
 
     fun add(x: Float, y: Float, z: Float): Vec3f {
@@ -66,7 +66,7 @@ data class Vec3f(val x: Float, val y: Float, val z: Float) {
         return Vec3f(d0, d1, d2)
     }
 
-    fun toVec3d() = Vec3d(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
+    fun toVec3d() = Vec3(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())
 
     companion object {
         @JvmField

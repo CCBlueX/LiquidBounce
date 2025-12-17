@@ -23,8 +23,8 @@ package net.ccbluex.liquidbounce.render.engine.font.processor
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.text.Style
-import net.minecraft.text.Text
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
 import java.awt.Font
 import java.util.Optional
 import kotlin.random.Random
@@ -49,7 +49,7 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
     ) : ProcessedText
 
     override fun process(
-        text: Text,
+        text: Component,
         defaultColor: Color4b,
     ): RecyclingProcessedText {
         val result = TEXT_POOL.borrow()
@@ -72,7 +72,7 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
             style.isItalic -> Font.ITALIC
             else -> Font.PLAIN
         }
-        val color = style.color?.let { Color4b(it.rgb) } ?: defaultColor
+        val color = style.color?.let { Color4b(it.value) } ?: defaultColor
         val obfuscated = style.isObfuscated
 
         result.chars.ensureCapacity(textAsString.length)

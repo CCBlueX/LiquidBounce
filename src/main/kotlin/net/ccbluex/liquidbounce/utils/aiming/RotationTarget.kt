@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.utils.aiming.features.processors.ShortStopRotati
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.minecraft.entity.Entity
+import net.minecraft.world.entity.Entity
 
 /**
  * An aim plan is a plan to aim at a certain rotation.

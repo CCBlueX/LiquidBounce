@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.minecraft.client.option.KeyBinding
+import net.minecraft.client.KeyMapping
 import java.util.*
 
 /**
@@ -56,7 +56,7 @@ import java.util.*
  */
 open class Clicker<T>(
     val parent: T,
-    val keyBinding: KeyBinding,
+    val keyBinding: KeyMapping,
     val itemCooldown: ItemCooldown? = ItemCooldown(),
     maxCps: Int = 60,
     name: String = "Clicker"
@@ -92,14 +92,14 @@ open class Clicker<T>(
      * This is useful for anti-cheats that detect if you are ignoring this cooldown.
      * Applies to the FailSwing feature as well.
      */
-    private val attackCooldown: Value<Boolean>? = if (keyBinding == mc.options.attackKey) {
+    private val attackCooldown: Value<Boolean>? = if (keyBinding == mc.options.keyAttack) {
         boolean("AttackCooldown", true)
     } else {
         null
     }
 
     private val passesAttackCooldown
-        get() = !(attackCooldown?.get() == true && mc.attackCooldown > 0)
+        get() = !(attackCooldown?.get() == true && mc.missTime > 0)
 
     private val clickArray = RollingClickArray(DEFAULT_CYCLE_LENGTH, 2)
 
@@ -150,7 +150,7 @@ open class Clicker<T>(
 
         // It turns out, we only want to do this with [attackKey], otherwise
         // [useKey] will do unexpected things.
-        if (keyBinding == mc.options.attackKey && event.keyBinding == keyBinding) {
+        if (keyBinding == mc.options.keyAttack && event.keyBinding == keyBinding) {
             // We want to simulate the click in order to
             // allow the game to handle the logic as if we clicked
             event.isPressed = clickAmount > 0
@@ -167,7 +167,7 @@ open class Clicker<T>(
         debugParameter("Current Clicks") { clicks }
         debugParameter("Peek Clicks") { clickArray.get(1) }
         debugParameter("Last Click Passed") { lastClickPassed }
-        debugParameter("Attack Cooldown") { mc.attackCooldown }
+        debugParameter("Attack Cooldown") { mc.missTime }
         debugParameter("Item Cooldown") { itemCooldown?.cooldownProgress() ?: 0.0f }
 
         var clickAmount = 0

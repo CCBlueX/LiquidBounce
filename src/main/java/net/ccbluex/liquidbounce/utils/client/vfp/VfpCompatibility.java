@@ -26,8 +26,8 @@ import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import com.viaversion.viaversion.api.protocol.version.VersionType;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.utils.client.ClientProtocolVersion;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.TitleScreen;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.TitleScreen;
 import org.apache.commons.lang3.ArrayUtils;
 
 /**
@@ -67,7 +67,7 @@ public enum VfpCompatibility {
 
     public void unsafeOpenVfpProtocolSelection() {
         try {
-            var currentScreen = MinecraftClient.getInstance().currentScreen;
+            var currentScreen = Minecraft.getInstance().screen;
             if (currentScreen == null) {
                 currentScreen = new TitleScreen();
             }

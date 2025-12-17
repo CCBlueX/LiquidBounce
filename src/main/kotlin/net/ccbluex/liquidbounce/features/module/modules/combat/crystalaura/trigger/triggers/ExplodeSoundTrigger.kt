@@ -24,23 +24,23 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.world
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.PostPacketTrigger
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.network.packet.s2c.play.PlaySoundFromEntityS2CPacket
-import net.minecraft.sound.SoundEvents
+import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket
+import net.minecraft.sounds.SoundEvents
 
 /**
  * Runs placing when an explosion sound is received.
  */
-object ExplodeSoundTrigger : PostPacketTrigger<PlaySoundFromEntityS2CPacket>("ExplodeSound", true) {
+object ExplodeSoundTrigger : PostPacketTrigger<ClientboundSoundEntityPacket>("ExplodeSound", true) {
 
-    override fun postPacketHandler(packet: PlaySoundFromEntityS2CPacket) {
-        if (packet.sound != SoundEvents.ENTITY_GENERIC_EXPLODE) {
+    override fun postPacketHandler(packet: ClientboundSoundEntityPacket) {
+        if (packet.sound != SoundEvents.GENERIC_EXPLODE) {
             return
         }
 
-        world.getEntityById(packet.entityId)?.let {
+        world.getEntity(packet.id)?.let {
             // don't place if the sound is too far away
             val maxRangeSq = SubmoduleCrystalPlacer.getMaxRange().sq()
-            if (it.entityPos.squaredDistanceTo(player.entityPos) > maxRangeSq) {
+            if (it.position().distanceToSqr(player.position()) > maxRangeSq) {
                 return
             }
         }

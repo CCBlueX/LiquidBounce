@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.entity.direction
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.minecraft.util.Hand
+import net.minecraft.world.InteractionHand
 
 /**
  * Vehicle control module
@@ -76,18 +76,18 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
 
     @Suppress("unused")
     private val handleVehicleMovement = tickHandler {
-        val vehicle = player.controllingVehicle ?: run {
+        val vehicle = player.controlledVehicle ?: run {
             wasInVehicle = false
             return@tickHandler
         }
 
         // Show explanation message
-        if (!wasInVehicle && mc.options.useKey.isPressed) {
+        if (!wasInVehicle && mc.options.keyUse.isDown) {
             wasInVehicle = true
             chat(warning(message("quitHelp")))
         }
 
-        val useSprintSpeed = mc.options.sprintKey.isPressed && SprintSpeed.enabled
+        val useSprintSpeed = mc.options.keySprint.isDown && SprintSpeed.enabled
         val hSpeed =
             if (useSprintSpeed) SprintSpeed.horizontalSpeed else BaseSpeed.horizontalSpeed
         val vSpeed =
@@ -96,24 +96,26 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
         // Control vehicle
         val horizontalSpeed = if (player.moving) hSpeed.toDouble() else 0.0
         val verticalSpeed = when {
-            mc.options.jumpKey.isPressed -> vSpeed.toDouble()
-            mc.options.sneakKey.isPressed -> -vSpeed.toDouble()
+            mc.options.keyJump.isDown -> vSpeed.toDouble()
+            mc.options.keyShift.isDown -> -vSpeed.toDouble()
             // If we do not stop the vehicle from going down when touching water, it will
             // drown in water and cannot be controlled anymore
-            !vehicle.isTouchingWater -> glide.toDouble()
+            !vehicle.isInWater -> glide.toDouble()
             else -> 0.0
         }
 
         // Vehicle control velocity
-        vehicle.velocity = vehicle.velocity
-            .copy(y = verticalSpeed)
-            .withStrafe(yaw = player.direction, speed = horizontalSpeed)
+        vehicle.setDeltaMovement(
+            vehicle.deltaMovement
+                .copy(y = verticalSpeed)
+                .withStrafe(yaw = player.yRot, speed = horizontalSpeed)
+        )
     }
 
     @Suppress("unused")
     private val handleMovementInputEvent = handler<MovementInputEvent> { event ->
-        if (player.controllingVehicle != null || Rehook.vehicleId >= 0) {
-            val isVehicleSafe = player.controllingVehicle?.let { it.isOnGround || it.isTouchingWater } == true
+        if (player.controlledVehicle != null || Rehook.vehicleId >= 0) {
+            val isVehicleSafe = player.controlledVehicle?.let { it.onGround() || it.isInWater } == true
 
             // Do not quit vehicle if not safe to do so
             event.sneak = event.sneak && isVehicleSafe
@@ -137,12 +139,12 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
 
         @Suppress("unused")
         private val handleRehooking = tickHandler {
-            if (vehicleId >= 0 && !player.hasVehicle()) {
-                val vehicle = world.getEntityById(vehicleId)
+            if (vehicleId >= 0 && !player.isPassenger) {
+                val vehicle = world.getEntity(vehicleId)
 
                 if (vehicle != null && !vehicle.isRemoved) {
                     // Check if the player is able to reach the vehicle
-                    if (vehicle.boxedDistanceTo(player) > player.entityInteractionRange) {
+                    if (vehicle.boxedDistanceTo(player) > player.entityInteractionRange()) {
                         chat(warning(message("vehicleTooFar")))
                         vehicleId = -1
                         return@tickHandler
@@ -150,7 +152,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
 
                     // Enter the vehicle again
                     if (!forceAttempt) {
-                        interaction.interactEntity(player, vehicle, Hand.MAIN_HAND)
+                        interaction.interact(player, vehicle, InteractionHand.MAIN_HAND)
                         forceAttempt = true
                     } else {
                         // We are already in the vehicle on the server-side, but our client does not know that, so
@@ -165,7 +167,7 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
                 forceAttempt = false
 
                 waitTicks(unhookAfter)
-                vehicleId = player.controllingVehicle?.id ?: return@tickHandler
+                vehicleId = player.controlledVehicle?.id ?: return@tickHandler
                 sendStartSneaking()
                 player.stopRiding()
                 waitTicks(hookAfter - 1)

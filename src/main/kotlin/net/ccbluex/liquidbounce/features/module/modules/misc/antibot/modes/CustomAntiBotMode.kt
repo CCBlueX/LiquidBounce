@@ -23,8 +23,6 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -35,28 +33,25 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.attribute.EntityAttributes
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.item.equipment.ArmorMaterials
-import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket
-import net.minecraft.network.packet.s2c.play.EntityAnimationS2CPacket
-import net.minecraft.network.packet.s2c.play.EntityAttributesS2CPacket
-import net.minecraft.network.packet.s2c.play.EntityS2CPacket
-import net.minecraft.registry.tag.ItemTags
-import net.minecraft.registry.tag.TagKey
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.equipment.ArmorMaterials
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
+import net.minecraft.network.protocol.game.ClientboundAnimatePacket
+import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket
+import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
+import net.minecraft.tags.ItemTags
+import net.minecraft.tags.TagKey
 import java.util.*
 import java.util.function.Predicate
 import kotlin.math.abs
 
 @Suppress("MagicNumber")
-object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleAntiBot.modes
+object CustomAntiBotMode : AntibotMode("Custom") {
 
     private object InvalidGround : ToggleableConfigurable(ModuleAntiBot, "InvalidGround", true) {
         val vlToConsiderAsBot by int("VLToConsiderAsBot", 10, 1..50, "flags")
@@ -125,12 +120,12 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
 
             constructor(choiceName: String, tag: TagKey<Item>) : this(
                 choiceName,
-                Predicate { it.isIn(tag) }
+                Predicate { it.`is`(tag) }
             )
 
             constructor(choiceName: String, item: Item) : this(
                 choiceName,
-                Predicate { it.isOf(item) }
+                Predicate { it.`is`(item) }
             )
 
             constructor(choiceName: String, vararg items: Item) : this(
@@ -168,10 +163,10 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
             this[EquipmentSlot.FEET] = multiEnumChoice("Boots", EnumSet.of(ArmorPredicate.NOTHING), BASE)
         }
 
-        fun isValid(entity: PlayerEntity): Boolean {
+        fun isValid(entity: Player): Boolean {
             return values.all { (slot, value) ->
                 val predicates = value.get()
-                val armor = entity.getEquippedStack(slot)
+                val armor = entity.getItemBySlot(slot)
                 // Nothing selected = skip this part
                 predicates.isEmpty() || predicates.any {
                     it.predicate.test(armor)
@@ -200,12 +195,12 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = CRITICAL_MODIFICATION) {
         val rangeSquared = AlwaysInRadius.alwaysInRadiusRange.sq()
-        for (entity in world.players) {
+        for (entity in world.players()) {
             if (entity === player) {
                 continue
             }
 
-            if (player.squaredDistanceTo(entity) > rangeSquared) {
+            if (player.distanceToSqr(entity) > rangeSquared) {
                 notAlwaysInRadiusSet.add(entity.id)
             }
 
@@ -215,7 +210,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         }
 
         armorSet.removeIf {
-            val entity = world.getEntityById(it) as? PlayerEntity
+            val entity = world.getEntity(it) as? Player
             entity == null || Armor.isValid(entity)
         }
     }
@@ -228,17 +223,17 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
-            is EntityS2CPacket -> {
-                if (!packet.isPositionChanged || !InvalidGround.enabled) {
+            is ClientboundMoveEntityPacket -> {
+                if (!packet.hasPosition() || !InvalidGround.enabled) {
                     return@handler
                 }
 
                 val entity = packet.getEntity(world) ?: return@handler
                 val id = entity.id
                 val currentValue = flyingSet.getOrDefault(id, 0)
-                if (entity.isOnGround && entity.lastY != entity.y) {
+                if (entity.onGround() && entity.yo != entity.y) {
                     flyingSet.put(id, currentValue + 1)
-                } else if (!entity.isOnGround && currentValue > 0) {
+                } else if (!entity.onGround() && currentValue > 0) {
                     val newVL = currentValue / 2
 
                     if (newVL <= 0) {
@@ -249,22 +244,22 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
                 }
             }
 
-            is EntityAttributesS2CPacket -> {
+            is ClientboundUpdateAttributesPacket -> {
                 attributesSet.add(packet.entityId)
             }
 
-            is EntityAnimationS2CPacket -> {
-                when (packet.animationId) {
-                    EntityAnimationS2CPacket.SWING_MAIN_HAND, EntityAnimationS2CPacket.SWING_OFF_HAND -> {
-                        swungSet.add(packet.entityId)
+            is ClientboundAnimatePacket -> {
+                when (packet.action) {
+                    ClientboundAnimatePacket.SWING_MAIN_HAND, ClientboundAnimatePacket.SWING_OFF_HAND -> {
+                        swungSet.add(packet.id)
                     }
-                    EntityAnimationS2CPacket.CRIT, EntityAnimationS2CPacket.ENCHANTED_HIT -> {
-                        crittedSet.add(packet.entityId)
+                    ClientboundAnimatePacket.CRITICAL_HIT, ClientboundAnimatePacket.MAGIC_CRITICAL_HIT -> {
+                        crittedSet.add(packet.id)
                     }
                 }
             }
 
-            is EntitiesDestroyS2CPacket -> {
+            is ClientboundRemoveEntitiesPacket -> {
                 packet.entityIds.forEachInt { entityId ->
                     attributesSet.remove(entityId)
                     flyingSet.remove(entityId)
@@ -276,16 +271,16 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
         }
     }
 
-    private fun hasInvalidGround(player: PlayerEntity): Boolean {
+    private fun hasInvalidGround(player: Player): Boolean {
         return flyingSet.getOrDefault(player.id, 0) >= InvalidGround.vlToConsiderAsBot
     }
 
-    override fun isBot(entity: PlayerEntity): Boolean {
+    override fun isBot(entity: Player): Boolean {
         val entityId = entity.id
         return when {
             InvalidGround.enabled && hasInvalidGround(entity) -> true
             AlwaysInRadius.enabled && !notAlwaysInRadiusSet.contains(entityId) -> true
-            Age.enabled && entity.age < Age.minimum -> true
+            Age.enabled && entity.tickCount < Age.minimum -> true
             Armor.enabled && armorSet.contains(entityId) -> true
             else -> customConditions.any { it.isBot.test(entity) }
         }
@@ -311,22 +306,22 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
     @Suppress("unused")
     private enum class CustomConditions(
         override val choiceName: String,
-        val isBot: Predicate<PlayerEntity>
+        val isBot: Predicate<Player>
     ) : NamedChoice {
         DUPLICATE("Duplicate", { suspected ->
             isADuplicate(suspected.gameProfile)
         }),
         NO_GAME_MODE("NoGameMode", { suspected ->
-            network.getPlayerListEntry(suspected.uuid)?.gameMode == null
+            network.getPlayerInfo(suspected.uuid)?.gameMode == null
         }),
         ILLEGAL_PITCH("IllegalPitch", { suspected ->
-            abs(suspected.pitch) > 90
+            abs(suspected.xRot) > 90
         }),
         FAKE_ENTITY_ID("FakeEntityID", { suspected ->
             suspected.id !in 0..1_000_000_000
         }),
         ILLEGAL_NAME("IllegalName", { suspected ->
-            val name = suspected.nameForScoreboard
+            val name = suspected.scoreboardName
             name.length !in 3..16 || name.any { !VALID_CHARS_OF_NAME[it.code] }
         }),
         NEED_IT("NeedHit", { suspected ->
@@ -345,7 +340,7 @@ object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
             !attributesSet.contains(suspected.id)
         }),
         ILLEGAL_SCALE("IllegalScale", { suspected ->
-            suspected.attributes.getValue(EntityAttributes.SCALE) != 1.0
+            suspected.attributes.getValue(Attributes.SCALE) != 1.0
         })
     }
 }

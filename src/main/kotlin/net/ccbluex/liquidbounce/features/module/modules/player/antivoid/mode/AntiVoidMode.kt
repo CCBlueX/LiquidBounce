@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
 abstract class AntiVoidMode(name: String) : Choice(name) {
 
@@ -33,11 +33,11 @@ abstract class AntiVoidMode(name: String) : Choice(name) {
 
     // Cases in which the AntiVoid protection should not be active.
     open val isExempt: Boolean
-        get() = player.isDead || ModuleFly.running
+        get() = player.isDeadOrDying || ModuleFly.running
 
-    open fun discoverRescuePosition(): Vec3d? {
+    open fun discoverRescuePosition(): Vec3? {
         if (!ModuleAntiVoid.isLikelyFalling) {
-            return player.entityPos
+            return player.position()
         }
         return null
     }

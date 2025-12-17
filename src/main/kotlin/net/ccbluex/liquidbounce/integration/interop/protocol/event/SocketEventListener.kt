@@ -76,7 +76,7 @@ internal object SocketEventListener : EventListener {
         EventManager.unregisterEventHook(eventClass, eventHook)
     }
 
-    private fun writeToSockets(event: Event) = Util.getMainWorkerExecutor().execute {
+    private fun writeToSockets(event: Event) = Util.backgroundExecutor().execute {
         val eventName = event.javaClass.eventName
         val json = writeBuffer.get().runCatching {
             JsonWriter(this).use { writer ->

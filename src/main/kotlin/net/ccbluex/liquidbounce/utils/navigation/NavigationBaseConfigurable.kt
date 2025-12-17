@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
 /**
  * Base class for navigation-related features that handles common movement functionality
@@ -60,7 +60,7 @@ abstract class NavigationBaseConfigurable<T>(
      *
      * @return Target position as Vec3d
      */
-    protected abstract fun calculateGoalPosition(context: T): Vec3d?
+    protected abstract fun calculateGoalPosition(context: T): Vec3?
 
     /**
      * Handles additional movement mechanics like swimming and jumping
@@ -69,7 +69,7 @@ abstract class NavigationBaseConfigurable<T>(
      */
     @Suppress("ComplexCondition")
     protected open fun handleMovementAssist(event: MovementInputEvent, context: T) {
-        if ((autoSwim && player.isTouchingWater) || (autoJump && player.horizontalCollision)) {
+        if ((autoSwim && player.isInWater) || (autoJump && player.horizontalCollision)) {
             event.jump = true
         }
     }
@@ -81,8 +81,8 @@ abstract class NavigationBaseConfigurable<T>(
      * @param goal Target position to move towards
      * @return Calculated directional input
      */
-    private fun calculateDirectionalInput(currentInput: DirectionalInput, goal: Vec3d): DirectionalInput {
-        val degrees = getDegreesRelativeToView(goal.subtract(player.entityPos), player.yaw)
+    private fun calculateDirectionalInput(currentInput: DirectionalInput, goal: Vec3): DirectionalInput {
+        val degrees = getDegreesRelativeToView(goal.subtract(player.position()), player.yRot)
         return getDirectionalInputForDegrees(currentInput, degrees, deadAngle = 20.0F)
     }
 
@@ -92,7 +92,7 @@ abstract class NavigationBaseConfigurable<T>(
      * @return Movement rotation
      */
     open fun getMovementRotation(): Rotation {
-        val movementYaw = getMovementDirectionOfInput(player.yaw, DirectionalInput(player.input))
+        val movementYaw = getMovementDirectionOfInput(player.yRot, DirectionalInput(player.input))
         val movementPitch = 0.0f
 
         return Rotation(movementYaw, movementPitch)

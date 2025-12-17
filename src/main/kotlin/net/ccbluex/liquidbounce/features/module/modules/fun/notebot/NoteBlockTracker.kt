@@ -23,14 +23,14 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 class NoteBlockTracker(val pos: BlockPos): MinecraftShortcuts {
     var currentNote: Int? = null
@@ -62,7 +62,7 @@ class NoteBlockTracker(val pos: BlockPos): MinecraftShortcuts {
     private fun interact() {
         val blockState = this.pos.getState()!!
         val raytrace = raytraceBlockRotation(
-            player.eyePos,
+            player.eyePosition,
             this.pos,
             blockState,
             range = ModuleNotebot.range.toDouble(),
@@ -76,8 +76,8 @@ class NoteBlockTracker(val pos: BlockPos): MinecraftShortcuts {
             blockState,
         ) ?: return
 
-        network.sendPacket(
-            PlayerMoveC2SPacket.LookAndOnGround(
+        network.send(
+            ServerboundMovePlayerPacket.Rot(
                 raytrace.rotation.yaw,
                 raytrace.rotation.pitch,
                 player.lastOnGround,
@@ -85,9 +85,9 @@ class NoteBlockTracker(val pos: BlockPos): MinecraftShortcuts {
             )
         )
 
-        interaction.sendSequencedPacket(world) { sequence ->
-            PlayerInteractBlockC2SPacket(
-                Hand.MAIN_HAND,
+        interaction.startPrediction(world) { sequence ->
+            ServerboundUseItemOnPacket(
+                InteractionHand.MAIN_HAND,
                 blockHitResult,
                 sequence
             )
@@ -98,16 +98,16 @@ class NoteBlockTracker(val pos: BlockPos): MinecraftShortcuts {
     }
 
     fun click() {
-        interaction.sendSequencedPacket(world) { sequence ->
-            PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
+        interaction.startPrediction(world) { sequence ->
+            ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
                 this.pos,
                 Direction.UP,
                 sequence
             )
         }
 
-        network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+        network.send(ServerboundSwingPacket(InteractionHand.MAIN_HAND))
 
 //        interaction.sendSequencedPacket(world) { sequence ->
 //            PlayerActionC2SPacket(

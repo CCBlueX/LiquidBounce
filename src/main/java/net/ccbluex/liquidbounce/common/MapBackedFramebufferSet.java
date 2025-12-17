@@ -19,10 +19,10 @@
 
 package net.ccbluex.liquidbounce.common;
 
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.PostEffectProcessor;
-import net.minecraft.client.util.Handle;
-import net.minecraft.util.Identifier;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import net.minecraft.client.renderer.PostChain;
+import com.mojang.blaze3d.resource.ResourceHandle;
+import net.minecraft.resources.Identifier;
 
 import java.util.HashMap;
 
@@ -32,16 +32,16 @@ import javax.annotation.Nullable;
  * Stupid class, but Minecraft needed one more abstraction...
  */
 public record MapBackedFramebufferSet(
-        HashMap<Identifier, Handle<Framebuffer>> backingMap
-) implements PostEffectProcessor.FramebufferSet {
+        HashMap<Identifier, ResourceHandle<RenderTarget>> backingMap
+) implements PostChain.TargetBundle {
 
     @Override
-    public void set(Identifier id, Handle<Framebuffer> framebuffer) {
+    public void replace(Identifier id, ResourceHandle<RenderTarget> framebuffer) {
         this.backingMap.put(id, framebuffer);
     }
 
     @Override
-    public @Nullable Handle<Framebuffer> get(Identifier id) {
+    public @Nullable ResourceHandle<RenderTarget> get(Identifier id) {
         return this.backingMap.get(id);
     }
 }

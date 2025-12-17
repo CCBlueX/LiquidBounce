@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.entity.EntityEquipment
-import net.minecraft.entity.EntityPose
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.util.Hand
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.world.entity.EntityEquipment
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.entity.player.Inventory
+import net.minecraft.world.InteractionHand
 
 @JvmRecord
 data class PosPoseSnapshot(
@@ -43,13 +43,13 @@ data class PosPoseSnapshot(
     val lastBodyYaw: Float,
     val headYaw: Float,
     val lastHeadYaw: Float,
-    val pose: EntityPose,
-    val preferredHand: Hand,
-    val inventory: PlayerInventory,
+    val pose: Pose,
+    val preferredHand: InteractionHand,
+    val inventory: Inventory,
     val limbPos: Float
 )
 
-fun fromPlayer(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
+fun fromPlayer(entity: AbstractClientPlayer): PosPoseSnapshot {
     return PosPoseSnapshot(
         entity.x,
         entity.y,
@@ -57,48 +57,48 @@ fun fromPlayer(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
         entity.x,
         entity.y,
         entity.z,
-        entity.handSwinging,
-        entity.handSwingTicks,
-        entity.handSwingProgress,
-        entity.yaw,
-        entity.yaw,
-        entity.pitch,
-        entity.pitch,
-        entity.bodyYaw,
-        entity.bodyYaw,
-        entity.headYaw,
-        entity.headYaw,
+        entity.swinging,
+        entity.swingTime,
+        entity.attackAnim,
+        entity.yRot,
+        entity.yRot,
+        entity.xRot,
+        entity.xRot,
+        entity.yBodyRot,
+        entity.yBodyRot,
+        entity.yHeadRot,
+        entity.yHeadRot,
         entity.pose,
-        entity.preferredHand ?: Hand.MAIN_HAND,
+        entity.swingingArm ?: InteractionHand.MAIN_HAND,
         entity.inventory,
-        entity.limbAnimator.animationProgress
+        entity.walkAnimation.position
     )
 }
 
-fun fromPlayerMotion(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
-    val playerInventory = PlayerInventory(null, EntityEquipment())
-    playerInventory.clone(entity.inventory)
+fun fromPlayerMotion(entity: AbstractClientPlayer): PosPoseSnapshot {
+    val playerInventory = Inventory(entity, EntityEquipment())
+    playerInventory.replaceWith(entity.inventory)
     return PosPoseSnapshot(
         entity.x,
         entity.y,
         entity.z,
-        entity.lastX,
-        entity.lastY,
-        entity.lastZ,
-        entity.handSwinging,
-        entity.handSwingTicks,
-        entity.handSwingProgress,
-        entity.yaw,
-        entity.lastYaw,
-        entity.pitch,
-        entity.lastPitch,
-        entity.bodyYaw,
-        entity.lastBodyYaw,
-        entity.headYaw,
-        entity.lastHeadYaw,
+        entity.xo,
+        entity.yo,
+        entity.zo,
+        entity.swinging,
+        entity.swingTime,
+        entity.attackAnim,
+        entity.yRot,
+        entity.yRotO,
+        entity.xRot,
+        entity.xRotO,
+        entity.yBodyRot,
+        entity.yBodyRotO,
+        entity.yHeadRot,
+        entity.yHeadRotO,
         entity.pose,
-        entity.preferredHand ?: Hand.MAIN_HAND,
+        entity.swingingArm,
         playerInventory,
-        entity.limbAnimator.animationProgress
+        entity.walkAnimation.position
     )
 }

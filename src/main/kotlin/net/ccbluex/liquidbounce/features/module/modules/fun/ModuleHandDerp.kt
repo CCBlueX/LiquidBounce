@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.network.packet.c2s.common.ClientOptionsC2SPacket
-import net.minecraft.network.packet.c2s.common.SyncedClientOptions
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
-import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket
+import net.minecraft.network.protocol.common.ServerboundClientInformationPacket
+import net.minecraft.server.level.ClientInformation
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 
 
 /**
@@ -44,12 +44,12 @@ object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
     private val mode = choices("Mode", Delay, arrayOf(Delay, Swing))
 
 
-    private val originalHand = mc.options.mainArm.value
-    private var currentHand = mc.options.mainArm.value
+    private val originalHand = mc.options.mainHand().get()
+    private var currentHand = mc.options.mainHand().get()
 
     private fun calculatePlayerPartValue(): Int {
         var value = 0
-        for (part in mc.options.enabledPlayerModelParts) {
+        for (part in mc.options.modelParts) {
             value = value or (1 shl part.ordinal)
         }
         return value
@@ -58,18 +58,18 @@ object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
     private fun switchHand() {
 
         currentHand = currentHand.opposite
-        network.sendPacket(
-            ClientOptionsC2SPacket(
-                SyncedClientOptions(
-                    mc.options.language,
-                    mc.options.viewDistance.value,
-                    mc.options.chatVisibility.value,
-                    mc.options.chatColors.value,
+        network.send(
+            ServerboundClientInformationPacket(
+                ClientInformation(
+                    mc.options.languageCode,
+                    mc.options.renderDistance().get(),
+                    mc.options.chatVisibility().get(),
+                    mc.options.chatColors().get(),
                     calculatePlayerPartValue(),
                     currentHand,
-                    mc.shouldFilterText(),
-                    mc.options.allowServerListing.value,
-                    mc.options.particles.value
+                    mc.isTextFilteringEnabled,
+                    mc.options.allowServerListing().get(),
+                    mc.options.particles().get()
                 )
             )
         )
@@ -78,15 +78,15 @@ object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
 
     val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
         val packet = it.packet
-        if (silent && packet is EntityTrackerUpdateS2CPacket &&
-            packet.trackedValues.any { data ->
-                data.id == mc.options.mainArm.value.id }) {
+        if (silent && packet is ClientboundSetEntityDataPacket &&
+            packet.packedItems.any { data ->
+                data.id == mc.options.mainHand().get().id }) {
             it.cancelEvent()
         }
     }
 
     override fun onDisabled() {
-        if (mc.options.mainArm.value != originalHand) {
+        if (mc.options.mainHand().get() != originalHand) {
             switchHand()
         }
     }
@@ -111,7 +111,7 @@ object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
         @Suppress("unused")
         val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
             val packet = it.packet
-            if (packet is HandSwingC2SPacket) {
+            if (packet is ServerboundSwingPacket) {
                 switchHand()
             }
         }

@@ -22,49 +22,49 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.entry.RegistryEntry
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.Holder
 
 abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
 
     private open class Potion(
         parent: StatusEffectBasedBuff,
         name: String,
-        val statusEffect: RegistryEntry<StatusEffect>,
+        val statusEffect: Holder<MobEffect>,
     ) : ToggleableConfigurable(parent, name, true) {
 
-        open fun isValid(effect: StatusEffectInstance, health: Float): Boolean {
-            return enabled && statusEffect == effect.effectType && !player.hasStatusEffect(statusEffect)
+        open fun isValid(effect: MobEffectInstance, health: Float): Boolean {
+            return enabled && statusEffect == effect.effect && !player.hasEffect(statusEffect)
         }
     }
 
     private class HealthBasedPotion(
         parent: StatusEffectBasedBuff,
         name: String,
-        statusEffect: RegistryEntry<StatusEffect>,
+        statusEffect: Holder<MobEffect>,
     ) : Potion(parent, name, statusEffect) {
         private val healthPercent by int("Health", 40, 1..100, "%HP")
 
         private val health
             get() = player.maxHealth * healthPercent / 100
 
-        override fun isValid(effect: StatusEffectInstance, health: Float): Boolean {
+        override fun isValid(effect: MobEffectInstance, health: Float): Boolean {
             return super.isValid(effect, health) && health <= this.health
         }
     }
 
     private class Potions(parent: StatusEffectBasedBuff) : Configurable("Potions") {
 
-        private val healthPotion = HealthBasedPotion(parent, "Health", StatusEffects.INSTANT_HEALTH)
-        private val regenPotion = HealthBasedPotion(parent, "Regen", StatusEffects.REGENERATION)
-        private val strengthPotion = Potion(parent, "Strength", StatusEffects.STRENGTH)
-        private val speedPotion = Potion(parent, "Speed", StatusEffects.SPEED)
-        private val fireResistancePotion = Potion(parent, "FireResistance", StatusEffects.FIRE_RESISTANCE)
-        private val jumpBoostPotion = Potion(parent, "JumpBoost", StatusEffects.JUMP_BOOST)
-        private val waterBreathingPotion = Potion(parent, "WaterBreathing", StatusEffects.WATER_BREATHING)
+        private val healthPotion = HealthBasedPotion(parent, "Health", MobEffects.INSTANT_HEALTH)
+        private val regenPotion = HealthBasedPotion(parent, "Regen", MobEffects.REGENERATION)
+        private val strengthPotion = Potion(parent, "Strength", MobEffects.STRENGTH)
+        private val speedPotion = Potion(parent, "Speed", MobEffects.SPEED)
+        private val fireResistancePotion = Potion(parent, "FireResistance", MobEffects.FIRE_RESISTANCE)
+        private val jumpBoostPotion = Potion(parent, "JumpBoost", MobEffects.JUMP_BOOST)
+        private val waterBreathingPotion = Potion(parent, "WaterBreathing", MobEffects.WATER_BREATHING)
 
         private val values = arrayOf(
             healthPotion,
@@ -76,13 +76,13 @@ abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
             waterBreathingPotion,
         ).onEach(::tree).associateBy { it.statusEffect }
 
-        operator fun get(statusEffect: RegistryEntry<StatusEffect>) = values[statusEffect]
+        operator fun get(statusEffect: Holder<MobEffect>) = values[statusEffect]
     }
 
     private val potions = tree(Potions(this))
 
-    protected fun foundTargetEffect(effect: StatusEffectInstance, health: Float) =
-        potions[effect.effectType]?.isValid(effect, health) ?: false
+    protected fun foundTargetEffect(effect: MobEffectInstance, health: Float) =
+        potions[effect.effect]?.isValid(effect, health) ?: false
 
     protected abstract fun isValidPotion(stack: ItemStack): Boolean
 

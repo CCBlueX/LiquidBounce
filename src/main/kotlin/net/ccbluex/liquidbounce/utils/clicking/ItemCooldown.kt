@@ -41,7 +41,7 @@ open class ItemCooldown : Configurable("ItemCooldown", aliases = listOf("Cooldow
      * @see net.minecraft.entity.player.PlayerEntity.getAttackCooldownProgress
      */
     fun cooldownProgress(baseTime: Int = 0) =
-        (player.ticksSinceLastAttack + baseTime).toFloat() / player.attackCooldownProgressPerTick
+        (player.attackStrengthTicker + baseTime).toFloat() / player.currentItemAttackStrengthDelay
 
     /**
      * Generates a new cooldown based on the range that was set by the user.

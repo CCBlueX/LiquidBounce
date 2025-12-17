@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.utils.combat.EntityTargetClassification
 import net.ccbluex.liquidbounce.utils.combat.EntityTargetingInfo
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.PriorityField
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
 
 @Nameable("attack")
 class AttackEntityEvent(

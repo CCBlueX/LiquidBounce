@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.minecraft.item.Items
+import net.minecraft.world.item.Items
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura as KillAura
 
 private const val MILLISECONDS_PER_TICK = 50

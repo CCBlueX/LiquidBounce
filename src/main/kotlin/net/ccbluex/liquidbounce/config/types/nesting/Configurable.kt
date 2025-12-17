@@ -45,15 +45,15 @@ import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.kotlin.toEnumSet
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.block.Block
-import net.minecraft.client.util.InputUtil
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.item.Item
-import net.minecraft.sound.SoundEvent
-import net.minecraft.util.Identifier
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.level.block.Block
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.item.Item
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.resources.Identifier
+import net.minecraft.world.phys.Vec3
+import net.minecraft.core.Vec3i
 import org.joml.Vector2f
 import org.lwjgl.glfw.GLFW
 import java.io.File
@@ -309,16 +309,16 @@ open class Configurable(
 
     fun bind(name: String, default: Int = GLFW.GLFW_KEY_UNKNOWN) = bind(
         name,
-        InputBind(InputUtil.Type.KEYSYM, default, InputBind.BindAction.TOGGLE)
+        InputBind(InputConstants.Type.KEYSYM, default, InputBind.BindAction.TOGGLE)
     )
 
     fun bind(name: String, default: InputBind) = BindValue(name, defaultValue = default).apply {
         this@Configurable.inner.add(this)
     }
 
-    fun key(name: String, default: Int) = key(name, InputUtil.Type.KEYSYM.createFromCode(default))
+    fun key(name: String, default: Int) = key(name, InputConstants.Type.KEYSYM.getOrCreate(default))
 
-    fun key(name: String, default: InputUtil.Key = InputUtil.UNKNOWN_KEY) =
+    fun key(name: String, default: InputConstants.Key = InputConstants.UNKNOWN) =
         value(name, default, ValueType.KEY)
 
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
@@ -339,7 +339,7 @@ open class Configurable(
 
     fun vec3i(name: String, default: Vec3i) = value(name, default, ValueType.VECTOR3_I)
 
-    fun vec3d(name: String, default: Vec3d) = value(name, default, ValueType.VECTOR3_D)
+    fun vec3d(name: String, default: Vec3) = value(name, default, ValueType.VECTOR3_D)
 
     fun <C : SequencedSet<Block>> blocks(name: String, default: C) =
         registryList(name, default, ValueType.BLOCK)
@@ -352,7 +352,7 @@ open class Configurable(
     fun <C : SequencedSet<SoundEvent>> sounds(name: String, default: C) =
         registryList(name, default, ValueType.SOUND)
 
-    fun <C : SequencedSet<StatusEffect>> statusEffects(name: String, default: C) =
+    fun <C : SequencedSet<MobEffect>> statusEffects(name: String, default: C) =
         registryList(name, default, ValueType.STATUS_EFFECT)
 
     fun <C : SequencedSet<Identifier>> clientPackets(name: String, default: C) =

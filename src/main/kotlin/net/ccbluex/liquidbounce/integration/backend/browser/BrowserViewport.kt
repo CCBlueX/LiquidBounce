@@ -51,8 +51,8 @@ data class BrowserViewport(
             get() = BrowserViewport(
                 x = 0,
                 y = 0,
-                width = mc.window.framebufferWidth,
-                height = mc.window.framebufferHeight,
+                width = mc.window.width,
+                height = mc.window.height,
                 fullScreen = true
             )
     }

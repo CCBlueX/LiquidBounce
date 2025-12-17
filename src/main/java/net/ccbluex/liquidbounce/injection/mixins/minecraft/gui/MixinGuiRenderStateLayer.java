@@ -30,30 +30,30 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.ArrayList;
 
 @SuppressWarnings("rawtypes")
-@Mixin(GuiRenderState.Layer.class)
+@Mixin(GuiRenderState.Node.class)
 public abstract class MixinGuiRenderStateLayer {
 
-    @WrapOperation(method = "addItem", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "submitItem", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addItem(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "addText", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "submitText", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addText(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "addSpecialElement", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "submitPicturesInPictureState", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addSpecialElement(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "addSimpleElement", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "submitGuiElement", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addSimpleElement(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "addPreparedText", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "submitGlyph", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addPreparedText(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }

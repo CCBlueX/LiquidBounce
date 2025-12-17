@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
 
 /**
  * Displays training overlay in Minecraft
@@ -70,14 +70,14 @@ class OverlayTrainingListener(
             regular("Batch "),
             variable("$progress%"),
             regular("\n".repeat(1)),
-            "[".asPlainText(Formatting.GRAY),
-            "█".repeat(progress / 4).asPlainText(Formatting.GREEN),
-            "░".repeat(25 - progress / 4).asPlainText(Formatting.DARK_GRAY),
-            "]".asPlainText(Formatting.GRAY),
+            "[".asPlainText(ChatFormatting.GRAY),
+            "█".repeat(progress / 4).asPlainText(ChatFormatting.GREEN),
+            "░".repeat(25 - progress / 4).asPlainText(ChatFormatting.DARK_GRAY),
+            "]".asPlainText(ChatFormatting.GRAY),
         )
 
         mc.execute {
-            mc.inGameHud.setOverlayMessage(progressBar, false)
+            mc.gui.setOverlayMessage(progressBar, false)
         }
     }
 

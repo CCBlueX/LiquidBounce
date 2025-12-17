@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.RegistryKey
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.ItemStack
+import net.minecraft.resources.ResourceKey
 
 class EnchantmentValueEstimator(
     private vararg val weightedEnchantments: WeightedEnchantment,
@@ -39,5 +39,5 @@ class EnchantmentValueEstimator(
     override fun compare(o1: ItemStack, o2: ItemStack): Int =
         this.estimateValue(o1).compareTo(this.estimateValue(o2))
 
-    class WeightedEnchantment(val enchantment: RegistryKey<Enchantment>, val factor: Float)
+    class WeightedEnchantment(val enchantment: ResourceKey<Enchantment>, val factor: Float)
 }

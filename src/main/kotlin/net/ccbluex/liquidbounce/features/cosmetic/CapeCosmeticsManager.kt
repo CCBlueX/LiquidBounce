@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.registerTexture
-import net.minecraft.util.Identifier
+import net.minecraft.resources.Identifier
 
 /**
  * A cape cosmetic manager
@@ -113,7 +113,7 @@ object CapeCosmeticsManager : EventListener {
 
     @Suppress("unused")
     private val disconnectHandler = handler<DisconnectEvent> {
-        cachedCapes.values.forEach { mc.textureManager.destroyTexture(it) }
+        cachedCapes.values.forEach { mc.textureManager.release(it) }
         cachedCapes.clear()
     }
 

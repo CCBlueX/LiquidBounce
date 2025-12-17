@@ -46,10 +46,10 @@ import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.item.Items
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.item.Items
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
 
 /**
  * Module Extinguish
@@ -116,7 +116,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
             lastExtinguishPos = null
         }
 
-        if (player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE) || (notDuringCombat && CombatManager.isInCombat)) {
+        if (player.hasEffect(MobEffects.FIRE_RESISTANCE) || (notDuringCombat && CombatManager.isInCombat)) {
             return null
         }
 
@@ -196,7 +196,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
             ),
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = bucket.itemStack,
-            PlayerLocationOnPlacement(position = player.entityPos),
+            PlayerLocationOnPlacement(position = player.position()),
         )
 
         val bestPlacementPlan = findBestBlockPlacementTarget(blockPos, options) ?: return null

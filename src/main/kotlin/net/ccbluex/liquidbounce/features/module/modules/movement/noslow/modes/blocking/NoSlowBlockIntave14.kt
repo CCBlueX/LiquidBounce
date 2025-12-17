@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.world.phys.BlockHitResult
 
 /**
  * tested on mineblaze.net
@@ -36,15 +36,15 @@ internal class NoSlowBlockIntave14(override val parent: ChoiceConfigurable<*>) :
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
-            is PlayerInteractBlockC2SPacket -> {
+            is ServerboundUseItemOnPacket -> {
                 if (player.isUsingItem && player.moving) {
-                    network.sendPacket(
-                        PlayerInteractBlockC2SPacket(
+                    network.send(
+                        ServerboundUseItemOnPacket(
                             packet.hand, BlockHitResult(
-                                packet.blockHitResult.blockPos.toCenterPos(),
-                                packet.blockHitResult.side,
-                                packet.blockHitResult.blockPos,
-                                packet.blockHitResult.isInsideBlock
+                                packet.hitResult.blockPos.center,
+                                packet.hitResult.direction,
+                                packet.hitResult.blockPos,
+                                packet.hitResult.isInside
                             ), packet.sequence
                         )
                     )

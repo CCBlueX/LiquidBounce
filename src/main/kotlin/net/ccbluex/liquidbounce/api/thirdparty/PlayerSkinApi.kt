@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
 import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.entity.player.PlayerSkinType
+import net.minecraft.world.entity.player.PlayerModelType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -34,7 +34,7 @@ import java.io.File
 class PlayerSkinApi(serviceHost: String) : BaseApi(serviceHost) {
 
     private suspend fun uploadSkin(body: RequestBody) {
-        val session = mc.session
+        val session = mc.user
         require(session.accountType != "legacy") {
             "Legacy account can't use this API"
         }
@@ -44,7 +44,7 @@ class PlayerSkinApi(serviceHost: String) : BaseApi(serviceHost) {
         }
     }
 
-    suspend fun changeSkin(url: String, model: PlayerSkinType) {
+    suspend fun changeSkin(url: String, model: PlayerModelType) {
         // https://minecraft.wiki/w/Mojang_API#Change_skin
         val jsonBody = JsonObject().apply {
             addProperty("url", url)
@@ -54,7 +54,7 @@ class PlayerSkinApi(serviceHost: String) : BaseApi(serviceHost) {
         uploadSkin(jsonBody)
     }
 
-    suspend fun uploadSkin(file: File, model: PlayerSkinType) {
+    suspend fun uploadSkin(file: File, model: PlayerModelType) {
         // https://minecraft.wiki/w/Mojang_API#Upload_skin
         val formBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -69,10 +69,10 @@ class PlayerSkinApi(serviceHost: String) : BaseApi(serviceHost) {
         uploadSkin(formBody)
     }
 
-    private val PlayerSkinType.variant
+    private val PlayerModelType.variant
         get() = when (this) {
-            PlayerSkinType.WIDE -> "classic"
-            PlayerSkinType.SLIM -> "slim"
+            PlayerModelType.WIDE -> "classic"
+            PlayerModelType.SLIM -> "slim"
     }
 
 }

@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.render
 
-import net.minecraft.client.render.VertexConsumer
+import com.mojang.blaze3d.vertex.VertexConsumer
 import org.joml.Matrix3x2f
 
 /**

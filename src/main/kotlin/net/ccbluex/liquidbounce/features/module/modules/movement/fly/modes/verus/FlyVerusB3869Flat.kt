@@ -34,9 +34,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.block.FluidBlock
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.level.block.LiquidBlock
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat Verus
@@ -55,15 +55,15 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is ServerboundMovePlayerPacket) {
             packet.onGround = true
         }
     }
 
     @Suppress("unused")
     private val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.block !is FluidBlock && event.pos.y < player.y) {
-            event.shape = VoxelShapes.fullCube()
+        if (event.state.block !is LiquidBlock && event.pos.y < player.y) {
+            event.shape = Shapes.block()
         }
     }
 
@@ -85,11 +85,11 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
     }
 
     override fun disable() {
-        player.velocity.x = 0.0
-        player.velocity.z = 0.0
+        player.deltaMovement.x = 0.0
+        player.deltaMovement.z = 0.0
 
-        network.sendPacket(
-            PlayerMoveC2SPacket.PositionAndOnGround(
+        network.send(
+            ServerboundMovePlayerPacket.Pos(
                 player.x, player.y - 0.5, player.z,
                 false, player.horizontalCollision
             )

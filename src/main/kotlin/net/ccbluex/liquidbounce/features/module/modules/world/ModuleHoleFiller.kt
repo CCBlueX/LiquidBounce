@@ -41,10 +41,10 @@ import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
 import net.ccbluex.liquidbounce.utils.math.from
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.block.Blocks
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.BlockBox
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.level.levelgen.structure.BoundingBox
+import net.minecraft.core.BlockPos
 import org.joml.Vector2d
 import kotlin.math.acos
 import kotlin.math.ceil
@@ -110,7 +110,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
         // all holes, if required 1x1 holes filtered out
         val holes = HoleTracker.holes.filter { Features.ONLY_ONE_BY_ONE !in features || it.type == Hole.Type.ONE_ONE }
 
-        val blockPos = player.blockPos
+        val blockPos = player.blockPosition()
         val selfInHole = holes.any { it.contains(blockPos) }
         if (Features.ONLY_WHEN_SELF_IN_HOLE in features && !selfInHole) {
             return@handler
@@ -158,7 +158,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
                 || holeContext.selfInHole
                 || !hole.positions.intersects(holeContext.selfRegion)
             ) {
-                hole.positions.iterate().mapTo(holeContext.blocks) { it.toImmutable() }
+                hole.positions.iterate().mapTo(holeContext.blocks) { it.immutable() }
             }
         }
     }
@@ -167,8 +167,8 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
         val checkedHoles = hashSetOf<Hole>()
         var remainingItems = availableItems
 
-        world.entities.forEach { entity ->
-            if (entity.squaredDistanceTo(player) > range || entity == player || !entity.shouldBeAttacked()) {
+        world.entitiesForRendering().forEach { entity ->
+            if (entity.distanceToSqr(player) > range || entity == player || !entity.shouldBeAttacked()) {
                 return@forEach
             }
 
@@ -182,7 +182,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
             )
 
             found.sortedByDescending { it.leftDouble() }
-                .mapTo(holeContext.blocks) { BlockPos.fromLong(it.rightLong()) }
+                .mapTo(holeContext.blocks) { BlockPos.of(it.rightLong()) }
             if (remainingItems <= 0) {
                 return
             }
@@ -197,7 +197,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
         found: MutableSet<DoubleLongPair>
     ): Int {
         var remainingItems1 = remainingItems
-        val region = entity.blockPos.expendToBlockBox(fillArea, fillArea, fillArea)
+        val region = entity.blockPosition().expendToBlockBox(fillArea, fillArea, fillArea)
 
         holeContext.holes.forEach { hole ->
             if (hole in checkedHoles) {
@@ -211,7 +211,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
 
             val holeSize = hole.type.size
             remainingItems1 -= holeSize
-            if (remainingItems1 < 0 && !player.abilities.creativeMode) {
+            if (remainingItems1 < 0 && !player.abilities.instabuild) {
                 remainingItems1 += holeSize
                 return@forEach
             }
@@ -221,7 +221,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
                 DoubleLongPair.of(valid.rightDouble(), it.asLong())
             }
 
-            if (remainingItems1 == 0 && !player.abilities.creativeMode) {
+            if (remainingItems1 == 0 && !player.abilities.instabuild) {
                 return 0
             }
         }
@@ -232,9 +232,9 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
     private fun isValidHole(
         hole: Hole,
         entity: Entity,
-        region: BlockBox,
+        region: BoundingBox,
         selfInHole: Boolean,
-        selfRegion: BlockBox
+        selfRegion: BoundingBox
     ) : BooleanDoubleImmutablePair {
         val y = hole.positions.from.y + 1.0
         val movingTowardsHole = isMovingTowardsHole(hole, entity)
@@ -250,9 +250,9 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
     }
 
     private fun isMovingTowardsHole(hole: Hole, entity: Entity): BooleanDoubleImmutablePair {
-        val holePos = hole.positions.from.toCenterPos()
-        val velocity = entity.entityPos.subtract(entity.lastX, entity.lastY, entity.lastZ)
-        val playerPos = entity.entityPos
+        val holePos = hole.positions.from.center
+        val velocity = entity.position().subtract(entity.xo, entity.yo, entity.zo)
+        val playerPos = entity.position()
 
         val normalizedVelocity = Vector2d(velocity.x, velocity.z).normalize()
         val normalizedDelta = Vector2d(holePos.x - playerPos.x, holePos.z - playerPos.z).normalize()
@@ -270,7 +270,7 @@ object ModuleHoleFiller : ClientModule("HoleFiller", Category.WORLD), HoleManage
     private data class HoleContext(
         val holes: List<Hole>,
         val selfInHole: Boolean,
-        val selfRegion: BlockBox,
+        val selfRegion: BoundingBox,
         val blocks: MutableSet<BlockPos>
     )
 

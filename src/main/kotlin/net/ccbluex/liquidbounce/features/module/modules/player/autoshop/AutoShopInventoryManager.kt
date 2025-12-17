@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.kotlin.sumValues
-import net.minecraft.item.ItemStack
-import net.minecraft.item.PotionItem
-import net.minecraft.registry.Registries
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.PotionItem
+import net.minecraft.core.registries.BuiltInRegistries
 
 object AutoShopInventoryManager : EventListener {
 
@@ -43,13 +43,13 @@ object AutoShopInventoryManager : EventListener {
     @Suppress("unused")
     // update the items from the player's inventory every tick
     private val onTick = handler<GameTickEvent> {
-        inventoryItems += player.inventory.mainStacks
+        inventoryItems += player.inventory.nonEquipmentItems
         inventoryItems += player.armorItems
-        inventoryItems += player.offHandStack
+        inventoryItems += player.offhandItem
 
         val newItems = Object2IntOpenHashMap<String>()
         inventoryItems.filter { !it.isEmpty }.forEach { stack ->
-            val id = Registries.ITEM.getId(stack.item).path
+            val id = BuiltInRegistries.ITEM.getKey(stack.item).path
             newItems.addTo(id, stack.count)
 
             // collects all kinds of colorful blocks together
@@ -64,7 +64,7 @@ object AutoShopInventoryManager : EventListener {
             // groups potions by their effects
             if (stack.item is PotionItem) {
                 stack.getPotionEffects().forEach { effect ->
-                    val potionID = Registries.STATUS_EFFECT.getId(effect.effectType.value())?.path
+                    val potionID = BuiltInRegistries.MOB_EFFECT.getKey(effect.effect.value())?.path
                     val newID = "$POTION_PREFIX$potionID"
                     if (potionID != null) {
                         newItems.addTo(newID, stack.count)
@@ -74,8 +74,8 @@ object AutoShopInventoryManager : EventListener {
 
             // groups items by enchantments
             // example: [chainmail_chestplate:protection:2 = 1, iron_sword:sharpness:3 = 1]
-            stack.enchantments.enchantmentEntries.forEach {
-                val enchantmentID = it.key.idAsString.replace("minecraft:", "")
+            stack.enchantments.entrySet().forEach {
+                val enchantmentID = it.key.registeredName.replace("minecraft:", "")
                 val level = it.intValue
                 val enchantedItemID = "$id:$enchantmentID:$level"
                 newItems.addTo(enchantedItemID, stack.count)

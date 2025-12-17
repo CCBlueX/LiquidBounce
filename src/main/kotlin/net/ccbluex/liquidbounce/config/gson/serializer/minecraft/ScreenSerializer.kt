@@ -23,7 +23,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
-import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screens.Screen
 import java.lang.reflect.Type
 
 object ScreenSerializer : JsonSerializer<Screen> {

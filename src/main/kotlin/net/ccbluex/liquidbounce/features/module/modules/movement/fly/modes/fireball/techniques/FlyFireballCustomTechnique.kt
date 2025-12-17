@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.entity.MovementType
+import net.minecraft.world.entity.MoverType
 
 object FlyFireballCustomTechnique : Choice("Custom") {
 
@@ -74,7 +74,7 @@ object FlyFireballCustomTechnique : Choice("Custom") {
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         RotationManager.setRotationTarget(
-            Rotation(player.yaw, Rotations.pitch),
+            Rotation(player.yRot, Rotations.pitch),
             configurable = Rotations,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleFly
@@ -90,12 +90,12 @@ object FlyFireballCustomTechnique : Choice("Custom") {
 
     @Suppress("unused")
     val playerMoveHandler = sequenceHandler<PlayerMoveEvent> {
-        if (it.type != MovementType.SELF) return@sequenceHandler
+        if (it.type != MoverType.SELF) return@sequenceHandler
 
-        if (player.isOnGround) {
+        if (player.onGround()) {
             if (Jump.enabled) {
                 waitTicks(Jump.delay)
-                player.jump()
+                player.jumpFromGround()
             }
 
             waitTicks(throwDelay)
@@ -109,7 +109,7 @@ object FlyFireballCustomTechnique : Choice("Custom") {
 
         if (YVelocity.enabled) {
             waitTicks(YVelocity.delay)
-            player.velocity.y = YVelocity.velocity.toDouble()
+            player.deltaMovement.y = YVelocity.velocity.toDouble()
         }
 
         waitTicks(disableDelay)

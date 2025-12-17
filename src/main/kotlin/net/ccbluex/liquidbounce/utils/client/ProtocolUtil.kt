@@ -24,7 +24,7 @@ import com.viaversion.viafabricplus.ViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility1_8
 import net.minecraft.SharedConstants
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 // Only runs once
 val usesViaFabricPlus = runCatching {
@@ -34,7 +34,7 @@ val usesViaFabricPlus = runCatching {
     ViaFabricPlus.getImpl().registerOnChangeProtocolVersionCallback { _, _ ->
         // Update the window title
         mc.execute {
-            mc.updateWindowTitle()
+            mc.updateTitle()
         }
     }
 
@@ -45,8 +45,8 @@ val usesViaFabricPlus = runCatching {
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
 val defaultProtocolVersion = ClientProtocolVersion(
-    SharedConstants.getGameVersion().name(),
-    SharedConstants.getGameVersion().protocolVersion()
+    SharedConstants.getCurrentVersion().name(),
+    SharedConstants.getCurrentVersion().protocolVersion()
 )
 
 val protocolVersion: ClientProtocolVersion

@@ -107,7 +107,7 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
         // Auto GG
         if (message.contains("Show some love by typing")) {
             delay(delayResponse.random().milliseconds)
-            network.sendChatMessage("gg")
+            network.sendChat("gg")
             return@sequenceHandler
         }
 
@@ -182,9 +182,9 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
         // Send answer
         val formattedAnswer = answerTemplate.format(answer)
         if (formattedAnswer.startsWith("/")) {
-            network.sendChatCommand(formattedAnswer.substring(1))
+            network.sendCommand(formattedAnswer.substring(1))
         } else {
-            network.sendChatMessage(formattedAnswer)
+            network.sendChat(formattedAnswer)
         }
     }
 }

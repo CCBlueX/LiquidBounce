@@ -35,13 +35,13 @@ import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.client.gl.RenderPipelines
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.item.consume.UseAction
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Identifier
+import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.ItemUseAnimation
+import net.minecraft.world.InteractionResult
+import net.minecraft.resources.Identifier
 
 /**
  * SmartEat module
@@ -51,7 +51,7 @@ import net.minecraft.util.Identifier
 
 object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
 
-    private val HOTBAR_OFFHAND_LEFT_TEXTURE = Identifier.of("hud/hotbar_offhand_left")
+    private val HOTBAR_OFFHAND_LEFT_TEXTURE = Identifier.parse("hud/hotbar_offhand_left")
 
     private val swapBackDelay by int("SwapBackDelay", 5, 1..20)
 
@@ -93,7 +93,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
                 prefersGapples && item == Items.POTION -> {
                     val hasHealthEffect =
                         itemStack.getPotionEffects().any {
-                            it.effectType == StatusEffects.INSTANT_HEALTH
+                            it.effect == MobEffects.INSTANT_HEALTH
                         }
 
                     if (hasHealthEffect) {
@@ -132,14 +132,14 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
 
                 val currentFood = Estimator.findBestFood() ?: return@handler
                 val dc = event.context
-                val scaledWidth = dc.scaledWindowWidth
-                val scaledHeight = dc.scaledWindowHeight
+                val scaledWidth = dc.guiWidth()
+                val scaledHeight = dc.guiHeight()
                 val i: Int = scaledWidth / 2
                 val x = i - 91 - 26 - offset
                 val y = scaledHeight - 16 - 3
-                dc.drawStackOverlay(mc.textRenderer, currentFood.itemStack, x, y)
-                dc.drawItem(currentFood.itemStack, x, y)
-                dc.drawGuiTexture(
+                dc.renderItemDecorations(mc.font, currentFood.itemStack, x, y)
+                dc.renderItem(currentFood.itemStack, x, y)
+                dc.blitSprite(
                     RenderPipelines.GUI_TEXTURED,
                     HOTBAR_OFFHAND_LEFT_TEXTURE, i - 91 - 29 - offset,
                     scaledHeight - 23, 29, 24
@@ -154,7 +154,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
                 return@handler
             }
 
-            if (event.actionResult != ActionResult.PASS) {
+            if (event.actionResult != InteractionResult.PASS) {
                 return@handler
             }
 
@@ -162,7 +162,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
 
             val alwaysEdible = currentFood.itemStack.foodComponent?.canAlwaysEat == false
 
-            if (!player.canConsume(false) && alwaysEdible) {
+            if (!player.canEat(false) && alwaysEdible) {
                 return@handler
             }
 
@@ -171,7 +171,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
             }
 
             // Only use silent offhand if we have tools in hand.
-            if (!player.mainHandStack.isMiningTool) {
+            if (!player.mainHandItem.isMiningTool) {
                 return@handler
             }
 
@@ -185,9 +185,9 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
 
         @Suppress("unused")
         private val tickHandler = tickHandler {
-            val useAction = player.activeItem.useAction
+            val useAction = player.useItem.useAnimation
 
-            if (useAction != UseAction.EAT && useAction != UseAction.DRINK) {
+            if (useAction != ItemUseAnimation.EAT && useAction != ItemUseAnimation.DRINK) {
                 return@tickHandler
             }
 
@@ -212,7 +212,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
 
         @Suppress("unused")
         private val tickHandler = tickHandler {
-            if (player.hungerManager.foodLevel < minHunger) {
+            if (player.foodData.foodLevel < minHunger) {
                 if (notDuringCombat && CombatManager.isInCombat) {
                     return@tickHandler
                 }
@@ -220,7 +220,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
                 CombatManager.pauseCombatForAtLeast(combatPauseTime)
                 tickUntil {
                     eat()
-                    player.hungerManager.foodLevel > minHunger
+                    player.foodData.foodLevel > minHunger
                 }
 
                 forceUseKey = false
@@ -229,7 +229,7 @@ object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
 
         @Suppress("unused")
         private val keyBindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
-            if (event.keyBinding == mc.options.useKey && forceUseKey) {
+            if (event.keyBinding == mc.options.keyUse && forceUseKey) {
                 CombatManager.pauseCombatForAtLeast(combatPauseTime)
                 event.isPressed = true
             }

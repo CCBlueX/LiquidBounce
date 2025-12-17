@@ -35,11 +35,11 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.item.BowItem
-import net.minecraft.item.TridentItem
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.world.item.BowItem
+import net.minecraft.world.item.TridentItem
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoot", true) {
 
@@ -80,14 +80,14 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
     private val tickHandler = handler<GameTickEvent> {
         forceUncharged = false
 
-        val currentItem = player.activeItem?.item
+        val currentItem = player.useItem?.item
 
         // Should check if player is using bow
         if (currentItem !is BowItem && currentItem !is TridentItem) {
             return@handler
         }
 
-        if (player.itemUseTime < charged + getChargedRandom()) { // Wait until the bow is fully charged
+        if (player.ticksUsingItem < charged + getChargedRandom()) { // Wait until the bow is fully charged
             return@handler
         }
 
@@ -121,14 +121,14 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
 
     @Suppress("unused")
     private val keybindHandler = handler<KeybindIsPressedEvent> { event ->
-        if (event.keyBinding == mc.options.useKey && forceUncharged) {
+        if (event.keyBinding == mc.options.keyUse && forceUncharged) {
             event.isPressed = false
         }
     }
 
-    private val playerHitboxBase = Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
+    private val playerHitboxBase = AABB(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
 
-    fun getHypotheticalHit(): AbstractClientPlayerEntity? {
+    fun getHypotheticalHit(): AbstractClientPlayer? {
         val rotation = RotationManager.serverRotation
         val yaw = rotation.yaw
         val pitch = rotation.pitch
@@ -141,8 +141,8 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
 
         val arrow = SimulatedArrow(
             world,
-            player.eyePos,
-            Vec3d(vX, vY, vZ),
+            player.eyePosition,
+            Vec3(vX, vY, vZ),
             collideEntities = false
         )
 
@@ -157,9 +157,9 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
                 val playerSnapshot = player.getSnapshotAt(i)
 
                 val playerHitBox =
-                    playerHitboxBase.expand(0.3).offset(playerSnapshot.pos)
+                    playerHitboxBase.inflate(0.3).move(playerSnapshot.pos)
 
-                val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
+                val raycastResult = playerHitBox.clip(lastPos, arrow.pos)
 
                 raycastResult.orElse(null)?.let {
                     return entity
@@ -170,10 +170,10 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
         return null
     }
 
-    private fun findAndBuildSimulatedPlayers(): List<Pair<AbstractClientPlayerEntity, SimulatedPlayerCache>> {
-        return world.players.filter {
+    private fun findAndBuildSimulatedPlayers(): List<Pair<AbstractClientPlayer, SimulatedPlayerCache>> {
+        return world.players().filter {
             it != player &&
-                Line(player.entityPos, player.rotationVector).squaredDistanceTo(it.entityPos) < 10.0 * 10.0
+                Line(player.position(), player.lookAngle).squaredDistanceTo(it.position()) < 10.0 * 10.0
         }.map {
             Pair(it, PlayerSimulationCache.getSimulationForOtherPlayers(it))
         }

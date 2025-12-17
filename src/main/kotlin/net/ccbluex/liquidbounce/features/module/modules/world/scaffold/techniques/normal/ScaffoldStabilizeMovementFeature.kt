@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
 object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "StabilizeMovement",
     true) {
@@ -37,18 +37,18 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalT
     @Suppress("unused")
     val moveEvent = handler<MovementInputEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
         // Prevents the stabilization from giving the player a boost before jumping that cannot be corrected mid-air.
-        if (event.jump && player.isOnGround) {
+        if (event.jump && player.onGround()) {
             return@handler
         }
 
         val optimalLine = ModuleScaffold.currentOptimalLine ?: return@handler
         val currentInput = event.directionalInput
 
-        val nearestPointOnLine = optimalLine.getNearestPointTo(player.entityPos)
+        val nearestPointOnLine = optimalLine.getNearestPointTo(player.position())
 
-        val vecToLine = nearestPointOnLine.subtract(player.entityPos)
-        val horizontalVelocity = Vec3d(player.velocity.x, 0.0, player.velocity.z)
-        val isRunningTowardsLine = vecToLine.dotProduct(horizontalVelocity) > 0.0
+        val vecToLine = nearestPointOnLine.subtract(player.position())
+        val horizontalVelocity = Vec3(player.deltaMovement.x, 0.0, player.deltaMovement.z)
+        val isRunningTowardsLine = vecToLine.dot(horizontalVelocity) > 0.0
 
         val maxDeviation =
             if (isRunningTowardsLine) {
@@ -57,11 +57,11 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalT
                 MAX_CENTER_DEVIATION
             }
 
-        if (nearestPointOnLine.squaredDistanceTo(player.entityPos) < maxDeviation * maxDeviation) {
+        if (nearestPointOnLine.distanceToSqr(player.position()) < maxDeviation * maxDeviation) {
             return@handler
         }
 
-        val dgs = getDegreesRelativeToView(nearestPointOnLine.subtract(player.entityPos), player.yaw)
+        val dgs = getDegreesRelativeToView(nearestPointOnLine.subtract(player.position()), player.yRot)
 
         val newDirectionalInput = getDirectionalInputForDegrees(DirectionalInput.NONE, dgs, deadAngle = 0.0F)
 

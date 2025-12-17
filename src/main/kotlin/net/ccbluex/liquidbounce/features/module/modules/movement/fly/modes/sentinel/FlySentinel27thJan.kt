@@ -50,16 +50,16 @@ internal object FlySentinel27thJan : Choice("Sentinel27thJan") {
         get() = ModuleFly.modes
 
     val repeatable = tickHandler {
-        if (player.isOnGround) {
+        if (player.onGround()) {
             return@tickHandler
         }
 
-        player.velocity.y = when {
-            player.isSneaking -> -0.4
-            player.input.playerInput.jump -> 0.42
+        player.deltaMovement.y = when {
+            player.isShiftKeyDown -> -0.4
+            player.input.keyPresses.jump -> 0.42
             else -> 0.2
         }
-        player.velocity = player.velocity.withStrafe(speed = horizontalSpeed.random().toDouble())
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = horizontalSpeed.random().toDouble()))
 
         waitTicks(6)
     }

@@ -197,7 +197,7 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
         .replace("%enabledModules%", ModuleManager.count { it.running }.toString())
         .replace("%totalModules%", ModuleManager.count().toString())
         .replace("%protocol%", protocolVersion.let { "${it.name} (${it.version})" })
-        .replace("%server%", (mc.currentServerEntry?.address ?: "none").hideSensitiveAddress())
+        .replace("%server%", (mc.currentServer?.ip ?: "none").hideSensitiveAddress())
 
     private inline fun IPCClient.sendRichPresence(builderAction: RichPresence.Builder.() -> Unit) =
         sendRichPresence(RichPresence.Builder().apply(builderAction).build())

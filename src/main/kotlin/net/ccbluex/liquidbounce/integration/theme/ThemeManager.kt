@@ -37,9 +37,9 @@ import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ChatScreen
-import net.minecraft.resource.SynchronousResourceReloader
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.ChatScreen
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import java.io.File
 
 object ThemeManager : Configurable("theme") {
@@ -80,7 +80,7 @@ object ThemeManager : Configurable("theme") {
             }
         }
 
-    private val takesInputHandler = InputAcceptor { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
+    private val takesInputHandler = InputAcceptor { mc.screen != null && mc.screen !is ChatScreen }
 
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->
@@ -94,8 +94,8 @@ object ThemeManager : Configurable("theme") {
             return@onChange enabled
         }
 
-    internal val reloader = SynchronousResourceReloader { resourceManager ->
-        themes.forEach { it.reload(resourceManager) }
+    internal val reloader = ResourceManagerReloadListener { resourceManager ->
+        themes.forEach { it.onResourceManagerReload(resourceManager) }
         logger.info("Reloaded ${themes.size} themes.")
     }
 
@@ -216,7 +216,7 @@ object ThemeManager : Configurable("theme") {
     }
 
     @Suppress("LongParameterList")
-    fun drawBackground(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
+    fun drawBackground(context: GuiGraphics, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
         val background = if (shaderEnabled) {
             theme.themeBackgroundShader
         } else {

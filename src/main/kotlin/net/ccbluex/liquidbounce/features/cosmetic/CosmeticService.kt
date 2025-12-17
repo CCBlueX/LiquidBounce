@@ -96,7 +96,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
         val clientAccount = ClientAccountManager.clientAccount
 
         // Check if the client account is available and the requested UUID is the same as the session UUID
-        if ((uuid == mc.session.uuidOrNull || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
+        if ((uuid == mc.user.profileId || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
             clientAccount.cosmetics?.let { cosmetics ->
                 done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return)
                 return
@@ -149,7 +149,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
         // Check if the client account is available and the requested UUID is the same as the session UUID
         val clientAccount = ClientAccountManager.clientAccount
 
-        if ((uuid == mc.session.uuidOrNull || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
+        if ((uuid == mc.user.profileId || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
             clientAccount.cosmetics?.let { cosmetics ->
                 return cosmetics.find { cosmetic -> cosmetic.category == category }
             }
@@ -194,7 +194,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
         if (session.accessToken.length < 2) {
             return@handler
         }
-        val uuid = session.uuidOrNull ?: return@handler
+        val uuid = session.profileId ?: return@handler
 
         transferTemporaryOwnership(uuid)
     }

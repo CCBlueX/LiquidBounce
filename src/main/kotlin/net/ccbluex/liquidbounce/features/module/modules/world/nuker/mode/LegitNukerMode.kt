@@ -40,9 +40,9 @@ import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.BlockPos
 import kotlin.math.max
 
 object LegitNukerMode : Choice("Legit") {
@@ -63,7 +63,7 @@ object LegitNukerMode : Choice("Legit") {
 
     @Suppress("unused")
     private val simulatedTickHandler = handler<RotationUpdateEvent> {
-        if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
+        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
             this.currentTarget = null
             return@handler
         }
@@ -125,7 +125,7 @@ object LegitNukerMode : Choice("Legit") {
      * Chooses the best block to break next and aims at it.
      */
     private fun lookupTarget(): BlockPos? {
-        val eyes = player.eyePos
+        val eyes = player.eyePosition
         val packetMine = ModulePacketMine.running
 
         // Check if the current target is still valid

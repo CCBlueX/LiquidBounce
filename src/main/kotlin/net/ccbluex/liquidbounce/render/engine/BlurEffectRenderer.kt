@@ -35,8 +35,8 @@ import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.writeStd140
-import net.minecraft.client.gl.SimpleFramebuffer
-import net.minecraft.client.gui.screen.ChatScreen
+import com.mojang.blaze3d.pipeline.TextureTarget
+import net.minecraft.client.gui.screens.ChatScreen
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
@@ -48,14 +48,14 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             field = value
         }
 
-    val overlayFramebuffer = SimpleFramebuffer(
+    val overlayFramebuffer = TextureTarget(
         "${LiquidBounce.CLIENT_NAME} BlurOverlay",
-        mc.window.framebufferWidth,
-        mc.window.framebufferHeight,
+        mc.window.width,
+        mc.window.height,
         true
     )
 
-    private val overlaySampler = RenderSystem.getSamplerCache().get(FilterMode.NEAREST)
+    private val overlaySampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
 
     private fun clearOverlay() {
         overlayFramebuffer.clearColorAndDepth()
@@ -66,7 +66,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
     @Suppress("unused")
     private val resizeHandler = handler<FramebufferResizeEvent> {
-        if ((it.width != this.overlayFramebuffer.textureWidth || it.height != this.overlayFramebuffer.textureHeight)) {
+        if ((it.width != this.overlayFramebuffer.width || it.height != this.overlayFramebuffer.height)) {
             if (it.width == 0 || it.height == 0) {
                 clearOverlay()
             } else {
@@ -81,7 +81,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     ).slice()
 
     private fun hasNoFullScreen(): Boolean =
-        mc.currentScreen == null || mc.currentScreen is ChatScreen || FeatureSilentScreen.shouldHide
+        mc.screen == null || mc.screen is ChatScreen || FeatureSilentScreen.shouldHide
 
     fun shouldDrawBlur(): Boolean = inGame && hasNoFullScreen() &&
         ModuleHud.running && ModuleHud.isBlurEffectActive
@@ -99,10 +99,10 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             putFloat(ModuleHud.Blur.alphaBlendRange.endInclusive)
         }
 
-        mc.framebuffer.createRenderPass({ "GUI blur pass" }).use { pass ->
+        mc.mainRenderTarget.createRenderPass({ "GUI blur pass" }).use { pass ->
             pass.setPipeline(ClientRenderPipelines.GuiBlur)
-            pass.bindTexture("texture0", mc.framebuffer.colorAttachmentView, overlaySampler)
-            pass.bindTexture("overlay", overlayFramebuffer.colorAttachmentView, overlaySampler)
+            pass.bindTexture("texture0", mc.mainRenderTarget.colorTextureView, overlaySampler)
+            pass.bindTexture("overlay", overlayFramebuffer.colorTextureView, overlaySampler)
             pass.setUniform("BlurData", GUI_BLUR_UNIFORM_BUFFER)
             pass.draw(0, 3)
         }
@@ -118,13 +118,13 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
      * @see net.minecraft.client.gl.Framebuffer.drawBlit
      */
     private fun drawOverlayBlit() {
-        mc.framebuffer.colorAttachmentView!!.createRenderPass(
+        mc.mainRenderTarget.colorTextureView!!.createRenderPass(
             { "GUI blur overlay blit pass" },
         ).use { renderPass ->
             renderPass.setPipeline(ClientRenderPipelines.JCEF.Blit)
             RenderSystem.bindDefaultUniforms(renderPass)
 
-            renderPass.bindTexture("InSampler", overlayFramebuffer.colorAttachmentView, overlaySampler)
+            renderPass.bindTexture("InSampler", overlayFramebuffer.colorTextureView, overlaySampler)
             renderPass.draw(0, 3)
         }
     }

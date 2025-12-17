@@ -21,15 +21,15 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.features.spoofer.SpooferTranslation
-import net.minecraft.resource.AbstractFileResourcePack
-import net.minecraft.resource.DefaultResourcePack
-import net.minecraft.resource.ResourcePack
-import net.minecraft.text.KeybindTextContent
-import net.minecraft.text.MutableText
-import net.minecraft.text.StringVisitable
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.text.TranslatableTextContent
+import net.minecraft.server.packs.AbstractPackResources
+import net.minecraft.server.packs.VanillaPackResources
+import net.minecraft.server.packs.PackResources
+import net.minecraft.network.chat.contents.KeybindContents
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.FormattedText
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.contents.TranslatableContents
 import java.util.*
 
 object VanillaTranslationRecognizer {
@@ -42,40 +42,42 @@ object VanillaTranslationRecognizer {
         }
     }
 
-    fun isPackLegit(pack: ResourcePack): Boolean {
-        return pack is DefaultResourcePack || pack is AbstractFileResourcePack
+    fun isPackLegit(pack: PackResources): Boolean {
+        return pack is VanillaPackResources || pack is AbstractPackResources
     }
 
     var isBuildingVanillaKeybinds = false
 }
 
-fun filterNonVanillaText(text: Text): Text {
+fun filterNonVanillaText(text: Component): Component {
     if (!SpooferTranslation.running) {
         return text
     }
 
-    val result: MutableText = when (val content = text.content) {
-        is KeybindTextContent -> {
-            val keybind: String = content.key
+    val result: MutableComponent = when (val content = text.contents) {
+        is KeybindContents -> {
+            val keybind: String = content.name
 
             if (VanillaTranslationRecognizer.vanillaKeybinds.contains(keybind)) {
-                MutableText.of(content)
+                MutableComponent.create(content)
             } else {
-                MutableText.of(SuppressedKeybindTextContent(keybind))
+                MutableComponent.create(SuppressedKeybindTextContent(keybind))
             }
         }
 
-        is TranslatableTextContent -> {
+        is TranslatableContents -> {
             val translationKey: String = content.key
 
             if (VanillaTranslationRecognizer.vanillaTranslations.contains(translationKey)) {
-                MutableText.of(content)
+                MutableComponent.create(content)
             } else {
-                MutableText.of(SuppressedTranslatableTextContent(translationKey, content.fallback, content.args))
+                MutableComponent.create(
+                    SuppressedTranslatableTextContent(translationKey, content.fallback, content.args)
+                )
             }
         }
 
-        else -> MutableText.of(text.content)
+        else -> MutableComponent.create(text.contents)
     }
 
     result.setStyle(text.style)
@@ -87,28 +89,28 @@ fun filterNonVanillaText(text: Text): Text {
     return result
 }
 
-class SuppressedKeybindTextContent(key: String) : KeybindTextContent(key) {
-    private val translated: Text = Text.of(key)
+class SuppressedKeybindTextContent(key: String) : KeybindContents(key) {
+    private val translated: Component = Component.nullToEmpty(key)
 
-    override fun <T : Any?> visit(visitor: StringVisitable.Visitor<T>?): Optional<T> {
+    override fun <T : Any> visit(visitor: FormattedText.ContentConsumer<T>): Optional<T> {
         return translated.visit(visitor)
     }
 
-    override fun <T : Any?> visit(visitor: StringVisitable.StyledVisitor<T>?, style: Style?): Optional<T> {
+    override fun <T : Any> visit(visitor: FormattedText.StyledContentConsumer<T>, style: Style): Optional<T> {
         return translated.visit(visitor, style)
     }
 }
 
-class SuppressedTranslatableTextContent(key: String, fallback: String?, args: Array<Any>) :
-    TranslatableTextContent(key, fallback, args) {
+private class SuppressedTranslatableTextContent(key: String, fallback: String?, args: Array<Any>) :
+    TranslatableContents(key, fallback, args) {
 
-    private val translated: Text = Text.of(fallback ?: key)
+    private val translated: Component = Component.nullToEmpty(fallback ?: key)
 
-    override fun <T : Any?> visit(visitor: StringVisitable.Visitor<T>?): Optional<T> {
+    override fun <T : Any> visit(visitor: FormattedText.ContentConsumer<T>): Optional<T> {
         return translated.visit(visitor)
     }
 
-    override fun <T : Any?> visit(visitor: StringVisitable.StyledVisitor<T>?, style: Style?): Optional<T> {
+    override fun <T : Any> visit(visitor: FormattedText.StyledContentConsumer<T>, style: Style): Optional<T> {
         return translated.visit(visitor, style)
     }
 }

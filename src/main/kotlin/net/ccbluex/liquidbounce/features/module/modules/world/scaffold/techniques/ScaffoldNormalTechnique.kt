@@ -52,12 +52,12 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.entity.EntityPose
-import net.minecraft.item.ItemStack
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec3
+import net.minecraft.core.Vec3i
 import kotlin.math.round
 import kotlin.random.Random
 
@@ -81,14 +81,14 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
     private var randomization = Random.nextDouble(-0.02, 0.02)
 
     override fun findPlacementTarget(
-        predictedPos: Vec3d,
-        predictedPose: EntityPose,
+        predictedPos: Vec3,
+        predictedPose: Pose,
         optimalLine: Line?,
         bestStack: ItemStack
     ): BlockPlacementTarget? {
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityComparator: Comparator<Vec3i> = if (optimalLine != null) {
-            compareByDescending { vec -> optimalLine.squaredDistanceTo(Vec3d.ofCenter(vec)) }
+            compareByDescending { vec -> optimalLine.squaredDistanceTo(Vec3.atCenterOf(vec)) }
         } else {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
         }
@@ -124,7 +124,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             return when (ScaffoldTellyFeature.resetMode) {
                 Mode.REVERSE -> Rotation(
                     round(player.rotation.yaw / 45) * 45,
-                    if (player.pitch < 45f) 45f else player.pitch
+                    if (player.xRot < 45f) 45f else player.xRot
                 )
 
                 Mode.RESET -> null
@@ -159,7 +159,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         return null
     }
 
-    private fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose, optimalLine: Line?):
+    private fun getFacePositionFactoryForConfig(predictedPos: Vec3, predictedPose: Pose, optimalLine: Line?):
         FaceTargetPositionFactory {
         val config = PositionFactoryConfiguration(
             predictedPos.add(0.0, player.getEyeHeight(predictedPose).toDouble(), 0.0),

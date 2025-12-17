@@ -29,22 +29,22 @@ import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.network.ClientPlayerInteractionManager
-import net.minecraft.client.network.SequencedPacketCreator
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemUsageContext
-import net.minecraft.network.listener.ClientPlayPacketListener
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.world.GameMode
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.client.multiplayer.MultiPlayerGameMode
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.UseOnContext
+import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.level.GameType
 import org.apache.commons.lang3.mutable.MutableObject
 import java.util.*
 
@@ -60,9 +60,17 @@ internal fun sendStopSneaking() {
     network.sendPacket(PlayerSneakPacket.STOP)
 }
 
+fun sendStartSprinting() {
+    network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_SPRINTING))
+}
+
+fun sendStopSprinting() {
+    network.send(ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING))
+}
+
 @Suppress("LongParameterList")
 fun clickBlockWithSlot(
-    player: ClientPlayerEntity,
+    player: LocalPlayer,
     rayTraceResult: BlockHitResult,
     slot: Int,
     swingMode: SwingMode,
@@ -70,13 +78,13 @@ fun clickBlockWithSlot(
     sequenced: Boolean = true
 ) {
     val hand = if (slot == OffHandSlot.hotbarSlotForServer) {
-        Hand.OFF_HAND
+        InteractionHand.OFF_HAND
     } else {
-        Hand.MAIN_HAND
+        InteractionHand.MAIN_HAND
     }
 
     val prevHotbarSlot = player.inventory.selectedSlot
-    if (hand == Hand.MAIN_HAND) {
+    if (hand == InteractionHand.MAIN_HAND) {
         if (switchMode == SwitchMode.NONE && slot != prevHotbarSlot) {
             // the slot is not selected and we can't switch
             return
@@ -85,111 +93,111 @@ fun clickBlockWithSlot(
         player.inventory.selectedSlot = slot
 
         if (slot != prevHotbarSlot) {
-            player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(slot))
+            player.connection.send(ServerboundSetCarriedItemPacket(slot))
         }
     }
 
     if (sequenced) {
-        interaction.sendSequencedPacket(world) { sequence ->
-            PlayerInteractBlockC2SPacket(hand, rayTraceResult, sequence)
+        interaction.startPrediction(world) { sequence ->
+            ServerboundUseItemOnPacket(hand, rayTraceResult, sequence)
         }
     } else {
-        network.sendPacket(PlayerInteractBlockC2SPacket(hand, rayTraceResult, 0))
+        network.send(ServerboundUseItemOnPacket(hand, rayTraceResult, 0))
     }
 
-    val itemUsageContext = ItemUsageContext(player, hand, rayTraceResult)
+    val itemUsageContext = UseOnContext(player, hand, rayTraceResult)
 
-    val itemStack = player.inventory.getStack(slot)
+    val itemStack = player.inventory.getItem(slot)
 
-    val actionResult: ActionResult
+    val actionResult: InteractionResult
 
     if (player.isCreative) {
         val i = itemStack.count
-        actionResult = itemStack.useOnBlock(itemUsageContext)
+        actionResult = itemStack.useOn(itemUsageContext)
         itemStack.count = i
     } else {
-        actionResult = itemStack.useOnBlock(itemUsageContext)
+        actionResult = itemStack.useOn(itemUsageContext)
     }
 
     if (actionResult.shouldSwingHand()) {
         swingMode.swing(hand)
     }
 
-    if (slot != prevHotbarSlot && hand == Hand.MAIN_HAND && switchMode == SwitchMode.SILENT) {
-        player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(prevHotbarSlot))
+    if (slot != prevHotbarSlot && hand == InteractionHand.MAIN_HAND && switchMode == SwitchMode.SILENT) {
+        player.connection.send(ServerboundSetCarriedItemPacket(prevHotbarSlot))
     }
 
     player.inventory.selectedSlot = prevHotbarSlot
 }
 
 /**
- * [ClientPlayerInteractionManager.interactItem] but with custom rotations.
+ * [MultiPlayerGameMode.interactItem] but with custom rotations.
  */
-fun ClientPlayerInteractionManager.interactItem(
-    player: PlayerEntity,
-    hand: Hand,
+fun MultiPlayerGameMode.interactItem(
+    player: Player,
+    hand: InteractionHand,
     yaw: Float,
     pitch: Float
-): ActionResult {
-    if (gameMode == GameMode.SPECTATOR) {
-        return ActionResult.PASS
+): InteractionResult {
+    if (localPlayerMode == GameType.SPECTATOR) {
+        return InteractionResult.PASS
     }
 
-    this.syncSelectedSlot()
-    val mutableObject = MutableObject<ActionResult>()
-    this.sendSequencedPacket(world, SequencedPacketCreator { sequence: Int ->
-        val playerInteractItemC2SPacket = PlayerInteractItemC2SPacket(hand, sequence, yaw, pitch)
-        val itemStack = player.getStackInHand(hand)
-        if (player.itemCooldownManager.isCoolingDown(itemStack)) {
-            mutableObject.setValue(ActionResult.PASS)
-            return@SequencedPacketCreator playerInteractItemC2SPacket
+    this.ensureHasSentCarriedItem()
+    val mutableObject = MutableObject<InteractionResult>()
+    this.startPrediction(world) { sequence ->
+        val playerInteractItemC2SPacket = ServerboundUseItemPacket(hand, sequence, yaw, pitch)
+        val itemStack = player.getItemInHand(hand)
+        if (player.cooldowns.isOnCooldown(itemStack)) {
+            mutableObject.setValue(InteractionResult.PASS)
+            return@startPrediction playerInteractItemC2SPacket
         }
 
         val typedActionResult = itemStack.use(world, player, hand)
-        val itemStack2 = if (typedActionResult is ActionResult.Success) {
+        val itemStack2 = if (typedActionResult is InteractionResult.Success) {
             Objects.requireNonNullElseGet<ItemStack>(
-                typedActionResult.newHandStack
-            ) { player.getStackInHand(hand) } as ItemStack
+                typedActionResult.heldItemTransformedTo()
+            ) { player.getItemInHand(hand) } as ItemStack
         } else {
-            player.getStackInHand(hand)
+            player.getItemInHand(hand)
         }
 
         if (itemStack2 != itemStack) {
-            player.setStackInHand(hand, itemStack2)
+            player.setItemInHand(hand, itemStack2)
         }
 
         mutableObject.setValue(typedActionResult)
-        return@SequencedPacketCreator playerInteractItemC2SPacket
-    })
+        return@startPrediction playerInteractItemC2SPacket
+    }
 
-    return mutableObject.value
+    return mutableObject.get()
 }
 
 fun handlePacket(packet: Packet<*>) =
-    runCatching { (packet as Packet<ClientPlayPacketListener>).apply(mc.networkHandler) }
+    runCatching { (packet as Packet<ClientGamePacketListener>).handle(mc.connection!!) }
 
 fun sendPacketSilently(packet: Packet<*>) {
     // hack fix for the packet handler not being called on Rotation Manager for tracking
     val packetEvent = PacketEvent(TransferOrigin.OUTGOING, packet, false)
     RotationManager.packetHandler.handler.accept(packetEvent)
     ModulePacketLogger.onPacket(TransferOrigin.OUTGOING, packet)
-    mc.networkHandler?.connection?.send(packetEvent.packet, null)
+    mc.connection?.connection?.send(packetEvent.packet, null)
 }
 
-enum class MovePacketType(override val choiceName: String, val generatePacket: () -> PlayerMoveC2SPacket)
+enum class MovePacketType(override val choiceName: String, val generatePacket: () -> ServerboundMovePlayerPacket)
     : NamedChoice {
     ON_GROUND_ONLY("OnGroundOnly", {
-        PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround, player.horizontalCollision)
+        ServerboundMovePlayerPacket.StatusOnly(player.onGround(), player.horizontalCollision)
     }),
     POSITION_AND_ON_GROUND("PositionAndOnGround", {
-        PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, player.isOnGround,
+        ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, player.onGround(),
             player.horizontalCollision)
     }),
     LOOK_AND_ON_GROUND("LookAndOnGround", {
-        PlayerMoveC2SPacket.LookAndOnGround(player.yaw, player.pitch, player.isOnGround, player.horizontalCollision)
+        ServerboundMovePlayerPacket.Rot(player.yRot, player.xRot, player.onGround(), player.horizontalCollision)
     }),
     FULL("Full", {
-        PlayerMoveC2SPacket.Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround,
+        ServerboundMovePlayerPacket.PosRot(player.x, player.y, player.z, player.yRot, player.xRot, player.onGround(),
             player.horizontalCollision)
     });
 }

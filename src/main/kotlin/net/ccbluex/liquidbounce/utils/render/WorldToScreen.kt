@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.aiming.utils.toVec3d
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.minecraft.util.math.Vec2f
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec2
+import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import java.text.NumberFormat
@@ -50,7 +50,7 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
     private val renderHandler = handler<WorldRenderEvent>(priority = READ_FINAL_STATE) { event ->
         val matrixStack = event.matrixStack
 
-        this.mvpMatrix.set(matrixStack.peek().positionMatrix)
+        this.mvpMatrix.set(matrixStack.last().pose())
 
         // Important: here we need this buffer to be USAGE_MAP_READ, so add mixins at all sources.
         // Usages (2025/11/09, 1.21.6):
@@ -69,32 +69,32 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
     @JvmStatic
     @JvmOverloads
     fun calculateScreenPos(
-        pos: Vec3d,
-        cameraPos: Vec3d = mc.gameRenderer.camera.cameraPos,
+        pos: Vec3,
+        cameraPos: Vec3 = mc.gameRenderer.mainCamera.position(),
     ): Vec3f? {
         val transformedPos = cacheVec3f.set(pos).sub(cameraPos)
             .mulProject(cacheMatrix.set(projectionMatrix).mul(mvpMatrix))
 
-        val scaleFactor = mc.window.scaleFactor
+        val scaleFactor = mc.window.guiScale
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
         val screenPos = transformedPos.mul(1.0F, -1.0F, 1.0F).add(1.0F, 1.0F, 0.0F)
-            .mul(guiScaleMul * mc.framebuffer.textureWidth, guiScaleMul * mc.framebuffer.textureHeight, 1.0F)
+            .mul(guiScaleMul * mc.mainRenderTarget.width, guiScaleMul * mc.mainRenderTarget.height, 1.0F)
 
         return if (transformedPos.z < 1.0F) Vec3f(screenPos.x, screenPos.y, transformedPos.z) else null
     }
 
     @JvmStatic
     @JvmOverloads
-    fun calculateMouseRay(posOnScreen: Vec2f, cameraPos: Vec3d = mc.gameRenderer.camera.cameraPos): Line {
+    fun calculateMouseRay(posOnScreen: Vec2, cameraPos: Vec3 = mc.gameRenderer.mainCamera.position()): Line {
         val screenVec = cacheVec3f.set(posOnScreen.x, posOnScreen.y, 1.0F)
 
-        val scaleFactor = mc.window.scaleFactor
+        val scaleFactor = mc.window.guiScale
         val guiScaleMul = 0.5f / scaleFactor.toFloat()
 
         val transformedPos = screenVec.mul(
-            1.0F / (guiScaleMul * mc.framebuffer.textureWidth),
-            1.0F / (guiScaleMul * mc.framebuffer.textureHeight),
+            1.0F / (guiScaleMul * mc.mainRenderTarget.width),
+            1.0F / (guiScaleMul * mc.mainRenderTarget.height),
             1.0F
         ).sub(1.0F, 1.0F, 0.0F).mul(1.0F, -1.0F, 1.0F)
 
@@ -110,6 +110,6 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
 
 }
 
-private inline fun Vector3f.set(vec3d: Vec3d) = set(vec3d.x, vec3d.y, vec3d.z)
+private inline fun Vector3f.set(vec3d: Vec3) = set(vec3d.x, vec3d.y, vec3d.z)
 
-private inline fun Vector3f.sub(vec3d: Vec3d) = sub(vec3d.x.toFloat(), vec3d.y.toFloat(), vec3d.z.toFloat())
+private inline fun Vector3f.sub(vec3d: Vec3) = sub(vec3d.x.toFloat(), vec3d.y.toFloat(), vec3d.z.toFloat())

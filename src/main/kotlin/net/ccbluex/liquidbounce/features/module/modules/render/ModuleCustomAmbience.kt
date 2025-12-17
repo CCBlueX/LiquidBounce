@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.render.fog.FogData
+import net.minecraft.client.renderer.fog.FogData
 
 /**
  * CustomAmbience module

@@ -36,10 +36,10 @@ import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.minecraft.client.render.Camera
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.Camera
+import com.mojang.blaze3d.vertex.VertexConsumer
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.joml.Vector3f
 import org.joml.Vector4f
@@ -67,7 +67,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
     }
 
     private val trails = IdentityHashMap<Entity, Trail>()
-    private val lastPositions = IdentityHashMap<Entity, Vec3d>()
+    private val lastPositions = IdentityHashMap<Entity, Vec3>()
 
     override fun onDisabled() {
         clear()
@@ -118,7 +118,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             return@handler
         }
 
-        val actualPresent = world.players
+        val actualPresent = world.players()
         actualPresent.forEach { player -> updateEntityTrail(time, player) }
         trails.keys.removeIf { key ->
             actualPresent.none { it === key } || !key.isAlive
@@ -131,7 +131,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             return
         }
 
-        lastPositions[entity] = Vec3d(entity.x, entity.y, entity.z)
+        lastPositions[entity] = Vec3(entity.x, entity.y, entity.z)
         trails.getOrPut(entity, ::Trail).positions.add(TrailPart(entity.x, entity.y, entity.z, time))
     }
 
@@ -191,7 +191,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
                 ObjectFloatMutablePair.of(point, alpha)
             }
 
-            val interpolatedPos = entity.getLerpedPos(mc.renderTickCounter.getTickProgress(true))
+            val interpolatedPos = entity.getPosition(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
             val point = calculatePoint(camera, interpolatedPos.x, interpolatedPos.y, interpolatedPos.z)
             pointsWithAlpha.last().left(point)
 
@@ -200,7 +200,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
 
         private fun calculatePoint(camera: Camera, x: Double, y: Double, z: Double): Vector3f {
             val point = Vector3f(x.toFloat(), y.toFloat(), z.toFloat())
-            point.sub(camera.cameraPos.x.toFloat(), camera.cameraPos.y.toFloat(), camera.cameraPos.z.toFloat())
+            point.sub(camera.position().x.toFloat(), camera.position().y.toFloat(), camera.position().z.toFloat())
             return point
         }
 
@@ -214,11 +214,11 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
                     val (v0, alpha0) = list[i]
                     val (v2, alpha2) = list[i - 1]
 
-                    vertex(renderData.matrix, v0.x, v0.y, v0.z).color(red, green, blue, alpha0)
-                    vertex(renderData.matrix, v2.x, v2.y, v2.z).color(red, green, blue, alpha2)
+                    addVertex(renderData.matrix, v0.x, v0.y, v0.z).setColor(red, green, blue, alpha0)
+                    addVertex(renderData.matrix, v2.x, v2.y, v2.z).setColor(red, green, blue, alpha2)
                     if (!renderData.lines) {
-                        vertex(renderData.matrix, v2.x, v2.y + height, v2.z).color(red, green, blue, alpha2)
-                        vertex(renderData.matrix, v0.x, v0.y + height, v0.z).color(red, green, blue, alpha0)
+                        addVertex(renderData.matrix, v2.x, v2.y + height, v2.z).setColor(red, green, blue, alpha2)
+                        addVertex(renderData.matrix, v0.x, v0.y + height, v0.z).setColor(red, green, blue, alpha0)
                     }
                 }
             }

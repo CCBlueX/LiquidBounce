@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.render
 import com.mojang.blaze3d.shaders.ShaderType
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.minecraft.client.gl.ShaderSourceGetter
-import net.minecraft.util.Identifier
+import com.mojang.blaze3d.shaders.ShaderSource
+import net.minecraft.resources.Identifier
 
-object ClientShaders : ShaderSourceGetter {
+object ClientShaders : ShaderSource {
 
     private val shaders = Object2ObjectOpenHashMap<Identifier, String>()
 
