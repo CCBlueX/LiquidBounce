@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.util.Hand
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.world.InteractionHand
 
 object NormalMineMode : MineMode("Normal") {
 
@@ -34,32 +34,32 @@ object NormalMineMode : MineMode("Normal") {
 
     override fun start(mineTarget: MineTarget) {
         EventManager.callEvent(BlockBreakingProgressEvent(mineTarget.targetPos))
-        interaction.sendSequencedPacket(world) { sequence ->
-            PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
+        interaction.startPrediction(world) { sequence ->
+            ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
                 mineTarget.targetPos,
-                mineTarget.direction,
+                mineTarget.direction!!,
                 sequence,
             )
         }
 
-        ModulePacketMine.swingMode.swing(Hand.MAIN_HAND)
+        ModulePacketMine.swingMode.swing(InteractionHand.MAIN_HAND)
     }
 
     override fun finish(mineTarget: MineTarget) {
-        interaction.sendSequencedPacket(world) { sequence ->
-            PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+        interaction.startPrediction(world) { sequence ->
+            ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                 mineTarget.targetPos,
-                mineTarget.direction,
+                mineTarget.direction!!,
                 sequence,
             )
         }
 
-        ModulePacketMine.swingMode.swing(Hand.MAIN_HAND)
+        ModulePacketMine.swingMode.swing(InteractionHand.MAIN_HAND)
 
         if (clientSideSet) {
-            interaction.breakBlock(mineTarget.targetPos)
+            interaction.destroyBlock(mineTarget.targetPos)
         }
 
         mineTarget.finished = true

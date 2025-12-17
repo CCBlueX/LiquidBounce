@@ -36,11 +36,11 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.minecraft.entity.decoration.ArmorStandEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.util.Hand
+import net.minecraft.world.entity.decoration.ArmorStand
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.world.InteractionHand
 
 object AutoQueueGommeDuels : Choice("GommeDuels") {
 
@@ -61,8 +61,8 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
     }
 
     val repeatable = tickHandler {
-        val inGameHud = mc.inGameHud ?: return@tickHandler
-        val playerListHeader = inGameHud.playerListHud.header
+        val inGameHud = mc.gui ?: return@tickHandler
+        val playerListHeader = inGameHud.tabList.header
 
         if (playerListHeader == null) {
             inMatch = false
@@ -108,13 +108,13 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
             inMatch = false
 
             waitSeconds(2)
-            network.sendChatMessage(winMessage)
+            network.sendChat(winMessage)
         } else if (ev.message.contains("Du wurdest von") && ev.message.contains("getötet")) {
             notification("AutoPlay", "Match lost", NotificationEvent.Severity.INFO)
             inMatch = false
 
             waitSeconds(2)
-            network.sendChatMessage(loseMessage)
+            network.sendChat(loseMessage)
         }
     }
 
@@ -127,11 +127,11 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
     private suspend fun handleLobbySituation() {
         inMatch = false
 
-        val duelsEntity = world.entities.filterIsInstance<ArmorStandEntity>().find {
+        val duelsEntity = world.entitiesForRendering().filterIsInstance<ArmorStand>().find {
             it.boxedDistanceTo(player) < 5 && it.displayName?.string?.contains("Duels") == true
         }?.let { armorStand ->
-            world.entities.filterIsInstance<PlayerEntity>().find {
-                it.boxedDistanceTo(player) < 5 && it.entityPos == armorStand.entityPos.subtract(0.0, 2.0, 0.0)
+            world.entitiesForRendering().filterIsInstance<Player>().find {
+                it.boxedDistanceTo(player) < 5 && it.position() == armorStand.position().subtract(0.0, 2.0, 0.0)
             }
         }
 
@@ -139,7 +139,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
             notification("AutoPlay", "Could not find Duels NPC", NotificationEvent.Severity.ERROR)
         } else {
             // I mean, we do not need any rotation for the lobby, right?
-            interaction.interactEntity(player, duelsEntity, Hand.MAIN_HAND)
+            interaction.interact(player, duelsEntity, InteractionHand.MAIN_HAND)
             notification("AutoPlay", "Interacted with Duels NPC", NotificationEvent.Severity.INFO)
         }
 
@@ -162,8 +162,8 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
             waitTicks(5)
 
             // Use head
-            interaction.sendSequencedPacket(world) { sequence ->
-                PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence, player.yaw, player.pitch)
+            interaction.startPrediction(world) { sequence ->
+                ServerboundUseItemPacket(InteractionHand.MAIN_HAND, sequence, player.yRot, player.xRot)
             }
             waitTicks(20)
         } else if (!ModuleKillAura.running && controlKillAura) {

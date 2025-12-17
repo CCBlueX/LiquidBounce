@@ -24,17 +24,17 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.minecraft.block.AbstractPressurePlateBlock
-import net.minecraft.block.Block
-import net.minecraft.block.CactusBlock
-import net.minecraft.block.CobwebBlock
-import net.minecraft.block.FireBlock
-import net.minecraft.block.MagmaBlock
-import net.minecraft.block.SweetBerryBushBlock
-import net.minecraft.fluid.FluidState
-import net.minecraft.fluid.Fluids
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.level.block.BasePressurePlateBlock
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.CactusBlock
+import net.minecraft.world.level.block.WebBlock
+import net.minecraft.world.level.block.FireBlock
+import net.minecraft.world.level.block.MagmaBlock
+import net.minecraft.world.level.block.SweetBerryBushBlock
+import net.minecraft.world.level.material.FluidState
+import net.minecraft.world.level.material.Fluids
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * Anti hazards module
@@ -48,7 +48,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", Category.MOVEMENT) {
     val cobWebs get() = Avoid.COBWEB in avoid
 
     @Suppress("MagicNumber")
-    private val UNSAFE_BLOCK_CAP = Block.createCuboidShape(
+    private val UNSAFE_BLOCK_CAP = Block.box(
         0.0,
         0.0,
         0.0,
@@ -60,7 +60,7 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", Category.MOVEMENT) {
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         avoid.find { it.test(event.state.block, event.state.fluidState, event.pos) }?.let {
-            event.shape = if (it.fullCube) VoxelShapes.fullCube() else UNSAFE_BLOCK_CAP
+            event.shape = if (it.fullCube) Shapes.block() else UNSAFE_BLOCK_CAP
         }
     }
 
@@ -79,16 +79,16 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", Category.MOVEMENT) {
             block is FireBlock
         }),
         COBWEB("Cobwebs", test = { block, _, _, ->
-            block is CobwebBlock
+            block is WebBlock
         }),
         PRESSURE_PLATES("PressurePlates", fullCube = false, test = { block, _, _ ->
-            block is AbstractPressurePlateBlock
+            block is BasePressurePlateBlock
         }),
         MAGMA("MagmaBlocks", fullCube = false, test = { _, _, pos ->
-            pos.down().getBlock() is MagmaBlock
+            pos.below().getBlock() is MagmaBlock
         }),
         LAVA("Lava", test = { _, fluidState, _ ->
-            fluidState.isOf(Fluids.LAVA) || fluidState.isOf(Fluids.FLOWING_LAVA)
+            fluidState.`is`(Fluids.LAVA) || fluidState.`is`(Fluids.FLOWING_LAVA)
         })
     }
 }

@@ -24,19 +24,19 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinWorldRenderer
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLevelRenderer
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.block.ShapeContext
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.shape.VoxelShape
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Direction
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.shapes.VoxelShape
 
 /**
  * Block Outline module
@@ -62,13 +62,13 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
         tree(Slide)
     }
 
-    private var currentPosition: Box? = null
-    private var previousPosition: Box? = null
+    private var currentPosition: AABB? = null
+    private var previousPosition: AABB? = null
     private var lastChange = 0L
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val target = mc.crosshairTarget
+        val target = mc.hitResult
         if (target !is BlockHitResult || target.getType() == HitResult.Type.MISS) {
             resetPositions()
             return@handler
@@ -76,14 +76,14 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
 
         val blockPos = target.blockPos
         val blockState = world.getBlockState(blockPos)
-        if (blockState.isAir || !world.worldBorder.contains(blockPos)) {
+        if (blockState.isAir || !world.worldBorder.isWithinBounds(blockPos)) {
             resetPositions()
             return@handler
         }
 
-        val side = target.side
-        val box = blockState.getOutlineShape(this.world, blockPos, ShapeContext.of(mc.cameraEntity))
-        val finalPosition = (if (sideOnly) flatBox(box, side) else box.boundingBox).offset(blockPos)
+        val side = target.direction
+        val box = blockState.getShape(this.world, blockPos, CollisionContext.of(mc.cameraEntity!!))
+        val finalPosition = (if (sideOnly) flatBox(box, side) else box.bounds()).move(blockPos)
         if (currentPosition != finalPosition) {
             previousPosition = currentPosition
             currentPosition = finalPosition
@@ -94,22 +94,22 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
             val factor = Slide.easing.getFactor(lastChange, System.currentTimeMillis(), Slide.time.toFloat()).toDouble()
 
             val previousPosition = previousPosition!!
-            Box(
-                MathHelper.lerp(factor, previousPosition.minX, finalPosition.minX),
-                MathHelper.lerp(factor, previousPosition.minY, finalPosition.minY),
-                MathHelper.lerp(factor, previousPosition.minZ, finalPosition.minZ),
-                MathHelper.lerp(factor, previousPosition.maxX, finalPosition.maxX),
-                MathHelper.lerp(factor, previousPosition.maxY, finalPosition.maxY),
-                MathHelper.lerp(factor, previousPosition.maxZ, finalPosition.maxZ)
+            AABB(
+                Mth.lerp(factor, previousPosition.minX, finalPosition.minX),
+                Mth.lerp(factor, previousPosition.minY, finalPosition.minY),
+                Mth.lerp(factor, previousPosition.minZ, finalPosition.minZ),
+                Mth.lerp(factor, previousPosition.maxX, finalPosition.maxX),
+                Mth.lerp(factor, previousPosition.maxY, finalPosition.maxY),
+                Mth.lerp(factor, previousPosition.maxZ, finalPosition.maxZ)
             )
         } else {
             finalPosition
         }
 
-        val translatedPosition = renderPosition.offset(
+        val translatedPosition = renderPosition.move(
             mc.entityRenderDispatcher
-                .camera?.cameraPos
-                ?.negate() ?: return@handler
+                .camera?.position()
+                ?.reverse() ?: return@handler
         )
         renderEnvironmentForWorld(event.matrixStack) {
             if (sideOnly) {
@@ -130,38 +130,38 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
     }
 
     private fun flatBox(shape: VoxelShape, side: Direction) = when (side) {
-        Direction.UP -> shape.boxWithBoundsY(shape.getMax(Direction.Axis.Y))
-        Direction.DOWN -> shape.boxWithBoundsY(shape.getMin(Direction.Axis.Y))
-        Direction.NORTH -> shape.boxWithBoundsZ(shape.getMin(Direction.Axis.Z))
-        Direction.SOUTH -> shape.boxWithBoundsZ(shape.getMax(Direction.Axis.Z))
-        Direction.WEST -> shape.boxWithBoundsX(shape.getMin(Direction.Axis.X))
-        Direction.EAST -> shape.boxWithBoundsX(shape.getMax(Direction.Axis.X))
+        Direction.UP -> shape.boxWithBoundsY(shape.max(Direction.Axis.Y))
+        Direction.DOWN -> shape.boxWithBoundsY(shape.min(Direction.Axis.Y))
+        Direction.NORTH -> shape.boxWithBoundsZ(shape.min(Direction.Axis.Z))
+        Direction.SOUTH -> shape.boxWithBoundsZ(shape.max(Direction.Axis.Z))
+        Direction.WEST -> shape.boxWithBoundsX(shape.min(Direction.Axis.X))
+        Direction.EAST -> shape.boxWithBoundsX(shape.max(Direction.Axis.X))
     }
 
-    private fun VoxelShape.boxWithBoundsX(x: Double) = Box(
+    private fun VoxelShape.boxWithBoundsX(x: Double) = AABB(
         x,
-        getMin(Direction.Axis.Y),
-        getMin(Direction.Axis.Z),
+        min(Direction.Axis.Y),
+        min(Direction.Axis.Z),
         x,
-        getMax(Direction.Axis.Y),
-        getMax(Direction.Axis.Z)
+        max(Direction.Axis.Y),
+        max(Direction.Axis.Z)
     )
 
-    private fun VoxelShape.boxWithBoundsY(y: Double) = Box(
-        getMin(Direction.Axis.X),
+    private fun VoxelShape.boxWithBoundsY(y: Double) = AABB(
+        min(Direction.Axis.X),
         y,
-        getMin(Direction.Axis.Z),
-        getMax(Direction.Axis.X),
+        min(Direction.Axis.Z),
+        max(Direction.Axis.X),
         y,
-        getMax(Direction.Axis.Z)
+        max(Direction.Axis.Z)
     )
 
-    private fun VoxelShape.boxWithBoundsZ(z: Double) = Box(
-        getMin(Direction.Axis.X),
-        getMin(Direction.Axis.Y),
+    private fun VoxelShape.boxWithBoundsZ(z: Double) = AABB(
+        min(Direction.Axis.X),
+        min(Direction.Axis.Y),
         z,
-        getMax(Direction.Axis.X),
-        getMax(Direction.Axis.Y),
+        max(Direction.Axis.X),
+        max(Direction.Axis.Y),
         z
     )
 

@@ -138,7 +138,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.util.crash.CrashException
+import net.minecraft.ReportedException
 
 /**
  * Contains all classes of events. Used to create lookup tables ahead of time
@@ -339,7 +339,7 @@ object EventManager {
 
             try {
                 eventHook.handler.accept(event)
-            } catch (e: CrashException) {
+            } catch (e: ReportedException) {
                 ErrorHandler.fatal(
                     error = e,
                     needToReport = true,

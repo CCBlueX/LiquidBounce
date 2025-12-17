@@ -33,11 +33,11 @@ import net.ccbluex.liquidbounce.utils.render.QuadGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.TexQuadGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.TriangleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.VerticesSetupHandler
-import net.minecraft.client.gl.RenderPipelines
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.ScreenRect
-import net.minecraft.client.texture.TextureSetup
-import net.minecraft.util.math.Vec2f
+import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.navigation.ScreenRectangle
+import net.minecraft.client.gui.render.TextureSetup
+import net.minecraft.world.phys.Vec2
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
 
@@ -46,7 +46,7 @@ import org.joml.Matrix3x2fStack
  */
 private fun Matrix3x2f.transformEachVertex(
     sameAxis: Int, otherAxis: Int, width: Int, height: Int,
-): ScreenRect {
+): ScreenRectangle {
     val left = sameAxis
     val right = sameAxis + width
     val top = otherAxis
@@ -64,25 +64,25 @@ private fun Matrix3x2f.transformEachVertex(
     Pools.Vec2f.recycle(vector2f2)
     Pools.Vec2f.recycle(vector2f3)
     Pools.Vec2f.recycle(vector2f4)
-    return ScreenRect(f.floorToInt(), h.floorToInt(), (g - f).ceilToInt(), (i - h).ceilToInt())
+    return ScreenRectangle(f.floorToInt(), h.floorToInt(), (g - f).ceilToInt(), (i - h).ceilToInt())
 }
 
 /**
  * @see net.minecraft.client.gui.render.state.ColoredQuadGuiElementRenderState.createBounds
  */
-fun DrawContext.createBounds(x: Float, y: Float, w: Float, h: Float): ScreenRect {
+fun GuiGraphics.createBounds(x: Float, y: Float, w: Float, h: Float): ScreenRectangle {
 //    val rect = ScreenRect(x.floorToInt(), y.floorToInt(), w.ceilToInt(), h.ceilToInt())
 //        .transformEachVertex(this.matrices)
-    val rect = this.matrices.transformEachVertex(
+    val rect = this.pose().transformEachVertex(
         x.floorToInt(), y.floorToInt(), w.ceilToInt(), h.ceilToInt()
     )
-    return this.scissorStack.peekLast()?.intersection(rect) ?: rect
+    return this.scissorStack.peek()?.intersection(rect) ?: rect
 }
 
-fun DrawContext.createBounds(box: BoundingBox2f): ScreenRect =
+fun GuiGraphics.createBounds(box: BoundingBox2f): ScreenRectangle =
     createBounds(box.xMin, box.yMin, box.width, box.height)
 
-inline fun DrawContext.copyPose(): Matrix3x2f = Pools.Mat3x2f.borrow().set(this.matrices)
+inline fun GuiGraphics.copyPose(): Matrix3x2f = Pools.Mat3x2f.borrow().set(this.pose())
 
 inline fun Matrix3x2fStack.withPush(block: Matrix3x2fStack.() -> Unit) {
     pushMatrix()
@@ -93,7 +93,7 @@ inline fun Matrix3x2fStack.withPush(block: Matrix3x2fStack.() -> Unit) {
     }
 }
 
-inline fun DrawContext.ScissorStack.withPush(rect: ScreenRect, block: DrawContext.ScissorStack.() -> Unit) {
+inline fun GuiGraphics.ScissorStack.withPush(rect: ScreenRectangle, block: GuiGraphics.ScissorStack.() -> Unit) {
     push(rect)
     try {
         block()
@@ -102,13 +102,13 @@ inline fun DrawContext.ScissorStack.withPush(rect: ScreenRect, block: DrawContex
     }
 }
 
-inline fun DrawContext.drawCustomElement(
+inline fun GuiGraphics.drawCustomElement(
     pipeline: RenderPipeline = RenderPipelines.GUI, // PosColor + QUADS
-    textureSetup: TextureSetup = TextureSetup.empty(),
-    scissorArea: ScreenRect? = this.scissorStack.peekLast(),
-    bounds: ScreenRect? = null,
+    textureSetup: TextureSetup = TextureSetup.noTexture(),
+    scissorArea: ScreenRectangle? = this.scissorStack.peek(),
+    bounds: ScreenRectangle? = null,
     verticesSetupHandler: VerticesSetupHandler,
-) = this.state.addSimpleElement(
+) = this.guiRenderState.submitGuiElement(
     LambdaSimpleGuiElementRenderState(
         pipeline,
         textureSetup,
@@ -119,23 +119,23 @@ inline fun DrawContext.drawCustomElement(
     )
 )
 
-fun DrawContext.drawLines(
+fun GuiGraphics.drawLines(
     points: FloatArray,
     argb: Int,
-    bounds: ScreenRect,
+    bounds: ScreenRectangle,
 ) {
-    this.state.addSimpleElement(
+    this.guiRenderState.submitGuiElement(
         LineGuiElementRenderState(
             points,
             argb,
             copyPose(),
-            this.scissorStack.peekLast(),
+            this.scissorStack.peek(),
             bounds,
         )
     )
 }
 
-fun DrawContext.drawQuad(
+fun GuiGraphics.drawQuad(
     x1: Float,
     y1: Float,
     x2: Float,
@@ -151,7 +151,7 @@ fun DrawContext.drawQuad(
     val bounds = createBounds(x11, y11, x21 - x11, y21 - y11)
 
     if (fillColor != null && !fillColor.isTransparent) {
-        this.state.addSimpleElement(
+        this.guiRenderState.submitGuiElement(
             QuadGuiElementRenderState(
                 x11,
                 y11,
@@ -159,7 +159,7 @@ fun DrawContext.drawQuad(
                 y21,
                 fillColor.toARGB(),
                 copyPose(),
-                this.scissorStack.peekLast(),
+                this.scissorStack.peek(),
                 bounds,
             )
         )
@@ -187,19 +187,19 @@ fun DrawContext.drawQuad(
 /**
  * Float version of [DrawContext.drawHorizontalLine]
  */
-fun DrawContext.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Float, color: Color4b) {
+fun GuiGraphics.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Float, color: Color4b) {
     this.drawQuad(x1, y, x2, y + thickness, color)
 }
 
 /**
  * Float version of [DrawContext.drawVerticalLine]
  */
-fun DrawContext.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Color4b) {
+fun GuiGraphics.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Color4b) {
     this.drawQuad(x, y1, x + thickness, y2, color)
 }
 
-fun DrawContext.drawTriangle(
-    p1: Vec2f, p2: Vec2f, p3: Vec2f,
+fun GuiGraphics.drawTriangle(
+    p1: Vec2, p2: Vec2, p3: Vec2,
     fillColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
 ) {
@@ -210,12 +210,12 @@ fun DrawContext.drawTriangle(
     val bounds = createBounds(minX, minY, maxX - minX, maxY - minY)
 
     if (fillColor != null && !fillColor.isTransparent) {
-        this.state.addSimpleElement(
+        this.guiRenderState.submitGuiElement(
             TriangleGuiElementRenderState(
                 p1.x, p1.y, p2.x, p2.y, p3.x, p3.y,
                 fillColor.toARGB(),
                 copyPose(),
-                this.scissorStack.peekLast(),
+                this.scissorStack.peek(),
                 bounds,
             )
         )
@@ -238,7 +238,7 @@ fun DrawContext.drawTriangle(
 }
 
 @Suppress("LongParameterList")
-inline fun DrawContext.drawTexQuad(
+inline fun GuiGraphics.drawTexQuad(
     textureSetup: TextureSetup,
     x0: Float,
     y0: Float,
@@ -251,7 +251,7 @@ inline fun DrawContext.drawTexQuad(
     argb: Int = -1,
     pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
 ) {
-    this.state.addSimpleElement(
+    this.guiRenderState.submitGuiElement(
         TexQuadGuiElementRenderState(
             x0,
             y0,
@@ -265,7 +265,7 @@ inline fun DrawContext.drawTexQuad(
             pipeline,
             textureSetup,
             copyPose(),
-            this.scissorStack.peekLast(),
+            this.scissorStack.peek(),
             createBounds(x0, y0, x1 - x0, y1 - y0),
         )
     )

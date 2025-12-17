@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.util.math.MathHelper
+import net.minecraft.util.Mth
 
 object FlyFireballLegitTechnique : Choice("Legit") {
 
@@ -67,7 +67,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         RotationManager.setRotationTarget(
-            Rotation(if (Rotations.backwards) this.invertYaw(player.yaw) else player.yaw, Rotations.pitch),
+            Rotation(if (Rotations.backwards) this.invertYaw(player.yRot) else player.yRot, Rotations.pitch),
             configurable = Rotations,
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleFly
@@ -94,7 +94,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
             canMove = !stopMove
 
             if (Jump.enabled) {
-                if (player.isOnGround) {
+                if (player.onGround()) {
                     shouldJump = true
                     tickUntil { !shouldJump }
                 }
@@ -117,7 +117,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
      * Inverts yaw (-180 to 180)
      */
     private fun invertYaw(yaw: Float): Float {
-        return MathHelper.wrapDegrees(yaw + 180)
+        return Mth.wrapDegrees(yaw + 180)
     }
 
 }

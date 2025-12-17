@@ -20,41 +20,41 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Position
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Direction
+import net.minecraft.core.Position
+import net.minecraft.world.phys.Vec3
+import net.minecraft.core.Vec3i
 import kotlin.math.max
 import kotlin.math.min
 
 // Box operators
 
-inline operator fun Box.plus(offset: Position): Box =
-    this.offset(offset.x, offset.y, offset.z)
+inline operator fun AABB.plus(offset: Position): AABB =
+    this.move(offset.x(), offset.y(), offset.z())
 
-inline operator fun Box.minus(offset: Position): Box =
-    this.offset(-offset.x, -offset.y, -offset.z)
+inline operator fun AABB.minus(offset: Position): AABB =
+    this.move(-offset.x(), -offset.y(), -offset.z())
 
-inline operator fun Box.plus(offset: Vec3i): Box =
-    this.offset(offset.x.toDouble(), offset.y.toDouble(), offset.z.toDouble())
+inline operator fun AABB.plus(offset: Vec3i): AABB =
+    this.move(offset.x.toDouble(), offset.y.toDouble(), offset.z.toDouble())
 
-inline operator fun Box.minus(offset: Vec3i): Box =
-    this.offset(-offset.x.toDouble(), -offset.y.toDouble(), -offset.z.toDouble())
+inline operator fun AABB.minus(offset: Vec3i): AABB =
+    this.move(-offset.x.toDouble(), -offset.y.toDouble(), -offset.z.toDouble())
 
 /**
  * Tests if the infinite line resulting from [start] and the point [p] will intersect this box.
  */
-fun Box.isHitByLine(start: Vec3d, p: Vec3d): Boolean {
+fun AABB.isHitByLine(start: Vec3, p: Vec3): Boolean {
     val d = p.subtract(start)
 
     var tEntry = Double.NEGATIVE_INFINITY
     var tExit = Double.POSITIVE_INFINITY
 
-    fun Box.checkSide(axis: Direction.Axis, start: Vec3d, d: Vec3d): Boolean {
+    fun AABB.checkSide(axis: Direction.Axis, start: Vec3, d: Vec3): Boolean {
         val d1 = axis.choose(d.x, d.y, d.z)
-        val min = getMin(axis)
-        val max = getMax(axis)
+        val min = min(axis)
+        val max = max(axis)
         val p0 = axis.choose(start.x, start.y, start.z)
 
         // parallel and outside, no need to check anything else
@@ -82,13 +82,13 @@ fun Box.isHitByLine(start: Vec3d, p: Vec3d): Boolean {
     return tEntry <= tExit
 }
 
-val Box.size: Double
-    get() = this.lengthX * this.lengthY * this.lengthZ
+val AABB.size: Double
+    get() = this.xsize * this.ysize * this.zsize
 
-fun Box.getCoordinate(direction: Direction): Double {
-    return if (direction.direction == Direction.AxisDirection.POSITIVE) {
-        this.getMax(direction.axis)
+fun AABB.getCoordinate(direction: Direction): Double {
+    return if (direction.axisDirection == Direction.AxisDirection.POSITIVE) {
+        this.max(direction.axis)
     } else {
-        this.getMin(direction.axis)
+        this.min(direction.axis)
     }
 }

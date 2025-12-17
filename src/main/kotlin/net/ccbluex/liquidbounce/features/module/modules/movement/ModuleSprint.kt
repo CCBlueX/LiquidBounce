@@ -101,7 +101,7 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     private val jumpHandler = handler<PlayerJumpEvent> { event ->
         if (sprintMode == SprintMode.OMNIDIRECTIONAL && shouldSprintOmnidirectional) {
             // Allows us to sprint boost in every direction
-            event.yaw = getMovementDirectionOfInput(player.yaw, DirectionalInput(player.input))
+            event.yaw = getMovementDirectionOfInput(player.yRot, DirectionalInput(player.input))
         }
     }
 
@@ -115,23 +115,23 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
             return@handler
         }
 
-        val yaw = getMovementDirectionOfInput(player.yaw, DirectionalInput(player.input))
+        val yaw = getMovementDirectionOfInput(player.yRot, DirectionalInput(player.input))
 
         // todo: unhook pitch - AimPlan needs support for only yaw or pitch operation
-        val rotation = Rotation(yaw, player.pitch)
+        val rotation = Rotation(yaw, player.xRot)
 
         RotationManager.setRotationTarget(rotationsConfigurable.toRotationTarget(rotation), Priority.NOT_IMPORTANT,
             this@ModuleSprint)
     }
 
     private fun shouldPreventSprint(): Boolean {
-        val deltaYawRad = (player.yaw - (RotationManager.currentRotation ?: return false).yaw).toRadians()
+        val deltaYawRad = (player.yRot - (RotationManager.currentRotation ?: return false).yaw).toRadians()
         val forward = player.input.movementForward
         val sideways = player.input.movementSideways
 
         val hasForwardMovement = forward * deltaYawRad.fastCos() + sideways * deltaYawRad.fastSin() > 1.0E-5
 
-        return (if (player.isOnGround) StopOn.GROUND in stopOn else StopOn.AIR in stopOn)
+        return (if (player.onGround()) StopOn.GROUND in stopOn else StopOn.AIR in stopOn)
             && !shouldSprintOmnidirectional
             && RotationManager.activeRotationTarget?.movementCorrection == MovementCorrection.OFF
             && !hasForwardMovement

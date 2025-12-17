@@ -29,10 +29,10 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.mode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.swingMode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.util.Hand
-import net.minecraft.util.math.Direction
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.world.InteractionHand
+import net.minecraft.core.Direction
 
 object InstantNukerMode : Choice("Instant") {
 
@@ -49,7 +49,7 @@ object InstantNukerMode : Choice("Instant") {
             return@tickHandler
         }
 
-        if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
+        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
             return@tickHandler
         }
 
@@ -62,17 +62,22 @@ object InstantNukerMode : Choice("Instant") {
         }
 
         for ((pos, _) in targets) {
-            interaction.sendSequencedPacket(world) { sequence ->
-                PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, sequence)
+            interaction.startPrediction(world) { sequence ->
+                ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
+                    pos,
+                    Direction.DOWN,
+                    sequence
+                )
             }
 
-            swingMode.swing(Hand.MAIN_HAND)
+            swingMode.swing(InteractionHand.MAIN_HAND)
             wasTarget = pos
 
             if (!doNotStop) {
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+                interaction.startPrediction(world) { sequence ->
+                    ServerboundPlayerActionPacket(
+                        ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                         pos,
                         Direction.DOWN,
                         sequence

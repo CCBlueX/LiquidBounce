@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.utils.io.toJson
-import net.minecraft.entity.Entity
+import net.minecraft.world.entity.Entity
 import java.util.concurrent.CopyOnWriteArraySet
 
 object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Generic") {
@@ -47,7 +47,7 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
         }
 
         for (scheduledEntityDebug in due) {
-            val entity = world.getEntityById(scheduledEntityDebug.entityId)
+            val entity = world.getEntity(scheduledEntityDebug.entityId)
 
             if (entity != null) {
                 recordDebugInfo(ModuleDebugRecorder, "entity", debugObject(entity))
@@ -69,8 +69,8 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
     fun debugObject(entity: Entity): JsonElement {
         return JsonObject().apply {
             addProperty("id", entity.id)
-            add("pos", entity.entityPos.toJson())
-            add("velocity", entity.velocity.toJson())
+            add("pos", entity.position().toJson())
+            add("velocity", entity.deltaMovement.toJson())
         }
     }
 }

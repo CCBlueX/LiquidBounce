@@ -20,12 +20,12 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
-import net.minecraft.text.CharacterVisitor
-import net.minecraft.text.OrderedText
-import net.minecraft.text.StringVisitable.StyledVisitor
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.util.FormattedCharSink
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.network.chat.FormattedText.StyledContentConsumer
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 import java.util.Optional
 
 /**
@@ -35,8 +35,8 @@ import java.util.Optional
  * @param innerVisitor the receiver of the degenerated text formatting.
  */
 class LegacyTextSanitizer(
-    private val innerVisitor: StyledVisitor<Nothing>
-): StyledVisitor<Nothing> {
+    private val innerVisitor: StyledContentConsumer<Nothing>
+): StyledContentConsumer<Nothing> {
 
     override fun accept(style: Style, text: String): Optional<Nothing> {
         var currentStyle = style
@@ -72,26 +72,26 @@ class LegacyTextSanitizer(
     }
 
     private fun applyCodeForStyle(codePoint: Int, currentStyle: Style): Style {
-        return Formatting.byCode(codePoint.toChar())?.applyFormatting(currentStyle) ?: currentStyle
+        return ChatFormatting.getByCode(codePoint.toChar())?.applyFormatting(currentStyle) ?: currentStyle
     }
 
-    private fun Formatting.applyFormatting(style: Style): Style {
+    private fun ChatFormatting.applyFormatting(style: Style): Style {
         return when {
             isColor -> style.withColor(this)
             else -> when (this) {
-                Formatting.RESET -> Style.EMPTY
-                Formatting.BOLD -> style.withBold(true)
-                Formatting.OBFUSCATED -> style.withObfuscated(true)
-                Formatting.STRIKETHROUGH -> style.withStrikethrough(true)
-                Formatting.UNDERLINE -> style.withUnderline(true)
-                Formatting.ITALIC -> style.withItalic(true)
+                ChatFormatting.RESET -> Style.EMPTY
+                ChatFormatting.BOLD -> style.withBold(true)
+                ChatFormatting.OBFUSCATED -> style.withObfuscated(true)
+                ChatFormatting.STRIKETHROUGH -> style.withStrikethrough(true)
+                ChatFormatting.UNDERLINE -> style.withUnderlined(true)
+                ChatFormatting.ITALIC -> style.withItalic(true)
                 else -> style
             }
         }
     }
 
-    class SanitizedLegacyText(private val text: Text): OrderedText {
-        override fun accept(visitor: CharacterVisitor): Boolean {
+    class SanitizedLegacyText(private val text: Component): FormattedCharSequence {
+        override fun accept(visitor: FormattedCharSink): Boolean {
             val degenerator = LegacyTextSanitizer { style, text ->
                 var index = 0
                 while (index < text.length) {

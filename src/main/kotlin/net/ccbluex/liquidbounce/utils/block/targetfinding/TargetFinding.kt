@@ -29,17 +29,17 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
-import net.minecraft.block.BlockState
-import net.minecraft.block.ShapeContext
-import net.minecraft.block.SideShapeType
-import net.minecraft.entity.EntityPose
-import net.minecraft.item.ItemStack
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.level.block.SupportType
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
+import net.minecraft.core.Vec3i
 
 enum class AimMode(override val choiceName: String) : NamedChoice {
     CENTER("Center"),
@@ -64,7 +64,7 @@ class BlockPlacementTargetFindingOptions(
     companion object {
         @JvmField
         val PRIORITIZE_LEAST_BLOCK_DISTANCE: Comparator<Vec3i> = compareByDescending { vec ->
-            player.squaredDistanceTo(vec.x.toDouble(), vec.y.toDouble(), vec.z.toDouble())
+            player.distanceToSqr(vec.x.toDouble(), vec.y.toDouble(), vec.z.toDouble())
         }
     }
 }
@@ -102,8 +102,8 @@ class FaceHandlingOptions(
  * @param pose the player's pose (on placement)
  */
 class PlayerLocationOnPlacement(
-    val position: Vec3d,
-    val pose: EntityPose = player.pose
+    val position: Vec3,
+    val pose: Pose = player.pose
 )
 
 /**
@@ -121,20 +121,20 @@ data class BlockTargetPlan(
     /**
      * The center of the target block face
      */
-    val targetPositionOnBlock: Vec3d =
+    val targetPositionOnBlock: Vec3 =
         blockPosToInteractWith
-            .toCenterPos()
-            .add(Vec3d.of(interactionDirection.vector).multiply(0.5))
+            .center
+            .add(Vec3.atLowerCornerOf(interactionDirection.unitVec3i).scale(0.5))
 
     /**
      * cosine of the angle between the expected player's eye position and the normal of the targeted face.
      */
-    fun calculateAngleToPlayerEyeCosine(playerPos: Vec3d): Double {
+    fun calculateAngleToPlayerEyeCosine(playerPos: Vec3): Double {
         val deltaToPlayerPos = playerPos
-            .add(0.0, mc.player!!.standingEyeHeight.toDouble(), 0.0)
+            .add(0.0, mc.player!!.eyeHeight.toDouble(), 0.0)
             .subtract(targetPositionOnBlock)
 
-        return deltaToPlayerPos.dotProduct(Vec3d.of(interactionDirection.vector)) / deltaToPlayerPos.length()
+        return deltaToPlayerPos.dot(Vec3.atLowerCornerOf(interactionDirection.unitVec3i)) / deltaToPlayerPos.length()
     }
 
 }
@@ -169,7 +169,7 @@ private fun findBestTargetPlanForTargetPosition(
 
     val playerEyePositionOnPlacement = targetFindingOptions.playerLocationOnPlacement.position.add(
         0.0,
-        player.standingEyeHeight.toDouble(),
+        player.eyeHeight.toDouble(),
         0.0
     )
 
@@ -190,10 +190,10 @@ fun getTargetPlanForPositionAndDirection(
 ): BlockTargetPlan? {
     when (mode) {
         BlockTargetingMode.PLACE_AT_NEIGHBOR -> {
-            val currPos = pos.add(direction.opposite.vector)
+            val currPos = pos.offset(direction.opposite.unitVec3i)
             val currState = currPos.getState() ?: return null
 
-            if (currState.isReplaceable) {
+            if (currState.canBeReplaced()) {
                 return null
             }
 
@@ -205,7 +205,7 @@ fun getTargetPlanForPositionAndDirection(
     }
 }
 
-class PointOnFace(val face: AlignedFace, val point: Vec3d)
+class PointOnFace(val face: AlignedFace, val point: Vec3)
 
 fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFindingOptions): BlockPlacementTarget? {
     val state = pos.getState()!!
@@ -217,11 +217,11 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
 
     val offsetsToInvestigate = options.offsetOptions.offsetsToInvestigate.sortedWith { a, b ->
         // Sort DESCENDING!
-        options.offsetOptions.priorityComparator.compare(b.add(pos), a.add(pos))
+        options.offsetOptions.priorityComparator.compare(b.offset(pos), a.offset(pos))
     }
 
     for (offset in offsetsToInvestigate) {
-        val posToInvestigate = pos.add(offset)
+        val posToInvestigate = pos.offset(offset)
         val blockStateToInvestigate = posToInvestigate.getState()!!
 
         // Already a block in that position?
@@ -255,7 +255,7 @@ fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFin
         val pointOnFace = findTargetPointOnFace(currPos.getState()!!, currPos, targetPlan, options) ?: continue
 
         val rotation = Rotation.lookingAt(
-            point = pointOnFace.point.add(Vec3d.of(currPos)),
+            point = pointOnFace.point.add(Vec3.atLowerCornerOf(currPos)),
             from = options.playerLocationOnPlacement.position.add(
                 0.0,
                 player.getEyeHeight(options.playerLocationOnPlacement.pose).toDouble(),
@@ -281,7 +281,7 @@ private fun findTargetPointOnFace(
     targetPlan: BlockTargetPlan,
     options: BlockPlacementTargetFindingOptions
 ): PointOnFace? {
-    val shapeBBs = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
+    val shapeBBs = currState.getShape(world, currPos, CollisionContext.of(player)).toAabbs()
 
     val face = shapeBBs.mapNotNull {
         val face = it.getFace(targetPlan.interactionDirection)
@@ -303,8 +303,8 @@ private fun findTargetPointOnFace(
     }.maxWithOrNull(
         Comparator.comparingDouble<PointOnFace> {
             it.point.subtract(0.5, 0.5, 0.5)
-                .multiply(Vec3d.of(targetPlan.interactionDirection.vector))
-                .lengthSquared()
+                .multiply(Vec3.atLowerCornerOf(targetPlan.interactionDirection.unitVec3i))
+                .lengthSqr()
         }.thenComparingDouble { it.point.y }
     )
     return face
@@ -331,7 +331,7 @@ data class BlockPlacementTarget(
 
     val blockHitResult: BlockHitResult
         get() = BlockHitResult(
-            interactedBlockPos.toCenterPos(),
+            interactedBlockPos.center,
             direction,
             interactedBlockPos,
             false
@@ -341,15 +341,15 @@ data class BlockPlacementTarget(
         return when {
             crosshairTarget.type != HitResult.Type.BLOCK -> false
             crosshairTarget.blockPos != this.interactedBlockPos -> false
-            crosshairTarget.side != this.direction -> false
-            crosshairTarget.pos.y < this.minPlacementY -> false
+            crosshairTarget.direction != this.direction -> false
+            crosshairTarget.location.y < this.minPlacementY -> false
             else -> true
         }
     }
 }
 
 private fun isBlockSolid(state: BlockState, pos: BlockPos) =
-    state.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER)
+    state.isFaceSturdy(mc.level!!, pos, Direction.UP, SupportType.CENTER)
 
 class PlacementPlan(
     val targetPos: BlockPos,
@@ -359,7 +359,7 @@ class PlacementPlan(
     fun doesCorrespondTo(rayTraceResult: BlockHitResult, sideMustMatch: Boolean = true): Boolean {
         return rayTraceResult.type == HitResult.Type.BLOCK
             && rayTraceResult.blockPos == this.placementTarget.interactedBlockPos
-            && (!sideMustMatch || rayTraceResult.side == this.placementTarget.direction)
+            && (!sideMustMatch || rayTraceResult.direction == this.placementTarget.direction)
     }
 }
 

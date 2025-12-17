@@ -39,9 +39,9 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.block.Block
-import net.minecraft.client.network.ServerInfo
-import net.minecraft.world.GameMode
+import net.minecraft.world.level.block.Block
+import net.minecraft.client.multiplayer.ServerData
+import net.minecraft.world.level.GameType
 
 @Deprecated(
     "The `clickGuiScaleChange` event has been deprecated.",
@@ -86,7 +86,7 @@ class NotificationEvent(val title: String, val message: String, val severity: Se
 }
 
 @Nameable("gameModeChange")
-class GameModeChangeEvent(val gameMode: GameMode) : Event(), WebSocketEvent
+class GameModeChangeEvent(val gameMode: GameType) : Event(), WebSocketEvent
 
 @Nameable("targetChange")
 class TargetChangeEvent(val target: PlayerData?) : Event(), WebSocketEvent
@@ -176,7 +176,7 @@ class VirtualScreenEvent(
 }
 
 @Nameable("serverPinged")
-class ServerPingedEvent(val server: ServerInfo) : Event(), WebSocketEvent
+class ServerPingedEvent(val server: ServerData) : Event(), WebSocketEvent
 
 @Nameable("componentsUpdate")
 class ComponentsUpdateEvent(val id: String? = null, val components: List<HudComponent>) : Event(), WebSocketEvent {

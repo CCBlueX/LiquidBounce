@@ -42,13 +42,13 @@ import java.util.*
 // GET /api/v1/client/info
 @Suppress("UNUSED_PARAMETER")
 fun getClientInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("os", Util.getOperatingSystem().getName())
-    addProperty("gameVersion", mc.gameVersion)
+    addProperty("os", Util.getPlatform().telemetryName())
+    addProperty("gameVersion", mc.launchedVersion)
     addProperty("clientVersion", LiquidBounce.clientVersion)
     addProperty("clientName", LiquidBounce.CLIENT_NAME)
     addProperty("development", LiquidBounce.IN_DEVELOPMENT)
-    addProperty("fps", mc.currentFps)
-    addProperty("gameDir", mc.runDirectory.path)
+    addProperty("fps", mc.fps)
+    addProperty("gameDir", mc.gameDirectory.path)
     addProperty("clientDir", ConfigSystem.rootFolder.path)
     addProperty("inGame", inGame)
     addProperty("viaFabricPlus", usesViaFabricPlus)
@@ -80,19 +80,19 @@ fun getUpdateInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
 // POST /api/v1/client/exit
 @Suppress("UNUSED_PARAMETER")
 fun postExit(requestObject: RequestObject): FullHttpResponse {
-    mc.scheduleStop()
+    mc.stop()
     return httpNoContent()
 }
 
 // GET /api/v1/client/window
 @Suppress("UNUSED_PARAMETER")
 fun getWindowInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("width", mc.window.width)
-    addProperty("height", mc.window.height)
-    addProperty("scaledWidth", mc.window.scaledWidth)
-    addProperty("scaledHeight", mc.window.scaledHeight)
-    addProperty("scaleFactor", mc.window.scaleFactor)
-    addProperty("guiScale", mc.options.guiScale.value)
+    addProperty("width", mc.window.screenWidth)
+    addProperty("height", mc.window.screenHeight)
+    addProperty("scaledWidth", mc.window.guiScaledWidth)
+    addProperty("scaledHeight", mc.window.guiScaledHeight)
+    addProperty("scaleFactor", mc.window.guiScale)
+    addProperty("guiScale", mc.options.guiScale().get())
 })
 
 // POST /api/v1/client/browse
@@ -102,7 +102,7 @@ fun postBrowse(requestObject: RequestObject): FullHttpResponse {
 
     val url = POSSIBLE_URL_TARGETS[target] ?: return httpForbidden("Unknown target")
 
-    Util.getOperatingSystem().open(url)
+    Util.getPlatform().openUri(url)
     return httpNoContent()
 }
 
@@ -127,7 +127,7 @@ fun postBrowsePath(requestObject: RequestObject): FullHttpResponse {
         else -> return httpForbidden("Invalid file type")
     }
 
-    Util.getOperatingSystem().open(directoryToOpen)
+    Util.getPlatform().openFile(directoryToOpen)
     return httpNoContent()
 }
 

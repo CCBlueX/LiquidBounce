@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.imp
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.MinaraiAngleSmooth
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.SigmoidAngleSmooth
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
-import net.minecraft.entity.Entity
+import net.minecraft.world.entity.Entity
 
 /**
  * Configurable to configure the dynamic rotation engine

@@ -31,10 +31,10 @@ import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.plusAssign
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.withColor
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
 
 /**
  * Help Command
@@ -49,7 +49,7 @@ object CommandHelp : Command.Factory {
             .pagedQuery(
                 pageSize = 8,
                 header = {
-                    result("help").withColor(Formatting.RED).bold(true)
+                    result("help").withColor(ChatFormatting.RED).bold(true)
                 },
                 items = {
                     CommandManager.sortedBy { it.name }
@@ -57,7 +57,7 @@ object CommandHelp : Command.Factory {
                 eachRow = { _, command ->
                     val commandStart = CommandManager.Options.prefix + command.name
                     "\u2B25 ".asText()
-                        .formatted(Formatting.BLUE)
+                        .withStyle(ChatFormatting.BLUE)
                         .onHover(
                             HoverEvent.ShowText(
                                 translation("liquidbounce.command.${command.name}.description")
@@ -65,7 +65,7 @@ object CommandHelp : Command.Factory {
                         )
                         .append(
                             commandStart.asText()
-                                .formatted(Formatting.GRAY)
+                                .withStyle(ChatFormatting.GRAY)
                                 .onClick(ClickEvent.SuggestCommand(commandStart))
                         )
                         .append(buildAliasesText(command))
@@ -73,13 +73,13 @@ object CommandHelp : Command.Factory {
             )
     }
 
-    private fun buildAliasesText(cmd: Command): Text {
-        val aliasesText = Text.literal("")
+    private fun buildAliasesText(cmd: Command): Component {
+        val aliasesText = Component.literal("")
 
         if (cmd.aliases.isNotEmpty()) {
             cmd.aliases.forEach { alias ->
-                aliasesText += ", ".asPlainText(Formatting.DARK_GRAY)
-                aliasesText += regular(alias).formatted(Formatting.GRAY)
+                aliasesText += ", ".asPlainText(ChatFormatting.DARK_GRAY)
+                aliasesText += regular(alias).withStyle(ChatFormatting.GRAY)
                     .onClick(ClickEvent.SuggestCommand(CommandManager.Options.prefix + alias))
             }
         }

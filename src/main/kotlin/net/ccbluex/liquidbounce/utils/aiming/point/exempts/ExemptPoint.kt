@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.point.exempts
 
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
@@ -41,5 +41,5 @@ import net.minecraft.util.math.Vec3d
  *
  */
 internal interface ExemptPoint {
-    fun predicate(context: ExemptContext, point: Vec3d): Boolean
+    fun predicate(context: ExemptContext, point: Vec3): Boolean
 }

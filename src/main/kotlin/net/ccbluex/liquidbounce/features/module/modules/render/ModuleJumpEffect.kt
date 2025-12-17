@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.render.utils.shiftHue
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
 object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
@@ -45,7 +45,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
     private val lifetime by int("Lifetime", 15, 1..30)
 
-    private val circles = ExpiringList<Vec3d>()
+    private val circles = ExpiringList<Vec3>()
 
     override fun onDisabled() {
         circles.clear()
@@ -86,7 +86,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
     private val playerJumpHandler = handler<PlayerJumpEvent> { _ ->
         // Adds new circle when the player jumps
-        circles.add(player.entityPos, lifetime)
+        circles.add(player.position(), lifetime)
     }
 
 }

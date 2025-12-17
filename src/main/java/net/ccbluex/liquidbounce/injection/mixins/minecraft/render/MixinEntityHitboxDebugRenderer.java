@@ -23,9 +23,9 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleHitbox;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
-import net.minecraft.client.render.debug.EntityHitboxDebugRenderer;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Box;
+import net.minecraft.client.renderer.debug.EntityHitboxDebugRenderer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -33,24 +33,24 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class MixinEntityHitboxDebugRenderer {
 
     @ModifyExpressionValue(
-        method = "drawHitbox",
+        method = "showHitboxes",
         at = {
             @At(
                 value = "INVOKE",
-                target = "Lnet/minecraft/entity/Entity;getBoundingBox()Lnet/minecraft/util/math/Box;"
+                target = "Lnet/minecraft/world/entity/Entity;getBoundingBox()Lnet/minecraft/world/phys/AABB;"
             ),
             @At(
                 value = "INVOKE",
-                target = "Lnet/minecraft/entity/boss/dragon/EnderDragonPart;getBoundingBox()Lnet/minecraft/util/math/Box;"
+                target = "Lnet/minecraft/world/entity/boss/enderdragon/EnderDragonPart;getBoundingBox()Lnet/minecraft/world/phys/AABB;"
             ),
         }
     )
-    private Box getBoundingBox(Box original, @Local(argsOnly = true) Entity entity) {
+    private AABB getBoundingBox(AABB original, @Local(argsOnly = true) Entity entity) {
         var moduleHitBox = ModuleHitbox.INSTANCE;
         if (entity != null && moduleHitBox.getRunning()
             && moduleHitBox.getApplyToDebugHitbox() && CombatExtensionsKt.shouldBeAttacked(entity)) {
             var expansion = moduleHitBox.getSize();
-            return original.expand(expansion);
+            return original.inflate(expansion);
         }
         return original;
     }

@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * @anticheat Sentinel
@@ -96,7 +96,7 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
     val moveHandler = handler<PlayerMoveEvent> { event ->
         if (player.hurtTime > 0  && !hasBeenHurt) {
             hasBeenHurt = true
-            player.velocity = player.velocity.withStrafe(speed = horizontalSpeed.toDouble())
+            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = horizontalSpeed.toDouble()))
             notification(
                 "Fly",
                 translation("liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage"),
@@ -106,7 +106,7 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
             // Nostalgia mode
             if (!hasBeenTeleported && nostalgia) {
                 hasBeenTeleported = true
-                player.setPosition(
+                player.setPos(
                     player.x,
                     player.y + 0.42,
                     player.z
@@ -119,8 +119,8 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
         }
 
         event.movement.y = when {
-            mc.options.jumpKey.isPressed -> verticalSpeed.toDouble()
-            mc.options.sneakKey.isPressed -> (-verticalSpeed).toDouble()
+            mc.options.keyJump.isDown -> verticalSpeed.toDouble()
+            mc.options.keyShift.isDown -> (-verticalSpeed).toDouble()
             else -> 0.0
         }
 
@@ -131,13 +131,17 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
 
     private fun boost() {
         hasBeenHurt = false
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false,
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false,
             player.horizontalCollision))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z,
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y + 3.25, player.z,
             false, player.horizontalCollision))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false,
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false,
             player.horizontalCollision))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true,
+        network.send(
+            ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true,
             player.horizontalCollision))
     }
 

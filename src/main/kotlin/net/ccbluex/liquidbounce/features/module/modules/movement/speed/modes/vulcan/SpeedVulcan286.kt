@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.world.effect.MobEffects
 
 /**
  * BHop Speed for Vulcan 286
@@ -45,23 +45,26 @@ class SpeedVulcan286(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase
     private val afterJumpHandler = sequenceHandler<PlayerAfterJumpEvent> {
         // We might lose the effect during runtime of the sequence,
         // but we don't care, since it is Vulcan.
-        val speedLevel = (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+        val speedLevel = (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
 
         waitTicks(1)
-        player.velocity =
-            player.velocity.withStrafe(speed = if (goingSideways) 0.3345 else 0.3355 * (1 + speedLevel * 0.3819))
+        player.deltaMovement = player.deltaMovement.withStrafe(
+            speed = if (goingSideways) 0.3345 else 0.3355 * (1 + speedLevel * 0.3819)
+        )
+
         waitTicks(1)
         if (player.isSprinting) {
-            player.velocity =
-                player.velocity.withStrafe(speed = if (goingSideways) 0.3235 else 0.3284 * (1 + speedLevel * 0.355))
+            player.deltaMovement = player.deltaMovement.withStrafe(
+                speed = if (goingSideways) 0.3235 else 0.3284 * (1 + speedLevel * 0.355)
+            )
         }
 
         waitTicks(2)
-        player.velocity = player.velocity.copy(y = -0.376)
+        player.deltaMovement = player.deltaMovement.copy(y = -0.376)
 
         waitTicks(2)
-        if (player.speed > 0.298) {
-            player.velocity = player.velocity.withStrafe(speed = 0.298)
+        if (player.flyDist > 0.298) {
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = 0.298)
         }
     }
 

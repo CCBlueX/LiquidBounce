@@ -21,22 +21,22 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.minecraft.util.math.BlockBox
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Position
-import net.minecraft.util.math.Vec2f
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.level.levelgen.structure.BoundingBox
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.util.Mth
+import net.minecraft.core.Position
+import net.minecraft.world.phys.Vec2
+import net.minecraft.world.phys.Vec3
+import net.minecraft.core.Vec3i
 
-inline operator fun Vec2f.component1() = this.x
-inline operator fun Vec2f.component2() = this.y
-inline fun Vec2f.copy(x: Float = this.x, y: Float = this.y) = Vec2f(x, y)
+inline operator fun Vec2.component1() = this.x
+inline operator fun Vec2.component2() = this.y
+inline fun Vec2.copy(x: Float = this.x, y: Float = this.y) = Vec2(x, y)
 
-inline operator fun BlockPos.rangeTo(other: BlockPos): BlockBox = BlockBox.create(this, other)
+inline operator fun BlockPos.rangeTo(other: BlockPos): BoundingBox = BoundingBox.fromCorners(this, other)
 
-inline fun BlockPos.Mutable.set(pos: Position): BlockPos.Mutable = set(pos.x, pos.y, pos.z)
+inline fun BlockPos.MutableBlockPos.set(pos: Position): BlockPos.MutableBlockPos = set(pos.x(), pos.y(), pos.z())
 
 inline operator fun Vec3i.component1() = this.x
 inline operator fun Vec3i.component2() = this.y
@@ -44,31 +44,31 @@ inline operator fun Vec3i.component3() = this.z
 
 inline fun BlockPos.copy(x: Int = this.x, y: Int = this.y, z: Int = this.z) = BlockPos(x, y, z)
 
-inline operator fun Vec3i.plus(other: Vec3i): Vec3i = add(other)
+inline operator fun Vec3i.plus(other: Vec3i): Vec3i = offset(other)
 
 inline operator fun Vec3i.minus(other: Vec3i): Vec3i = subtract(other)
 
 inline operator fun Vec3i.times(scalar: Int): Vec3i = multiply(scalar)
 
-inline operator fun Vec3d.plus(other: Vec3d): Vec3d = add(other)
+inline operator fun Vec3.plus(other: Vec3): Vec3 = add(other)
 
-inline operator fun Vec3d.plus(other: Vec3i): Vec3d = add(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
+inline operator fun Vec3.plus(other: Vec3i): Vec3 = add(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
 
-inline operator fun Vec3d.minus(other: Vec3d): Vec3d = subtract(other)
+inline operator fun Vec3.minus(other: Vec3): Vec3 = subtract(other)
 
-inline operator fun Vec3d.minus(other: Vec3i): Vec3d =
+inline operator fun Vec3.minus(other: Vec3i): Vec3 =
     subtract(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
 
-inline operator fun Vec3d.times(scalar: Double): Vec3d = multiply(scalar)
+inline operator fun Vec3.times(scalar: Double): Vec3 = scale(scalar)
 
-val Vec3d.isLikelyZero: Boolean
-    get() = MathHelper.approximatelyEquals(this.lengthSquared(), 1.0E-6)
+val Vec3.isLikelyZero: Boolean
+    get() = Mth.equal(this.lengthSqr(), 1.0E-6)
 
-val Vec2f.isLikelyZero: Boolean
-    get() = MathHelper.approximatelyEquals(this.lengthSquared(), 1.0E-6F)
+val Vec2.isLikelyZero: Boolean
+    get() = Mth.equal(this.lengthSquared(), 1.0E-6F)
 
-inline fun Vec3d.interpolate(start: Vec3d, multiple: Double) =
-    Vec3d(
+inline fun Vec3.interpolate(start: Vec3, multiple: Double) =
+    Vec3(
         this.x.interpolate(start.x, multiple),
         this.y.interpolate(start.y, multiple),
         this.z.interpolate(start.z, multiple),
@@ -76,20 +76,20 @@ inline fun Vec3d.interpolate(start: Vec3d, multiple: Double) =
 
 inline fun Double.interpolate(old: Double, scale: Double) = old + (this - old) * scale
 
-inline fun Vec3d.copy(x: Double = this.x, y: Double = this.y, z: Double = this.z) = Vec3d(x, y, z)
+inline fun Vec3.copy(x: Double = this.x, y: Double = this.y, z: Double = this.z) = Vec3(x, y, z)
 
-inline operator fun Vec3d.component1(): Double = this.x
-inline operator fun Vec3d.component2(): Double = this.y
-inline operator fun Vec3d.component3(): Double = this.z
+inline operator fun Vec3.component1(): Double = this.x
+inline operator fun Vec3.component2(): Double = this.y
+inline operator fun Vec3.component3(): Double = this.z
 
 fun ChunkPos.contains(blockPos: Long): Boolean =
-    BlockPos.unpackLongX(blockPos) in startX..endX && BlockPos.unpackLongZ(blockPos) in startZ..endZ
+    BlockPos.getX(blockPos) in minBlockX..maxBlockX && BlockPos.getZ(blockPos) in minBlockZ..maxBlockZ
 
 fun ChunkPos.contains(blockPos: BlockPos): Boolean =
-    blockPos.x in startX..endX && blockPos.z in startZ..endZ
+    blockPos.x in minBlockX..maxBlockX && blockPos.z in minBlockZ..maxBlockZ
 
-fun Iterable<Vec3d>.average(): Vec3d {
-    val result = Vec3d(0.0, 0.0, 0.0)
+fun Iterable<Vec3>.average(): Vec3 {
+    val result = Vec3(0.0, 0.0, 0.0)
     var i = 0
     for (vec in this) {
         result.move(vec)
@@ -98,7 +98,7 @@ fun Iterable<Vec3d>.average(): Vec3d {
     return result.scale(1.0 / i)
 }
 
-inline fun forEach3D(v0: Vec3d, v1: Vec3d, step: Double, fn: (Double, Double, Double) -> Unit) {
+inline fun forEach3D(v0: Vec3, v1: Vec3, step: Double, fn: (Double, Double, Double) -> Unit) {
     val (startX, startY, startZ) = v0
     val (endX, endY, endZ) = v1
 
@@ -118,53 +118,53 @@ inline fun forEach3D(v0: Vec3d, v1: Vec3d, step: Double, fn: (Double, Double, Do
     }
 }
 
-inline fun Vec3i.toVec3d(): Vec3d = Vec3d.of(this)
+inline fun Vec3i.toVec3d(): Vec3 = Vec3.atLowerCornerOf(this)
 inline fun Vec3i.toVec3d(
     xOffset: Double = 0.0,
     yOffset: Double = 0.0,
     zOffset: Double = 0.0,
-): Vec3d = Vec3d(x + xOffset, y + yOffset, z + zOffset)
+): Vec3 = Vec3(x + xOffset, y + yOffset, z + zOffset)
 
-inline fun Vec3d.toVec3(): Vec3f = Vec3f(this.x, this.y, this.z)
+inline fun Vec3.toVec3(): Vec3f = Vec3f(this.x, this.y, this.z)
 
 @Deprecated("use this.toBlockPos instead", replaceWith = ReplaceWith("this.toBlockPos"))
-inline fun Vec3d.toVec3i(): Vec3i = toBlockPos()
+inline fun Vec3.toVec3i(): Vec3i = toBlockPos()
 
-inline fun Vec3d.toBlockPos(
+inline fun Vec3.toBlockPos(
     xOffset: Double = 0.0,
     yOffset: Double = 0.0,
     zOffset: Double = 0.0,
-): BlockPos = BlockPos.ofFloored(x + xOffset, y + yOffset, z + zOffset)
+): BlockPos = BlockPos.containing(x + xOffset, y + yOffset, z + zOffset)
 
-fun Vec3d.preferOver(other: Vec3d): Vec3d {
+fun Vec3.preferOver(other: Vec3): Vec3 {
     val x = if (this.x == 0.0) other.x else this.x
     val y = if (this.y == 0.0) other.y else this.y
     val z = if (this.z == 0.0) other.z else this.z
-    return Vec3d(x, y, z)
+    return Vec3(x, y, z)
 }
 
 // Mutable Vec3d
 
-fun Vec3d.set(x: Double = this.x, y: Double = this.y, z: Double = this.z): Vec3d = apply {
+fun Vec3.set(x: Double = this.x, y: Double = this.y, z: Double = this.z): Vec3 = apply {
     this.x = x
     this.y = y
     this.z = z
 }
 
-fun Vec3d.set(other: Vec3d): Vec3d = set(other.x, other.y, other.z)
+fun Vec3.set(other: Vec3): Vec3 = set(other.x, other.y, other.z)
 
-fun Vec3d.move(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vec3d = apply {
+fun Vec3.move(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vec3 = apply {
     this.x += x
     this.y += y
     this.z += z
 }
 
-fun Vec3d.move(other: Vec3d): Vec3d = move(other.x, other.y, other.z)
+fun Vec3.move(other: Vec3): Vec3 = move(other.x, other.y, other.z)
 
-fun Vec3d.scale(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vec3d = apply {
+fun Vec3.scale(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vec3 = apply {
     this.x *= x
     this.y *= y
     this.z *= z
 }
 
-fun Vec3d.scale(scale: Double = 1.0): Vec3d = scale(x = scale, y = scale, z = scale)
+fun Vec3.scale(scale: Double = 1.0): Vec3 = scale(x = scale, y = scale, z = scale)

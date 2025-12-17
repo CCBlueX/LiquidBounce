@@ -20,7 +20,7 @@
 
 package net.ccbluex.liquidbounce.lang
 
-import net.minecraft.text.TranslatableTextContent
+import net.minecraft.network.chat.contents.TranslatableContents
 
 class LanguageText(key: String, args: Array<out Any>) :
-    TranslatableTextContent(key, null, args)
+    TranslatableContents(key, null, args)

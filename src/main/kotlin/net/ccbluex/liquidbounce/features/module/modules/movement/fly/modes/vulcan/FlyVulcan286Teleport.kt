@@ -30,10 +30,10 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionAndOnGround
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Pos
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.world.phys.Vec3
 
 /**
  * @anticheat Vulcan
@@ -70,40 +70,42 @@ internal object FlyVulcan286Teleport : Choice("Vulcan286-Teleport-18") {
         jumping = true
 
         repeat(3) {
-            player.jump()
+            player.jumpFromGround()
             // Ugly code, yes I know
             // If this wasn't like this, it would trigger at the same tick...
-            tickUntil { !player.isOnGround }
-            tickUntil { player.isOnGround }
+            tickUntil { !player.onGround() }
+            tickUntil { player.onGround() }
         }
 
         jumping = false
         tickUntil { player.hurtTime > 0 }
 
         // Flag to disable some checks...
-        network.sendPacket(PositionAndOnGround(
+        network.send(
+            Pos(
             player.x,
             player.y - 0.1,
             player.z,
-            player.isOnGround,
+            player.onGround(),
             player.horizontalCollision
         ))
 
         tickUntil { flagged }
 
         // Cool, we took damage so lets fly
-        val vector = Vec3d.fromPolar(0F, player.yaw).normalize()
+        val vector = Vec3.directionFromRotation(0F, player.yRot).normalize()
         // After 3 times vulcan flags us. 3 is the max
         repeat(3) {
             // 10 Blocks per teleport...
             // Used 9 because stable...
             // Otherwise, last teleport would flag since player also moves a bit
-            player.setPosition(player.x + vector.x * 9, player.y, player.z + vector.z * 9)
-            network.sendPacket(PositionAndOnGround(
+            player.setPos(player.x + vector.x * 9, player.y, player.z + vector.z * 9)
+            network.send(
+                Pos(
                 player.x,
                 player.y,
                 player.z,
-                player.isOnGround,
+                player.onGround(),
                 player.horizontalCollision
             ))
         }
@@ -122,13 +124,13 @@ internal object FlyVulcan286Teleport : Choice("Vulcan286-Teleport-18") {
 
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is ServerboundMovePlayerPacket) {
             if (jumping) {
                 // This allows us to do the jump "exploit"
                 packet.onGround = false
             }
         }
-        if (packet is PlayerPositionLookS2CPacket) {
+        if (packet is ClientboundPlayerPositionPacket) {
             flagged = true
         }
     }

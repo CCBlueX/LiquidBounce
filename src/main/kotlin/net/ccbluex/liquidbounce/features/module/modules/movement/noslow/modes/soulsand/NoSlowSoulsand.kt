@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockVelocityMultiplierEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
-import net.minecraft.block.SoulSandBlock
+import net.minecraft.world.level.block.SoulSandBlock
 
 internal object NoSlowSoulsand : ToggleableConfigurable(ModuleNoSlow, "Soulsand", true) {
 

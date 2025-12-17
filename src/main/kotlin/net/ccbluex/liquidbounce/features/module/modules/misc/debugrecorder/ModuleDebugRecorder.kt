@@ -41,8 +41,8 @@ import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.underline
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
 import java.time.LocalDateTime
 
 object ModuleDebugRecorder : ClientModule("DebugRecorder", Category.MISC, disableOnQuit = true) {

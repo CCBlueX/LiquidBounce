@@ -50,7 +50,7 @@ object CommandUsername : Command.Factory, MinecraftShortcuts {
                     .underline(true)
 
                 chat(regular(command.result("username", formattedUsernameWithEvents)), command)
-                GLFW.glfwSetClipboardString(mc.window.handle, username)
+                GLFW.glfwSetClipboardString(mc.window.handle(), username)
             }
             .build()
     }

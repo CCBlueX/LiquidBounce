@@ -30,12 +30,12 @@ import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 
 object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Prediction", true) {
 
-    private val lastPlacementOffsets = ArrayDeque<Vec3d>()
+    private val lastPlacementOffsets = ArrayDeque<Vec3>()
 
     private const val MAX_PLACEMENT_OFFSETS = 4
 
@@ -43,7 +43,7 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
         lastPlacementOffsets.clear()
     }
 
-    fun onPlace(optimalLine: Line?, lastFallOffPosition: Vec3d?) {
+    fun onPlace(optimalLine: Line?, lastFallOffPosition: Vec3?) {
         if (optimalLine == null || !this.enabled) {
             return
         }
@@ -52,7 +52,7 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
 
         val lineDirAngle = atan2(optimalLine.direction.z, optimalLine.direction.x).toFloat()
 
-        val unrotatedOffset = (player.entityPos - fallOffPoint).rotateY(lineDirAngle)
+        val unrotatedOffset = (player.position() - fallOffPoint).yRot(lineDirAngle)
 
         val x = getAvgPlacementPos()
 
@@ -67,7 +67,7 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
         }
     }
 
-    fun getAvgPlacementPos(): Vec3d? {
+    fun getAvgPlacementPos(): Vec3? {
         if (lastPlacementOffsets.isEmpty()) {
             return null
         }
@@ -80,7 +80,7 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
      *
      * @return the predicted pos or `null` if the prediction failed
      */
-    fun getPredictedPlacementPos(optimalLine: Line?): Vec3d? {
+    fun getPredictedPlacementPos(optimalLine: Line?): Vec3? {
         if (optimalLine == null || !this.enabled) {
             return null
         }
@@ -95,7 +95,7 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
         // If the next placement point is far in the future. Don't predict for now
         val fallOffPoint = getFallOffPositionOnLine(optimalLine) ?: return null
 
-        val fallOffPointToPlayer = fallOffPoint - player.entityPos
+        val fallOffPointToPlayer = fallOffPoint - player.position()
 
         val offset = when (val last = getAvgPlacementPos()) {
             null -> {
@@ -106,7 +106,7 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
             else -> {
                 val lineDirAngle = atan2(optimalLine.direction.z, optimalLine.direction.x).toFloat()
 
-                val predictedPos = fallOffPoint + last.rotateY(-lineDirAngle)
+                val predictedPos = fallOffPoint + last.yRot(-lineDirAngle)
 
                 predictedPos
             }
@@ -115,13 +115,13 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
         return offset
     }
 
-    fun getFallOffPositionOnLine(optimalLine: Line): Vec3d? {
+    fun getFallOffPositionOnLine(optimalLine: Line): Vec3? {
         // TODO Check if the player is moving away from the line and implement another prediction method for that case
 
-        val nearestPosToPlayer = optimalLine.getNearestPointTo(player.entityPos)
+        val nearestPosToPlayer = optimalLine.getNearestPointTo(player.position())
 
         val fromLine = nearestPosToPlayer.add(0.0, -0.1, 0.0)
-        val toLine = fromLine + optimalLine.direction.normalize().multiply(3.0)
+        val toLine = fromLine + optimalLine.direction.normalize().scale(3.0)
 
         val edgeCollision = findEdgeCollision(fromLine, toLine) ?: return null
 

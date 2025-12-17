@@ -29,12 +29,12 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.item.FishingRodItem
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
-import net.minecraft.registry.Registries
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.Hand
+import net.minecraft.world.item.FishingRodItem
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.InteractionHand
 
 /**
  * AutoFish module
@@ -57,8 +57,8 @@ object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
      */
     private val sounds by sounds(
         "Sounds", objectRBTreeSetOf(
-            Registries.SOUND_EVENT.asComparator(),
-            SoundEvents.ENTITY_FISHING_BOBBER_SPLASH,
+            BuiltInRegistries.SOUND_EVENT.asComparator(),
+            SoundEvents.FISHING_BOBBER_SPLASH,
         )
     )
 
@@ -91,24 +91,24 @@ object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
             return@tickHandler
         }
 
-        for (hand in Hand.entries) {
-            if (player.getEquippedStack(hand.equipmentSlot).item !is FishingRodItem) {
+        for (hand in InteractionHand.entries) {
+            if (player.getItemBySlot(hand.asEquipmentSlot()).item !is FishingRodItem) {
                 continue
             }
 
             waitTicks(reelDelay.random())
-            interaction.sendSequencedPacket(world) { sequence ->
-                PlayerInteractItemC2SPacket(hand, sequence, player.yaw, player.pitch)
+            interaction.startPrediction(world) { sequence ->
+                ServerboundUseItemPacket(hand, sequence, player.yRot, player.xRot)
             }
 
-            player.swingHand(hand)
+            player.swing(hand)
 
             if (RecastRod.enabled) {
                 waitTicks(RecastRod.delay.random())
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(hand, sequence, player.yaw, player.pitch)
+                interaction.startPrediction(world) { sequence ->
+                    ServerboundUseItemPacket(hand, sequence, player.yRot, player.xRot)
                 }
-                player.swingHand(hand)
+                player.swing(hand)
             }
             break
         }
@@ -119,14 +119,14 @@ object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        val fishHook = player.fishHook ?: return@handler
+        val fishHook = player.fishing ?: return@handler
         if (fishHook.isRemoved) {
             return@handler
         }
 
-        if (packet is PlaySoundS2CPacket && packet.sound.value() in sounds) {
+        if (packet is ClientboundSoundPacket && packet.sound.value() in sounds) {
             if (PullTriggerSoundDistance.running) {
-                val hookToSoundSq = fishHook.entityPos.squaredDistanceTo(packet.x, packet.y, packet.z)
+                val hookToSoundSq = fishHook.position().distanceToSqr(packet.x, packet.y, packet.z)
                 debugParameter("HookToSoundSq") { hookToSoundSq }
 
                 // From my testing, we should see distances around 0.04 - 0.08 (Paper version 1.21.1-132)

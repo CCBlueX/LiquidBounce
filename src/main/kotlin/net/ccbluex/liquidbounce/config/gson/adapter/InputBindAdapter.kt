@@ -29,14 +29,14 @@ import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
-import net.minecraft.client.util.InputUtil
+import com.mojang.blaze3d.platform.InputConstants
 import java.lang.reflect.Type
 
 object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind> {
 
     override fun serialize(src: InputBind, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         return JsonObject().apply {
-            add("boundKey", context.serialize(src.boundKey, InputUtil.Key::class.java))
+            add("boundKey", context.serialize(src.boundKey, InputConstants.Key::class.java))
             add("action", context.serialize(src.action, NamedChoice::class.java))
             if (src.modifiers.isNotEmpty()) {
                 add("modifiers", context.serialize(src.modifiers))
@@ -50,20 +50,23 @@ object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind>
 
             // We do not want to throw an error but simply unbind the key instead.
             if (!primitive.isNumber) {
-                return InputBind(InputUtil.UNKNOWN_KEY, InputBind.BindAction.TOGGLE, emptySet())
+                return InputBind(InputConstants.UNKNOWN, InputBind.BindAction.TOGGLE, emptySet())
             }
 
             // Bind Action goes missing as we cannot access the action that is located
             // one element above - Sorry!
             return InputBind(
-                InputUtil.Type.KEYSYM.createFromCode(primitive.asInt),
+                InputConstants.Type.KEYSYM.getOrCreate(primitive.asInt),
                 InputBind.BindAction.TOGGLE,
                 emptySet(),
             )
         }
 
         val jsonObject = json.asJsonObject
-        val boundKey = context.deserialize<InputUtil.Key>(jsonObject.get("boundKey"), InputUtil.Key::class.java)
+        val boundKey = context.deserialize<InputConstants.Key>(
+            jsonObject.get("boundKey"),
+            InputConstants.Key::class.java
+        )
         val actionStr = jsonObject.string("action")
         val action = InputBind.BindAction.entries.find { it.choiceName.equals(actionStr, ignoreCase = true) }
             ?: InputBind.BindAction.TOGGLE

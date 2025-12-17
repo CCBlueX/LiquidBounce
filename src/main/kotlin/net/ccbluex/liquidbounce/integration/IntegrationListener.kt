@@ -44,8 +44,8 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.TitleScreen
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.TitleScreen
 import org.lwjgl.glfw.GLFW
 import kotlin.math.min
 
@@ -103,7 +103,7 @@ object IntegrationListener : EventListener {
     }
 
     internal val parent: Screen
-        get() = mc.currentScreen ?: TitleScreen()
+        get() = mc.screen ?: TitleScreen()
 
     private var browserIsReady = false
 
@@ -195,8 +195,8 @@ object IntegrationListener : EventListener {
     }
 
     fun restoreOriginalScreen() {
-        if (mc.currentScreen is VirtualDisplayScreen) {
-            mc.setScreen((mc.currentScreen as VirtualDisplayScreen).originalScreen)
+        if (mc.screen is VirtualDisplayScreen) {
+            mc.setScreen((mc.screen as VirtualDisplayScreen).originalScreen)
         }
     }
 
@@ -206,7 +206,7 @@ object IntegrationListener : EventListener {
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> { event ->
         // Set to default GLFW cursor
-        GLFW.glfwSetCursor(mc.window.handle, standardCursor)
+        GLFW.glfwSetCursor(mc.window.handle(), standardCursor)
 
         if (handleCurrentScreen(event.screen)) {
             event.cancelEvent()
@@ -215,8 +215,8 @@ object IntegrationListener : EventListener {
 
     @Suppress("unused")
     private val screenRefresher = handler<GameTickEvent> {
-        if (browserIsReady && mc.currentScreen !is TaskProgressScreen) {
-            handleCurrentScreen(mc.currentScreen)
+        if (browserIsReady && mc.screen !is TaskProgressScreen) {
+            handleCurrentScreen(mc.screen)
         }
     }
 
@@ -231,7 +231,7 @@ object IntegrationListener : EventListener {
 
     @Suppress("unused")
     private val fpsLimitHandler = handler<FpsLimitEvent> { event ->
-        if (!browserIsReady || !browserSettings.syncGameFps || !isClientScreen(mc.currentScreen)) {
+        if (!browserIsReady || !browserSettings.syncGameFps || !isClientScreen(mc.screen)) {
             return@handler
         }
 
@@ -270,7 +270,7 @@ object IntegrationListener : EventListener {
             !browserIsReady || screen is VirtualDisplayScreen -> false
             else -> {
                 // Are we currently playing the game?
-                if (mc.world != null && screen == null) {
+                if (mc.level != null && screen == null) {
                     virtualClose()
 
                     return false

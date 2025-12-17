@@ -23,8 +23,8 @@ package net.ccbluex.liquidbounce.utils.aiming.projectiles
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.EntityDimensions
+import net.minecraft.world.phys.Vec3
 
 /**
  * Uses the best available implementation of [ProjectileAngleCalculator]
@@ -32,7 +32,7 @@ import net.minecraft.util.math.Vec3d
 object SituationalProjectileAngleCalculator: ProjectileAngleCalculator() {
     override fun calculateAngleFor(
         projectileInfo: TrajectoryInfo,
-        sourcePos: Vec3d,
+        sourcePos: Vec3,
         targetPosFunction: PositionExtrapolation,
         targetShape: EntityDimensions
     ): Rotation? {

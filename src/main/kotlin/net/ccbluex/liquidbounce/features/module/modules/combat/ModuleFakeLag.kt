@@ -36,17 +36,17 @@ import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.item.isConsumable
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSignC2SPacket
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
-import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import kotlin.jvm.optionals.getOrNull
 
 /**
@@ -68,15 +68,15 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
         val testPacket: (packet: Packet<*>?) -> Boolean
     ) : NamedChoice {
         ENTITY_INTERACT("EntityInteract", {
-            it is PlayerInteractEntityC2SPacket
-            || it is HandSwingC2SPacket
+            it is ServerboundInteractPacket
+            || it is ServerboundSwingPacket
         }),
         BLOCK_INTERACT("BlockInteract", {
-            it is PlayerInteractBlockC2SPacket
-            || it is UpdateSignC2SPacket
+            it is ServerboundUseItemOnPacket
+            || it is ServerboundSignUpdatePacket
         }),
         ACTION("Action", {
-            it is PlayerActionC2SPacket
+            it is ServerboundPlayerActionPacket
         })
     }
 
@@ -123,8 +123,8 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
 
     @Suppress("unused", "ComplexCondition")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin != TransferOrigin.OUTGOING || player.isDead || player.isTouchingWater
-            || mc.currentScreen != null
+        if (event.origin != TransferOrigin.OUTGOING || player.isDeadOrDying || player.isInWater
+            || mc.screen != null
         ) {
             return@handler
         }
@@ -145,14 +145,14 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
 
         when (val packet = event.packet) {
 
-            is PlayerPositionLookS2CPacket,
-            is ResourcePackStatusC2SPacket -> {
+            is ClientboundPlayerPositionPacket,
+            is ServerboundResourcePackPacket -> {
                 chronometer.reset()
                 return@handler
             }
 
-            is PlayerInteractEntityC2SPacket,
-            is HandSwingC2SPacket -> {
+            is ServerboundInteractPacket,
+            is ServerboundSwingPacket -> {
                 if (FlushOn.ENTITY_INTERACT in flushOn) {
                     chronometer.reset()
                     return@handler
@@ -160,9 +160,9 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
             }
 
             // Flush on knockback
-            is EntityVelocityUpdateS2CPacket -> {
-                if (packet.entityId == player.id
-                    && (packet.velocity.x != 0.0 || packet.velocity.y != 0.0 || packet.velocity.z != 0.0)
+            is ClientboundSetEntityMotionPacket -> {
+                if (packet.id == player.id
+                    && (packet.movement.x != 0.0 || packet.movement.y != 0.0 || packet.movement.z != 0.0)
                 ) {
                     chronometer.reset()
                     return@handler
@@ -170,7 +170,7 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
             }
 
             // Flush on explosion
-            is ExplosionS2CPacket -> {
+            is ClientboundExplodePacket -> {
                 packet.playerKnockback.getOrNull()?.let { knockback ->
                     if (knockback.x != 0.0 || knockback.y != 0.0 || knockback.z != 0.0) {
                         chronometer.reset()
@@ -180,14 +180,14 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
             }
 
             // Flush on damage
-            is HealthUpdateS2CPacket -> {
+            is ClientboundSetHealthPacket -> {
                 chronometer.reset()
                 return@handler
             }
         }
 
         // We don't want to lag when we are using an item that is not a food, milk bucket or potion.
-        if (player.isUsingItem && player.activeItem.isConsumable) {
+        if (player.isUsingItem && player.useItem.isConsumable) {
             return@handler
         }
 
@@ -209,7 +209,7 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
                     event.action = PacketQueueManager.Action.QUEUE
                     return@handler
                 }
-                val playerBox = player.dimensions.getBoxAt(position)
+                val playerBox = player.dimensions.makeBoundingBox(position)
 
                 // todo: implement if enemy is facing old player position
 
@@ -226,10 +226,10 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
                     it.box.intersects(playerBox)
                 }
                 val serverDistance = entities.minOfOrNull {
-                    it.entityPos.distanceTo(position)
+                    it.position().distanceTo(position)
                 } ?: return@handler
                 val clientDistance = entities.minOfOrNull {
-                    it.entityPos.distanceTo(player.entityPos)
+                    it.position().distanceTo(player.position())
                 } ?: return@handler
 
                 // If the server position is not closer than the client position, we keep lagging.

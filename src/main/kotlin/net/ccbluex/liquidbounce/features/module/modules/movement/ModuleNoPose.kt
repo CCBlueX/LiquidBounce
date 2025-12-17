@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.entity.EntityAttachmentType
-import net.minecraft.entity.EntityAttachments
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.entity.EntityPose
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.entity.EntityAttachment
+import net.minecraft.world.entity.EntityAttachments
+import net.minecraft.world.entity.EntityDimensions
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.entity.player.Player
 
 /**
  * Prevents pose changes for low version of server protocol
@@ -38,10 +38,10 @@ object ModuleNoPose : ClientModule("NoPose", Category.MOVEMENT, aliases = listOf
     val noSwim by boolean("NoSwim", false)
     val sneakHeightChoice by enumChoice("SneakHeight", SneakHeights.ONEFIFTEEN)
 
-    fun shouldCancelPose(pose: EntityPose): Boolean {
+    fun shouldCancelPose(pose: Pose): Boolean {
         if (!running) return false
         /* If the entity in question is mc.player, only cancel EntityPose.SWIMMING */
-        return pose == EntityPose.SWIMMING && noSwim
+        return pose == Pose.SWIMMING && noSwim
     }
 
     /**
@@ -61,11 +61,13 @@ object ModuleNoPose : ClientModule("NoPose", Category.MOVEMENT, aliases = listOf
  * Helper method to add vehicle attachment
  */
 private fun getDimensions(width: Float, height: Float, eyeHeight: Float): EntityDimensions {
-    return EntityDimensions.changing(width, height)
+    return EntityDimensions.scalable(width, height)
         .withEyeHeight(eyeHeight)
-        .withAttachments(EntityAttachments.builder().add(
-            EntityAttachmentType.VEHICLE,
-            PlayerEntity.VEHICLE_ATTACHMENT))
+        .withAttachments(
+            EntityAttachments.builder().attach(
+            EntityAttachment.VEHICLE,
+            Player.DEFAULT_VEHICLE_ATTACHMENT
+            ))
 }
 
 @Suppress("unused") /* Used as settings */

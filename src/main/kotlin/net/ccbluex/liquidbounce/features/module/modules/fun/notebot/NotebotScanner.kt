@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.block.Blocks
-import net.minecraft.block.enums.NoteBlockInstrument
-import net.minecraft.util.Formatting
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
+import net.minecraft.ChatFormatting
 
 object NotebotScanner : MinecraftShortcuts {
     fun scanBlocksAndCheckRequirements(songData: SongData): BlocksAndRequirements {
@@ -44,14 +44,14 @@ object NotebotScanner : MinecraftShortcuts {
     private fun scanSurroundingNoteBlocks(songData: SongData): Map<NoteBlockInstrument, MutableList<NoteBlockTracker>> {
         val result = enumMapOf<NoteBlockInstrument, ArrayDeque<NoteBlockTracker>>()
 
-        val surroundings = player.eyePos.toBlockPos().getSortedSphere(ModuleNotebot.range)
+        val surroundings = player.eyePosition.toBlockPos().getSortedSphere(ModuleNotebot.range)
         val noteBlocks = surroundings.filter { pos ->
-            pos.getState()?.block == Blocks.NOTE_BLOCK && pos.up().getState()!!.isAir
+            pos.getState()?.block == Blocks.NOTE_BLOCK && pos.above().getState()!!.isAir
         }
 
         val requiredInstruments = ModuleNotebot.getRequiredInstruments(songData)
         noteBlocks.forEach { pos ->
-            val instrument = pos.down().getState()!!.instrument
+            val instrument = pos.below().getState()!!.instrument()
             if (instrument in requiredInstruments) {
                 result.getOrPut(instrument) { ArrayDeque() }.add(NoteBlockTracker(pos))
             }
@@ -120,18 +120,18 @@ object NotebotScanner : MinecraftShortcuts {
                 aggregatedRequirements.merge(key1.instrumentEnum, count, Int::plus)
             }
 
-            val text = ModuleNotebot.message("notEnoughNoteBlocks").formatted(Formatting.RED)
+            val text = ModuleNotebot.message("notEnoughNoteBlocks").withStyle(ChatFormatting.RED)
             aggregatedRequirements.entries.sortedBy { -it.value }.forEach { (instrument, requiredCount) ->
                 val availableCount = this.availableBlocks[instrument]?.size ?: 0
 
                 val messageLine = "\n - ${instrument.name} ($availableCount/$requiredCount)"
 
                 if (availableCount >= requiredCount) {
-                    text.append(messageLine.asPlainText(Formatting.GREEN))
+                    text.append(messageLine.asPlainText(ChatFormatting.GREEN))
                 } else if (availableCount == 0) {
-                    text.append(messageLine.asPlainText(Formatting.RED))
+                    text.append(messageLine.asPlainText(ChatFormatting.RED))
                 } else {
-                    text.append(messageLine.asPlainText(Formatting.YELLOW))
+                    text.append(messageLine.asPlainText(ChatFormatting.YELLOW))
                 }
             }
 

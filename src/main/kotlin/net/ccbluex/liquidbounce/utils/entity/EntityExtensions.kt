@@ -41,47 +41,47 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
-import net.minecraft.block.Blocks
-import net.minecraft.block.EntityShapeContext
-import net.minecraft.block.ShapeContext
-import net.minecraft.client.input.Input
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.TntEntity
-import net.minecraft.entity.attribute.EntityAttributes
-import net.minecraft.entity.damage.DamageSource
-import net.minecraft.entity.decoration.EndCrystalEntity
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.entity.mob.CreeperEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.entity.projectile.PersistentProjectileEntity
-import net.minecraft.entity.vehicle.TntMinecartEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ShieldItem
-import net.minecraft.item.consume.UseAction
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket
-import net.minecraft.registry.tag.DamageTypeTags
-import net.minecraft.scoreboard.ScoreboardDisplaySlot
-import net.minecraft.util.Hand
-import net.minecraft.util.PlayerInput
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Position
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.phys.shapes.EntityCollisionContext
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.client.player.ClientInput
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.item.PrimedTnt
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.monster.Creeper
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow
+import net.minecraft.world.entity.vehicle.minecart.MinecartTNT
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.ShieldItem
+import net.minecraft.world.item.ItemUseAnimation
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket
+import net.minecraft.tags.DamageTypeTags
+import net.minecraft.world.scores.DisplaySlot
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.player.Input
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Direction
+import net.minecraft.util.Mth
+import net.minecraft.core.Position
+import net.minecraft.world.phys.Vec3
+import net.minecraft.core.Vec3i
+import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.Difficulty
-import net.minecraft.world.RaycastContext
-import net.minecraft.world.World
-import net.minecraft.world.explosion.ExplosionBehavior
-import net.minecraft.world.explosion.ExplosionImpl
+import net.minecraft.world.level.ClipContext
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.ExplosionDamageCalculator
+import net.minecraft.world.level.ServerExplosion
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.hypot
@@ -90,50 +90,50 @@ import kotlin.math.sqrt
 
 // Copied from 1.21.4
 val Entity.isInsideWaterOrBubbleColumn: Boolean
-    get() = this.isTouchingWater || this.blockStateAtPos.isOf(Blocks.BUBBLE_COLUMN)
+    get() = this.isInWater || this.inBlockState.`is`(Blocks.BUBBLE_COLUMN)
 
-inline var Input.movementForward: Float
-    get() = movementInput.y
+inline var ClientInput.movementForward: Float
+    get() = moveVector.y
     set(value) {
-        (this as InputAddition).`liquid_bounce$setMovementInput`(movementInput.copy(y = value))
+        (this as InputAddition).`liquid_bounce$setMovementInput`(moveVector.copy(y = value))
     }
 
-inline var Input.movementSideways: Float
-    get() = movementInput.x
+inline var ClientInput.movementSideways: Float
+    get() = moveVector.x
     set(value) {
-        (this as InputAddition).`liquid_bounce$setMovementInput`(movementInput.copy(x = value))
+        (this as InputAddition).`liquid_bounce$setMovementInput`(moveVector.copy(x = value))
     }
 
 val LivingEntity.handItems: Array<ItemStack>
-    get() = arrayOf(mainHandStack, offHandStack)
+    get() = arrayOf(mainHandItem, offhandItem)
 
 val LivingEntity.armorItems: Array<ItemStack>
     get() = arrayOf(
-        getEquippedStack(EquipmentSlot.FEET),
-        getEquippedStack(EquipmentSlot.LEGS),
-        getEquippedStack(EquipmentSlot.CHEST),
-        getEquippedStack(EquipmentSlot.HEAD),
+        getItemBySlot(EquipmentSlot.FEET),
+        getItemBySlot(EquipmentSlot.LEGS),
+        getItemBySlot(EquipmentSlot.CHEST),
+        getItemBySlot(EquipmentSlot.HEAD),
     )
 
 val LivingEntity.equippedItems: Array<ItemStack>
-    get() = EquipmentSlot.entries.mapToArray { this.getEquippedStack(it) }
+    get() = EquipmentSlot.entries.mapToArray { this.getItemBySlot(it) }
 
 fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
-    val entity = source.source
+    val entity = source.directEntity
     var bl = false
-    if (entity is PersistentProjectileEntity) {
+    if (entity is AbstractArrow) {
         if (entity.pierceLevel > 0.toByte()) {
             bl = true
         }
     }
 
-    val itemStack = blockingItem
-    if (!source.isIn(DamageTypeTags.BYPASSES_SHIELD) && itemStack?.item is ShieldItem && !bl) {
-        val vec3d = source.position
+    val itemStack = itemBlockingWith
+    if (!source.`is`(DamageTypeTags.BYPASSES_SHIELD) && itemStack?.item is ShieldItem && !bl) {
+        val vec3d = source.sourcePosition
         if (vec3d != null) {
-            val vec3d2 = getRotationVector(0f, headYaw)
-            val vec3d3 = vec3d.relativize(entityPos).copy(y = 0.0).normalize()
-            return vec3d3.dotProduct(vec3d2) < 0.0
+            val vec3d2 = calculateViewVector(0f, yHeadRot)
+            val vec3d3 = vec3d.vectorTo(position()).copy(y = 0.0).normalize()
+            return vec3d3.dot(vec3d2) < 0.0
         }
     }
 
@@ -142,71 +142,71 @@ fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
 
 // Copied from 1.21.4 END
 
-val Entity.netherPosition: Vec3d
-    get() = if (world.registryKey == World.NETHER) {
-        Vec3d(x, y, z)
+val Entity.netherPosition: Vec3
+    get() = if (world.dimension() == Level.NETHER) {
+        Vec3(x, y, z)
     } else {
-        Vec3d(x / 8.0, y, z / 8.0)
+        Vec3(x / 8.0, y, z / 8.0)
     }
 
-val ClientPlayerEntity.moving
+val LocalPlayer.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
 
-val Input.untransformed: PlayerInput
+val ClientInput.untransformed: Input
     get() = (this as InputAddition).`liquid_bounce$getUntransformed`()
 
-val Input.initial: PlayerInput
+val ClientInput.initial: Input
     get() = (this as InputAddition).`liquid_bounce$getInitial`()
 
-val PlayerEntity.ping: Int
-    get() = mc.networkHandler?.getPlayerListEntry(uuid)?.latency ?: 0
+val Player.ping: Int
+    get() = mc.connection?.getPlayerInfo(uuid)?.latency ?: 0
 
-val ClientPlayerEntity.airTicks: Int
+val LocalPlayer.airTicks: Int
     get() = (this as ClientPlayerEntityAddition).`liquid_bounce$getAirTicks`()
 
-val ClientPlayerEntity.onGroundTicks: Int
+val LocalPlayer.onGroundTicks: Int
     get() = (this as ClientPlayerEntityAddition).`liquid_bounce$getOnGroundTicks`()
 
-val ClientPlayerEntity.direction: Float
+val LocalPlayer.direction: Float
     get() = getMovementDirectionOfInput(DirectionalInput(input))
 
 /**
  * Check if the attack speed is below 1 tick. If so, we have a cooldown.
  */
-val ClientPlayerEntity.hasCooldown: Boolean
-    get() = !isOlderThanOrEqual1_8 && this.getAttributeValue(EntityAttributes.ATTACK_SPEED) < 20.0
+val LocalPlayer.hasCooldown: Boolean
+    get() = !isOlderThanOrEqual1_8 && this.getAttributeValue(Attributes.ATTACK_SPEED) < 20.0
 
-fun ClientPlayerEntity.getMovementDirectionOfInput(input: DirectionalInput): Float {
-    return getMovementDirectionOfInput(this.yaw, input)
+fun LocalPlayer.getMovementDirectionOfInput(input: DirectionalInput): Float {
+    return getMovementDirectionOfInput(this.yRot, input)
 }
 
-val ClientPlayerEntity.isBlockAction: Boolean
-    get() = isUsingItem && activeItem.useAction == UseAction.BLOCK
+val LocalPlayer.isBlockAction: Boolean
+    get() = isUsingItem && useItem.useAnimation == ItemUseAnimation.BLOCK
 
-fun Entity.lastRenderPos() = Vec3d(this.lastRenderX, this.lastRenderY, this.lastRenderZ)
+fun Entity.lastRenderPos() = Vec3(this.xOld, this.yOld, this.zOld)
 
-val Hand.equipmentSlot: EquipmentSlot
+val InteractionHand.equipmentSlot: EquipmentSlot
     get() = when (this) {
-        Hand.MAIN_HAND -> EquipmentSlot.MAINHAND
-        Hand.OFF_HAND -> EquipmentSlot.OFFHAND
+        InteractionHand.MAIN_HAND -> EquipmentSlot.MAINHAND
+        InteractionHand.OFF_HAND -> EquipmentSlot.OFFHAND
     }
 
-fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
+fun LocalPlayer.wouldBeCloseToFallOff(position: Vec3): Boolean {
     val hitbox =
         this.dimensions
-            .getBoxAt(position)
-            .expand(-0.05, 0.0, -0.05)
-            .offset(0.0, this.fallDistance - this.stepHeight, 0.0)
+            .makeBoundingBox(position)
+            .inflate(-0.05, 0.0, -0.05)
+            .move(0.0, this.fallDistance - this.maxUpStep(), 0.0)
 
-    return world.isSpaceEmpty(this, hitbox)
+    return world.noCollision(this, hitbox)
 }
 
-fun ClientPlayerEntity.isCloseToEdge(
+fun LocalPlayer.isCloseToEdge(
     directionalInput: DirectionalInput,
     distance: Double = 0.1,
-    pos: Vec3d = this.entityPos,
+    pos: Vec3 = this.position(),
 ): Boolean {
-    val alpha = (getMovementDirectionOfInput(this.yaw, directionalInput) + 90.0F).toRadians()
+    val alpha = (getMovementDirectionOfInput(this.yRot, directionalInput) + 90.0F).toRadians()
     val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
     simulatedInput.set(
         jump = false,
@@ -221,14 +221,14 @@ fun ClientPlayerEntity.isCloseToEdge(
     simulatedPlayer.tick()
 
     val nextVelocity = simulatedPlayer.velocity
-    val direction = if (nextVelocity.horizontalLengthSquared() > 0.003 * 0.003) {
+    val direction = if (nextVelocity.horizontalDistanceSqr() > 0.003 * 0.003) {
         nextVelocity.multiply(1.0, 0.0, 1.0).normalize()
     } else {
-        Vec3d(cos(alpha).toDouble(), 0.0, sin(alpha).toDouble())
+        Vec3(cos(alpha).toDouble(), 0.0, sin(alpha).toDouble())
     }
 
     val from = pos.add(0.0, -0.1, 0.0)
-    val to = from + direction.multiply(distance)
+    val to = from + direction.scale(distance)
 
     if (findEdgeCollision(from, to) != null) {
         return true
@@ -244,26 +244,25 @@ fun ClientPlayerEntity.isCloseToEdge(
  *
  * TODO: Use Minecraft Step logic instead of this basic collision check.
  */
-fun ClientPlayerEntity.canStep(height: Double = 1.0): Boolean {
-    if (!horizontalCollision || isDescending || !isOnGround) {
+fun LocalPlayer.canStep(height: Double = 1.0): Boolean {
+    if (!horizontalCollision || isDescending || !onGround()) {
         // If we are not colliding with anything, we are not meant to step
         return false
     }
 
     val box = this.boundingBox
-    val direction = this.direction
 
-    val angle = Math.toRadians(direction.toDouble())
+    val angle = Math.toRadians(this.yRot.toDouble())
     val xOffset = -sin(angle) * 0.1
     val zOffset = cos(angle) * 0.1
 
-    val offsetBox = box.offset(xOffset, 0.0, zOffset)
-    val stepBox = offsetBox.offset(0.0, height, 0.0)
+    val offsetBox = box.move(xOffset, 0.0, zOffset)
+    val stepBox = offsetBox.move(0.0, height, 0.0)
 
     return world.getBlockCollisions(this, stepBox).all { shape ->
-        shape == VoxelShapes.empty()
+        shape == Shapes.empty()
     } && world.getBlockCollisions(this, offsetBox).all { shape ->
-        shape != VoxelShapes.empty()
+        shape != Shapes.empty()
     }
 }
 
@@ -293,20 +292,20 @@ fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Floa
     return actualYaw
 }
 
-val PlayerEntity.sqrtSpeed: Double
-    get() = velocity.sqrtSpeed
+val Player.sqrtSpeed: Double
+    get() = deltaMovement.sqrtSpeed
 
-val Vec3d.sqrtSpeed: Double
+val Vec3.sqrtSpeed: Double
     get() = hypot(x, z)
 
-fun Vec3d.withStrafe(
+fun Vec3.withStrafe(
     speed: Double = sqrtSpeed,
     strength: Double = 1.0,
     input: DirectionalInput? = DirectionalInput(player.input),
     yaw: Float = player.getMovementDirectionOfInput(input ?: DirectionalInput(player.input)),
-): Vec3d {
+): Vec3 {
     if (input?.isMoving == false) {
-        return Vec3d(0.0, y, 0.0)
+        return Vec3(0.0, y, 0.0)
     }
 
     val prevX = x * (1.0 - strength)
@@ -316,26 +315,26 @@ fun Vec3d.withStrafe(
     val angle = Math.toRadians(yaw.toDouble())
     val x = (-sin(angle) * useSpeed) + prevX
     val z = (cos(angle) * useSpeed) + prevZ
-    return Vec3d(x, y, z)
+    return Vec3(x, y, z)
 }
 
-val Entity.lastPos: Vec3d
-    get() = Vec3d(lastX, lastY, lastZ)
+val Entity.lastPos: Vec3
+    get() = Vec3(xo, yo, zo)
 
 val Entity.rotation: Rotation
-    get() = Rotation(this.yaw, this.pitch, true)
+    get() = Rotation(this.yRot, this.xRot, true)
 
-val ClientPlayerEntity.lastRotation: Rotation
-    get() = Rotation(this.lastYawClient, this.lastPitchClient, true)
+val LocalPlayer.lastRotation: Rotation
+    get() = Rotation(this.yRotLast, this.xRotLast, true)
 
-val Entity.box: Box
-    get() = boundingBox.expand(targetingMargin.toDouble())
+val Entity.box: AABB
+    get() = boundingBox.inflate(pickRadius.toDouble())
 
-val cameraEyePos: Vec3d get() = (mc.cameraEntity ?: player).eyePos
+val cameraEyePos: Vec3 get() = (mc.cameraEntity ?: player).eyePosition
 
-fun Position.cameraDistanceSq() = cameraEyePos.squaredDistanceTo(x, y, z)
+fun Position.cameraDistanceSq() = cameraEyePos.distanceToSqr(x(), y(), z())
 
-fun Vec3i.cameraDistanceSq() = cameraEyePos.squaredDistanceTo(x.toDouble(), y.toDouble(), z.toDouble())
+fun Vec3i.cameraDistanceSq() = cameraEyePos.distanceToSqr(x.toDouble(), y.toDouble(), z.toDouble())
 
 /**
  * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
@@ -345,58 +344,58 @@ fun Entity.boxedDistanceTo(entity: Entity): Double {
 }
 
 fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
-    return this.squaredBoxedDistanceTo(entity.eyePos)
+    return this.squaredBoxedDistanceTo(entity.eyePosition)
 }
 
-fun Entity.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
+fun Entity.squaredBoxedDistanceTo(otherPos: Vec3): Double {
     return this.box.squaredBoxedDistanceTo(otherPos)
 }
 
-fun Entity.squareBoxedDistanceTo(entity: Entity, offsetPos: Vec3d): Double {
-    return this.box.offset(offsetPos - this.entityPos).squaredBoxedDistanceTo(entity.eyePos)
+fun Entity.squareBoxedDistanceTo(entity: Entity, offsetPos: Vec3): Double {
+    return this.box.move(offsetPos - this.position()).squaredBoxedDistanceTo(entity.eyePosition)
 }
 
-fun Box.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
+fun AABB.squaredBoxedDistanceTo(otherPos: Vec3): Double {
     val pos = getNearestPoint(otherPos, this)
 
-    return pos.squaredDistanceTo(otherPos)
+    return pos.distanceToSqr(otherPos)
 }
 
-fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3d {
-    if (this.age == 0) {
-        return this.entityPos
+fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
+    if (this.tickCount == 0) {
+        return this.position()
     }
 
-    return Vec3d(
-        this.lastRenderX + (this.x - this.lastRenderX) * tickDelta,
-        this.lastRenderY + (this.y - this.lastRenderY) * tickDelta,
-        this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta
+    return Vec3(
+        this.xOld + (this.x - this.xOld) * tickDelta,
+        this.yOld + (this.y - this.yOld) * tickDelta,
+        this.zOld + (this.z - this.zOld) * tickDelta
     )
 }
 
 fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
-    if (this.age == 0) {
+    if (this.tickCount == 0) {
         return this.rotation
     }
 
     return Rotation(
-        lastYaw + (this.yaw - lastYaw) * tickDelta,
-        lastPitch + (this.pitch - lastPitch) * tickDelta,
+        yRotO + (this.yRot - yRotO) * tickDelta,
+        xRotO + (this.xRot - xRotO) * tickDelta,
     )
 }
 
 /**
  * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
  */
-fun getNearestPoint(from: Vec3d, box: Box): Vec3d {
-    return Vec3d(
+fun getNearestPoint(from: Vec3, box: AABB): Vec3 {
+    return Vec3(
         from.x.coerceIn(box.minX, box.maxX),
         from.y.coerceIn(box.minY, box.maxY),
         from.z.coerceIn(box.minZ, box.maxZ),
     )
 }
 
-fun getNearestPointOnSide(from: Vec3d, box: Box, side: Direction): Vec3d {
+fun getNearestPointOnSide(from: Vec3, box: AABB, side: Direction): Vec3 {
     val nearestPointInBlock = getNearestPoint(from, box)
 
     val x = nearestPointInBlock.x
@@ -405,12 +404,12 @@ fun getNearestPointOnSide(from: Vec3d, box: Box, side: Direction): Vec3d {
 
     val nearestPointOnSide =
         when (side) {
-            Direction.DOWN -> Vec3d(x, box.minY, z)
-            Direction.UP -> Vec3d(x, box.maxY, z)
-            Direction.NORTH -> Vec3d(x, y, box.minZ)
-            Direction.SOUTH -> Vec3d(x, y, box.maxZ)
-            Direction.WEST -> Vec3d(box.maxX, y, z)
-            Direction.EAST -> Vec3d(box.minX, y, z)
+            Direction.DOWN -> Vec3(x, box.minY, z)
+            Direction.UP -> Vec3(x, box.maxY, z)
+            Direction.NORTH -> Vec3(x, y, box.minZ)
+            Direction.SOUTH -> Vec3(x, y, box.maxZ)
+            Direction.WEST -> Vec3(box.maxX, y, z)
+            Direction.EAST -> Vec3(box.minX, y, z)
         }
 
     return nearestPointOnSide
@@ -423,24 +422,24 @@ fun getNearestPointOnSide(from: Vec3d, box: Box, side: Direction): Vec3d {
  */
 @Suppress("detekt:all")
 fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreShield: Boolean = false): Float {
-    val world = this.entityWorld
+    val world = this.level()
 
-    if (this.isAlwaysInvulnerableTo(source)) {
+    if (this.isInvulnerableToBase(source)) {
         return 0.0F
     }
 
     // EDGE CASE!!! Might cause weird bugs
-    if (this.isDead) {
+    if (this.isDeadOrDying) {
         return 0.0F
     }
 
     var amount = damage
 
-    if (this is PlayerEntity) {
-        if (this.abilities.invulnerable && source.type.msgId != world.damageSources.outOfWorld().type.msgId)
+    if (this is Player) {
+        if (this.abilities.invulnerable && source.type().msgId != world.damageSources().fellOutOfWorld().type().msgId)
             return 0.0F
 
-        if (source.isScaledWithDifficulty) {
+        if (source.scalesWithDifficulty()) {
             when (world.difficulty) {
                 Difficulty.PEACEFUL -> {
                     amount = 0.0f
@@ -459,7 +458,7 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     if (amount == 0.0F)
         return 0.0F
 
-    if (source == world.damageSources.onFire() && this.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))
+    if (source == world.damageSources().onFire() && this.hasEffect(MobEffects.FIRE_RESISTANCE))
         return 0.0F
 
     if (!ignoreShield && blockedByShield(source))
@@ -467,24 +466,24 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
 
     // Do we need to take the timeUntilRegen mechanic into account?
 
-    amount = this.applyArmorToDamage(source, amount)
-    amount = this.modifyAppliedDamage(source, amount)
+    amount = this.getDamageAfterArmorAbsorb(source, amount)
+    amount = this.getDamageAfterMagicAbsorb(source, amount)
 
     return amount
 }
 
 fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
     return when (entity) {
-        is EndCrystalEntity -> getDamageFromExplosion(entity.entityPos, 6f, 12f, 144f)
-        is TntEntity -> getDamageFromExplosion(entity.entityPos.add(0.0, 0.0625, 0.0), 4f, 8f, 64f)
-        is TntMinecartEntity -> {
+        is EndCrystal -> getDamageFromExplosion(entity.position(), 6f, 12f, 144f)
+        is PrimedTnt -> getDamageFromExplosion(entity.position().add(0.0, 0.0625, 0.0), 4f, 8f, 64f)
+        is MinecartTNT -> {
             val d = 5f
-            getDamageFromExplosion(entity.entityPos, 4f + d * 1.5f)
+            getDamageFromExplosion(entity.position(), 4f + d * 1.5f)
         }
 
-        is CreeperEntity -> {
-            val f = if (entity.isCharged) 2f else 1f
-            getDamageFromExplosion(entity.entityPos, entity.explosionRadius * f)
+        is Creeper -> {
+            val f = if (entity.isPowered) 2f else 1f
+            getDamageFromExplosion(entity.position(), entity.explosionRadius * f)
         }
 
         else -> 0f
@@ -496,17 +495,17 @@ fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
  */
 @Suppress("LongParameterList")
 fun LivingEntity.getDamageFromExplosion(
-    pos: Vec3d,
+    pos: Vec3,
     power: Float = 6f,
     explosionRange: Float = power * 2f, // allows setting precomputed values
     damageDistance: Float = explosionRange * explosionRange,
     exclude: Array<BlockPos>? = null,
     include: BlockPos? = null,
     maxBlastResistance: Float? = null,
-    entityBoundingBox: Box? = null
+    entityBoundingBox: AABB? = null
 ): Float {
     // no damage will be dealt if the entity is outside the explosion range or when the difficulty is peaceful
-    if (this.squaredDistanceTo(pos) > damageDistance || world.difficulty == Difficulty.PEACEFUL) {
+    if (this.distanceToSqr(pos) > damageDistance || world.difficulty == Difficulty.PEACEFUL) {
         return 0f
     }
 
@@ -521,10 +520,10 @@ fun LivingEntity.getDamageFromExplosion(
         val exposure = if (useTweakedMethod) {
             getExposureToExplosion(pos, exclude, include, maxBlastResistance, entityBoundingBox)
         } else {
-            ExplosionImpl.calculateReceivedDamage(pos, this)
+            ServerExplosion.getSeenPercent(pos, this)
         }
 
-        val distanceDecay = 1.0 - (sqrt(this.squaredDistanceTo(pos)) / explosionRange.toDouble())
+        val distanceDecay = 1.0 - (sqrt(this.distanceToSqr(pos)) / explosionRange.toDouble())
         val pre1 = exposure.toDouble() * distanceDecay
 
         val preprocessedDamage = (pre1 * pre1 + pre1) / 2.0 * 7.0 * explosionRange.toDouble() + 1.0
@@ -532,7 +531,7 @@ fun LivingEntity.getDamageFromExplosion(
             return 0f
         }
 
-        return getEffectiveDamage(world.damageSources.explosion(null), preprocessedDamage.toFloat())
+        return getEffectiveDamage(world.damageSources().explosion(null), preprocessedDamage.toFloat())
     } finally {
         ShapeFlag.noShapeChange = false
     }
@@ -543,23 +542,21 @@ fun LivingEntity.getDamageFromExplosion(
  */
 @Suppress("NestedBlockDepth")
 fun LivingEntity.getExposureToExplosion(
-    source: Vec3d,
+    source: Vec3,
     exclude: Array<BlockPos>?,
     include: BlockPos?,
     maxBlastResistance: Float?,
-    entityBoundingBox: Box?
+    entityBoundingBox: AABB?
 ): Float {
     val entityBoundingBox1 = entityBoundingBox ?: boundingBox
-    val shapeContext = entityBoundingBox1?.let {
-        EntityShapeContext(
-            isDescending,
-            false, // TODO: is this correct?
-            entityBoundingBox1.minY,
-            mainHandStack,
-            canWalkOnFluid(null),
-            this
-        )
-    } ?: ShapeContext.of(this)
+    val shapeContext = EntityCollisionContext(
+        isDescending,
+        false, // TODO: is this correct?
+        entityBoundingBox1.minY,
+        mainHandItem,
+        false,
+        this
+    )
 
     val stepX = 1.0 / ((entityBoundingBox1.maxX - entityBoundingBox1.minX) * 2.0 + 1.0)
     val stepY = 1.0 / ((entityBoundingBox1.maxY - entityBoundingBox1.minY) * 2.0 + 1.0)
@@ -581,17 +578,17 @@ fun LivingEntity.getExposureToExplosion(
         while (currentYStep <= 1.0) {
             var currentZStep = 0.0
             while (currentZStep <= 1.0) {
-                val sampleX = MathHelper.lerp(currentXStep, entityBoundingBox1.minX, entityBoundingBox1.maxX)
-                val sampleY = MathHelper.lerp(currentYStep, entityBoundingBox1.minY, entityBoundingBox1.maxY)
-                val sampleZ = MathHelper.lerp(currentZStep, entityBoundingBox1.minZ, entityBoundingBox1.maxZ)
+                val sampleX = Mth.lerp(currentXStep, entityBoundingBox1.minX, entityBoundingBox1.maxX)
+                val sampleY = Mth.lerp(currentYStep, entityBoundingBox1.minY, entityBoundingBox1.maxY)
+                val sampleZ = Mth.lerp(currentZStep, entityBoundingBox1.minZ, entityBoundingBox1.maxZ)
 
-                val samplePoint = Vec3d(sampleX + offsetX, sampleY, sampleZ + offsetZ)
+                val samplePoint = Vec3(sampleX + offsetX, sampleY, sampleZ + offsetZ)
                 val hitResult = world.raycast(
-                    RaycastContext(
+                    ClipContext(
                         samplePoint,
                         source,
-                        RaycastContext.ShapeType.COLLIDER,
-                        RaycastContext.FluidHandling.NONE,
+                        ClipContext.Block.COLLIDER,
+                        ClipContext.Fluid.NONE,
                         shapeContext
                     ),
                     exclude,
@@ -639,7 +636,7 @@ private val HEALTH_KEYWORDS = listOf("❤", "HP", "Health", "Здоровья", 
 fun LivingEntity.hasHealthScoreboard(): Boolean {
     if (this == player) return false
 
-    val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME) ?: return false
+    val objective = world.scoreboard.getDisplayObjective(DisplaySlot.BELOW_NAME) ?: return false
     val displayName = objective.displayName?.string ?: return false
 
     return HEALTH_KEYWORDS.any { displayName.contains(it) }
@@ -647,14 +644,14 @@ fun LivingEntity.hasHealthScoreboard(): Boolean {
 
 private fun LivingEntity.getHealthFromScoreboard(): Float? {
     if (!this.hasHealthScoreboard()) return null
-    val objective = world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME)
-    val score = objective?.scoreboard?.getScore(this, objective) ?: return null
+    val objective = world.scoreboard.getDisplayObjective(DisplaySlot.BELOW_NAME)
+    val score = objective?.scoreboard?.getPlayerScoreInfo(this, objective) ?: return null
 
-    return score.score.toFloat()
+    return score.value().toFloat()
 }
 
-fun Entity.getBoundingBoxAt(pos: Vec3d): Box {
-    return boundingBox.offset(pos - this.entityPos)
+fun Entity.getBoundingBoxAt(pos: Vec3): AABB {
+    return boundingBox.move(pos - this.position())
 }
 
 /**
@@ -665,23 +662,23 @@ fun Entity.doesNotCollideBelow(until: Double = -64.0): Boolean {
         return true
     }
 
-    val offsetBb = boundingBox.withMinY(until)
+    val offsetBb = boundingBox.setMinY(until)
     return world.getBlockCollisions(this, offsetBb)
-        .all(VoxelShapes.empty()::equals)
+        .all(Shapes.empty()::equals)
 }
 
 /**
  * Check if the entity box collides with any block in the world at the given [pos].
  */
-fun Entity.doesCollideAt(pos: Vec3d = player.entityPos): Boolean {
-    return !world.getBlockCollisions(this, getBoundingBoxAt(pos)).all(VoxelShapes.empty()::equals)
+fun Entity.doesCollideAt(pos: Vec3 = player.position()): Boolean {
+    return !world.getBlockCollisions(this, getBoundingBoxAt(pos)).all(Shapes.empty()::equals)
 }
 
 /**
  * Check if the entity is likely falling to the void based on the given position and bounding box.
  */
-fun Entity.wouldFallIntoVoid(pos: Vec3d, voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
-    val offsetBb = boundingBox.offset(pos - this.entityPos)
+fun Entity.wouldFallIntoVoid(pos: Vec3, voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
+    val offsetBb = boundingBox.move(pos - this.position())
 
     if (pos.y < voidLevel || offsetBb.minY < voidLevel) {
         return true
@@ -690,59 +687,59 @@ fun Entity.wouldFallIntoVoid(pos: Vec3d, voidLevel: Double = -64.0, safetyExpand
     // If there is no collision to void threshold, we do not want to teleport down.
     val boundingBox = offsetBb
         // Set the minimum Y to the void threshold to check for collisions below the player
-        .withMinY(voidLevel)
+        .setMinY(voidLevel)
         // Expand the bounding box to check if there might blocks to safely land on
-        .expand(safetyExpand, 0.0, safetyExpand)
+        .inflate(safetyExpand, 0.0, safetyExpand)
     return world.getBlockCollisions(this, boundingBox)
-        .all(VoxelShapes.empty()::equals)
+        .all(Shapes.empty()::equals)
 }
 
 
-fun ClientPlayerEntity.warp(pos: Vec3d? = null, onGround: Boolean = false) {
+fun LocalPlayer.warp(pos: Vec3? = null, onGround: Boolean = false) {
     val vehicle = this.vehicle
 
     if (vehicle != null) {
-        pos?.let(vehicle::setPosition)
-        network.sendPacket(VehicleMoveC2SPacket.fromVehicle(vehicle))
+        pos?.let(vehicle::setPos)
+        network.send(ServerboundMoveVehiclePacket.fromEntity(vehicle))
         return
     }
 
     if (pos != null) {
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(pos.x, pos.y, pos.z, onGround, horizontalCollision))
+        network.send(ServerboundMovePlayerPacket.Pos(pos.x, pos.y, pos.z, onGround, horizontalCollision))
     } else {
-        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(onGround, horizontalCollision))
+        network.send(ServerboundMovePlayerPacket.StatusOnly(onGround, horizontalCollision))
     }
 }
 
-fun ClientPlayerEntity.isInHole(feetBlockPos: BlockPos = getFeetBlockPos()): Boolean {
+fun LocalPlayer.isInHole(feetBlockPos: BlockPos = getFeetBlockPos()): Boolean {
     return DIRECTIONS_EXCLUDING_UP.all {
-        feetBlockPos.offset(it).isBlastResistant()
+        feetBlockPos.relative(it).isBlastResistant()
     }
 }
 
-fun ClientPlayerEntity.isBurrowed(): Boolean {
+fun LocalPlayer.isBurrowed(): Boolean {
     return getFeetBlockPos().isBlastResistant()
 }
 
-fun ClientPlayerEntity.getFeetBlockPos(): BlockPos {
+fun LocalPlayer.getFeetBlockPos(): BlockPos {
     val bb = boundingBox
     return BlockPos(
-        MathHelper.floor(MathHelper.lerp(0.5, bb.minX, bb.maxX)),
-        MathHelper.ceil(bb.minY),
-        MathHelper.floor(MathHelper.lerp(0.5, bb.minZ, bb.maxZ))
+        Mth.floor(Mth.lerp(0.5, bb.minX, bb.maxX)),
+        Mth.ceil(bb.minY),
+        Mth.floor(Mth.lerp(0.5, bb.minZ, bb.maxZ))
     )
 }
 
 val LivingEntity.wouldBlockHit
     get() = !isOlderThanOrEqual1_8 &&
-        this.blockedByShield(world.damageSources.playerAttack(player))
+        this.blockedByShield(world.damageSources().playerAttack(player))
 
 /**
  * @see <a href="https://minecraft.fandom.com/wiki/Magma_Block#Damage">Magma Block — Damage</a>
  */
-val ClientPlayerEntity.immuneToMagmaBlocks
-    get() = this.hasStatusEffect(StatusEffects.FIRE_RESISTANCE)
-        || (this.getStatusEffect(StatusEffects.RESISTANCE)?.amplifier ?: -1) >= 4
+val LocalPlayer.immuneToMagmaBlocks
+    get() = this.hasEffect(MobEffects.FIRE_RESISTANCE)
+        || (this.getEffect(MobEffects.RESISTANCE)?.amplifier ?: -1) >= 4
         || this.isCreative
         || this.isSpectator
-        || this.getEquippedStack(EquipmentSlot.FEET).getEnchantment(Enchantments.FROST_WALKER) > 0
+        || this.getItemBySlot(EquipmentSlot.FEET).getEnchantment(Enchantments.FROST_WALKER) > 0

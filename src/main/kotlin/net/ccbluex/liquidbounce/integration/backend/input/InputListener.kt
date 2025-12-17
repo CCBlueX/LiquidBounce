@@ -54,10 +54,10 @@ class InputListener(
 
     @Suppress("unused")
     private val mouseCursorHandler = handler<MouseCursorEvent> { event ->
-        val framebufferWidth = mc.window.framebufferWidth.toDouble()
-        val framebufferHeight = mc.window.framebufferHeight.toDouble()
-        val windowWidth = mc.window.width.toDouble()
-        val windowHeight = mc.window.height.toDouble()
+        val framebufferWidth = mc.window.width.toDouble()
+        val framebufferHeight = mc.window.height.toDouble()
+        val windowWidth = mc.window.screenWidth.toDouble()
+        val windowHeight = mc.window.screenHeight.toDouble()
 
         val factorW = framebufferWidth / windowWidth
         val factorV = framebufferHeight / windowHeight

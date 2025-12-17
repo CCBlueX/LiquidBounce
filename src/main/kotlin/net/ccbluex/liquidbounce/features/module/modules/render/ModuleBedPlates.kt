@@ -44,11 +44,11 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.Vec3
 import java.util.function.Predicate
 
 object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTracker.Subscriber {
@@ -63,7 +63,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val showBed by boolean("ShowBed", true)
     private val textShadow by boolean("TextShadow", true)
     private val scale by float("Scale", 1.5f, 0.5f..3.0f)
-    private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+    private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F, aliases = listOf("MaxDistance"))
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
@@ -105,8 +105,9 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
             )
 
             override fun test(block: Block): Boolean {
-                val state = block.defaultState
-                return !(state.isAir || !state.isSolidBlock(world, BlockPos.ORIGIN) && block !in WHITELIST_NON_SOLID)
+                val state = block.defaultBlockState()
+                return !(state.isAir ||
+                    !state.isRedstoneConductor(world, BlockPos.ZERO) && block !in WHITELIST_NON_SOLID)
             }
         }
 
@@ -136,7 +137,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val beds = ArrayList<BedStateRenderState>()
 
     private fun updateAndSortBeds() {
-        val cameraPos = (mc.cameraEntity ?: mc.player ?: return).entityPos
+        val cameraPos = (mc.cameraEntity ?: mc.player ?: return).position()
         beds.forEach { renderState ->
             val bedState = renderState.bedState
             renderState.distance = bedState.pos.distanceTo(cameraPos)
@@ -146,7 +147,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
             renderState.surrounding = surrounding
 
             renderState.itemStacksForRender = if (showBed) {
-                val bedItemStack = bedState.block.asItem().defaultStack
+                val bedItemStack = bedState.block.asItem().defaultInstance
                 if (surrounding.isEmpty()) {
                     listOf(bedItemStack)
                 } else {
@@ -178,7 +179,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
         fun isAdjacentAndNotEquals(pos1: BlockPos, pos2: BlockPos): Boolean {
-            return pos1 != pos2 && pos1.getManhattanDistance(pos2) <= 1
+            return pos1 != pos2 && pos1.distManhattan(pos2) <= 1
         }
 
         beds.sort()
@@ -199,7 +200,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
             val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
 
-            val outlineColor = if (outline) Color4b(bedState.block.color.mapColor.color) else Color4b.TRANSPARENT
+            val outlineColor = if (outline) Color4b(bedState.block.color.mapColor.col) else Color4b.TRANSPARENT
 
             event.context.drawItemStackList(itemStacksForRender)
                 .rowLength(Int.MAX_VALUE)
@@ -210,32 +211,39 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                 .itemStackRenderer { textRenderer, index, stack, x, y ->
                     if (index == 0 && showBed) {
                         // bed
-                        drawItem(stack, x, y)
+                        renderItem(stack, x, y)
                         drawStackCount(textRenderer, stack, x, y, "${distance.toInt()}m")
                     } else {
                         val surroundingBlock = surrounding[if (showBed) index - 1 else index]
-                        val defaultState = surroundingBlock.block.defaultState
+                        val defaultState = surroundingBlock.block.defaultBlockState()
                         val color =
-                            if (highlightUnbreakable && defaultState.isToolRequired
-                                && Slots.Hotbar.findSlot { s -> s.isSuitableFor(defaultState) } == null
+                            if (highlightUnbreakable && defaultState.requiresCorrectToolForDrops()
+                                && Slots.Hotbar.findSlot { s -> s.isCorrectToolForDrops(defaultState) } == null
                             ) {
                                 Color4b.RED
                             } else {
                                 Color4b.WHITE
                             }.toARGB()
 
-                        drawItem(stack, x, y)
+                        renderItem(stack, x, y)
                         val countString = stack.count.toString()
-                        matrices.withPush {
+                        pose().withPush {
                             // draw layer text
                             if (!compact) {
-                                drawText(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, textShadow)
+                                drawString(
+                                    textRenderer,
+                                    ROMAN_NUMERALS[surroundingBlock.layer],
+                                    x,
+                                    y,
+                                    color,
+                                    textShadow,
+                                )
                             }
                             // drawStackCount, with custom color (copied from DrawContext)
-                            drawText(
+                            drawString(
                                 textRenderer,
                                 countString,
-                                x + 19 - 2 - textRenderer.getWidth(countString),
+                                x + 19 - 2 - textRenderer.width(countString),
                                 y + 6 + 3,
                                 color,
                                 textShadow,

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.minecraft.entity.LivingEntity
+import net.minecraft.world.entity.LivingEntity
 
 private val entities = ReferenceArrayList<LivingEntity>()
 
@@ -81,7 +81,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
 
         val shouldCheckCombineMobs = ModuleCombineMobs.running
 
-        for (entity in world.entities) {
+        for (entity in world.entitiesForRendering()) {
             if (entity is LivingEntity && entity.shouldBeShown()) {
                 if (shouldCheckCombineMobs && ModuleCombineMobs.trackEntity(entity, true)) {
                     continue

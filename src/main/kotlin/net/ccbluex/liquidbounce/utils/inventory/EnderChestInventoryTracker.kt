@@ -32,11 +32,11 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.ScreenHandlerType
-import net.minecraft.text.Text
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.MenuType
+import net.minecraft.network.chat.Component
 
 object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
 
@@ -57,9 +57,9 @@ object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
 
     val stacks: List<ItemStack> get() = flow.value
 
-    private fun Screen.isEnderChest() = this is GenericContainerScreen
-        && screenHandler.typeOrNull === ScreenHandlerType.GENERIC_9X3
-        && title.string == Text.translatable("container.enderchest").string
+    private fun Screen.isEnderChest() = this is ContainerScreen
+        && menu.typeOrNull === MenuType.GENERIC_9x3
+        && title.string == Component.translatable("container.enderchest").string
 
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> {
@@ -79,17 +79,17 @@ object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
     }
 
     private fun track() {
-        val screen = mc.currentScreen as? GenericContainerScreen ?: run {
+        val screen = mc.screen as? ContainerScreen ?: run {
             isInEnderChestScreen = false
             return
         }
 
         if (screen.isEnderChest()) {
-            mc.send {
+            mc.schedule {
                 isInEnderChestScreen = true
-                flow.value = screen.screenHandler.slots
-                    .filter { it.inventory !== player.inventory }
-                    .map { it.stack.copy() }
+                flow.value = screen.menu.slots
+                    .filter { it.container !== player.inventory }
+                    .map { it.item.copy() }
             }
         } else {
             isInEnderChestScreen = false

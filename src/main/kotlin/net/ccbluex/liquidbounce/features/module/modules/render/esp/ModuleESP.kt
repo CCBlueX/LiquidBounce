@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
 
 /**
  * ESP module
@@ -81,7 +81,7 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     }
 
     private fun getBaseColor(entity: LivingEntity): Color4b {
-        if (entity is PlayerEntity) {
+        if (entity is Player) {
             if (FriendManager.isFriend(entity) && friendColor.a > 0) {
                 return friendColor
             }

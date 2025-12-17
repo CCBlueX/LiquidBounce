@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import java.util.*
 
 internal object NoFallPacketJump : NoFallMode("PacketJump") {
@@ -33,27 +33,30 @@ internal object NoFallPacketJump : NoFallMode("PacketJump") {
     private val fallDistance = choices("FallDistance", Smart, arrayOf(Smart, Constant))
     private val timing = choices("Timing", Landing, arrayOf(Landing, Falling))
 
+    @Volatile
     private var falling = false
 
     val tickHandler = handler<PlayerTickEvent> {
         falling = player.fallDistance > fallDistance.activeChoice.value
-        if (timing.activeChoice is Falling && !player.isOnGround && falling) {
-            network.sendPacket(packetType.generatePacket().apply {
+        if (timing.activeChoice is Falling && !player.onGround() && falling) {
+            network.send(packetType.generatePacket().apply {
                 y += 1.0E-9
             })
             if (Falling.resetFallDistance) {
-                player.onLanding()
+                player.resetFallDistance()
             }
         }
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (timing.activeChoice is Landing && event.packet is PlayerMoveC2SPacket && event.packet.onGround && falling) {
+        if (timing.activeChoice is Landing &&
+            event.packet is ServerboundMovePlayerPacket && event.packet.onGround && falling
+        ) {
             falling = false
-            network.sendPacket(packetType.generatePacket().apply {
-                x = player.lastX
-                y = player.lastYClient + 1.0E-9
-                z = player.lastZ
+            network.send(packetType.generatePacket().apply {
+                x = player.xo
+                y = player.yLast + 1.0E-9
+                z = player.zo
                 onGround = false
             })
         }

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.types.nesting.ScrollAdjustConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ScrollAdjustOptions
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
@@ -27,8 +28,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.minecraft.client.option.Perspective
-import net.minecraft.client.util.InputUtil
+import net.minecraft.client.CameraType
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -73,15 +73,15 @@ object ModuleCameraClip : ClientModule("CameraClip", Category.RENDER) {
             }
 
         override fun canPerformScroll(): Boolean =
-            (modifierKey == InputUtil.UNKNOWN_KEY || modifierKey.isPressed)
+            (modifierKey == InputConstants.UNKNOWN || modifierKey.isPressed)
                 && (!requireFreeLook || ModuleFreeLook.running)
-                && (mc.options.perspective != Perspective.FIRST_PERSON || ModuleFreeLook.running)
+                && (mc.options.cameraType != CameraType.FIRST_PERSON || ModuleFreeLook.running)
 
         @Suppress("unused")
         private val resetHandler = handler<PerspectiveEvent>(
             priority = EventPriorityConvention.READ_FINAL_STATE
         ) {
-            if (it.perspective == Perspective.FIRST_PERSON) {
+            if (it.perspective == CameraType.FIRST_PERSON) {
                 reset()
             }
         }

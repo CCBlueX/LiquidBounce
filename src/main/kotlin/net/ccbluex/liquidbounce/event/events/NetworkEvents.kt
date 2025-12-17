@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.minecraft.network.packet.Packet
+import net.minecraft.network.protocol.Packet
 
 @Nameable("pipeline")
 class PipelineEvent(val channelPipeline: ChannelPipeline, val local: Boolean) : Event()

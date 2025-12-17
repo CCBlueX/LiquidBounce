@@ -34,7 +34,7 @@ object SpooferBungeeCord : ToggleableConfigurable(name = "BungeecordSpoofer", en
 
     fun modifyHandshakeAddress(original: String): String {
         val uuidStr = CustomUuid.uuid.takeIf { enabled }
-            ?: mc.session.uuidOrNull.toString().replace("-", "")
+            ?: mc.user.profileId.toString().replace("-", "")
 
         // Format: "<originalAddress>\u0000<host>\u0000<uuid>"
         return "$original\u0000${host}\u0000$uuidStr"

@@ -48,7 +48,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulca
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286Teleport
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 /**
  * Fly module
@@ -104,7 +104,7 @@ object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = listOf("Glid
         @Suppress("unused")
         val strideHandler = handler<PlayerStrideEvent> { event ->
             if (stride) {
-                event.strideForce = 0.1.coerceAtMost(player.velocity.horizontalLength()).toFloat()
+                event.strideForce = 0.1.coerceAtMost(player.deltaMovement.horizontalDistance()).toFloat()
             }
 
         }
@@ -120,7 +120,7 @@ object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = listOf("Glid
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         // Setback detection
-        if (event.packet is PlayerPositionLookS2CPacket && disableOnSetback) {
+        if (event.packet is ClientboundPlayerPositionPacket && disableOnSetback) {
             chat(markAsError(message("setbackDetected")))
             enabled = false
         }

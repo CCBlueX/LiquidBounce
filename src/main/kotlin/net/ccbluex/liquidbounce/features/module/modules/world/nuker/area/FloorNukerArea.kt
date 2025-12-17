@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.rangeTo
-import net.minecraft.block.BlockState
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Vec3i
 
 object FloorNukerArea : NukerArea("Floor") {
 
@@ -42,16 +42,18 @@ object FloorNukerArea : NukerArea("Floor") {
 
     @Suppress("detekt:CognitiveComplexMethod")
     override fun lookupTargets(radius: Float, count: Int?): List<Pair<BlockPos, BlockState>> {
-        val (startX, startY, startZ) = if (relativeToPlayer) startPosition.add(player.blockPos) else startPosition
-        val (endX, endY, endZ) = if (relativeToPlayer) endPosition.add(player.blockPos) else endPosition
+        val (startX, startY, startZ) =
+            if (relativeToPlayer) startPosition.offset(player.blockPosition()) else startPosition
+        val (endX, endY, endZ) =
+            if (relativeToPlayer) endPosition.offset(player.blockPosition()) else endPosition
 
-        val start = BlockPos.Mutable(startX, startY, startZ)
-        val end = BlockPos.Mutable(endX, endY, endZ)
+        val start = BlockPos.MutableBlockPos(startX, startY, startZ)
+        val end = BlockPos.MutableBlockPos(endX, endY, endZ)
 
-        val box = Box.enclosing(start, end)
+        val box = AABB.encapsulatingFullBlocks(start, end)
 
         // Check if the box is within the radius
-        val eyesPos = player.eyePos
+        val eyesPos = player.eyePosition
         val rangeSquared = (radius * radius).toDouble()
         if (box.squaredBoxedDistanceTo(eyesPos) > rangeSquared) {
             // Return empty list if not
@@ -77,7 +79,7 @@ object FloorNukerArea : NukerArea("Floor") {
             val m = (start..end).iterate().mapNotNull { pos ->
                 val state = pos.getState() ?: return@mapNotNull null
                 if (isPositionAvailable(eyesPos, rangeSquared, pos, state)) {
-                    pos.toImmutable() to state
+                    pos.immutable() to state
                 } else {
                     null
                 }

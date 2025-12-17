@@ -19,18 +19,18 @@
 package net.ccbluex.liquidbounce.api.types.enums
 
 import com.google.gson.annotations.SerializedName
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
 
-enum class AutoSettingsStatusType(val displayName: String, val formatting: Formatting) {
+enum class AutoSettingsStatusType(val displayName: String, val formatting: ChatFormatting) {
     @SerializedName("NotBypassing")
-    NOT_BYPASSING("Not Bypassing", Formatting.RED),
+    NOT_BYPASSING("Not Bypassing", ChatFormatting.RED),
 
     @SerializedName("Bypassing")
-    BYPASSING("Bypassing", Formatting.GREEN),
+    BYPASSING("Bypassing", ChatFormatting.GREEN),
 
     @SerializedName("Undetectable")
-    UNDETECTABLE("Undetectable", Formatting.BLUE),
+    UNDETECTABLE("Undetectable", ChatFormatting.BLUE),
 
     @SerializedName("Unknown")
-    UNKNOWN("Unknown", Formatting.GOLD)
+    UNKNOWN("Unknown", ChatFormatting.GOLD)
 }

@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat Watchdog (NCP)
@@ -48,40 +48,40 @@ class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHop
     val tickHandler = tickHandler {
         shouldStrafe = false
 
-        if (player.isOnGround) {
-            player.velocity = player.velocity.withStrafe()
+        if (player.onGround()) {
+            player.setDeltaMovement(player.deltaMovement.withStrafe())
             shouldStrafe = true
         } else {
             when (player.airTicks) {
                 1 -> {
-                    player.velocity = player.velocity.withStrafe()
+                    player.setDeltaMovement(player.deltaMovement.withStrafe())
                     shouldStrafe = true
-                    player.velocity.y += 0.0568
+                    player.deltaMovement.y += 0.0568
                 }
                 3 -> {
-                    player.velocity.x *= 0.95
-                    player.velocity.y -= 0.13
-                    player.velocity.z *= 0.95
+                    player.deltaMovement.x *= 0.95
+                    player.deltaMovement.y -= 0.13
+                    player.deltaMovement.z *= 0.95
                 }
-                4 -> player.velocity.y -= 0.2
+                4 -> player.deltaMovement.y -= 0.2
                 7 -> {
                     if (glide && isGroundExempt()) {
-                        player.velocity.y = 0.0
+                        player.deltaMovement.y = 0.0
                     }
                 }
             }
 
             if (isGroundExempt()) {
-                player.velocity = player.velocity.withStrafe()
+                player.setDeltaMovement(player.deltaMovement.withStrafe())
             }
 
             if (player.hurtTime == 9) {
-                player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(0.281))
+                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(0.281)))
             }
 
-            if ((player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) == 2) {
+            if ((player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) == 2) {
                 when (player.airTicks) {
-                    1, 2, 5, 6, 8 -> player.velocity = player.velocity.multiply(1.2,1.0,1.2)
+                    1, 2, 5, 6, 8 -> player.setDeltaMovement(player.deltaMovement.multiply(1.2, 1.0, 1.2))
                 }
             }
         }
@@ -89,15 +89,15 @@ class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHop
 
     @Suppress("unused")
     private val jumpHandler = handler<PlayerJumpEvent> {
-        val atLeast = 0.247 + 0.15 * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+        val atLeast = 0.247 + 0.15 * (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
 
-        player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast))
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast)))
         shouldStrafe = true
     }
 
     private fun isGroundExempt() =
-        world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.66, 0.0)).any { shape ->
-            shape != VoxelShapes.empty()
-        } && player.velocity.y < 0
+        world.getBlockCollisions(player, player.boundingBox.move(0.0, -0.66, 0.0)).any { shape ->
+            shape != Shapes.empty()
+        } && player.deltaMovement.y < 0
 
 }

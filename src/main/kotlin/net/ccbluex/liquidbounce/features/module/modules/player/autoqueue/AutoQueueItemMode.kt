@@ -23,8 +23,8 @@ import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import java.util.function.Predicate
 
 sealed class AutoQueueItemMode(
@@ -35,7 +35,7 @@ sealed class AutoQueueItemMode(
     class ByName(parent: ChoiceConfigurable<*>) : AutoQueueItemMode(parent, "Name") {
         private val stackName by textList("Name", objectRBTreeSetOf("Paper"))
         override fun test(itemStack: ItemStack): Boolean {
-            val string = itemStack.name.string
+            val string = itemStack.hoverName.string
             return stackName.any { it in string }
         }
     }

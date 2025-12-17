@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.Team;
+import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.world.scores.PlayerTeam;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -39,8 +39,7 @@ public abstract class MixinScoreboard {
 
     @Shadow
     @Nullable
-    public abstract Team getScoreHolderTeam(String scoreHolderName);
-
+    public abstract PlayerTeam getPlayersTeam(String scoreHolderName);
 
     @ModifyExpressionValue(method = "addObjective", at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/objects/Object2ObjectMap;containsKey(Ljava/lang/Object;)Z", remap = false))
     private boolean noCrash(boolean original) {
@@ -52,10 +51,10 @@ public abstract class MixinScoreboard {
         }
     }
 
-    @Inject(method = "removeScoreHolderFromTeam", at = @At("HEAD"), cancellable = true)
-    private void noCrash2(String scoreHolderName, Team team, CallbackInfo ci) {
+    @Inject(method = "removePlayerFromTeam(Ljava/lang/String;Lnet/minecraft/world/scores/PlayerTeam;)V", at = @At("HEAD"), cancellable = true)
+    private void noCrash2(String scoreHolderName, PlayerTeam team, CallbackInfo ci) {
         var antiExploit = ModuleAntiExploit.INSTANCE;
-        if (antiExploit.getRunning() && antiExploit.getVfpScoreboardFix() && getScoreHolderTeam(scoreHolderName) != team) {
+        if (antiExploit.getRunning() && antiExploit.getVfpScoreboardFix() && getPlayersTeam(scoreHolderName) != team) {
             ci.cancel();
         }
     }

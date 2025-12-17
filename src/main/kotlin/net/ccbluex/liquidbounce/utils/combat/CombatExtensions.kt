@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 @file:Suppress("TooManyFunctions")
+
 package net.ccbluex.liquidbounce.utils.combat
 
 import it.unimi.dsi.fastutil.objects.ObjectDoublePair
@@ -38,26 +39,26 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
-import net.minecraft.client.option.Perspective
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.Attackable
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.attribute.EntityAttributes
-import net.minecraft.entity.mob.Angerable
-import net.minecraft.entity.mob.HostileEntity
-import net.minecraft.entity.mob.Monster
-import net.minecraft.entity.mob.WaterCreatureEntity
-import net.minecraft.entity.passive.AllayEntity
-import net.minecraft.entity.passive.BatEntity
-import net.minecraft.entity.passive.PassiveEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.Hand
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.GameMode
+import net.minecraft.client.CameraType
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.world.entity.Attackable
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.NeutralMob
+import net.minecraft.world.entity.monster.Monster
+import net.minecraft.world.entity.monster.Enemy
+import net.minecraft.world.entity.animal.fish.WaterAnimal
+import net.minecraft.world.entity.animal.allay.Allay
+import net.minecraft.world.entity.ambient.Bat
+import net.minecraft.world.entity.AgeableMob
+import net.minecraft.world.entity.player.Player
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.GameType
 import java.util.*
 import java.util.function.Predicate
 
@@ -111,7 +112,7 @@ private fun EnumSet<Targets>.shouldAttack(entity: Entity): Boolean {
 private fun EnumSet<Targets>.shouldShow(entity: Entity): Boolean {
     if (entity === player) {
         return Targets.SELF in this &&
-            (mc.options.perspective !== Perspective.FIRST_PERSON || ModuleFreeCam.enabled || ModuleFreeLook.enabled)
+            (mc.options.cameraType !== CameraType.FIRST_PERSON || ModuleFreeCam.enabled || ModuleFreeLook.enabled)
     }
 
     val info = EntityTaggingManager.getTag(entity).targetingInfo
@@ -140,16 +141,16 @@ private fun EnumSet<Targets>.isInteresting(suspect: Entity): Boolean {
 
     // Check if enemy is a player and should be considered as a target
     return when (suspect) {
-        is PlayerEntity -> when {
+        is Player -> when {
             suspect === mc.player -> false
             // Check if enemy is sleeping (or ignore being sleeping)
             suspect.isSleeping && Targets.SLEEPING !in this -> false
             else -> Targets.PLAYERS in this
         }
-        is WaterCreatureEntity -> Targets.WATER_CREATURE in this
-        is PassiveEntity, is BatEntity, is AllayEntity -> Targets.PASSIVE in this
-        is HostileEntity, is Monster -> Targets.HOSTILE in this
-        is Angerable -> Targets.ANGERABLE in this
+        is WaterAnimal -> Targets.WATER_CREATURE in this
+        is AgeableMob, is Bat, is Allay -> Targets.PASSIVE in this
+        is Monster, is Enemy -> Targets.HOSTILE in this
+        is NeutralMob -> Targets.ANGERABLE in this
 
         else -> false
     }
@@ -167,34 +168,34 @@ fun Entity.shouldBeAttacked(enemyConf: EnumSet<Targets> = ModuleTargets.combat) 
 /**
  * Find the best enemy in the current world in a specific range.
  */
-fun ClientWorld.findEnemy(
+fun ClientLevel.findEnemy(
     range: ClosedFloatingPointRange<Float>,
     enemyConf: EnumSet<Targets> = ModuleTargets.combat
 ) = findEnemies(range, enemyConf).minByOrNull { (_, distance) -> distance }?.key()
 
-fun ClientWorld.findEnemies(
+fun ClientLevel.findEnemies(
     range: ClosedFloatingPointRange<Float>,
     enemyConf: EnumSet<Targets> = ModuleTargets.combat
 ): List<ObjectDoublePair<Entity>> {
     val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
 
-    return getEntitiesInCuboid(player.eyePos, squaredRange.endInclusive)
+    return getEntitiesInCuboid(player.eyePosition, squaredRange.endInclusive)
         .filter { it.shouldBeAttacked(enemyConf) }
         .map { ObjectDoublePair.of(it, it.squaredBoxedDistanceTo(player)) }
         .filter { (_, distance) -> distance in squaredRange }
 }
 
-fun ClientWorld.getEntitiesInCuboid(
-    midPos: Vec3d,
+fun ClientLevel.getEntitiesInCuboid(
+    midPos: Vec3,
     range: Double,
     predicate: Predicate<Entity> = Predicate { true }
 ): MutableList<Entity> {
-    return getOtherEntities(null, Box(midPos.subtract(range, range, range),
+    return getEntities(null, AABB(midPos.subtract(range, range, range),
         midPos.add(range, range, range)), predicate)
 }
 
-inline fun ClientWorld.getEntitiesBoxInRange(
-    midPos: Vec3d,
+inline fun ClientLevel.getEntitiesBoxInRange(
+    midPos: Vec3,
     range: Double,
     crossinline predicate: (Entity) -> Boolean = { true }
 ): MutableList<Entity> {
@@ -214,52 +215,52 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
     with(player) {
         // Swing before attacking (on 1.8)
         if (isOlderThanOrEqual1_8) {
-            swing.swing(Hand.MAIN_HAND)
+            swing.swing(InteractionHand.MAIN_HAND)
         }
 
-        interaction.syncSelectedSlot()
-        network.sendPacket(PlayerInteractEntityC2SPacket.attack(this@attack, isSneaking))
+        interaction.ensureHasSentCarriedItem()
+        network.send(ServerboundInteractPacket.createAttackPacket(this@attack, isShiftKeyDown))
 
         if (keepSprint) {
             var genericAttackDamage =
-                if (this.isUsingRiptide) {
-                    this.riptideAttackDamage
+                if (this.isAutoSpinAttack) {
+                    this.autoSpinAttackDmg
                 } else {
-                    getAttributeValue(EntityAttributes.ATTACK_DAMAGE).toFloat()
+                    getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
                 }
-            val damageSource = this.damageSources.playerAttack(this)
-            var enchantAttackDamage = this.getDamageAgainst(this@attack, genericAttackDamage,
+            val damageSource = this.damageSources().playerAttack(this)
+            var enchantAttackDamage = this.getEnchantedDamage(this@attack, genericAttackDamage,
                 damageSource) - genericAttackDamage
 
-            val attackCooldown = this.getAttackCooldownProgress(0.5f)
+            val attackCooldown = this.getAttackStrengthScale(0.5f)
             genericAttackDamage *= 0.2f + attackCooldown * attackCooldown * 0.8f
             enchantAttackDamage *= attackCooldown
 
             if (genericAttackDamage > 0.0f || enchantAttackDamage > 0.0f) {
                 if (enchantAttackDamage > 0.0f) {
-                    this.addEnchantedHitParticles(this@attack)
+                    this.magicCrit(this@attack)
                 }
 
                 if (ModuleCriticals.wouldDoCriticalHit(true)) {
                     world.playSound(
-                        null, x, y, z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
-                        soundCategory, 1.0f, 1.0f
+                        null, x, y, z, SoundEvents.PLAYER_ATTACK_CRIT,
+                        soundSource, 1.0f, 1.0f
                     )
-                    addCritParticles(this@attack)
+                    crit(this@attack)
                 }
             }
         } else {
-            if (interaction.currentGameMode != GameMode.SPECTATOR) {
+            if (interaction.playerMode != GameType.SPECTATOR) {
                 attack(this@attack)
             }
         }
 
         // Reset cooldown
-        this.ticksSinceLastAttack = 0
+        this.attackStrengthTicker = 0
 
         // Swing after attacking (on 1.9+)
         if (!isOlderThanOrEqual1_8) {
-            swing.swing(Hand.MAIN_HAND)
+            swing.swing(InteractionHand.MAIN_HAND)
         }
     }
 }

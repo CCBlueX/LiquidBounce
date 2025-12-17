@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 abstract class Buff(
     name: String,

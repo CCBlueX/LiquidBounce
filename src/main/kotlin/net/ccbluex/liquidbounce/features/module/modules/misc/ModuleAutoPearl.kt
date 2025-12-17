@@ -41,15 +41,15 @@ import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.SpawnReason
-import net.minecraft.entity.projectile.thrown.EnderPearlEntity
-import net.minecraft.item.Items
-import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityDimensions
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec3
 
 private const val MAX_SIMULATED_TICKS = 240
 
@@ -85,21 +85,21 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
 
     @Suppress("unused")
     private val pearlSpawnHandler = handler<PacketEvent> { event ->
-        if (event.packet !is EntitySpawnS2CPacket || event.packet.entityType != EntityType.ENDER_PEARL) {
+        if (event.packet !is ClientboundAddEntityPacket || event.packet.type != EntityType.ENDER_PEARL) {
             return@handler
         }
 
         Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@handler
 
         val data = event.packet
-        val entity = data.entityType.create(world, SpawnReason.SPAWN_ITEM_USE) as EnderPearlEntity
-        entity.onSpawnPacket(data)
+        val entity = data.type.create(world, EntitySpawnReason.SPAWN_ITEM_USE) as ThrownEnderpearl
+        entity.recreateFromPacket(data)
 
         proceedPearl(
             pearl = entity,
             // entity.velocity & entity.pos doesn't work, don't use it
-            velocity = with(data) { Vec3d(velocity.x, velocity.y, velocity.z) },
-            pearlPos = with(data) { Vec3d(x, y, z) }
+            velocity = with(data) { Vec3(movement.x, movement.y, movement.z) },
+            pearlPos = with(data) { Vec3(x, y, z) }
         )
     }
 
@@ -147,9 +147,9 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
     }
 
     private fun proceedPearl(
-        pearl: EnderPearlEntity,
-        velocity: Vec3d,
-        pearlPos: Vec3d
+        pearl: ThrownEnderpearl,
+        velocity: Vec3,
+        pearlPos: Vec3
     ) {
         if (!canTrigger(pearl)) {
             return
@@ -159,9 +159,9 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
             owner = pearl.owner ?: player,
             velocity = velocity,
             pos = pearlPos
-        )?.pos ?: return
+        )?.location ?: return
 
-        if (Limits.enabled && Limits.activationDistance > destination.distanceTo(player.entityPos)) {
+        if (Limits.enabled && Limits.activationDistance > destination.distanceTo(player.position())) {
             return
         }
 
@@ -180,7 +180,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
         }
     }
 
-    private fun canTrigger(pearl: EnderPearlEntity): Boolean {
+    private fun canTrigger(pearl: ThrownEnderpearl): Boolean {
         if (Limits.enabled && Limits.angle < RotationUtil.crosshairAngleToEntity(pearl)) {
             return false
         }
@@ -201,23 +201,23 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
 
     private fun canThrow(
         angles: Rotation,
-        destination: Vec3d
+        destination: Vec3
     ): Boolean {
         val simulatedDestination = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             entity = player,
             trajectoryInfo = TrajectoryInfo.GENERIC,
             rotation = angles
-        ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.pos ?: return false
+        ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.location ?: return false
 
         return !Limits.enabled || Limits.destDistance > destination.distanceTo(simulatedDestination)
     }
 
     private fun runSimulation(
         owner: Entity,
-        velocity: Vec3d,
-        pos: Vec3d,
+        velocity: Vec3,
+        pos: Vec3,
         trajectoryInfo: TrajectoryInfo = TrajectoryInfo.GENERIC,
-        renderOffset: Vec3d = Vec3d.ZERO
+        renderOffset: Vec3 = Vec3.ZERO
     ): HitResult? =
         TrajectoryInfoRenderer(
             owner = owner,

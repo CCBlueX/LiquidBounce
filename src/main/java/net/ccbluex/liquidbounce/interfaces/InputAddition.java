@@ -20,15 +20,15 @@
 
 package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.util.PlayerInput;
-import net.minecraft.util.math.Vec2f;
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.phys.Vec2;
 
 public interface InputAddition {
     /**
      * @param movementVector x -> movementSideways; y -> movementForward
      */
-    void liquid_bounce$setMovementInput(Vec2f movementVector);
+    void liquid_bounce$setMovementInput(Vec2 movementVector);
 
-    PlayerInput liquid_bounce$getInitial();
-    PlayerInput liquid_bounce$getUntransformed();
+    Input liquid_bounce$getInitial();
+    Input liquid_bounce$getUntransformed();
 }

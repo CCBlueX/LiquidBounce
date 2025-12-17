@@ -30,10 +30,10 @@ import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.Component
 import java.util.*
 
 @Suppress("LongParameterList")
@@ -95,7 +95,7 @@ class Command(
         }
     }
 
-    fun result(key: String, vararg args: Any): MutableText {
+    fun result(key: String, vararg args: Any): MutableComponent {
         return translation("$translationBaseKey.result.$key", args = args)
     }
 
@@ -111,7 +111,7 @@ class Command(
     fun printStyledText(
         key: String,
         data: String? = null,
-        formatting: (MutableText) -> MutableText = ::regular,
+        formatting: (MutableComponent) -> MutableComponent = ::regular,
         hover: HoverEvent? = HoverEvent.ShowText(translation("liquidbounce.tooltip.clickToCopy")),
         click: ClickEvent? = data?.let(ClickEvent::CopyToClipboard)
     ) {
@@ -132,9 +132,9 @@ class Command(
      */
     fun printStyledComponent(
         key: String,
-        textComponent: Text? = null,
+        textComponent: Component? = null,
         copyContent: String? = null,
-        formatting: (MutableText) -> MutableText = ::regular,
+        formatting: (MutableComponent) -> MutableComponent = ::regular,
         hover: HoverEvent? = HoverEvent.ShowText(translation("liquidbounce.tooltip.clickToCopy"))
     ) {
         val displayComponent = textComponent ?: markAsError("N/A")
@@ -143,7 +143,7 @@ class Command(
         chat(formatting(result(key, displayComponent)).copyable(copyContent = content, hover = hover))
     }
 
-    fun resultWithTree(key: String, vararg args: Any): MutableText {
+    fun resultWithTree(key: String, vararg args: Any): MutableComponent {
         var parentCommand = this.parentCommand
         if (parentCommand != null) {
             // Keep going until parent command is null

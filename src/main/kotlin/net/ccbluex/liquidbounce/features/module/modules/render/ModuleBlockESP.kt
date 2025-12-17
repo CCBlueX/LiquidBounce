@@ -41,11 +41,11 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.core.BlockPos
 import java.util.concurrent.ConcurrentSkipListSet
 
 /**
@@ -88,12 +88,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         private val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
-            drawBoxMode(mc.framebuffer, matrixStack, this.outline, false)
+            drawBoxMode(mc.mainRenderTarget, matrixStack, this.outline, false)
         }
 
         fun drawBoxMode(
-            framebuffer: Framebuffer,
-            matrixStack: MatrixStack,
+            framebuffer: RenderTarget,
+            matrixStack: PoseStack,
             drawOutline: Boolean,
             fullAlpha: Boolean,
         ): Boolean {
@@ -133,11 +133,11 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                     continue
                 }
 
-                val outlineShape = blockState.getOutlineShape(world, blockPos)
+                val outlineShape = blockState.getShape(world, blockPos)
                 val boundingBox = if (outlineShape.isEmpty) {
                     FULL_BOX
                 } else {
-                    outlineShape.boundingBox
+                    outlineShape.bounds()
                 }
 
                 var color = colorMode.getColor(Pair(blockPos, blockState))

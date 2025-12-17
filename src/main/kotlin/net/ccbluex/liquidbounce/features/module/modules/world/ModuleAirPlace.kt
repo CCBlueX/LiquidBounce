@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+
 import net.ccbluex.liquidbounce.config.types.nesting.ScrollAdjustConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
@@ -30,15 +31,15 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.item.ArmorStandItem
-import net.minecraft.item.BlockItem
-import net.minecraft.item.FireworkRocketItem
-import net.minecraft.item.ItemStack
-import net.minecraft.item.SpawnEggItem
-
-import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.world.item.ArmorStandItem
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.FireworkRocketItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.SpawnEggItem
+import net.minecraft.world.phys.BlockHitResult
 
 /**
  * AirPlace module
@@ -82,23 +83,23 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
     private fun ItemStack.isAirPlaceableAt(hit: BlockHitResult): Boolean {
         if (isEmpty || isConsumable) return false
         return when (val i = item) {
-            is BlockItem -> i.block.defaultState.canPlaceAt(world, hit.blockPos)
+            is BlockItem -> i.block.defaultBlockState().canSurvive(world, hit.blockPos)
             is SpawnEggItem, is ArmorStandItem, is FireworkRocketItem -> true
             else -> false
         }
     }
 
     private fun canPlayerPlaceAt(hit: BlockHitResult): Boolean {
-        val main = player.mainHandStack
+        val main = player.mainHandItem
         if (main.isAirPlaceableAt(hit)) return true
 
-        val off = player.offHandStack
+        val off = player.offhandItem
         return off.isAirPlaceableAt(hit)
     }
 
 
     private fun getValidHitResult(): BlockHitResult? {
-        val hitResult = mc.crosshairTarget as? BlockHitResult ?: return null
+        val hitResult = mc.hitResult as? BlockHitResult ?: return null
         if (player.isSpectator) return null
         if (!hitResult.isAirOrFluid) return null
         if (!canPlayerPlaceAt(hitResult)) return null
@@ -106,15 +107,15 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
 
         if (CustomRange.running) {
             val distance = CustomRange.range.get().toDouble()
-            val playerEye = player.eyePos
-            val direction = hitResult.pos.subtract(playerEye).normalize()
-            val targetPos = playerEye.add(direction.multiply(distance))
+            val playerEye = player.eyePosition
+            val direction = hitResult.location.subtract(playerEye).normalize()
+            val targetPos = playerEye.add(direction.scale(distance))
 
             val newHitResult = BlockHitResult(
                 targetPos,
-                hitResult.side,
+                hitResult.direction,
                 targetPos.toBlockPos(),
-                hitResult.isInsideBlock
+                hitResult.isInside
             )
 
             if (!newHitResult.isAirOrFluid) return null
@@ -147,8 +148,8 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
     private val placeHandler = handler<PlayerInteractItemEvent> { event ->
         val hitResult = getValidHitResult() ?: return@handler
 
-        val actionResult = interaction.interactBlock(player, event.hand, hitResult)
-        if (actionResult.isAccepted) player.swingHand(event.hand)
+        val actionResult = interaction.useItemOn(player, event.hand, hitResult)
+        if (actionResult.shouldSwingHand()) player.swing(event.hand)
         event.cancelEvent()
     }
 }

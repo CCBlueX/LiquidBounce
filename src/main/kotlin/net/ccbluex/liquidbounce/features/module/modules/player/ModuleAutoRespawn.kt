@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.client.gui.screen.DeathScreen
+import net.minecraft.client.gui.screens.DeathScreen
 
 /**
  * AutoRespawn module
@@ -41,7 +41,7 @@ object ModuleAutoRespawn : ClientModule("AutoRespawn", Category.PLAYER) {
                 waitTicks(delay)
             }
 
-            player.requestRespawn()
+            player.respawn()
             mc.setScreen(null)
         }
     }

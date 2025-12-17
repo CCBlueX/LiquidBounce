@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.util.InputUtil
+import net.minecraft.client.gui.screens.Screen
+import com.mojang.blaze3d.platform.InputConstants
 
 @Nameable("windowResize")
 class WindowResizeEvent(val width: Int, val height: Int) : Event()
@@ -35,7 +35,7 @@ class FramebufferResizeEvent(val width: Int, val height: Int) : Event()
 
 @Nameable("mouseButton")
 class MouseButtonEvent(
-    val key: InputUtil.Key,
+    val key: InputConstants.Key,
     val button: Int,
     val action: Int,
     val mods: Int,
@@ -53,7 +53,7 @@ class MouseCursorEvent(val x: Double, val y: Double) : Event()
 
 @Nameable("keyboardKey")
 class KeyboardKeyEvent(
-    val key: InputUtil.Key,
+    val key: InputConstants.Key,
     val keyCode: Int,
     val scanCode: Int,
     val action: Int,

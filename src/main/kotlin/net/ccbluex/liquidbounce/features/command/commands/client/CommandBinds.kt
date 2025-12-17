@@ -48,9 +48,9 @@ import net.ccbluex.liquidbounce.utils.input.bind
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.ccbluex.liquidbounce.utils.input.renderText
 import net.ccbluex.liquidbounce.utils.input.unbind
-import net.minecraft.client.util.InputUtil
-import net.minecraft.text.HoverEvent
-import net.minecraft.util.Formatting
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.ChatFormatting
 
 /**
  * Binds Command
@@ -84,7 +84,7 @@ object CommandBinds : Command.Factory {
         .pagedQuery(
             pageSize = 8,
             header = {
-                result("bindings").withColor(Formatting.RED).bold(true)
+                result("bindings").withColor(ChatFormatting.RED).bold(true)
             },
             items = {
                 ModuleManager.filter { !it.bind.isUnbound }
@@ -92,7 +92,7 @@ object CommandBinds : Command.Factory {
             eachRow = { _, module ->
                 val bind = module.bind
                 "\u2B25 ".asText()
-                    .formatted(Formatting.BLUE)
+                    .withStyle(ChatFormatting.BLUE)
                     .append(
                         markAsError("[\u2715] ")
                             .onHover(
@@ -173,7 +173,7 @@ object CommandBinds : Command.Factory {
             val modifiers = args.getOrNull(3) as Set<InputBind.Modifier>? ?: module.bind.modifiers
 
             val bindKey = inputByName(keyName)
-            if (bindKey == InputUtil.UNKNOWN_KEY) {
+            if (bindKey == InputConstants.UNKNOWN) {
                 throw CommandException(command.result("unknownKey"))
             }
 

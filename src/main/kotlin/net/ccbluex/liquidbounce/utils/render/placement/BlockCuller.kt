@@ -20,14 +20,14 @@
 
 package net.ccbluex.liquidbounce.utils.render.placement
 
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Direction.DOWN
-import net.minecraft.util.math.Direction.EAST
-import net.minecraft.util.math.Direction.NORTH
-import net.minecraft.util.math.Direction.SOUTH
-import net.minecraft.util.math.Direction.UP
-import net.minecraft.util.math.Direction.WEST
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.core.Direction.DOWN
+import net.minecraft.core.Direction.EAST
+import net.minecraft.core.Direction.NORTH
+import net.minecraft.core.Direction.SOUTH
+import net.minecraft.core.Direction.UP
+import net.minecraft.core.Direction.WEST
 
 private const val FACE_DOWN = (1 shl 0) or (1 shl 1) or (1 shl 2) or (1 shl 3)
 private const val FACE_UP = (1 shl 4) or (1 shl 5) or (1 shl 6) or (1 shl 7)

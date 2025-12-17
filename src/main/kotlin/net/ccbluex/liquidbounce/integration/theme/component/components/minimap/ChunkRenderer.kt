@@ -23,12 +23,12 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.dotProduct
 import net.ccbluex.liquidbounce.utils.math.similarity
-import net.minecraft.block.BlockState
-import net.minecraft.block.MapColor.Brightness
-import net.minecraft.client.texture.TextureSetup
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.world.chunk.WorldChunk
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.material.MapColor.Brightness
+import net.minecraft.client.gui.render.TextureSetup
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.chunk.LevelChunk
 import org.joml.Vector2i
 import org.joml.Vector2ic
 import org.joml.component1
@@ -73,10 +73,10 @@ object ChunkRenderer {
                 if (heightmapUpdated) {
                     arrayOf(
                         pos,
-                        pos.add(1, 0, 0),
-                        pos.add(-1, 0, 0),
-                        pos.add(0, 0, 1),
-                        pos.add(0, 0, -1),
+                        pos.offset(1, 0, 0),
+                        pos.offset(-1, 0, 0),
+                        pos.offset(0, 0, 1),
+                        pos.offset(0, 0, -1),
                     )
                 } else {
                     arrayOf(pos)
@@ -85,10 +85,10 @@ object ChunkRenderer {
             for (posToUpdate in positionsToUpdate) {
                 val color = getColor(posToUpdate.x, posToUpdate.z)
 
-                textureAtlasManager.editChunk(ChunkPos.toLong(posToUpdate)) { texture, atlasPosition ->
+                textureAtlasManager.editChunk(ChunkPos.asLong(posToUpdate)) { texture, atlasPosition ->
                     val (x, y) = atlasPosition.getPosOnAtlas(posToUpdate.x and 15, posToUpdate.z and 15)
 
-                    texture.image!!.setColorArgb(x, y, color)
+                    texture.pixels!!.setPixel(x, y, color)
                 }
             }
         }
@@ -108,7 +108,7 @@ object ChunkRenderer {
 
         private fun getColor(x: Int, z: Int): Int {
             try {
-                val chunk = mc.world?.getChunk(x shr 4, z shr 4) ?: return AIR_COLOR
+                val chunk = mc.level?.getChunk(x shr 4, z shr 4) ?: return AIR_COLOR
 
                 val height = heightmapManager.getHeight(x, z)
 
@@ -139,7 +139,8 @@ object ChunkRenderer {
                     return AIR_COLOR
                 }
 
-                val baseColor = surfaceBlockState.getMapColor(chunk, surfaceBlockPos).getRenderColor(Brightness.HIGH)
+                val baseColor = surfaceBlockState.getMapColor(chunk, surfaceBlockPos)
+                    .calculateARGBColor(Brightness.HIGH)
 
                 val color = Color(baseColor)
 
@@ -167,7 +168,7 @@ object ChunkRenderer {
             Vector2i(15, 15),
         )
 
-        override fun chunkUpdate(chunk: WorldChunk) {
+        override fun chunkUpdate(chunk: LevelChunk) {
             val chunkPos = chunk.pos
             val x = chunkPos.x
             val z = chunkPos.z
@@ -189,7 +190,7 @@ object ChunkRenderer {
 
                         val color = getColor(offX or (x shl 4), offZ or (z shl 4))
 
-                        texture.image!!.setColorArgb(texX, texY, color)
+                        texture.pixels!!.setPixel(texX, texY, color)
                     }
                 }
             }
@@ -200,9 +201,9 @@ object ChunkRenderer {
                         for (offZ in from.y..to.y) {
                             val (texX, texY) = atlasPosition.getPosOnAtlas(offX, offZ)
 
-                            val color = getColor(offX or otherPos.startX, offZ or otherPos.startZ)
+                            val color = getColor(offX or otherPos.minBlockX, offZ or otherPos.minBlockZ)
 
-                            texture.image!!.setColorArgb(texX, texY, color)
+                            texture.pixels!!.setPixel(texX, texY, color)
                         }
                     }
                 }

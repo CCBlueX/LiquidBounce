@@ -41,10 +41,10 @@ import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.entity.EntityPose
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.round
@@ -86,7 +86,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
         ModuleDebug.debugParameter(this, "Snapshot Ledged", snapshotOne.clipLedged)
 
         return if (snapshotOne.clipLedged) {
-            val cameraPosition = snapshotOne.pos.add(0.0, player.standingEyeHeight.toDouble(), 0.0)
+            val cameraPosition = snapshotOne.pos.add(0.0, player.eyeHeight.toDouble(), 0.0)
             val currentCrosshairTarget = raycast(start = cameraPosition, direction = rotation.directionVector)
 
             if (target == null) {
@@ -129,8 +129,8 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
     private var isOnRightSide = false
 
     override fun findPlacementTarget(
-        predictedPos: Vec3d,
-        predictedPose: EntityPose,
+        predictedPos: Vec3,
+        predictedPose: Pose,
         optimalLine: Line?,
         bestStack: ItemStack
     ): BlockPlacementTarget? {
@@ -154,7 +154,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             return getRotationForNoInput(target)
         }
 
-        val direction = getMovementDirectionOfInput(player.yaw, rawInput) + 180
+        val direction = getMovementDirectionOfInput(player.yRot, rawInput) + 180
 
         // Round to 45°-steps (NORTH, NORTH_EAST, etc.)
         val movingYaw = round(direction / 45) * 45
@@ -169,16 +169,16 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
     }
 
     private fun getRotationForStraightInput(movingYaw: Float): Rotation {
-        if (player.isOnGround) {
+        if (player.onGround()) {
             isOnRightSide = floor(player.x + cos(movingYaw.toRadians()) * 0.5) != floor(player.x) ||
                 floor(player.z + sin(movingYaw.toRadians()) * 0.5) != floor(player.z)
 
-            val posInDirection = player.entityPos
-                .offset(Direction.fromHorizontalDegrees(movingYaw.toDouble()), 0.6)
+            val posInDirection = player.position()
+                .relative(Direction.fromYRot(movingYaw.toDouble()), 0.6)
                 .toBlockPos()
 
-            val isLeaningOffBlock = player.blockPos.down().getState()?.isAir == true
-            val nextBlockIsAir = posInDirection.down().getState()?.isAir == true
+            val isLeaningOffBlock = player.blockPosition().below().getState()?.isAir == true
+            val nextBlockIsAir = posInDirection.below().getState()?.isAir == true
 
             if (isLeaningOffBlock && nextBlockIsAir) {
                 isOnRightSide = !isOnRightSide

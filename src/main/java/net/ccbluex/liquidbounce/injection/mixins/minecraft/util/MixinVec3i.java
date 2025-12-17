@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.util;
 
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.Vec3i;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -41,7 +41,7 @@ public abstract class MixinVec3i {
      * @reason avoid useless int -> float -> int
      */
     @Overwrite
-    public int getManhattanDistance(Vec3i vec) {
+    public int distManhattan(Vec3i vec) {
         int f = Math.abs(vec.getX() - this.getX());
         int g = Math.abs(vec.getY() - this.getY());
         int h = Math.abs(vec.getZ() - this.getZ());

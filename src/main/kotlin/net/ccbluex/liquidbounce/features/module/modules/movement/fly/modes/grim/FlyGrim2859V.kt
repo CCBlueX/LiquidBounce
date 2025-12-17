@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
 /**
  * @anticheat Grim
@@ -49,7 +49,7 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
 
 
     var ticks = 0
-    var pos: Vec3d? = null
+    var pos: Vec3? = null
 
     override fun enable() {
         ticks = 0
@@ -58,7 +58,7 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
 
     val tickHandler = handler<PlayerTickEvent> {
         when {
-            ticks == 0 -> player.jump()
+            ticks == 0 -> player.jumpFromGround()
             // For some reason, low timer makes the timer jump (2 tick start)
             // A lot more stable.
             ticks <= 5 -> Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_2, ModuleFly, 1)
@@ -89,10 +89,10 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
                  * Tested versions: 2.3.59
                  */
 
-                pos = player.entityPos
-                player.setPosition(player.entityPos.x + 1152, player.entityPos.y, player.entityPos.z + 1152)
-            } else if (pos != null) {
-                player.setPosition(pos)
+                pos = player.position()
+                player.setPos(player.position().x + 1152, player.position().y, player.position().z + 1152)
+            } else {
+                pos?.let(player::setPos)
             }
         }
     }

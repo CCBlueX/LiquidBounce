@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.interfaces;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 
 /**
- * Additions to {@link net.minecraft.client.gui.hud.ChatHudLine}.
+ * Additions to {@link net.minecraft.client.GuiMessage}.
  */
 public interface ChatHudLineAddition {
 

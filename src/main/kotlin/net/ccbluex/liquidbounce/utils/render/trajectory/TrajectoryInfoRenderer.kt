@@ -46,27 +46,27 @@ import net.ccbluex.liquidbounce.utils.math.scale
 import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
-import net.minecraft.block.ShapeContext
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.projectile.ProjectileEntity
-import net.minecraft.entity.projectile.ProjectileUtil
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
+import net.minecraft.world.phys.shapes.CollisionContext
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.projectile.Projectile
+import net.minecraft.world.entity.projectile.ProjectileUtil
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.EntityHitResult
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.ClipContext
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.cos
 import kotlin.math.sin
 
 class TrajectoryInfoRenderer(
     val owner: Entity,
-    velocity: Vec3d,
-    pos: Vec3d,
+    velocity: Vec3,
+    pos: Vec3,
     val trajectoryInfo: TrajectoryInfo,
     /**
      * Only used for rendering. No effect on simulation.
@@ -76,7 +76,7 @@ class TrajectoryInfoRenderer(
      * The visualization should be what-you-see-is-what-you-get, so we use the actual current position of the player
      * for simulation. Since the trajectory line should follow the player smoothly, we offset it by some amount.
      */
-    private val renderOffset: Vec3d
+    private val renderOffset: Vec3
 ) {
     enum class Type {
         /**
@@ -99,20 +99,20 @@ class TrajectoryInfoRenderer(
             entity: Entity,
             trajectoryInfo: TrajectoryInfo,
             rotation: Rotation,
-            partialTicks: Float = mc.renderTickCounter.getTickProgress(true)
+            partialTicks: Float = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
         ): TrajectoryInfoRenderer {
             val yawRadians = rotation.yaw / 180f * Math.PI.toFloat()
             val pitchRadians = rotation.pitch / 180f * Math.PI.toFloat()
 
-            val interpolatedOffset = entity.interpolateCurrentPosition(partialTicks) - entity.entityPos
+            val interpolatedOffset = entity.interpolateCurrentPosition(partialTicks) - entity.position()
 
-            val pos = Vec3d(
+            val pos = Vec3(
                 entity.x,
                 entity.eyeY - 0.10000000149011612,
                 entity.z
             )
 
-            val velocity = Vec3d(
+            val velocity = Vec3(
                 -sin(yawRadians) * cos(pitchRadians).toDouble(),
                 -sin((rotation.pitch + trajectoryInfo.roll).toRadians()).toDouble(),
                 cos(yawRadians) * cos(pitchRadians).toDouble()
@@ -121,9 +121,9 @@ class TrajectoryInfoRenderer(
             //In Freeze, this momentum is the residual value before freezing.
             if (trajectoryInfo.copiesPlayerVelocity && !ModuleFreeze.running) {
             velocity.move(
-                    x = entity.velocity.x,
-                    y = if (entity.isOnGround) 0.0 else entity.velocity.y,
-                    z = entity.velocity.z
+                    x = entity.deltaMovement.x,
+                    y = if (entity.onGround()) 0.0 else entity.deltaMovement.y,
+                    z = entity.deltaMovement.z
                 )
             }
 
@@ -142,7 +142,7 @@ class TrajectoryInfoRenderer(
     private val pos = pos.copy() // Used as mutable
 
     private val hitbox = trajectoryInfo.hitbox()
-    private val mutableBlockPos = BlockPos.Mutable()
+    private val mutableBlockPos = BlockPos.MutableBlockPos()
 
     fun runSimulation(
         maxTicks: Int,
@@ -159,7 +159,7 @@ class TrajectoryInfoRenderer(
             velocity.scale(drag).move(y = -trajectoryInfo.gravity)
         }
 
-        val positions = mutableListOf<Vec3d>()
+        val positions = mutableListOf<Vec3>()
 
         // Apply first-tick physics to velocity only, mimicking server spawn reset
         tickVelocity()
@@ -169,7 +169,7 @@ class TrajectoryInfoRenderer(
         var currTicks = 1
 
         while (currTicks < maxTicks) {
-            if (pos.y < world.bottomY) {
+            if (pos.y < world.minY) {
                 break
             }
 
@@ -199,39 +199,39 @@ class TrajectoryInfoRenderer(
     }
 
     private fun checkForHits(
-        posBefore: Vec3d,
-        posAfter: Vec3d
-    ): Pair<HitResult, Vec3d?>? {
-        val blockHitResult = world.raycast(
-            RaycastContext(
+        posBefore: Vec3,
+        posAfter: Vec3
+    ): Pair<HitResult, Vec3?>? {
+        val blockHitResult = world.clip(
+            ClipContext(
                 posBefore,
                 posAfter,
-                RaycastContext.ShapeType.COLLIDER,
-                RaycastContext.FluidHandling.NONE,
+                ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE,
                 owner
             )
         )
-        if (blockHitResult != null && blockHitResult.type != HitResult.Type.MISS) {
-            return blockHitResult to blockHitResult.pos
+        if (blockHitResult.type != HitResult.Type.MISS) {
+            return blockHitResult to blockHitResult.location
         }
 
-        val entityHitResult = ProjectileUtil.getEntityCollision(
+        val entityHitResult = ProjectileUtil.getEntityHitResult(
             world,
             owner,
             posBefore,
             posAfter,
-            hitbox.offset(pos).stretch(velocity).expand(1.0),
+            hitbox.move(pos).expandTowards(velocity).inflate(1.0),
             {
                 val canCollide = !it.isSpectator && it.isAlive
-                val shouldCollide = it.canHit() || owner !== player && it === player
+                val shouldCollide = it.isPickable || owner !== player && it === player
 
-                return@getEntityCollision canCollide && shouldCollide && !owner.isConnectedThroughVehicle(it)
+                return@getEntityHitResult canCollide && shouldCollide && !owner.isPassengerOfSameVehicle(it)
             },
-            if (owner is ProjectileEntity) ProjectileUtil.getToleranceMargin(owner) else 0f,
+            if (owner is Projectile) ProjectileUtil.computeMargin(owner) else 0f,
         )
 
         return if (entityHitResult != null && entityHitResult.type != HitResult.Type.MISS) {
-            val hitPos = entityHitResult.entity.box.expand(trajectoryInfo.hitboxRadius).raycast(posBefore, posAfter)
+            val hitPos = entityHitResult.entity.box.inflate(trajectoryInfo.hitboxRadius).clip(posBefore, posAfter)
 
             entityHitResult to hitPos.getOrNull()
         } else {
@@ -266,16 +266,16 @@ class TrajectoryInfoRenderer(
         }
 
         if (trajectoryInfo == TrajectoryInfo.POTION && entityHitColor != null) {
-            drawSplashPotionTargets(landingPosition.pos, trajectoryInfo, event, entityHitColor)
+            drawSplashPotionTargets(landingPosition.location, trajectoryInfo, event, entityHitColor)
         }
 
         return simulationResult
     }
 
     private fun drawTrajectoryForProjectile(
-        positions: List<Vec3d>,
+        positions: List<Vec3>,
         color: Color4b,
-        matrixStack: MatrixStack,
+        matrixStack: PoseStack,
     ) {
         renderEnvironmentForWorld(matrixStack) {
             drawLineStrip(
@@ -287,28 +287,28 @@ class TrajectoryInfoRenderer(
     @JvmRecord
     data class SimulationResult(
         val hitResult: HitResult?,
-        val positions: List<Vec3d>,
+        val positions: List<Vec3>,
     )
 }
 
 private fun drawSplashPotionTargets(
-    landingPosition: Vec3d,
+    landingPosition: Vec3,
     trajectoryInfo: TrajectoryInfo,
     event: WorldRenderEvent,
     entityHitColor: Color4b,
 ) {
-    val box: Box = trajectoryInfo.hitbox(landingPosition).expand(4.0, 2.0, 4.0)
+    val box: AABB = trajectoryInfo.hitbox(landingPosition).inflate(4.0, 2.0, 4.0)
 
     val hitTargets =
-        world.getNonSpectatingEntities(LivingEntity::class.java, box)
-            .takeWhile { it.squaredDistanceTo(landingPosition) <= 16.0 }
-            .filter { it.isAffectedBySplashPotions }
+        world.getEntitiesOfClass(LivingEntity::class.java, box)
+            .takeWhile { it.distanceToSqr(landingPosition) <= 16.0 }
+            .filter { it.isAffectedByPotions }
 
     drawHitEntities(event.matrixStack, entityHitColor, hitTargets, event.partialTicks)
 }
 
 private fun drawHitEntities(
-    matrixStack: MatrixStack,
+    matrixStack: PoseStack,
     entityHitColor: Color4b,
     entities: List<Entity>,
     partialTicks: Float
@@ -326,7 +326,7 @@ private fun drawHitEntities(
                 drawBox(
                     entity
                         .getDimensions(entity.pose)!!
-                        .getBoxAt(Vec3d.ZERO),
+                        .makeBoundingBox(Vec3.ZERO),
                     entityHitColor,
                 )
             }
@@ -335,20 +335,20 @@ private fun drawHitEntities(
     }
 }
 
-private fun renderHitBlockFace(matrixStack: MatrixStack, blockHitResult: BlockHitResult, color: Color4b) {
+private fun renderHitBlockFace(matrixStack: PoseStack, blockHitResult: BlockHitResult, color: Color4b) {
     val currPos = blockHitResult.blockPos
     val currState = currPos.getState()!!
 
-    val bestBox = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
-        .filter { blockHitResult.pos in it.expand(0.01, 0.01, 0.01).offset(currPos) }
-        .minByOrNull { it.squaredBoxedDistanceTo(blockHitResult.pos) }
+    val bestBox = currState.getShape(world, currPos, CollisionContext.of(player)).toAabbs()
+        .filter { blockHitResult.location in it.inflate(0.01, 0.01, 0.01).move(currPos) }
+        .minByOrNull { it.squaredBoxedDistanceTo(blockHitResult.location) }
 
     if (bestBox != null) {
         renderEnvironmentForWorld(matrixStack) {
             withPositionRelativeToCamera(currPos) {
                 drawBoxSide(
                     bestBox,
-                    side = blockHitResult.side,
+                    side = blockHitResult.direction,
                     faceColor = color,
                 )
             }

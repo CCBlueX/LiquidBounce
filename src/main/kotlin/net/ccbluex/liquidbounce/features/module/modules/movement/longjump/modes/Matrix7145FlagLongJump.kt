@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.Module
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 /**
  * @anticheat Matrix
@@ -52,29 +52,31 @@ internal object Matrix7145FlagLongJump : Choice("Matrix-7.14.5-Flag") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler(onCancellation = { flagTicks = 0 }) {
-        if (!player.isOnGround) {
+        if (!player.onGround()) {
             return@tickHandler
         }
 
         // Wait until we are not on ground and reached the delay
-        tickUntil { !player.isOnGround && player.airTicks >= delay }
+        tickUntil { !player.onGround() && player.airTicks >= delay }
 
-        val yaw = player.yaw
+        val yaw = player.yRot
         // Repeat the jump until we get at least 2 flags and have not floated for too long
         while (flagTicks < 2 && player.airTicks < ACCEPTED_AIR_TIME) {
-            player.velocity = player.velocity
-                .withStrafe(speed = boostSpeed.toDouble(), yaw = yaw, input = null)
-                .copy(y = motionY.toDouble())
+            player.setDeltaMovement(
+                player.deltaMovement
+                    .withStrafe(speed = boostSpeed.toDouble(), yaw = yaw, input = null)
+                    .copy(y = motionY.toDouble())
+            )
 
             // On the first flag, we wait for the player to be on ground
             if (flagTicks == 1) {
-                tickUntil { player.isOnGround || player.airTicks >= ACCEPTED_AIR_TIME }
+                tickUntil { player.onGround() || player.airTicks >= ACCEPTED_AIR_TIME }
             }
             waitTicks(1)
         }
 
         // Reset
-        tickUntil { player.isOnGround }
+        tickUntil { player.onGround() }
         flagTicks = 0
         if (ModuleLongJump.autoDisable) {
             ModuleLongJump.enabled = false
@@ -87,7 +89,7 @@ internal object Matrix7145FlagLongJump : Choice("Matrix-7.14.5-Flag") {
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlayerPositionLookS2CPacket) {
+        if (event.packet is ClientboundPlayerPositionPacket) {
             flagTicks++
         }
     }

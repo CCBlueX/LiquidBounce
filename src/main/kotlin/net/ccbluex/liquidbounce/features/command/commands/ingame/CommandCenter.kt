@@ -52,8 +52,8 @@ object CommandCenter : Command.Factory, EventListener {
                 return@handler
             }
 
-            val pos = player.blockPos.toCenterPos()
-            val delta = player.entityPos.subtract(pos)
+            val pos = player.blockPosition().center
+            val delta = player.position().subtract(pos)
             it.x = delta.x
             it.y = delta.y
             it.z = delta.z

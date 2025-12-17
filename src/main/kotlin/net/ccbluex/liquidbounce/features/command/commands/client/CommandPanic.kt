@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.text.MutableText
+import net.minecraft.network.chat.MutableComponent
 
 /**
  * Panic Command
@@ -49,7 +49,7 @@ object CommandPanic : Command.Factory {
             )
             .handler {
                 var modules = ModuleManager.filter { it.running }
-                val msg: MutableText
+                val msg: MutableComponent
 
                 when (val type = args.getOrNull(0) as String? ?: "nonrender") {
                     "all" -> msg = command.result("disabledAllModules")

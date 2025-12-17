@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
-import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
+import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
 
 /**
  * Duplicate exempt grim
@@ -55,25 +55,27 @@ internal object VelocityGrim2344 : VelocityMode("Grim2344-117") {
 
         // Check for damage to make sure it will only cancel
         // damage velocity (that all we need) and not affect other types of velocity
-        if (packet is EntityDamageS2CPacket && packet.entityId == player.id) {
+        if (packet is ClientboundDamageEventPacket && packet.entityId == player.id) {
             canCancel = true
         }
 
-        if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket)
+        if ((packet is ClientboundSetEntityMotionPacket && packet.id == player.id || packet is ClientboundExplodePacket)
             && canCancel) {
             event.cancelEvent()
             waitTicks(1)
             repeat(if (alternativeBypass) 4 else 1) {
-                network.sendPacket(
-                    Full(
-                        player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround,
+                network.send(
+                    PosRot(
+                        player.x, player.y, player.z, player.yRot, player.xRot, player.onGround(),
                         player.horizontalCollision
                     )
                 )
             }
-            network.sendPacket(
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, player.blockPos, player.horizontalFacing.opposite
+            network.send(
+                ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
+                    player.blockPosition(),
+                    player.direction.opposite
                 )
             )
             canCancel = false

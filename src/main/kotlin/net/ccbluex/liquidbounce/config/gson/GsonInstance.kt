@@ -66,25 +66,25 @@ import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.render.Alignment
-import net.minecraft.block.Block
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.network.ServerInfo
-import net.minecraft.client.session.Session
-import net.minecraft.client.util.InputUtil
-import net.minecraft.component.ComponentChanges
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.ScreenHandlerType
-import net.minecraft.sound.SoundEvent
-import net.minecraft.text.Text
-import net.minecraft.util.Identifier
-import net.minecraft.util.StringIdentifiable
-import net.minecraft.util.math.Vec2f
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.level.block.Block
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.multiplayer.ServerData
+import net.minecraft.client.User
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.MenuType
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.Identifier
+import net.minecraft.util.StringRepresentable
+import net.minecraft.world.phys.Vec2
+import net.minecraft.world.phys.Vec3
+import net.minecraft.core.Vec3i
 import org.joml.Vector2fc
 import java.io.File
 import java.time.LocalDate
@@ -152,28 +152,28 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(File::class.javaObjectType, FileAdapter)
         .registerTypeHierarchyAdapter(EntityType::class.java, IdentifierWithRegistryAdapter.ENTITY_TYPE)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, IdentifierWithRegistryAdapter.ITEM)
-        .registerTypeAdapter(ComponentChanges::class.java, CodecBasedAdapter.COMPONENT_CHANGES)
+        .registerTypeAdapter(DataComponentPatch::class.java, CodecBasedAdapter.COMPONENT_CHANGES)
         .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, IdentifierWithRegistryAdapter.SOUND_EVENT)
-        .registerTypeHierarchyAdapter(StatusEffect::class.javaObjectType, IdentifierWithRegistryAdapter.STATUS_EFFECT)
-        .registerTypeHierarchyAdapter(ScreenHandlerType::class.java, IdentifierWithRegistryAdapter.SCREEN_HANDLER)
+        .registerTypeHierarchyAdapter(MobEffect::class.javaObjectType, IdentifierWithRegistryAdapter.STATUS_EFFECT)
+        .registerTypeHierarchyAdapter(MenuType::class.java, IdentifierWithRegistryAdapter.SCREEN_HANDLER)
         .registerTypeHierarchyAdapter(Color4b::class.javaObjectType, ColorAdapter)
-        .registerTypeHierarchyAdapter(Vec3d::class.javaObjectType, Vec3dAdapter)
+        .registerTypeHierarchyAdapter(Vec3::class.javaObjectType, Vec3dAdapter)
         .registerTypeHierarchyAdapter(Vec3i::class.javaObjectType, Vec3iAdapter)
-        .registerTypeHierarchyAdapter(Vec2f::class.javaObjectType, Vec2fAdapter)
+        .registerTypeHierarchyAdapter(Vec2::class.javaObjectType, Vec2fAdapter)
         .registerTypeHierarchyAdapter(Vector2fc::class.java, Vector2fcAdapter)
         .registerTypeHierarchyAdapter(Block::class.javaObjectType, IdentifierWithRegistryAdapter.BLOCK)
-        .registerTypeHierarchyAdapter(InputUtil.Key::class.javaObjectType, InputUtilAdapter)
+        .registerTypeHierarchyAdapter(InputConstants.Key::class.javaObjectType, InputUtilAdapter)
         .registerTypeHierarchyAdapter(InputBind::class.javaObjectType, InputBindAdapter)
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeHierarchyAdapter(MinecraftAccount::class.javaObjectType, MinecraftAccountAdapter)
-        .registerTypeHierarchyAdapter(Text::class.javaObjectType, CodecBasedAdapter.PROCESSED_TEXT)
+        .registerTypeHierarchyAdapter(Component::class.javaObjectType, CodecBasedAdapter.PROCESSED_TEXT)
         .registerTypeHierarchyAdapter(Screen::class.javaObjectType, ScreenSerializer)
-        .registerTypeHierarchyAdapter(Session::class.javaObjectType, SessionSerializer)
-        .registerTypeAdapter(ServerInfo::class.javaObjectType, ServerInfoSerializer)
-        .registerTypeHierarchyAdapter(StringIdentifiable::class.java, StringIdentifiableSerializer)
+        .registerTypeHierarchyAdapter(User::class.javaObjectType, SessionSerializer)
+        .registerTypeAdapter(ServerData::class.javaObjectType, ServerInfoSerializer)
+        .registerTypeHierarchyAdapter(StringRepresentable::class.java, StringIdentifiableSerializer)
         .registerTypeAdapter(ItemStack::class.javaObjectType, ItemStackSerializer)
         .registerTypeAdapter(Identifier::class.javaObjectType, IdentifierAdapter)
-        .registerTypeAdapter(StatusEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
+        .registerTypeAdapter(MobEffectInstance::class.javaObjectType, StatusEffectInstanceSerializer)
         .registerTypeHierarchyAdapter(Supplier::class.javaObjectType, SupplierSerializer)
         .registerTypeAdapterFactory(OptionalAdapter)

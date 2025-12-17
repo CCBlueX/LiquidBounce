@@ -32,7 +32,7 @@ import net.ccbluex.netty.http.util.httpOk
 // GET /api/v1/client/session
 @Suppress("UNUSED_PARAMETER")
 fun getSessionInfo(requestObject: RequestObject): FullHttpResponse {
-    val sessionInfo: JsonElement = interopGson.toJsonTree(mc.session)
+    val sessionInfo: JsonElement = interopGson.toJsonTree(mc.user)
     return httpOk(sessionInfo)
 }
 

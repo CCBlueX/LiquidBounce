@@ -27,13 +27,13 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sh
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedInvalidHand
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.item.isConsumable
-import net.minecraft.item.consume.UseAction
+import net.minecraft.world.item.ItemUseAnimation
 
 object NoSlowConsume : NoSlowUseActionHandler("Consume") {
 
     @Suppress("unused")
     private val noBlockInteract = tree(NoSlowNoBlockInteract(this) { action ->
-        action == UseAction.EAT || action == UseAction.DRINK
+        action == ItemUseAnimation.EAT || action == ItemUseAnimation.DRINK
     })
 
     @Suppress("unused")
@@ -56,7 +56,7 @@ object NoSlowConsume : NoSlowUseActionHandler("Consume") {
             }
 
             // Check if we are using a consume item
-            return player.isUsingItem && player.activeItem.isConsumable
+            return player.isUsingItem && player.useItem.isConsumable
         }
 
 }

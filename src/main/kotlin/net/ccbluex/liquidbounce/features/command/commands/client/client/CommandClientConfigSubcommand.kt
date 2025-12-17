@@ -153,7 +153,7 @@ object CommandClientConfigSubcommand {
         .build()
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
-        Util.getOperatingSystem().open(ConfigSystem.backupFolder)
+        Util.getPlatform().openFile(ConfigSystem.backupFolder)
         chat(regular(command.result("browse", variable(ConfigSystem.backupFolder.absolutePath))))
     }.build()
 

@@ -31,10 +31,10 @@ import com.mojang.serialization.DataResult
 import com.mojang.serialization.JsonOps
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.processContent
-import net.minecraft.component.ComponentChanges
-import net.minecraft.registry.DynamicRegistryManager
-import net.minecraft.text.Text
-import net.minecraft.text.TextCodecs
+import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.core.RegistryAccess
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.ComponentSerialization
 import java.lang.reflect.Type
 
 /**
@@ -42,7 +42,8 @@ import java.lang.reflect.Type
  */
 class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, JsonDeserializer<T> {
 
-    private val jsonOps get() = (mc.world?.registryManager ?: DynamicRegistryManager.EMPTY).getOps(JsonOps.INSTANCE)
+    private val jsonOps
+        get() = (mc.level?.registryAccess() ?: RegistryAccess.EMPTY).createSerializationContext(JsonOps.INSTANCE)
 
     override fun deserialize(
         jsonElement: JsonElement?,
@@ -71,13 +72,13 @@ class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, Jso
     companion object {
         /** For ItemStack */
         @JvmField
-        val COMPONENT_CHANGES = CodecBasedAdapter(ComponentChanges.CODEC)
+        val COMPONENT_CHANGES = CodecBasedAdapter(DataComponentPatch.CODEC)
 
         @JvmField
-        val TEXT = CodecBasedAdapter(TextCodecs.CODEC)
+        val TEXT = CodecBasedAdapter(ComponentSerialization.CODEC)
 
         @JvmField
-        val PROCESSED_TEXT = JsonSerializer<Text> { src, t, ctx ->
+        val PROCESSED_TEXT = JsonSerializer<Component> { src, t, ctx ->
             src?.processContent()?.let { TEXT.serialize(it, t, ctx) } ?: JsonNull.INSTANCE
         }
     }

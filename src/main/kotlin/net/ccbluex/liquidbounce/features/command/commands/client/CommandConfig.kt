@@ -42,9 +42,9 @@ import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.Text
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.Component
 import org.apache.commons.io.input.CharSequenceReader
 
 /**
@@ -91,12 +91,12 @@ object CommandConfig : Command.Factory {
         .handler {
             runCatching {
                 chat(regular(command.result("loading")))
-                val widthOfSpace = mc.textRenderer.getWidth(" ")
+                val widthOfSpace = mc.font.width(" ")
                 val configs = configs ?: run {
                     chat(markAsError("Failed to load settings list from API"))
                     return@handler
                 }
-                val width = configs.maxOf { mc.textRenderer.getWidth(it.settingId) }
+                val width = configs.maxOf { mc.font.width(it.settingId) }
 
                 // In the case of the chat, we want to show the newest config at the bottom for visibility
                 configs.sortedBy { it.date }.forEach {
@@ -105,7 +105,7 @@ object CommandConfig : Command.Factory {
                     // Append spaces to the setting name to align the date and status
                     // Compensate for the length of the setting name
                     val spaces = " ".repeat(
-                        (width - mc.textRenderer.getWidth(settingName))
+                        (width - mc.font.width(settingName))
                             / widthOfSpace
                     )
 
@@ -118,18 +118,18 @@ object CommandConfig : Command.Factory {
                             )
                             .onHover(
                                 HoverEvent.ShowText(
-                                    Text.of("§7Click to load $settingName")
+                                    Component.nullToEmpty("§7Click to load $settingName")
                                 )
                             ),
                         regular(spaces),
                         regular(" | "),
                         variable(it.dateFormatted),
                         regular(" | "),
-                        Text.literal(it.statusType.displayName)
-                            .formatted(it.statusType.formatting)
+                        Component.literal(it.statusType.displayName)
+                            .withStyle(it.statusType.formatting)
                             .onHover(
                                 HoverEvent.ShowText(
-                                    Text.of(it.statusDateFormatted)
+                                    Component.nullToEmpty(it.statusDateFormatted)
                                 )
                             )
                         ,

@@ -31,9 +31,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 /**
  * @anticheat Watchdog (NCP)
@@ -69,38 +69,38 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
     private var wasFlagged = false
 
     val repeatable = tickHandler {
-        if (player.isOnGround) {
+        if (player.onGround()) {
             // Strafe when on ground
-            player.velocity = player.velocity.withStrafe()
+            player.setDeltaMovement(player.deltaMovement.withStrafe())
             return@tickHandler
         } else {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
             val horizontalMod = if (horizontalAcceleration) {
                 BASE_HORIZONTAL_MODIFIER + HORIZONTAL_SPEED_AMPLIFIER *
-                    (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+                    (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
             } else {
                 0.0
             }
 
             // Vertical acceleration, this makes sense to get a little bit more speed again
-            val yMod = if (verticalAcceleration && player.velocity.y < 0 && player.fallDistance < 1) {
+            val yMod = if (verticalAcceleration && player.deltaMovement.y < 0 && player.fallDistance < 1) {
                 VERTICAL_SPEED_AMPLIFIER
             } else {
                 0.0
             }
 
-            player.velocity = player.velocity.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod)
+            player.setDeltaMovement(player.deltaMovement.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod))
         }
     }
 
     val jumpEvent = handler<PlayerJumpEvent> {
         val atLeast = if (!wasFlagged) {
-            AT_LEAST + SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+            AT_LEAST + SPEED_EFFECT_CONST * (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
         } else {
             0.0
         }
 
-        player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast))
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast)))
     }
 
     /**
@@ -110,10 +110,10 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
     val packetHandler = sequenceHandler<PacketEvent>(priority = CRITICAL_MODIFICATION) { event ->
         val packet = event.packet
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-            val velocityX = packet.velocity.x / 8000.0
-            val velocityY = packet.velocity.y / 8000.0
-            val velocityZ = packet.velocity.z / 8000.0
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+            val velocityX = packet.movement.x / 8000.0
+            val velocityY = packet.movement.y / 8000.0
+            val velocityZ = packet.movement.z / 8000.0
 
             waitTicks(1)
 
@@ -121,13 +121,13 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
             val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
                 player.sqrtSpeed.coerceAtLeast(
                     BASH *
-                        (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+                        (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
                 )
             } else {
                 player.sqrtSpeed
             }
-            player.velocity = player.velocity.withStrafe(speed = speed)
-        } else if (packet is PlayerPositionLookS2CPacket) {
+            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
+        } else if (packet is ClientboundPlayerPositionPacket) {
             wasFlagged = true
         }
     }

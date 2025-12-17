@@ -24,10 +24,10 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec2f
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.Vec2
+import net.minecraft.world.phys.Vec3
+import net.minecraft.core.Vec3i
 import org.joml.Vector2f
 import org.joml.Vector2fc
 import java.lang.reflect.Type
@@ -51,15 +51,15 @@ object Vec3iAdapter : JsonSerializer<Vec3i>, JsonDeserializer<Vec3i> {
 
 }
 
-object Vec3dAdapter : JsonSerializer<Vec3d>, JsonDeserializer<Vec3d> {
+object Vec3dAdapter : JsonSerializer<Vec3>, JsonDeserializer<Vec3> {
 
-    override fun serialize(src: Vec3d, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
+    override fun serialize(src: Vec3, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
         addProperty("x", src.x)
         addProperty("y", src.y)
         addProperty("z", src.z)
     }
 
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?) = Vec3d(
+    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?) = Vec3(
         json.asJsonObject["x"].asDouble,
         json.asJsonObject["y"].asDouble,
         json.asJsonObject["z"].asDouble
@@ -67,14 +67,14 @@ object Vec3dAdapter : JsonSerializer<Vec3d>, JsonDeserializer<Vec3d> {
 
 }
 
-object Vec2fAdapter : JsonSerializer<Vec2f>, JsonDeserializer<Vec2f> {
+object Vec2fAdapter : JsonSerializer<Vec2>, JsonDeserializer<Vec2> {
 
-    override fun serialize(src: Vec2f, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
+    override fun serialize(src: Vec2, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
         addProperty("x", src.x)
         addProperty("y", src.y)
     }
 
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?) = Vec2f(
+    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?) = Vec2(
         json.asJsonObject["x"].asFloat,
         json.asJsonObject["y"].asFloat
     )

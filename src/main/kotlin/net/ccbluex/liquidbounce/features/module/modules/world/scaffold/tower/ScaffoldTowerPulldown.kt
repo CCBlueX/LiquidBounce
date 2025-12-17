@@ -35,10 +35,10 @@ object ScaffoldTowerPulldown : ScaffoldTower("Pulldown") {
         }
 
         // Wait until we can proceed with our tower
-        tickUntil { player.velocity.y < triggerMotion && !player.isOnGround }
+        tickUntil { player.deltaMovement.y < triggerMotion && !player.onGround() }
         if (!isBlockBelow) return@sequenceHandler
 
-        player.velocity.y = -1.0
+        player.deltaMovement.y = -1.0
     }
 
 }

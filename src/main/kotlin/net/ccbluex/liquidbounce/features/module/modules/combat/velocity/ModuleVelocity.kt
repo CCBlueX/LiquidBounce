@@ -39,9 +39,9 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.Vel
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityModify
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReversal
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityStrafe
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 /**
  * Velocity module
@@ -97,7 +97,9 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = list
             return@sequenceHandler
         }
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket) {
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id
+            || packet is ClientboundExplodePacket
+        ) {
             // When delay is above 0, we will delay the velocity update
             if (delay.last > 0) {
                 event.cancelEvent()
@@ -114,10 +116,10 @@ object ModuleVelocity : ClientModule("Velocity", Category.COMBAT, aliases = list
                 EventManager.callEvent(packetEvent)
 
                 if (!packetEvent.isCancelled) {
-                    packet.apply(network)
+                    packet.handle(network)
                 }
             }
-        } else if (packet is PlayerPositionLookS2CPacket) {
+        } else if (packet is ClientboundPlayerPositionPacket) {
             pause = pauseOnFlag
         }
     }

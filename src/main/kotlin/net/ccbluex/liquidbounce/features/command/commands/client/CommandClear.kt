@@ -35,7 +35,7 @@ object CommandClear : Command.Factory {
             .begin("clear")
             .handler {
                 ModuleBetterChat.antiChatClearPaused = true
-                mc.inGameHud.chatHud.clear(true)
+                mc.gui.chat.clearMessages(true)
                 ModuleBetterChat.antiChatClearPaused = false
             }
             .build()

@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.render
 
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Direction
 
 enum class BoxVertexIterator {
     FACE {
-        override fun forEachVertex(box: Box, consumer: Consumer) {
+        override fun forEachVertex(box: AABB, consumer: Consumer) {
             box.forEachFaceVertex(consumer::invoke)
         }
 
@@ -38,7 +38,7 @@ enum class BoxVertexIterator {
         }
     },
     OUTLINE {
-        override fun forEachVertex(box: Box, consumer: Consumer) {
+        override fun forEachVertex(box: AABB, consumer: Consumer) {
             box.forEachOutlineVertex(consumer::invoke)
         }
 
@@ -55,7 +55,7 @@ enum class BoxVertexIterator {
     /**
      * For Java and JS usage.
      */
-    abstract fun forEachVertex(box: Box, consumer: Consumer)
+    abstract fun forEachVertex(box: AABB, consumer: Consumer)
 
     /**
      * For [drawBox].
@@ -67,7 +67,7 @@ enum class BoxVertexIterator {
     }
 }
 
-inline fun Box.forEachFaceVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
+inline fun AABB.forEachFaceVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
     var i = 0
     // down
     fn(i++, minX, minY, minZ)
@@ -108,7 +108,7 @@ inline fun Box.forEachFaceVertex(fn: (index: Int, x: Double, y: Double, z: Doubl
     // i == 24
 }
 
-inline fun Box.forEachOutlineVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
+inline fun AABB.forEachOutlineVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
     var i = 0
     // down north
     fn(i++, minX, minY, minZ)

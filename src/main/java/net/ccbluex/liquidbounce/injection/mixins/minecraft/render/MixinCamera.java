@@ -28,12 +28,12 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspe
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSmoothCamera;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
-import net.minecraft.client.render.Camera;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.client.Camera;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -46,34 +46,34 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinCamera {
 
     @Shadow
-    private Vec3d pos;
+    private Vec3 position;
     @Shadow
-    private boolean thirdPerson;
+    private boolean detached;
     @Shadow
-    private float yaw;
+    private float yRot;
     @Shadow
-    private float pitch;
+    private float xRot;
 
     @Shadow
     protected abstract void setRotation(float yaw, float pitch);
 
     @Shadow
-    protected abstract float clipToSpace(float f);
+    protected abstract float getMaxZoom(float f);
 
     @Shadow
-    protected abstract void moveBy(float f, float g, float h);
+    protected abstract void move(float f, float g, float h);
 
     @Shadow
-    public abstract void setPos(Vec3d pos);
+    public abstract void setPosition(Vec3 pos);
 
-    @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER))
-    private void hookFreeCamModifiedPosition(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView,
+    @Inject(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V", shift = At.Shift.AFTER))
+    private void hookFreeCamModifiedPosition(Level area, Entity focusedEntity, boolean thirdPerson, boolean inverseView,
         float tickProgress, CallbackInfo ci) {
         ModuleFreeCam.INSTANCE.applyCameraPosition(focusedEntity, tickProgress);
     }
 
-    @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER), cancellable = true)
-    private void modifyCameraOrientation(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView,
+    @Inject(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V", shift = At.Shift.AFTER), cancellable = true)
+    private void modifyCameraOrientation(Level area, Entity focusedEntity, boolean thirdPerson, boolean inverseView,
         float tickProgress, CallbackInfo ci) {
         var freeLook = ModuleFreeLook.INSTANCE.getRunning();
         var freeLockInvertedView = ModuleFreeLook.INSTANCE.isInvertedView();
@@ -81,7 +81,7 @@ public abstract class MixinCamera {
         var rearView = qps && ModuleQuickPerspectiveSwap.INSTANCE.getRearView() && !freeLook && !thirdPerson;
 
         if (freeLook || qps) {
-            if (!rearView) this.thirdPerson = true;
+            if (!rearView) this.detached = true;
 
             if (freeLook) {
                 var cameraYaw = ModuleFreeLook.INSTANCE.getCameraYaw();
@@ -95,14 +95,14 @@ public abstract class MixinCamera {
             }
 
             if (qps) {
-                setRotation(yaw + 180.0f, freeLook && !freeLockInvertedView ? pitch : -pitch);
+                setRotation(yRot + 180.0f, freeLook && !freeLockInvertedView ? xRot : -xRot);
             }
 
             float scale = focusedEntity instanceof LivingEntity livingEntity ? livingEntity.getScale() : 1.0F;
             float desiredCameraDistance = ModuleCameraClip.INSTANCE.getRunning() ? ModuleCameraClip.INSTANCE.getDistance() : 4f;
 
             if (!rearView) {
-                moveBy(-clipToSpace(desiredCameraDistance * scale), 0.0f, 0.0f);
+                move(-getMaxZoom(desiredCameraDistance * scale), 0.0f, 0.0f);
             }
 
             ci.cancel();
@@ -112,7 +112,7 @@ public abstract class MixinCamera {
         var screen = ModuleDroneControl.INSTANCE.getScreen();
 
         if (screen != null) {
-            this.setPos(screen.getCameraPos());
+            this.setPosition(screen.getCameraPos());
             this.setRotation(screen.getCameraRotation().x, screen.getCameraRotation().y);
         }
 
@@ -128,43 +128,43 @@ public abstract class MixinCamera {
         }
 
         setRotation(
-            MathHelper.lerp(tickProgress, previousRotation.getYaw(), currentRotation.getYaw()),
-            MathHelper.lerp(tickProgress, previousRotation.getPitch(), currentRotation.getPitch())
+            Mth.lerp(tickProgress, previousRotation.getYaw(), currentRotation.getYaw()),
+            Mth.lerp(tickProgress, previousRotation.getPitch(), currentRotation.getPitch())
         );
     }
 
-    @Inject(method = "update", at = @At("TAIL"))
-    private void applyFreeCamPlayerSelfRendering(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickProgress, CallbackInfo ci) {
+    @Inject(method = "setup", at = @At("TAIL"))
+    private void applyFreeCamPlayerSelfRendering(Level area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickProgress, CallbackInfo ci) {
         if (ModuleFreeCam.INSTANCE.getRunning()) {
-            this.thirdPerson = true;
+            this.detached = true;
         }
     }
 
-    @ModifyConstant(method = "clipToSpace", constant = @Constant(intValue = 8))
+    @ModifyConstant(method = "getMaxZoom", constant = @Constant(intValue = 8))
     private int hookCameraClip(int constant) {
         return ModuleCameraClip.INSTANCE.getRunning() ? 0 : constant;
     }
 
-    @ModifyExpressionValue(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;clipToSpace(F)F"))
+    @ModifyExpressionValue(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;getMaxZoom(F)F"))
     private float modifyDesiredCameraDistance(float original) {
-        return ModuleCameraClip.INSTANCE.getRunning() ? clipToSpace(ModuleCameraClip.INSTANCE.getDistance()) : original;
+        return ModuleCameraClip.INSTANCE.getRunning() ? getMaxZoom(ModuleCameraClip.INSTANCE.getDistance()) : original;
     }
 
-    @Inject(method = "update", at = @At("TAIL"))
-    private void onUpdate(World area, Entity focusedEntity, boolean thirdPerson, boolean inverseView,
+    @Inject(method = "setup", at = @At("TAIL"))
+    private void onUpdate(Level area, Entity focusedEntity, boolean thirdPerson, boolean inverseView,
         float tickProgress, CallbackInfo ci) {
-        ModuleSmoothCamera.cameraUpdate(yaw, pitch, pos);
+        ModuleSmoothCamera.cameraUpdate(yRot, xRot, position);
     }
 
-    @ModifyReturnValue(method = "getCameraPos", at = @At("RETURN"))
-    private Vec3d modifyGetPos(Vec3d original) {
+    @ModifyReturnValue(method = "position", at = @At("RETURN"))
+    private Vec3 modifyGetPos(Vec3 original) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
             return original;
         }
         return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothPos() : original;
     }
 
-    @ModifyReturnValue(method = "getYaw", at = @At("RETURN"))
+    @ModifyReturnValue(method = "yRot", at = @At("RETURN"))
     private float modifyGetYaw(float original) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
             return original;
@@ -172,7 +172,7 @@ public abstract class MixinCamera {
         return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothYaw() : original;
     }
 
-    @ModifyReturnValue(method = "getPitch", at = @At("RETURN"))
+    @ModifyReturnValue(method = "xRot", at = @At("RETURN"))
     private float modifyGetPitch(float original) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
             return original;

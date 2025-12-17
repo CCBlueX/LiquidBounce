@@ -25,7 +25,7 @@ import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import net.minecraft.client.gl.Framebuffer
+import com.mojang.blaze3d.pipeline.RenderTarget
 import java.util.OptionalDouble
 import java.util.OptionalInt
 import java.util.function.Supplier
@@ -34,22 +34,22 @@ import java.util.function.Supplier
  * 1.21.5-10
  */
 inline fun RenderPass.bindSampler(name: String, gpuTextureView: GpuTextureView) {
-    bindTexture(name, gpuTextureView, RenderSystem.getSamplerCache().get(FilterMode.NEAREST))
+    bindTexture(name, gpuTextureView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST))
 }
 
 private val RENDER_PASS_DEFAULT_LABEL = Supplier { LiquidBounce.CLIENT_NAME + " RenderPass" }
 
 @JvmOverloads
-fun Framebuffer.createRenderPass(
+fun RenderTarget.createRenderPass(
     labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
     clearColor: OptionalInt = OptionalInt.empty(),
     clearDepth: OptionalDouble = OptionalDouble.empty(),
     useDepthAttachment: Boolean = true,
 ): RenderPass = newRenderPass(
     labelGetter,
-    colorAttachmentView!!,
+    colorTextureView!!,
     clearColor,
-    depthAttachmentView.takeIf { this.useDepthAttachment && useDepthAttachment },
+    depthTextureView.takeIf { this.useDepth && useDepthAttachment },
     clearDepth,
 )
 

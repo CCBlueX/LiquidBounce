@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket
-import net.minecraft.network.packet.s2c.play.PlaySoundFromEntityS2CPacket
-import net.minecraft.sound.SoundEvents
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
+import net.minecraft.network.protocol.game.ClientboundSoundEntityPacket
+import net.minecraft.sounds.SoundEvents
 
 /**
  * Can be implemented to handle actions after crystals got attacked.
@@ -59,19 +59,19 @@ abstract class CrystalPostAttackTracker : EventListener {
     @Suppress("unused")
     private val explodeListener = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
-            is PlaySoundFromEntityS2CPacket -> {
-                if (packet.sound != SoundEvents.ENTITY_GENERIC_EXPLODE) {
+            is ClientboundSoundEntityPacket -> {
+                if (packet.sound != SoundEvents.GENERIC_EXPLODE) {
                     return@handler
                 }
 
-                val id = packet.entityId
+                val id = packet.id
                 // Default (non-existing) value = 0
                 if (attackedIds.remove(id) != 0L) {
                     confirmed(id)
                 }
             }
 
-            is EntitiesDestroyS2CPacket -> {
+            is ClientboundRemoveEntitiesPacket -> {
                 packet.entityIds.forEach { id ->
                     if (attackedIds.remove(id) != 0L) {
                         confirmed(id)

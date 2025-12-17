@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.minecraft.entity.LivingEntity
-import net.minecraft.item.ItemStack
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
 
 internal object NametagEquipment : Configurable("Equipment") {
 
@@ -43,7 +43,7 @@ internal object NametagEquipment : Configurable("Equipment") {
      */
     fun createItemList(entity: LivingEntity): List<ItemStack> {
         val stacks = slots.mapToArray {
-            entity.getEquippedStack(it.slot)
+            entity.getItemBySlot(it.slot)
         }
 
         return if (skipEmptySlot) {

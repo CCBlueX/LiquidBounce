@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProces
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.textureSetup
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.text.Text
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.network.chat.Component
 import java.awt.Font
 import kotlin.math.max
 
@@ -74,11 +74,11 @@ class FontRenderer(
         elements().reverse(0, size)
     }
 
-    override fun process(text: Text, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
+    override fun process(text: Component, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
         return MinecraftTextProcessor.process(text.sanitizeForeignInput(), defaultColor)
     }
 
-    context(ctx: DrawContext)
+    context(ctx: GuiGraphics)
     override fun draw(
         text: MinecraftTextProcessor.RecyclingProcessedText,
         x0: Float,
@@ -110,7 +110,7 @@ class FontRenderer(
      *
      * @return The resulting x value
      */
-    context(ctx: DrawContext)
+    context(ctx: GuiGraphics)
     @Suppress("CognitiveComplexMethod")
     private fun drawInternal(
         text: ProcessedText,
@@ -210,7 +210,7 @@ class FontRenderer(
         }
     }
 
-    context(ctx: DrawContext)
+    context(ctx: GuiGraphics)
     private fun drawLine(
         x0: Float,
         x1: Float,
@@ -222,7 +222,7 @@ class FontRenderer(
         ctx.drawHorizontalLine(x0, x1, y, 1f, color)
     }
 
-    context(ctx: DrawContext)
+    context(ctx: GuiGraphics)
     private fun drawChar(
         glyph: GlyphDescriptor,
         x: Float,

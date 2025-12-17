@@ -18,19 +18,20 @@
  */
 package net.ccbluex.liquidbounce.config.types.nesting
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.input.isPressed
-import net.minecraft.client.util.InputUtil
+import org.lwjgl.glfw.GLFW
 
 /**
  * A configurable for scroll-adjusting values.
  */
 
 data class ScrollAdjustOptions(
-    val modifierKeyDefault: Int = InputUtil.GLFW_KEY_LEFT_ALT,
+    val modifierKeyDefault: Int = GLFW.GLFW_KEY_LEFT_ALT,
     val sensitivityDefault: Float = 0.5f,
     val sensitivityRange: ClosedFloatingPointRange<Float> = 0.1f..1.0f
 )
@@ -46,7 +47,7 @@ open class ScrollAdjustConfigurable(
     val modifierKey by key("Modifier", options.modifierKeyDefault)
     val sensitivity by float("Sensitivity", options.sensitivityDefault, options.sensitivityRange)
 
-    open fun canPerformScroll(): Boolean = modifierKey == InputUtil.UNKNOWN_KEY || modifierKey.isPressed
+    open fun canPerformScroll(): Boolean = modifierKey == InputConstants.UNKNOWN || modifierKey.isPressed
 
     init {
         handler<MouseScrollEvent> { event ->

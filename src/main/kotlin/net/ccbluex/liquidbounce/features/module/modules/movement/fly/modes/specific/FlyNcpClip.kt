@@ -36,10 +36,10 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * NCP Clip Fly
@@ -69,7 +69,7 @@ object FlyNcpClip : Choice("NcpClip") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
-    private var startPosition: Vec3d? = null
+    private var startPosition: Vec3? = null
     private var damage = false
 
     private var shouldLag = false
@@ -84,20 +84,20 @@ object FlyNcpClip : Choice("NcpClip") {
         }
 
         if (startPos == null) {
-            startPosition = player.entityPos
+            startPosition = player.position()
 
             // Wait until there is a vertical collision
             tickUntil { collidesVertical() }
 
             if (clipping != 0f) {
-                network.sendPacket(
-                    PlayerMoveC2SPacket.PositionAndOnGround(
+                network.send(
+                    ServerboundMovePlayerPacket.Pos(
                         player.x, player.y + clipping, player.z,
                         false, player.horizontalCollision
                     )
                 )
-                network.sendPacket(
-                    PlayerMoveC2SPacket.PositionAndOnGround(
+                network.send(
+                    ServerboundMovePlayerPacket.Pos(
                         player.x, player.y, player.z,
                         false, player.horizontalCollision
                     )
@@ -112,21 +112,21 @@ object FlyNcpClip : Choice("NcpClip") {
             tickUntil { !collidesVertical() }
 
             // Proceed to jump (just like speeding up) and boost strafe entry
-            player.jump()
-            player.velocity = player.velocity.withStrafe(speed = (speed + additionalEntrySpeed).toDouble())
+            player.jumpFromGround()
+            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = (speed + additionalEntrySpeed).toDouble()))
 
             // Wait until the player is not on ground
-            tickUntil { !player.isOnGround }
+            tickUntil { !player.onGround() }
 
             // Proceed to strafe with the normal speed
-            player.velocity = player.velocity.withStrafe(speed = speed.toDouble())
+            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
         } else if (collidesBottomVertical()) {
             shouldLag = false
 
             // Disable the module if the player is on ground again
             ModuleFly.enabled = false
             return@tickHandler
-        } else if (startPos.distanceTo(player.entityPos) > maximumDistance) {
+        } else if (startPos.distanceTo(player.position()) > maximumDistance) {
             if (shouldLag) {
                 // If we are lagging, we might abuse this to get us back to safety
                 PacketQueueManager.cancel()
@@ -143,7 +143,7 @@ object FlyNcpClip : Choice("NcpClip") {
 
         // Strafe the player to improve control
         if (strafe) {
-            player.velocity = player.velocity.withStrafe()
+            player.setDeltaMovement(player.deltaMovement.withStrafe())
         }
 
         // Set timer speed
@@ -158,7 +158,7 @@ object FlyNcpClip : Choice("NcpClip") {
         // make settings hidden with booleans
         //
         // Falling from 5 blocks deals 3hp damage.
-        if (packet is PlayerMoveC2SPacket && player.fallDistance > 5) {
+        if (packet is ServerboundMovePlayerPacket && player.fallDistance > 5) {
             if (!damage && fallDamage) {
                 /**
                  * Alright, we are able to take fall damge.
@@ -179,7 +179,7 @@ object FlyNcpClip : Choice("NcpClip") {
 
         }
 
-        if (packet is EntityDamageS2CPacket && packet.entityId == player.id) {
+        if (packet is ClientboundDamageEventPacket && packet.entityId == player.id) {
             damage = true
         }
     }
@@ -197,7 +197,7 @@ object FlyNcpClip : Choice("NcpClip") {
         shouldLag = false
 
         // Cancel the motion
-        player.setVelocity(0.0, player.velocity.y, 0.0)
+        player.setDeltaMovement(0.0, player.deltaMovement.y, 0.0)
         super.disable()
     }
 
@@ -205,13 +205,13 @@ object FlyNcpClip : Choice("NcpClip") {
      * Check if there is a vertical collision possible above the player
      */
     private fun collidesVertical() =
-        world.getBlockCollisions(player, player.boundingBox.offset(0.0, 0.5, 0.0)).any { shape ->
-            shape != VoxelShapes.empty()
+        world.getBlockCollisions(player, player.boundingBox.move(0.0, 0.5, 0.0)).any { shape ->
+            shape != Shapes.empty()
         }
 
     private fun collidesBottomVertical() =
-        world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.4, 0.0)).any { shape ->
-            shape != VoxelShapes.empty()
+        world.getBlockCollisions(player, player.boundingBox.move(0.0, -0.4, 0.0)).any { shape ->
+            shape != Shapes.empty()
         }
 
 }

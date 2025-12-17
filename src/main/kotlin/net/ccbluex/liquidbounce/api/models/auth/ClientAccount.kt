@@ -61,6 +61,7 @@ data class ClientAccount(
     }
 
     companion object {
+        @JvmField
         val EMPTY_ACCOUNT = ClientAccount(null, null, null)
     }
 }
