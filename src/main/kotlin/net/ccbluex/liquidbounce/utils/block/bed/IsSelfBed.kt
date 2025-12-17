@@ -36,9 +36,9 @@ import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.block.BedBlock
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.BedBlock
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.core.BlockPos
 import org.joml.Vector3d
 import org.lwjgl.glfw.GLFW
 
@@ -63,7 +63,7 @@ sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConf
     class Color(parent: ChoiceConfigurable<*>) : IsSelfBedChoice("Color", parent) {
         override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
             val color = block.color
-            val colorRgb = color.entityColor
+            val colorRgb = color.textureDiffuseColor
             val (_, armorColor) = getArmorColor() ?: return false
 
             return armorColor == colorRgb
@@ -91,9 +91,9 @@ sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConf
         private val gameStartHandler = handler<PacketEvent>(FIRST_PRIORITY) {
             val packet = it.packet
 
-            if (packet is PlayerPositionLookS2CPacket) {
+            if (packet is ClientboundPlayerPositionPacket) {
                 val pos = packet.change.position
-                val distSq = player.entityPos.squaredDistanceTo(pos.x, pos.y, pos.z)
+                val distSq = player.position().distanceToSqr(pos.x, pos.y, pos.z)
 
                 if (distSq > 16.0 * 16.0) {
                     trackedSpawnLocation.set(pos.x, pos.y, pos.z)
@@ -108,17 +108,17 @@ sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConf
         private val trackKey by key("Track", GLFW.GLFW_KEY_KP_ADD)
         private val untrackKey by key("Untrack", GLFW.GLFW_KEY_KP_SUBTRACT)
 
-        private val trackedPos = BlockPos.Mutable()
+        private val trackedPos = BlockPos.MutableBlockPos()
 
         override fun disable() {
-            trackedPos.set(BlockPos.ORIGIN)
+            trackedPos.set(BlockPos.ZERO)
             super.disable()
         }
 
         override fun isSelfBed(
             block: BedBlock,
             pos: BlockPos,
-        ): Boolean = pos == trackedPos || pos.offset(pos.getState().anotherBedPartDirection()!!) == trackedPos
+        ): Boolean = pos == trackedPos || pos.relative(pos.getState().anotherBedPartDirection()!!) == trackedPos
 
         @Suppress("unused")
         private val keyHandler = handler<KeyboardKeyEvent> { event ->
@@ -126,9 +126,9 @@ sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConf
 
             when (event.key) {
                 trackKey -> {
-                    val center = player.eyePos
+                    val center = player.eyePosition
                     val (bedPos, _) = center.searchBlocksInCuboid(16.0F) { _, state -> state.isBed }
-                        .minByOrNull { it.first.getSquaredDistance(center) } ?: run {
+                        .minByOrNull { it.first.distToCenterSqr(center) } ?: run {
                         notification(
                             title = "SelfBed-$name",
                             message = "Cannot find any bed around you! Please get close to your bed.",
@@ -146,14 +146,14 @@ sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConf
                     )
                 }
 
-                untrackKey if trackedPos != BlockPos.ORIGIN -> {
+                untrackKey if trackedPos != BlockPos.ZERO -> {
                     val (x, y, z) = trackedPos
                     notification(
                         title = "SelfBed-$name",
                         message = "Bed position ($x, $y, $z) has been untracked.",
                         NotificationEvent.Severity.INFO,
                     )
-                    trackedPos.set(BlockPos.ORIGIN)
+                    trackedPos.set(BlockPos.ZERO)
                 }
             }
         }
@@ -166,7 +166,7 @@ sealed class IsSelfBedChoice(name: String, final override val parent: ChoiceConf
                 message = "Bed position ($x, $y, $z) has been untracked due to world change.",
                 NotificationEvent.Severity.INFO,
             )
-            trackedPos.set(BlockPos.ORIGIN)
+            trackedPos.set(BlockPos.ZERO)
         }
 
     }

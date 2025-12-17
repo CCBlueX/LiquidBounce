@@ -35,13 +35,13 @@ import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.getBlock
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.Level
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -120,8 +120,8 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
 
     private fun isHoldingProtBlock(): Boolean {
         val player = mc.player ?: return false
-        val main = player.mainHandStack.getBlock()
-        val off = player.offHandStack.getBlock()
+        val main = player.mainHandItem.getBlock()
+        val off = player.offhandItem.getBlock()
         return (main != null && main in protBlocks)
             || (off != null && off in protBlocks)
     }
@@ -132,7 +132,7 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
     }
 
     private fun nearestCenters(
-        centers: Sequence<BlockPos>, limit: Int, playerPos: Vec3d
+        centers: Sequence<BlockPos>, limit: Int, playerPos: Vec3
     ): List<BlockPos> {
         if (limit <= 0) return emptyList()
 
@@ -146,11 +146,11 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         }.leastOf(centers.iterator(), limit)
     }
 
-    private fun computeZones(centers: List<BlockPos>, world: World): Array<Box> {
+    private fun computeZones(centers: List<BlockPos>, world: Level): Array<AABB> {
         return centers.mapToArray { c ->
-            val minY = max(c.y - Radius.y, world.bottomY)
-            val maxY = min(c.y + Radius.y, world.topYInclusive)
-            Box(
+            val minY = max(c.y - Radius.y, world.minY)
+            val maxY = min(c.y + Radius.y, world.maxY)
+            AABB(
                 (c.x - Radius.x).toDouble(),
                 minY.toDouble(),
                 (c.z - Radius.z).toDouble(),
@@ -161,24 +161,24 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         }
     }
 
-    private fun findHighlightIndex(zones: Array<Box>, playerPos: Vec3d): Int? {
+    private fun findHighlightIndex(zones: Array<AABB>, playerPos: Vec3): Int? {
         val r2 = (HIGHLIGHT_RADIUS * HIGHLIGHT_RADIUS).toDouble()
         for ((i, b) in zones.withIndex()) {
             if (b.contains(playerPos)) return null
-            if (b.squaredMagnitude(playerPos) <= r2) return i
+            if (b.distanceToSqr(playerPos) <= r2) return i
         }
         return null
     }
 
     private fun WorldRenderEnvironment.drawZones(
-        zones: Array<Box>, centers: List<BlockPos>, highlightIndex: Int?, camOffset: Vec3d
+        zones: Array<AABB>, centers: List<BlockPos>, highlightIndex: Int?, camOffset: Vec3
     ) {
         val colors = Renderer.ProtectionColors
-        val viewZones = ArrayList<Box>(zones.size)
-        val centerBoxes = ArrayList<Box>(centers.size)
+        val viewZones = ArrayList<AABB>(zones.size)
+        val centerBoxes = ArrayList<AABB>(centers.size)
         for (i in zones.indices) {
-            viewZones += zones[i].offset(camOffset)
-            centerBoxes += Box(centers[i]).offset(camOffset)
+            viewZones += zones[i].move(camOffset)
+            centerBoxes += AABB(centers[i]).move(camOffset)
         }
 
         for (b in viewZones) drawBox(b, outlineColor = colors.zoneOutline)
@@ -191,13 +191,13 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
     }
 
     private fun WorldRenderEnvironment.drawIndicator(
-        centers: List<BlockPos>, zones: Array<Box>, camOffset: Vec3d
+        centers: List<BlockPos>, zones: Array<AABB>, camOffset: Vec3
     ) {
         if (centers.isEmpty()) return
         val player = mc.player ?: return
-        val world = mc.world ?: return
+        val world = mc.level ?: return
 
-        val playerBlockPos = player.blockPos
+        val playerBlockPos = player.blockPosition()
         val refCenter = centers.first()
 
         val stepX = 2 * Radius.x + 1
@@ -206,14 +206,14 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         val snappedX = snapToGrid(value = playerBlockPos.x, origin = refCenter.x, step = stepX)
         val snappedZ = snapToGrid(value = playerBlockPos.z, origin = refCenter.z, step = stepZ)
         val snappedY = (if (Indicator.snapY) refCenter.y else playerBlockPos.y).coerceIn(
-            world.bottomY,
-            world.topYInclusive
+            world.minY,
+            world.maxY
         )
 
         val indicatorPos = BlockPos(snappedX, snappedY, snappedZ)
-        val indicatorCenter = indicatorPos.toCenterPos()
+        val indicatorCenter = indicatorPos.center
         if (zones.any { it.contains(indicatorCenter) }) return
-        val indicatorBox = Box(indicatorPos).offset(camOffset)
+        val indicatorBox = AABB(indicatorPos).move(camOffset)
 
         drawBox(
             indicatorBox,
@@ -228,22 +228,22 @@ object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) 
         val holdingProt = isHoldingProtBlock()
         if (Renderer.holdBlockToRender && !holdingProt) return@handler
 
-        val world = mc.world ?: return@handler
+        val world = mc.level ?: return@handler
         val player = mc.player ?: return@handler
 
         val centers = nearestCenters(
             centers = BlockTracker.allPositions(),
             limit = Renderer.renderLimit,
-            playerPos = player.entityPos,
+            playerPos = player.position(),
         )
         if (centers.isEmpty()) return@handler
 
         val zones = computeZones(centers, world)
-        val highlightIndex = findHighlightIndex(zones, playerPos = player.entityPos)
+        val highlightIndex = findHighlightIndex(zones, playerPos = player.position())
 
         renderEnvironmentForWorld(e.matrixStack) {
             startBatch()
-            val camOffset = mc.entityRenderDispatcher.camera?.cameraPos?.negate() ?: return@handler
+            val camOffset = mc.entityRenderDispatcher.camera?.position()?.reverse() ?: return@handler
             drawZones(zones, centers, highlightIndex, camOffset)
             if (holdingProt) {
                 drawIndicator(centers, zones, camOffset)

@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.minecraft.util.math.Box
+import net.minecraft.world.phys.AABB
 
 object EspBoxMode : EspMode("Box") {
 
@@ -40,7 +40,7 @@ object EspBoxMode : EspMode("Box") {
             for (entity in RenderedEntities) {
                 val dimensions = entity.getDimensions(entity.pose)
                 val d = dimensions.width.toDouble() / 2.0
-                val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
+                val box = AABB(-d, 0.0, -d, d, dimensions.height.toDouble(), d).inflate(expand.toDouble())
 
                 val pos = entity.interpolateCurrentPosition(event.partialTicks)
                 val color = getColor(entity)

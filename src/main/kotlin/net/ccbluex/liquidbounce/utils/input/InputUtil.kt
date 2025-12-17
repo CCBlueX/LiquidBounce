@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.utils.input
 
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.util.InputUtil
-import net.minecraft.util.ActionResult
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.world.InteractionResult
 
 /**
  * Translates a key name to an InputUtil.Key using GLFW key codes.
@@ -34,9 +34,9 @@ import net.minecraft.util.ActionResult
  * @param name The key name as a string.
  * @return The corresponding InputUtil.Key object.
  */
-fun inputByName(name: String): InputUtil.Key {
+fun inputByName(name: String): InputConstants.Key {
     if (name.equals("NONE", true)) {
-        return InputUtil.UNKNOWN_KEY
+        return InputConstants.UNKNOWN
     }
 
     val formattedName = name.replace('_', '.')
@@ -50,19 +50,19 @@ fun inputByName(name: String): InputUtil.Key {
 
             else -> "key.keyboard.${formattedName.lowercase()}"
         }
-    return InputUtil.fromTranslationKey(translationKey)
+    return InputConstants.getKey(translationKey)
 }
 
 /**
  * Checks whether this key is currently pressed.
  *
  * This extension property uses the current window handle to determine if
- * the key represented by this [InputUtil.Key] is being pressed.
+ * the key represented by this [InputConstants.Key] is being pressed.
  *
  * @return `true` if the key is pressed; otherwise, `false`.
  */
-val InputUtil.Key.isPressed get() =
-    InputUtil.isKeyPressed(mc.window, this.code)
+val InputConstants.Key.isPressed get() =
+    InputConstants.isKeyDown(mc.window, this.value)
 
 /**
  * Reduces a full key name (e.g., "key.keyboard.a") to its minimal form (e.g., "a").
@@ -82,8 +82,8 @@ fun reduceInputName(translationKey: String): String =
  * @return A set of simplified mouse input names.
  */
 val availableKeyboardKeys: Set<String>
-    get() = InputUtil.Type.MOUSE.map.values
-        .map { key -> reduceInputName(key.translationKey) }
+    get() = InputConstants.Type.MOUSE.map.values
+        .map { key -> reduceInputName(key.name) }
         .toSet()
 
 /**
@@ -92,22 +92,23 @@ val availableKeyboardKeys: Set<String>
  * @return A set of simplified keyboard input names.
  */
 val availableMouseKeys: Set<String>
-    get() = InputUtil.Type.KEYSYM.map.values
-        .map { key -> reduceInputName(key.translationKey) }
+    get() = InputConstants.Type.KEYSYM.map.values
+        .map { key -> reduceInputName(key.name) }
         .toSet()
 
 val availableInputKeys: Set<String> = availableKeyboardKeys + availableMouseKeys + "none"
 
-fun ActionResult.shouldSwingHand() = this is ActionResult.Success && this.swingSource == ActionResult.SwingSource.CLIENT
+fun InteractionResult.shouldSwingHand() =
+    this is InteractionResult.Success && this.swingSource == InteractionResult.SwingSource.CLIENT
 
 /**
  * Try to parse the key into [InputBind.Modifier] instance.
  *
  * @return null if it's not a valid modifier.
  */
-fun InputUtil.Key.toModifierOrNull(): InputBind.Modifier? {
-    return if (this.category == InputUtil.Type.KEYSYM) {
-        InputBind.Modifier.of(this.code)
+fun InputConstants.Key.toModifierOrNull(): InputBind.Modifier? {
+    return if (this.type == InputConstants.Type.KEYSYM) {
+        InputBind.Modifier.of(this.value)
     } else {
         null
     }

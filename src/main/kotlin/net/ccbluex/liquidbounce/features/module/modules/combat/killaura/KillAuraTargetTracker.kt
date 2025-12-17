@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.isAxe
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
 
 object KillAuraTargetTracker : TargetTracker() {
 
@@ -43,11 +43,11 @@ object KillAuraTargetTracker : TargetTracker() {
      * Check if the entity is holding a shield and if the shield would block the attack.
      */
     private fun validateShield(entity: LivingEntity): Boolean {
-        if (ignoreShield || entity !is PlayerEntity || isOlderThanOrEqual1_8) {
+        if (ignoreShield || entity !is Player || isOlderThanOrEqual1_8) {
             return true
         }
 
-        if (player.mainHandStack.isAxe || ModuleAutoWeapon.willShieldBreak) {
+        if (player.mainHandItem.isAxe || ModuleAutoWeapon.willShieldBreak) {
             return true
         }
 

@@ -34,9 +34,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.Modu
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk.standingOnWater
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.minecraft.block.FluidBlock
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.level.block.LiquidBlock
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat NoCheatPlus
@@ -52,29 +52,29 @@ internal object LiquidWalkNoCheatPlus : Choice("NoCheatPlus") {
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (mc.options.sneakKey.isPressed || player.fallDistance > 3.0f || player.isOnFire) {
+        if (mc.options.keyShift.isDown || player.fallDistance > 3.0f || player.isOnFire) {
             return@handler
         }
 
         val block = event.state.block
 
-        if (block is FluidBlock && !player.box.isBlockAtPosition { it is FluidBlock }) {
-            event.shape = VoxelShapes.fullCube()
+        if (block is LiquidBlock && !player.box.isBlockAtPosition { it is LiquidBlock }) {
+            event.shape = Shapes.block()
         }
     }
 
     val repeatable = tickHandler {
-        if (player.box.isBlockAtPosition { it is FluidBlock } && !mc.options.sneakKey.isPressed) {
-            player.velocity.y = 0.08
+        if (player.box.isBlockAtPosition { it is LiquidBlock } && !mc.options.keyShift.isDown) {
+            player.deltaMovement.y = 0.08
         }
     }
 
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (event.origin == TransferOrigin.OUTGOING && packet is PlayerMoveC2SPacket) {
-            if (!mc.options.sneakKey.isPressed &&
-                !player.isTouchingWater &&
+        if (event.origin == TransferOrigin.OUTGOING && packet is ServerboundMovePlayerPacket) {
+            if (!mc.options.keyShift.isDown &&
+                !player.isInWater &&
                 standingOnWater() &&
                 !collidesWithAnythingElse()
                 ) {

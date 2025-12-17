@@ -40,7 +40,7 @@ import net.ccbluex.liquidbounce.utils.entity.untransformed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 import java.lang.Math.toDegrees
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -99,7 +99,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
             /**
              * Validate if [point] is safe to strafe to
              */
-            internal fun validatePoint(point: Vec3d): Boolean {
+            internal fun validatePoint(point: Vec3): Boolean {
                 if (!validateCollision(point)) {
                     return false
                 }
@@ -123,21 +123,21 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
                 return true
             }
 
-            private fun validateCollision(point: Vec3d, expand: Double = 0.0): Boolean {
-                val hitbox = player.dimensions.getBoxAt(point).expand(expand, 0.0, expand)
+            private fun validateCollision(point: Vec3, expand: Double = 0.0): Boolean {
+                val hitbox = player.dimensions.makeBoundingBox(point).inflate(expand, 0.0, expand)
 
-                return world.isSpaceEmpty(player, hitbox)
+                return world.noCollision(player, hitbox)
             }
 
-            private fun isCloseToFall(position: Vec3d): Boolean {
+            private fun isCloseToFall(position: Vec3): Boolean {
                 position.y = floor(position.y)
                 val hitbox =
                     player.dimensions
-                        .getBoxAt(position)
-                        .expand(-0.05, 0.0, -0.05)
-                        .offset(0.0, -EdgeCheck.maxFallHeight.toDouble(), 0.0)
+                        .makeBoundingBox(position)
+                        .inflate(-0.05, 0.0, -0.05)
+                        .move(0.0, -EdgeCheck.maxFallHeight.toDouble(), 0.0)
 
-                return world.isSpaceEmpty(player, hitbox)
+                return world.noCollision(player, hitbox)
             }
 
         }
@@ -165,7 +165,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
             val target = ModuleKillAura.targetTracker.target
                 ?: ModuleAimbot.targetTracker.target
                 ?: targetSelector.targets().firstOrNull() ?: return@handler
-            val distance = hypot(player.entityPos.x - target.entityPos.x, player.entityPos.z - target.entityPos.z)
+            val distance = hypot(player.position().x - target.position().x, player.position().z - target.position().z)
 
             // return if we're too far
             if (distance > followRange) {
@@ -185,9 +185,9 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
             }
 
             val speed = player.sqrtSpeed
-            val strafeYaw = atan2(target.entityPos.z - player.entityPos.z, target.entityPos.x - player.entityPos.x)
+            val strafeYaw = atan2(target.position().z - player.position().z, target.position().x - player.position().x)
             var strafeVec = computeDirectionVec(strafeYaw, distance, speed, targetSelector.maxRange, direction)
-            var pointCoords = player.entityPos.add(strafeVec)
+            var pointCoords = player.position().add(strafeVec)
 
             if (!Validation.validatePoint(pointCoords)) {
                 if (!AdaptiveRange.enabled) {
@@ -197,7 +197,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
                     var currentRange = AdaptiveRange.rangeStep
                     while (!Validation.validatePoint(pointCoords)) {
                         strafeVec = computeDirectionVec(strafeYaw, distance, speed, currentRange, direction)
-                        pointCoords = player.entityPos.add(strafeVec)
+                        pointCoords = player.position().add(strafeVec)
                         currentRange += AdaptiveRange.rangeStep
                         if (currentRange > AdaptiveRange.maxRange) {
                             direction = -direction
@@ -212,7 +212,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
 
             // Perform the strafing movement
             if (hypixel && ModuleSpeed.running) {
-                val minSpeed = if (player.isOnGround) {
+                val minSpeed = if (player.onGround()) {
                     0.48
                 } else {
                     0.281
@@ -250,14 +250,14 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
             speed: Double,
             range: Float,
             direction: Int
-        ): Vec3d {
+        ): Vec3 {
             val yaw = strafeYaw - (0.5f * Math.PI)
             val encirclement = if (distance - range < -speed) -speed else distance - range
             val encirclementX = -sin(yaw) * encirclement
             val encirclementZ = cos(yaw) * encirclement
             val strafeX = -sin(strafeYaw) * speed * direction
             val strafeZ = cos(strafeYaw) * speed * direction
-            return Vec3d(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)
+            return Vec3(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)
         }
 
     }
@@ -268,7 +268,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
         val meets: () -> Boolean
     ) : NamedChoice {
         SPACE("Space", {
-            mc.options.jumpKey.isPressed
+            mc.options.keyJump.isDown
         }),
         SPEED("Speed", {
             ModuleSpeed.running
@@ -277,7 +277,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
             ModuleKillAura.running
         }),
         GROUND("Ground", {
-           player.isOnGround
+           player.onGround()
         });
     }
 }

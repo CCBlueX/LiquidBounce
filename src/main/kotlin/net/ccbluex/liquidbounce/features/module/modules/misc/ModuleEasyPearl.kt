@@ -46,12 +46,12 @@ import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.block.BlockRenderType
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.item.Items
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.level.block.RenderShape
+import net.minecraft.world.entity.EntityDimensions
+import net.minecraft.world.item.Items
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
 
 /**
  * EasyPearl module
@@ -65,7 +65,7 @@ object ModuleEasyPearl :
     private val reachableCheck by boolean("ReachableCheck", true)
     private val rotation = tree(RotationsConfigurable(this))
 
-    private var targetPosition: Vec3d? = null
+    private var targetPosition: Vec3? = null
 
     var currentTargetRotation : Rotation? = null
         private set
@@ -82,21 +82,21 @@ object ModuleEasyPearl :
      */
     @Suppress("unused")
     private val interactItemHandler = handler<PlayerInteractItemEvent> { event ->
-        if (!isHoldingPearl() || !mc.options.useKey.isPressed) {
+        if (!isHoldingPearl() || !mc.options.keyUse.isDown) {
             return@handler
         }
 
         val hitResult = getPositionPlayerLookAt()
         // While reachable check is enabled, we will check if the player
         // is looking at a block father than pearl can reach
-        if (reachableCheck && getTargetRotation(hitResult.pos) == null
+        if (reachableCheck && getTargetRotation(hitResult.location) == null
             && hitResult.type != HitResult.Type.MISS) {
             chat(markAsError(message("noInReachWarning")))
             event.cancelEvent()
             targetPosition = null
             return@handler
         }
-        targetPosition = hitResult.pos
+        targetPosition = hitResult.location
 
         // check if we are rotating to the target position correctly
         if (isRotationDone(targetPosition!!)) {
@@ -149,7 +149,7 @@ object ModuleEasyPearl :
         }
 
         val matrixStack = event.matrixStack
-        val pos = getPositionPlayerLookAt(event.partialTicks)?.pos ?: return@handler
+        val pos = getPositionPlayerLookAt(event.partialTicks)?.location ?: return@handler
         val blockPos = pos.toBlockPos()
         val state = blockPos.getState() ?: return@handler
 
@@ -166,7 +166,7 @@ object ModuleEasyPearl :
             val outlineColor = color.with(a = 200)
 
             withPositionRelativeToCamera(blockPos) {
-                if (state.renderType != BlockRenderType.MODEL && state.isAir) {
+                if (state.renderShape != RenderShape.MODEL && state.isAir) {
                     drawBoxSide(
                         FULL_BOX,
                         Direction.DOWN,
@@ -186,7 +186,7 @@ object ModuleEasyPearl :
     }
 
     private fun isHoldingPearl() =
-        player.mainHandStack.item == Items.ENDER_PEARL || player.offHandStack.item == Items.ENDER_PEARL
+        player.mainHandItem.item == Items.ENDER_PEARL || player.offhandItem.item == Items.ENDER_PEARL
 
     /**
      * check if we are rotating to the target rotation correctly
@@ -194,7 +194,7 @@ object ModuleEasyPearl :
      * @return true if we are rotating to the target rotation correctly, false otherwise
      */
     @Suppress("ReturnCount")
-    private fun isRotationDone(targetPosition: Vec3d): Boolean {
+    private fun isRotationDone(targetPosition: Vec3): Boolean {
         return RotationManager.serverRotation.angleTo(
             getTargetRotation(targetPosition) ?: return true,
         ) <= aimOffThreshold
@@ -205,17 +205,17 @@ object ModuleEasyPearl :
      * @return the position player look at
      */
     private fun getPositionPlayerLookAt(tickDelta: Float = 0f) =
-        player.raycast(1000.0, tickDelta, false)
+        player.pick(1000.0, tickDelta, false)
 
     /**
      * get the target rotation for the target position
      * @param targetPosition the target position
      * @return the target rotation for the target position
      */
-    private fun getTargetRotation(targetPosition: Vec3d): Rotation? =
+    private fun getTargetRotation(targetPosition: Vec3): Rotation? =
         SituationalProjectileAngleCalculator.calculateAngleFor(
             TrajectoryInfo.GENERIC,
-            sourcePos = player.entityPos,
+            sourcePos = player.position(),
             targetPosFunction = ConstantPositionExtrapolation(targetPosition),
             targetShape = EntityDimensions.fixed(1.0F, 0.0F),
         )

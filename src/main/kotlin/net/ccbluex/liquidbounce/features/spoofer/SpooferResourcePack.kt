@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.features.spoofer
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
-import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket.Status.ACCEPTED
-import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket.Status.DECLINED
-import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket.Status.FAILED_DOWNLOAD
-import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket.Status.SUCCESSFULLY_LOADED
-import net.minecraft.network.packet.s2c.common.ResourcePackSendS2CPacket
+import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
+import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Action.ACCEPTED
+import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Action.DECLINED
+import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Action.FAILED_DOWNLOAD
+import net.minecraft.network.protocol.common.ServerboundResourcePackPacket.Action.SUCCESSFULLY_LOADED
+import net.minecraft.network.protocol.common.ClientboundResourcePackPushPacket
 
 /**
  * ResourcePack Spoof
@@ -38,15 +38,15 @@ object SpooferResourcePack : ToggleableConfigurable(name = "ResourceSpoofer", en
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        val network = mc.networkHandler ?: return@handler
+        val network = mc.connection ?: return@handler
 
-        if (packet is ResourcePackSendS2CPacket) {
+        if (packet is ClientboundResourcePackPushPacket) {
             val id = packet.id
-            network.sendPacket(ResourcePackStatusC2SPacket(id, ACCEPTED))
-            network.sendPacket(ResourcePackStatusC2SPacket(id, SUCCESSFULLY_LOADED))
+            network.send(ServerboundResourcePackPacket(id, ACCEPTED))
+            network.send(ServerboundResourcePackPacket(id, SUCCESSFULLY_LOADED))
             event.cancelEvent()
-        } else if (packet is ResourcePackStatusC2SPacket && (packet.status == DECLINED ||
-                packet.status == FAILED_DOWNLOAD)) {
+        } else if (packet is ServerboundResourcePackPacket && (packet.action == DECLINED ||
+                packet.action == FAILED_DOWNLOAD)) {
             event.cancelEvent()
         }
     }

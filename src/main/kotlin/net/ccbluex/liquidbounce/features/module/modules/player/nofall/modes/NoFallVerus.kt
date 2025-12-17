@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * @anticheat Verus
@@ -30,10 +30,10 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 internal object NoFallVerus : NoFallMode("Verus") {
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
-        if (packet is PlayerMoveC2SPacket && player.fallDistance > 3.35) {
+        if (packet is ServerboundMovePlayerPacket && player.fallDistance > 3.35) {
             packet.onGround = true
             player.fallDistance = 0.0
-            player.velocity.y = 0.0
+            player.deltaMovement.y = 0.0
         }
     }
 }

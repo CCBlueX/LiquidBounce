@@ -26,17 +26,17 @@ import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
-import net.minecraft.client.network.CookieStorage
-import net.minecraft.client.network.ServerAddress
-import net.minecraft.client.network.ServerInfo
-import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.option.Perspective
-import net.minecraft.client.session.Session
-import net.minecraft.client.util.InputUtil
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.ConnectScreen
+import net.minecraft.client.multiplayer.TransferState
+import net.minecraft.client.multiplayer.resolver.ServerAddress
+import net.minecraft.client.multiplayer.ServerData
+import net.minecraft.client.KeyMapping
+import net.minecraft.client.CameraType
+import net.minecraft.client.User
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
 
 @Nameable("gameTick")
 object GameTickEvent : Event()
@@ -54,7 +54,7 @@ object TickPacketProcessEvent : Event()
 
 @Nameable("key")
 class KeyEvent(
-    val key: InputUtil.Key,
+    val key: InputConstants.Key,
     val action: Int,
 ) : Event(), WebSocketEvent
 
@@ -93,7 +93,7 @@ object KeybindChangeEvent : Event(), WebSocketEvent
 
 @Nameable("keybindIsPressed")
 class KeybindIsPressedEvent(
-    val keyBinding: KeyBinding,
+    val keyBinding: KeyMapping,
     var isPressed: Boolean,
 ) : Event()
 
@@ -116,7 +116,7 @@ class AllowAutoJumpEvent(
 
 @Nameable("session")
 class SessionEvent(
-    val session: Session,
+    val session: User,
 ) : Event(), WebSocketEvent
 
 @Nameable("screen")
@@ -132,9 +132,9 @@ class ChatSendEvent(
 @Nameable("chatReceive")
 class ChatReceiveEvent(
     val message: String,
-    val textData: Text,
+    val textData: Component,
     val type: ChatType,
-    val applyChatDecoration: (Text) -> Text,
+    val applyChatDecoration: (Component) -> Component,
 ) : CancellableEvent(), WebSocketEvent {
     enum class ChatType(override val choiceName: String) : NamedChoice {
         CHAT_MESSAGE("ChatMessage"),
@@ -147,8 +147,8 @@ class ChatReceiveEvent(
 class ServerConnectEvent(
     val connectScreen: ConnectScreen,
     val address: ServerAddress,
-    val serverInfo: ServerInfo,
-    val cookieStorage: CookieStorage?,
+    val serverInfo: ServerData,
+    val cookieStorage: TransferState?,
 ) : CancellableEvent()
 
 @Nameable("disconnect")
@@ -156,17 +156,17 @@ object DisconnectEvent : Event(), WebSocketEvent
 
 @Nameable("overlayMessage")
 class OverlayMessageEvent(
-    val text: Text,
+    val text: Component,
     val tinted: Boolean,
 ) : Event(), WebSocketEvent
 
 @Nameable("perspective")
 class PerspectiveEvent(
-    var perspective: Perspective,
+    var perspective: CameraType,
 ) : Event()
 
 @Nameable("itemLoreQuery")
 class ItemLoreQueryEvent(
     val itemStack: ItemStack,
-    val lore: ArrayList<Text>,
+    val lore: ArrayList<Component>,
 ) : Event()

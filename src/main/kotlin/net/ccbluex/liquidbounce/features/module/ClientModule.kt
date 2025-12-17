@@ -40,7 +40,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.minecraft.client.util.InputUtil
+import com.mojang.blaze3d.platform.InputConstants
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -49,7 +49,7 @@ import net.minecraft.client.util.InputUtil
 open class ClientModule(
     name: String, // name parameter in configurable
     @Exclude val category: Category, // module category
-    bind: Int = InputUtil.UNKNOWN_KEY.code, // default bind
+    bind: Int = InputConstants.UNKNOWN.value, // default bind
     bindAction: InputBind.BindAction = InputBind.BindAction.TOGGLE, // default action
     state: Boolean = false, // default state
     @Exclude val notActivatable: Boolean = false, // disable settings that are not needed if the module can't be enabled
@@ -68,7 +68,7 @@ open class ClientModule(
     override val running: Boolean
         get() = super<EventListener>.running && inGame && (enabled || notActivatable)
 
-    internal val bindValue = bind("Bind", InputBind(InputUtil.Type.KEYSYM, bind, bindAction))
+    internal val bindValue = bind("Bind", InputBind(InputConstants.Type.KEYSYM, bind, bindAction))
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
         .independentDescription().apply {
             if (notActivatable) {

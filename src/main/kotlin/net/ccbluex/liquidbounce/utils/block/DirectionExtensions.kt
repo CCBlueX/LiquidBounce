@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
 
 @JvmField
 val DIRECTIONS_EXCLUDING_UP = arrayOf(

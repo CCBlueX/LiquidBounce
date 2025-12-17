@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.interfaces;
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer;
 
 /**
- * Addition to {@link net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket}
+ * Addition to {@link net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket}
  *
  * Exclusively for {@link CrystalAuraTriggerer}.
  */

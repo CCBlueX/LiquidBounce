@@ -40,10 +40,10 @@ import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.block.MagmaBlock
-import net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
+import net.minecraft.world.level.block.MagmaBlock
+import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
 
 /**
  * Sneak module
@@ -85,12 +85,12 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
 
         @Suppress("unused")
         private val sneakNetworkHandler = handler<PacketEvent> { event ->
-            if ((player.moving && notDuringMove) || event.packet !is PlayerInputC2SPacket) {
+            if ((player.moving && notDuringMove) || event.packet !is ServerboundPlayerInputPacket) {
                 return@handler
             }
 
             event.cancelEvent() // Because the packet is record
-            sendPacketSilently(PlayerInputC2SPacket(event.packet.input.copy(sneak = true)))
+            sendPacketSilently(ServerboundPlayerInputPacket(event.packet.input.copy(sneak = true)))
         }
 
     }
@@ -142,7 +142,7 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
         simulatedInput.ignoreClippingAtLedge = true
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(simulatedInput)
-        simulatedPlayer.pos = player.entityPos
+        simulatedPlayer.pos = player.position()
 
         simulatedPlayer.tick()
         val isOnMagmaBlockAfterOneTick = isOnMagmaBlock(simulatedPlayer.boundingBox)
@@ -156,7 +156,7 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
     /**
      * [boundingBox] - the specific bounding box of a player, mob or even another block.
      */
-    private fun isOnMagmaBlock(boundingBox: Box): Boolean {
+    private fun isOnMagmaBlock(boundingBox: AABB): Boolean {
 
         // Blocks that are the height of a trapdoor or lower
         // (such as snow layers, carpets, repeaters, or comparators)
@@ -164,10 +164,10 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
 
         // Therefore, we expand the box downward by 0.2 blocks.
         val expandedBox = boundingBox
-            .expand(0.0, 0.1,0.0)
-            .offset(0.0, -0.1, 0.0)
+            .inflate(0.0, 0.1,0.0)
+            .move(0.0, -0.1, 0.0)
 
-        return BlockPos.iterate(
+        return BlockPos.betweenClosed(
             expandedBox.minX.floorToInt(),
             expandedBox.minY.floorToInt(),
             expandedBox.minZ.floorToInt(),
@@ -176,7 +176,7 @@ object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
             expandedBox.maxZ.ceilToInt(),
         ).any {
             it.getBlock() is MagmaBlock &&
-                expandedBox.intersects(it.collisionShape.boundingBox.offset(it))
+                expandedBox.intersects(it.collisionShape.bounds().move(it))
         }
     }
 }

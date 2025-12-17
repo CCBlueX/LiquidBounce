@@ -40,18 +40,18 @@ import net.ccbluex.netty.http.util.httpInternalServerError
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.SharedConstants
-import net.minecraft.client.gui.screen.TitleScreen
-import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
-import net.minecraft.client.network.MultiplayerServerListPinger
-import net.minecraft.client.network.ServerAddress
-import net.minecraft.client.network.ServerInfo
-import net.minecraft.client.network.ServerInfo.ResourcePackPolicy
-import net.minecraft.client.option.ServerList
-import net.minecraft.network.NetworkingBackend
-import net.minecraft.screen.ScreenTexts
-import net.minecraft.text.Text
-import net.minecraft.util.Colors
+import net.minecraft.client.gui.screens.TitleScreen
+import net.minecraft.client.gui.screens.ConnectScreen
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
+import net.minecraft.client.multiplayer.ServerStatusPinger
+import net.minecraft.client.multiplayer.resolver.ServerAddress
+import net.minecraft.client.multiplayer.ServerData
+import net.minecraft.client.multiplayer.ServerData.ServerPackStatus
+import net.minecraft.client.multiplayer.ServerList
+import net.minecraft.server.network.EventLoopGroupHolder
+import net.minecraft.network.chat.CommonComponents
+import net.minecraft.network.chat.Component
+import net.minecraft.util.CommonColors
 import net.minecraft.util.Util
 import java.net.UnknownHostException
 import java.util.concurrent.CompletableFuture
@@ -60,7 +60,7 @@ import java.util.concurrent.Future
 // GET /api/v1/client/servers
 @Suppress("UNUSED_PARAMETER")
 fun getServers(requestObject: RequestObject) = runCatching {
-    serverList.loadFile()
+    serverList.load()
     pingThemAll()
 
     val servers = JsonArray()
@@ -87,12 +87,12 @@ fun postConnect(requestObject: RequestObject): FullHttpResponse {
 
     val serverConnectRequest = requestObject.asJson<ServerConnectRequest>()
     val serverInfo = serverList.getByAddress(serverConnectRequest.address)
-        ?: ServerInfo("Unknown Server", serverConnectRequest.address, ServerInfo.ServerType.OTHER)
+        ?: ServerData("Unknown Server", serverConnectRequest.address, ServerData.Type.OTHER)
 
-    val serverAddress = ServerAddress.parse(serverInfo.address)
+    val serverAddress = ServerAddress.parseString(serverInfo.ip)
 
     mc.execute {
-        ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
+        ConnectScreen.startConnecting(JoinMultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false, null)
     }
     return httpNoContent()
 }
@@ -104,17 +104,17 @@ fun putAddServer(requestObject: RequestObject): FullHttpResponse {
 
     val serverAddRequest = requestObject.asJson<ServerAddRequest>()
 
-    if (!ServerAddress.isValid(serverAddRequest.address)) {
+    if (!ServerAddress.isValidAddress(serverAddRequest.address)) {
         return httpForbidden("Invalid address")
     }
 
-    val serverInfo = ServerInfo(serverAddRequest.name, serverAddRequest.address, ServerInfo.ServerType.OTHER)
+    val serverInfo = ServerData(serverAddRequest.name, serverAddRequest.address, ServerData.Type.OTHER)
     serverAddRequest.resourcePackPolicy?.let {
-        serverInfo.resourcePackPolicy = ResourcePolicy.fromString(it)?.toMinecraftPolicy() ?: ResourcePackPolicy.PROMPT
+        serverInfo.resourcePackStatus = ResourcePolicy.fromString(it)?.toMinecraftPolicy() ?: ServerPackStatus.PROMPT
     }
 
     serverList.add(serverInfo, false)
-    serverList.saveFile()
+    serverList.save()
 
     return httpNoContent()
 }
@@ -128,7 +128,7 @@ fun deleteServer(requestObject: RequestObject): FullHttpResponse {
     val serverInfo = serverList.get(serverRemoveRequest.id)
 
     serverList.remove(serverInfo)
-    serverList.saveFile()
+    serverList.save()
 
     return httpNoContent()
 }
@@ -147,11 +147,11 @@ fun putEditServer(requestObject: RequestObject): FullHttpResponse {
     val serverInfo = serverList.get(serverEditRequest.id)
 
     serverInfo.name = serverEditRequest.name
-    serverInfo.address = serverEditRequest.address
+    serverInfo.ip = serverEditRequest.address
     serverEditRequest.resourcePackPolicy?.let {
-        serverInfo.resourcePackPolicy = ResourcePolicy.fromString(it)?.toMinecraftPolicy() ?: ResourcePackPolicy.PROMPT
+        serverInfo.resourcePackStatus = ResourcePolicy.fromString(it)?.toMinecraftPolicy() ?: ServerPackStatus.PROMPT
     }
-    serverList.saveFile()
+    serverList.save()
 
     return httpNoContent()
 }
@@ -163,8 +163,8 @@ fun postSwapServers(requestObject: RequestObject): FullHttpResponse {
 
     val serverSwapRequest = requestObject.asJson<ServerSwapRequest>()
 
-    serverList.swapEntries(serverSwapRequest.from, serverSwapRequest.to)
-    serverList.saveFile()
+    serverList.swap(serverSwapRequest.from, serverSwapRequest.to)
+    serverList.save()
     return httpNoContent()
 }
 
@@ -177,35 +177,35 @@ fun postOrderServers(requestObject: RequestObject): FullHttpResponse {
 
     serverOrderRequest.order.map { serverList.get(it) }
         .forEachIndexed { index, serverInfo ->
-            serverList.set(index, serverInfo)
+            serverList.replace(index, serverInfo)
         }
-    serverList.saveFile()
+    serverList.save()
 
     return httpNoContent()
 }
 
 object ActiveServerList : EventListener {
 
-    internal val serverList = ServerList(mc).apply { loadFile() }
+    internal val serverList = ServerList(mc).apply { load() }
 
-    private val serverListPinger = MultiplayerServerListPinger()
-    private val cannotConnectText = Text.translatable("multiplayer.status.cannot_connect")
-        .withColor(Colors.RED)
-    private val cannotResolveText = Text.translatable("multiplayer.status.cannot_resolve")
-        .withColor(Colors.RED)
+    private val serverListPinger = ServerStatusPinger()
+    private val cannotConnectText = Component.translatable("multiplayer.status.cannot_connect")
+        .withColor(CommonColors.RED)
+    private val cannotResolveText = Component.translatable("multiplayer.status.cannot_resolve")
+        .withColor(CommonColors.RED)
 
     private val pingTasks = mutableListOf<Future<*>>()
 
     private fun cancelTasks() {
         pingTasks.forEach { it.cancel(true) }
         pingTasks.clear()
-        serverListPinger.cancel()
+        serverListPinger.removeAll()
     }
 
     internal fun pingThemAll() {
         cancelTasks()
         serverList.servers
-            .distinctBy { it.address } // We do not want to ping the same server multiple times
+            .distinctBy { it.ip } // We do not want to ping the same server multiple times
             .forEach(this::ping)
     }
 
@@ -214,35 +214,36 @@ object ActiveServerList : EventListener {
         cancelTasks()
     }
 
-    fun ping(serverEntry: ServerInfo) {
-        if (serverEntry.status != ServerInfo.Status.INITIAL) {
+    fun ping(serverEntry: ServerData) {
+        if (serverEntry.state() != ServerData.State.INITIAL) {
             return
         }
 
-        serverEntry.status = ServerInfo.Status.PINGING
-        serverEntry.label = ScreenTexts.EMPTY
-        serverEntry.playerCountLabel = ScreenTexts.EMPTY
+        serverEntry.setState(ServerData.State.PINGING)
+        serverEntry.motd = CommonComponents.EMPTY
+        serverEntry.status = CommonComponents.EMPTY
 
         pingTasks += CompletableFuture.runAsync({
             try {
-                serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }, {
-                    serverEntry.status =
-                        if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion()) {
-                            ServerInfo.Status.SUCCESSFUL
+                serverListPinger.pingServer(serverEntry, { mc.execute(serverList::save) }, {
+                    serverEntry.setState(
+                        if (serverEntry.protocol == SharedConstants.getCurrentVersion().protocolVersion()) {
+                            ServerData.State.SUCCESSFUL
                         } else {
-                            ServerInfo.Status.INCOMPATIBLE
+                            ServerData.State.INCOMPATIBLE
                         }
-                }, NetworkingBackend.remote(true))
+                    )
+                }, EventLoopGroupHolder.remote(true))
             } catch (unknownHostException: UnknownHostException) {
-                serverEntry.status = ServerInfo.Status.UNREACHABLE
-                serverEntry.label = cannotResolveText
+                serverEntry.setState(ServerData.State.UNREACHABLE)
+                serverEntry.motd = cannotResolveText
                 logger.error("Failed to ping server ${serverEntry.name} due to ${unknownHostException.message}")
             } catch (exception: Exception) {
-                serverEntry.status = ServerInfo.Status.UNREACHABLE
-                serverEntry.label = cannotConnectText
+                serverEntry.setState(ServerData.State.UNREACHABLE)
+                serverEntry.motd = cannotConnectText
                 logger.error("Failed to ping server ${serverEntry.name}", exception)
             }
-        }, Util.getDownloadWorkerExecutor())
+        }, Util.nonCriticalIoPool())
     }
 
     @Suppress("unused")
@@ -254,7 +255,7 @@ object ActiveServerList : EventListener {
 
 }
 
-val ServerList.servers: List<ServerInfo>
-    get() = (this as MixinServerListAccessor).`liquid_bounce$getServers`()
+val ServerList.servers: List<ServerData>
+    get() = (this as MixinServerListAccessor).`liquid_bounce$getServerList`()
 
-fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.address == address }
+fun ServerList.getByAddress(address: String) = servers.firstOrNull { it.ip == address }

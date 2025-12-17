@@ -24,15 +24,17 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.minecraft.client.util.InputUtil
+import com.mojang.blaze3d.platform.InputConstants
 import java.lang.reflect.Type
 
-object InputUtilAdapter : JsonSerializer<InputUtil.Key>, JsonDeserializer<InputUtil.Key> {
+object InputUtilAdapter : JsonSerializer<InputConstants.Key>, JsonDeserializer<InputConstants.Key> {
 
-    override fun serialize(src: InputUtil.Key, typeOfSrc: Type, context: JsonSerializationContext) =
-        JsonPrimitive(src.translationKey)
+    override fun serialize(
+        src: InputConstants.Key, typeOfSrc: Type, context: JsonSerializationContext
+    ) = JsonPrimitive(src.name)
 
-    override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): InputUtil.Key =
-        InputUtil.fromTranslationKey(json.asString)
+    override fun deserialize(
+        json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?
+    ): InputConstants.Key = InputConstants.getKey(json.asString)
 
 }

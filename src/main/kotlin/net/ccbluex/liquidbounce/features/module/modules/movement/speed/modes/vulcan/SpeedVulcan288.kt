@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import kotlin.math.abs
 
 /**
@@ -42,28 +42,28 @@ class SpeedVulcan288(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase
 
     @Suppress("unused")
     private val afterJumpHandler = sequenceHandler<PlayerAfterJumpEvent> {
-        val hasSpeed = (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) != 0
+        val hasSpeed = (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) != 0
 
-        player.velocity = player.velocity.withStrafe(speed = if (hasSpeed) 0.771 else 0.5)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.771 else 0.5))
         waitTicks(1)
-        player.velocity = player.velocity.withStrafe(speed = if (hasSpeed) 0.605 else 0.31)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.605 else 0.31))
         waitTicks(1)
-        player.velocity = player.velocity.withStrafe(speed = if (hasSpeed) 0.57 else 0.29)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.57 else 0.29))
         // does max possible motion down without introducing other issues
-        player.velocity = player.velocity.copy(y = if (hasSpeed) -0.5 else -0.37)
+        player.setDeltaMovement(player.deltaMovement.copy(y = if (hasSpeed) -0.5 else -0.37))
         waitTicks(1)
-        player.velocity = player.velocity.withStrafe(speed = if (hasSpeed) 0.595 else 0.27)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.595 else 0.27))
         waitTicks(1)
-        player.velocity = player.velocity.withStrafe(speed = if (hasSpeed) 0.595 else 0.28)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.595 else 0.28))
     }
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        val hasSpeed = (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) != 0
-        if (!player.isOnGround) {
+        val hasSpeed = (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) != 0
+        if (!player.onGround()) {
             if (abs(player.fallDistance) > 0 && hasSpeed) {
-                player.velocity.x *= 1.055
-                player.velocity.z *= 1.055
+                player.deltaMovement.x *= 1.055
+                player.deltaMovement.z *= 1.055
             }
         }
     }
@@ -71,7 +71,7 @@ class SpeedVulcan288(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        if (packet is PlayerMoveC2SPacket && player.velocity.y < 0) {
+        if (packet is ServerboundMovePlayerPacket && player.deltaMovement.y < 0) {
             packet.onGround = true
         }
     }

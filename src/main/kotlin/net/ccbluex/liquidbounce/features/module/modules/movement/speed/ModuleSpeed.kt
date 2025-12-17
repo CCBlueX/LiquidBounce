@@ -207,7 +207,7 @@ object ModuleSpeed : ClientModule("Speed", Category.MOVEMENT) {
             !(ModuleScaffold.running || ModuleFly.running)
         }),
         WHILE_SNEAKING("WhileSneaking", {
-            !player.isSneaking
+            !player.isShiftKeyDown
         })
     }
 }

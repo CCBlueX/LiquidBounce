@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.util.math.Box
+import net.minecraft.world.phys.AABB
 
 object Esp2DMode : EspMode("2D") {
 
@@ -64,9 +64,9 @@ object Esp2DMode : EspMode("2D") {
 
             val dimensions = entity.getDimensions(entity.pose)
             val d = dimensions.width.toDouble() / 2.0
-            val boxNoOffset = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
+            val boxNoOffset = AABB(-d, 0.0, -d, d, dimensions.height.toDouble(), d).inflate(expand.toDouble())
             val pos = entity.interpolateCurrentPosition(event.tickDelta)
-            val box = boxNoOffset.offset(pos)
+            val box = boxNoOffset.move(pos)
 
             val projected = box.edgePoints.mapNotNull { pos -> WorldToScreen.calculateScreenPos(pos) }
             if (projected.isEmpty()) {
@@ -85,12 +85,12 @@ object Esp2DMode : EspMode("2D") {
             val rectWidth = maxX - minX
             val rectHeight = maxY - minY
 
-            val guiScaleFactor = mc.options.guiScale.value
+            val guiScaleFactor = mc.options.guiScale().get()
             val outlineThickness = Outline.thickness / guiScaleFactor
             val borderThickness = Border.thickness / guiScaleFactor
 
             with(event.context) {
-                matrices.withPush {
+                pose().withPush {
                     translate(minX, minY)
 
                     if (fill) {

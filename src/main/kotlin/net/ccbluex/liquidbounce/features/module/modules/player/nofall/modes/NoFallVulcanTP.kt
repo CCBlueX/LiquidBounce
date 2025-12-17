@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.entity.set
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * @anticheat Vulcan
@@ -37,7 +37,7 @@ internal object NoFallVulcanTP : NoFallMode("VulcanTP288") {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket && player.fallDistance in 2.5..50.0
+        if (packet is ServerboundMovePlayerPacket && player.fallDistance in 2.5..50.0
             // Check if the player is falling into the void and set safety expand to 0.0 - otherwise,
             // the player will be teleported to the void and flag
             && !player.doesNotCollideBelow(until = voidThreshold.toDouble())) {
@@ -45,7 +45,7 @@ internal object NoFallVulcanTP : NoFallMode("VulcanTP288") {
             packet.onGround = true
 
             // Extreme high fall velocity
-            player.setVelocity(0.0, -99.887575, 0.0)
+            player.setDeltaMovement(0.0, -99.887575, 0.0)
             player.input.set(
                 sneak = true
             )

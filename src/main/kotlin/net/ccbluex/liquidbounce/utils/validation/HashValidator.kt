@@ -45,7 +45,7 @@ object HashValidator {
 
         file.walk().mapNotNull { it.resolve(HASH_FILE_NAME).takeIf(File::exists) }
             .mapTo(mutableListOf()) {
-                CompletableFuture.runAsync({ validateHashFile(it) }, Util.getMainWorkerExecutor())
+                CompletableFuture.runAsync({ validateHashFile(it) }, Util.backgroundExecutor())
             }.forEach {
                 it.join()
             }

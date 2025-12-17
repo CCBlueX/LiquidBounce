@@ -24,6 +24,9 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.resource
 import net.fabricmc.mappings.model.V2MappingsProvider
 
+@Deprecated(
+    "Since Minecraft 26.1 the source of game will no longer be obfuscated. This remapper is no longer needed."
+)
 object EnvironmentRemapper {
 
     private val mappings = runCatching {

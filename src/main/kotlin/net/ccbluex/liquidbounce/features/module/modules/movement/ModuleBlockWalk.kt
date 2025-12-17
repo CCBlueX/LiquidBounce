@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
-import net.minecraft.block.Blocks
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * BlockWalk module
@@ -39,7 +39,7 @@ object ModuleBlockWalk : ClientModule("BlockWalk", Category.MOVEMENT) {
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (event.state.block in blocks) {
-            event.shape = VoxelShapes.fullCube()
+            event.shape = Shapes.block()
         }
     }
 }

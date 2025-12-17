@@ -13,23 +13,23 @@ import net.ccbluex.liquidbounce.lang.LanguageManager.knownLanguages
 import net.ccbluex.liquidbounce.lang.LanguageManager.languageMap
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.text.MutableText
-import net.minecraft.text.OrderedText
-import net.minecraft.text.StringVisitable
-import net.minecraft.text.Style
-import net.minecraft.text.TextVisitFactory
-import net.minecraft.util.Language
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.network.chat.FormattedText
+import net.minecraft.network.chat.Style
+import net.minecraft.util.StringDecomposer
+import net.minecraft.locale.Language
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-fun translation(key: String, vararg args: Any): MutableText =
-    MutableText.of(LanguageText(key, args))
+fun translation(key: String, vararg args: Any): MutableComponent =
+    MutableComponent.create(LanguageText(key, args))
 
 object LanguageManager : Configurable("lang") {
 
     // Current language
     val languageIdentifier: String
-        get() = overrideLanguage.ifBlank { mc.options.language }
+        get() = overrideLanguage.ifBlank { mc.options.languageCode }
 
     // The game language can be overridden by the user
     var overrideLanguage by text("OverrideLanguage", "").onChanged { lang ->
@@ -94,7 +94,7 @@ object LanguageManager : Configurable("lang") {
     fun getCommonLanguage() = loadLanguage(COMMON_UNDERSTOOD_LANGUAGE)
 
     fun hasFallbackTranslation(key: String) =
-        loadLanguage(COMMON_UNDERSTOOD_LANGUAGE)?.hasTranslation(key) ?: false
+        loadLanguage(COMMON_UNDERSTOOD_LANGUAGE)?.has(key) ?: false
 
 }
 
@@ -110,21 +110,20 @@ class ClientLanguage(private val translations: Map<String, String>) : Language()
      * Be careful when using this method that it will not cause a stack overflow.
      * Use [getTranslation] instead.
      */
-    override fun get(key: String, fallback: String?) = getTranslation(key)
+    override fun getOrDefault(key: String, fallback: String) = getTranslation(key)
         ?: LanguageManager.getCommonLanguage()?.getTranslation(key)
         ?: fallback
-        ?: key
 
-    override fun hasTranslation(key: String) = translations.containsKey(key)
+    override fun has(key: String) = translations.containsKey(key)
 
-    override fun isRightToLeft() = false
+    override fun isDefaultRightToLeft() = false
 
-    override fun reorder(text: StringVisitable) = OrderedText { visitor ->
+    override fun getVisualOrder(text: FormattedText) = FormattedCharSequence { visitor ->
         text.visit({ style, string ->
-            if (TextVisitFactory.visitFormatted(string, style, visitor)) {
+            if (StringDecomposer.iterateFormatted(string, style, visitor)) {
                 Optional.empty()
             } else {
-                StringVisitable.TERMINATE_VISIT
+                FormattedText.STOP_ITERATION
             }
         }, Style.EMPTY).isPresent
     }

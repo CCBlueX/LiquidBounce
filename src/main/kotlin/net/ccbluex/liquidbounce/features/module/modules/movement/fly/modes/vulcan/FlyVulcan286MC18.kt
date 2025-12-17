@@ -34,9 +34,9 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat Vulcan
@@ -56,7 +56,7 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
         get() = modes
 
     var flags = 0
-    private var flagPos: Vec3d? = null
+    private var flagPos: Vec3? = null
 
     override fun enable() {
         flags = 0
@@ -87,7 +87,7 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
 
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
-        if (packet is PlayerPositionLookS2CPacket) {
+        if (packet is ClientboundPlayerPositionPacket) {
             flags++
             if (autoDisable) {
                 val pos = packet.change.position
@@ -107,10 +107,10 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
     }
 
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.pos == player.blockPos.down() && !player.isSneaking) {
-            event.shape = VoxelShapes.fullCube()
+        if (event.pos == player.blockPosition().below() && !player.isShiftKeyDown) {
+            event.shape = Shapes.block()
         } else {
-            event.shape = VoxelShapes.empty()
+            event.shape = Shapes.empty()
         }
     }
 

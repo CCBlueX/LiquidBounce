@@ -20,17 +20,17 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.network;
 
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
-import net.minecraft.client.network.ClientCommonNetworkHandler;
-import net.minecraft.network.packet.Packet;
+import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl;
+import net.minecraft.network.protocol.Packet;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ClientCommonNetworkHandler.class)
+@Mixin(ClientCommonPacketListenerImpl.class)
 public class MixinCommonNetworkHandler {
 
-    @Inject(method = "onPacketException", at = @At(value = "HEAD"), cancellable = true)
+    @Inject(method = "onPacketError", at = @At(value = "HEAD"), cancellable = true)
     private void packetExceptionCancel(Packet packet, Exception exception, CallbackInfo ci) {
         var antiExploit = ModuleAntiExploit.INSTANCE;
         if (antiExploit.getRunning() && antiExploit.getIgnoreProtocol()) {

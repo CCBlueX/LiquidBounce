@@ -27,10 +27,10 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.block.SideShapeType
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.chunk.Chunk
+import net.minecraft.world.level.block.SupportType
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.level.chunk.ChunkAccess
 
 /**
  * VoidESP module
@@ -60,11 +60,11 @@ object ModuleVoidESP : ClientModule("VoidESP", Category.RENDER) {
         renderer.clearSilently()
     }
 
-    private val posStart = BlockPos.Mutable()
-    private val posEnd = BlockPos.Mutable()
+    private val posStart = BlockPos.MutableBlockPos()
+    private val posEnd = BlockPos.MutableBlockPos()
 
-    private fun Chunk.canBlockStandOn(pos: BlockPos): Boolean {
-        return this.getBlockState(pos).isSideSolid(this, pos, Direction.UP, SideShapeType.CENTER)
+    private fun ChunkAccess.canBlockStandOn(pos: BlockPos): Boolean {
+        return this.getBlockState(pos).isFaceSturdy(this, pos, Direction.UP, SupportType.CENTER)
     }
 
     /**
@@ -74,7 +74,7 @@ object ModuleVoidESP : ClientModule("VoidESP", Category.RENDER) {
         val positions = LongOpenHashSet()
 
         // Find the first place where the player can stand
-        val startPos = posEnd.set(player.blockPos, Direction.DOWN)
+        val startPos = posEnd.setWithOffset(player.blockPosition(), Direction.DOWN)
         val yThreshold = yThreshold
         var chunk = world.getChunk(startPos)
         var flag = false
@@ -92,15 +92,15 @@ object ModuleVoidESP : ClientModule("VoidESP", Category.RENDER) {
             return LongSets.EMPTY_SET
         }
 
-        val facing = player.horizontalFacing
-        val side = facing.rotateYClockwise()
+        val facing = player.direction
+        val side = facing.clockWise
 
         val from = posStart.set(startPos)
             .move(facing, rangeFacing).move(side.opposite, rangeSide)
         val to = posEnd.set(startPos)
             .move(facing.opposite, rangeFacing).move(side, rangeSide)
 
-        BlockPos.iterate(from, to).forEach {
+        BlockPos.betweenClosed(from, to).forEach {
             chunk = world.getChunk(it)
 
             if (chunk.canBlockStandOn(it)) {
@@ -117,7 +117,7 @@ object ModuleVoidESP : ClientModule("VoidESP", Category.RENDER) {
                 }
 
                 // Reach the bottom(void)
-                if (posStart.y <= chunk.bottomY) {
+                if (posStart.y <= chunk.minY) {
                     positions.add(it.asLong())
                     return@forEach
                 }

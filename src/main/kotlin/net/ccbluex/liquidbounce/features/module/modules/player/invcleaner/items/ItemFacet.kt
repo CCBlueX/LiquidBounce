@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
     open val category: ItemCategory

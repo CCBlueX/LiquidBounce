@@ -21,8 +21,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.ccbluex.liquidbounce.config.gson.util.readJson
-import net.minecraft.block.MapColor
-import net.minecraft.item.map.MapState
+import net.minecraft.world.level.material.MapColor
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData
 import java.awt.Color
 
 object MurderMysteryFontDetection {
@@ -40,7 +40,7 @@ object MurderMysteryFontDetection {
     }
 
     @Suppress("all")
-    fun readContractLine(mapData: MapState): String {
+    fun readContractLine(mapData: MapItemSavedData): String {
         val rgb = extractBitmapFromMap(mapData)
         val contractLine = filterContractLine(rgb)
 
@@ -127,11 +127,11 @@ object MurderMysteryFontDetection {
         return contractLine
     }
 
-    private fun extractBitmapFromMap(mapData: MapState): IntArray {
+    private fun extractBitmapFromMap(mapData: MapItemSavedData): IntArray {
         val rgb = IntArray(128 * 128)
 
         for (i in rgb.indices) {
-            val color = MapColor.getRenderColor(mapData.colors[i].toInt())
+            val color = MapColor.getColorFromPackedId(mapData.colors[i].toInt())
 
             val r = color and 0xFF
             val g = (color ushr 8) and 0xFF

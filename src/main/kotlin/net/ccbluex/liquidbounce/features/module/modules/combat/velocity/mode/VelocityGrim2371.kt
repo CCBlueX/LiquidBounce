@@ -29,17 +29,17 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.common.CommonPongC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.common.ServerboundPongPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
 
 internal object VelocityGrim2371 : VelocityMode("Grim2371") {
 
@@ -71,24 +71,24 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
     }
 
     private val Packet<*>.isSelfDamage
-        get() = this is EntityDamageS2CPacket && this.entityId == player.id
+        get() = this is ClientboundDamageEventPacket && this.entityId == player.id
 
     private val Packet<*>.isSelfVelocity
-        get() = this is EntityVelocityUpdateS2CPacket && this.entityId == player.id
-            || this is ExplosionS2CPacket
+        get() = this is ClientboundSetEntityMotionPacket && this.id == player.id
+            || this is ClientboundExplodePacket
 
     @Suppress("unused")
     private val packetHandler = sequenceHandler<PacketEvent> { event ->
         val packet = event.packet
 
         when (packet) {
-            is PlayerInteractEntityC2SPacket, is PlayerInteractBlockC2SPacket ->
+            is ServerboundInteractPacket, is ServerboundUseItemOnPacket ->
                 shouldSkip = true
 
-            is PlayerMoveC2SPacket if packet.changesPosition() && waitForUpdate ->
+            is ServerboundMovePlayerPacket if packet.hasPosition() && waitForUpdate ->
                 event.cancelEvent()
 
-            is CommonPongC2SPacket if waitForPing -> {
+            is ServerboundPongPacket if waitForPing -> {
                 waitTicks(1)
                 waitForUpdate = false
                 waitForPing = false
@@ -99,7 +99,7 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
             return@sequenceHandler
         }
 
-        if (packet is BlockUpdateS2CPacket && waitForUpdate && packet.pos == player.blockPos) {
+        if (packet is ClientboundBlockUpdatePacket && waitForUpdate && packet.pos == player.blockPosition()) {
             waitTicks(1)
             waitForPing = true
             needClick = false
@@ -137,32 +137,32 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
             hitResult = raycast(
                 rotation = RotationManager.serverRotation.copy(pitch = 90F)
             ).takeIf {
-                it.blockPos.offset(it.side) == player.blockPos
+                it.blockPos.relative(it.direction) == player.blockPosition()
             }
         }
 
-        if (hitResult != null) {
+        hitResult?.let { hitResult ->
             delay = false
 
             PacketQueueManager.flush(TransferOrigin.INCOMING)
 
-            if (interaction.interactBlock(player, Hand.MAIN_HAND, hitResult).isAccepted) {
-                player.swingHand(Hand.MAIN_HAND)
+            if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, hitResult).consumesAction()) {
+                player.swing(InteractionHand.MAIN_HAND)
             }
 
             if (RotationManager.serverRotation.pitch != 90f) {
-                network.sendPacket(
-                    PlayerMoveC2SPacket.LookAndOnGround(
-                        player.yaw,
+                network.send(
+                    ServerboundMovePlayerPacket.Rot(
+                        player.yRot,
                         90f,
-                        player.isOnGround,
+                        player.onGround(),
                         player.horizontalCollision
                     )
                 )
             } else {
-                network.sendPacket(
-                    PlayerMoveC2SPacket.OnGroundOnly(
-                        player.isOnGround,
+                network.send(
+                    ServerboundMovePlayerPacket.StatusOnly(
+                        player.onGround(),
                         player.horizontalCollision
                     )
                 )
@@ -170,7 +170,7 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
 
             freezeTicks = 0
             waitForUpdate = true
-            hitResult = null
+            this.hitResult = null
             needClick = false
         }
 

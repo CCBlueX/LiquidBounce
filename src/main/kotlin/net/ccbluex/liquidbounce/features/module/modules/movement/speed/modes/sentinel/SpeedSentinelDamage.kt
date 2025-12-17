@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpe
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
-import net.minecraft.entity.MovementType
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.world.entity.MoverType
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -105,7 +105,7 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
             return@handler
         }
 
-        if (event.type == MovementType.SELF && player.moving) {
+        if (event.type == MoverType.SELF && player.moving) {
             event.movement = event.movement.withStrafe(strength = 1.0, speed = speed.toDouble())
         }
     }
@@ -121,13 +121,13 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
         externalDamageAdjust = 0
         hasBeenHurt = false
         enabledTime = System.currentTimeMillis()
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false, false))
-        network.sendPacket(
-            PlayerMoveC2SPacket.PositionAndOnGround(
+        network.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false, false))
+        network.send(
+            ServerboundMovePlayerPacket.Pos(
                 player.x, player.y + 3.25, player.z,
             false, false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false, false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true, false))
+        network.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, false, false))
+        network.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true, false))
     }
 
 }

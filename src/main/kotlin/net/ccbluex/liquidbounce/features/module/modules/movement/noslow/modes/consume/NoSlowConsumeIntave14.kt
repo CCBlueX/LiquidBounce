@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.util.math.Direction
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.core.Direction
 
 /**
  * tested on mineblaze.net
@@ -35,10 +35,10 @@ internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>)
     private val mode by enumChoice("Mode", Mode.RELEASE)
 
     private fun releasePacket() {
-        network.sendPacket(
-            PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                player.blockPos,
+        network.send(
+            ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM,
+                player.blockPosition(),
                 Direction.UP
             )
         )
@@ -53,14 +53,14 @@ internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>)
                         releasePacket()
                     }
 
-                    if (player.itemUseTime == 3) {
-                        player.stopUsingItem()
+                    if (player.ticksUsingItem == 3) {
+                        player.releaseUsingItem()
                         releasePacket()
                     }
                 }
 
                 Mode.NEW -> {
-                    if (player.itemUseTime <= 2 || player.itemUseTimeLeft == 0) {
+                    if (player.ticksUsingItem <= 2 || player.useItemRemainingTicks == 0) {
                         releasePacket()
                     }
                 }

@@ -21,22 +21,22 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
-import net.minecraft.world.World;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(Item.class)
 public abstract class MixinItem {
 
-    @ModifyExpressionValue(method = "raycast", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/entity/player/PlayerEntity;getRotationVector(FF)Lnet/minecraft/util/math/Vec3d;"))
-    private static Vec3d hookFixRotation(Vec3d original, World world, PlayerEntity player, RaycastContext.FluidHandling fluidHandling) {
-        if (player == MinecraftClient.getInstance().player) {
+    @ModifyExpressionValue(method = "getPlayerPOVHitResult", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/player/Player;calculateViewVector(FF)Lnet/minecraft/world/phys/Vec3;"))
+    private static Vec3 hookFixRotation(Vec3 original, Level world, Player player, ClipContext.Fluid fluidHandling) {
+        if (player == Minecraft.getInstance().player) {
             var rotation = RotationManager.INSTANCE.getCurrentRotation();
             if (rotation != null) {
                 return rotation.getDirectionVector();

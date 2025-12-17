@@ -27,12 +27,12 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
-import net.minecraft.entity.ItemEntity
-import net.minecraft.item.Items
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.item.Items
+import net.minecraft.world.phys.Vec3
 import java.util.*
 
-object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3d?>(ModuleAutoFarm, "AutoWalk", false) {
+object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3?>(ModuleAutoFarm, "AutoWalk", false) {
 
     private val minimumDistance by float("MinimumDistance", 2f, 1f..4f)
 
@@ -48,7 +48,7 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3d?>(ModuleAutoFarm, "Au
         private val filter by enumChoice("Filter", Filter.BLACKLIST)
 
         fun shouldPickUp(itemEntity: ItemEntity): Boolean {
-            return filter(itemEntity.stack.item, items)
+            return filter(itemEntity.item.item, items)
         }
 
         var rangeSquared: Float = range.sq()
@@ -61,7 +61,7 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3d?>(ModuleAutoFarm, "Au
 
     private var invHadSpace = true
 
-    var walkTarget: Vec3d? = null
+    var walkTarget: Vec3? = null
         private set
 
     private fun collectAllowedStates(): Set<AutoFarmTrackedState> {
@@ -83,40 +83,40 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3d?>(ModuleAutoFarm, "Au
         return allowedStates
     }
 
-    private fun findWalkToBlock(): Vec3d? {
+    private fun findWalkToBlock(): Vec3? {
         if (AutoFarmBlockTracker.isEmpty()) return null
 
         val allowedStates = collectAllowedStates()
 
         val closestBlockPos = AutoFarmBlockTracker.iterate().mapNotNull { (pos, state) ->
-            if (state in allowedStates) pos.toCenterPos() else null
-        }.minByOrNull(player::squaredDistanceTo)
+            if (state in allowedStates) pos.center else null
+        }.minByOrNull(player::distanceToSqr)
 
         return closestBlockPos
     }
 
-    private fun findWalkTarget(invHasSpace: Boolean): Vec3d? {
+    private fun findWalkTarget(invHasSpace: Boolean): Vec3? {
         val blockTarget = findWalkToBlock()
 
         if (toItems.enabled && invHasSpace) {
-            val playerPos = player.entityPos
+            val playerPos = player.position()
             val itemTarget = findWalkToItem() ?: return blockTarget
             blockTarget ?: return itemTarget
 
-            val blockTargetDistSq = blockTarget.squaredDistanceTo(playerPos)
-            val itemTargetDistSq = itemTarget.squaredDistanceTo(playerPos)
+            val blockTargetDistSq = blockTarget.distanceToSqr(playerPos)
+            val itemTargetDistSq = itemTarget.distanceToSqr(playerPos)
             return if (blockTargetDistSq < itemTargetDistSq) blockTarget else itemTarget
         } else {
             return blockTarget
         }
     }
 
-    private fun findWalkToItem(): Vec3d? = world.entities.filter {
-        it is ItemEntity && toItems.shouldPickUp(it) && it.squaredDistanceTo(player) < toItems.rangeSquared
-    }.minByOrNull { it.squaredDistanceTo(player) }?.entityPos
+    private fun findWalkToItem(): Vec3? = world.entitiesForRendering().filter {
+        it is ItemEntity && toItems.shouldPickUp(it) && it.distanceToSqr(player) < toItems.rangeSquared
+    }.minByOrNull { it.distanceToSqr(player) }?.position()
 
     @Suppress("EmptyFunctionBlock")
-    override fun createNavigationContext(): Vec3d? {
+    override fun createNavigationContext(): Vec3? {
         val invHasSpace = hasInventorySpace()
         if (!invHasSpace && invHadSpace && toItems.enabled) {
             notification("Inventory is Full", "AutoFarm will no longer ", NotificationEvent.Severity.ERROR)
@@ -127,9 +127,9 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3d?>(ModuleAutoFarm, "Au
         return findWalkTarget(invHasSpace)
     }
 
-    override fun calculateGoalPosition(context: Vec3d?): Vec3d? {
-        val target = ModuleAutoFarm.currentTarget?.toCenterPos() ?: context
-        if (target != null && player.squaredDistanceTo(target) < minimumDistance.sq()) {
+    override fun calculateGoalPosition(context: Vec3?): Vec3? {
+        val target = ModuleAutoFarm.currentTarget?.center ?: context
+        if (target != null && player.distanceToSqr(target) < minimumDistance.sq()) {
             this.walkTarget = null
             return null
         }

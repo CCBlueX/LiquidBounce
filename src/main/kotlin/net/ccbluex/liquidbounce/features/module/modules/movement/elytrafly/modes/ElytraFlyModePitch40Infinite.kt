@@ -51,7 +51,7 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
     }
 
     override fun onTick() {
-        if (!player.isGliding) {
+        if (!player.isFallFlying) {
             return
         }
 
@@ -72,7 +72,7 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
      * Calculates the current player speed in km/h
      */
     private fun calculateCurrentSpeed(): Float {
-        return (player.velocity.horizontalLength() * SPEED_CONVERSION_FACTOR).toFloat()
+        return (player.deltaMovement.horizontalDistance() * SPEED_CONVERSION_FACTOR).toFloat()
     }
 
     /**
@@ -98,6 +98,6 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
             MAX_PITCH
         )
 
-        player.pitch = infinitePitch
+        player.setXRot(infinitePitch)
     }
 }

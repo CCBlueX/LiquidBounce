@@ -58,10 +58,10 @@ import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.network.chat.Component
+import net.minecraft.ChatFormatting
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 /**
  * Rotations module
@@ -204,16 +204,16 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             return@handler
         }
 
-        val pos0 = Vec3d(77.0, 75.0, -52.0)
+        val pos0 = Vec3(77.0, 75.0, -52.0)
         val face = AlignedFace(pos0, pos0.add(1.0, 1.0, 0.0))
 
         debugGeometry(
             ModuleScaffold,
             "targetFace",
-            DebuggedBox(Box(face.from, face.to), Color4b(255, 0, 0, 64))
+            DebuggedBox(AABB(face.from, face.to), Color4b(255, 0, 0, 64))
         )
 
-        val line = LineSegment(player.eyePos, player.rotationVector, 0.0..10.0)
+        val line = LineSegment(player.eyePosition, player.lookAngle, 0.0..10.0)
 
         debugGeometry(
             ModuleScaffold,
@@ -243,7 +243,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     private val screenRenderHandler = handler<OverlayRenderEvent> { event ->
         val context = event.context
 
-        if (mc.options.playerListKey.isPressed || !parameters) {
+        if (mc.options.keyPlayerList.isDown || !parameters) {
             return@handler
         }
 
@@ -255,26 +255,26 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
          *   Parameter Name: Parameter Value
          *   Parameter Name: Parameter Value
          */
-        val textList = mutableListOf<Text>()
+        val textList = mutableListOf<Component>()
 
         val debuggedOwners = debugParameters.keys.groupBy { it.owner }
 
         val currentTime = System.currentTimeMillis()
 
-        fun ownerName(owner: DebuggedOwner): Text {
+        fun ownerName(owner: DebuggedOwner): Component {
             return when (owner) {
-                is ClientModule -> owner.name.asText().formatted(Formatting.GOLD).bold(true)
-                is Command -> "Command ${owner.name}".asText().formatted(Formatting.GOLD).underline(true)
+                is ClientModule -> owner.name.asText().withStyle(ChatFormatting.GOLD).bold(true)
+                is Command -> "Command ${owner.name}".asText().withStyle(ChatFormatting.GOLD).underline(true)
                 is EventListener -> listOfNotNull(
                     owner.parent()?.let { ownerName(it) },
-                    "::".asPlainText(Formatting.GRAY),
-                    owner.javaClass.simpleName.asText().formatted(Formatting.DARK_AQUA).italic(true),
+                    "::".asPlainText(ChatFormatting.GRAY),
+                    owner.javaClass.simpleName.asText().withStyle(ChatFormatting.DARK_AQUA).italic(true),
                 ).asText()
 
-                is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asPlainText(Formatting.GRAY)
+                is CoroutineScope -> owner.coroutineContext[CoroutineName]?.name?.asPlainText(ChatFormatting.GRAY)
                     ?: owner.toString().asPlainText()
 
-                else -> owner.javaClass.simpleName.asPlainText(Formatting.BLUE)
+                else -> owner.javaClass.simpleName.asPlainText(ChatFormatting.BLUE)
             }
         }
 
@@ -286,9 +286,9 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                 val parameterCapture = debugParameters[debuggedParameter] ?: return@forEach
                 val duration = (currentTime - parameterCapture.time) / 1000
                 textList += textOf(
-                    "$parameterName: ".asPlainText(Formatting.WHITE),
-                    parameterCapture.value.toString().asPlainText(Formatting.GREEN),
-                    " [${duration}s ago]".asPlainText(Formatting.GRAY),
+                    "$parameterName: ".asPlainText(ChatFormatting.WHITE),
+                    parameterCapture.value.toString().asPlainText(ChatFormatting.GREEN),
+                    " [${duration}s ago]".asPlainText(ChatFormatting.GRAY),
                 )
             }
         }
@@ -360,14 +360,14 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     }
 
     class DebuggedLine(line: Line, override val color: Color4b) : DebuggedGeometry {
-        val from: Vec3d
-        val to: Vec3d
+        val from: Vec3
+        val to: Vec3
 
         init {
             val normalizedDirection = line.direction.normalize()
 
-            this.from = line.position.subtract(normalizedDirection.multiply(100.0))
-            this.to = line.position.add(normalizedDirection.multiply(100.0))
+            this.from = line.position.subtract(normalizedDirection.scale(100.0))
+            this.to = line.position.add(normalizedDirection.scale(100.0))
         }
 
         override fun render(env: WorldRenderEnvironment) {
@@ -380,9 +380,9 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     }
 
     class DebuggedTriangle(
-        val p1: Vec3d,
-        val p2: Vec3d,
-        val p3: Vec3d,
+        val p1: Vec3,
+        val p2: Vec3,
+        val p3: Vec3,
         override val color: Color4b,
     ) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
@@ -395,7 +395,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, override val color: Color4b) : DebuggedGeometry {
+    class DebuggedLineSegment(val from: Vec3, val to: Vec3, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
             env.drawLine(
                 env.relativeToCamera(from).toVec3(),
@@ -405,14 +405,14 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
         }
     }
 
-    open class DebuggedBox(val box: Box, override val color: Color4b) : DebuggedGeometry {
+    open class DebuggedBox(val box: AABB, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
-            env.drawBox(box.offset(env.camera.cameraPos.negate()), color)
+            env.drawBox(box.move(env.camera.position().reverse()), color)
         }
     }
 
-    class DebuggedPoint(point: Vec3d, color: Color4b, size: Double = 0.2) : DebuggedBox(
-        Box.of(point, size, size, size),
+    class DebuggedPoint(point: Vec3, color: Color4b, size: Double = 0.2) : DebuggedBox(
+        AABB.ofSize(point, size, size, size),
         color
     )
 

@@ -20,10 +20,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
-import net.minecraft.block.Blocks
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 /**
  * No collision with cobwebs and breaks them to bypass check
@@ -37,15 +37,21 @@ object NoWebGrimBreak : NoWebMode("Grim2365") {
     private val breakOnWorld by boolean("BreakOnWorld", true)
 
     override fun handleEntityCollision(pos: BlockPos): Boolean {
-        if (breakOnWorld) world.setBlockState(pos, Blocks.AIR.defaultState)
+        if (breakOnWorld) world.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState())
 
-        val start = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN)
-        val abort = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN)
-        val finish = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
+        val start = ServerboundPlayerActionPacket(
+            ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN
+        )
+        val abort = ServerboundPlayerActionPacket(
+            ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN
+        )
+        val finish = ServerboundPlayerActionPacket(
+            ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN
+        )
 
-        network.sendPacket(start)
-        network.sendPacket(abort)
-        network.sendPacket(finish)
+        network.send(start)
+        network.send(abort)
+        network.send(finish)
 
         return true
     }

@@ -26,12 +26,14 @@ internal object ElytraFlyModeVanilla : ElytraFlyMode("Vanilla") {
 
     override fun onTick() {
         if (player.moving) {
-            player.velocity = player.velocity.withStrafe(speed = ModuleElytraFly.Speed.horizontal.toDouble())
+            player.deltaMovement = player.deltaMovement.withStrafe(
+                speed = ModuleElytraFly.Speed.horizontal.toDouble()
+            )
         }
 
-        player.velocity.y = when {
-            mc.options.jumpKey.isPressed -> ModuleElytraFly.Speed.vertical.toDouble()
-            mc.options.sneakKey.isPressed -> -ModuleElytraFly.Speed.vertical.toDouble()
+        player.deltaMovement.y = when {
+            mc.options.keyJump.isDown -> ModuleElytraFly.Speed.vertical.toDouble()
+            mc.options.keyShift.isDown -> -ModuleElytraFly.Speed.vertical.toDouble()
             else -> return
         }
     }

@@ -37,9 +37,9 @@ import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.entity.Entity
-import net.minecraft.entity.projectile.FireballEntity
-import net.minecraft.entity.projectile.ShulkerBulletEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball
+import net.minecraft.world.entity.projectile.ShulkerBullet
 
 /**
  * ProjectilePuncher module
@@ -48,7 +48,7 @@ import net.minecraft.entity.projectile.ShulkerBulletEntity
  */
 object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORLD, aliases = listOf("AntiFireball")) {
 
-    private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.attackKey, null))
+    private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.keyAttack, null))
 
     private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
@@ -96,15 +96,15 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
 
         target = null
 
-        for (entity in world.entities.sortedBy { it.squaredBoxedDistanceTo(player) }) {
+        for (entity in world.entitiesForRendering().sortedBy { it.squaredBoxedDistanceTo(player) }) {
             if (!shouldAttack(entity)) {
                 continue
             }
 
-            val nextTickFireballPosition = entity.entityPos + entity.entityPos - entity.lastPos
+            val nextTickFireballPosition = entity.position() + entity.position() - entity.lastPos
 
-            val entityBox = entity.dimensions.getBoxAt(nextTickFireballPosition)
-            val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyePos)
+            val entityBox = entity.dimensions.makeBoundingBox(nextTickFireballPosition)
+            val distanceSquared = entityBox.squaredBoxedDistanceTo(player.eyePosition)
 
             if (distanceSquared > rangeSquared) {
                 continue
@@ -112,7 +112,7 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
 
             // find best spot
             val spot = raytraceBox(
-                player.eyePos, entity.box, range = range.toDouble(), wallsRange = 0.0
+                player.eyePosition, entity.box, range = range.toDouble(), wallsRange = 0.0
             ) ?: continue
 
             target = entity
@@ -130,11 +130,11 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
     }
 
     private fun shouldAttack(entity: Entity): Boolean {
-        if (entity !is FireballEntity && entity !is ShulkerBulletEntity) {
+        if (entity !is LargeFireball && entity !is ShulkerBullet) {
             return false
         }
 
-        val fireballVelocity = entity.entityPos - entity.lastPos
+        val fireballVelocity = entity.position() - entity.lastPos
 
         // If the fireball is not moving the player can obviously not be hit. Additionally the code below only works if
         // the fireball is moving.
@@ -143,19 +143,19 @@ object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", Category.WORL
         }
 
         // Check if the fireball is going towards the player
-        val vecToPlayer = player.box.center - entity.entityPos
+        val vecToPlayer = player.box.center - entity.position()
 
-        val dot = vecToPlayer.dotProduct(fireballVelocity)
+        val dot = vecToPlayer.dot(fireballVelocity)
 
         // if angle less than PI/3 (60 degrees) then
         val isMovingTowardsPlayer = dot > 0.5 * fireballVelocity.length() * vecToPlayer.length()
 
-        val extendedHitbox = player.box.expand(entity.box.lengthX / 2.0)
+        val extendedHitbox = player.box.inflate(entity.box.xsize / 2.0)
 
         // If the fireball was already inside the player's hitbox, but would be moving away from the player, this
         // would unnecessarily trigger the player to attack the fireball.
-        val touchesHitbox = extendedHitbox.raycast(entity.entityPos, fireballVelocity * 20.0).isPresent
-        val willHitPlayer = !extendedHitbox.contains(entity.entityPos) && touchesHitbox
+        val touchesHitbox = extendedHitbox.clip(entity.position(), fireballVelocity * 20.0).isPresent
+        val willHitPlayer = !extendedHitbox.contains(entity.position()) && touchesHitbox
 
         // We need two checks in order to prevent following situation: The fireball is very close to the player and
         // moving towards their feet. The moving towards player check would fail since the velocity line is not similar

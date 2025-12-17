@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.render.entity.state.LivingEntityRenderState
-import net.minecraft.entity.LivingEntity
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
+import net.minecraft.world.entity.LivingEntity
 
 /**
  * TrueSight module

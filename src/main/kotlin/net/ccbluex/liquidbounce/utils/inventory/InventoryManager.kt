@@ -39,14 +39,14 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.network.packet.s2c.play.CloseScreenS2CPacket
-import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket
-import net.minecraft.registry.Registries
-import net.minecraft.screen.slot.SlotActionType
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
+import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
+import net.minecraft.network.protocol.game.ClientboundOpenScreenPacket
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.inventory.ClickType
 import kotlin.math.max
 import kotlin.random.Random
 
@@ -63,7 +63,7 @@ object InventoryManager : EventListener {
         get() = isInInventoryScreen || isInventoryOpenServerSide
 
     val isHandledScreenOpen
-        get() = mc.currentScreen is HandledScreen<*> || isInventoryOpenServerSide
+        get() = mc.screen is AbstractContainerScreen<*> || isInventoryOpenServerSide
 
     var isInventoryOpenServerSide = false
         internal set(value) {
@@ -97,7 +97,7 @@ object InventoryManager : EventListener {
 
         debugParameter("Inventory Open") { isInventoryOpen }
         debugParameter("Inventory Open Server Side") { isInventoryOpenServerSide }
-        debugParameter("Cursor Stack") { player.currentScreenHandler.cursorStack }
+        debugParameter("Cursor Stack") { player.containerMenu.carried }
 
         var maximumCloseDelay = 0
 
@@ -185,7 +185,7 @@ object InventoryManager : EventListener {
                     // the action is a throw action (you cannot miss-click really when throwing)
                     if (index == 0 && action is InventoryAction.Click
                         && constraints.missChance.random() > Random.nextInt(100)
-                        && action.actionType != SlotActionType.THROW) {
+                        && action.actionType != ClickType.THROW) {
                         // Simulate a miss click (this is only possible for container-type slots)
                         // TODO: Add support for inventory slots
                         if (action.performMissClick()) {
@@ -218,7 +218,7 @@ object InventoryManager : EventListener {
     }
 
     /**
-     * Called when a click occurred. Can be tracked by listening for [ClickSlotC2SPacket]
+     * Called when a click occurred. Can be tracked by listening for [ServerboundContainerClickPacket]
      */
     @JvmStatic
     fun clickOccurred() {
@@ -227,7 +227,7 @@ object InventoryManager : EventListener {
     }
 
     /**
-     * Called when the inventory was opened. Can be tracked by listening for [OpenScreenS2CPacket]
+     * Called when the inventory was opened. Can be tracked by listening for [ClientboundOpenScreenPacket]
      */
     @JvmStatic
     fun inventoryOpened() {
@@ -247,17 +247,19 @@ object InventoryManager : EventListener {
         }
 
         // If we actually send a click packet, we can reset the click chronometer
-        if (packet is ClickSlotC2SPacket) {
+        if (packet is ServerboundContainerClickPacket) {
             clickOccurred()
 
-            if (packet.syncId == 0) {
+            if (packet.containerId == 0) {
                 isInventoryOpenServerSide = true
             }
         }
 
-        if (packet is CloseHandledScreenC2SPacket || packet is CloseScreenS2CPacket || packet is OpenScreenS2CPacket) {
+        if (packet is ServerboundContainerClosePacket || packet is ClientboundContainerClosePacket
+            || packet is ClientboundOpenScreenPacket
+        ) {
             // Prevent closing inventory (no other screen!) if it is already closed
-            if (!isInventoryOpenServerSide && packet is CloseHandledScreenC2SPacket && packet.syncId == 0) {
+            if (!isInventoryOpenServerSide && packet is ServerboundContainerClosePacket && packet.containerId == 0) {
                 event.cancelEvent()
                 return@handler
             }
@@ -278,15 +280,15 @@ object InventoryManager : EventListener {
             return@handler
         }
 
-        if (screen is HandledScreen<*>) {
+        if (screen is AbstractContainerScreen<*>) {
             debugParameter("Screen Handler Type") {
-                screen.screenHandler.typeOrNull?.let {
-                    Registries.SCREEN_HANDLER.getId(it)
+                screen.menu.typeOrNull?.let {
+                    BuiltInRegistries.MENU.getKey(it)
                 }
             }
             debugParameter("Screen Slot count") {
-                val slots = screen.screenHandler.slots
-                "${slots.size} (${slots.count { it.inventory !== player.inventory }})"
+                val slots = screen.menu.slots
+                "${slots.size} (${slots.count { it.container !== player.inventory }})"
             }
             // ViaFabricPlus injects into [tutorialManager.onInventoryOpened()] but we take
             // the easy way and just listen for the screen event.

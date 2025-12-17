@@ -50,10 +50,10 @@ import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.entity.LivingEntity
-import net.minecraft.item.EggItem
-import net.minecraft.item.Item
-import net.minecraft.item.SnowballItem
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.EggItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.SnowballItem
 import java.util.function.Function
 
 /**
@@ -71,7 +71,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     private val throwableType by enumChoice("ThrowableType", ThrowableType.EGG_AND_SNOWBALL)
     private val gravityType by enumChoice("GravityType", GravityType.AUTO).apply { tagBy(this) }
 
-    private val clicker = tree(Clicker(this, mc.options.useKey, itemCooldown = null))
+    private val clicker = tree(Clicker(this, mc.options.keyUse, itemCooldown = null))
 
     /**
      * The target tracker to find the best enemy to attack.
@@ -128,7 +128,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         // Find the recommended target
         val target = targetTracker.selectFirst {
             // Check if we can see the enemy
-            player.canSee(it)
+            player.hasLineOfSight(it)
         } ?: return@handler
 
         if (notDuringCombat && CombatManager.isInCombat) {
@@ -196,7 +196,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
             interactItem(
                 slot.useHand,
                 swingMode = swingMode,
-            ).isAccepted
+            ).consumesAction()
         }
     }
 
@@ -218,8 +218,8 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
                 it.item is EggItem || it.item is SnowballItem
             }
             ANYTHING -> when {
-                !player.mainHandStack.isEmpty -> Slots.Hotbar[player.inventory.selectedSlot]
-                !player.offHandStack.isEmpty -> OffHandSlot
+                !player.mainHandItem.isEmpty -> Slots.Hotbar[player.inventory.selectedSlot]
+                !player.offhandItem.isEmpty -> OffHandSlot
                 else -> null
             }
         }
@@ -240,7 +240,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
             LINEAR -> {
                 // On linear we likely don't need to care about gravity,
                 // but instead aim exactly at the hitbox of the target.
-                val eyes = player.eyePos
+                val eyes = player.eyePosition
                 val point = pointTracker.findPoint(eyes, target, 1)
                 Rotation.lookingAt(point.pos, eyes)
             }

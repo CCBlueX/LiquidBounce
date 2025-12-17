@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.render.engine.font.StaticGlyphPage.Companion.cre
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.renderer.texture.DynamicTexture
 import java.awt.Dimension
 import java.awt.Point
 import kotlin.math.max
@@ -38,7 +38,7 @@ import kotlin.math.sqrt
  * A staticly allocated glyph page.
  */
 class StaticGlyphPage(
-    override val texture: NativeImageBackedTexture,
+    override val texture: DynamicTexture,
     val glyphs: Set<Pair<FontManager.FontId, GlyphRenderInfo>>
 ): GlyphPage() {
     companion object {

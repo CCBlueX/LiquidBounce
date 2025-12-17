@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
-import net.minecraft.block.Block
-import net.minecraft.item.BlockItem
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.BlockPos
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
@@ -48,9 +48,9 @@ object PreferFavourableBlocks : Comparator<ItemStack> {
 object PreferSolidBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
         return compareValueByCondition(o1, o2) {
-            val defaultState = (it.item as BlockItem).block.defaultState
+            val defaultState = (it.item as BlockItem).block.defaultBlockState()
 
-            defaultState.isSolidBlock(mc.world!!, BlockPos.ORIGIN)
+            defaultState.isRedstoneConductor(mc.level!!, BlockPos.ZERO)
         }
     }
 }
@@ -58,9 +58,9 @@ object PreferSolidBlocks : Comparator<ItemStack> {
 object PreferFullCubeBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
         return compareValueByCondition(o1, o2) {
-            val defaultState = (it.item as BlockItem).block.defaultState
+            val defaultState = (it.item as BlockItem).block.defaultBlockState()
 
-            defaultState.isFullCube(mc.world!!, BlockPos.ORIGIN)
+            defaultState.isCollisionShapeFullBlock(mc.level!!, BlockPos.ZERO)
         }
     }
 
@@ -74,9 +74,9 @@ object PreferFullCubeBlocks : Comparator<ItemStack> {
  */
 object PreferWalkableBlocks : Comparator<ItemStack> {
     private val chain = ComparatorChain<Block>(
-        compareBy { it.slipperiness.toDouble() },
-        compareBy { abs(it.jumpVelocityMultiplier - 1.0) },
-        compareBy { abs(it.velocityMultiplier - 1.0) },
+        compareBy { it.friction.toDouble() },
+        compareBy { abs(it.jumpFactor - 1.0) },
+        compareBy { abs(it.speedFactor - 1.0) },
     )
 
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
@@ -107,8 +107,8 @@ class PreferAverageHardBlocks(private val neutralRange: Boolean) : Comparator<It
     }
 
     private fun hardnessDist(stack: ItemStack): Double {
-        val defaultState = (stack.item as BlockItem).block.defaultState
-        val hardness = defaultState.getHardness(mc.world!!, BlockPos.ORIGIN)
+        val defaultState = (stack.item as BlockItem).block.defaultBlockState()
+        val hardness = defaultState.getDestroySpeed(mc.level!!, BlockPos.ZERO)
 
         // If neutral range is enabled, items with a specific range of hardness values should be considered ideal.
         if (this.neutralRange && hardness in GOOD_HARDNESS_RANGE) {

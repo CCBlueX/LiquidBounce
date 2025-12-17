@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorKitParameters
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
-import net.minecraft.entity.EquipmentSlot
+import net.minecraft.world.entity.EquipmentSlot
 
 object ArmorEvaluation {
     /**

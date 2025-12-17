@@ -21,18 +21,18 @@ package net.ccbluex.liquidbounce.config.gson.adapter
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.util.Identifier
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.Registry
+import net.minecraft.resources.Identifier
 
 class IdentifierWithRegistryAdapter<T : Any>(val registry: Registry<T>) : TypeAdapter<T>() {
 
     override fun read(source: JsonReader): T? {
-        return registry[Identifier.tryParse(source.nextString())]
+        return registry.getValue(Identifier.tryParse(source.nextString()))
     }
 
     override fun write(sink: JsonWriter, value: T?) {
-        val id = value?.let { registry.getId(it) }
+        val id = value?.let { registry.getKey(it) }
         if (id == null) {
             sink.nullValue()
         } else {
@@ -42,22 +42,22 @@ class IdentifierWithRegistryAdapter<T : Any>(val registry: Registry<T>) : TypeAd
 
     companion object {
         @JvmField
-        val ENTITY_TYPE = IdentifierWithRegistryAdapter(Registries.ENTITY_TYPE)
+        val ENTITY_TYPE = IdentifierWithRegistryAdapter(BuiltInRegistries.ENTITY_TYPE)
 
         @JvmField
-        val ITEM = IdentifierWithRegistryAdapter(Registries.ITEM)
+        val ITEM = IdentifierWithRegistryAdapter(BuiltInRegistries.ITEM)
 
         @JvmField
-        val BLOCK = IdentifierWithRegistryAdapter(Registries.BLOCK)
+        val BLOCK = IdentifierWithRegistryAdapter(BuiltInRegistries.BLOCK)
 
         @JvmField
-        val SOUND_EVENT = IdentifierWithRegistryAdapter(Registries.SOUND_EVENT)
+        val SOUND_EVENT = IdentifierWithRegistryAdapter(BuiltInRegistries.SOUND_EVENT)
 
         @JvmField
-        val STATUS_EFFECT = IdentifierWithRegistryAdapter(Registries.STATUS_EFFECT)
+        val STATUS_EFFECT = IdentifierWithRegistryAdapter(BuiltInRegistries.MOB_EFFECT)
 
         @JvmField
-        val SCREEN_HANDLER = IdentifierWithRegistryAdapter(Registries.SCREEN_HANDLER)
+        val SCREEN_HANDLER = IdentifierWithRegistryAdapter(BuiltInRegistries.MENU)
     }
 
 }

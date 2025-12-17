@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * @anticheat Sentinel
@@ -54,8 +54,8 @@ internal object FlySentinel10thMar : Choice("Sentinel10thMar") {
         get() = ModuleFly.modes
 
     val repeatable = tickHandler {
-        player.velocity.y = jumpHeight.toDouble()
-        player.velocity = player.velocity.withStrafe(speed = jumpSpeed.toDouble())
+        player.deltaMovement.y = jumpHeight.toDouble()
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = jumpSpeed.toDouble()))
         spoofOnGround = true
         waitTicks(ticks)
     }
@@ -67,7 +67,7 @@ internal object FlySentinel10thMar : Choice("Sentinel10thMar") {
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is ServerboundMovePlayerPacket) {
             if (spoofOnGround) {
                 packet.onGround = true
                 spoofOnGround = false

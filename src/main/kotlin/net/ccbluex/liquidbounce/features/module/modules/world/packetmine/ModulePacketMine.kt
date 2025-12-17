@@ -47,15 +47,15 @@ import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.block.BlockState
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.BlockPos
 import kotlin.math.max
 
 /**
@@ -129,7 +129,7 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
 
     init {
         mode.onChanged {
-            if (mc.world != null && mc.player != null) {
+            if (mc.level != null && mc.player != null) {
                 onDisabled()
                 onEnabled()
             }
@@ -137,7 +137,7 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
     }
 
     override fun onEnabled() {
-        interaction.cancelBlockBreaking()
+        interaction.stopDestroyBlock()
     }
 
     override fun onDisabled() {
@@ -168,7 +168,7 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
         val rotate = rotationMode.shouldRotate(mineTarget)
 
         val raytrace = raytraceBlockRotation(
-            player.eyePos,
+            player.eyePosition,
             mineTarget.targetPos,
             mineTarget.blockState,
             range = range.toDouble(),
@@ -211,24 +211,24 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
             rotation = rotation ?: return,
             pos = mineTarget.targetPos,
             state = mineTarget.blockState
-        )?.side ?: run {
+        )?.direction ?: run {
             // wrong rotations?? this should not happen!
             FailProcedure.ABORT.execute(mineTarget)
             return
         }
 
         if (player.isCreative) {
-            interaction.sendSequencedPacket(net.ccbluex.liquidbounce.utils.client.world) { sequence: Int ->
-                interaction.breakBlock(mineTarget.targetPos)
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
+            interaction.startPrediction(net.ccbluex.liquidbounce.utils.client.world) { sequence: Int ->
+                interaction.destroyBlock(mineTarget.targetPos)
+                ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK,
                     mineTarget.targetPos,
-                    mineTarget.direction,
+                    mineTarget.direction!!,
                     sequence
                 )
             }
 
-            swingMode.swing(Hand.MAIN_HAND)
+            swingMode.swing(InteractionHand.MAIN_HAND)
             return
         }
 
@@ -250,7 +250,7 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
     private fun startBreaking(slot: IntObjectImmutablePair<ItemStack>?, mineTarget: MineTarget) {
         switch(slot, mineTarget)
         if (switchMode.activeChoice.syncOnStart) {
-            interaction.syncSelectedSlot()
+            interaction.ensureHasSentCarriedItem()
         }
 
         mode.activeChoice.start(mineTarget)
@@ -267,7 +267,7 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
 
         switch(slot, mineTarget)
         if (switchMode.getSwitchingMethod().shouldSync) {
-            interaction.syncSelectedSlot()
+            interaction.ensureHasSentCarriedItem()
         }
 
         val f = if (breakDamage > 0f) {
@@ -278,12 +278,12 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
         }
 
         val box = mineTarget.targetPos.outlineBox
-        val lengthX = box.lengthX
-        val lengthY = box.lengthY
-        val lengthZ = box.lengthZ
+        val lengthX = box.xsize
+        val lengthY = box.ysize
+        val lengthZ = box.zsize
         targetRenderer.updateBox(
             mineTarget.targetPos,
-            box.expand(
+            box.inflate(
                 -(lengthX / 2) + lengthX * f,
                 -(lengthY / 2) + lengthY * f,
                 -(lengthZ / 2) + lengthZ * f
@@ -304,16 +304,16 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
 
     @Suppress("unused")
     private val mouseButtonHandler = handler<MouseButtonEvent> { event ->
-        val openScreen = mc.currentScreen != null
+        val openScreen = mc.screen != null
         val unchangeableActive = !mode.activeChoice.canManuallyChange && _target != null
-        if (openScreen || unchangeableActive || !player.abilities.allowModifyWorld) {
+        if (openScreen || unchangeableActive || !player.abilities.mayBuild) {
             return@handler
         }
 
         val isLeftClick = event.button == 0
         // without adding a little delay before being able to unselect / select again, selecting would be impossible
         val hasTimePassed = chronometer.hasElapsed(selectDelay.toLong())
-        val hitResult = mc.crosshairTarget
+        val hitResult = mc.hitResult
         if (!isLeftClick || !hasTimePassed || hitResult == null || hitResult !is BlockHitResult) {
             return@handler
         }
@@ -325,7 +325,7 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
         // stop when the block is clicked again
         val isCancelledByUser = blockPos.equals(_target?.targetPos)
 
-        _target = if (shouldTargetBlock && world.worldBorder.contains(blockPos) && !isCancelledByUser) {
+        _target = if (shouldTargetBlock && world.worldBorder.isWithinBounds(blockPos) && !isCancelledByUser) {
             MineTarget(blockPos)
         } else {
             null
@@ -351,13 +351,13 @@ object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
         }
 
         when (val packet = it.packet) {
-            is BlockUpdateS2CPacket -> {
-                mc.submit { updatePosOnChange(packet.pos, packet.state) }
+            is ClientboundBlockUpdatePacket -> {
+                mc.submit { updatePosOnChange(packet.pos, packet.blockState) }
             }
 
-            is ChunkDeltaUpdateS2CPacket -> {
+            is ClientboundSectionBlocksUpdatePacket -> {
                 mc.submit {
-                    packet.visitUpdates { pos, state -> updatePosOnChange(pos, state) }
+                    packet.runUpdates { pos, state -> updatePosOnChange(pos, state) }
                 }
             }
         }

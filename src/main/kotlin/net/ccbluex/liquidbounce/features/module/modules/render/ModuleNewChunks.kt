@@ -29,12 +29,12 @@ import net.ccbluex.liquidbounce.render.drawPlane
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.Vec3d
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
 import kotlin.math.max
@@ -72,30 +72,30 @@ object ModuleNewChunks : ClientModule("NewChunks", Category.RENDER) {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
-            is UnloadChunkS2CPacket -> {
+            is ClientboundForgetLevelChunkPacket -> {
                 if (!persist) {
                     chunks.remove(packet.pos)
                 }
             }
 
-            is ChunkDataS2CPacket -> {
-                val pos = ChunkPos(packet.chunkX, packet.chunkZ)
+            is ClientboundLevelChunkWithLightPacket -> {
+                val pos = ChunkPos(packet.x, packet.z)
 
                 chunks.putIfAbsent(pos, false)
             }
 
-            is ChunkDeltaUpdateS2CPacket -> {
-                packet.visitUpdates { bp, state ->
+            is ClientboundSectionBlocksUpdatePacket -> {
+                packet.runUpdates { bp, state ->
                     val fluid = state.fluidState
-                    if (!fluid.isEmpty && !fluid.isStill) {
+                    if (!fluid.isEmpty && !fluid.isSource) {
                         chunks[ChunkPos(bp)] = true
                     }
                 }
             }
 
-            is BlockUpdateS2CPacket -> {
-                val fluid = packet.state.fluidState
-                if (!fluid.isEmpty && !fluid.isStill) {
+            is ClientboundBlockUpdatePacket -> {
+                val fluid = packet.blockState.fluidState
+                if (!fluid.isEmpty && !fluid.isSource) {
                     chunks[ChunkPos(packet.pos)] = true
                 }
             }
@@ -114,10 +114,10 @@ object ModuleNewChunks : ClientModule("NewChunks", Category.RENDER) {
         renderEnvironmentForWorld(event.matrixStack) {
             startBatch()
             for ((chunk, isNew) in chunks) {
-                val chunkX = chunk.startX
-                val chunkZ = chunk.startZ
+                val chunkX = chunk.minBlockX
+                val chunkZ = chunk.minBlockZ
 
-                if (player.squaredDistanceTo(chunkX + 8.0, player.y, chunkZ + 8.0) > renderDistSq) {
+                if (player.distanceToSqr(chunkX + 8.0, player.y, chunkZ + 8.0) > renderDistSq) {
                     continue
                 }
 
@@ -145,7 +145,7 @@ object ModuleNewChunks : ClientModule("NewChunks", Category.RENDER) {
                     }
                 }
 
-                withPositionRelativeToCamera(Vec3d(chunkX.toDouble(), drawY, chunkZ.toDouble())) {
+                withPositionRelativeToCamera(Vec3(chunkX.toDouble(), drawY, chunkZ.toDouble())) {
                     drawPlane(16f, 16f, color, color.darker())
                 }
             }

@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.minecraft.block.FluidBlock
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.level.block.LiquidBlock
+import net.minecraft.world.phys.shapes.Shapes
 
 internal object LiquidWalkVanilla : Choice("Vanilla") {
 
@@ -39,7 +39,7 @@ internal object LiquidWalkVanilla : Choice("Vanilla") {
 
     @Suppress("unused")
     val inputHandler = handler<MovementInputEvent> { event ->
-        if (event.sneak || !player.box.isBlockAtPosition { it is FluidBlock }) {
+        if (event.sneak || !player.box.isBlockAtPosition { it is LiquidBlock }) {
             return@handler
         }
 
@@ -49,14 +49,14 @@ internal object LiquidWalkVanilla : Choice("Vanilla") {
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (mc.options.sneakKey.isPressed || player.fallDistance > 3.0f || player.isOnFire) {
+        if (mc.options.keyShift.isDown || player.fallDistance > 3.0f || player.isOnFire) {
             return@handler
         }
 
         val block = event.state.block
 
-        if (block is FluidBlock && !player.box.isBlockAtPosition { it is FluidBlock }) {
-            event.shape = VoxelShapes.fullCube()
+        if (block is LiquidBlock && !player.box.isBlockAtPosition { it is LiquidBlock }) {
+            event.shape = Shapes.block()
         }
     }
 

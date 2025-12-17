@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.event.events.BlockSlipperinessMultiplierEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.icespeed.IceSpeed.Motion.horizontalMotion
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
 
 /**
  * Ice Speed allows you to manipulate slipperiness speed
@@ -50,8 +50,8 @@ internal object IceSpeed : ToggleableConfigurable(ModuleTerrainSpeed, "IceSpeed"
     val blockSlipperinessMultiplierHandler = handler<BlockSlipperinessMultiplierEvent> { event ->
         if (event.block in iceBlocks) {
             if (Motion.enabled) {
-                player.velocity.x *= horizontalMotion
-                player.velocity.z *= horizontalMotion
+                player.deltaMovement.x *= horizontalMotion
+                player.deltaMovement.z *= horizontalMotion
             }
 
             event.slipperiness = slipperiness

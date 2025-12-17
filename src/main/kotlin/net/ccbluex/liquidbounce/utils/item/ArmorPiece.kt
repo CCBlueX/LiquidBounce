@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.item
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.minecraft.entity.EquipmentSlot
+import net.minecraft.world.entity.EquipmentSlot
 
 /**
  * @see net.minecraft.item.equipment.ArmorMaterial.createAttributeModifiers
@@ -30,7 +30,7 @@ value class ArmorPiece(val itemSlot: ItemSlot) {
     val slotType: EquipmentSlot
         get() = itemSlot.itemStack.equipmentSlot!!
     val entitySlotId: Int
-        get() = this.slotType.entitySlotId
+        get() = this.slotType.index
     val inventorySlot: Int
         get() = 36 + entitySlotId
     val isAlreadyEquipped: Boolean

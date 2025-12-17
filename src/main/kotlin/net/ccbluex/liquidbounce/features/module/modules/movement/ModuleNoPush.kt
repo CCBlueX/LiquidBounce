@@ -44,12 +44,12 @@ object ModuleNoPush : ClientModule("NoPush", Category.MOVEMENT) {
             return@handler
         }
 
-        if (mc.options.jumpKey.isPressed || mc.options.sneakKey.isPressed) {
+        if (mc.options.keyJump.isDown || mc.options.keyShift.isDown) {
             return@handler
         }
 
-        if ((player.isTouchingWater || player.isInLava) && player.velocity.y < 0) {
-            player.velocity.y = 0.0
+        if ((player.isInWater || player.isInLava) && player.deltaMovement.y < 0) {
+            player.deltaMovement.y = 0.0
         }
     }
 }

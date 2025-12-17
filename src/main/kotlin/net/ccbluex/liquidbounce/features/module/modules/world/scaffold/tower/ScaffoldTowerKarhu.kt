@@ -21,17 +21,17 @@ object ScaffoldTowerKarhu : ScaffoldTower("Karhu") {
             return@sequenceHandler
         }
 
-        tickUntil { !player.isOnGround }
+        tickUntil { !player.onGround() }
         Timer.requestTimerSpeed(timerSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleScaffold)
 
         if (pulldown) {
-            tickUntil { !player.isOnGround && player.velocity.y < triggerMotion }
+            tickUntil { !player.onGround() && player.deltaMovement.y < triggerMotion }
 
             if (!isBlockBelow) {
                 return@sequenceHandler
             }
 
-            player.velocity.y -= 1f
+            player.deltaMovement.y -= 1f
         }
     }
 

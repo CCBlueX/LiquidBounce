@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.io
 
 import io.netty.bootstrap.AbstractBootstrap
 import io.netty.channel.Channel
-import net.minecraft.network.NetworkingBackend
+import net.minecraft.server.network.EventLoopGroupHolder
 
 /**
  * Shortcut for Netty client [io.netty.bootstrap.Bootstrap],
@@ -29,8 +29,8 @@ import net.minecraft.network.NetworkingBackend
 internal fun <B : AbstractBootstrap<B, Channel>> AbstractBootstrap<B, Channel>.clientChannelAndGroup(
     useEpoll: Boolean = true
 ): B {
-    val networkingBackend = NetworkingBackend.remote(useEpoll)
-    return channel(networkingBackend.channelClass)
-            .group(networkingBackend.eventLoopGroup)
+    val networkingBackend = EventLoopGroupHolder.remote(useEpoll)
+    return channel(networkingBackend.channelCls())
+            .group(networkingBackend.eventLoopGroup())
 }
 

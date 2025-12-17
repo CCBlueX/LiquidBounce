@@ -35,9 +35,9 @@ internal object NoFallHypixelPacket : NoFallMode("HypixelPacket") {
     }
 
     val repeatable = tickHandler {
-        if (player.fallDistance - player.velocity.y >= 3.3 && voidCheck()) {
+        if (player.fallDistance - player.deltaMovement.y >= 3.3 && voidCheck()) {
             Timer.requestTimerSpeed(0.5f, Priority.IMPORTANT_FOR_PLAYER_LIFE, ModuleNoFall)
-            network.sendPacket(MovePacketType.ON_GROUND_ONLY.generatePacket().apply {
+            network.send(MovePacketType.ON_GROUND_ONLY.generatePacket().apply {
                 onGround = true
             })
             player.fallDistance = 0.0

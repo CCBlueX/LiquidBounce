@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.minecraft.util.math.MathHelper
+import net.minecraft.util.Mth
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.floor
@@ -149,8 +149,8 @@ class AccelerationAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Acce
         val diff = currentRotation.rotationDeltaTo(targetRotation)
 
         // Check if we are already on target
-        if (MathHelper.approximatelyEquals(diff.deltaYaw, 0f) &&
-            MathHelper.approximatelyEquals(diff.deltaPitch, 0f)) {
+        if (Mth.equal(diff.deltaYaw, 0f) &&
+            Mth.equal(diff.deltaPitch, 0f)) {
             return 0
         }
 
@@ -162,8 +162,8 @@ class AccelerationAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Acce
         )
 
         // Check if we are already on target
-        if (MathHelper.approximatelyEquals(newYawDiff, 0f) &&
-            MathHelper.approximatelyEquals(newPitchDiff, 0f) ||
+        if (Mth.equal(newYawDiff, 0f) &&
+            Mth.equal(newPitchDiff, 0f) ||
             abs(diff.deltaYaw) < abs(newYawDiff) &&
             abs(diff.deltaPitch) < abs(newPitchDiff)) {
             return 0

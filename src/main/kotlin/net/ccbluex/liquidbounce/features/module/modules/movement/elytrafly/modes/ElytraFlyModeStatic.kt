@@ -53,12 +53,12 @@ internal object ElytraFlyModeStatic : ElytraFlyMode("Static") {
 
     @Suppress("unused")
     private val moveHandler = handler<PlayerMoveEvent> { event ->
-        if (ModuleElytraFly.shouldNotOperate() || !player.isGliding) {
+        if (ModuleElytraFly.shouldNotOperate() || !player.isFallFlying) {
             return@handler
         }
 
         val speed = ModuleElytraFly.Speed.enabled
-        val input = player.input.playerInput
+        val input = player.input.keyPresses
         val isMoving = input.forward || input.backward || input.left || input.right
         if (speed && isMoving) {
             event.movement = event.movement.withStrafe(speed = ModuleElytraFly.Speed.horizontal.toDouble())
@@ -76,8 +76,8 @@ internal object ElytraFlyModeStatic : ElytraFlyMode("Static") {
         }
 
         event.movement.y = when {
-            mc.options.jumpKey.isPressed && speed -> ModuleElytraFly.Speed.vertical.toDouble()
-            mc.options.sneakKey.isPressed && speed -> -ModuleElytraFly.Speed.vertical.toDouble()
+            mc.options.keyJump.isDown && speed -> ModuleElytraFly.Speed.vertical.toDouble()
+            mc.options.keyShift.isDown && speed -> -ModuleElytraFly.Speed.vertical.toDouble()
             else -> if (Glide.running) -Glide.verticalGlide.toDouble() else 0.0
         }
     }

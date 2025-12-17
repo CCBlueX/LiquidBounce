@@ -29,83 +29,83 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatScreenAc
 import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gui.screen.ChatScreen
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.MutableText
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.text.TextColor
-import net.minecraft.util.Formatting
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.screens.ChatScreen
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.TextColor
+import net.minecraft.ChatFormatting
 import java.io.File
 
 // Chat formatting
-private val clientPrefix: Text = "".asText()
-    .formatted(Formatting.RESET, Formatting.GRAY)
+private val clientPrefix: Component = "".asText()
+    .withStyle(ChatFormatting.RESET, ChatFormatting.GRAY)
     .append(gradientText("LiquidBounce", Color4b.fromHex("#4677ff"), Color4b.fromHex("#24AA7F")))
-    .append(" ▸ ".asText().formatted(Formatting.RESET, Formatting.GRAY))
+    .append(" ▸ ".asText().withStyle(ChatFormatting.RESET, ChatFormatting.GRAY))
 
-fun regular(text: MutableText): MutableText = text.formatted(Formatting.GRAY)
+fun regular(text: MutableComponent): MutableComponent = text.withStyle(ChatFormatting.GRAY)
 
-fun regular(text: String): MutableText = text.asText().formatted(Formatting.GRAY)
+fun regular(text: String): MutableComponent = text.asText().withStyle(ChatFormatting.GRAY)
 
-fun variable(text: MutableText): MutableText = text.formatted(Formatting.GOLD)
+fun variable(text: MutableComponent): MutableComponent = text.withStyle(ChatFormatting.GOLD)
 
-fun variable(text: String): MutableText = text.asText().formatted(Formatting.GOLD)
+fun variable(text: String): MutableComponent = text.asText().withStyle(ChatFormatting.GOLD)
 
-fun clickablePath(file: File): MutableText =
+fun clickablePath(file: File): MutableComponent =
     variable(file.absolutePath)
         .onClick(ClickEvent.OpenFile(file))
         .onHover(HoverEvent.ShowText("Open".asPlainText()))
 
-fun highlight(text: MutableText): MutableText = text.formatted(Formatting.DARK_PURPLE)
+fun highlight(text: MutableComponent): MutableComponent = text.withStyle(ChatFormatting.DARK_PURPLE)
 
-fun highlight(text: String): MutableText = text.asText().formatted(Formatting.DARK_PURPLE)
+fun highlight(text: String): MutableComponent = text.asText().withStyle(ChatFormatting.DARK_PURPLE)
 
-fun warning(text: MutableText): MutableText = text.formatted(Formatting.YELLOW)
+fun warning(text: MutableComponent): MutableComponent = text.withStyle(ChatFormatting.YELLOW)
 
-fun warning(text: String): MutableText = text.asText().formatted(Formatting.YELLOW)
+fun warning(text: String): MutableComponent = text.asText().withStyle(ChatFormatting.YELLOW)
 
-fun markAsError(text: String): MutableText = text.asText().formatted(Formatting.RED)
+fun markAsError(text: String): MutableComponent = text.asText().withStyle(ChatFormatting.RED)
 
-fun markAsError(text: MutableText): MutableText = text.formatted(Formatting.RED)
+fun markAsError(text: MutableComponent): MutableComponent = text.withStyle(ChatFormatting.RED)
 
-inline fun MutableText.withColor(value: Formatting?): MutableText =
+inline fun MutableComponent.withColor(value: ChatFormatting?): MutableComponent =
     setStyle(style.withColor(value))
 
-inline fun MutableText.withColor(value: TextColor?): MutableText =
+inline fun MutableComponent.withColor(value: TextColor?): MutableComponent =
     setStyle(style.withColor(value))
 
-inline fun MutableText.bold(value: Boolean?): MutableText =
+inline fun MutableComponent.bold(value: Boolean?): MutableComponent =
     setStyle(style.withBold(value))
 
-inline fun MutableText.obfuscated(value: Boolean?): MutableText =
+inline fun MutableComponent.obfuscated(value: Boolean?): MutableComponent =
     setStyle(style.withObfuscated(value))
 
-inline fun MutableText.strikethrough(value: Boolean?): MutableText =
+inline fun MutableComponent.strikethrough(value: Boolean?): MutableComponent =
     setStyle(style.withStrikethrough(value))
 
-inline fun MutableText.underline(value: Boolean?): MutableText =
-    setStyle(style.withUnderline(value))
+inline fun MutableComponent.underline(value: Boolean?): MutableComponent =
+    setStyle(style.withUnderlined(value))
 
-inline fun MutableText.italic(value: Boolean?): MutableText =
+inline fun MutableComponent.italic(value: Boolean?): MutableComponent =
     setStyle(style.withItalic(value))
 
-inline fun MutableText.onHover(event: HoverEvent?): MutableText =
+inline fun MutableComponent.onHover(event: HoverEvent?): MutableComponent =
     setStyle(style.withHoverEvent(event))
 
-inline fun MutableText.onClick(event: ClickEvent?): MutableText =
+inline fun MutableComponent.onClick(event: ClickEvent?): MutableComponent =
     setStyle(style.withClickEvent(event))
 
-inline fun MutableText.onClickRun(callback: Runnable): MutableText =
+inline fun MutableComponent.onClickRun(callback: Runnable): MutableComponent =
     setStyle(style.withClickEvent(RunnableClickEvent(callback)))
 
-inline operator fun MutableText.plusAssign(other: String) {
+inline operator fun MutableComponent.plusAssign(other: String) {
     this.append(other)
 }
 
-inline operator fun MutableText.plusAssign(other: Text) {
+inline operator fun MutableComponent.plusAssign(other: Component) {
     this.append(other)
 }
 
@@ -117,7 +117,7 @@ inline operator fun MutableText.plusAssign(other: Text) {
  * @param endColor The second color in the gradient
  * @return A MutableText with the gradient applied
  */
-fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableText {
+fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableComponent {
     return text.foldIndexed("".asText()) { index, newText, char ->
         val factor = if (text.length > 1) index / (text.length - 1.0) else 0.0
         val color = startColor.interpolateTo(endColor, factor)
@@ -136,18 +136,18 @@ fun gradientText(text: String, startColor: Color4b, endColor: Color4b): MutableT
  * @param hover The hover event to apply (defaults to "Click to copy" tooltip)
  * @return Styled text with copy functionality
  */
-fun MutableText.copyable(
+fun MutableComponent.copyable(
     copyContent: String = this.string,
     hover: HoverEvent? = HoverEvent.ShowText(
         translation("liquidbounce.tooltip.clickToCopy")
     )
-): MutableText = apply {
+): MutableComponent = apply {
     hover?.let(::onHover)
     onClick(ClickEvent.CopyToClipboard(copyContent))
 }
 
-fun MutableText.bypassNameProtection(): MutableText = styled {
-    val color = it.color ?: TextColor.fromFormatting(Formatting.RESET)
+fun MutableComponent.bypassNameProtection(): MutableComponent = withStyle {
+    val color = it.color ?: TextColor.fromLegacyFormat(ChatFormatting.RESET)
 
     @Suppress("CAST_NEVER_SUCCEEDS")
     val newColor = (color as ClientTextColorAdditions).`liquid_bounce$withNameProtectionBypass`()
@@ -159,8 +159,8 @@ fun MutableText.bypassNameProtection(): MutableText = styled {
  * Open a [ChatScreen] with given text,
  * or set the text of current [ChatScreen]
  */
-fun MinecraftClient.openChat(text: String, draft: Boolean = false) = send {
-    (currentScreen as? MixinChatScreenAccessor)?.chatField?.setText(text) ?: setScreen(ChatScreen(text, draft))
+fun Minecraft.openChat(text: String, draft: Boolean = false) = schedule {
+    (screen as? MixinChatScreenAccessor)?.input?.setValue(text) ?: setScreen(ChatScreen(text, draft))
 }
 
 private val defaultMessageMetadata = MessageMetadata()
@@ -191,7 +191,7 @@ data class MessageMetadata(
     }
 }
 
-fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
+fun chat(text: Component, metadata: MessageMetadata = defaultMessageMetadata) {
     val realText = if (metadata.prefix) clientPrefix.copy().append(text) else text
 
     if (mc.player == null) {
@@ -199,7 +199,7 @@ fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
         return
     }
 
-    val chatHud = mc.inGameHud.chatHud
+    val chatHud = mc.gui.chat
 
     if (metadata.remove && !metadata.id.isNullOrEmpty()) {
         chatHud.removeMessage(metadata.id)
@@ -211,13 +211,13 @@ fun chat(text: Text, metadata: MessageMetadata = defaultMessageMetadata) {
 /**
  * Adds a new chat message.
  */
-fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata) {
+fun chat(vararg texts: Component, metadata: MessageMetadata = defaultMessageMetadata) {
     chat(texts.asText(), metadata)
 }
 
-fun chat(text: Text, module: ClientModule) = chat(text, metadata = MessageMetadata.byModule(module))
+fun chat(text: Component, module: ClientModule) = chat(text, metadata = MessageMetadata.byModule(module))
 
-fun chat(text: Text, command: Command) = chat(text, metadata = MessageMetadata.byCommand(command))
+fun chat(text: Component, command: Command) = chat(text, metadata = MessageMetadata.byCommand(command))
 
 fun chat(text: String, module: ClientModule) = chat(text.asPlainText(), module)
 
@@ -225,10 +225,10 @@ fun chat(text: String, command: Command) = chat(text.asPlainText(), command)
 
 fun chat(text: String) = chat(text.asPlainText())
 
-fun notification(title: Text, message: String, severity: NotificationEvent.Severity) =
+fun notification(title: Component, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title.string, message, severity))
 
-fun notification(title: String, message: Text, severity: NotificationEvent.Severity) =
+fun notification(title: String, message: Component, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message.string, severity))
 
 fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
@@ -237,7 +237,7 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
 /**
  * Joins a list of [Text] into a single [Text] with the given [separator].
  */
-fun Collection<Text>.joinToText(separator: Text): Text {
+fun Collection<Component>.joinToText(separator: Component): Component {
     if (isEmpty()) {
         return PlainText.EMPTY
     }

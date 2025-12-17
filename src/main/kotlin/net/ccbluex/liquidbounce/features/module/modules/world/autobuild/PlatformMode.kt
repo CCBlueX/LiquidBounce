@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.minecraft.block.Blocks
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.core.BlockPos
 
 object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
 
@@ -40,12 +40,12 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
     private var startY = 0.0
 
     override fun enabled() {
-        startY = player.entityPos.y
+        startY = player.position().y
     }
 
     @Suppress("unused")
     private val repeatable = tickHandler {
-        if (disableOnYChange && player.entityPos.y != startY) {
+        if (disableOnYChange && player.position().y != startY) {
             ModuleAutoBuild.enabled = false
         }
     }
@@ -53,14 +53,14 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
         val blocks1 = hashSetOf<BlockPos>()
-        val center = BlockPos.ofFloored(player.entityPos).down()
-        val pos = center.mutableCopy()
+        val center = BlockPos.containing(player.position()).below()
+        val pos = center.mutable()
         for (x in center.x - platformSize..center.x + platformSize) {
             for (z in center.z - platformSize..center.z + platformSize) {
                 pos.x = x
                 pos.z = z
-                if (pos.getState()!!.isReplaceable) {
-                    blocks1.add(pos.toImmutable())
+                if (pos.getState()!!.canBeReplaced()) {
+                    blocks1.add(pos.immutable())
                 }
             }
         }

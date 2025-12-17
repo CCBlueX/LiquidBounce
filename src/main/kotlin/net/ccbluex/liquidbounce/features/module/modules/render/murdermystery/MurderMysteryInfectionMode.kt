@@ -23,19 +23,17 @@ package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.handItems
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.item.BowItem
-import net.minecraft.item.Items
-import net.minecraft.util.Identifier
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.world.item.BowItem
+import net.minecraft.world.item.Items
+import net.minecraft.resources.Identifier
 
-object MurderMysteryInfectionMode : MurderMysteryGenericMode("Infection") {
-    override val parent
-        get() = ModuleMurderMystery.modes
+object MurderMysteryInfectionMode : SkinBasedMurderMysteryMode("Infection") {
 
     val rep =
         tickHandler {
-            world.players
-                .filterIsInstance<AbstractClientPlayerEntity>()
+            world.players()
+                .filterIsInstance<AbstractClientPlayer>()
                 .filter {
                     it.isUsingItem && player.handItems.any { stack -> stack.item is BowItem } ||
                         player.handItems.any { stack -> stack.item == Items.ARROW }
@@ -46,7 +44,7 @@ object MurderMysteryInfectionMode : MurderMysteryGenericMode("Infection") {
         }
 
     override fun handleHasSword(
-        entity: AbstractClientPlayerEntity,
+        entity: AbstractClientPlayer,
         locationSkin: Identifier,
     ) {
         if (murdererSkins.add(locationSkin.path) && murdererSkins.size == 1) {

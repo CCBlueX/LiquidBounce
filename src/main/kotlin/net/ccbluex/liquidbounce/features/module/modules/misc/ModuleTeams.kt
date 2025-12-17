@@ -27,10 +27,10 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
 import java.util.function.Predicate
 
 /**
@@ -73,13 +73,13 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
      * Checks if the color of any armor piece matches.
      */
     private fun checkArmor(entity: LivingEntity) =
-        entity is PlayerEntity && armorColor.any { it.matchesArmorColor(entity) }
+        entity is Player && armorColor.any { it.matchesArmorColor(entity) }
 
     /**
      * Returns the team color of the [entity] or null if the entity is not in a team.
      */
     private fun getTeamColor(entity: Entity) =
-        entity.displayName?.style?.color?.rgb?.let { Color4b(it, hasAlpha = true) }
+        entity.displayName?.style?.color?.value?.let { Color4b(it, hasAlpha = true) }
 
     @Suppress("unused")
     private enum class Matches(
@@ -90,7 +90,7 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
          * Check if [LivingEntity] is in your own team using scoreboard,
          */
         SCOREBOARD_TEAM("ScoreboardTeam", { suspected ->
-            player.isTeammate(suspected)
+            player.isAlliedTo(suspected)
         }),
 
         /**
@@ -142,9 +142,9 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
          * the [player] matches the user's armor color in the same slot.
          */
         @Suppress("ReturnCount")
-        fun matchesArmorColor(suspected: PlayerEntity): Boolean {
-            val ownStack = player.getEquippedStack(slot)
-            val otherStack = suspected.getEquippedStack(slot)
+        fun matchesArmorColor(suspected: Player): Boolean {
+            val ownStack = player.getItemBySlot(slot)
+            val otherStack = suspected.getItemBySlot(slot)
 
             // returns false if the armor is not dyeable (e.g., iron armor)
             // to avoid a false positive from `null == null`

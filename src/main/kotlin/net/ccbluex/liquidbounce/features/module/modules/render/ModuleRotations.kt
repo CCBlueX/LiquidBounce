@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.util.math.Box
+import net.minecraft.world.phys.AABB
 
 /**
  * Rotations module
@@ -109,15 +109,15 @@ object ModuleRotations : ClientModule("Rotations", Category.RENDER) {
         if (drawVectorLine || drawVectorDot) {
             val currentRotation = RotationManager.currentRotation ?: return@handler
             val previousRotation = RotationManager.previousRotation ?: currentRotation
-            val camera = mc.gameRenderer.camera
+            val camera = mc.gameRenderer.mainCamera
 
             val interpolatedRotationVec = previousRotation.directionVector.lerp(currentRotation.directionVector,
                 partialTicks.toDouble()
             )
 
             val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-                .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
+                .rotatePitch((-Math.toRadians(camera.xRot().toDouble())).toFloat())
+                .rotateYaw((-Math.toRadians(camera.yRot().toDouble())).toFloat())
 
             if (drawVectorLine) {
                 renderEnvironmentForWorld(matrixStack) {
@@ -131,7 +131,7 @@ object ModuleRotations : ClientModule("Rotations", Category.RENDER) {
             if (drawVectorDot) {
                 renderEnvironmentForWorld(matrixStack) {
                     val vector = eyeVector + Vec3f(interpolatedRotationVec * 100.0)
-                    drawBox(Box.of(vector.toVec3d(), 2.5, 2.5, 2.5), vectorDot)
+                    drawBox(AABB.ofSize(vector.toVec3d(), 2.5, 2.5, 2.5), vectorDot)
                 }
             }
         }

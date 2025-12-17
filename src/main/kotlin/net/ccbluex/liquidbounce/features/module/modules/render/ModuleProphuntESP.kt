@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.entity.FallingBlockEntity
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
+import net.minecraft.world.entity.item.FallingBlockEntity
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
 
 object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
     aliases = listOf("BlockUpdateDetector", "FallingBlockESP")
@@ -57,9 +57,9 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         if (Tracking.FALLING_BLOCKS in tracking) {
-            for (entity in world.entities) {
+            for (entity in world.entitiesForRendering()) {
                 if (entity is FallingBlockEntity) {
-                    renderer.addBlock(entity.blockPos, update = false)
+                    renderer.addBlock(entity.blockPosition(), update = false)
                 }
             }
         }
@@ -70,11 +70,11 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
     private val networkHandler = handler<PacketEvent> { event ->
         val packet = event.packet
         when {
-            packet is BlockUpdateS2CPacket && Tracking.BLOCK_UPDATES in tracking -> mc.execute {
+            packet is ClientboundBlockUpdatePacket && Tracking.BLOCK_UPDATES in tracking -> mc.execute {
                 renderer.addBlock(packet.pos, update = false)
             }
-            packet is ChunkDeltaUpdateS2CPacket && Tracking.CHUNK_DELTA_UPDATES in tracking -> mc.execute {
-                packet.visitUpdates { pos, _ -> renderer.addBlock(pos, update = false) }
+            packet is ClientboundSectionBlocksUpdatePacket && Tracking.CHUNK_DELTA_UPDATES in tracking -> mc.execute {
+                packet.runUpdates { pos, _ -> renderer.addBlock(pos, update = false) }
             }
         }
     }

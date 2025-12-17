@@ -26,17 +26,17 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinInGameHudAccessor
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinGuiAccessor
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
-import net.minecraft.client.gl.RenderPipelines
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.slot.Slot
+import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.Slot
 
 object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) {
 
@@ -49,13 +49,13 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
             final override val parent: ChoiceConfigurable<*>
                 get() = mode
 
-            abstract fun drawHighlightSlot(context: DrawContext, slot: Slot)
+            abstract fun drawHighlightSlot(context: GuiGraphics, slot: Slot)
 
             object Border : Mode("Border") {
                 private const val STACK_SIZE = 16
                 val color by color("Color", Color4b.GREEN)
 
-                override fun drawHighlightSlot(context: DrawContext, slot: Slot) {
+                override fun drawHighlightSlot(context: GuiGraphics, slot: Slot) {
                     context.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.toARGB())
                 }
             }
@@ -64,10 +64,10 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
                 /**
                  * @see net.minecraft.client.gui.hud.InGameHud.renderHotbar
                  */
-                override fun drawHighlightSlot(context: DrawContext, slot: Slot) {
-                    context.drawGuiTexture(
+                override fun drawHighlightSlot(context: GuiGraphics, slot: Slot) {
+                    context.blitSprite(
                         RenderPipelines.GUI_TEXTURED,
-                        MixinInGameHudAccessor.getHotbarSelectionTexture(),
+                        MixinGuiAccessor.getHotbarSelectionTexture(),
                         slot.x - 3,
                         slot.y - 3,
                         22,
@@ -112,41 +112,41 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
         tree(ContainerItemView)
     }
 
-    fun DrawContext.drawTextCooldownProgress(stack: ItemStack, x: Int, y: Int) {
+    fun GuiGraphics.drawTextCooldownProgress(stack: ItemStack, x: Int, y: Int) {
         if (!running || stack.isEmpty || !TextCooldownProgress.enabled) return
 
         val player = mc.player ?: return
 
-        val progress = player.itemCooldownManager.getCooldownProgress(stack, mc.renderTickCounter.getTickProgress(true))
+        val progress = player.cooldowns.getCooldownPercent(stack, mc.deltaTracker.getGameTimeDeltaPartialTick(true))
 
         if (progress > 0.0F) {
-            this.matrices.pushMatrix()
-            this.matrices.scale(TextCooldownProgress.scale)
+            this.pose().pushMatrix()
+            this.pose().scale(TextCooldownProgress.scale)
             val text = when (TextCooldownProgress.mode) {
                 CooldownProgressMode.PERCENTAGE -> "${(progress * 100f).toInt()}%"
                 CooldownProgressMode.DURATION_TICKS -> {
-                    val entry = player.itemCooldownManager.getCooldown(stack)!!
+                    val entry = player.cooldowns.getCooldown(stack)!!
                     val ticks = entry.endTick - entry.currentTick
                     ticks.toString()
                 }
                 CooldownProgressMode.DURATION_SECONDS -> {
-                    val entry = player.itemCooldownManager.getCooldown(stack)!!
+                    val entry = player.cooldowns.getCooldown(stack)!!
                     val seconds = (entry.endTick - entry.currentTick) * 0.05f
                     if (seconds > 1) "${seconds.toInt()}s" else "${seconds.toFixed(1)}s"
                 }
             }
-            this.drawCenteredTextWithShadow(mc.textRenderer, text, x + 16 / 2, y, TextCooldownProgress.color.toARGB())
-            this.matrices.popMatrix()
+            this.drawCenteredString(mc.font, text, x + 16 / 2, y, TextCooldownProgress.color.toARGB())
+            this.pose().popMatrix()
         }
     }
 
-    fun DrawContext.drawHighlightSlot(slot: Slot) {
-        if (!running || !HighlightClicked.enabled || slot.id != InventoryManager.lastClickedSlot) return
+    fun GuiGraphics.drawHighlightSlot(slot: Slot) {
+        if (!running || !HighlightClicked.enabled || slot.index != InventoryManager.lastClickedSlot) return
 
         HighlightClicked.mode.activeChoice.drawHighlightSlot(this, slot)
     }
 
-    fun DrawContext.drawContainerItemView(
+    fun GuiGraphics.drawContainerItemView(
         stack: ItemStack,
         x: Int,
         y: Int,
@@ -155,10 +155,10 @@ object ModuleBetterInventory : ClientModule("BetterInventory", Category.RENDER) 
     ): Boolean {
         if (!running || stack.isEmpty || !ContainerItemView.enabled) return false
 
-        val containerComponent = stack[DataComponentTypes.CONTAINER] ?: return false
+        val containerComponent = stack[DataComponents.CONTAINER] ?: return false
 
         val stacks = if (ContainerItemView.skipEmptyStack) {
-            containerComponent.streamNonEmpty()
+            containerComponent.nonEmptyStream()
         } else {
             containerComponent.stream()
         }.toList()

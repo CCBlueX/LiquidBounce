@@ -37,10 +37,10 @@ import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.mob.Angerable
-import net.minecraft.entity.mob.HostileEntity
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.NeutralMob
+import net.minecraft.world.entity.monster.Monster
+import net.minecraft.world.entity.player.Player
 import java.util.function.Predicate
 
 /**
@@ -117,7 +117,7 @@ open class TargetSelector(
     /**
      * Counts available targets.
      */
-    fun countTargets(): Int = world.entities.count { entity ->
+    fun countTargets(): Int = world.entitiesForRendering().count { entity ->
         entity is LivingEntity && validate(entity)
     }
 
@@ -127,7 +127,7 @@ open class TargetSelector(
     fun targets(): MutableList<LivingEntity> {
         val entities = ObjectArrayList<LivingEntity>()
 
-        for (entity in world.entities) {
+        for (entity in world.entitiesForRendering()) {
             if (entity is LivingEntity && validate(entity)) {
                 entities.add(entity)
             }
@@ -196,9 +196,9 @@ enum class TargetPriority(override val choiceName: String) : NamedChoice, Compar
     TYPE("Type") {
         private fun weight(entity: LivingEntity): Int =
             when (entity) {
-                is PlayerEntity -> 0
-                is HostileEntity -> 1
-                is Angerable if entity.angryAt == player.uuid -> 2
+                is Player -> 0
+                is Monster -> 1
+                is NeutralMob if entity.persistentAngerTarget == player.uuid -> 2
                 else -> Int.MAX_VALUE
             }
 
@@ -243,6 +243,6 @@ enum class TargetPriority(override val choiceName: String) : NamedChoice, Compar
      */
     AGE("Age") {
         override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
-            o2.age compareTo o1.age
+            o2.tickCount compareTo o1.tickCount
     },
 }

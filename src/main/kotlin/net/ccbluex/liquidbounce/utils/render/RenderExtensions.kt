@@ -18,6 +18,7 @@
  */
 
 @file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
+
 package net.ccbluex.liquidbounce.utils.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
@@ -32,17 +33,17 @@ import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.render.BuiltBuffer
-import net.minecraft.client.texture.AbstractTexture
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
-import net.minecraft.client.texture.TextureSetup
-import net.minecraft.client.util.ScreenshotRecorder
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.Identifier
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.vertex.MeshData
+import net.minecraft.client.renderer.texture.AbstractTexture
+import com.mojang.blaze3d.platform.NativeImage
+import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.client.gui.render.TextureSetup
+import net.minecraft.client.Screenshot
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
-import net.minecraft.util.math.ColorHelper
+import net.minecraft.util.ARGB
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
@@ -56,9 +57,9 @@ import java.util.function.Supplier
 @JvmField
 val SAMPLER_NAMES = Array(RenderEnvironment.TEXTURE_COUNT) { "Sampler$it" }
 
-fun MatrixStack.reset() {
-    while (!isEmpty) pop()
-    loadIdentity()
+fun PoseStack.reset() {
+    while (!isEmpty) popPose()
+    setIdentity()
 }
 
 inline fun withOutputTextureOverride(
@@ -85,9 +86,9 @@ inline fun GpuTexture.clearColor(color: Int = 0) =
 inline fun GpuTexture.clearDepth(depth: Double = 1.0) =
     gpuDevice.createCommandEncoder().clearDepthTexture(this, depth)
 
-inline fun Framebuffer.clearColorAndDepth(color: Int = 0, depth: Double = 1.0) {
-    val colorAttachment = colorAttachment
-    val depthAttachment = depthAttachment.takeIf { useDepthAttachment }
+inline fun RenderTarget.clearColorAndDepth(color: Int = 0, depth: Double = 1.0) {
+    val colorAttachment = colorTexture
+    val depthAttachment = depthTexture.takeIf { useDepth }
 
     when {
         colorAttachment != null && depthAttachment != null ->
@@ -144,8 +145,8 @@ inline fun GpuTexture.copyFrom(
 
 fun GpuTexture.saveToFile(file: File): CompletableFuture<*> =
     this.toNativeImage().thenAcceptAsync({ nativeImage ->
-        nativeImage.writeTo(file)
-    }, Util.getIoWorkerExecutor())
+        nativeImage.writeToFile(file)
+    }, Util.ioPool())
 
 /**
  * @see ScreenshotRecorder.takeScreenshot
@@ -168,7 +169,7 @@ fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> 
             for (y in 0..<height) {
                 for (x in 0..<width) {
                     val abgr = mappedView.data().getInt((x + y * width) * pixelSize)
-                    nativeImage.setColor(x, height - y - 1, abgr)
+                    nativeImage.setPixelABGR(x, height - y - 1, abgr)
                 }
             }
             future.complete(nativeImage)
@@ -197,7 +198,7 @@ fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedIma
             for (y in 0..<height) {
                 for (x in 0..<width) {
                     val abgr = mappedView.data().getInt((x + y * width) * pixelSize)
-                    bufferedImage.setRGB(x, height - y - 1, ColorHelper.fromAbgr(abgr))
+                    bufferedImage.setRGB(x, height - y - 1, ARGB.fromABGR(abgr))
                 }
             }
             future.complete(bufferedImage)
@@ -208,12 +209,12 @@ fun GpuTexture.toBufferedImage(mipLevel: Int = 0): CompletableFuture<BufferedIma
     return future
 }
 
-fun NativeImageBackedTexture.uploadRect(
+fun DynamicTexture.uploadRect(
     mipLevel: Int,
     x: Int, y: Int,
     width: Int, height: Int,
 ) = gpuDevice.createCommandEncoder().writeToTexture(
-    this.glTexture, this.image!!,
+    this.texture, this.pixels!!,
     mipLevel, 0,
     x, y,
     width, height,
@@ -228,7 +229,7 @@ fun NativeImage.toBufferedImage(): BufferedImage {
         0,
         width,
         height,
-        copyPixelsArgb(),
+        pixels,
         0,
         width
     )
@@ -241,7 +242,7 @@ fun BufferedImage.toNativeImage(): NativeImage {
 
     for (x in 0 until this.width) {
         for (y in 0 until this.height) {
-            nativeImage.setColorArgb(x, y, this.getRGB(x, y))
+            nativeImage.setPixel(x, y, this.getRGB(x, y))
         }
     }
 
@@ -249,24 +250,27 @@ fun BufferedImage.toNativeImage(): NativeImage {
 }
 
 fun NativeImage.registerTexture(identifier: Identifier) {
-    mc.textureManager.registerTexture(identifier, asTexture(identifier::toString))
+    mc.textureManager.register(identifier, asTexture(identifier::toString))
 }
 
 inline fun InputStream.toNativeImage(): NativeImage = NativeImage.read(this)
 
 @JvmOverloads
-inline fun NativeImage.asTexture(nameSupplier: Supplier<String>? = null) =
-    NativeImageBackedTexture(nameSupplier, this)
+inline fun NativeImage.asTexture(
+    nameSupplier: Supplier<String> = Supplier {
+        "Texture NativeImage@${this.hashCode()} (${this.width}x${this.height})"
+    },
+) = DynamicTexture(nameSupplier, this)
 
 val AbstractTexture.textureSetup: TextureSetup
-    get() = TextureSetup.of(glTextureView, sampler)
+    get() = TextureSetup.singleTexture(textureView, sampler)
 
 @JvmOverloads
-fun BuiltBuffer.createGpuBuffer(labelGetter: Supplier<String>? = null): GpuBuffer = use {
+fun MeshData.createGpuBuffer(labelGetter: Supplier<String>? = null): GpuBuffer = use {
     gpuDevice.createBuffer(
         labelGetter,
         GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_COPY_DST,
-        it.buffer
+        it.vertexBuffer()
     )
 }
 

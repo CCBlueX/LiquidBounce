@@ -43,7 +43,7 @@ import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
-import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screens.Screen
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -74,7 +74,7 @@ object ModuleClickGui :
                 close()
             }
 
-            if (mc.currentScreen is VirtualDisplayScreen || mc.currentScreen is ClickScreen) {
+            if (mc.screen is VirtualDisplayScreen || mc.screen is ClickScreen) {
                 onEnabled()
             }
         }
@@ -88,7 +88,7 @@ object ModuleClickGui :
     }
 
     val isInSearchBar: Boolean
-        get() = (mc.currentScreen is VirtualDisplayScreen || mc.currentScreen is ClickScreen) && isTyping
+        get() = (mc.screen is VirtualDisplayScreen || mc.screen is ClickScreen) && isTyping
 
     object Snapping : ToggleableConfigurable(this, "Snapping", true) {
 
@@ -138,7 +138,7 @@ object ModuleClickGui :
             priority = 20,
             settings = IntegrationListener.browserSettings
         ) {
-            mc.currentScreen is ClickScreen
+            mc.screen is ClickScreen
         }
     }
 
@@ -161,7 +161,7 @@ object ModuleClickGui :
 
     @Suppress("unused")
     private val gameRenderHandler = handler<GameRenderEvent>(priority = OBJECTION_AGAINST_EVERYTHING) {
-        clickGuiBrowser?.visible = mc.currentScreen is ClickScreen
+        clickGuiBrowser?.visible = mc.screen is ClickScreen
     }
 
     @Suppress("unused")
@@ -179,14 +179,14 @@ object ModuleClickGui :
         }
 
         waitSeconds(WORLD_CHANGE_SECONDS_UNTIL_RELOAD)
-        if (mc.currentScreen !is ClickScreen) {
+        if (mc.screen !is ClickScreen) {
             reload()
         }
     }
 
     @Suppress("unused")
     private val clientLanguageChangedHandler = handler<ClientLanguageChangedEvent> {
-        if (mc.currentScreen !is ClickScreen) {
+        if (mc.screen !is ClickScreen) {
             reload()
         }
     }
@@ -201,19 +201,19 @@ object ModuleClickGui :
 
         override fun init() {
             if (trackMousePosition && !screenInitialized && !mouseX.isNaN() && !mouseY.isNaN()) {
-                mc.mouse.setPosition(mouseX, mouseY)
+                mc.mouseHandler.setPosition(mouseX, mouseY)
             }
             super.init()
         }
 
-        override fun close() {
-            mouseX = mc.mouse.x
-            mouseY = mc.mouse.y
-            mc.mouse.lockCursor()
-            super.close()
+        override fun onClose() {
+            mouseX = mc.mouseHandler.xpos()
+            mouseY = mc.mouseHandler.ypos()
+            mc.mouseHandler.grabMouse()
+            super.onClose()
         }
 
-        override fun shouldPause(): Boolean {
+        override fun isPauseScreen(): Boolean {
             // preventing game pause
             return false
         }

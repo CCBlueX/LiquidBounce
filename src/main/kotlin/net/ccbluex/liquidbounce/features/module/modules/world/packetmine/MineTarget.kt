@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 class MineTarget(val targetPos: BlockPos) {
 
@@ -37,7 +37,7 @@ class MineTarget(val targetPos: BlockPos) {
 
     fun init() {
         with(ModulePacketMine) {
-            targetRenderer.addBlock(targetPos, box = EMPTY_BOX.expand(0.01e-5, 0.0, 0.0))
+            targetRenderer.addBlock(targetPos, box = EMPTY_BOX.inflate(0.01e-5, 0.0, 0.0))
             targetRenderer.updateAll()
         }
     }
@@ -73,7 +73,13 @@ class MineTarget(val targetPos: BlockPos) {
             direction ?: Direction.DOWN
         }
 
-        network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, targetPos, dir))
+        network.send(
+            ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK,
+                targetPos,
+                dir,
+            )
+        )
     }
 
     override fun equals(other: Any?): Boolean {

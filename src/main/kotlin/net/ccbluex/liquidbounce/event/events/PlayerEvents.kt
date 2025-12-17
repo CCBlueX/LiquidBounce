@@ -25,13 +25,13 @@ import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
-import net.minecraft.entity.MovementType
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.fluid.Fluid
-import net.minecraft.registry.tag.TagKey
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.MoverType
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.tags.TagKey
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.Vec3
 
 // Entity events bound to client-user entity
 @Nameable("healthUpdate")
@@ -62,7 +62,7 @@ class PlayerNetworkMovementTickEvent(
 class PlayerPushOutEvent : CancellableEvent()
 
 @Nameable("playerMove")
-class PlayerMoveEvent(val type: MovementType, var movement: Vec3d) : Event()
+class PlayerMoveEvent(val type: MoverType, var movement: Vec3) : Event()
 
 @Nameable("playerJump")
 class PlayerJumpEvent(var motion: Float, var yaw: Float) : CancellableEvent()
@@ -83,10 +83,14 @@ class PlayerSneakMultiplier(var multiplier: Double) : Event()
 class PlayerInteractItemEvent : CancellableEvent()
 
 @Nameable("playerInteractedItem")
-class PlayerInteractedItemEvent(val player: PlayerEntity, val hand: Hand, val actionResult: ActionResult) : Event()
+class PlayerInteractedItemEvent(
+    val player: Player,
+    val hand: InteractionHand,
+    val actionResult: InteractionResult,
+) : Event()
 
 @Nameable("playerStrafe")
-class PlayerVelocityStrafe(val movementInput: Vec3d, val speed: Float, val yaw: Float, var velocity: Vec3d) : Event()
+class PlayerVelocityStrafe(val movementInput: Vec3, val speed: Float, val yaw: Float, var velocity: Vec3) : Event()
 
 @Nameable("playerStride")
 class PlayerStrideEvent(var strideForce: Float) : Event()
@@ -98,7 +102,7 @@ class PlayerSafeWalkEvent(var isSafeWalk: Boolean = false) : Event()
 class PlayerStepEvent(var height: Float) : Event()
 
 @Nameable("playerStepSuccess")
-class PlayerStepSuccessEvent(val movementVec: Vec3d, var adjustedVec: Vec3d) : Event()
+class PlayerStepSuccessEvent(val movementVec: Vec3, var adjustedVec: Vec3) : Event()
 
 @Nameable("playerFluidCollisionCheck")
 class PlayerFluidCollisionCheckEvent(val fluid: TagKey<Fluid>) : CancellableEvent()

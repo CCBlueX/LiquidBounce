@@ -45,5 +45,5 @@ internal object NoSlowSneaking : ToggleableConfigurable(ModuleNoSlow, "Sneaking"
     }
 
     override val running: Boolean
-        get() = super.running && inGame && player.isSneaking
+        get() = super.running && inGame && player.isShiftKeyDown
 }

@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.getBlock
-import net.minecraft.block.Block
+import net.minecraft.world.level.block.Block
 
 enum class Filter(override val choiceName: String) : NamedChoice {
     WHITELIST("Whitelist") {

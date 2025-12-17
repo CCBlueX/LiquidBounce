@@ -35,8 +35,8 @@ import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.SAFETY_FEATURE
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import kotlin.math.round
 
 /**
@@ -56,7 +56,7 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
     }
 
     override fun disable() {
-        player.velocity = player.velocity.copy(x = 0.0, z = 0.0)
+        player.setDeltaMovement(player.deltaMovement.copy(x = 0.0, z = 0.0))
     }
 
     @Suppress("unused")
@@ -66,7 +66,7 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
             return@tickHandler
         }
 
-        if (player.isOnGround) {
+        if (player.onGround()) {
             state = 1
             if (ModuleScaffold.enabled) {
                 state = 2
@@ -74,11 +74,11 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
         }
 
         var speed = 0.06 + when {
-            player.isOnGround -> 0.12
+            player.onGround() -> 0.12
             else -> 0.21
-        } + player.velocity.y / 20
+        } + player.deltaMovement.y / 20
 
-        if ((player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) == 1) {
+        if ((player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) == 1) {
             speed += 0.1
         }
 
@@ -94,14 +94,14 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
             0 -> {} // Pause state, do nothing
             1 -> { // AVG 6,403 BPS
                 if (player.airTicks == 4) {
-                    player.velocity.y = -0.09800000190734863
+                    player.deltaMovement.y = -0.09800000190734863
                 }
             }
             2 -> { // AVG 6,475 BPS
                 when (player.airTicks) {
-                    1 -> player.velocity.y += 0.0568
-                    3 -> player.velocity.y -= 0.13
-                    4 -> player.velocity.y -= 0.2
+                    1 -> player.deltaMovement.y += 0.0568
+                    3 -> player.deltaMovement.y -= 0.13
+                    4 -> player.deltaMovement.y -= 0.2
                 }
             }
         }
@@ -111,8 +111,8 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
             yaw = round(yaw / 45) * 45
         }
 
-        if (!player.isOnGround && state != 0) {
-            player.velocity = player.velocity.withStrafe(speed = speed, yaw = yaw)
+        if (!player.onGround() && state != 0) {
+            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed, yaw = yaw))
         }
     }
 
@@ -127,7 +127,7 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerPositionLookS2CPacket) {
+        if (packet is ClientboundPlayerPositionPacket) {
             flagDelay = 20
         }
     }

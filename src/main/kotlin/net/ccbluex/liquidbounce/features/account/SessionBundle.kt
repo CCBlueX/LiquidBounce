@@ -20,11 +20,11 @@
 package net.ccbluex.liquidbounce.features.account
 
 import com.mojang.authlib.minecraft.MinecraftSessionService
-import net.minecraft.client.session.ProfileKeys
-import net.minecraft.client.session.Session
+import net.minecraft.client.multiplayer.ProfileKeyPairManager
+import net.minecraft.client.User
 
 data class SessionBundle(
-    val session: Session,
+    val session: User,
     val sessionService: MinecraftSessionService?,
-    val profileKeys: ProfileKeys
+    val profileKeys: ProfileKeyPairManager
 )

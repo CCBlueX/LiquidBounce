@@ -49,7 +49,7 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
             return false
         }
 
-        if (!player.isOnGround && onlyOnGround) {
+        if (!player.onGround() && onlyOnGround) {
             return false
         }
 

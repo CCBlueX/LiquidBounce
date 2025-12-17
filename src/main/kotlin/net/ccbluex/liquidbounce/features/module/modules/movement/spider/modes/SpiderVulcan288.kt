@@ -45,15 +45,15 @@ internal object SpiderVulcan288 : Choice("Vulcan288") {
 
     val repeatable = tickHandler {
         if (player.horizontalCollision) {
-            if (!player.isClimbing) {
+            if (!player.onClimbable()) {
                 requiresStop = true
                 waitTicks(2)
-                player.velocity.y = 9.6599696
+                player.deltaMovement.y = 9.6599696
                 waitTicks(2)
-                player.setVelocity(0.0, 0.0001, 0.0)
+                player.setDeltaMovement(0.0, 0.0001, 0.0)
             }
         }else if (requiresStop) {
-            player.velocity.y = 0.0
+            player.deltaMovement.y = 0.0
             requiresStop = false
         }
     }

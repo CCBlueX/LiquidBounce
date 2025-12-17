@@ -73,7 +73,7 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
 
     private suspend inline fun action(operation: () -> Unit) {
         sending = true
-        tickUntil { mc.networkHandler != null }
+        tickUntil { mc.connection != null }
         waitTicks(delay.random())
         operation()
         sending = false
@@ -81,12 +81,12 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
 
     fun login() {
         chat("login")
-        network.sendChatCommand("$loginCommand $password")
+        network.sendCommand("$loginCommand $password")
     }
 
     fun register() {
         chat("register")
-        network.sendChatCommand("$registerCommand $password $password")
+        network.sendCommand("$registerCommand $password $password")
     }
 
     private inline fun <reified T : Event> createMessageHandler(
@@ -113,8 +113,8 @@ object ModuleAutoAccount : ClientModule("AutoAccount", Category.MISC, aliases = 
 
     init {
         createMessageHandler<ChatReceiveEvent>(MessageSource.CHAT) { it.message }
-        createMessageHandler<TitleEvent.Title>(MessageSource.TITLE) { it.text?.literalString }
-        createMessageHandler<TitleEvent.Subtitle>(MessageSource.SUBTITLE) { it.text?.literalString }
+        createMessageHandler<TitleEvent.Title>(MessageSource.TITLE) { it.text?.tryCollapseToString() }
+        createMessageHandler<TitleEvent.Subtitle>(MessageSource.SUBTITLE) { it.text?.tryCollapseToString() }
     }
 
 }

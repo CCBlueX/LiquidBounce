@@ -39,8 +39,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFa
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVerus
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVulcan
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVulcanTP
-import net.minecraft.entity.EntityPose
-import net.minecraft.item.Items
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.Items
 import java.util.function.BooleanSupplier
 
 /**
@@ -96,14 +96,14 @@ object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
          * With Elytra - we don't want to reduce fall damage.
          */
         WHILE_GLIDING("WhileGliding") {
-            override fun getAsBoolean() = player.isGliding && player.isInPose(EntityPose.GLIDING)
+            override fun getAsBoolean() = player.isFallFlying && player.hasPose(Pose.FALL_FLYING)
         },
 
         /**
          * Check if we are holding a mace
          */
         WITH_MACE("WithMace") {
-            override fun getAsBoolean() = player.mainHandStack.item == Items.MACE
+            override fun getAsBoolean() = player.mainHandItem.item == Items.MACE
         };
     }
 }

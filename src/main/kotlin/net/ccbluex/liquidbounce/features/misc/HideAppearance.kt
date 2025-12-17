@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.modmenu.ModMenuCompatibility
 import net.fabricmc.loader.impl.FabricLoaderImpl
 import net.minecraft.SharedConstants
-import net.minecraft.client.util.Icons
+import com.mojang.blaze3d.platform.IconSet
 import org.lwjgl.glfw.GLFW
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
@@ -99,10 +99,10 @@ object HideAppearance : EventListener {
             IntegrationListener.update()
         }
 
-        mc.updateWindowTitle()
+        mc.updateTitle()
         mc.window.setIcon(
-            mc.defaultResourcePack,
-            if (SharedConstants.getGameVersion().stable()) Icons.RELEASE else Icons.SNAPSHOT
+            mc.vanillaPackResources,
+            if (SharedConstants.getCurrentVersion().stable()) IconSet.RELEASE else IconSet.SNAPSHOT
         )
     }
 
@@ -131,7 +131,7 @@ object HideAppearance : EventListener {
         isHidingNow = true
         isDestructed = true
 
-        mc.inGameHud.chatHud.messageHistory.removeIf {
+        mc.gui.chat.recentChat.removeIf {
             it.startsWith(CommandManager.Options.prefix)
         }
 
@@ -155,7 +155,7 @@ object HideAppearance : EventListener {
         sleep(1000L)
 
         // Clear log folder
-        mc.runDirectory.resolve("logs").listFiles()?.forEach {
+        mc.gameDirectory.resolve("logs").listFiles()?.forEach {
             runCatching {
                 it.delete()
             }
@@ -187,7 +187,7 @@ object HideAppearance : EventListener {
         }
 
         // History clear
-        mc.inGameHud.chatHud.clear(true)
+        mc.gui.chat.clearMessages(true)
     }
 
 }

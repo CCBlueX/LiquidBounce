@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * FastUse module
@@ -71,12 +71,12 @@ object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = listOf
         get() = if (conditions.any { it.meetsConditions() }) {
             false
         } else {
-            player.isUsingItem && player.activeItem.isConsumable
+            player.isUsingItem && player.useItem.isConsumable
         }
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent>(priority = CRITICAL_MODIFICATION) { event ->
-        if (mc.options.useKey.isPressed && stopInput) {
+        if (mc.options.keyUse.isDown && stopInput) {
             event.directionalInput = DirectionalInput.NONE
         }
     }
@@ -106,9 +106,9 @@ object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = listOf
 
                 waitTicks(delay)
                 repeat(speed) {
-                    network.sendPacket(packetType.generatePacket())
+                    network.send(packetType.generatePacket())
                 }
-                player.stopUsingItem()
+                player.releaseUsingItem()
             }
         }
 
@@ -124,12 +124,12 @@ object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = listOf
 
         @Suppress("unused")
         val repeatable = tickHandler {
-            if (accelerateNow && player.itemUseTime >= consumeTime) {
+            if (accelerateNow && player.ticksUsingItem >= consumeTime) {
                 repeat(speed) {
-                    network.sendPacket(packetType.generatePacket())
+                    network.send(packetType.generatePacket())
                 }
 
-                player.stopUsingItem()
+                player.releaseUsingItem()
             }
         }
 
@@ -141,13 +141,13 @@ object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = listOf
         val meetsConditions: () -> Boolean
     ) : NamedChoice {
         NOT_IN_THE_AIR("NotInTheAir", {
-            !player.isOnGround
+            !player.onGround()
         }),
         NOT_DURING_MOVE("NotDuringMove", {
             player.moving
         }),
         NOT_DURING_REGENERATION("NotDuringRegeneration", {
-            player.hasStatusEffect(StatusEffects.REGENERATION)
+            player.hasEffect(MobEffects.REGENERATION)
         })
     }
 }

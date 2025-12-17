@@ -76,16 +76,16 @@ object ModuleHighJump : ClientModule("HighJump", Category.MOVEMENT) {
         @Suppress("unused")
         val repeatable = tickHandler {
             if (glide && shouldGlide) { // if the variable is true, then glide
-                if (player.isOnGround) {
+                if (player.onGround()) {
                     shouldGlide = false
                     return@tickHandler
                 }
                 if (player.fallDistance > 0) {
-                    if (player.age % 2 == 0) {
-                        player.velocity.y = -0.155
+                    if (player.tickCount % 2 == 0) {
+                        player.deltaMovement.y = -0.155
                     }
                 } else {
-                    player.velocity.y = -0.1
+                    player.deltaMovement.y = -0.1
                 }
             }
         }
@@ -94,7 +94,7 @@ object ModuleHighJump : ClientModule("HighJump", Category.MOVEMENT) {
         val jumpEvent = sequenceHandler<PlayerJumpEvent> {
             it.motion = motion
             waitTicks(100)
-            player.velocity.y = 0.0
+            player.deltaMovement.y = 0.0
             shouldGlide = true
         }
     }

@@ -18,9 +18,10 @@
  */
 
 @file:Suppress("FunctionName", "NOTHING_TO_INLINE")
+
 package net.ccbluex.liquidbounce.additions
 
-import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screens.Screen
 
 interface ScreenAddition {
 

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.ModuleAutoQueue.presets
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.minecraft.item.Items
+import net.minecraft.world.item.Items
 
 object AutoQueueHypixelSW : Choice("HypixelSW") {
 
@@ -47,7 +47,7 @@ object AutoQueueHypixelSW : Choice("HypixelSW") {
         }
 
         // Send join command
-        network.sendChatCommand("play ${gameMode.joinName}")
+        network.sendCommand("play ${gameMode.joinName}")
         waitTicks(20)
     }
 

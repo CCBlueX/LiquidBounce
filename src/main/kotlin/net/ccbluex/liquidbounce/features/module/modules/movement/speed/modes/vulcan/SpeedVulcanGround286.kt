@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat Vulcan
@@ -42,8 +42,8 @@ class SpeedVulcanGround286(override val parent: ChoiceConfigurable<*>) : SpeedBH
 
     @Suppress("unused")
     private val afterJumpHandler = tickHandler {
-        if (player.moving && collidesBottomVertical() && !mc.options.jumpKey.isPressed) {
-            val speedEffect = player.getStatusEffect(StatusEffects.SPEED)
+        if (player.moving && collidesBottomVertical() && !mc.options.keyJump.isDown) {
+            val speedEffect = player.getEffect(MobEffects.SPEED)
             val isAffectedBySpeed = speedEffect != null && speedEffect.amplifier > 0
             val isMovingSideways = player.input.movementSideways != 0f
 
@@ -53,26 +53,26 @@ class SpeedVulcanGround286(override val parent: ChoiceConfigurable<*>) : SpeedBH
                 else -> 0.42
             }
 
-            player.velocity = player.velocity.withStrafe(speed = strafe)
-            player.velocity.y = 0.005
+            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = strafe))
+            player.deltaMovement.y = 0.005
         }
     }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlayerMoveC2SPacket && collidesBottomVertical() && !mc.options.jumpKey.isPressed) {
+        if (event.packet is ServerboundMovePlayerPacket && collidesBottomVertical() && !mc.options.keyJump.isDown) {
             event.packet.y += 0.005
         }
     }
 
     private fun collidesBottomVertical() =
-        world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.005, 0.0)).any { shape ->
-            shape != VoxelShapes.empty()
+        world.getBlockCollisions(player, player.boundingBox.move(0.0, -0.005, 0.0)).any { shape ->
+            shape != Shapes.empty()
         }
 
     @Suppress("unused")
     private val jumpEvent = handler<PlayerJumpEvent> { event ->
-        if (!mc.options.jumpKey.isPressed) {
+        if (!mc.options.keyJump.isDown) {
             event.cancelEvent()
         }
     }

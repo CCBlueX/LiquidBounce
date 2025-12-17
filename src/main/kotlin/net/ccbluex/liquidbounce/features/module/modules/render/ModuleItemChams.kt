@@ -77,7 +77,7 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
         },
     ).slice()
 
-    private val sampler = RenderSystem.getSamplerCache().get(FilterMode.LINEAR, false)
+    private val sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR, false)
 
     fun applyToTexture(textureView: GpuTextureView) {
         if (!this.running || edited) return

@@ -47,8 +47,8 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.Entity
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.Entity
 
 /**
  * Aimbot module
@@ -121,12 +121,12 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
         val partialTicks = event.partialTicks
         val target = targetTracker.target ?: return@handler
 
-        if (IgnoreOpened.SCREEN !in ignores && mc.currentScreen != null) {
+        if (IgnoreOpened.SCREEN !in ignores && mc.screen != null) {
             return@handler
         }
 
         if (IgnoreOpened.CONTAINER !in ignores && (InventoryManager.isInventoryOpen ||
-                mc.currentScreen is HandledScreen<*>)) {
+                mc.screen is AbstractContainerScreen<*>)) {
             return@handler
         }
 
@@ -167,7 +167,7 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
         for (entity in targetTracker.targets()) {
-            val eyes = player.eyePos
+            val eyes = player.eyePosition
             val point = pointTracker.findPoint(eyes, entity)
 
             debugGeometry("Box") { ModuleDebug.DebuggedBox(point.box, Color4b.ORANGE.with(a = 90)) }

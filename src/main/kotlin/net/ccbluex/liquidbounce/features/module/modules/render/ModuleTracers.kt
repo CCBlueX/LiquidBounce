@@ -39,9 +39,9 @@ import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.MathHelper
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.util.Mth
 import kotlin.math.sqrt
 
 /**
@@ -89,24 +89,24 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
 
         val useDistanceColor = DistanceColor.isSelected
 
-        val viewDistance = 16.0F * MathHelper.SQUARE_ROOT_OF_TWO *
+        val viewDistance = 16.0F * Mth.SQRT_OF_TWO *
             (if (DistanceColor.useViewDistance) {
-                mc.options.viewDistance.value.toFloat()
+                mc.options.renderDistance().get().toFloat()
             } else {
                 DistanceColor.customViewDistance
             })
-        val camera = mc.gameRenderer.camera
+        val camera = mc.gameRenderer.mainCamera
 
         renderEnvironmentForWorld(matrixStack) {
             val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotatePitch(-camera.pitch.toRadians())
-                .rotateYaw(-camera.yaw.toRadians())
+                .rotatePitch(-camera.xRot().toRadians())
+                .rotateYaw(-camera.yRot().toRadians())
 
             longLines {
                 startBatch()
                 val maxDistanceSq = maximumDistance.sq()
                 for (entity in RenderedEntities) {
-                    val distanceSq = entity.entityPos.cameraDistanceSq().toFloat()
+                    val distanceSq = entity.position().cameraDistanceSq().toFloat()
                     if (distanceSq > maxDistanceSq) {
                         continue
                     }
@@ -118,7 +118,7 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
                             1.0f,
                             1.0f,
                         )
-                    } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
+                    } else if (entity is Player && FriendManager.isFriend(entity.gameProfile.name)) {
                         Color4b.BLUE
                     } else {
                         EntityTaggingManager.getTag(entity).color ?: modes.activeChoice.getColor(entity)
@@ -129,7 +129,7 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
                     drawLines(
                         argb = color.toARGB(),
                         eyeVector, pos,
-                        pos, pos.add(0f, entity.height, 0f)
+                        pos, pos.add(0f, entity.bbHeight, 0f)
                     )
                 }
                 commitBatch()

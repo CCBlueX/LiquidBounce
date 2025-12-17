@@ -29,11 +29,11 @@ import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
-import net.minecraft.client.network.OtherClientPlayerEntity
-import net.minecraft.client.render.entity.state.LivingEntityRenderState
-import net.minecraft.entity.Entity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.client.player.RemotePlayer
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import java.time.Instant
 import java.util.*
 
@@ -54,37 +54,37 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
     @Suppress("unused")
     private val entityRemoveHandler = handler<WorldEntityRemoveEvent> { event ->
         val entity = event.entity
-        if (entity !is PlayerEntity || isLogoffEntity(entity.id)) {
+        if (entity !is Player || isLogoffEntity(entity.id)) {
             return@handler
         }
 
         // Note: I thought we could keep [entity], but I was not able to keep it from being removed
         // from the world. So, we have to create a new entity and copy the position and rotation.
-        val clone = OtherClientPlayerEntity(world, entity.gameProfile)
-        clone.headYaw = entity.headYaw
-        clone.copyPositionAndRotation(entity)
-        clone.uuid = UUID.randomUUID()
-        clone.inventory.clone(entity.inventory)
+        val clone = RemotePlayer(world, entity.gameProfile)
+        clone.yHeadRot = entity.yHeadRot
+        clone.copyPosition(entity)
+        clone.setUUID(UUID.randomUUID())
+        clone.inventory.replaceWith(entity.inventory)
         clone.health = entity.getActualHealth()
         world.addEntity(clone)
         lastSeenPlayers[entity.uuid] = LoggedOffPlayer(Instant.now(), clone)
 
-        val blockPos = entity.blockPos
-        chat(regular(message("disappeared", entity.nameForScoreboard, blockPos.x, blockPos.y, blockPos.z)))
+        val blockPos = entity.blockPosition()
+        chat(regular(message("disappeared", entity.scoreboardName, blockPos.x, blockPos.y, blockPos.z)))
     }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
         lastSeenPlayers.entries.removeIf { (id, loggedOffPlayer) ->
             val playerEntity = loggedOffPlayer.entity
-            val blockPos = playerEntity.blockPos
+            val blockPos = playerEntity.blockPosition()
 
-            if (!world.isPosLoaded(blockPos)) {
-                chat(regular(message("unloaded", playerEntity.nameForScoreboard)))
+            if (!world.isLoaded(blockPos)) {
+                chat(regular(message("unloaded", playerEntity.scoreboardName)))
                 world.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
                 true
-            } else if (world.getPlayerByUuid(id) != null) {
-                chat(regular(message("reappeared", playerEntity.nameForScoreboard)))
+            } else if (world.getPlayerByUUID(id) != null) {
+                chat(regular(message("reappeared", playerEntity.scoreboardName)))
                 world.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_WITH_PLAYER)
                 true
             } else {
@@ -102,7 +102,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerInteractEntityC2SPacket) {
+        if (packet is ServerboundInteractPacket) {
             if (isLogoffEntity(packet.entityId)) {
                 event.cancelEvent()
             }
@@ -114,7 +114,7 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
             val playerEntity = loggedOffPlayer.entity
             // Use [mc.world] instead of [world] to prevent NPE when the module is disabled
             // outside the game
-            mc.world?.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
+            mc.level?.removeEntity(playerEntity.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
         }
 
         lastSeenPlayers.clear()

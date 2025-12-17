@@ -261,15 +261,15 @@ class ChatClient {
                 runCatching {
                     val sessionHash = packet.sessionHash
 
-                    mc.apiServices.sessionService.joinServer(
-                        mc.session.uuidOrNull,
-                        mc.session.accessToken,
+                    mc.services.sessionService.joinServer(
+                        mc.user.profileId,
+                        mc.user.accessToken,
                         sessionHash
                     )
                     sendPacket(
                         ServerLoginMojangPacket(
-                            mc.session.username,
-                            mc.session.uuidOrNull,
+                            mc.user.name,
+                            mc.user.profileId,
                             allowMessages = true
                         )
                     )

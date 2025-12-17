@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.phys.Vec3
 import java.security.SecureRandom
 import kotlin.math.abs
 
@@ -47,8 +47,8 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
 
     }
 
-    var currentOffset: Vec3d = Vec3d.ZERO
-    private var targetOffset: Vec3d = Vec3d.ZERO
+    var currentOffset: Vec3 = Vec3.ZERO
+    private var targetOffset: Vec3 = Vec3.ZERO
 
     val yawFactor by floatRange("YawOffset", 0f..0f, 0.0f..1.0f)
     val pitchFactor by floatRange("PitchOffset", 0f..0f, 0.0f..1.0f)
@@ -68,7 +68,7 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
 
     private fun interpolate(start: Double, end: Double, f: Double) = start + (end - start) * f
 
-    private fun gaussianHasReachedTarget(vec1: Vec3d, vec2: Vec3d, tolerance: Float): Boolean {
+    private fun gaussianHasReachedTarget(vec1: Vec3, vec2: Vec3, tolerance: Float): Boolean {
         return abs(vec1.x - vec2.x) < tolerance &&
             abs(vec1.y - vec2.y) < tolerance &&
             abs(vec1.z - vec2.z) < tolerance
@@ -99,14 +99,14 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
             )
         ) {
             if (random.nextInt(100) <= chance) {
-                targetOffset = Vec3d(
+                targetOffset = Vec3(
                     random.nextGaussian(MEAN_X, STDDEV_X) * yawFactor,
                     random.nextGaussian(MEAN_Y, STDDEV_Y) * pitchFactor,
                     random.nextGaussian(MEAN_Z, STDDEV_Z) * yawFactor
                 )
             }
         } else {
-            currentOffset = Vec3d(
+            currentOffset = Vec3(
                 interpolate(
                     currentOffset.x,
                     targetOffset.x,

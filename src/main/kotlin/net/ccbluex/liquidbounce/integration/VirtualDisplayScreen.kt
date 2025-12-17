@@ -23,30 +23,30 @@ import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screens.Screen
 
 class VirtualDisplayScreen(
     private val screenType: VirtualScreenType,
     private val theme: Theme = ThemeManager.getScreenLocation(screenType).theme,
     val originalScreen: Screen? = null,
-    val parentScreen: Screen? = mc.currentScreen
+    val parentScreen: Screen? = mc.screen
 ) : Screen("VS-${screenType.routeName.uppercase()}".asPlainText()) {
 
     override fun init() {
         IntegrationListener.virtualOpen(theme, screenType)
     }
 
-    override fun close() {
+    override fun onClose() {
         if (parentScreen is VirtualDisplayScreen) {
             mc.setScreen(parentScreen)
         } else {
             IntegrationListener.virtualClose()
-            mc.mouse.lockCursor()
-            super.close()
+            mc.mouseHandler.grabMouse()
+            super.onClose()
         }
     }
 
-    override fun shouldPause(): Boolean {
+    override fun isPauseScreen(): Boolean {
         // preventing game pause
         return false
     }

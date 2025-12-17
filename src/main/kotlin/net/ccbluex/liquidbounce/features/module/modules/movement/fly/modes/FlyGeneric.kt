@@ -36,11 +36,12 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.block.FluidBlock
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
-import net.minecraft.util.shape.VoxelShapes
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.world.level.block.LiquidBlock
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.minecraft.world.phys.shapes.Shapes
 import kotlin.jvm.optionals.getOrNull
 
 internal object FlyVanilla : Choice("Vanilla") {
@@ -69,24 +70,24 @@ internal object FlyVanilla : Choice("Vanilla") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        val useSprintSpeed = mc.options.sprintKey.isPressed && SprintSpeed.enabled
+        val useSprintSpeed = mc.options.keySprint.isDown && SprintSpeed.enabled
         val hSpeed =
             if (useSprintSpeed) SprintSpeed.horizontalSpeed else BaseSpeed.horizontalSpeed
         val vSpeed =
             if (useSprintSpeed) SprintSpeed.verticalSpeed else BaseSpeed.verticalSpeed
 
-        player.velocity = player.velocity.withStrafe(speed = hSpeed.toDouble())
-        player.velocity.y = when {
-            mc.options.jumpKey.isPressed -> vSpeed.toDouble()
-            mc.options.sneakKey.isPressed -> (-vSpeed).toDouble()
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = hSpeed.toDouble()))
+        player.deltaMovement.y = when {
+            mc.options.keyJump.isDown -> vSpeed.toDouble()
+            mc.options.keyShift.isDown -> (-vSpeed).toDouble()
             else -> glide.toDouble()
         }
 
         // Most basic bypass for vanilla fly check
         // This can also be done via packets, but this is easier.
-        if (bypassVanillaCheck && player.age % 40 == 0) {
+        if (bypassVanillaCheck && player.tickCount % 40 == 0) {
             waitTicks(1)
-            player.velocity.y = -0.04
+            player.deltaMovement.y = -0.04
             waitTicks(1)
         }
     }
@@ -115,44 +116,44 @@ internal object FlyCreative : Choice("Creative") {
     private val forceFlight by boolean("ForceFlight", true)
 
     override fun enable() {
-        player.abilities.allowFlying = true
+        player.abilities.mayfly = true
     }
 
     private fun shouldFlyDown(): Boolean {
         if (!bypassVanillaCheck) return false
-        if (player.age % 40 != 0) return false
+        if (player.tickCount % 40 != 0) return false
 
         // check if the player is above a block or in mid-air
         // if the player is right above a block, we don't need to fly down
-        if (world.getStatesInBox(player.boundingBox.offset(0.0, -0.55, 0.0)).anyMatch { !it.isAir }) return false
+        if (world.getBlockStates(player.boundingBox.move(0.0, -0.55, 0.0)).anyMatch { !it.isAir }) return false
 
         return true
     }
 
     val repeatable = tickHandler {
-        player.abilities.flySpeed =
-            if (mc.options.sprintKey.isPressed && SprintSpeed.enabled) SprintSpeed.speed else speed
+        player.abilities.flyingSpeed =
+            if (mc.options.keySprint.isDown && SprintSpeed.enabled) SprintSpeed.speed else speed
 
         if (forceFlight) player.abilities.flying = true
 
-        if (player.velocity.lengthSquared() > maxVelocity * maxVelocity) {
-            player.velocity = player.velocity.normalize().multiply(maxVelocity.toDouble())
+        if (player.deltaMovement.lengthSqr() > maxVelocity.sq()) {
+            player.deltaMovement = player.deltaMovement.normalize().scale(maxVelocity.toDouble())
         }
 
         if (shouldFlyDown()) {
-            network.sendPacket(MovePacketType.POSITION_AND_ON_GROUND.generatePacket())
+            network.send(MovePacketType.POSITION_AND_ON_GROUND.generatePacket())
         }
 
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (shouldFlyDown() && event.packet is PlayerMoveC2SPacket) {
-            event.packet.y = player.lastYClient - 0.04
+        if (shouldFlyDown() && event.packet is ServerboundMovePlayerPacket) {
+            event.packet.y = player.yLast - 0.04
         }
     }
 
     override fun disable() {
-        player.abilities.allowFlying = false
+        player.abilities.mayfly = false
         player.abilities.flying = false
     }
 
@@ -166,15 +167,15 @@ internal object FlyAirWalk : Choice("AirWalk") {
     val onGround by boolean("OnGround", true)
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlayerMoveC2SPacket) {
+        if (event.packet is ServerboundMovePlayerPacket) {
             event.packet.onGround = onGround
         }
     }
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.block !is FluidBlock && event.pos.y < player.y) {
-            event.shape = VoxelShapes.fullCube()
+        if (event.state.block !is LiquidBlock && event.pos.y < player.y) {
+            event.shape = Shapes.block()
         }
     }
 
@@ -207,8 +208,8 @@ internal object FlyExplosion : Choice("Explosion") {
 
     val repeatable = tickHandler {
         if (strafeSince > 0) {
-            if (!player.isOnGround) {
-                player.velocity = player.velocity.withStrafe(speed = strafeSince.toDouble())
+            if (!player.onGround()) {
+                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = strafeSince.toDouble()))
                 strafeSince -= strafeDecrease
             } else {
                 strafeSince = 0f
@@ -220,15 +221,15 @@ internal object FlyExplosion : Choice("Explosion") {
         val packet = event.packet
 
         // Check if this is a regular velocity update
-        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
             // Modify packet according to the specified values
-            packet.velocity.x = 0.0
-            packet.velocity.y = packet.velocity.y * vertical
-            packet.velocity.z = 0.0
+            packet.movement.x = 0.0
+            packet.movement.y = packet.movement.y * vertical
+            packet.movement.z = 0.0
 
             waitTicks(1)
             strafeSince = startStrafe
-        } else if (packet is ExplosionS2CPacket) { // Check if explosion affects velocity
+        } else if (packet is ClientboundExplodePacket) { // Check if explosion affects velocity
             packet.playerKnockback.getOrNull()?.let { knockback ->
                 knockback.x = 0.0
                 knockback.y *= vertical
@@ -248,10 +249,10 @@ internal object FlyJetpack : Choice("Jetpack") {
         get() = ModuleFly.modes
 
     val repeatable = tickHandler {
-        if (player.input.playerInput.jump) {
-            player.velocity.x *= 1.1
-            player.velocity.y += 0.15
-            player.velocity.z *= 1.1
+        if (player.input.keyPresses.jump) {
+            player.deltaMovement.x *= 1.1
+            player.deltaMovement.y += 0.15
+            player.deltaMovement.z *= 1.1
         }
     }
 

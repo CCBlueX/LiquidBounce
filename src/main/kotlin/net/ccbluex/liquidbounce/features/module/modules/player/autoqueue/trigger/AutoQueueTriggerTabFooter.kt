@@ -30,7 +30,7 @@ object AutoQueueTriggerTabFooter : AutoQueueTrigger("TabFooter") {
 
     override val isTriggered: Boolean
         get() {
-            val playerListHeader = mc.inGameHud?.playerListHud?.footer ?: return false
+            val playerListHeader = mc.gui?.tabList?.footer ?: return false
             return playerListHeader.string.contains(text)
         }
 

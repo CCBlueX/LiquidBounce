@@ -35,9 +35,9 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.resource.ResourceManager
-import net.minecraft.resource.SynchronousResourceReloader
+import com.mojang.blaze3d.platform.NativeImage
+import net.minecraft.server.packs.resources.ResourceManager
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
@@ -59,7 +59,7 @@ class Theme private constructor(val origin: Origin, url: String) :
                 "${AuthMiddleware.AUTH_COOKIE_NAME}=${AuthMiddleware.AUTH_CODE}"
             )
             .build()
-    ), Closeable, SynchronousResourceReloader {
+    ), Closeable, ResourceManagerReloadListener {
 
     enum class Origin(override val choiceName: String, val external: Boolean) : NamedChoice {
         RESOURCE("resource", false),
@@ -225,7 +225,7 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     fun isOverlaySupported(name: String?) = name != null && metadata.overlays.contains(name)
 
-    override fun reload(manager: ResourceManager) {
+    override fun onResourceManagerReload(manager: ResourceManager) {
         themeBackgroundShader?.onResourceReload()
         themeBackgroundTexture?.onResourceReload()
         logger.info("Reloaded theme '${metadata.name}'.")

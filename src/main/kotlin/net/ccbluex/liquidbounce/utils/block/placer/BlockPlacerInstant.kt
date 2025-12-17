@@ -33,25 +33,25 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacem
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
-import net.minecraft.block.BlockState
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
 
 fun BlockPlacer.placeInstantOnBlockUpdate(event: PacketEvent) {
     when (val packet = event.packet) {
-        is BlockUpdateS2CPacket -> placeInstant(packet.pos, packet.state)
-        is ChunkDeltaUpdateS2CPacket -> {
-            packet.visitUpdates { pos, state -> placeInstant(pos, state) }
+        is ClientboundBlockUpdatePacket -> placeInstant(packet.pos, packet.blockState)
+        is ClientboundSectionBlocksUpdatePacket -> {
+            packet.runUpdates { pos, state -> placeInstant(pos, state) }
         }
     }
 }
 
 private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
-    val irrelevantPacket = !state.isReplaceable || pos.asLong() !in blocks
+    val irrelevantPacket = !state.canBeReplaced() || pos.asLong() !in blocks
 
     val rotationMode = rotationMode.activeChoice
     if (irrelevantPacket || rotationMode !is NoRotationMode || pos.isBlockedByEntities()) {
@@ -64,8 +64,8 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
         ),
         FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
-        stackToPlaceWith = Items.SANDSTONE.defaultStack,
-        PlayerLocationOnPlacement(position = player.entityPos, pose = player.pose),
+        stackToPlaceWith = Items.SANDSTONE.defaultInstance,
+        PlayerLocationOnPlacement(position = player.position(), pose = player.pose),
     )
 
     val placementTarget = findBestBlockPlacementTarget(pos, searchOptions) ?: return
@@ -81,8 +81,8 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
 
     if (rotationMode.send) {
         val rotation = placementTarget.rotation.normalize()
-        network.sendPacket(
-            PlayerMoveC2SPacket.LookAndOnGround(rotation.yaw, rotation.pitch, player.isOnGround,
+        network.send(
+            ServerboundMovePlayerPacket.Rot(rotation.yaw, rotation.pitch, player.onGround(),
                 player.horizontalCollision)
         )
     }

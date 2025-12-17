@@ -31,14 +31,14 @@ import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.size
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.entity.LivingEntity
-import net.minecraft.item.Item
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.entity.EntityDimensions
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.Item
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 abstract class TrapPlanner<T>(
     parent: EventListener,
@@ -58,16 +58,16 @@ abstract class TrapPlanner<T>(
     abstract fun plan(enemies: List<LivingEntity>): BlockChangeIntent<T>?
 
     protected fun findOffsetsForTarget(
-        pos: Vec3d,
+        pos: Vec3,
         dims: EntityDimensions,
-        velocity: Vec3d,
+        velocity: Vec3,
         mustBeOnGround: Boolean
     ): List<BlockPos> {
         val ticksToLookAhead = 5
         val blockPos = pos.toBlockPos()
         val normalizedStartBB =
-            dims.getBoxAt(pos).offset(-blockPos.x.toDouble(), -blockPos.y.toDouble(), -pos.z.toInt().toDouble())
-        val normalizedEnddBB = normalizedStartBB.offset(
+            dims.makeBoundingBox(pos).move(-blockPos.x.toDouble(), -blockPos.y.toDouble(), -pos.z.toInt().toDouble())
+        val normalizedEnddBB = normalizedStartBB.move(
             velocity.x * ticksToLookAhead,
             0.0,
             velocity.z * ticksToLookAhead
@@ -76,24 +76,24 @@ abstract class TrapPlanner<T>(
         val searchBB = normalizedEnddBB
 
         if (searchBB.size > 30) {
-            return listOf(BlockPos.ORIGIN)
+            return listOf(BlockPos.ZERO)
         }
 
         return findOffsetsBetween(normalizedStartBB, normalizedEnddBB, blockPos, mustBeOnGround)
     }
 
     private fun findOffsetsBetween(
-        startBox: Box,
-        endBox: Box,
+        startBox: AABB,
+        endBox: AABB,
         offsetPos: BlockPos,
         mustBeOnGround: Boolean
     ): List<BlockPos> {
         val offsets = mutableListOf<DoubleLongPair>()
 
         startBox.collidingRegion.iterate().forEach { offset ->
-            val bp = offsetPos.add(offset)
+            val bp = offsetPos.offset(offset)
 
-            val bb = Box(offset)
+            val bb = AABB(offset)
 
             if (!startBox.intersects(bb) && !endBox.intersects(bb)) {
                 return@forEach
@@ -105,17 +105,17 @@ abstract class TrapPlanner<T>(
                 return@forEach
             }
 
-            if (mustBeOnGround && (bp.down().getState()?.isAir != false)) {
+            if (mustBeOnGround && (bp.below().getState()?.isAir != false)) {
                 return@forEach
             }
 
-            val intersect = startBox.intersection(bb).size + endBox.intersection(bb).size * 0.5
+            val intersect = startBox.intersect(bb).size + endBox.intersect(bb).size * 0.5
 
             offsets.add(DoubleLongPair.of(intersect, offset.asLong()))
         }
 
         offsets.sortByDescending { it.leftDouble() }
 
-        return offsets.map { BlockPos.fromLong(it.rightLong()) }
+        return offsets.map { BlockPos.of(it.rightLong()) }
     }
 }

@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.formatAsTime
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
 object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "Blink", false) {
 
@@ -46,7 +46,7 @@ object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
         val packet = event.packet
 
-        if (mc.currentScreen is HandledScreen<*> && event.origin == TransferOrigin.OUTGOING) {
+        if (mc.screen is AbstractContainerScreen<*> && event.origin == TransferOrigin.OUTGOING) {
             event.action = when {
                 ModuleInventoryMove.isContainerPacket(packet) -> PacketQueueManager.Action.PASS
                 else -> PacketQueueManager.Action.QUEUE
@@ -56,7 +56,7 @@ object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "
 
     @Suppress("unused")
     val screenHandler = handler<ScreenEvent> { event ->
-        if (event.screen is HandledScreen<*>) {
+        if (event.screen is AbstractContainerScreen<*>) {
             chronometer.reset()
 
             notification(
@@ -68,8 +68,8 @@ object InventoryMoveBlinkFeature : ToggleableConfigurable(ModuleInventoryMove, "
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (mc.currentScreen is HandledScreen<*> && chronometer.hasElapsed(maximumTime.toLong())) {
-            player.closeHandledScreen()
+        if (mc.screen is AbstractContainerScreen<*> && chronometer.hasElapsed(maximumTime.toLong())) {
+            player.closeContainer()
             notification("InventoryMove", message("blinkEnd"), NotificationEvent.Severity.INFO)
         }
     }

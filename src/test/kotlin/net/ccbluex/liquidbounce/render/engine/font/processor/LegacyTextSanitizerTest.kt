@@ -21,9 +21,9 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
 import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.minecraft.text.StringVisitable.StyledVisitor
-import net.minecraft.text.Style
-import net.minecraft.text.Text
+import net.minecraft.network.chat.FormattedText.StyledContentConsumer
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.util.Optional
@@ -35,7 +35,7 @@ class LegacyTextSanitizerTest {
         assertEquals(listOf("This is a Test!" to Style.EMPTY), getResults("This is a Test!".asPlainText()))
     }
 
-    private fun getResults(text: Text): ArrayList<Pair<String, Style>> {
+    private fun getResults(text: Component): ArrayList<Pair<String, Style>> {
         val visitor = TestVisitor()
 
         text.visit(visitor, Style.EMPTY)
@@ -43,7 +43,7 @@ class LegacyTextSanitizerTest {
         return visitor.contents
     }
 
-    private class TestVisitor : StyledVisitor<Unit> {
+    private class TestVisitor : StyledContentConsumer<Unit> {
         val contents = ArrayList<Pair<String, Style>>()
 
         override fun accept(style: Style, asString: String): Optional<Unit> {

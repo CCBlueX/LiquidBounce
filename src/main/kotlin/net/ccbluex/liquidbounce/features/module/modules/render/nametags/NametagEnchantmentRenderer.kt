@@ -29,39 +29,39 @@ import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.resource.language.I18n
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.LivingEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.util.Formatting
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.resources.language.I18n
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.Registries
+import net.minecraft.ChatFormatting
 import org.joml.Vector2f
 import org.joml.component1
 import org.joml.component2
 import kotlin.math.hypot
 
 private object EnchantmentDisplayHelper {
-    private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(128)
+    private val enchantmentAbbreviationCache = LruCache<ResourceKey<Enchantment>, String>(128)
 
     private val knownCurses = ReferenceSet.of(
         Enchantments.BINDING_CURSE,
         Enchantments.VANISHING_CURSE
     )
 
-    fun getEnchantmentInfo(enchantment: RegistryKey<Enchantment>): EnchantmentInfo {
+    fun getEnchantmentInfo(enchantment: ResourceKey<Enchantment>): EnchantmentInfo {
         return EnchantmentInfo(
             displayName = getAbbreviation(enchantment),
             isCurse = isCurse(enchantment)
         )
     }
 
-    private fun getEnchantmentName(enchantment: RegistryKey<Enchantment>): String {
-        val idPath = enchantment.value.toString().substringAfter(':')
+    private fun getEnchantmentName(enchantment: ResourceKey<Enchantment>): String {
+        val idPath = enchantment.identifier().toString().substringAfter(':')
         val translationKey = "enchantment.minecraft.$idPath"
-        return I18n.translate(translationKey)
+        return I18n.get(translationKey)
     }
 
     private fun getSingleWordAbbreviation(word: String): String = word.take(3)
@@ -104,14 +104,14 @@ private object EnchantmentDisplayHelper {
         }
     }
 
-    private fun getAbbreviation(enchantment: RegistryKey<Enchantment>): String {
+    private fun getAbbreviation(enchantment: ResourceKey<Enchantment>): String {
         return enchantmentAbbreviationCache.getOrPut(enchantment) {
             val name = getEnchantmentName(enchantment)
             processName(name)
         }
     }
 
-    private fun isCurse(enchantment: RegistryKey<Enchantment>): Boolean = enchantment in knownCurses
+    private fun isCurse(enchantment: ResourceKey<Enchantment>): Boolean = enchantment in knownCurses
 }
 
 @JvmRecord
@@ -144,7 +144,7 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
     private val BG_COLOR_CURSE = Color4b.RED.darker().alpha(200)
 
     private val supportedEnchantments by lazy {
-        mc.world?.registryManager?.getOrThrow(RegistryKeys.ENCHANTMENT)?.keys?.toList() ?: emptyList()
+        mc.level?.registryAccess()?.lookupOrThrow(Registries.ENCHANTMENT)?.registryKeySet()?.toList() ?: emptyList()
     }
 
     @JvmRecord
@@ -160,7 +160,7 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
         val width: Float
     )
 
-    fun DrawContext.drawEntityEnchantments(
+    fun GuiGraphics.drawEntityEnchantments(
         entity: LivingEntity,
         worldX: Float,
         worldY: Float,
@@ -225,7 +225,7 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
 
     private fun getEntityItemsWithEnchantments(entity: LivingEntity): List<ItemStack> =
         slots.mapToArray {
-            entity.getEquippedStack(it.slot)
+            entity.getItemBySlot(it.slot)
         }.filter { !it.isEmpty && it.getEnchantmentCount() > 0 }
 
     private fun createCell(
@@ -234,14 +234,14 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
         isEllipsis: Boolean = false
     ): EnchantCell {
         val text = if (isEllipsis) {
-            "${Formatting.GRAY}..."
+            "${ChatFormatting.GRAY}..."
         } else {
             val textColor = when {
-                info?.isCurse == true -> Formatting.RED
-                level >= 4 -> Formatting.GOLD
-                level == 3 -> Formatting.YELLOW
-                level == 2 -> Formatting.GREEN
-                else -> Formatting.WHITE
+                info?.isCurse == true -> ChatFormatting.RED
+                level >= 4 -> ChatFormatting.GOLD
+                level == 3 -> ChatFormatting.YELLOW
+                level == 2 -> ChatFormatting.GREEN
+                else -> ChatFormatting.WHITE
             }
             "${textColor}${info?.displayName} $level"
         }
@@ -255,7 +255,7 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
         )
     }
 
-    private fun DrawContext.renderEnchantmentColumn(
+    private fun GuiGraphics.renderEnchantmentColumn(
         cells: List<EnchantCell>,
         x: Float,
         y: Float,
@@ -290,7 +290,7 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
         }
     }
 
-    private fun DrawContext.drawEnchantmentColumns(
+    private fun GuiGraphics.drawEnchantmentColumns(
         x: Float,
         y: Float,
         columnData: List<EnchantColumn>
@@ -321,7 +321,7 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
         }
     }
 
-    private fun DrawContext.drawGroupBorder(rect: Rect) {
+    private fun GuiGraphics.drawGroupBorder(rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
         drawQuad(
             rect.x1, rect.y1,

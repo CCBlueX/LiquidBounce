@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.item.MixinHeldItemRenderer
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.item.MixinItemInHandRenderer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 
 /**

@@ -26,35 +26,37 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (!mc.options.jumpKey.isPressed || ModuleScaffold.blockCount <= 0 || !isBlockBelow) {
+        if (!mc.options.keyJump.isDown || ModuleScaffold.blockCount <= 0 || !isBlockBelow) {
             return@tickHandler
         }
 
         if (player.x % 1.0 != 0.0 && !player.moving) {
-            player.velocity.x = (Math.round(player.x).toDouble() - player.x).coerceAtMost(0.281)
+            player.deltaMovement.x = (Math.round(player.x).toDouble() - player.x).coerceAtMost(0.281)
         }
 
         if (player.airTicks > 14) {
-            player.velocity.y -= 0.09
-            player.velocity = player.velocity.multiply(
-                0.6,
-                1.0,
-                0.6
+            player.deltaMovement.y -= 0.09
+            player.setDeltaMovement(
+                player.deltaMovement.multiply(
+                    0.6,
+                    1.0,
+                    0.6
+                )
             )
             return@tickHandler
         }
         when (player.airTicks % 3) {
             0 -> {
-                player.velocity.y = 0.42
-                player.velocity = player.velocity.withStrafe(speed = 0.247 - (Math.random() / 100f))
+                player.deltaMovement.y = 0.42
+                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.247 - (Math.random() / 100f)))
             }
-            2 -> player.velocity.y = 1 - (player.y % 1.0)
+            2 -> player.deltaMovement.y = 1 - (player.y % 1.0)
         }
     }
 
@@ -62,18 +64,18 @@ object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
         if (!player.moving) {
             // Find the block closest to the player
             val blocks = arrayOf(
-                blockPos.add(0, 0, 1),
-                blockPos.add(0, 0, -1),
-                blockPos.add(1, 0, 0),
-                blockPos.add(-1, 0, 0)
+                blockPos.offset(0, 0, 1),
+                blockPos.offset(0, 0, -1),
+                blockPos.offset(1, 0, 0),
+                blockPos.offset(-1, 0, 0)
             )
 
             val blockOffset = blocks.minByOrNull { blockPos ->
                 blockPos.getCenterDistanceSquared()
-            }?.add(0, -1, 0) ?: blockPos
+            }?.offset(0, -1, 0) ?: blockPos
 
             // Check if block next to the player is solid
-            if (!blockOffset.getState()!!.isSolidBlock(world, blockOffset)) {
+            if (!blockOffset.getState()!!.isRedstoneConductor(world, blockOffset)) {
                 return blockOffset
             }
         }

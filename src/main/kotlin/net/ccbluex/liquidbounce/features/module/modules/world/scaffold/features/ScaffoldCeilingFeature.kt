@@ -23,5 +23,5 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.utils.block.getState
 
 object ScaffoldCeilingFeature : ToggleableConfigurable(ModuleScaffold, "Ceiling", false) {
-    fun canConstructCeiling() = !player.blockPos.down().getState()!!.isAir
+    fun canConstructCeiling() = !player.blockPosition().below().getState()!!.isAir
 }

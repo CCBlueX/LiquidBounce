@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.texture.NativeImage
+import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.util.Util
-import net.minecraft.util.crash.CrashException
+import net.minecraft.ReportedException
 import okhttp3.Cache
 import okhttp3.Call
 import okhttp3.Callback
@@ -62,7 +62,7 @@ import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
 val renderScope = CoroutineScope(
     Dispatchers.Minecraft + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
-        if (throwable is CrashException) {
+        if (throwable is ReportedException) {
             ErrorHandler.fatal(throwable, additionalMessage = "Render scope")
         }
     }
@@ -70,7 +70,7 @@ val renderScope = CoroutineScope(
 
 val ioScope = CoroutineScope(
     Dispatchers.IO + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
-        if (throwable is CrashException) {
+        if (throwable is ReportedException) {
             ErrorHandler.fatal(throwable, additionalMessage = "IO scope")
         }
     }
@@ -107,7 +107,7 @@ object HttpClient {
     }
 
     private val defaultClient = OkHttpClient.Builder()
-        .dispatcher(Dispatcher(Util.getDownloadWorkerExecutor().service))
+        .dispatcher(Dispatcher(Util.nonCriticalIoPool().service))
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
         .writeTimeout(20, TimeUnit.SECONDS)

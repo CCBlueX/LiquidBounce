@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noweb
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.ModuleNoWeb.modes
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 abstract class NoWebMode(name: String) : Choice(name) {
 

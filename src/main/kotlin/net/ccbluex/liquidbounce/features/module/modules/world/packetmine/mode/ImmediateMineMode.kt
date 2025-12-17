@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode
 import it.unimi.dsi.fastutil.ints.IntObjectImmutablePair
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.util.Hand
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.world.InteractionHand
 
 object ImmediateMineMode : MineMode("Immediate", canManuallyChange = false, canAbort = false) {
 
@@ -31,15 +31,15 @@ object ImmediateMineMode : MineMode("Immediate", canManuallyChange = false, canA
 
     override fun start(mineTarget: MineTarget) {
         NormalMineMode.start(mineTarget)
-        interaction.sendSequencedPacket(world) { sequence ->
-            PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+        interaction.startPrediction(world) { sequence ->
+            ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                 mineTarget.targetPos,
-                mineTarget.direction,
+                mineTarget.direction!!,
                 sequence,
             )
         }
-        ModulePacketMine.swingMode.swing(Hand.MAIN_HAND)
+        ModulePacketMine.swingMode.swing(InteractionHand.MAIN_HAND)
     }
 
     override fun finish(mineTarget: MineTarget) {

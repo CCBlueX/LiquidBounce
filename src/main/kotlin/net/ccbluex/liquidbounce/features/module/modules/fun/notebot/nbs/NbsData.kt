@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs
 
-import net.minecraft.block.enums.NoteBlockInstrument
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
 
 data class NbsHeader(
     val version: Byte = 0,

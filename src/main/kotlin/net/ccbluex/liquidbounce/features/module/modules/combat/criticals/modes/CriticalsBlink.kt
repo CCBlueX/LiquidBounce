@@ -28,12 +28,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.wouldDoCriticalHit
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
-import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSignC2SPacket
+import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
 
 object CriticalsBlink : Choice("Blink") {
 
@@ -61,12 +61,12 @@ object CriticalsBlink : Choice("Blink") {
             }
 
             event.action = when (event.packet) {
-                is PlayerInteractBlockC2SPacket,
-                is PlayerActionC2SPacket,
-                is UpdateSignC2SPacket,
-                is PlayerInteractEntityC2SPacket,
-                is HandSwingC2SPacket,
-                is ResourcePackStatusC2SPacket -> PacketQueueManager.Action.PASS
+                is ServerboundUseItemOnPacket,
+                is ServerboundPlayerActionPacket,
+                is ServerboundSignUpdatePacket,
+                is ServerboundInteractPacket,
+                is ServerboundSwingPacket,
+                is ServerboundResourcePackPacket -> PacketQueueManager.Action.PASS
                 else -> PacketQueueManager.Action.QUEUE
             }
             isInState = true

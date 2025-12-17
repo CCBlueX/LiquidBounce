@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.minecraft.item.Items
+import net.minecraft.world.item.Items
 
 /**
  * Uses an item called Rettungsplatform or Rettungskapsel to prevent fall damage.

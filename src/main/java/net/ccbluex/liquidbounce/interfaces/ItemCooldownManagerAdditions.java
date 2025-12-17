@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

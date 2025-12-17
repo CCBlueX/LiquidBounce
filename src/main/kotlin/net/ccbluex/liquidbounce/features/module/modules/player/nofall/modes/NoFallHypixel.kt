@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 internal object NoFallHypixel : NoFallMode("Hypixel") {
 
@@ -29,15 +29,15 @@ internal object NoFallHypixel : NoFallMode("Hypixel") {
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is ServerboundMovePlayerPacket) {
             if (player.fallDistance >= 3.3) {
                 doJump = true
             }
 
-            if (doJump && player.isOnGround) {
+            if (doJump && player.onGround()) {
                 packet.onGround = false
-                if (!mc.options.jumpKey.isPressed) {
-                    player.setPosition(player.entityPos.x, player.entityPos.y + 0.09, player.entityPos.z)
+                if (!mc.options.keyJump.isDown) {
+                    player.setPos(player.position().x, player.position().y + 0.09, player.position().z)
                 }
 
                 doJump = false

@@ -24,12 +24,12 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.getBlock
-import net.minecraft.block.BlockWithEntity
-import net.minecraft.block.Blocks
-import net.minecraft.block.FallingBlock
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.block.BaseEntityBlock
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.FallingBlock
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 object ScaffoldBlockItemSelection : Configurable("BlockItemSelection") {
 
@@ -68,10 +68,10 @@ object ScaffoldBlockItemSelection : Configurable("BlockItemSelection") {
         }
 
         val block = stack.getBlock() ?: return false
-        val defaultState = block.defaultState
+        val defaultState = block.defaultBlockState()
 
         return when {
-            !defaultState.isSolidSurface(world, BlockPos.ORIGIN, player, Direction.UP) -> {
+            !defaultState.entityCanStandOnFace(world, BlockPos.ZERO, player, Direction.UP) -> {
                 false
             }
             // We don't want to suicide...
@@ -89,15 +89,15 @@ object ScaffoldBlockItemSelection : Configurable("BlockItemSelection") {
         val block = stack.getBlock() ?: return true
         return when {
             // We dislike slippery blocks...
-            block.slipperiness > 0.6F -> true
+            block.friction > 0.6F -> true
             // We dislike soul sand and slime...
-            block.velocityMultiplier < 1.0F -> true
+            block.speedFactor < 1.0F -> true
             // We hate honey...
-            block.jumpVelocityMultiplier < 1.0F -> true
+            block.jumpFactor < 1.0F -> true
             // We don't want to place bee hives, chests, spawners, etc.
-            block is BlockWithEntity -> true
+            block is BaseEntityBlock -> true
             // We don't like slabs etc.
-            !block.defaultState.isFullCube(ModuleScaffold.mc.world!!, BlockPos.ORIGIN) -> true
+            !block.defaultBlockState().isCollisionShapeFullBlock(ModuleScaffold.mc.level!!, BlockPos.ZERO) -> true
             // Is there a hard coded answer?
             else -> block in unfavorableBlocksToPlace
         }

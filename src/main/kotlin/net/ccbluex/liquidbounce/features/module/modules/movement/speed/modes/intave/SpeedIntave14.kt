@@ -42,8 +42,8 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
 
         @Suppress("unused")
         private val tickHandler = tickHandler {
-            if (player.isSprinting && (player.isOnGround || player.airTicks == 11)) {
-                player.velocity = player.velocity.withStrafe(strength = strength.toDouble())
+            if (player.isSprinting && (player.onGround() || player.airTicks == 11)) {
+                player.setDeltaMovement(player.deltaMovement.withStrafe(strength = strength.toDouble()))
             }
         }
     }
@@ -52,9 +52,9 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
 
         @Suppress("unused")
         private val tickHandler = tickHandler {
-            if (player.velocity.y > 0.003 && player.isSprinting) {
-                player.velocity.x *= 1f + (BOOST_CONSTANT * 0.25)
-                player.velocity.z *= 1f + (BOOST_CONSTANT * 0.25)
+            if (player.deltaMovement.y > 0.003 && player.isSprinting) {
+                player.deltaMovement.x *= 1f + (BOOST_CONSTANT * 0.25)
+                player.deltaMovement.z *= 1f + (BOOST_CONSTANT * 0.25)
             }
         }
     }
