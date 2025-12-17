@@ -93,7 +93,6 @@ import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.server.packs.resources.ReloadableResourceManager
 import net.minecraft.server.packs.resources.PreparableReloadListener
-import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import net.minecraft.resources.Identifier
 import java.io.InputStream
 import java.util.*
@@ -506,8 +505,8 @@ object LiquidBounce : EventListener {
      *
      * For now this is only used to check for updates and request additional information from the internet.
      *
-     * @see SynchronousResourceReloader
-     * @see ResourceReloader
+     * @see net.fabricmc.fabric.api.resource.v1.reloader.SimpleResourceReloader
+     * @see PreparableReloadListener
      */
     private object ClientResourceReloader : PreparableReloadListener {
         override fun reload(

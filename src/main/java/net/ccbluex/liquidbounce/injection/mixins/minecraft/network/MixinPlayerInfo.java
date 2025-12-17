@@ -69,7 +69,7 @@ public abstract class MixinPlayerInfo {
         }
 
         if (capeTexture != null) {
-            return new PlayerSkin(original.body(), new ClientAsset.ResourceTexture(capeTexture),
+            return new PlayerSkin(original.body(), new ClientAsset.ResourceTexture(capeTexture, capeTexture),
                     original.elytra(), original.model(), original.secure());
         }
 
