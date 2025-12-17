@@ -297,7 +297,6 @@ tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
 
     // Minecraft 1.21.1 upwards uses Java 21.
-    // Minecraft 26.1 upwards uses Java 25.
     options.release = 21
 }
 
@@ -363,7 +362,7 @@ kotlin {
     compilerOptions {
         suppressWarnings = true
         jvmToolchain(21)
-        freeCompilerArgs.add("-Xexplicit-backing-fields")
+        freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
         freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
