@@ -40,12 +40,10 @@ object SpooferManager : Configurable("Spoofer") {
         tree(SpooferClient)
         tree(SpooferResourcePack)
         tree(SpooferBungeeCord)
+        tree(SpooferFingerprint)
 
         if (usesExploitPreventer) {
             registerExpModules()
-        } else {
-            // Exploit Preventer comes with a fingerprint spoofer
-            tree(SpooferFingerprint)
         }
     }
 
@@ -53,6 +51,9 @@ object SpooferManager : Configurable("Spoofer") {
         val modules = ExpCompatibility.INSTANCE.modules ?: return
 
         for ((expEnumName, expDisplayName) in modules) {
+            // Duplicated with [SpooferFingerprint]
+            if (expEnumName == "FINGERPRINTING") continue
+
             tree(SpooferExploitPreventerModule(expEnumName, expDisplayName))
         }
     }
