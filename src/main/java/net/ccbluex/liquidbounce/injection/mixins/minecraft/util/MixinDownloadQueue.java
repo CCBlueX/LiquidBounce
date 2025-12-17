@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.util;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.spoofer.SpooferFingerprint;
-import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.packs.DownloadQueue;
 import org.spongepowered.asm.mixin.Final;
@@ -42,18 +41,15 @@ public abstract class MixinDownloadQueue {
 
     @ModifyExpressionValue(method = "method_55485", at = @At(value = "INVOKE", target = "Ljava/nio/file/Path;resolve(Ljava/lang/String;)Ljava/nio/file/Path;"))
     private Path hookResolve(Path original, @Local(argsOnly = true) UUID id) {
-        if (SpooferFingerprint.INSTANCE.getRunning()) {
-            var accountId = Minecraft.getInstance().getUser().getProfileId();
-            if (accountId == null) {
-                ClientUtilsKt.getLogger().warn("Failed to change download directory, because account id is null.");
-                return original;
-            }
-
-            return cacheDir.resolve(accountId.toString()).resolve(id.toString());
+        // Check if our fingerprint spoofer is enabled or,
+        // the folder has been altered with by another mod.
+        if (!SpooferFingerprint.INSTANCE.getRunning() || !original.getParent().equals(cacheDir)) {
+            return original;
         }
 
-        return original;
+        var accountId = Minecraft.getInstance().getUser().getProfileId();
+        var accountFolder = cacheDir.resolve(accountId.toString());
+        return accountFolder.resolve(id.toString());
     }
-
 
 }
