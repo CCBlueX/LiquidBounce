@@ -116,12 +116,4 @@ open class FakePlayer(
         super.remove(reason)
     }
 
-    /**
-     * [org.jspecify.annotations.NullMarked] makes the parameter of [equals]
-     * in Java parent class notnull, but the Kotlin compiler expects it to be nullable.
-     */
-    override fun equals(other: Any?): Boolean {
-        return other != null && super.equals(other)
-    }
-
 }
