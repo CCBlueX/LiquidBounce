@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.handItems
@@ -29,24 +28,25 @@ import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.Items
 import net.minecraft.resources.Identifier
 
-abstract class MurderMysteryGenericMode(name: String) : Choice(name), MurderMysteryMode {
+sealed class SkinBasedMurderMysteryMode(name: String) : MurderMysteryMode(name) {
+
     protected val bowSkins = HashSet<String>()
     protected val murdererSkins = HashSet<String>()
 
     /**
      * What is our current player doing? Is he murderer?
      */
-    protected var currentPlayerType = MurderMysteryMode.PlayerType.NEUTRAL
+    protected var currentPlayerType = PlayerType.NEUTRAL
 
     val repeatable =
         tickHandler {
             currentPlayerType = player.handItems.firstNotNullOfOrNull {
                 when {
-                    it.item is BowItem || it.item == Items.ARROW -> MurderMysteryMode.PlayerType.DETECTIVE_LIKE
-                    MurderMysterySwordDetection.isSword(it) -> MurderMysteryMode.PlayerType.MURDERER
+                    it.item is BowItem || it.item == Items.ARROW -> PlayerType.DETECTIVE_LIKE
+                    MurderMysterySwordDetection.isSword(it) -> PlayerType.MURDERER
                     else -> null
                 }
-            } ?: MurderMysteryMode.PlayerType.NEUTRAL
+            } ?: PlayerType.NEUTRAL
         }
 
     override fun reset() {
@@ -65,11 +65,11 @@ abstract class MurderMysteryGenericMode(name: String) : Choice(name), MurderMyst
         }
     }
 
-    override fun getPlayerType(player: AbstractClientPlayer): MurderMysteryMode.PlayerType {
+    override fun getPlayerType(player: AbstractClientPlayer): PlayerType {
         return when (player.skin.body.texturePath().path) {
-            in murdererSkins -> MurderMysteryMode.PlayerType.MURDERER
-            in bowSkins -> MurderMysteryMode.PlayerType.DETECTIVE_LIKE
-            else -> MurderMysteryMode.PlayerType.NEUTRAL
+            in murdererSkins -> PlayerType.MURDERER
+            in bowSkins -> PlayerType.DETECTIVE_LIKE
+            else -> PlayerType.NEUTRAL
         }
     }
 
@@ -77,8 +77,8 @@ abstract class MurderMysteryGenericMode(name: String) : Choice(name), MurderMyst
         val targetPlayerType = getPlayerType(entity)
 
         return when (currentPlayerType) {
-            MurderMysteryMode.PlayerType.MURDERER -> targetPlayerType != MurderMysteryMode.PlayerType.MURDERER
-            else -> targetPlayerType == MurderMysteryMode.PlayerType.MURDERER
+            PlayerType.MURDERER -> targetPlayerType != PlayerType.MURDERER
+            else -> targetPlayerType == PlayerType.MURDERER
         }
     }
 }

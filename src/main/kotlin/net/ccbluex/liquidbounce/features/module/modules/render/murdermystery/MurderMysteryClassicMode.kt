@@ -24,9 +24,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.resources.Identifier
 
-object MurderMysteryClassicMode : MurderMysteryGenericMode("Classic") {
-    override val parent
-        get() = ModuleMurderMystery.modes
+object MurderMysteryClassicMode : SkinBasedMurderMysteryMode("Classic") {
 
     override fun handleHasSword(
         entity: AbstractClientPlayer,

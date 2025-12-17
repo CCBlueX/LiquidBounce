@@ -28,9 +28,7 @@ import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.Items
 import net.minecraft.resources.Identifier
 
-object MurderMysteryInfectionMode : MurderMysteryGenericMode("Infection") {
-    override val parent
-        get() = ModuleMurderMystery.modes
+object MurderMysteryInfectionMode : SkinBasedMurderMysteryMode("Infection") {
 
     val rep =
         tickHandler {

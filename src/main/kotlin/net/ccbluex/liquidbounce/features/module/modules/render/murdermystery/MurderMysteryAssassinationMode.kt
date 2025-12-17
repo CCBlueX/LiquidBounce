@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -38,9 +37,7 @@ import net.minecraft.resources.Identifier
 import java.util.*
 import kotlin.math.absoluteValue
 
-object MurderMysteryAssassinationMode : Choice("Assassination"), MurderMysteryMode {
-    override val parent
-        get() = ModuleMurderMystery.modes
+object MurderMysteryAssassinationMode : MurderMysteryMode("Assassination") {
 
     private var lastMap: MapId? = null
     private var currentAssassinationTarget: UUID? = null
@@ -150,15 +147,15 @@ object MurderMysteryAssassinationMode : Choice("Assassination"), MurderMysteryMo
 
     override fun shouldAttack(entity: AbstractClientPlayer): Boolean {
         // This person is either our assasin or our target. Attack them.
-        return this.getPlayerType(entity) == MurderMysteryMode.PlayerType.MURDERER
+        return this.getPlayerType(entity) == PlayerType.MURDERER
     }
 
-    override fun getPlayerType(player: AbstractClientPlayer): MurderMysteryMode.PlayerType {
+    override fun getPlayerType(player: AbstractClientPlayer): PlayerType {
         if (player.gameProfile.id == currentAssassinationTarget || player.gameProfile.id == currentAssassin) {
-            return MurderMysteryMode.PlayerType.MURDERER
+            return PlayerType.MURDERER
         }
 
-        return MurderMysteryMode.PlayerType.NEUTRAL
+        return PlayerType.NEUTRAL
     }
 
     override fun reset() {

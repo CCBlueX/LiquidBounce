@@ -29,8 +29,10 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.ChatFormatting
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.world.entity.Entity
@@ -41,7 +43,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
 import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ClientboundRespawnPacket
-import net.minecraft.network.chat.Component
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.phys.AABB
 
@@ -57,7 +58,7 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
         )
 
     private val currentMode: MurderMysteryMode
-        get() = this.modes.activeChoice as MurderMysteryMode
+        get() = this.modes.activeChoice
 
     override fun onDisabled() {
         this.reset()
@@ -132,12 +133,12 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
 
         val col = when (playerType) {
             MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> {
-                entity.team?.setPlayerPrefix(Component.literal("§b[BOW] "))
+                entity.team?.setPlayerPrefix("[BOW] ".asPlainText(ChatFormatting.AQUA))
                 Color4b(0, 144, 255)
             }
 
             MurderMysteryMode.PlayerType.MURDERER -> {
-                entity.team?.setPlayerPrefix(Component.literal("§c[MURD] "))
+                entity.team?.setPlayerPrefix("[MURD] ".asPlainText(ChatFormatting.RED))
                 Color4b(203, 9, 9)
             }
 
