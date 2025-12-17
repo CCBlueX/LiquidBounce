@@ -19,13 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
 import net.ccbluex.fastutil.objectHashSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isGameProfileUnique
 import net.ccbluex.liquidbounce.utils.entity.armorItems
@@ -36,9 +33,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import java.util.*
 
-object MatrixAntiBotMode : Choice("Matrix"), ModuleAntiBot.IAntiBotMode {
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleAntiBot.modes
+object MatrixAntiBotMode : AntibotMode("Matrix") {
 
     private val suspectList = objectHashSetOf<UUID>()
     private val botList = objectHashSetOf<UUID>()

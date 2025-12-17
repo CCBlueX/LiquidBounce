@@ -18,26 +18,22 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.minecraft.world.entity.player.Player
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import java.util.*
 
-object HorizonAntiBotMode : Choice("Horizon"), ModuleAntiBot.IAntiBotMode {
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleAntiBot.modes
+object HorizonAntiBotMode : AntibotMode("Horizon") {
 
-    private val botList = hashSetOf<UUID>()
+    private val botList = objectHashSetOf<UUID>()
 
     val packetHandler = handler<PacketEvent> {
         when (val packet = it.packet) {
             is ClientboundPlayerInfoUpdatePacket -> {
-                if (packet.actions().first() == ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER) {
+                if (ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER in packet.actions()) {
                     for (entry in packet.entries()) {
                         if (entry.gameMode != null) {
                             continue

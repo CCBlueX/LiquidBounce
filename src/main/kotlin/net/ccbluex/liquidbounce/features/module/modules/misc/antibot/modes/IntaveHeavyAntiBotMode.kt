@@ -18,8 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
@@ -33,12 +32,10 @@ import java.util.*
  *
  * Tested on: gamster.org and a private server with latest Intave as of 7/28/2022.
  */
-object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMode {
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleAntiBot.modes
+object IntaveHeavyAntiBotMode : AntibotMode("IntaveHeavy") {
 
     private val suspectList = hashMapOf<UUID, SuspectInfo>()
-    private val botList = hashSetOf<UUID>()
+    private val botList = objectHashSetOf<UUID>()
 
     /**
      * ## Ping logic:
@@ -46,8 +43,8 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
      * come back from a duel, you will keep your ping.
      *
      * As for Matrix and Intave, they defy this logic. Intave though decides instead to fix it by sending
-     * [PlayerListS2CPacket.Action.UPDATE_LATENCY] to make up for the ping issue. Unfortunately, that leads to
-     * even more problems.
+     * [ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LATENCY] to make up for the ping issue.
+     * Unfortunately, that leads to even more problems.
      */
     val packetHandler = handler<PacketEvent> {
         when (val packet = it.packet) {
@@ -129,6 +126,6 @@ object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMod
     }
 
     @JvmRecord
-    data class SuspectInfo(val latency: Int, val timestamp: Long)
+    private data class SuspectInfo(val latency: Int, val timestamp: Long)
 
 }

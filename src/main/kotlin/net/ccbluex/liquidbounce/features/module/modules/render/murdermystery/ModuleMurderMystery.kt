@@ -41,9 +41,8 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
 import net.minecraft.network.protocol.game.ClientboundLoginPacket
 import net.minecraft.network.protocol.game.ClientboundRespawnPacket
-import net.minecraft.sounds.SoundEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
+import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.phys.AABB
 
 object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
@@ -71,23 +70,13 @@ object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
     @Suppress("unused")
     val renderHandler = handler<WorldRenderEvent> { event ->
         if (playHurt) {
-            mc.soundManager.play(
-                SimpleSoundInstance.forUI(
-                    SoundEvent.createVariableRangeEvent(Identifier.parse("entity.villager.hurt")),
-                    1F,
-                ),
-            )
+            mc.soundManager.play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_HURT, 1F))
 
             playHurt = false
         }
 
         if (playBow) {
-            mc.soundManager.play(
-                SimpleSoundInstance.forUI(
-                    SoundEvent.createVariableRangeEvent(Identifier.parse("item.crossbow.shoot")),
-                    1F,
-                ),
-            )
+            mc.soundManager.play(SimpleSoundInstance.forUI(SoundEvents.CROSSBOW_SHOOT, 1F))
 
             playBow = false
         }

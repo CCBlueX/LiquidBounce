@@ -54,7 +54,7 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
     }
 
     private fun reset() = this.modes.choices.forEach {
-        (it as IAntiBotMode).reset()
+        it.reset()
     }
 
     override fun onDisabled() {
@@ -95,11 +95,7 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
             return true
         }
 
-        return (this.modes.activeChoice as IAntiBotMode).isBot(player)
+        return this.modes.activeChoice.isBot(player)
     }
 
-    interface IAntiBotMode {
-        fun reset() { }
-        fun isBot(entity: Player): Boolean
-    }
 }

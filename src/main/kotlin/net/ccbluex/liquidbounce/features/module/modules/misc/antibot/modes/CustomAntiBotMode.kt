@@ -23,8 +23,6 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -53,10 +51,7 @@ import java.util.function.Predicate
 import kotlin.math.abs
 
 @Suppress("MagicNumber")
-object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleAntiBot.modes
+object CustomAntiBotMode : AntibotMode("Custom") {
 
     private object InvalidGround : ToggleableConfigurable(ModuleAntiBot, "InvalidGround", true) {
         val vlToConsiderAsBot by int("VLToConsiderAsBot", 10, 1..50, "flags")
