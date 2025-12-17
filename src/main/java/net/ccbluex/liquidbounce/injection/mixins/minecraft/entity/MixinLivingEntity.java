@@ -26,13 +26,9 @@ import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.ModuleElytraTarget;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
-import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
+import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone;
@@ -41,19 +37,19 @@ import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
-import net.minecraft.core.Holder;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -360,6 +356,12 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Inject(method = "setItemSlot", at = @At("HEAD"))
     private void hookEquipmentChange(EquipmentSlot slot, ItemStack stack, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new EntityEquipmentChangeEvent((LivingEntity) (Object) this, slot, stack));
+    }
+
+    @ModifyExpressionValue(method = "getCurrentSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"), require = 0)
+    private int hookSwingSpeed(int duration) {
+        var animations = ModuleAnimations.INSTANCE;
+        return animations.getRunning() ? animations.getSwingDuration() : duration;
     }
 
 }
