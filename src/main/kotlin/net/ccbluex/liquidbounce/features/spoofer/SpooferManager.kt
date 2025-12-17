@@ -32,7 +32,8 @@ import net.ccbluex.liquidbounce.utils.client.exploitpreventer.ExpCompatibility
 object SpooferManager : Configurable("Spoofer") {
 
     val usesExploitPreventer = runCatching {
-        Class.forName("com.nikoverflow.exploitpreventer.ExploitPreventer")
+        // The API does not report whether [ExploitPreventer] is installed or not.
+        Class.forName("com.nikoverflow.exploitpreventer.ExploitPreventerMod")
         true
     }.getOrDefault(false)
 
