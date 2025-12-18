@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.utils.aiming.point.features
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.point.PointInsideBox
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
@@ -80,14 +80,14 @@ internal class PointProcessorGaussian(parent: EventListener) : PointProcessor(pa
 
         val yawFactor =
             if (dynamicCheck && dynamic.yawFactor > 0f) {
-                (yawFactor.random() + player.sqrtSpeed * dynamic.yawFactor)
+                (yawFactor.random() + player.horizontalSpeed * dynamic.yawFactor)
             } else {
                 yawFactor.random()
             }.toDouble()
 
         val pitchFactor =
             if (dynamicCheck && dynamic.pitchFactor > 0f) {
-                (pitchFactor.random() + player.sqrtSpeed * dynamic.pitchFactor)
+                (pitchFactor.random() + player.horizontalSpeed * dynamic.pitchFactor)
             } else {
                 pitchFactor.random()
             }.toDouble()

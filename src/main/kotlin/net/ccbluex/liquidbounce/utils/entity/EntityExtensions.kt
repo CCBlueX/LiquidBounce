@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition
 import net.ccbluex.liquidbounce.interfaces.InputAddition
@@ -43,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.shapes.EntityCollisionContext
-import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.client.player.ClientInput
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.item.enchantment.Enchantments
@@ -84,7 +82,6 @@ import net.minecraft.world.level.ExplosionDamageCalculator
 import net.minecraft.world.level.ServerExplosion
 import kotlin.math.cos
 import kotlin.math.floor
-import kotlin.math.hypot
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -114,9 +111,6 @@ val LivingEntity.armorItems: Array<ItemStack>
         getItemBySlot(EquipmentSlot.CHEST),
         getItemBySlot(EquipmentSlot.HEAD),
     )
-
-val LivingEntity.equippedItems: Array<ItemStack>
-    get() = EquipmentSlot.entries.mapToArray { this.getItemBySlot(it) }
 
 fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
     val entity = source.directEntity
@@ -292,14 +286,11 @@ fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Floa
     return actualYaw
 }
 
-val Player.sqrtSpeed: Double
-    get() = deltaMovement.sqrtSpeed
-
-val Vec3.sqrtSpeed: Double
-    get() = hypot(x, z)
+val Player.horizontalSpeed: Double
+    get() = deltaMovement.horizontalDistance()
 
 fun Vec3.withStrafe(
-    speed: Double = sqrtSpeed,
+    speed: Double = horizontalDistance(),
     strength: Double = 1.0,
     input: DirectionalInput? = DirectionalInput(player.input),
     yaw: Float = player.getMovementDirectionOfInput(input ?: DirectionalInput(player.input)),
@@ -491,7 +482,7 @@ fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
 }
 
 /**
- * See [ExplosionBehavior.calculateDamage].
+ * See [ExplosionDamageCalculator.getEntityDamageAmount].
  */
 @Suppress("LongParameterList")
 fun LivingEntity.getDamageFromExplosion(
@@ -538,7 +529,7 @@ fun LivingEntity.getDamageFromExplosion(
 }
 
 /**
- * Basically [ExplosionImpl.calculateReceivedDamage] but this method allows us to exclude blocks using [exclude].
+ * Basically [ServerExplosion.getSeenPercent] but this method allows us to exclude blocks using [exclude].
  */
 @Suppress("NestedBlockDepth")
 fun LivingEntity.getExposureToExplosion(
@@ -637,7 +628,7 @@ fun LivingEntity.hasHealthScoreboard(): Boolean {
     if (this == player) return false
 
     val objective = world.scoreboard.getDisplayObjective(DisplaySlot.BELOW_NAME) ?: return false
-    val displayName = objective.displayName?.string ?: return false
+    val displayName = objective.displayName.string
 
     return HEALTH_KEYWORDS.any { displayName.contains(it) }
 }

@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.wat
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.entity.any
 import net.ccbluex.liquidbounce.utils.entity.initial
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.untransformed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
@@ -184,7 +184,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
                 }
             }
 
-            val speed = player.sqrtSpeed
+            val speed = player.horizontalSpeed
             val strafeYaw = atan2(target.position().z - player.position().z, target.position().x - player.position().x)
             var strafeVec = computeDirectionVec(strafeYaw, distance, speed, targetSelector.maxRange, direction)
             var pointCoords = player.position().add(strafeVec)
@@ -221,13 +221,13 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
                 if (SpeedHypixelLowHop.shouldStrafe) {
                     event.movement = event.movement.withStrafe(
                         yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
-                        speed = player.sqrtSpeed.coerceAtLeast(minSpeed),
+                        speed = player.horizontalSpeed.coerceAtLeast(minSpeed),
                         input = null
                     )
                 } else {
                     event.movement = event.movement.withStrafe(
                         yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
-                        speed = player.sqrtSpeed.coerceAtLeast(minSpeed),
+                        speed = player.horizontalSpeed.coerceAtLeast(minSpeed),
                         strength = 0.02,
                         input = null
                     )
@@ -235,7 +235,7 @@ object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
             } else {
                 event.movement = event.movement.withStrafe(
                     yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
-                    speed = player.sqrtSpeed,
+                    speed = player.horizontalSpeed,
                     input = null
                 )
             }

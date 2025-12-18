@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.minecraft.world.effect.MobEffects
@@ -100,7 +100,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
             0.0
         }
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast)))
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(atLeast)))
     }
 
     /**
@@ -119,12 +119,12 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
 
             // Fall damage velocity
             val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
-                player.sqrtSpeed.coerceAtLeast(
+                player.horizontalSpeed.coerceAtLeast(
                     BASH *
                         (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
                 )
             } else {
-                player.sqrtSpeed
+                player.horizontalSpeed
             }
             player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
         } else if (packet is ClientboundPlayerPositionPacket) {

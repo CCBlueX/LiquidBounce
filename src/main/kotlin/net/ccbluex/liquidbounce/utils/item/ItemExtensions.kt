@@ -96,7 +96,7 @@ fun createSplashPotion(name: String, vararg effects: MobEffectInstance): ItemSta
     val itemStack = ItemStack(Items.SPLASH_POTION)
 
     itemStack.set(DataComponents.CUSTOM_NAME, regular(name))
-    itemStack.set<PotionContents>(
+    itemStack.set(
         DataComponents.POTION_CONTENTS,
         PotionContents(Optional.empty(), Optional.empty(), effects.unmodifiable(), Optional.empty())
     )
@@ -117,7 +117,7 @@ fun ItemStack?.getEnchantment(enchantment: ResourceKey<Enchantment>): Int {
 }
 
 /**
- * @return if this item stack has same [Item] and [net.minecraft.component.ComponentChanges]
+ * @return if this item stack has same [Item] and [net.minecraft.core.component.DataComponentPatch]
  * with the other item stack
  */
 fun ItemStack.isMergeable(other: ItemStack): Boolean {
@@ -158,6 +158,7 @@ val ItemStack.attackDamage: Double
 val ItemStack.sharpnessLevel: Int
     get() = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
 
+@JvmOverloads
 fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double =
     if (!isOlderThanOrEqual1_8) {
         when (level) {
