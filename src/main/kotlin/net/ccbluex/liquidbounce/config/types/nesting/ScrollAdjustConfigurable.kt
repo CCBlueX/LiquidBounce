@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.config.types.nesting
 
 import com.mojang.blaze3d.platform.InputConstants
+import it.unimi.dsi.fastutil.floats.FloatConsumer
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
@@ -39,10 +40,10 @@ data class ScrollAdjustOptions(
 open class ScrollAdjustConfigurable(
     parent: EventListener?,
     name: String,
-    default: Boolean,
-    private val adjustFunction: (Float) -> Unit,
+    enabled: Boolean,
+    private val adjustFunction: FloatConsumer,
     options: ScrollAdjustOptions = ScrollAdjustOptions()
-) : ToggleableConfigurable(parent, name, default) {
+) : ToggleableConfigurable(parent, name, enabled) {
 
     val modifierKey by key("Modifier", options.modifierKeyDefault)
     val sensitivity by float("Sensitivity", options.sensitivityDefault, options.sensitivityRange)
@@ -54,7 +55,7 @@ open class ScrollAdjustConfigurable(
             if (!running) return@handler
             if (!canPerformScroll()) return@handler
             val delta = event.vertical.toFloat() * sensitivity
-            adjustFunction(delta)
+            adjustFunction.accept(delta)
         }
 
         handler<MouseScrollInHotbarEvent> {

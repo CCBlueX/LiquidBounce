@@ -48,15 +48,15 @@ import net.minecraft.world.phys.BlockHitResult
  */
 object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
 
-    object Preview : ToggleableConfigurable(this, "Preview", true) {
+    private object Preview : ToggleableConfigurable(this, "Preview", true) {
         val outlineOnly by boolean("OutlineOnly", false)
         val fillColor by color("Color", Color4b(69, 119, 255, 104))
         val outlineColor by color("OutlineColor", Color4b.WHITE)
     }
 
-    val liquidPlace by boolean("Place in Liquids", false)
+    private val liquidPlace by boolean("PlaceInLiquid", false)
 
-    object CustomRange : ToggleableConfigurable(this, "CustomRange", false) {
+    private object CustomRange : ToggleableConfigurable(this, "CustomRange", false) {
         private val rangeBounds = 1.0f..4.5f
         val range = float("Range", 3.0f, rangeBounds)
 
@@ -72,7 +72,8 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
     }
 
     init {
-        treeAll(Preview, CustomRange)
+        tree(Preview)
+        tree(CustomRange)
     }
 
     private inline val BlockHitResult.isAirOrFluid: Boolean
@@ -103,7 +104,6 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
         if (player.isSpectator) return null
         if (!hitResult.isAirOrFluid) return null
         if (!canPlayerPlaceAt(hitResult)) return null
-
 
         if (CustomRange.running) {
             val distance = CustomRange.range.get().toDouble()
