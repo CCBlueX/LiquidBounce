@@ -69,16 +69,28 @@ enum class HarvestAction {
 }
 
 /**
+ * Get the harvest action for the block. The block itself might be not ready for harvest!
+ * Call [BlockPos.readyForHarvest] before performing the harvest action.
+ */
+val Block.harvestAction: HarvestAction?
+    get() = when (this) {
+        is PumpkinBlock, is CropBlock, is NetherWartBlock, is CocoaBlock,
+        is SugarCaneBlock, is CactusBlock, is KelpPlantBlock, is BambooStalkBlock, Blocks.MELON -> HarvestAction.BREAK
+        is SweetBerryBushBlock -> HarvestAction.USE
+        else -> null
+    }
+
+/**
  * Check if [this@shouldBeDestroyed] with [state] is ready for harvest
  */
-internal fun BlockPos.readyForHarvest(state: BlockState): Boolean {
+fun BlockPos.readyForHarvest(state: BlockState): Boolean {
     return when (val block = state.block) {
         is PumpkinBlock -> true
         Blocks.MELON -> true
         is CropBlock -> block.isMaxAge(state)
         is NetherWartBlock -> state.getValue(NetherWartBlock.AGE) >= NetherWartBlock.MAX_AGE
         is CocoaBlock -> state.getValue(CocoaBlock.AGE) >= CocoaBlock.MAX_AGE
-        is SweetBerryBushBlock -> state.getValue(SweetBerryBushBlock.AGE) >= SweetBerryBushBlock.MAX_AGE // TODO: should use item
+        is SweetBerryBushBlock -> state.getValue(SweetBerryBushBlock.AGE) >= SweetBerryBushBlock.MAX_AGE
         is SugarCaneBlock -> isAboveLast<SugarCaneBlock>(this)
         is CactusBlock -> isAboveLast<CactusBlock>(this)
         is KelpPlantBlock -> isAboveLast<KelpPlantBlock>(this)

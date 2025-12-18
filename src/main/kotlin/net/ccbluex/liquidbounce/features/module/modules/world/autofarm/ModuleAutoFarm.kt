@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.util.asRefreshable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -75,11 +77,21 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     private val disableOnFullInventory by boolean("DisableOnFullInventory", false)
 
     private object AutoPlaceCrops : ToggleableConfigurable(this, "AutoPlace", true) {
-        val swapBackDelay by intRange("swapBackDelay", 1..2, 1..20, "ticks")
+        val swapBackDelay by intRange("SwapBackDelay", 1..2, 1..20, "ticks")
     }
 
     internal object AutoUseBoneMeal : ToggleableConfigurable(this, "AutoUseBoneMeal", false) {
-        // TODO Use delay, Use filter (wheat/potato/...)
+        private val chronometer = Chronometer()
+        // TODO Use filter (wheat/potato/...)
+        private val useDelay = intRange("UseDelay", 20..200, 0..20000, "ms").asRefreshable()
+        val swapBackDelay by intRange("SwapBackDelay", 1..2, 1..20, "ticks")
+
+        val isReady get() = chronometer.hasElapsed(useDelay.current.toLong())
+
+        fun reset() {
+            chronometer.reset()
+            useDelay.refresh()
+        }
     }
 
     private val fortune by boolean("UseFortune", true)
@@ -149,17 +161,19 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         if (blockPos.readyForHarvest(state)) {
             swapToSlotWithFortune()
 
+            // TODO: check type
             doBreak(rayTraceResult)
 
             if (interaction.destroyStage == -1) {
                 // Only wait if the block is completely broken
                 waitTicks(interactDelay.random())
             }
-        } else if (AutoUseBoneMeal.enabled && blockPos.canUseBoneMeal(state)) {
+        } else if (AutoUseBoneMeal.enabled && AutoUseBoneMeal.isReady && blockPos.canUseBoneMeal(state)) {
             val boneMealSlot = Slots.OffhandWithHotbar.findClosestSlot(Items.BONE_MEAL) ?: return@tickHandler
 
-            SilentHotbar.selectSlotSilently(this, boneMealSlot, AutoPlaceCrops.swapBackDelay.random())
+            SilentHotbar.selectSlotSilently(this, boneMealSlot, AutoUseBoneMeal.swapBackDelay.random())
             doPlacement(rayTraceResult, hand = boneMealSlot.useHand)
+            AutoUseBoneMeal.reset()
             waitTicks(interactDelay.random())
         } else {
             val pos = blockPos.relative(rayTraceResult.direction).below()
@@ -201,8 +215,8 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         return false
     }
 
-    // Searches for any blocks within the radius that need to be destroyed, such as crops.
-    private fun updateTargetToBreakable(radius: Float, radiusSquared: Float, eyesPos: Vec3): Boolean {
+    /** Searches for any blocks within the radius that need to be destroyed, such as crops. */
+    private fun updateTargetToHarvest(radius: Float, radiusSquared: Float, eyesPos: Vec3): Boolean {
         val blocksToBreak = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
             !state.isAir && pos.readyForHarvest(state) &&
                     getNearestPoint(eyesPos, AABB(pos)).distanceToSqr(eyesPos) <= radiusSquared
@@ -275,7 +289,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         val eyesPos = player.eyePosition
 
         // Can we find a breakable target?
-        if (updateTargetToBreakable(radius, radiusSquared, eyesPos)) {
+        if (updateTargetToHarvest(radius, radiusSquared, eyesPos)) {
             return
         }
 
