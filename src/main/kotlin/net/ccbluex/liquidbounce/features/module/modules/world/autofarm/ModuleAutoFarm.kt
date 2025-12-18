@@ -316,7 +316,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         state: BlockState,
         pos: BlockPos,
         allowFarmland: Boolean = true,
-        allowSoulsand: Boolean = true
+        allowSoulsand: Boolean = true,
     ): Boolean {
         return isFarmBlock(state, allowFarmland, allowSoulsand) && pos.above().getState()?.isAir == true
     }
@@ -336,6 +336,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     override fun onDisabled() {
         ChunkScanner.unsubscribe(AutoFarmBlockTracker)
         currentTarget = null
+        AutoUseBoneMeal.reset()
     }
 
 }

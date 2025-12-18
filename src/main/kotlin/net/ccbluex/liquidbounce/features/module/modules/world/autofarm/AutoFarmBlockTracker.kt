@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.world.level.block.state.BlockState
@@ -25,19 +26,24 @@ import net.minecraft.world.level.block.FarmBlock
 import net.minecraft.world.level.block.SoulSandBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.tags.BlockTags
 
-enum class AutoFarmTrackedState {
-    READY_FOR_HARVEST,
-    CAN_USE_BONE_MEAL,
-    FARMLAND,
-    SOUL_SAND,
+sealed interface AutoFarmTrackedState {
+    object ReadyForHarvest : AutoFarmTrackedState
+    object Bonemealable : AutoFarmTrackedState
+
+    enum class Plantable(override val choiceName: String) : AutoFarmTrackedState, NamedChoice {
+        FARM("Farmland"),
+        SOUL_SAND("SoulSand"),
+        JUNGLE_LOGS("JungleLogs");
+    }
 }
 
 object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFarmTrackedState>() {
     override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedState? {
         // Should be destroyed? e.g., Melon block, Pumpkin block
         if (pos.readyForHarvest(state)) {
-            return AutoFarmTrackedState.READY_FOR_HARVEST
+            return AutoFarmTrackedState.ReadyForHarvest
         }
 
         val cache = BlockPos.MutableBlockPos()
@@ -46,12 +52,14 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
             val blockBelow = cache.setWithOffset(pos, Direction.DOWN).getState()?.block ?: return null
 
             when (blockBelow) {
-                is FarmBlock -> track(cache, AutoFarmTrackedState.FARMLAND)
-                is SoulSandBlock -> track(cache, AutoFarmTrackedState.SOUL_SAND)
+                is FarmBlock -> track(cache, AutoFarmTrackedState.Plantable.FARM)
+                is SoulSandBlock -> track(cache, AutoFarmTrackedState.Plantable.SOUL_SAND)
             }
 
             // Air itself should be untracked
             return null
+        } else if (state.`is`(BlockTags.JUNGLE_LOGS)) {
+            return AutoFarmTrackedState.Plantable.JUNGLE_LOGS
         }
 
         val blockBelow = cache.setWithOffset(pos, Direction.DOWN).getState()?.block
@@ -60,7 +68,7 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
         }
 
         if (pos.canUseBoneMeal(state)) {
-            return AutoFarmTrackedState.CAN_USE_BONE_MEAL
+            return AutoFarmTrackedState.Bonemealable
         }
 
         val block = state.block
@@ -68,8 +76,8 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
         // Check if air above
         return if (cache.setWithOffset(pos, Direction.UP).getState()?.isAir == true) {
             when (block) {
-                is FarmBlock -> AutoFarmTrackedState.FARMLAND
-                is SoulSandBlock -> AutoFarmTrackedState.SOUL_SAND
+                is FarmBlock -> AutoFarmTrackedState.Plantable.FARM
+                is SoulSandBlock -> AutoFarmTrackedState.Plantable.SOUL_SAND
                 else -> null
             }
         } else {

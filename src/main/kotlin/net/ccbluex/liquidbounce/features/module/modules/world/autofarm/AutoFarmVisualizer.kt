@@ -31,9 +31,9 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.core.Direction
+import java.util.EnumSet
 import kotlin.math.hypot
 
 object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", true) {
@@ -66,6 +66,8 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
 
         private val colorRainbow by boolean("Rainbow", false)
 
+        private val placeTargets by multiEnumChoice("PlaceTargets", AutoFarmTrackedState.Plantable.entries)
+
         private object CurrentTarget : ToggleableConfigurable(this.parent, "CurrentTarget", true) {
             private val color by color("Color", Color4b(66, 120, 245, 255))
             private val colorRainbow by boolean("Rainbow", false)
@@ -97,14 +99,18 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
 
                     withPositionRelativeToCamera(pos) {
                         when (type) {
-                            AutoFarmTrackedState.READY_FOR_HARVEST -> {
+                            AutoFarmTrackedState.ReadyForHarvest -> {
                                 drawBox(
                                     FULL_BOX,
                                     fillColor,
                                     if (outline) baseColor.with(a = 100) else null,
                                 )
                             }
-                            AutoFarmTrackedState.SOUL_SAND, AutoFarmTrackedState.FARMLAND -> {
+
+                            AutoFarmTrackedState.Plantable.SOUL_SAND, AutoFarmTrackedState.Plantable.FARM -> if (placeTargets.contains(
+                                    type
+                                )
+                            ) {
                                 drawBoxSide(
                                     FULL_BOX,
                                     side = Direction.UP,
@@ -112,7 +118,17 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                                     outlineColor = if (outline) baseColor.with(a = 100) else null,
                                 )
                             }
-                            AutoFarmTrackedState.CAN_USE_BONE_MEAL -> {
+
+                            AutoFarmTrackedState.Plantable.JUNGLE_LOGS -> if (placeTargets.contains(type)) {
+                                drawBox(
+                                    FULL_BOX,
+                                    faceColor = placeColor,
+                                    outlineColor = if (outline) baseColor.with(a = 100) else null,
+                                    faceVertices = 0xFF_FF00.inv(), // Without UP & DOWN
+                                )
+                            }
+
+                            AutoFarmTrackedState.Bonemealable -> {
                                 // NOOP
                             }
                         }

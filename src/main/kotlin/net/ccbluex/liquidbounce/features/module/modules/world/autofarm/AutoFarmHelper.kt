@@ -100,7 +100,7 @@ fun BlockPos.readyForHarvest(state: BlockState): Boolean {
 }
 
 internal val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
-internal val itemsForSoulSand = arrayOf(Items.NETHER_WART)
+internal val itemsForSoulSand = setOf(Items.NETHER_WART)
 
 internal fun getAvailableSlotForBlock(blockState: BlockState) =
     when (blockState.block) {
