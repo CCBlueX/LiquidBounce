@@ -479,13 +479,13 @@ fun raytraceUpperBlockSide(
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
 
-    val vec3d = Vec3.atLowerCornerWithOffset(expectedTarget, 0.0, 0.9, 0.0)
+    val vec3d = Vec3.atLowerCornerOf(expectedTarget)
 
     val bestRotationTracker = BestRotationTracker(rotationPreference)
 
     val stepSize = rotationsNotToMatch?.let { 0.05 } ?: 0.1
     range(0.1..0.9 step stepSize, 0.1..0.9 step stepSize) { x, z ->
-        val vec3 = vec3d.add(x, 0.0, z)
+        val vec3 = vec3d.add(x, 0.9, z)
 
         // skip because of out of range
         val distance = eyes.distanceToSqr(vec3)

@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockSide
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.doBreak
@@ -44,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.entity.getNearestPointOnSide
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
@@ -51,14 +53,18 @@ import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.inventory.hasItem
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.HitResult
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
 
 /**
  * AutoFarm module
@@ -183,17 +189,17 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             AutoUseBoneMeal.reset()
             waitTicks(interactDelay.random())
         } else {
-            val pos = blockPos.relative(rayTraceResult.direction).below()
-            val blockState = world.getBlockState(pos)
+            val blockState = world.getBlockState(blockPos)
 
             debugGeometry("RayTraceResult") {
                 ModuleDebug.DebuggedPoint(rayTraceResult.location, Color4b.RED.alpha(150))
             }
             debugGeometry("PlantablePos") {
-                ModuleDebug.DebuggedBox(AABB(pos), Color4b.GREEN.alpha(100))
+                ModuleDebug.DebuggedBox(AABB(blockPos), Color4b.GREEN.alpha(100))
             }
 
-            if (isPlantableBlock(blockState, pos, AutoFarmTrackedState.Plantable.entries)) {
+            val sides = AutoFarmTrackedState.Plantable.entries.findPlantableSides(blockPos, blockState)
+            if (sides.isNotEmpty()) {
                 val slot = getAvailableSlotForBlock(blockState) ?: return@tickHandler
 
                 SilentHotbar.selectSlotSilently(this, slot, AutoPlaceCrops.swapBackDelay.random())
@@ -252,18 +258,30 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
         val blocksToPlace =
             eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-                !state.isAir && isPlantableBlock(state, pos, allowedTypes)
-                        && getNearestPoint(eyesPos, AABB(pos)).distanceToSqr(eyesPos) <= radiusSquared
-            }.map { it.first }.sortedBy { it.getCenterDistanceSquared() }
+                !state.isAir && allowedTypes.any { it.isBlockMatches(state) }
+            }.mapNotNullTo(mutableListOf()) { (pos, state) ->
+                val sides =
+                    allowedTypes.findPlantableSides(pos, state).takeUnless { it.isEmpty() } ?: return@mapNotNullTo null
+                sides.removeIf { side ->
+                    getNearestPointOnSide(eyesPos, AABB(pos), side)
+                        .distanceToSqr(eyesPos) > radiusSquared
+                }
+                if (sides.isEmpty()) return@mapNotNullTo null
+                pos to sides
+            }.sortedBy { it.first.getCenterDistanceSquared() }
 
-        for (pos in blocksToPlace) {
-            // We can only plant on the upper side
-            val (rotation, _) = raytraceUpperBlockSide(
-                player.eyePosition,
-                range = range.toDouble() - 0.1,
-                wallsRange = wallRange.toDouble() - 0.1,
-                pos
-            ) ?: continue // We don't have a free angle at the block? Well, let me see the next.
+        val collisionContext = CollisionContext.of(player)
+        for ((pos, sides) in blocksToPlace) {
+            val (rotation, _) = sides.firstNotNullOfOrNull { side ->
+                raytraceBlockSide(
+                    side,
+                    pos,
+                    player.eyePosition,
+                    rangeSquared = range.sq().toDouble() - 0.1,
+                    wallsRangeSquared = wallRange.sq().toDouble() - 0.1,
+                    collisionContext,
+                )
+            } ?: continue // We don't have a free angle at the block? Well, let me see the next.
 
             // set currentTarget to the new target
             currentTarget = pos
@@ -319,15 +337,12 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     }
 
     /**
-     * checks if the block is either a farmland or soulsand block and has air above it
+     * Find plantable sides of the block for all types in the iterable
      */
-    private fun isPlantableBlock(
-        state: BlockState,
+    private fun Iterable<AutoFarmTrackedState.Plantable>.findPlantableSides(
         pos: BlockPos,
-        allowedTypes: Iterable<AutoFarmTrackedState.Plantable>,
-    ): Boolean {
-        return allowedTypes.any { it.findPlantableNeighbors(pos, state).isNotEmpty() }
-    }
+        state: BlockState,
+    ) = flatMapTo(emptyEnumSet()) { it.findPlantableSides(pos, state) }
 
     override fun onEnabled() {
         ChunkScanner.subscribe(AutoFarmBlockTracker)

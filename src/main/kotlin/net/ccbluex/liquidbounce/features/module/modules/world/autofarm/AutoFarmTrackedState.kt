@@ -19,14 +19,13 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
-import it.unimi.dsi.fastutil.longs.LongCollection
-import net.ccbluex.fastutil.longListOf
-import net.ccbluex.fastutil.longMutableListOf
 import net.ccbluex.fastutil.objectArraySetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_HORIZONTAL
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.tags.BlockTags
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
@@ -57,13 +56,13 @@ sealed interface AutoFarmTrackedState {
         ) {
             override fun isBlockMatches(state: BlockState): Boolean = state.`is`(BlockTags.JUNGLE_LOGS)
 
-            override fun findPlantableNeighbors0(pos: BlockPos, state: BlockState): LongCollection {
-                val result = longMutableListOf()
+            override fun findPlantableNeighbors0(pos: BlockPos, state: BlockState): Collection<Direction> {
+                val result = emptyEnumSet<Direction>()
                 val mutable = BlockPos.MutableBlockPos()
                 for (dir in DIRECTIONS_HORIZONTAL) {
                     mutable.set(pos).move(dir)
                     if (world.getBlockState(mutable).isAir) {
-                        result.add(mutable.asLong())
+                        result.add(dir)
                     }
                 }
                 return result
@@ -72,20 +71,20 @@ sealed interface AutoFarmTrackedState {
 
         abstract fun isBlockMatches(state: BlockState): Boolean
 
-        protected open fun findPlantableNeighbors0(pos: BlockPos, state: BlockState): LongCollection {
+        protected open fun findPlantableNeighbors0(pos: BlockPos, state: BlockState): Collection<Direction> {
             val above = pos.above()
             return if (world.getBlockState(above).isAir) {
-                longListOf(above.asLong())
+                setOf(Direction.UP)
             } else {
-                longListOf()
+                setOf()
             }
         }
 
-        fun findPlantableNeighbors(pos: BlockPos, state: BlockState): LongCollection {
+        fun findPlantableSides(pos: BlockPos, state: BlockState): Collection<Direction> {
             return if (isBlockMatches(state)) {
                 findPlantableNeighbors0(pos, state)
             } else {
-                longListOf()
+                setOf()
             }
         }
     }
