@@ -62,12 +62,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
 
         private val readyColor by color("ReadyColor", Color4b(36, 237, 0, 255))
         private val placeColor by color("PlaceColor", Color4b(191, 245, 66, 100))
-        private val range by int("Range", 50, 10..128).onChange {
-            rangeSquared = it.sq()
-            it
-        }
-
-        private var rangeSquared: Int = range * range
+        private val range by int("Range", 50, 10..128)
 
         private val colorRainbow by boolean("Rainbow", false)
 
@@ -98,11 +93,11 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
 
                 CurrentTarget.render(this)
                 for ((pos, type) in AutoFarmBlockTracker.iterate()) {
-                    if (hypot(pos.x - player.x, pos.z - player.z) > rangeSquared) continue
+                    if (hypot(pos.x - player.x, pos.z - player.z) > range) continue
 
                     withPositionRelativeToCamera(pos) {
                         when (type) {
-                            AutoFarmTrackedState.SHOULD_BE_DESTROYED -> {
+                            AutoFarmTrackedState.READY_FOR_HARVEST -> {
                                 drawBox(
                                     FULL_BOX,
                                     fillColor,

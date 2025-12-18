@@ -66,7 +66,7 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3?>(ModuleAutoFarm, "Aut
 
     private fun collectAllowedStates(): Set<AutoFarmTrackedState> {
         // we should always walk to blocks we want to destroy because we can do so even without any items
-        val allowedStates = EnumSet.of(AutoFarmTrackedState.SHOULD_BE_DESTROYED)
+        val allowedStates = EnumSet.of(AutoFarmTrackedState.READY_FOR_HARVEST)
 
         // we should only walk to farmland/soulsand blocks if we have plantable items
         if (!toPlace) return allowedStates

@@ -27,7 +27,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 
 enum class AutoFarmTrackedState {
-    SHOULD_BE_DESTROYED,
+    READY_FOR_HARVEST,
     CAN_USE_BONE_MEAL,
     FARMLAND,
     SOUL_SAND,
@@ -37,7 +37,7 @@ object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFa
     override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedState? {
         // Should be destroyed? e.g., Melon block, Pumpkin block
         if (pos.readyForHarvest(state)) {
-            return AutoFarmTrackedState.SHOULD_BE_DESTROYED
+            return AutoFarmTrackedState.READY_FOR_HARVEST
         }
 
         val cache = BlockPos.MutableBlockPos()
