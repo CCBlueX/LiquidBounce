@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitiz
 import net.ccbluex.liquidbounce.render.AbstractFontRenderer
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
+import net.ccbluex.liquidbounce.render.drawGlyphOnCurrentLayer
 import net.ccbluex.liquidbounce.render.drawHorizontalLine
-import net.ccbluex.liquidbounce.render.drawTexQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -241,7 +241,7 @@ class FontRenderer(
             val uv2 = renderInfo.atlasLocation.uvCoordinatesOnTexture.max
             val argb = color.toARGB()
 
-            ctx.drawTexQuad(
+            ctx.drawGlyphOnCurrentLayer(
                 glyph.page.texture.textureSetup,
                 x0 = x0, y0 = y0, x1 = x1, y1 = y1,
                 u1 = uv1.u, v1 = uv1.v, u2 = uv2.u, v2 = uv2.v, argb = argb,

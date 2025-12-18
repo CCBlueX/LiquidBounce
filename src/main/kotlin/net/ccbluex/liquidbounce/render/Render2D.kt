@@ -37,6 +37,7 @@ import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.render.TextureSetup
+import net.minecraft.client.gui.render.state.BlitRenderState
 import net.minecraft.world.phys.Vec2
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
@@ -68,7 +69,7 @@ private fun Matrix3x2f.transformEachVertex(
 }
 
 /**
- * @see net.minecraft.client.gui.render.state.ColoredQuadGuiElementRenderState.createBounds
+ * @see net.minecraft.client.gui.render.state.ColoredRectangleRenderState.getBounds
  */
 fun GuiGraphics.createBounds(x: Float, y: Float, w: Float, h: Float): ScreenRectangle {
 //    val rect = ScreenRect(x.floorToInt(), y.floorToInt(), w.ceilToInt(), h.ceilToInt())
@@ -185,14 +186,14 @@ fun GuiGraphics.drawQuad(
 }
 
 /**
- * Float version of [DrawContext.drawHorizontalLine]
+ * Float version of [GuiGraphics.drawHorizontalLine]
  */
 fun GuiGraphics.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Float, color: Color4b) {
     this.drawQuad(x1, y, x2, y + thickness, color)
 }
 
 /**
- * Float version of [DrawContext.drawVerticalLine]
+ * Float version of [GuiGraphics.drawVerticalLine]
  */
 fun GuiGraphics.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Color4b) {
     this.drawQuad(x, y1, x + thickness, y2, color)
@@ -238,6 +239,40 @@ fun GuiGraphics.drawTriangle(
 }
 
 @Suppress("LongParameterList")
+inline fun GuiGraphics.drawGlyphOnCurrentLayer(
+    textureSetup: TextureSetup,
+    x0: Float,
+    y0: Float,
+    x1: Float,
+    y1: Float,
+    u1: Float = 0f,
+    v1: Float = 0f,
+    u2: Float = 1f,
+    v2: Float = 1f,
+    argb: Int = -1,
+    pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
+) {
+    this.guiRenderState.submitGlyphToCurrentLayer(
+        TexQuadGuiElementRenderState(
+            x0,
+            y0,
+            x1,
+            y1,
+            u1,
+            v1,
+            u2,
+            v2,
+            argb,
+            pipeline,
+            textureSetup,
+            copyPose(),
+            this.scissorStack.peek(),
+            createBounds(x0, y0, x1 - x0, y1 - y0),
+        )
+    )
+}
+
+@Suppress("LongParameterList")
 inline fun GuiGraphics.drawTexQuad(
     textureSetup: TextureSetup,
     x0: Float,
@@ -267,6 +302,40 @@ inline fun GuiGraphics.drawTexQuad(
             copyPose(),
             this.scissorStack.peek(),
             createBounds(x0, y0, x1 - x0, y1 - y0),
+        )
+    )
+}
+
+@Suppress("LongParameterList")
+inline fun GuiGraphics.drawBlitOnCurrentLayer(
+    textureSetup: TextureSetup,
+    x0: Int,
+    y0: Int,
+    x1: Int,
+    y1: Int,
+    u1: Float = 0f,
+    v1: Float = 0f,
+    u2: Float = 1f,
+    v2: Float = 1f,
+    argb: Int = -1,
+    pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
+) {
+    this.guiRenderState.submitBlitToCurrentLayer(
+        BlitRenderState(
+            pipeline,
+            textureSetup,
+            copyPose(),
+            x0,
+            y0,
+            x1,
+            y1,
+            u1,
+            v1,
+            u2,
+            v2,
+            argb,
+            this.scissorStack.peek(),
+            createBounds(x0.toFloat(), y0.toFloat(), (x1 - x0).toFloat(), (y1 - y0).toFloat()),
         )
     )
 }
