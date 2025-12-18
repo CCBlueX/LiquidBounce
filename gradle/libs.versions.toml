@@ -32,7 +32,7 @@ fastutil4k = "0.2.2"
 modmenu = "17.0.0-alpha.1"
 exploit_preventer_api = "0.0.1"
 exploit_preventer_mod = "0.1.7"
-sodium = "mc1.21.11-0.8.0-fabric"
+sodium = "mc1.21.11-0.8.1-fabric"
 lithium = "mc1.21.11-0.21.1-fabric"
 viafabricplus = "4.4.0"
 
@@ -62,7 +62,7 @@ fabric-kotlin = { group = "net.fabricmc", name = "fabric-language-kotlin", versi
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 fabric-loader-junit = { group = "net.fabricmc", name = "fabric-loader-junit", version.ref = "fabric-loader" }
 
-netty-proxy = { group = "io.netty", name = "netty-handler-proxy", version.ref = "netty" }
+netty-handler-proxy = { group = "io.netty", name = "netty-handler-proxy", version.ref = "netty" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-coroutines = { group = "com.squareup.okhttp3", name = "okhttp-coroutines", version.ref = "okhttp" }
 mcAuthlib = { group = "net.ccbluex", name = "mc-authlib", version.ref = "mc_authlib" }

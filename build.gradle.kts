@@ -152,7 +152,7 @@ dependencies {
     includeDependency(libs.bundles.okhttp)
 
     // SOCKS5 & HTTP Proxy Support
-    includeDependency(libs.netty.proxy)
+    includeDependency(libs.netty.handler.proxy)
 
     // Update Checker
     includeDependency(libs.semver4j)
