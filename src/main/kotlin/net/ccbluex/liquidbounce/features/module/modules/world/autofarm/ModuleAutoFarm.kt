@@ -159,10 +159,16 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
         val state = blockPos.getState() ?: return@tickHandler
         if (blockPos.readyForHarvest(state)) {
-            swapToSlotWithFortune()
-
-            // TODO: check type
-            doBreak(rayTraceResult)
+            when (state.block.harvestAction) {
+                HarvestAction.BREAK -> {
+                    swapToSlotWithFortune()
+                    doBreak(rayTraceResult)
+                }
+                HarvestAction.USE -> {
+                    doPlacement(rayTraceResult)
+                }
+                null -> return@tickHandler
+            }
 
             if (interaction.destroyStage == -1) {
                 // Only wait if the block is completely broken
