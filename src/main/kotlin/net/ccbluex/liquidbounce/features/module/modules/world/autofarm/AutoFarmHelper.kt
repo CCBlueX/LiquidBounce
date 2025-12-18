@@ -42,16 +42,12 @@ import net.minecraft.world.level.block.SweetBerryBushBlock
 import net.minecraft.world.item.Items
 import net.minecraft.core.BlockPos
 
-private const val NETHER_WART_MAX_AGE = 3
-private const val COCOA_MAX_AGE = 2
-//    private const val SWEET_BERRY_BUSH_MAX_AGE = 3 TODO: right click it
-
 private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
     return pos.below().getBlock() is T && pos.below(2).getBlock() !is T
 }
 
 /**
- * @see Fertilizable
+ * @see BonemealableBlock
  */
 internal fun BlockPos.canUseBoneMeal(state: BlockState): Boolean {
     return when (val block = state.block) {
@@ -59,6 +55,17 @@ internal fun BlockPos.canUseBoneMeal(state: BlockState): Boolean {
             block.isValidBonemealTarget(world, this, state)
         else -> false
     }
+}
+
+enum class HarvestAction {
+    /**
+     * Break the block to harvest it. e.g. Melon, Pumpkin, Cactus
+     */
+    BREAK,
+    /**
+     * Use the item in hand to harvest the block. e.g. Sweet Berry Bush
+     */
+    USE,
 }
 
 /**
@@ -69,8 +76,9 @@ internal fun BlockPos.readyForHarvest(state: BlockState): Boolean {
         is PumpkinBlock -> true
         Blocks.MELON -> true
         is CropBlock -> block.isMaxAge(state)
-        is NetherWartBlock -> state.getValue(NetherWartBlock.AGE) >= NETHER_WART_MAX_AGE
-        is CocoaBlock -> state.getValue(CocoaBlock.AGE) >= COCOA_MAX_AGE
+        is NetherWartBlock -> state.getValue(NetherWartBlock.AGE) >= NetherWartBlock.MAX_AGE
+        is CocoaBlock -> state.getValue(CocoaBlock.AGE) >= CocoaBlock.MAX_AGE
+        is SweetBerryBushBlock -> state.getValue(SweetBerryBushBlock.AGE) >= SweetBerryBushBlock.MAX_AGE // TODO: should use item
         is SugarCaneBlock -> isAboveLast<SugarCaneBlock>(this)
         is CactusBlock -> isAboveLast<CactusBlock>(this)
         is KelpPlantBlock -> isAboveLast<KelpPlantBlock>(this)
