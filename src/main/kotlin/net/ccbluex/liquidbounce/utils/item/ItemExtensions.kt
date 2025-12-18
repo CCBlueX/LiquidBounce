@@ -81,6 +81,7 @@ import net.minecraft.core.registries.Registries
 import net.minecraft.core.Holder
 import net.minecraft.core.BlockPos
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 /**
  * Create item with NBT tags
@@ -113,7 +114,7 @@ fun ItemStack?.getEnchantmentCount(): Int {
 fun ItemStack?.getEnchantment(enchantment: ResourceKey<Enchantment>): Int {
     val enchantments = this?.get(DataComponents.ENCHANTMENTS) ?: return 0
 
-    return enchantments.getLevel(enchantment.toRegistryEntry())
+    return enchantments.getLevel(enchantment.toRegistryEntryOrNull() ?: return 0)
 }
 
 /**
@@ -156,7 +157,12 @@ val ItemStack.attackDamage: Double
     }
 
 val ItemStack.sharpnessLevel: Int
-    get() = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
+    get() {
+        return EnchantmentHelper.getItemEnchantmentLevel(
+            Enchantments.SHARPNESS.toRegistryEntryOrNull() ?: return 0,
+            this
+        )
+    }
 
 @JvmOverloads
 fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double =
@@ -189,6 +195,10 @@ private fun Item.getAttributeValue(attribute: Holder<Attribute>): Double {
         }
 
     return attribInstance.value
+}
+
+fun ResourceKey<Enchantment>.toRegistryEntryOrNull(): Holder<Enchantment>? {
+    return mc.level?.registryAccess()?.lookup(Registries.ENCHANTMENT)?.getOrNull()?.get(this)?.getOrNull()
 }
 
 fun ResourceKey<Enchantment>.toRegistryEntry(): Holder<Enchantment> {
