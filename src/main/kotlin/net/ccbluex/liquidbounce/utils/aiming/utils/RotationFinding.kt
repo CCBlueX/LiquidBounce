@@ -41,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.math.forEach3D
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.size
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toVec3d
@@ -475,12 +474,12 @@ fun raytraceUpperBlockSide(
     wallsRange: Double,
     expectedTarget: BlockPos,
     rotationPreference: RotationPreference = LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION,
-    rotationsNotToMatch: List<Rotation>? = null
+    rotationsNotToMatch: Collection<Rotation>? = null
 ): RotationWithVector? {
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
 
-    val vec3d = Vec3.atLowerCornerOf(expectedTarget).add(0.0, 0.9, 0.0)
+    val vec3d = Vec3.atLowerCornerWithOffset(expectedTarget, 0.0, 0.9, 0.0)
 
     val bestRotationTracker = BestRotationTracker(rotationPreference)
 

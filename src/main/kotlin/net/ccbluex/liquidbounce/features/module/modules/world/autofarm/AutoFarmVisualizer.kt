@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.core.Direction
-import java.util.EnumSet
 import kotlin.math.hypot
 
 object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", true) {
@@ -107,10 +106,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                                 )
                             }
 
-                            AutoFarmTrackedState.Plantable.SOUL_SAND, AutoFarmTrackedState.Plantable.FARM -> if (placeTargets.contains(
-                                    type
-                                )
-                            ) {
+                            AutoFarmTrackedState.Plantable.SOUL_SAND, AutoFarmTrackedState.Plantable.FARM -> if (type in placeTargets) {
                                 drawBoxSide(
                                     FULL_BOX,
                                     side = Direction.UP,
@@ -119,7 +115,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                                 )
                             }
 
-                            AutoFarmTrackedState.Plantable.JUNGLE_LOGS -> if (placeTargets.contains(type)) {
+                            AutoFarmTrackedState.Plantable.JUNGLE_LOGS -> if (type in placeTargets) {
                                 drawBox(
                                     FULL_BOX,
                                     faceColor = placeColor,

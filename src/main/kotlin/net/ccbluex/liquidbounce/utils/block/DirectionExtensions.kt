@@ -37,3 +37,11 @@ val DIRECTIONS_EXCLUDING_DOWN = arrayOf(
     Direction.SOUTH,
     Direction.UP,
 )
+
+@JvmField
+val DIRECTIONS_HORIZONTAL = arrayOf(
+    Direction.WEST,
+    Direction.EAST,
+    Direction.NORTH,
+    Direction.SOUTH,
+)

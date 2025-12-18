@@ -39,7 +39,6 @@ import net.minecraft.world.level.block.SoulSandBlock
 import net.minecraft.world.level.block.StemBlock
 import net.minecraft.world.level.block.SugarCaneBlock
 import net.minecraft.world.level.block.SweetBerryBushBlock
-import net.minecraft.world.item.Items
 import net.minecraft.core.BlockPos
 
 private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
@@ -99,12 +98,9 @@ fun BlockPos.readyForHarvest(state: BlockState): Boolean {
     }
 }
 
-internal val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
-internal val itemsForSoulSand = setOf(Items.NETHER_WART)
-
 internal fun getAvailableSlotForBlock(blockState: BlockState) =
     when (blockState.block) {
-        is FarmBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForFarmland)
-        is SoulSandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForSoulSand)
+        is FarmBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = AutoFarmTrackedState.Plantable.FARM.items)
+        is SoulSandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = AutoFarmTrackedState.Plantable.SOUL_SAND.items)
         else -> null
     }

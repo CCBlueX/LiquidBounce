@@ -26,6 +26,9 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
@@ -49,8 +52,6 @@ import net.ccbluex.liquidbounce.utils.inventory.hasItem
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.block.FarmBlock
-import net.minecraft.world.level.block.SoulSandBlock
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.item.Items
@@ -183,9 +184,16 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             waitTicks(interactDelay.random())
         } else {
             val pos = blockPos.relative(rayTraceResult.direction).below()
-            val blockState = pos.getState() ?: return@tickHandler
+            val blockState = world.getBlockState(pos)
 
-            if (isFarmBlockWithAir(blockState, pos)) {
+            debugGeometry("RayTraceResult") {
+                ModuleDebug.DebuggedPoint(rayTraceResult.location, Color4b.RED.alpha(150))
+            }
+            debugGeometry("PlantablePos") {
+                ModuleDebug.DebuggedBox(AABB(pos), Color4b.GREEN.alpha(100))
+            }
+
+            if (isPlantableBlock(blockState, pos, AutoFarmTrackedState.Plantable.entries)) {
                 val slot = getAvailableSlotForBlock(blockState) ?: return@tickHandler
 
                 SilentHotbar.selectSlotSilently(this, slot, AutoPlaceCrops.swapBackDelay.random())
@@ -233,17 +241,18 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
     // Searches for any blocks suitable for placing crops or nether wart on
     // returns ture if it found a target
-    private fun updateTargetToPlaceable(radius: Float, radiusSquared: Float, eyesPos: Vec3): Boolean {
+    private fun updateTargetToPlantable(radius: Float, radiusSquared: Float, eyesPos: Vec3): Boolean {
         val hotbarItems = Slots.OffhandWithHotbar.items
 
-        val allowFarmland = hotbarItems.any { it in itemsForFarmland }
-        val allowSoulsand = hotbarItems.any { it in itemsForSoulSand }
+        val allowedTypes = AutoFarmTrackedState.Plantable.entries.filter { type ->
+            hotbarItems.any { it in type.items }
+        }
 
-        if (!allowFarmland && !allowSoulsand) return false
+        if (!allowedTypes.isEmpty()) return false
 
         val blocksToPlace =
             eyesPos.searchBlocksInCuboid(radius) { pos, state ->
-                !state.isAir && isFarmBlockWithAir(state, pos, allowFarmland, allowSoulsand)
+                !state.isAir && isPlantableBlock(state, pos, allowedTypes)
                         && getNearestPoint(eyesPos, AABB(pos)).distanceToSqr(eyesPos) <= radiusSquared
             }.map { it.first }.sortedBy { it.getCenterDistanceSquared() }
 
@@ -300,7 +309,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         }
 
         // Can we find a placeable target?
-        if (AutoPlaceCrops.enabled && updateTargetToPlaceable(radius, radiusSquared, eyesPos)) {
+        if (AutoPlaceCrops.enabled && updateTargetToPlantable(radius, radiusSquared, eyesPos)) {
             return
         }
 
@@ -312,21 +321,12 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     /**
      * checks if the block is either a farmland or soulsand block and has air above it
      */
-    private fun isFarmBlockWithAir(
+    private fun isPlantableBlock(
         state: BlockState,
         pos: BlockPos,
-        allowFarmland: Boolean = true,
-        allowSoulsand: Boolean = true,
+        allowedTypes: Iterable<AutoFarmTrackedState.Plantable>,
     ): Boolean {
-        return isFarmBlock(state, allowFarmland, allowSoulsand) && pos.above().getState()?.isAir == true
-    }
-
-    private fun isFarmBlock(state: BlockState, allowFarmland: Boolean, allowSoulsand: Boolean): Boolean {
-        return when (state.block) {
-            is FarmBlock -> allowFarmland
-            is SoulSandBlock -> allowSoulsand
-            else -> false
-        }
+        return allowedTypes.any { it.findPlantableNeighbors(pos, state).isNotEmpty() }
     }
 
     override fun onEnabled() {

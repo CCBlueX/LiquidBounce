@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.world.level.block.state.BlockState
@@ -27,17 +26,6 @@ import net.minecraft.world.level.block.SoulSandBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.tags.BlockTags
-
-sealed interface AutoFarmTrackedState {
-    object ReadyForHarvest : AutoFarmTrackedState
-    object Bonemealable : AutoFarmTrackedState
-
-    enum class Plantable(override val choiceName: String) : AutoFarmTrackedState, NamedChoice {
-        FARM("Farmland"),
-        SOUL_SAND("SoulSand"),
-        JUNGLE_LOGS("JungleLogs");
-    }
-}
 
 object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFarmTrackedState>() {
     override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedState? {

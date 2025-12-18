@@ -76,8 +76,8 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3?>(ModuleAutoFarm, "Aut
 
         for (item in Slots.OffhandWithHotbar.items) {
             when (item) {
-                in itemsForFarmland -> allowedStates.add(AutoFarmTrackedState.Plantable.FARM)
-                in itemsForSoulSand -> allowedStates.add(AutoFarmTrackedState.Plantable.SOUL_SAND)
+                in AutoFarmTrackedState.Plantable.FARM.items -> allowedStates.add(AutoFarmTrackedState.Plantable.FARM)
+                in AutoFarmTrackedState.Plantable.SOUL_SAND.items -> allowedStates.add(AutoFarmTrackedState.Plantable.SOUL_SAND)
                 Items.BONE_MEAL -> if (ModuleAutoFarm.AutoUseBoneMeal.enabled) {
                     allowedStates.add(AutoFarmTrackedState.Bonemealable)
                 }
