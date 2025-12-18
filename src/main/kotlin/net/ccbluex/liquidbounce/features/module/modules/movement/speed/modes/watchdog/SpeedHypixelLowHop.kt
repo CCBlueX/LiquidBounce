@@ -76,7 +76,8 @@ class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHop
             }
 
             if (player.hurtTime == 9) {
-                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(0.281)))
+                player.setDeltaMovement(
+                    player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(0.281)))
             }
 
             if ((player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) == 2) {
