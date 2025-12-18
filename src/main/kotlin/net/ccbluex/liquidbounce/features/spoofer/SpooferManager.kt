@@ -19,21 +19,44 @@
 package net.ccbluex.liquidbounce.features.spoofer
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.utils.client.exploitpreventer.ExpCompatibility
 
 /**
  * Spoofer Manager
  *
  * Includes all spoofer features shown in the Multiplayer GUI.
  * Spoofers will usually allow fixes or spoof data sent to the server
- * to e.g. trick the server into thinking you are connecting from
+ * to e.g., trick the server into thinking you are connecting from
  * another client brand.
  */
 object SpooferManager : Configurable("Spoofer") {
+
+    val usesExploitPreventer = runCatching {
+        // The API does not report whether [ExploitPreventer] is installed or not.
+        Class.forName("com.nikoverflow.exploitpreventer.ExploitPreventerMod")
+        true
+    }.getOrDefault(false)
+
     init {
         tree(SpooferClient)
         tree(SpooferResourcePack)
         tree(SpooferBungeeCord)
-        tree(SpooferTranslation)
         tree(SpooferFingerprint)
+
+        if (usesExploitPreventer) {
+            registerExpModules()
+        }
     }
+
+    private fun registerExpModules() {
+        val modules = ExpCompatibility.INSTANCE.modules ?: return
+
+        for ((expEnumName, expDisplayName) in modules) {
+            // Duplicated with [SpooferFingerprint]
+            if (expEnumName == "FINGERPRINTING") continue
+
+            tree(SpooferExploitPreventerModule(expEnumName, expDisplayName))
+        }
+    }
+
 }

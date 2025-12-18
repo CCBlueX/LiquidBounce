@@ -31,19 +31,19 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.block.BedBlock
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.DoubleBlockProperties
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.level.block.BedBlock
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.DoubleBlockCombiner
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.Vec3
 
 object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>() {
     private var maxLayers: Int = 0
 
     private val subscribers = ReferenceOpenHashSet<Subscriber>()
 
-    private val CACHE = ThreadLocal.withInitial(BlockPos::Mutable)
+    private val CACHE = ThreadLocal.withInitial(BlockPos::MutableBlockPos)
 
     internal fun triggerRescan() {
         val newMaxLayers = if (subscribers.isEmpty()) 0 else subscribers.maxOf { it.maxLayers }
@@ -98,13 +98,13 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
     }
 
     private fun BlockPos.getBedPlates(headState: BlockState): BedState {
-        val bedDirection = headState.get(BedBlock.FACING)
+        val bedDirection = headState.getValue(BedBlock.FACING)
 
         val bedBlock = headState.block as BedBlock
-        val renderPos = Vec3d(
-            x - (bedDirection.offsetX * 0.5) + 0.5,
+        val renderPos = Vec3(
+            x - (bedDirection.stepX * 0.5) + 0.5,
             y + 1.0,
-            z - (bedDirection.offsetZ * 0.5) + 0.5,
+            z - (bedDirection.stepZ * 0.5) + 0.5,
         )
 
         return BedState(bedBlock, this, renderPos, getBedSurroundingBlocks(headState))
@@ -113,9 +113,9 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
     @Suppress("detekt:CognitiveComplexMethod")
     override fun getStateFor(pos: BlockPos, state: BlockState): BedState? {
         return if (state.isBed) {
-            val part = BedBlock.getBedPart(state)
+            val part = BedBlock.getBlockType(state)
             // Only track the first part (head) of the bed
-            if (part == DoubleBlockProperties.Type.FIRST) {
+            if (part == DoubleBlockCombiner.BlockType.FIRST) {
                 pos.getBedPlates(state)
             } else {
                 null
@@ -126,7 +126,7 @@ object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>()
 
             allPositions().forEach { bedPos ->
                 // Update if the block is close to a bed
-                if (bedPos.getManhattanDistance(pos) > distance) {
+                if (bedPos.distManhattan(pos) > distance) {
                     return@forEach
                 }
 

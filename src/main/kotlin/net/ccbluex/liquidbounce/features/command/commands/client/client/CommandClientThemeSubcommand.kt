@@ -26,10 +26,20 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.util.Formatting
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.clickablePath
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.withColor
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.ChatFormatting
 import net.minecraft.util.Util
 import java.net.URI
 
@@ -43,7 +53,7 @@ object CommandClientThemeSubcommand {
         .build()
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
-        Util.getOperatingSystem().open(ThemeManager.themesFolder)
+        Util.getPlatform().openFile(ThemeManager.themesFolder)
         chat(regular("Location: "), clickablePath(ThemeManager.themesFolder))
     }.build()
 
@@ -95,14 +105,14 @@ object CommandClientThemeSubcommand {
         .pagedQuery(
             pageSize = 8,
             header = {
-                "Available themes".asText().withColor(Formatting.RED).bold(true)
+                "Available themes".asText().withColor(ChatFormatting.RED).bold(true)
             },
             items = {
                 ThemeManager.themes
             },
             eachRow = { _, theme ->
                 regular("\u2B25 ".asText()
-                    .formatted(Formatting.BLUE)
+                    .withStyle(ChatFormatting.BLUE)
                     .append(variable(theme.metadata.name))
                     .append(regular(" ("))
                     .append(variable(theme.metadata.id))

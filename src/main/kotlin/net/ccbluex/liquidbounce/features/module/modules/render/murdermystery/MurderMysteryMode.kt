@@ -20,27 +20,31 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.util.Identifier
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.resources.Identifier
 
-interface MurderMysteryMode {
-    fun handleHasBow(
-        entity: AbstractClientPlayerEntity,
+sealed class MurderMysteryMode(name: String) : Choice(name) {
+    final override val parent
+        get() = ModuleMurderMystery.modes
+
+    abstract fun handleHasBow(
+        entity: AbstractClientPlayer,
         locationSkin: Identifier,
     )
 
-    fun handleHasSword(
-        entity: AbstractClientPlayerEntity,
+    abstract fun handleHasSword(
+        entity: AbstractClientPlayer,
         locationSkin: Identifier,
     )
 
-    fun disallowsArrowDodge(): Boolean = false
+    open fun disallowsArrowDodge(): Boolean = false
 
-    fun shouldAttack(entity: AbstractClientPlayerEntity): Boolean
+    abstract fun shouldAttack(entity: AbstractClientPlayer): Boolean
 
-    fun getPlayerType(player: AbstractClientPlayerEntity): PlayerType
+    abstract fun getPlayerType(player: AbstractClientPlayer): PlayerType
 
-    fun reset()
+    abstract fun reset()
 
     enum class PlayerType {
         NEUTRAL,

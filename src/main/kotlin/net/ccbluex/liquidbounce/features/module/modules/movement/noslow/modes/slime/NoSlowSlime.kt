@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.events.BlockSlipperinessMultiplierEvent
 import net.ccbluex.liquidbounce.event.events.BlockVelocityMultiplierEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
-import net.minecraft.block.SlimeBlock
+import net.minecraft.world.level.block.SlimeBlock
 
 internal object NoSlowSlime : ToggleableConfigurable(ModuleNoSlow, "SlimeBlock", true) {
 

@@ -24,10 +24,21 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.playerName
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.util.Formatting
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.bypassNameProtection
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.italic
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.removeMessage
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.ChatFormatting
 
 private const val MSG_NO_FRIENDS = "noFriends"
 private const val MSG_SUCCESS = "success"
@@ -80,7 +91,7 @@ object CommandFriend : Command.Factory {
                         metadata = MessageMetadata(id = MESSAGE_ID)
                     )
                 } else {
-                    mc.inGameHud.chatHud.removeMessage(MESSAGE_ID)
+                    mc.gui.chat.removeMessage(MESSAGE_ID)
                     val data = MessageMetadata(id = MESSAGE_ID, remove = false)
 
                     FriendManager.friends.forEachIndexed { index, friend ->
@@ -95,7 +106,7 @@ object CommandFriend : Command.Factory {
                         val removeText = regular("Remove ${friend.name}")
 
                         val removeButton = regular("[X]")
-                            .formatted(Formatting.RED)
+                            .withStyle(ChatFormatting.RED)
                             .bold(true)
                             .onHover(HoverEvent.ShowText(removeText))
                             .onClick(ClickEvent.SuggestCommand(removeCommand))

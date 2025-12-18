@@ -28,16 +28,16 @@ import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 import kotlin.math.sqrt
 
 class PlaneSection(
-    val originPoint: Vec3d,
-    val dirVec1: Vec3d,
-    val dirVec2: Vec3d
+    val originPoint: Vec3,
+    val dirVec1: Vec3,
+    val dirVec2: Vec3
 ) {
 
-    inline fun castPointsOnUniformly(maxPoints: Int, consumer: (Vec3d) -> Unit) {
+    inline fun castPointsOnUniformly(maxPoints: Int, consumer: (Vec3) -> Unit) {
         val (dz, dy) = getFairStepSide(maxPoints)
 
         (0.0..1.0 step dy).forEachDouble { y ->

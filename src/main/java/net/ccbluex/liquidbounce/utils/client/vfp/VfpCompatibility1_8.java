@@ -27,7 +27,7 @@ import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
 import com.viaversion.viaversion.api.protocol.packet.ServerboundPacketType;
 import com.viaversion.viaversion.api.type.Types;
 import com.viaversion.viaversion.protocols.v1_8to1_9.packet.ServerboundPackets1_8;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 import java.util.function.Consumer;
 
@@ -55,7 +55,7 @@ public enum VfpCompatibility1_8 {
         });
     }
 
-    public void sendPlayerInput(Float sideways, Float forwards, boolean jumping, boolean sneaking) {
+    public void sendPlayerInput(float sideways, float forwards, boolean jumping, boolean sneaking) {
         writePacket(ServerboundPackets1_8.PLAYER_INPUT, packet -> {
             packet.write(Types.FLOAT, sideways);
             packet.write(Types.FLOAT, forwards);

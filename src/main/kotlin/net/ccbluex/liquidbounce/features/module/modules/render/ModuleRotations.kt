@@ -28,14 +28,14 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations.s
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.util.math.Box
+import net.minecraft.world.phys.AABB
 
 /**
  * Rotations module
@@ -109,29 +109,29 @@ object ModuleRotations : ClientModule("Rotations", Category.RENDER) {
         if (drawVectorLine || drawVectorDot) {
             val currentRotation = RotationManager.currentRotation ?: return@handler
             val previousRotation = RotationManager.previousRotation ?: currentRotation
-            val camera = mc.gameRenderer.camera
+            val camera = mc.gameRenderer.mainCamera
 
             val interpolatedRotationVec = previousRotation.directionVector.lerp(currentRotation.directionVector,
                 partialTicks.toDouble()
             )
 
-            val eyeVector = Vec3(0.0, 0.0, 1.0)
-                .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-                .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
+            val eyeVector = Vec3f(0.0, 0.0, 1.0)
+                .rotatePitch((-Math.toRadians(camera.xRot().toDouble())).toFloat())
+                .rotateYaw((-Math.toRadians(camera.yRot().toDouble())).toFloat())
 
             if (drawVectorLine) {
                 renderEnvironmentForWorld(matrixStack) {
                     drawLineStrip(
                         vectorLine.toARGB(),
-                        eyeVector, eyeVector + Vec3(interpolatedRotationVec * 100.0)
+                        eyeVector, eyeVector + Vec3f(interpolatedRotationVec * 100.0)
                     )
                 }
             }
 
             if (drawVectorDot) {
                 renderEnvironmentForWorld(matrixStack) {
-                    val vector = eyeVector + Vec3(interpolatedRotationVec * 100.0)
-                    drawBox(Box.of(vector.toVec3d(), 2.5, 2.5, 2.5), vectorDot)
+                    val vector = eyeVector + Vec3f(interpolatedRotationVec * 100.0)
+                    drawBox(AABB.ofSize(vector.toVec3d(), 2.5, 2.5, 2.5), vectorDot)
                 }
             }
         }

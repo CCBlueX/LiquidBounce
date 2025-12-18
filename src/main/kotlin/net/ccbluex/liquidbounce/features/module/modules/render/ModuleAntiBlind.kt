@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.item.Items
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.Items
+import net.minecraft.resources.Identifier
 
 /**
  * AntiBlind module
@@ -36,7 +36,7 @@ object ModuleAntiBlind : ClientModule("AntiBlind", Category.RENDER, aliases = li
      * @see net.minecraft.client.gui.hud.InGameHud.renderMiscOverlays
      */
     @JvmField
-    val TEXTURE_PUMPKIN_BLUR: Identifier = Identifier.ofVanilla("textures/misc/pumpkinblur.png")
+    val TEXTURE_PUMPKIN_BLUR: Identifier = Identifier.withDefaultNamespace("textures/misc/pumpkinblur.png")
 
     private val render = multiEnumChoice("DoRender",
         DoRender.ARMOR,

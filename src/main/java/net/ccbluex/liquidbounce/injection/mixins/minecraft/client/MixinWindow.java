@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent;
 import net.ccbluex.liquidbounce.event.events.ScaleFactorChangeEvent;
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
-import net.minecraft.client.util.Icons;
-import net.minecraft.client.util.Window;
-import net.minecraft.resource.InputSupplier;
-import net.minecraft.resource.ResourcePack;
+import com.mojang.blaze3d.platform.IconSet;
+import com.mojang.blaze3d.platform.Window;
+import net.minecraft.server.packs.resources.IoSupplier;
+import net.minecraft.server.packs.PackResources;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -52,10 +52,10 @@ public class MixinWindow {
      *
      * @return modified game icon
      */
-    @Redirect(method = "setIcon", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Icons;getIcons(Lnet/minecraft/resource/ResourcePack;)Ljava/util/List;"))
-    private List<InputSupplier<InputStream>> setupIcon(Icons instance, ResourcePack resourcePack) throws IOException {
+    @Redirect(method = "setIcon", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/IconSet;getStandardIcons(Lnet/minecraft/server/packs/PackResources;)Ljava/util/List;"))
+    private List<IoSupplier<InputStream>> setupIcon(IconSet instance, PackResources resourcePack) throws IOException {
         if (HideAppearance.INSTANCE.isHidingNow()) {
-            return instance.getIcons(resourcePack);
+            return instance.getStandardIcons(resourcePack);
         }
 
         LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
@@ -69,7 +69,7 @@ public class MixinWindow {
             LiquidBounce.INSTANCE.getLogger().error("Unable to find client icons.");
 
             // Load default icons
-            return instance.getIcons(resourcePack);
+            return instance.getStandardIcons(resourcePack);
         }
 
         return List.of(() -> stream16, () -> stream32);
@@ -78,21 +78,21 @@ public class MixinWindow {
     /**
      * Hook window resize
      */
-    @Inject(method = "onWindowSizeChanged", at = @At("RETURN"))
+    @Inject(method = "onResize", at = @At("RETURN"))
     public void hookResize(long window, int width, int height, CallbackInfo callbackInfo) {
         if (window == handle) {
             EventManager.INSTANCE.callEvent(new WindowResizeEvent(width, height));
         }
     }
 
-    @Inject(method = "onFramebufferSizeChanged", at = @At("RETURN"))
+    @Inject(method = "onFramebufferResize", at = @At("RETURN"))
     public void hookFramebufferResize(long window, int width, int height, CallbackInfo callbackInfo) {
         if (window == handle) {
             EventManager.INSTANCE.callEvent(new FramebufferResizeEvent(width, height));
         }
     }
 
-    @Inject(method = "setScaleFactor", at = @At("RETURN"))
+    @Inject(method = "setGuiScale", at = @At("RETURN"))
     public void hookScaleFactor(int scaleFactor, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new ScaleFactorChangeEvent(scaleFactor));
     }

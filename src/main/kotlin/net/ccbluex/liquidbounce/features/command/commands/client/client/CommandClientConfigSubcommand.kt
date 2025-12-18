@@ -27,7 +27,11 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.rootConfigurables
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.util.Util
 import java.time.LocalDateTime
 
@@ -149,7 +153,7 @@ object CommandClientConfigSubcommand {
         .build()
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
-        Util.getOperatingSystem().open(ConfigSystem.backupFolder)
+        Util.getPlatform().openFile(ConfigSystem.backupFolder)
         chat(regular(command.result("browse", variable(ConfigSystem.backupFolder.absolutePath))))
     }.build()
 

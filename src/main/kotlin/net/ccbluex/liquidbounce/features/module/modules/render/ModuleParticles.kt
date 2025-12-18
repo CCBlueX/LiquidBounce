@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -48,9 +46,9 @@ import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import com.mojang.blaze3d.platform.NativeImage
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
 import kotlin.math.max
 
@@ -102,7 +100,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     private val tickHandler = handler<GameTickEvent> {
         val cameraEyePos = cameraEyePos
         particles.removeIf { particle ->
-            if (particle.alpha <= 0 || cameraEyePos.squaredDistanceTo(particle.pos) > 30 * 30) {
+            if (particle.alpha <= 0 || cameraEyePos.distanceToSqr(particle.pos) > 30 * 30) {
                 true
             } else {
                 particle.update(cameraEyePos)
@@ -120,7 +118,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         chronometer.reset()
 
         val directionVector = (RotationManager.currentRotation ?: player.rotation).directionVector
-        val pos = player.eyePos.add(directionVector * player.distanceTo(event.entity).toDouble())
+        val pos = player.eyePosition.add(directionVector * player.distanceTo(event.entity).toDouble())
 
         repeat(count.random()) {
             particles.add(Particle(pos, particleImages.random()))
@@ -130,14 +128,11 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
-            mc.gameRenderer.lightmapTextureManager.disable()
-
             for (particle in particles) {
                 if (!particle.visible) continue
 
                 particle.render(event.partialTicks)
             }
-            mc.gameRenderer.lightmapTextureManager.enable()
         }
     }
 
@@ -164,14 +159,12 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
          */
         DOLLAR("Dollar", LiquidBounce.resource("particles/dollar.png").toNativeImage());
 
-        private val texture = this.image.asTexture { choiceName }
-
-        val textureView: GpuTextureView = texture.glTextureView
+        val texture = this.image.asTexture { choiceName }
     }
 
-    private class Particle(var pos: Vec3d, val particleImage: ParticleImage) {
+    private class Particle(var pos: Vec3, val particleImage: ParticleImage) {
         private var prevPos = pos
-        private var velocity = Vec3d(
+        private var velocity = Vec3(
             (-0.01..0.01).random(),
             (0.01..0.02).random(),
             (-0.01..0.01).random()
@@ -182,7 +175,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         private val spawnTime = System.currentTimeMillis()
         private var collisionTime = -1L
 
-        fun update(cameraPos: Vec3d) {
+        fun update(cameraPos: Vec3) {
             prevPos = pos
 
             if (collisionTime != -1L) {
@@ -226,7 +219,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         fun render(partialTicks: Float) {
             val interpPos = prevPos.lerp(pos, partialTicks.toDouble())
             env.withPositionRelativeToCamera(interpPos) {
-                RenderSystem.setShaderTexture(0, particleImage.textureView)
+                env.sampler0(particleImage.texture)
 
                 val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - spawnTime) / 12000f)
                 val rotation = if (rotate) {
@@ -237,20 +230,21 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
 
                 with(matrixStack) {
                     translate(-size / 2.0, -size / 2.0, 0.0)
-                    multiply(mc.gameRenderer.camera.rotation)
+                    mulPose(mc.gameRenderer.mainCamera.rotation())
                     scale(-1.0f, 1.0f, -1.0f)
-                    multiply(Quaternionf().fromAxisAngleDeg(0.0f, 0.0f, 1.0f, rotation))
+                    mulPose(Quaternionf().fromAxisAngleDeg(0.0f, 0.0f, 1.0f, rotation))
                     translate(size / 2.0, size / 2.0, 0.0)
                 }
 
                 val renderColor = color.alpha(
-                    MathHelper.clamp(
+                    Mth.clamp(
                         (alpha * color.a.toFloat()).toInt(),
                         0, color.a
                     )
                 )
 
                 drawSquareTexture(size, renderColor.toARGB())
+                env.sampler0(null)
             }
         }
     }

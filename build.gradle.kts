@@ -91,6 +91,10 @@ allprojects {
             name = "Lenni0451"
             url = uri("https://maven.lenni0451.net/everything")
         }
+        maven {
+            name = "NikOverflow"
+            url = uri("https://reposilite.nikoverflow.com/releases")
+        }
     }
 }
 
@@ -101,7 +105,7 @@ loom {
 dependencies {
     // Minecraft
     minecraft("com.mojang:minecraft:${project.property("minecraft_version")}")
-    mappings("net.fabricmc:yarn:${project.property("yarn_mappings")}:v2")
+    mappings(loom.officialMojangMappings())
 
     // Fabric
     modApi("net.fabricmc:fabric-loader:${project.property("loader_version")}")
@@ -119,6 +123,10 @@ dependencies {
     modApi("com.viaversion:viafabricplus-api:${project.property("viafabricplus_version")}")
     modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}")
 
+    // Exploit Preventer
+    modApi("com.nikoverflow:ExploitPreventer-API:${project.property("exploit_preventer_api_version")}")
+    modRuntimeOnly("maven.modrinth:exploitpreventer:${project.property("exploit_preventer_mod_version")}")
+
     // Minecraft Authlib
     includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
 
@@ -126,11 +134,7 @@ dependencies {
     val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
     modApi(mcef)
     include(mcef)
-    includeDependency("net.ccbluex:netty-httpserver:2.4.4")
-    // MacOS native (Linux native is included in game)
-    includeDependency("io.netty:netty-transport-classes-kqueue:${project.property("netty_version")}")
-    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-aarch_64")
-    includeNative("io.netty:netty-transport-native-kqueue:${project.property("netty_version")}:osx-x86_64")
+    includeDependency("net.ccbluex:netty-httpserver:2.5.0")
 
     // Discord RPC Support
     includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")

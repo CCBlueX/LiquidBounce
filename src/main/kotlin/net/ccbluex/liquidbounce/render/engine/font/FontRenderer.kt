@@ -21,13 +21,17 @@ package net.ccbluex.liquidbounce.render.engine.font
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntStack
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.AbstractFontRenderer
+import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
+import net.ccbluex.liquidbounce.render.drawGlyphOnCurrentLayer
+import net.ccbluex.liquidbounce.render.drawHorizontalLine
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.text.Text
+import net.ccbluex.liquidbounce.utils.render.textureSetup
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.network.chat.Component
 import java.awt.Font
 import kotlin.math.max
 
@@ -70,11 +74,11 @@ class FontRenderer(
         elements().reverse(0, size)
     }
 
-    override fun process(text: Text, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
+    override fun process(text: Component, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
         return MinecraftTextProcessor.process(text.sanitizeForeignInput(), defaultColor)
     }
 
-    context(ctx: DrawContext)
+    context(ctx: GuiGraphics)
     override fun draw(
         text: MinecraftTextProcessor.RecyclingProcessedText,
         x0: Float,
@@ -106,7 +110,7 @@ class FontRenderer(
      *
      * @return The resulting x value
      */
-    context(ctx: DrawContext)
+    context(ctx: GuiGraphics)
     @Suppress("CognitiveComplexMethod")
     private fun drawInternal(
         text: ProcessedText,
@@ -206,7 +210,7 @@ class FontRenderer(
         }
     }
 
-    context(ctx: DrawContext)
+    context(ctx: GuiGraphics)
     private fun drawLine(
         x0: Float,
         x1: Float,
@@ -218,7 +222,7 @@ class FontRenderer(
         ctx.drawHorizontalLine(x0, x1, y, 1f, color)
     }
 
-    context(ctx: DrawContext)
+    context(ctx: GuiGraphics)
     private fun drawChar(
         glyph: GlyphDescriptor,
         x: Float,
@@ -237,8 +241,8 @@ class FontRenderer(
             val uv2 = renderInfo.atlasLocation.uvCoordinatesOnTexture.max
             val argb = color.toARGB()
 
-            ctx.drawTexQuad(
-                glyph.page.texture.glTextureView,
+            ctx.drawGlyphOnCurrentLayer(
+                glyph.page.texture.textureSetup,
                 x0 = x0, y0 = y0, x1 = x1, y1 = y1,
                 u1 = uv1.u, v1 = uv1.v, u2 = uv2.u, v2 = uv2.v, argb = argb,
             )

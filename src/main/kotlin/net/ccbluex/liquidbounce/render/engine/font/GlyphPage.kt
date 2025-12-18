@@ -20,9 +20,14 @@ package net.ccbluex.liquidbounce.render.engine.font
 
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.renderer.texture.DynamicTexture
 import org.lwjgl.opengl.GL11
-import java.awt.*
+import java.awt.AlphaComposite
+import java.awt.Color
+import java.awt.Dimension
+import java.awt.Graphics2D
+import java.awt.Point
+import java.awt.RenderingHints
 import java.awt.font.FontRenderContext
 import java.awt.font.GlyphMetrics
 import java.awt.font.LineMetrics
@@ -114,7 +119,7 @@ class GlyphAtlasLocation(val pixelBoundingBox: BoundingBox2f, atlasDimensions: D
 data class GlyphLayoutInfo(val useHorizontalBaseline: Boolean, val advanceX: Float, val advanceY: Float)
 
 abstract class GlyphPage {
-    abstract val texture: NativeImageBackedTexture
+    abstract val texture: DynamicTexture
 
     companion object {
         /**

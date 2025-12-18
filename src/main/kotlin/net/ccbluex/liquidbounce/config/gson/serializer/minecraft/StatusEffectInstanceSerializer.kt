@@ -22,24 +22,24 @@ package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.registry.Registries
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.core.registries.BuiltInRegistries
 import java.lang.reflect.Type
 
-object StatusEffectInstanceSerializer : JsonSerializer<StatusEffectInstance> {
+object StatusEffectInstanceSerializer : JsonSerializer<MobEffectInstance> {
     override fun serialize(
-        src: StatusEffectInstance?, typeOfSrc: Type, context: JsonSerializationContext
+        src: MobEffectInstance?, typeOfSrc: Type, context: JsonSerializationContext
     ) = src?.let {
         JsonObject().apply {
-            addProperty("effect", Registries.STATUS_EFFECT.getId(it.effectType.value()).toString())
-            addProperty("localizedName", it.effectType.value().name.string)
+            addProperty("effect", BuiltInRegistries.MOB_EFFECT.getKey(it.effect.value()).toString())
+            addProperty("localizedName", it.effect.value().displayName.string)
             addProperty("duration", it.duration)
             addProperty("amplifier", it.amplifier)
             addProperty("ambient", it.isAmbient)
-            addProperty("infinite", it.isInfinite)
-            addProperty("visible", it.shouldShowParticles())
-            addProperty("showIcon", it.shouldShowIcon())
-            addProperty("color", it.effectType.value().color)
+            addProperty("infinite", it.isInfiniteDuration)
+            addProperty("visible", it.isVisible)
+            addProperty("showIcon", it.showIcon())
+            addProperty("color", it.effect.value().color)
         }
     }
 

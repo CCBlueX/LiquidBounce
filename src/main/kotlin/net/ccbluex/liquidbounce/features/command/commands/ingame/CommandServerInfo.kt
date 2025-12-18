@@ -25,8 +25,18 @@ import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enumChoices
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.HoverEvent
+import net.ccbluex.liquidbounce.utils.client.ServerObserver
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
+import net.ccbluex.liquidbounce.utils.client.joinToText
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.roundToDecimalPlaces
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.warning
+import net.minecraft.network.chat.HoverEvent
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -106,19 +116,19 @@ object CommandServerInfo : Command.Factory, EventListener {
      */
     private fun printInformation(command: Command, detections: Collection<DetectionType> = emptyList()) {
         // Gather basic server information
-        val serverInfo = network.serverInfo
+        val serverInfo = network.serverData
         val resolvedServerAddress = ServerObserver.serverAddress?.toString()
         val tps = ServerObserver.tps
-        val ping = network.getPlayerListEntry(player.uuid)?.latency ?: 0
-        val advertisedVersion = "${serverInfo?.version?.string} (${serverInfo?.protocolVersion})"
+        val ping = network.getPlayerInfo(player.uuid)?.latency ?: 0
+        val advertisedVersion = "${serverInfo?.version?.string} (${serverInfo?.protocol})"
         val detectedServerVersion = ServerObserver.serverVersion ?: "<= 1.20.4"
 
         chat(warning(command.result("header")))
-        command.printStyledText("address", serverInfo?.address?.hideSensitiveAddress())
+        command.printStyledText("address", serverInfo?.ip?.hideSensitiveAddress())
         command.printStyledText("resolvedAddress", resolvedServerAddress?.hideSensitiveAddress())
         command.printStyledText("serverId", ServerObserver.serverId)
         command.printStyledText("serverType", ServerObserver.serverType?.choiceName)
-        command.printStyledText("brand", network.brand)
+        command.printStyledText("brand", network.serverBrand())
         command.printStyledText("advertisedVersion", advertisedVersion)
         command.printStyledText(
             "detectedVersion",
@@ -150,7 +160,7 @@ object CommandServerInfo : Command.Factory, EventListener {
         command.printStyledComponent("transactionDifferences", transactionDiffText)
 
         // Anti-cheat detection
-        val guessedAntiCheat = ServerObserver.guessAntiCheat(serverInfo?.address ?: "")?.let(::variable)
+        val guessedAntiCheat = ServerObserver.guessAntiCheat(serverInfo?.ip ?: "")?.let(::variable)
             ?: markAsError("N/A")
         command.printStyledComponent(
             "guessedAntiCheat",

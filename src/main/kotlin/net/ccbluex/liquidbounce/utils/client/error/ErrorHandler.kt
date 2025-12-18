@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 @file:Suppress("NOTHING_TO_INLINE")
+
 package net.ccbluex.liquidbounce.utils.client.error
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -25,14 +26,14 @@ import net.ccbluex.liquidbounce.utils.client.error.errors.ClientError
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.util.Util
-import net.minecraft.util.Util.OperatingSystem.WINDOWS
+import net.minecraft.util.Util.OS.WINDOWS
 import org.lwjgl.util.tinyfd.TinyFileDialogs
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.div
 import kotlin.math.min
 import kotlin.system.exitProcess
 
-private val MAX_STACKTRACE_LINES = when (Util.getOperatingSystem()) {
+private val MAX_STACKTRACE_LINES = when (Util.getPlatform()) {
     WINDOWS -> 3
     else -> 1
 }
@@ -129,7 +130,7 @@ class ErrorHandler private constructor(
 
         append("Also include you game log, which can be found at:")
         appendLine()
-        append((mc.runDirectory.toPath() / "logs" / "latest.log").absolutePathString())
+        append((mc.gameDirectory.toPath() / "logs" / "latest.log").absolutePathString())
 
         appendLine(2)
         append("Open new GitHub issue?")

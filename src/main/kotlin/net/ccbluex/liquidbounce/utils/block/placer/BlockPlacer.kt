@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.utils.block.placer
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import net.ccbluex.fastutil.fastIterator
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -36,8 +36,19 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
-import net.ccbluex.liquidbounce.utils.block.*
-import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.block.SwingMode
+import net.ccbluex.liquidbounce.utils.block.doPlacement
+import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
+import net.ccbluex.liquidbounce.utils.block.isInteractable
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -46,15 +57,15 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.item.BlockItem
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3i
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.core.Vec3i
 import kotlin.math.max
 
 @Suppress("TooManyFunctions")
@@ -123,7 +134,7 @@ class BlockPlacer(
         keep = false
     ))
 
-    private val blockPosCache = BlockPos.Mutable()
+    private val blockPosCache = BlockPos.MutableBlockPos()
 
     /**
      * Stores all block positions where blocks should be placed paired with a boolean that is `true`
@@ -145,7 +156,7 @@ class BlockPlacer(
             ticksToWait = cooldown.random()
         }
 
-        val inventoryOpen = !ignoreOpenInventory && mc.currentScreen is HandledScreen<*>
+        val inventoryOpen = !ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>
         val usingItem = !ignoreUsingItem && player.isUsingItem
         if (inventoryOpen || usingItem) {
             return@handler
@@ -188,7 +199,7 @@ class BlockPlacer(
         // remove all positions of the current support path
         blocks.long2BooleanEntrySet().removeIf { entry ->
             if (entry.booleanValue) {
-                currentPlaceCandidates.add(BlockPos.fromLong(entry.longKey))
+                currentPlaceCandidates.add(BlockPos.of(entry.longKey))
                 true
             } else {
                 false
@@ -252,7 +263,7 @@ class BlockPlacer(
                 ),
                 FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
                 stackToPlaceWith = itemStack,
-                PlayerLocationOnPlacement(position = player.pos),
+                PlayerLocationOnPlacement(position = player.position()),
             )
 
             // TODO prioritize faces where sneaking is not required
@@ -266,7 +277,7 @@ class BlockPlacer(
             }
 
             debugGeometry("PlacementTarget") {
-                ModuleDebug.DebuggedPoint(pos.toCenterPos(), Color4b.GREEN.with(a = 100))
+                ModuleDebug.DebuggedPoint(pos.center, Color4b.GREEN.with(a = 100))
             }
 
             // sneak when placing on interactable block to not trigger their action
@@ -286,7 +297,7 @@ class BlockPlacer(
 
     private fun isBlocked(posAsLong: Long): Boolean {
         val pos = blockPosCache.set(posAsLong)
-        if (!pos.getState()!!.isReplaceable) {
+        if (!pos.getState()!!.canBeReplaced()) {
             inaccessible.add(posAsLong)
             return true
         }
@@ -332,7 +343,7 @@ class BlockPlacer(
 
         SilentHotbar.selectSlotSilently(this, slot, slotResetDelay.random())
 
-        if (slot.itemStack.item !is BlockItem || pos.getState()!!.isReplaceable) {
+        if (slot.itemStack.item !is BlockItem || pos.getState()!!.canBeReplaced()) {
             // place the block
             doPlacement(blockHitResult, hand = slot.useHand, swingMode = swingMode)
             placedRenderer.addBlock(pos)
@@ -350,11 +361,11 @@ class BlockPlacer(
         )
 
         if (blockHitResult != null && blockHitResult.type == HitResult.Type.BLOCK && blockHitResult.blockPos == pos) {
-            return blockHitResult.withSide(direction)
+            return blockHitResult.withDirection(direction)
         }
 
         if (constructFailResult) {
-            return BlockHitResult(pos.toCenterPos(), direction, pos, false)
+            return BlockHitResult(pos.center, direction, pos, false)
         }
 
         return null

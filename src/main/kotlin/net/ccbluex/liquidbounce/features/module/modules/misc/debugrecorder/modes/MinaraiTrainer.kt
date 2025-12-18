@@ -30,15 +30,19 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.Modul
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.lastPos
+import net.ccbluex.liquidbounce.utils.entity.lastRotation
+import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.mob.SlimeEntity
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.monster.Slime
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvents
 import java.util.*
 import kotlin.random.Random
 
@@ -91,12 +95,12 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
                         previousVector = previous.directionVector,
                         targetVector = Rotation.lookingAt(
                             point = target.box.center,
-                            from = player.eyePos
+                            from = player.eyePosition
                         ).directionVector,
                         velocityDelta = current.rotationDeltaTo(next).toVec2f(),
-                        playerDiff = player.pos.subtract(player.lastPos),
-                        targetDiff = target.pos.subtract(target.lastPos),
-                        age = target.age,
+                        playerDiff = player.position().subtract(player.lastPos),
+                        targetDiff = target.position().subtract(target.lastPos),
+                        age = target.tickCount,
                         hurtTime = target.hurtTime,
                         distance = distance
                     )
@@ -113,7 +117,7 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerInteractEntityC2SPacket) {
+        if (packet is ServerboundInteractPacket) {
             val targetEntity = target ?: return@handler
 
             if (packet.entityId == targetEntity.id) {
@@ -129,30 +133,30 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
      * in a random direction and at a different height.
      */
     fun spawn(): LivingEntity {
-        val slime = SlimeEntity(EntityType.SLIME, world)
-        slime.uuid = UUID.randomUUID()
+        val slime = Slime(EntityType.SLIME, world)
+        slime.setUUID(UUID.randomUUID())
 
         val distance = Random.nextDouble() * 0.9 + 2.0
 
         // Spawn at least in view range of the player
         val direction = Rotation(
-            player.yaw + Random.nextDouble(-65.0, 65.0).toFloat(),
+            player.yRot + Random.nextDouble(-65.0, 65.0).toFloat(),
             Random.nextDouble(-20.0, 10.0).toFloat()
         ).directionVector * distance
 
-        val position = player.eyePos.add(direction)
+        val position = player.eyePosition.add(direction)
 
-        slime.setPosition(position)
+        slime.setPos(position)
 
         world.addEntity(slime)
 
         // Play sound at position
-        world.playSoundClient(
+        world.playLocalSound(
             position.x,
             position.y,
             position.z,
-            SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP,
-            SoundCategory.NEUTRAL,
+            SoundEvents.EXPERIENCE_ORB_PICKUP,
+            SoundSource.NEUTRAL,
             1f,
             1f,
             false,

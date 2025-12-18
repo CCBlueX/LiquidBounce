@@ -22,11 +22,17 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerStepEvent
+import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -38,8 +44,8 @@ import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.canStep
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.stat.Stats
-import java.util.EnumSet
+import net.minecraft.stats.Stats
+import java.util.*
 
 /**
  * Step module
@@ -62,8 +68,8 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
             get() = modes
 
         @Suppress("unused")
-        private val autoJumpHandler = handler<MinecraftAutoJumpEvent> { event ->
-            event.autoJump = true
+        private val autoJumpHandler = handler<AllowAutoJumpEvent> { event ->
+            event.isAllowed = true
         }
 
     }
@@ -147,7 +153,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                 return@handler
             }
 
-            player.incrementStat(Stats.JUMP)
+            player.awardStat(Stats.JUMP)
 
             // Used to trim the additional height to the maximum step height
             val trimHeight = player.y + stepHeight
@@ -165,7 +171,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                         }
                         this.z = player.z
                     }
-                }.forEach(network::sendPacket)
+                }.forEach(network::send)
             ticksWait = wait.random()
         }
 
@@ -193,15 +199,15 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                 stepping = true
                 waitTicks(2)
                 if (stepCounter % 2 == 0) {
-                    player.velocity.y = 0.24680001947880004
-                    player.velocity = player.velocity.withStrafe(speed = 0.2)
+                    player.deltaMovement.y = 0.24680001947880004
+                    player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.2))
                 }
                 waitTicks(1)
                 if (stepCounter % 2 == 0) {
-                    player.velocity.y = 0.0
+                    player.deltaMovement.y = 0.0
                 }
                 waitTicks(1)
-                player.velocity.y = -0.17
+                player.deltaMovement.y = -0.17
                 stepping = false
             }
         }
@@ -238,14 +244,14 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
 
                 stepping = true
                 Timer.requestTimerSpeed(baseTimer, Priority.IMPORTANT_FOR_USAGE_1, ModuleStep, 3)
-                player.velocity.y = 0.42
+                player.deltaMovement.y = 0.42
                 waitTicks(1)
-                player.velocity.y = 0.33
+                player.deltaMovement.y = 0.33
                 waitTicks(1)
-                player.velocity.y = 0.25
+                player.deltaMovement.y = 0.25
                 waitTicks(2)
-                player.velocity = player.velocity.withStrafe(speed = 0.281)
-                player.velocity.y -= player.y % 1.0
+                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.281))
+                player.deltaMovement.y -= player.y % 1.0
                 Timer.requestTimerSpeed(recoveryTimer, Priority.IMPORTANT_FOR_USAGE_1, ModuleStep, 2)
                 stepping = false
             }
@@ -294,27 +300,27 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
                 event.jump = true
 
                 stepping = true
-                player.velocity.y = 0.42
+                player.deltaMovement.y = 0.42
                 waitTicks(1)
                 if (currentStepHeight > 1.0) {
-                    player.velocity.y += 0.061
+                    player.deltaMovement.y += 0.061
                 }
                 waitTicks(2)
                 if (currentStepHeight == 1.0) {
-                    player.velocity.y -= 0.14
+                    player.deltaMovement.y -= 0.14
                 } else {
-                    player.velocity.y -= 0.095
+                    player.deltaMovement.y -= 0.095
                     if (currentStepHeight > 1.25) {
                         waitTicks(5)
                         if (alternateBypass) {
-                            player.isOnGround = true
+                            player.setOnGround(true)
                         } else {
-                            player.velocity.y = 0.42
+                            player.deltaMovement.y = 0.42
                         }
                     }
                 }
                 stepping = false
-                player.velocity = player.velocity.withStrafe(speed = 0.1838601407459074)
+                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.1838601407459074))
             }
         }
 

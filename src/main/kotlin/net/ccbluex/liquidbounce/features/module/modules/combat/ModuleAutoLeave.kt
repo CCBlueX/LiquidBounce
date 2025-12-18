@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleKick
-import net.minecraft.component.DataComponentTypes
+import net.minecraft.core.component.DataComponents
 
 /**
  * AutoLeave module
@@ -43,13 +43,13 @@ object ModuleAutoLeave : ClientModule("AutoLeave", Category.COMBAT) {
     @Suppress("unused")
     private val tickHandler = tickHandler {
         val passed = tickConditional(delay.random()) {
-            if (player.abilities.creativeMode || mc.isIntegratedServerRunning) {
+            if (player.abilities.instabuild || mc.hasSingleplayerServer()) {
                 return@tickConditional true
             }
 
             // Player can heal himself
-            if (player.mainHandStack.components.contains(DataComponentTypes.DEATH_PROTECTION)
-                || player.offHandStack.components.contains(DataComponentTypes.DEATH_PROTECTION)
+            if (player.mainHandItem.components.has(DataComponents.DEATH_PROTECTION)
+                || player.offhandItem.components.has(DataComponents.DEATH_PROTECTION)
             ) {
                 return@tickConditional true
             }

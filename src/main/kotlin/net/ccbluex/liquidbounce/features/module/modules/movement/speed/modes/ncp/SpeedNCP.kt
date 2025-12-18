@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.world.effect.MobEffects
 
 /**
  * author: @larryngton
@@ -52,19 +52,19 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
 
         @Suppress("unused")
         private val tickHandler = tickHandler {
-            if (player.isOnGround) {
+            if (player.onGround()) {
                 ticksInAir = 0
                 return@tickHandler
             } else {
                 ticksInAir++
                 if (ticksInAir == onTick) {
-                    player.velocity = player.velocity.withStrafe()
-                    player.velocity.y -= (0.1523351824467155 * motionMultiplier)
+                    player.setDeltaMovement(player.deltaMovement.withStrafe())
+                    player.deltaMovement.y -= (0.1523351824467155 * motionMultiplier)
                 }
             }
 
-            if (onHurt && player.hurtTime >= 5 && player.velocity.y >= 0) {
-                player.velocity.y -= 0.1
+            if (onHurt && player.hurtTime >= 5 && player.deltaMovement.y >= 0) {
+                player.deltaMovement.y -= 0.1
             }
         }
     }
@@ -80,8 +80,8 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         @Suppress("unused")
         private val tickHandler = tickHandler {
             if (player.moving) {
-                player.velocity.x *= 1f + (BOOST_CONSTANT * initialBoostMultiplier.toDouble())
-                player.velocity.z *= 1f + (BOOST_CONSTANT * initialBoostMultiplier.toDouble())
+                player.deltaMovement.x *= 1f + (BOOST_CONSTANT * initialBoostMultiplier.toDouble())
+                player.deltaMovement.z *= 1f + (BOOST_CONSTANT * initialBoostMultiplier.toDouble())
             }
         }
     }
@@ -104,17 +104,21 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        val speedMultiplier = player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0
+        val speedMultiplier = player.getEffect(MobEffects.SPEED)?.amplifier ?: 0
 
         if (player.moving) {
-            if (player.isOnGround) {
+            if (player.onGround()) {
                 val groundMin = GROUND_CONSTANT + SPEED_CONSTANT * speedMultiplier
 
-                player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(groundMin))
+                player.deltaMovement = player.deltaMovement.withStrafe(
+                    speed = player.sqrtSpeed.coerceAtLeast(groundMin)
+                )
             } else if (shouldStrafeInAir) {
                 val airMin = AIR_CONSTANT + SPEED_CONSTANT * speedMultiplier
-                player.velocity =
-                    player.velocity.withStrafe(strength = 0.7, speed = player.sqrtSpeed.coerceAtLeast(airMin))
+                player.deltaMovement = player.deltaMovement.withStrafe(
+                    strength = 0.7,
+                    speed = player.sqrtSpeed.coerceAtLeast(airMin)
+                )
             }
         }
 
@@ -123,7 +127,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         }
 
         if (player.hurtTime >= 1 && damageBoost) {
-            player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(0.5))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(0.5))
         }
     }
 

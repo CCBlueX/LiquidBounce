@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
-import net.minecraft.stat.Stats
+import net.minecraft.stats.Stats
 import kotlin.math.truncate
 
 object ScaffoldTowerMotion : ScaffoldTower("Motion") {
@@ -44,7 +44,7 @@ object ScaffoldTowerMotion : ScaffoldTower("Motion") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (!mc.options.jumpKey.isPressed || ModuleScaffold.blockCount <= 0 || !isBlockBelow) {
+        if (!mc.options.keyJump.isDown || ModuleScaffold.blockCount <= 0 || !isBlockBelow) {
             jumpOffPosition = Double.NaN
             return@tickHandler
         }
@@ -54,15 +54,17 @@ object ScaffoldTowerMotion : ScaffoldTower("Motion") {
         }
 
         if (player.y > jumpOffPosition + triggerHeight) {
-            player.setPosition(player.x, truncate(player.y), player.z)
+            player.setPos(player.x, truncate(player.y), player.z)
 
-            player.velocity.y = motion.toDouble()
-            player.velocity = player.velocity.multiply(
-                slow.toDouble(),
-                1.0,
-                slow.toDouble()
+            player.deltaMovement.y = motion.toDouble()
+            player.setDeltaMovement(
+                player.deltaMovement.multiply(
+                    slow.toDouble(),
+                    1.0,
+                    slow.toDouble()
+                )
             )
-            player.incrementStat(Stats.JUMP)
+            player.awardStat(Stats.JUMP)
 
             jumpOffPosition = player.y
         }

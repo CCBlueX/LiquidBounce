@@ -24,7 +24,7 @@ import com.viaversion.viafabricplus.ViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility1_8
 import net.minecraft.SharedConstants
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 // Only runs once
 val usesViaFabricPlus = runCatching {
@@ -34,7 +34,7 @@ val usesViaFabricPlus = runCatching {
     ViaFabricPlus.getImpl().registerOnChangeProtocolVersionCallback { _, _ ->
         // Update the window title
         mc.execute {
-            mc.updateWindowTitle()
+            mc.updateTitle()
         }
     }
 
@@ -45,8 +45,8 @@ val usesViaFabricPlus = runCatching {
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
 val defaultProtocolVersion = ClientProtocolVersion(
-    SharedConstants.getGameVersion().name(),
-    SharedConstants.getGameVersion().protocolVersion()
+    SharedConstants.getCurrentVersion().name(),
+    SharedConstants.getCurrentVersion().protocolVersion()
 )
 
 val protocolVersion: ClientProtocolVersion
@@ -96,7 +96,7 @@ val isOlderThanOrEquals1_7_10: Boolean
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_7_10
     }.onFailure {
-        logger.error("Failed to check if the server is using 1.7.10", it)
+        logger.error("Failed to check if the server is using 1.7.10-", it)
     }.getOrDefault(false)
 
 val isNewerThanOrEquals1_16: Boolean
@@ -112,7 +112,7 @@ val isNewerThanOrEquals1_21_6: Boolean
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_6
     }.onFailure {
-        logger.error("Failed to check if the server is using 1.21.6", it)
+        logger.error("Failed to check if the server is using 1.21.6+", it)
     }.getOrDefault(false)
 
 val isOlderThanOrEqual1_11_1: Boolean

@@ -22,9 +22,9 @@ package net.ccbluex.liquidbounce.utils.io
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
-fun Vec3d.toJson(): JsonElement {
+fun Vec3.toJson(): JsonElement {
     return JsonArray(3).apply {
         add(x)
         add(y)

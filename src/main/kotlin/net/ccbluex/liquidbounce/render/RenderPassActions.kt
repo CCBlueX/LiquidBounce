@@ -19,48 +19,37 @@
 
 package net.ccbluex.liquidbounce.render
 
-import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.systems.RenderPass
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTextureView
-import com.mojang.blaze3d.vertex.VertexFormat.DrawMode
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import net.ccbluex.liquidbounce.utils.render.createGpuBuffer
-import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.render.BufferBuilder
-import net.minecraft.client.render.VertexFormats
-import net.minecraft.client.util.BufferAllocator
+import com.mojang.blaze3d.pipeline.RenderTarget
 import java.util.OptionalDouble
 import java.util.OptionalInt
 import java.util.function.Supplier
 
-internal val trianglePosTexVertexBuffer: GpuBuffer =
-    BufferAllocator(VertexFormats.POSITION_TEXTURE.vertexSize * 3).use { allocator ->
-        BufferBuilder(allocator, DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE).apply {
-            vertex(-1f, -1f, 0f).texture(0f, 0f)
-            vertex(3f, -1f, 0f).texture(2f, 0f)
-            vertex(-1f, 3f, 0f).texture(0f, 2f)
-        }.end().createGpuBuffer { "Triangle full screen position texture VBO" }
-    }
-
-fun RenderPass.drawFullScreenPositionTexture() {
-    setVertexBuffer(0, trianglePosTexVertexBuffer)
-    draw(0, 3)
+/**
+ * 1.21.5-10
+ */
+inline fun RenderPass.bindSampler(name: String, gpuTextureView: GpuTextureView) {
+    bindTexture(name, gpuTextureView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST))
 }
 
 private val RENDER_PASS_DEFAULT_LABEL = Supplier { LiquidBounce.CLIENT_NAME + " RenderPass" }
 
 @JvmOverloads
-fun Framebuffer.createRenderPass(
+fun RenderTarget.createRenderPass(
     labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
     clearColor: OptionalInt = OptionalInt.empty(),
     clearDepth: OptionalDouble = OptionalDouble.empty(),
     useDepthAttachment: Boolean = true,
 ): RenderPass = newRenderPass(
     labelGetter,
-    colorAttachmentView!!,
+    colorTextureView!!,
     clearColor,
-    depthAttachmentView.takeIf { this.useDepthAttachment && useDepthAttachment },
+    depthTextureView.takeIf { this.useDepth && useDepthAttachment },
     clearDepth,
 )
 

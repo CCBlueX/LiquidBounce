@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.math.findFunctionMinimumByBisect
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.EntityDimensions
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.pow
@@ -49,7 +49,7 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
      */
     override fun calculateAngleFor(
         projectileInfo: TrajectoryInfo,
-        sourcePos: Vec3d,
+        sourcePos: Vec3,
         targetPosFunction: PositionExtrapolation,
         targetShape: EntityDimensions
     ): Rotation? {
@@ -60,15 +60,15 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
 
     private fun getDirectionByTime(
         trajectoryInfo: TrajectoryInfo,
-        enemyPosition: Vec3d,
-        playerHeadPosition: Vec3d,
+        enemyPosition: Vec3,
+        playerHeadPosition: Vec3,
         time: Double
-    ): Vec3d {
+    ): Vec3 {
         val vA = trajectoryInfo.initialVelocity
         val resistanceFactor = trajectoryInfo.drag
         val g = trajectoryInfo.gravity
 
-        return Vec3d(
+        return Vec3(
             (enemyPosition.x - playerHeadPosition.x) * (resistanceFactor - 1)
                 / (vA * (resistanceFactor.pow(time) - 1)),
 
@@ -82,7 +82,7 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
         )
     }
 
-    private fun getVelocityOnImpact(trajectoryInfo: TrajectoryInfo, ticksPassed: Double, initialDir: Vec3d): Vec3d {
+    private fun getVelocityOnImpact(trajectoryInfo: TrajectoryInfo, ticksPassed: Double, initialDir: Vec3): Vec3 {
         val d_x = initialDir.x
         val d_y = initialDir.y
         val d_z = initialDir.z
@@ -94,7 +94,7 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
 
         val fResistance = r_proj - 1
 
-        return Vec3d(
+        return Vec3(
             (d_x * r_proj.pow(t) * ln(r_proj) * v_proj) / fResistance,
             (d_y * fResistance * r_proj.pow(t) * ln(r_proj) * v_proj - g * (r_proj.pow(t) * ln(r_proj) - r_proj + 1))
                 / fResistance.pow(2),
@@ -107,9 +107,9 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
      */
     private fun calculatePossibleTravelTimeToTarget(
         trajectoryInfo: TrajectoryInfo,
-        playerHeadPosition: Vec3d,
+        playerHeadPosition: Vec3,
         positionFunction: PositionExtrapolation,
-        defaultBoxOffset: Vec3d,
+        defaultBoxOffset: Vec3,
     ): Double? {
         val distance = positionFunction.getPositionInTicks(0.0).subtract(playerHeadPosition).length()
 
@@ -141,11 +141,11 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
 
     private fun predictArrowDirection(
         trajectoryInfo: TrajectoryInfo,
-        playerHeadPosition: Vec3d,
+        playerHeadPosition: Vec3,
         targetDimensions: EntityDimensions,
         positionFunction: PositionExtrapolation,
-    ): Vec3d? {
-        val defaultBoxOffset = Vec3d(
+    ): Vec3? {
+        val defaultBoxOffset = Vec3(
             targetDimensions.width * 0.5,
             targetDimensions.height * 0.5,
             targetDimensions.width * 0.5
@@ -172,7 +172,7 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
         ModuleDebug.debugGeometry(
             ModuleProjectileAimbot, "inboundDirection", ModuleDebug.DebuggedLineSegment(
                 entityPositionOnImpact,
-                entityPositionOnImpact.add(directionOnImpact.normalize().multiply(2.0)),
+                entityPositionOnImpact.add(directionOnImpact.normalize().scale(2.0)),
                 Color4b.BLUE
             )
         )
@@ -181,7 +181,8 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
             playerHeadPosition,
             directionOnImpact,
             entityPositionOnImpact,
-            targetEntityBox = targetDimensions.getBoxAt(entityPositionOnImpact).expand(trajectoryInfo.hitboxRadius)
+            targetEntityBox = targetDimensions.makeBoundingBox(entityPositionOnImpact)
+                .inflate(trajectoryInfo.hitboxRadius)
         ) ?: return null
 
         return getDirectionByTime(trajectoryInfo, finalTargetPos, playerHeadPosition, round(ticksUntilImpact))

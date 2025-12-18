@@ -29,13 +29,14 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.item.clearEnchantments
 import net.ccbluex.liquidbounce.utils.item.removeEnchantment
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.entry.RegistryEntry
-import net.minecraft.util.Hand
-import net.minecraft.util.Identifier
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
+import net.minecraft.core.registries.Registries
+import net.minecraft.core.Holder
+import net.minecraft.world.InteractionHand
+import net.minecraft.resources.Identifier
+import kotlin.jvm.optionals.getOrNull
 import kotlin.math.min
 
 /**
@@ -74,7 +75,9 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
 
                         sendItemPacket(itemStack)
                         chat(
-                            regular(command.resultWithTree("enchantedItem", enchantment.idAsString, level ?: "max")),
+                            regular(
+                                command.resultWithTree("enchantedItem", enchantment.registeredName, level ?: "max")
+                            ),
                             metadata = MessageMetadata(id = "CItemEnchant#info")
                         )
                     }
@@ -95,7 +98,7 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
 
                         sendItemPacket(itemStack)
                         chat(
-                            regular(command.resultWithTree("unenchantedItem", enchantment.idAsString)),
+                            regular(command.resultWithTree("unenchantedItem", enchantment.registeredName)),
                             metadata = MessageMetadata(id = "CItemEnchant#info")
                         )
                     }
@@ -167,9 +170,9 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
         }
 
 
-    private fun sendItemPacket(itemStack: ItemStack?) {
-        network.sendPacket(
-            CreativeInventoryActionC2SPacket(
+    private fun sendItemPacket(itemStack: ItemStack) {
+        network.send(
+            ServerboundSetCreativeModeSlotPacket(
                 36 + player.inventory.selectedSlot, itemStack
             )
         )
@@ -182,41 +185,38 @@ object CommandItemEnchant : Command.Factory, MinecraftShortcuts {
     }
 
     private fun getItemOrThrow(command: Command): ItemStack {
-        val itemStack = player.getStackInHand(Hand.MAIN_HAND)
+        val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
 
         if (itemStack.isEmpty) {
             throw CommandException(command.resultWithTree("mustHoldItem"))
         }
 
-        return itemStack!!
+        return itemStack
     }
 
-    private fun enchantmentByName(enchantmentName: String, command: Command): RegistryEntry<Enchantment> {
-        val identifier = Identifier.tryParse(enchantmentName)
-        val registry = world.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT)
-        val enchantment = registry.getEntry(identifier).orElseThrow {
-            CommandException(command.resultWithTree("enchantmentNotExists", enchantmentName))
-        }
-
-        return enchantment
+    private fun enchantmentByName(enchantmentName: String, command: Command): Holder<Enchantment> {
+        val registry = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+        return Identifier.tryParse(enchantmentName)?.let { identifier ->
+            registry.get(identifier).getOrNull()
+        } ?: throw CommandException(command.resultWithTree("enchantmentNotExists", enchantmentName))
     }
 
-    private fun enchantAnyLevel(item: ItemStack, enchantment: RegistryEntry<Enchantment>, level: Int?) {
+    private fun enchantAnyLevel(item: ItemStack, enchantment: Holder<Enchantment>, level: Int?) {
         if (level == null || level <= 255) {
-            item.addEnchantment(enchantment, level ?: enchantment.value().maxLevel)
+            item.enchant(enchantment, level ?: enchantment.value().maxLevel)
         } else {
             var next = level
 
             while (next > 255) {
-                item.addEnchantment(enchantment, min(next, 255))
+                item.enchant(enchantment, min(next, 255))
                 next -= 255
             }
         }
     }
 
     private fun enchantAll(item: ItemStack, onlyAcceptable: Boolean, level: Int?) {
-        world.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT).indexedEntries.forEach { enchantment ->
-            if (!enchantment.value().isAcceptableItem(item) && onlyAcceptable) {
+        world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).asHolderIdMap().forEach { enchantment ->
+            if (!enchantment.value().canEnchant(item) && onlyAcceptable) {
                 return@forEach
             }
 

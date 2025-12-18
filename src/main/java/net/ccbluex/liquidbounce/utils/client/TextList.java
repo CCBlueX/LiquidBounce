@@ -20,11 +20,11 @@
 package net.ccbluex.liquidbounce.utils.client;
 
 import it.unimi.dsi.fastutil.objects.ObjectList;
-import net.minecraft.text.OrderedText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextContent;
-import net.minecraft.util.Language;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.locale.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,25 +34,25 @@ import java.util.List;
 /**
  * Text, but only siblings
  */
-public final class TextList implements Text {
+public final class TextList implements Component {
 
     public static final TextList EMPTY = new TextList(Collections.emptyList());
 
-    private final @NotNull List<@NotNull Text> siblings;
+    private final @NotNull List<@NotNull Component> siblings;
 
-    private OrderedText ordered = OrderedText.EMPTY;
+    private FormattedCharSequence ordered = FormattedCharSequence.EMPTY;
     @Nullable
     private Language language;
 
-    private TextList(@NotNull List<@NotNull Text> siblings) {
+    private TextList(@NotNull List<@NotNull Component> siblings) {
         this.siblings = siblings;
     }
 
-    public static TextList of(@NotNull Text... texts) {
+    public static TextList of(@NotNull Component... texts) {
         return of(ObjectList.of(texts));
     }
 
-    public static TextList of(@NotNull List<@NotNull Text> siblings) {
+    public static TextList of(@NotNull List<@NotNull Component> siblings) {
         return siblings.isEmpty() ? EMPTY : new TextList(siblings);
     }
 
@@ -62,20 +62,20 @@ public final class TextList implements Text {
     }
 
     @Override
-    public TextContent getContent() {
+    public ComponentContents getContents() {
         return PlainText.EMPTY.content();
     }
 
     @Override
-    public @NotNull List<Text> getSiblings() {
+    public @NotNull List<Component> getSiblings() {
         return siblings;
     }
 
     @Override
-    public OrderedText asOrderedText() {
+    public FormattedCharSequence getVisualOrderText() {
         Language language = Language.getInstance();
         if (this.language != language) {
-            this.ordered = language.reorder(this);
+            this.ordered = language.getVisualOrder(this);
             this.language = language;
         }
 

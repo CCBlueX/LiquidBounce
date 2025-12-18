@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
-class RigidPlayerSimulation(override val pos: Vec3d) : PlayerSimulation {
+class RigidPlayerSimulation(override val pos: Vec3) : PlayerSimulation {
     override fun tick() {
         // Do nothing.
     }

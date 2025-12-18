@@ -34,22 +34,22 @@ object ScriptMovementUtil {
 
     @JvmName("strafe")
     fun strafe() {
-        player.velocity = player.velocity.withStrafe()
+        player.setDeltaMovement(player.deltaMovement.withStrafe())
     }
 
     @JvmName("strafeWithSpeed")
     fun strafeWithSpeed(speed: Double) {
-        player.velocity = player.velocity.withStrafe(speed = speed)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
     }
 
     @JvmName("strafeWithStrength")
     fun strafeWithStrength(strength: Double) {
-        player.velocity = player.velocity.withStrafe(strength = strength)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(strength = strength))
     }
 
     @JvmName("strafeWithSpeedAndStrength")
     fun strafeWithSpeedAndStrength(speed: Double, strength: Double) {
-        player.velocity = player.velocity.withStrafe(speed = speed, strength = strength)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed, strength = strength))
     }
 
 }

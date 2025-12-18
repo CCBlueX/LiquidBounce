@@ -32,8 +32,8 @@ internal object VelocityDexland : VelocityMode("Dexland") {
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         if (player.hurtTime > 0 && ++count % times == 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
-            player.velocity.x *= hReduce
-            player.velocity.z *= hReduce
+            player.deltaMovement.x *= hReduce
+            player.deltaMovement.z *= hReduce
         }
 
         lastAttackTime = System.currentTimeMillis()

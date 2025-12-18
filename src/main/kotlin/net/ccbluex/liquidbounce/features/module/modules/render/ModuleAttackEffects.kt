@@ -23,12 +23,12 @@ import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.block.Blocks
-import net.minecraft.client.sound.PositionedSoundInstance
-import net.minecraft.entity.LivingEntity
-import net.minecraft.particle.ParticleTypes
-import net.minecraft.sound.SoundEvent
-import net.minecraft.sound.SoundEvents
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.client.resources.sounds.SimpleSoundInstance
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.sounds.SoundEvents
 
 @Suppress("MagicNumber")
 object ModuleAttackEffects : ClientModule("AttackEffects", Category.RENDER) {
@@ -48,8 +48,8 @@ object ModuleAttackEffects : ClientModule("AttackEffects", Category.RENDER) {
         override val choiceName: String,
         val soundEvent: SoundEvent
     ) : NamedChoice {
-        HIT("Hit", SoundEvents.ENTITY_ARROW_HIT),
-        ORB("Orb", SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP)
+        HIT("Hit", SoundEvents.ARROW_HIT),
+        ORB("Orb", SoundEvents.EXPERIENCE_ORB_PICKUP)
     }
 
     private val particle by multiEnumChoice(
@@ -78,7 +78,7 @@ object ModuleAttackEffects : ClientModule("AttackEffects", Category.RENDER) {
 
     private fun doSound() {
         mc.soundManager.play(
-            PositionedSoundInstance.master(
+            SimpleSoundInstance.forUI(
                 (sound.randomOrNull() ?: return).soundEvent, 1f
             )
         )
@@ -86,17 +86,17 @@ object ModuleAttackEffects : ClientModule("AttackEffects", Category.RENDER) {
 
     private fun doEffect(target: LivingEntity) {
         when (particle.randomOrNull()) {
-            Particle.BLOOD -> world.addBlockBreakParticles(
-                target.blockPos.up(1),
-                Blocks.REDSTONE_BLOCK.defaultState
+            Particle.BLOOD -> world.addDestroyBlockEffect(
+                target.blockPosition().above(1),
+                Blocks.REDSTONE_BLOCK.defaultBlockState()
             )
 
-            Particle.FIRE -> mc.particleManager.addEmitter(target, ParticleTypes.LAVA)
-            Particle.HEART -> mc.particleManager.addEmitter(target, ParticleTypes.HEART)
-            Particle.WATER -> mc.particleManager.addEmitter(target, ParticleTypes.FALLING_WATER)
-            Particle.SMOKE -> mc.particleManager.addEmitter(target, ParticleTypes.SMOKE)
-            Particle.MAGIC -> mc.particleManager.addEmitter(target, ParticleTypes.ENCHANTED_HIT)
-            Particle.CRITS -> mc.particleManager.addEmitter(target, ParticleTypes.CRIT)
+            Particle.FIRE -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.LAVA)
+            Particle.HEART -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.HEART)
+            Particle.WATER -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.FALLING_WATER)
+            Particle.SMOKE -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.SMOKE)
+            Particle.MAGIC -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.ENCHANTED_HIT)
+            Particle.CRITS -> mc.particleEngine.createTrackingEmitter(target, ParticleTypes.CRIT)
             else -> return
         }
     }

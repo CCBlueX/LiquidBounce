@@ -23,13 +23,13 @@ import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.thirdparty.MojangApi
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.entity.Entity
-import net.minecraft.entity.passive.HorseEntity
-import net.minecraft.entity.passive.TameableEntity
-import net.minecraft.entity.projectile.ProjectileEntity
-import net.minecraft.text.OrderedText
-import net.minecraft.text.Style
-import net.minecraft.util.Formatting
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.animal.equine.Horse
+import net.minecraft.world.entity.TamableAnimal
+import net.minecraft.world.entity.projectile.Projectile
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.network.chat.Style
+import net.minecraft.ChatFormatting
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -43,42 +43,42 @@ object ModuleMobOwners : ClientModule("MobOwners", Category.RENDER) {
 
     private val projectiles by boolean("Projectiles", false)
 
-    private val uuidNameCache = ConcurrentHashMap<UUID, OrderedText>()
+    private val uuidNameCache = ConcurrentHashMap<UUID, FormattedCharSequence>()
 
-    fun getOwnerInfoText(entity: Entity): OrderedText? {
+    fun getOwnerInfoText(entity: Entity): FormattedCharSequence? {
         if (!this.running) {
             return null
         }
 
         val ownerId = when {
-            entity is TameableEntity -> entity.ownerReference?.uuid
-            entity is HorseEntity -> entity.ownerReference?.uuid
-            entity is ProjectileEntity && projectiles -> entity.owner?.uuid
+            entity is TamableAnimal -> entity.ownerReference?.uuid
+            entity is Horse -> entity.ownerReference?.uuid
+            entity is Projectile && projectiles -> entity.owner?.uuid
             else -> null
         } ?: return null
 
-        return world.getPlayerByUuid(ownerId)
-            ?.let { OrderedText.styledForwardsVisitedString(it.nameForScoreboard, Style.EMPTY) }
+        return world.getPlayerByUUID(ownerId)
+            ?.let { FormattedCharSequence.forward(it.scoreboardName, Style.EMPTY) }
             ?: getFromMojangApi(ownerId)
     }
 
-    private val LOADING_TEXT = OrderedText.styledForwardsVisitedString(
+    private val LOADING_TEXT = FormattedCharSequence.forward(
         "Loading...",
         Style.EMPTY.withItalic(true)
     )
 
-    private val FAILED_TEXT = OrderedText.styledForwardsVisitedString(
+    private val FAILED_TEXT = FormattedCharSequence.forward(
         "Failed to query Mojang API",
-        Style.EMPTY.withItalic(true).withColor(Formatting.RED)
+        Style.EMPTY.withItalic(true).withColor(ChatFormatting.RED)
     )
 
-    private val CANCELED_TEXT = OrderedText.styledForwardsVisitedString(
+    private val CANCELED_TEXT = FormattedCharSequence.forward(
         "Query is canceled",
-        Style.EMPTY.withItalic(true).withColor(Formatting.YELLOW)
+        Style.EMPTY.withItalic(true).withColor(ChatFormatting.YELLOW)
     )
 
     @Suppress("SwallowedException")
-    private fun getFromMojangApi(ownerId: UUID): OrderedText {
+    private fun getFromMojangApi(ownerId: UUID): FormattedCharSequence {
         return uuidNameCache.putIfAbsent(ownerId, LOADING_TEXT) ?: run {
             // The job will still run even if the module is disabled
             withScope {
@@ -88,7 +88,7 @@ object ModuleMobOwners : ClientModule("MobOwners", Category.RENDER) {
 
                     val entityName = response.first { it.changedToAt == null }.name
 
-                    OrderedText.styledForwardsVisitedString(entityName, Style.EMPTY)
+                    FormattedCharSequence.forward(entityName, Style.EMPTY)
                 } catch (e: CancellationException) {
                     CANCELED_TEXT
                 } catch (e: Exception) {

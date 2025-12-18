@@ -21,44 +21,85 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.authlib.GameProfile
+import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.core.HttpException
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.core.renderScope
+import net.ccbluex.liquidbounce.api.thirdparty.PlayerSkinApi
 import net.ccbluex.liquidbounce.authlib.utils.generateOfflinePlayerUuid
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
+import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
+import net.ccbluex.liquidbounce.event.events.SessionEvent
+import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.injection.mixins.authlib.MixinYggdrasilMinecraftSessionServiceAccessor
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.registerTexture
-import net.minecraft.client.network.PlayerListEntry
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.util.SkinTextures
+import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.minecraft.client.multiplayer.PlayerInfo
+import net.minecraft.world.entity.player.PlayerModelType
+import net.minecraft.world.entity.player.PlayerSkin
+import net.minecraft.core.ClientAsset
+import java.io.IOException
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
 object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
     /**
-     * Changes the player model by forcefully modifying [PlayerEntity.getSkinTextures],
+     * Changes the player model by forcefully modifying
+     * [net.minecraft.client.network.AbstractClientPlayerEntity.getSkin],
      * as PlayerListEntry is unreliable on some servers.
      */
     private val allowMixinAbstractClientPlayerEntity by boolean("ForceOverride", false)
 
+    private val uploadSkin = boolean("UploadSkin", false)
+
     private val mode = choices("Mode", 0) {
         arrayOf(Mode.Online, Mode.File)
+    }
+
+    private val DEBOUNCE_DURATION = 3.seconds
+
+    private val uploadSkinFlow = MutableSharedFlow<Unit>(replay = 0)
+
+    init {
+        ioScope.launch {
+            // debounce skin uploads to prevent rapid calls
+            uploadSkinFlow.debounce(DEBOUNCE_DURATION).filter { canUploadSkin() }.collectLatest {
+                logger.info("Uploading skin...")
+                mode.activeChoice.uploadSkin()
+            }
+        }
+
+        ioScope.launch {
+            combine(uploadSkin.asStateFlow(), mode.asStateFlow()) { skin, mode ->
+                if (skin) {
+                    triggerUpload()
+                }
+            }.collect()
+        }
     }
 
     private suspend fun waitUntilInGame() {
@@ -69,7 +110,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
 
     private inline fun <T> Flow<T>.debounceUntilInGame(crossinline action: suspend (T) -> Unit) {
         renderScope.launch {
-            this@debounceUntilInGame.debounce { 2.seconds }.collectLatest {
+            this@debounceUntilInGame.debounce(DEBOUNCE_DURATION).collectLatest {
                 waitUntilInGame()
                 try {
                     action(it)
@@ -87,7 +128,9 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
         final override val parent: ChoiceConfigurable<*>
             get() = mode
 
-        abstract val skinTextures: Supplier<SkinTextures>?
+        abstract val skinTextures: Supplier<PlayerSkin>?
+
+        abstract suspend fun uploadSkin()
 
         object Online : Mode("Online") {
             private val username = text("Username", "LiquidBounce")
@@ -95,61 +138,154 @@ object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
             init {
                 username.asStateFlow().debounceUntilInGame { username ->
                     skinTextures = textureSupplier(username)
+
+                    triggerUpload()
                 }
             }
 
-            override var skinTextures: Supplier<SkinTextures>? = null
+            override var skinTextures: Supplier<PlayerSkin>? = null
 
-            private suspend fun textureSupplier(username: String): Supplier<SkinTextures> {
+            private suspend fun textureSupplier(username: String): Supplier<PlayerSkin> {
                 val profile = withContext(Dispatchers.IO) {
-                    val uuid = GameProfileRepository().fetchUuidByUsername(username)
+                    val uuid = GameProfileRepository.Default.fetchUuidByUsername(username)
                         ?: generateOfflinePlayerUuid(username)
-                    mc.sessionService.fetchProfile(uuid, false)?.profile
+                    mc.services.sessionService.fetchProfile(uuid, false)?.profile
                         ?: GameProfile(uuid, username)
                 }
 
-                return PlayerListEntry.texturesSupplier(profile)
+                return PlayerInfo.createSkinLookup(profile)
+            }
+
+            override suspend fun uploadSkin() {
+                val uuid = withContext(Dispatchers.IO) {
+                    GameProfileRepository.Default.fetchUuidByUsername(username.get())
+                } ?: return
+
+                val profile = withContext(Dispatchers.IO) {
+                    mc.services.sessionService.fetchProfile(uuid, false)
+                } ?: return
+
+                val texture = mc.services.sessionService.unpackTextures(
+                    mc.services.sessionService.getPackedTextures(profile.profile)
+                )
+                val skinTexture = texture.skin ?: return
+                val variant = if (skinTexture.getMetadata("model") == "slim") {
+                    PlayerModelType.SLIM
+                } else {
+                    PlayerModelType.WIDE
+                }
+
+                request {
+                    changeSkin(skinTexture.url, variant)
+                }
             }
         }
 
-        object File : Mode("File") {
+        object File : Mode("File"), ClientAsset.Texture {
             private val image = file("Image")
 
-            private val model by enumChoice("Model", ModelChoice.WIDE)
+            private val skinType by enumChoice("Model", ModelChoice.WIDE)
 
             private val identifier = LiquidBounce.identifier("skin-changer-from-file")
 
+            override fun id() = identifier
+
+            override fun texturePath() = identifier
+
             private enum class ModelChoice(
                 override val choiceName: String,
-                val model: SkinTextures.Model,
+                val type: PlayerModelType,
             ) : NamedChoice {
-                SLIM("Slim", SkinTextures.Model.SLIM),
-                WIDE("Default", SkinTextures.Model.WIDE),
+                SLIM("Slim", PlayerModelType.SLIM),
+                WIDE("Default", PlayerModelType.WIDE),
             }
 
-            override var skinTextures: Supplier<SkinTextures>? = null
+            override val skinTextures = Supplier {
+                PlayerSkin(
+                    this, // body
+                    null, // cape
+                    null, // elytra
+                    skinType.type,
+                    false,
+                )
+            }
 
             init {
                 image.asStateFlow().filter { it.isFile }.debounceUntilInGame { file ->
                     // New texture will replace the old one
                     val nativeImage = withContext(Dispatchers.IO) {
-                        NativeImage.read(file.inputStream())
+                        file.inputStream().toNativeImage()
                     }
 
-                    nativeImage.registerTexture(identifier)
-
-                    skinTextures = Supplier {
-                        SkinTextures(identifier, null, null, null, model.model, false)
+                    withContext(Dispatchers.Minecraft) {
+                        nativeImage.registerTexture(identifier)
                     }
+
+                    triggerUpload()
+                }
+            }
+
+            override suspend fun uploadSkin() {
+                val file = image.get()
+                if (!file.isFile) {
+                    return
+                }
+
+                request {
+                    uploadSkin(file, skinType.type)
                 }
             }
         }
     }
 
-    val skinTextures: Supplier<SkinTextures>? get() = mode.activeChoice.skinTextures
+    val skinTextures: Supplier<PlayerSkin>? get() = mode.activeChoice.skinTextures
 
     @JvmStatic
     fun shouldApplyChanges(): Boolean =
         running && allowMixinAbstractClientPlayerEntity
 
+    @Suppress("unused")
+    private val sessionHandler = suspendHandler<SessionEvent>(behavior = SuspendHandlerBehavior.CancelPrevious) {
+        triggerUpload()
+    }
+
+    override suspend fun enabledEffect() {
+        triggerUpload()
+    }
+
+    private suspend fun triggerUpload() {
+        uploadSkinFlow.emit(Unit)
+    }
+
+    private inline fun request(block: PlayerSkinApi.() -> Unit) {
+        try {
+            PlayerSkinApi(YggdrasilEnvironment.PROD.environment.servicesHost).block()
+        } catch (e: HttpException) {
+            logger.error("Failed to upload skin: ${e.code} ${e.content}", e)
+        } catch (e: IOException) {
+            logger.error("Failed to upload skin", e)
+        }
+    }
+
+    private fun canUploadSkin(): Boolean {
+        if (!uploadSkin.get() || mc.user.accountType == "legacy") {
+            return false
+        }
+
+        val sessionService = mc.services.sessionService
+        if (sessionService !is MixinYggdrasilMinecraftSessionServiceAccessor) {
+            return false
+        }
+
+        // query environment with reflection
+        val baseUrl = sessionService.baseUrl
+        if (!baseUrl.startsWith(YggdrasilEnvironment.PROD.environment.sessionHost)) {
+            // custom authentication endpoints are used
+            // e.g. The Altening
+            logger.info("Skipped skin upload as custom authentication endpoint is used: $baseUrl")
+            return false
+        }
+
+        return true
+    }
 }

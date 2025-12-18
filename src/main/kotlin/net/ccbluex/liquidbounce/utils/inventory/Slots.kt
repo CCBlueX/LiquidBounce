@@ -22,10 +22,9 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import kotlin.collections.filter
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 
 fun <T : HotbarItemSlot> SlotGroup<T>.findClosestSlot(item: Item): T? =
     findClosestSlot { it.item === item }
@@ -113,16 +112,10 @@ class SlotGroup<T : ItemSlot>(val slots: List<T>) : List<T> by slots {
     }
 
     operator fun plus(other: SlotGroup<*>): SlotGroup<ItemSlot> {
-        val newList = ArrayList<ItemSlot>(this.size + other.size)
-        newList.addAll(this)
-        newList.addAll(other)
-        return SlotGroup(newList)
+        return SlotGroup(this.slots + other.slots)
     }
 
     operator fun plus(other: ItemSlot): SlotGroup<ItemSlot> {
-        val newList = ArrayList<ItemSlot>(this.size + 1)
-        newList.addAll(this)
-        newList.add(other)
-        return SlotGroup(newList)
+        return SlotGroup(this.slots + other)
     }
 }

@@ -371,7 +371,7 @@ export interface Theme {
     settings: { [name: string]: any };
 }
 
-export interface Component {
+export interface HudComponent {
     name: string;
     id: string;
     settings: { [name: string]: any };

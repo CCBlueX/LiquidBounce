@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 
 /**
- * Addition to {@link net.minecraft.client.render.entity.state.EntityRenderState}
+ * Addition to {@link net.minecraft.client.renderer.entity.state.EntityRenderState}
  */
 public interface EntityRenderStateAddition {
 

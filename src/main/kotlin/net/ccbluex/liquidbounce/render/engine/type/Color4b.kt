@@ -17,9 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 @file:Suppress("TooManyFunctions")
+
 package net.ccbluex.liquidbounce.render.engine.type
 
-import net.minecraft.text.TextColor
+import net.minecraft.network.chat.TextColor
 import org.joml.Vector4f
 import java.awt.Color
 

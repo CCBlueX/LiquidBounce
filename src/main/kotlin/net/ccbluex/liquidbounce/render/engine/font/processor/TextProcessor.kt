@@ -21,7 +21,7 @@
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.text.Text
+import net.minecraft.network.chat.Component
 import kotlin.random.Random
 
 abstract class TextProcessor<T : ProcessedText> {
@@ -30,7 +30,7 @@ abstract class TextProcessor<T : ProcessedText> {
      * @param defaultColor The color all chars are drawn when no style is specified from Minecraft formatting
      */
     abstract fun process(
-        text: Text,
+        text: Component,
         defaultColor: Color4b,
     ): T
 

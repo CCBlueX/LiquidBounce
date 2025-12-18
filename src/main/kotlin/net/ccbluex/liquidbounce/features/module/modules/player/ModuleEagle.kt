@@ -98,7 +98,7 @@ object ModuleEagle : ClientModule(
             get() = enabled && Condition.SNEAK in conditions
 
         fun shouldSneak(event: MovementInputEvent) =
-            !enabled || player.pitch in pitch && conditions.all { it.test(event) }
+            !enabled || player.xRot in pitch && conditions.all { it.test(event) }
 
         @Suppress("unused")
         private enum class Condition(override val choiceName: String) : NamedChoice, Predicate<MovementInputEvent> {
@@ -115,8 +115,8 @@ object ModuleEagle : ClientModule(
                 RIGHT -> event.directionalInput.right
                 FORWARDS -> event.directionalInput.forwards
                 BACKWARDS -> event.directionalInput.backwards
-                HOLDING_BLOCKS -> isValidBlock(player.mainHandStack) || isValidBlock(player.offHandStack)
-                ON_GROUND -> player.isOnGround
+                HOLDING_BLOCKS -> isValidBlock(player.mainHandItem) || isValidBlock(player.offhandItem)
+                ON_GROUND -> player.onGround()
                 SNEAK -> event.sneak
             }
         }
@@ -136,7 +136,7 @@ object ModuleEagle : ClientModule(
     private val handleMovementInput = handler<MovementInputEvent>(priority = SAFETY_FEATURE) { event ->
         debugParameter("EdgeDistance") { currentEdgeDistance }
 
-        val originalSneak = mc.options.sneakKey.isPressed
+        val originalSneak = mc.options.keyShift.isDown
         val conditionsMet = Conditional.shouldSneak(event)
         val isActive = shouldActivateEagle(event, conditionsMet)
 

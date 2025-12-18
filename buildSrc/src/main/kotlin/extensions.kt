@@ -149,11 +149,16 @@ fun Configuration.excludeProvidedLibs() = apply {
 
     exclude(group = "io.netty", module = "netty-buffer")
     exclude(group = "io.netty", module = "netty-codec")
+    exclude(group = "io.netty", module = "netty-codec-base")
+    exclude(group = "io.netty", module = "netty-codec-compression")
+    exclude(group = "io.netty", module = "netty-codec-http")
     exclude(group = "io.netty", module = "netty-common")
     exclude(group = "io.netty", module = "netty-handler")
     exclude(group = "io.netty", module = "netty-resolver")
     exclude(group = "io.netty", module = "netty-transport")
     exclude(group = "io.netty", module = "netty-transport-classes-epoll")
+    exclude(group = "io.netty", module = "netty-transport-classes-kqueue")
     exclude(group = "io.netty", module = "netty-transport-native-epoll")
+    exclude(group = "io.netty", module = "netty-transport-native-kqueue")
     exclude(group = "io.netty", module = "netty-transport-native-unix-common")
 }

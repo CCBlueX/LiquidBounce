@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 
 /**
  * FastBreak module
@@ -42,14 +42,14 @@ object ModuleFastBreak : ClientModule("FastBreak", Category.WORLD) {
     private val modeChoice = choices("Mode", 0) { arrayOf(NoneChoice(it), AbortAnother) }.apply(::tagBy)
 
     val repeatable = tickHandler {
-        if (onlyTool && !player.mainHandStack.isMiningTool) {
+        if (onlyTool && !player.mainHandItem.isMiningTool) {
             return@tickHandler
         }
 
-        interaction.blockBreakingCooldown = 0
+        interaction.destroyDelay = 0
 
-        if (interaction.currentBreakingProgress > breakDamage) {
-            interaction.currentBreakingProgress = 1f
+        if (interaction.destroyProgress > breakDamage) {
+            interaction.destroyProgress = 1f
         }
     }
 
@@ -65,20 +65,22 @@ object ModuleFastBreak : ClientModule("FastBreak", Category.WORLD) {
             get() = modeChoice
 
         val packetHandler = handler<PacketEvent> {
-            if (onlyTool && !player.mainHandStack.isMiningTool) {
+            if (onlyTool && !player.mainHandItem.isMiningTool) {
                 return@handler
             }
 
             val packet = it.packet
 
-            if (packet is PlayerActionC2SPacket && packet.action == PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK) {
-                val blockPos = packet.pos ?: return@handler
+            if (packet is ServerboundPlayerActionPacket &&
+                packet.action == ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK
+            ) {
+                val blockPos = packet.pos
 
                 // Abort block break on the block above (which we are not breaking)
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK,
-                        blockPos.up(), packet.direction
+                network.send(
+                    ServerboundPlayerActionPacket(
+                        ServerboundPlayerActionPacket.Action.ABORT_DESTROY_BLOCK,
+                        blockPos.above(), packet.direction
                     )
                 )
             }

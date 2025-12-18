@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
 import net.ccbluex.liquidbounce.utils.client.sendStopSneaking
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * BlocksMC velocity
@@ -35,7 +35,7 @@ internal object VelocityBlocksMC : VelocityMode("BlocksMC") {
         val packet = event.packet
 
         // Check if this is a regular velocity update
-        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
             event.cancelEvent()
             sendStartSneaking()
             sendStopSneaking()

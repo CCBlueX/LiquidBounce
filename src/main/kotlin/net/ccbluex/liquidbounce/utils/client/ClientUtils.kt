@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.minecraft.client.MinecraftClient
+import net.minecraft.client.Minecraft
 import net.minecraft.util.Util
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -27,9 +27,9 @@ import org.apache.logging.log4j.Logger
 val logger: Logger = LogManager.getLogger(CLIENT_NAME)
 
 val inGame: Boolean
-    get() = MinecraftClient.getInstance()?.let { mc -> mc.player != null && mc.world != null } == true
+    get() = Minecraft.getInstance()?.let { mc -> mc.player != null && mc.level != null } == true
 
 /**
  * Open uri in browser
  */
-fun browseUrl(url: String) = Util.getOperatingSystem().open(url)
+fun browseUrl(url: String) = Util.getPlatform().openUri(url)

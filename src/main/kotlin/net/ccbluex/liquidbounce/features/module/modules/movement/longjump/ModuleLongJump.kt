@@ -55,7 +55,7 @@ object ModuleLongJump : ClientModule("LongJump", Category.MOVEMENT) {
 
     val tickHandler = handler<MovementInputEvent> {
         if (jumped) {
-            if (player.isOnGround || player.abilities.flying) {
+            if (player.onGround() || player.abilities.flying) {
                 if (autoDisable && boosted) {
                     enabled = false
                 }
@@ -65,9 +65,9 @@ object ModuleLongJump : ClientModule("LongJump", Category.MOVEMENT) {
         }
 
         // AutoJump
-        if (autoJump && player.isOnGround && player.moving
+        if (autoJump && player.onGround() && player.moving
             && mode.activeChoice != NoCheatPlusBow) {
-            player.jump()
+            player.jumpFromGround()
             jumped = true
         }
     }

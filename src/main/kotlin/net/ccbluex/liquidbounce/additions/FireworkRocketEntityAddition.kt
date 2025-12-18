@@ -21,8 +21,8 @@
 
 package net.ccbluex.liquidbounce.additions
 
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.projectile.FireworkRocketEntity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.projectile.FireworkRocketEntity
 
 interface FireworkRocketEntityAddition {
     fun `liquidbounce$getShooter`(): LivingEntity?

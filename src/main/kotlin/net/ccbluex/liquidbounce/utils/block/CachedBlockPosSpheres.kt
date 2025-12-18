@@ -23,7 +23,7 @@ import it.unimi.dsi.fastutil.longs.LongImmutableList
 import it.unimi.dsi.fastutil.longs.LongList
 import net.ccbluex.liquidbounce.utils.block.CachedBlockPosSpheres.RADIUS
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 internal object CachedBlockPosSpheres {
 

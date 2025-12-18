@@ -52,14 +52,14 @@ object CommandInvsee : Command.Factory {
             )
             .handler {
                 val inputName = args[0] as String
-                val playerID = network.playerList.find { it.profile.name.equals(inputName, true) }?.profile?.id
-                val player = { world.getPlayerByUuid(playerID) ?: ModuleInventoryTracker.playerMap[playerID] }
+                val playerID = network.onlinePlayers.find { it.profile.name.equals(inputName, true) }?.profile?.id
+                val player = { playerID?.let(world::getPlayerByUUID) ?: ModuleInventoryTracker.playerMap[playerID] }
 
                 if (playerID == null || player() == null) {
                     throw CommandException(command.result("playerNotFound", inputName))
                 }
 
-                mc.send {
+                mc.schedule {
                     mc.setScreen(ViewedInventoryScreen(player))
                 }
 

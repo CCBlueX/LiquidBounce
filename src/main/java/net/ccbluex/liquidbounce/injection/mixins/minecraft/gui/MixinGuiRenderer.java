@@ -28,8 +28,8 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
+import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import net.minecraft.client.gui.render.GuiRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -57,7 +57,7 @@ public abstract class MixinGuiRenderer {
      * https://github.com/FabricMC/fabric/blob/320674d1c713640a2e71834c1e3eb379e80a49fb/fabric-rendering-v1/src/client/java/net/fabricmc/fabric/mixin/client/rendering/GuiRendererMixin.java#L111-L128
      */
     @WrapOperation(
-        method = "render(Lnet/minecraft/client/gui/render/GuiRenderer$Draw;Lcom/mojang/blaze3d/systems/RenderPass;Lcom/mojang/blaze3d/buffers/GpuBuffer;Lcom/mojang/blaze3d/vertex/VertexFormat$IndexType;)V",
+        method = "executeDraw(Lnet/minecraft/client/gui/render/GuiRenderer$Draw;Lcom/mojang/blaze3d/systems/RenderPass;Lcom/mojang/blaze3d/buffers/GpuBuffer;Lcom/mojang/blaze3d/vertex/VertexFormat$IndexType;)V",
         at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderPass;setIndexBuffer(Lcom/mojang/blaze3d/buffers/GpuBuffer;Lcom/mojang/blaze3d/vertex/VertexFormat$IndexType;)V")
     )
     private void fixIndexBufferType(
@@ -68,20 +68,20 @@ public abstract class MixinGuiRenderer {
         @Local(argsOnly = true) GuiRenderer.Draw draw
     ) {
         var pipeline = draw.pipeline();
-        if (pipeline.getVertexFormatMode() != VertexFormat.DrawMode.QUADS) {
+        if (pipeline.getVertexFormatMode() != VertexFormat.Mode.QUADS) {
             var shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.getVertexFormatMode());
-            gpuBuffer = shapeIndexBuffer.getIndexBuffer(draw.indexCount());
-            indexType = shapeIndexBuffer.getIndexType();
+            gpuBuffer = shapeIndexBuffer.getBuffer(draw.indexCount());
+            indexType = shapeIndexBuffer.type();
         }
 
         original.call(instance, gpuBuffer, indexType);
     }
 
     @WrapOperation(
-        method = "renderPreparedDraws",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getFramebuffer()Lnet/minecraft/client/gl/Framebuffer;")
+        method = "draw",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;getMainRenderTarget()Lcom/mojang/blaze3d/pipeline/RenderTarget;")
     )
-    private Framebuffer injectBlurRenderTarget(MinecraftClient instance, Operation<Framebuffer> original) {
+    private RenderTarget injectBlurRenderTarget(Minecraft instance, Operation<RenderTarget> original) {
         BlurEffectRenderer blurEffectRenderer = BlurEffectRenderer.INSTANCE;
         if (blurEffectRenderer.shouldDrawBlur()) {
             blurEffectRenderer.setDrawingHudFramebuffer(true);
@@ -91,7 +91,7 @@ public abstract class MixinGuiRenderer {
     }
 
     @Inject(
-        method = "renderPreparedDraws", at = @At("RETURN")
+        method = "draw", at = @At("RETURN")
     )
     private void afterRenderBlurOverlay(GpuBufferSlice fogBuffer, CallbackInfo ci) {
         BlurEffectRenderer.INSTANCE.blitBlurOverlay();

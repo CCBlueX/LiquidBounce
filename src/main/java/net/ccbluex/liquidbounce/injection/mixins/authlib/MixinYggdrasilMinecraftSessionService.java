@@ -26,14 +26,14 @@ import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.TextureUrlChecker;
 import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleYggdrasilSignatureFix;
-import net.minecraft.client.util.SkinTextures;
+import net.minecraft.world.entity.player.PlayerModelType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.*;
+import java.util.Map;
 
 @Mixin(YggdrasilMinecraftSessionService.class)
 
@@ -78,7 +78,7 @@ public class MixinYggdrasilMinecraftSessionService {
         if (!url.contains("127.0.0.1")) return;
 
         MinecraftProfileTextures forced = new MinecraftProfileTextures(
-                new MinecraftProfileTexture(url, Map.of("model", SkinTextures.Model.SLIM.getName())),
+                new MinecraftProfileTexture(url, Map.of("model", PlayerModelType.SLIM.getSerializedName())),
                 original.cape(),
                 original.elytra(),
                 original.signatureState()

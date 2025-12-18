@@ -20,23 +20,17 @@ package net.ccbluex.liquidbounce.utils.io
 
 import io.netty.bootstrap.AbstractBootstrap
 import io.netty.channel.Channel
-import io.netty.channel.epoll.Epoll
-import io.netty.channel.epoll.EpollSocketChannel
-import io.netty.channel.socket.nio.NioSocketChannel
-import net.minecraft.network.ClientConnection
+import net.minecraft.server.network.EventLoopGroupHolder
 
 /**
  * Shortcut for Netty client [io.netty.bootstrap.Bootstrap],
- * using shared [io.netty.channel.EventLoopGroup] from [ClientConnection]
+ * using shared [io.netty.channel.EventLoopGroup] from [NetworkingBackend]
  */
 internal fun <B : AbstractBootstrap<B, Channel>> AbstractBootstrap<B, Channel>.clientChannelAndGroup(
-    tryToUseEpoll: Boolean = true
-): B =
-    if (Epoll.isAvailable() && tryToUseEpoll) {
-        channelFactory(::EpollSocketChannel)
-            .group(ClientConnection.EPOLL_CLIENT_IO_GROUP.get())
-    } else {
-        channelFactory(::NioSocketChannel)
-            .group(ClientConnection.CLIENT_IO_GROUP.get())
-    }
+    useEpoll: Boolean = true
+): B {
+    val networkingBackend = EventLoopGroupHolder.remote(useEpoll)
+    return channel(networkingBackend.channelCls())
+            .group(networkingBackend.eventLoopGroup())
+}
 

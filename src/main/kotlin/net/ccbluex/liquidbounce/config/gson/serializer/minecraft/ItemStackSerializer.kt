@@ -22,25 +22,25 @@ package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
 import java.lang.reflect.Type
 
 object ItemStackSerializer : JsonSerializer<ItemStack> {
     override fun serialize(src: ItemStack?, typeOfSrc: Type, context: JsonSerializationContext) = src?.let {
         JsonObject().apply {
-            addProperty("identifier", Registries.ITEM.getId(it.item).toString())
-            add("displayName", context.serialize(it.name))
+            addProperty("identifier", BuiltInRegistries.ITEM.getKey(it.item).toString())
+            add("displayName", context.serialize(it.hoverName))
             addProperty("count", it.count)
-            addProperty("damage", it.damage)
+            addProperty("damage", it.damageValue)
             addProperty("maxDamage", it.maxDamage)
             addProperty("empty", it.isEmpty)
-            it.enchantments.enchantmentEntries
+            it.enchantments.entrySet()
                 .takeIf { set -> set.isNotEmpty() }
                 ?.let { entries ->
                     add("enchantments", JsonObject().apply {
                         for ((key, level) in entries) {
-                            addProperty(key.idAsString, level)
+                            addProperty(key.registeredName, level)
                         }
                     })
                 }

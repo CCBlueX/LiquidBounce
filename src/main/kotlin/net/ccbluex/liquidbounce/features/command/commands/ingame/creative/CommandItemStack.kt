@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 
 object CommandItemStack : Command.Factory, MinecraftShortcuts {
 
@@ -49,7 +49,7 @@ object CommandItemStack : Command.Factory, MinecraftShortcuts {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
-                val mainHandStack = player.mainHandStack
+                val mainHandStack = player.mainHandItem
                 if (mainHandStack.isEmpty) {
                     throw CommandException(command.result("noItem"))
                 }
@@ -63,9 +63,9 @@ object CommandItemStack : Command.Factory, MinecraftShortcuts {
                 }
 
                 mainHandStack.count = amount
-                player.inventory!!.setStack(player.inventory.selectedSlot, mainHandStack)
-                mc.networkHandler!!.sendPacket(
-                    CreativeInventoryActionC2SPacket(
+                player.inventory!!.setItem(player.inventory.selectedSlot, mainHandStack)
+                mc.connection!!.send(
+                    ServerboundSetCreativeModeSlotPacket(
                         36 + player.inventory.selectedSlot,
                         mainHandStack
                     )

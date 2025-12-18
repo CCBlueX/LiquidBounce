@@ -39,7 +39,7 @@ object ModuleTwerk : ClientModule("Twerk", Category.FUN) {
      * Handles sneaking and unsneaking, has a high priority so that more important modules can override it.
      */
     val movementInputHandler = handler<MovementInputEvent>(priority = 10) {
-        val sneaking = player.age % (delay * 2) < delay
+        val sneaking = player.tickCount % (delay * 2) < delay
         it.sneak = sneaking
     }
 
