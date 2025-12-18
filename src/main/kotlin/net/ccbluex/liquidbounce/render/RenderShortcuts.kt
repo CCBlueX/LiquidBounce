@@ -33,11 +33,11 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.render.SAMPLER_NAMES
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
@@ -50,7 +50,6 @@ import org.joml.Vector4f
 import org.lwjgl.opengl.GL11C
 import java.util.OptionalDouble
 import java.util.OptionalInt
-import java.util.function.IntFunction
 import java.util.function.Supplier
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -165,17 +164,9 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
     }
 }
 
-fun RenderEnvironment.draw(pipeline: RenderPipeline, builtBuffer: MeshData) = drawMesh(
-    pipeline,
-    builtBuffer,
-    this.framebuffer,
-    shaderColor = this.shaderColor.toVector4f(),
-    shaderTextureProvider = this.shaderTextures::get,
-)
-
 /**
  * copied from RenderLayer.draw(BuiltBuffer) (1.21.5-10: RenderLayer.MultiPhase.draw)
- * @see RenderLayer.draw
+ * @see net.minecraft.client.renderer.rendertype.RenderType.draw
  */
 @Suppress("detekt:all")
 fun drawMesh(
@@ -184,7 +175,7 @@ fun drawMesh(
     framebuffer: RenderTarget = mc.mainRenderTarget,
     shaderColor: Vector4f = Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
     renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
-    shaderTextureProvider: IntFunction<GpuTextureView?> = IntFunction { null },
+    shaderTextureProvider: Map<String, AbstractTexture> = emptyMap(),
 ) = builtBuffer.use { buffer ->
     val gpuBufferSlice = RenderSystem.getDynamicUniforms()
         .writeTransform(
@@ -232,11 +223,8 @@ fun drawMesh(
         renderPass.setUniform("DynamicTransforms", gpuBufferSlice)
         renderPass.setVertexBuffer(0, gpuBuffer)
 
-        for (i in 0 until RenderEnvironment.TEXTURE_COUNT) {
-            val gpuTexture = shaderTextureProvider.apply(i)
-            if (gpuTexture != null) {
-                renderPass.bindSampler(SAMPLER_NAMES[i], gpuTexture)
-            }
+        for ((key, texture) in shaderTextureProvider) {
+            renderPass.bindTexture(key, texture.textureView, texture.sampler)
         }
 
         renderPass.setIndexBuffer(gpuBuffer2, indexType)

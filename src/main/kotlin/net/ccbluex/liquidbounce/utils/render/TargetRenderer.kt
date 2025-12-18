@@ -46,7 +46,6 @@ import com.mojang.math.Axis
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
-import java.awt.Color
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
@@ -92,7 +91,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
         override val parent: ChoiceConfigurable<*>
             get() = appearance
 
-        private val color by color("Color", Color4b(Color.BLUE.rgb, true))
+        private val color by color("Color", Color4b.BLUE)
         private val size by float("Size", 0.5f, 0.4f..0.7f)
         private val length by int("Length", 25, 15..40)
 
@@ -109,7 +108,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
             with(env) {
                 startBatch()
-                shaderTextures[0] = ghostModeTexture.textureView
+                sampler0(ghostModeTexture)
                 drawParticle(
                     { sin, cos -> Vec3(sin, cos, -cos) },
                     { sin, cos -> Vec3(-sin, -cos, cos) }
@@ -125,6 +124,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                     { sin, cos -> Vec3(sin, sin, -cos) }
                 )
                 commitBatch()
+                sampler0(null)
             }
 
             env.matrixStack.popPose()
@@ -147,8 +147,8 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                     translate(translationsBefore(sin, cos))
 
                     translate(-size / 2.0, -size / 2.0, 0.0)
-                    mulPose(Axis.YP.rotationDegrees(-mc.gameRenderer.mainCamera.yRot()))
-                    mulPose(Axis.XP.rotationDegrees(mc.gameRenderer.mainCamera.xRot()))
+                    mulPose(Axis.YP.rotationDegrees(-camera.yRot()))
+                    mulPose(Axis.XP.rotationDegrees(camera.xRot()))
                     translate(size / 2.0, size / 2.0, 0.0)
                 }
 
@@ -159,8 +159,8 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
                 with(matrixStack) {
                     translate(-size / 2.0, -size / 2.0, 0.0)
-                    mulPose(Axis.XP.rotationDegrees(-mc.gameRenderer.mainCamera.xRot()))
-                    mulPose(Axis.YP.rotationDegrees(mc.gameRenderer.mainCamera.yRot()))
+                    mulPose(Axis.XP.rotationDegrees(-camera.xRot()))
+                    mulPose(Axis.YP.rotationDegrees(camera.yRot()))
                     translate(size / 2.0, size / 2.0, 0.0)
 
                     translate(translateAfter(sin, cos))

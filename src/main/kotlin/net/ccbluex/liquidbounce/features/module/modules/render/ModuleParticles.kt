@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -160,9 +159,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
          */
         DOLLAR("Dollar", LiquidBounce.resource("particles/dollar.png").toNativeImage());
 
-        private val texture = this.image.asTexture { choiceName }
-
-        val textureView: GpuTextureView = texture.textureView
+        val texture = this.image.asTexture { choiceName }
     }
 
     private class Particle(var pos: Vec3, val particleImage: ParticleImage) {
@@ -222,7 +219,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         fun render(partialTicks: Float) {
             val interpPos = prevPos.lerp(pos, partialTicks.toDouble())
             env.withPositionRelativeToCamera(interpPos) {
-                env.shaderTextures[0] = particleImage.textureView
+                env.sampler0(particleImage.texture)
 
                 val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - spawnTime) / 12000f)
                 val rotation = if (rotate) {
@@ -247,6 +244,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
                 )
 
                 drawSquareTexture(size, renderColor.toARGB())
+                env.sampler0(null)
             }
         }
     }

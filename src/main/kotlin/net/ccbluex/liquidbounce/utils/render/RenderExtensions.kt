@@ -51,12 +51,6 @@ import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
 import java.util.function.Supplier
 
-/**
- * Avoiding String contract
- */
-@JvmField
-val SAMPLER_NAMES = Array(RenderEnvironment.TEXTURE_COUNT) { "Sampler$it" }
-
 fun PoseStack.reset() {
     while (!isEmpty) popPose()
     setIdentity()

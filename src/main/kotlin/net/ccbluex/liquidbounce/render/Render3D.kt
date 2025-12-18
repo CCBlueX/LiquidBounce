@@ -29,13 +29,17 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.BufferBuilder
+import com.mojang.blaze3d.vertex.MeshData
 import net.minecraft.client.Camera
 import com.mojang.blaze3d.vertex.Tesselator
 import com.mojang.blaze3d.vertex.PoseStack
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
+import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Position
 import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
 import org.joml.Vector3fc
+import org.joml.Vector4f
 
 /**
  * Context representing the rendering environment.
@@ -44,11 +48,19 @@ import org.joml.Vector3fc
  */
 sealed class RenderEnvironment(val framebuffer: RenderTarget) {
 
-    val shaderTextures = arrayOfNulls<GpuTextureView>(TEXTURE_COUNT)
+    val shaderTextures = Object2ObjectArrayMap<String, AbstractTexture>(1)
     var shaderColor = Color4b.WHITE
 
     var isBatchMode: Boolean = false
         private set
+
+    fun sampler0(texture: AbstractTexture?) {
+        if (texture != null) {
+            shaderTextures["Sampler0"] = texture
+        } else {
+            shaderTextures.remove("Sampler0")
+        }
+    }
 
     fun getOrCreateBuffer(pipeline: RenderPipeline): BufferBuilder {
         return if (isBatchMode) {
@@ -77,9 +89,17 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
         batchBuffer.clear()
     }
 
-    companion object {
-        const val TEXTURE_COUNT = 12
+    fun draw(pipeline: RenderPipeline, builtBuffer: MeshData) = drawMesh(
+        pipeline,
+        builtBuffer,
+        this.framebuffer,
+        shaderColor = shaderColor.toVector4f(shaderColorVec),
+        shaderTextureProvider = this.shaderTextures,
+    )
 
+    companion object {
+        @JvmStatic
+        private val shaderColorVec = Vector4f()
         @JvmStatic
         private val batchBuffer = Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()
     }
