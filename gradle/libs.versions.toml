@@ -32,7 +32,7 @@ fastutil4k = "0.2.2"
 modmenu = "17.0.0-alpha.1"
 exploit_preventer_api = "0.0.1"
 exploit_preventer_mod = "0.1.7"
-sodium = "mc1.21.11-0.8.1-fabric"
+sodium = "mc1.21.11-0.8.1-neoforge"
 lithium = "mc1.21.11-0.21.1-fabric"
 viafabricplus = "4.4.0"
 
