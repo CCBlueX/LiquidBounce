@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockSide
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.doBreak
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -50,7 +49,6 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
-import net.ccbluex.liquidbounce.utils.inventory.hasItem
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
@@ -58,10 +56,9 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.item.enchantment.Enchantments
-import net.minecraft.world.item.Items
 import net.minecraft.world.phys.HitResult
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
+import net.minecraft.world.item.BoneMealItem
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
@@ -182,7 +179,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
                 waitTicks(interactDelay.random())
             }
         } else if (AutoUseBoneMeal.enabled && AutoUseBoneMeal.isReady && blockPos.canUseBoneMeal(state)) {
-            val boneMealSlot = Slots.OffhandWithHotbar.findClosestSlot(Items.BONE_MEAL) ?: return@tickHandler
+            val boneMealSlot = Slots.OffhandWithHotbar.findClosestSlot { it.item is BoneMealItem } ?: return@tickHandler
 
             SilentHotbar.selectSlotSilently(this, boneMealSlot, AutoUseBoneMeal.swapBackDelay.random())
             doPlacement(rayTraceResult, hand = boneMealSlot.useHand)
@@ -200,7 +197,13 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
             val sides = AutoFarmTrackedState.Plantable.entries.findPlantableSides(blockPos, blockState)
             if (sides.isNotEmpty()) {
-                val slot = getAvailableSlotForBlock(blockState) ?: return@tickHandler
+                val slot = AutoFarmTrackedState.Plantable.entries.firstNotNullOfOrNull {
+                    if (it.isBlockMatches(blockState)) {
+                        Slots.OffhandWithHotbar.findClosestSlot(it.items)
+                    } else {
+                        null
+                    }
+                } ?: return@tickHandler
 
                 SilentHotbar.selectSlotSilently(this, slot, AutoPlaceCrops.swapBackDelay.random())
                 doPlacement(rayTraceResult, hand = slot.useHand)
@@ -257,7 +260,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
         if (!allowedTypes.isEmpty()) return false
 
         val blocksToPlace =
-            eyesPos.searchBlocksInCuboid(radius) { pos, state ->
+            eyesPos.searchBlocksInCuboid(radius) { _, state ->
                 !state.isAir && allowedTypes.any { it.isBlockMatches(state) }
             }.mapNotNullTo(mutableListOf()) { (pos, state) ->
                 val sides =
@@ -299,7 +302,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     }
 
     private fun updateTargetToFertilizable(radius: Float, radiusSquared: Float, eyesPos: Vec3): Boolean {
-        if (!Slots.OffhandWithHotbar.hasItem(Items.BONE_MEAL)) {
+        if (Slots.OffhandWithHotbar.none { it.itemStack.item is BoneMealItem }) {
             return false
         }
 

@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
 import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.item.BoneMealItem
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
 import java.util.*
@@ -75,14 +76,10 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3?>(ModuleAutoFarm, "Aut
         allowedStates.add(AutoFarmTrackedState.ReadyForHarvest)
 
         for (item in Slots.OffhandWithHotbar.items) {
-            when (item) {
-                in AutoFarmTrackedState.Plantable.FARM.items -> allowedStates.add(AutoFarmTrackedState.Plantable.FARM)
-                in AutoFarmTrackedState.Plantable.SOUL_SAND.items -> allowedStates.add(AutoFarmTrackedState.Plantable.SOUL_SAND)
-                Items.BONE_MEAL -> if (ModuleAutoFarm.AutoUseBoneMeal.enabled) {
-                    allowedStates.add(AutoFarmTrackedState.Bonemealable)
-                }
+            AutoFarmTrackedState.Plantable.entries.filterTo(allowedStates) { it.items.contains(item) }
 
-                Items.COCOA_BEANS -> allowedStates.add(AutoFarmTrackedState.Plantable.JUNGLE_LOGS)
+            if (item is BoneMealItem && ModuleAutoFarm.AutoUseBoneMeal.enabled) {
+                allowedStates.add(AutoFarmTrackedState.Bonemealable)
             }
         }
         return allowedStates

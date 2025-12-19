@@ -97,10 +97,3 @@ fun BlockPos.readyForHarvest(state: BlockState): Boolean {
         else -> false
     }
 }
-
-internal fun getAvailableSlotForBlock(blockState: BlockState) =
-    when (blockState.block) {
-        is FarmBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = AutoFarmTrackedState.Plantable.FARM.items)
-        is SoulSandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = AutoFarmTrackedState.Plantable.SOUL_SAND.items)
-        else -> null
-    }
