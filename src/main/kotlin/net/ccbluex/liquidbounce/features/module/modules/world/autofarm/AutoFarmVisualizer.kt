@@ -106,7 +106,8 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                                 )
                             }
 
-                            AutoFarmTrackedState.Plantable.SOUL_SAND, AutoFarmTrackedState.Plantable.FARM -> if (type in placeTargets) {
+                            AutoFarmTrackedState.Plantable.SOUL_SAND,
+                            AutoFarmTrackedState.Plantable.FARM -> if (type in placeTargets) {
                                 drawBoxSide(
                                     FULL_BOX,
                                     side = Direction.UP,
