@@ -7,8 +7,68 @@ on:
     branches: [ nextgen ]
 
 jobs:
+  extract-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      lb_version: ${{ steps.versions.outputs.lb_version }}
+      minecraft_version: ${{ steps.versions.outputs.minecraft_version }}
+      loader_version: ${{ steps.versions.outputs.loader_version }}
+      fabricapi_version: ${{ steps.versions.outputs.fabricapi_version }}
+      kotlin_version: ${{ steps.versions.outputs.kotlin_version }}
+      fabric_kotlin_version: ${{ steps.versions.outputs.fabric_kotlin_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract versions
+        id: versions
+        run: |
+          set -euo pipefail
+          
+          function gradleprop {
+            local key="$1"
+            local value=$(grep "^${key}=" gradle.properties | head -n1 | cut -d'=' -f2- | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+            if [ -z "$value" ]; then
+              echo "[ERROR] gradleprop: '${key}' not found or blank in gradle.properties" >&2
+              exit 1
+            fi
+            echo "$value"
+          }
+          
+          function tomlprop {
+            local key="$1"
+            local value=$(grep "^${key}[[:space:]]*=" gradle/libs.versions.toml | head -n1 | sed -n 's/^[^=]*=[[:space:]]*"\([^"]*\)".*/\1/p')
+            if [ -z "$value" ]; then
+              echo "[ERROR] tomlprop: '${key}' not found or blank in gradle/libs.versions.toml" >&2
+              exit 1
+            fi
+            echo "$value"
+          }
+          
+          LB_VERSION=$(gradleprop 'mod_version')
+          MINECRAFT_VERSION=$(tomlprop 'minecraft')
+          LOADER_VERSION=$(tomlprop 'fabric-loader')
+          FABRICAPI_VERSION=$(tomlprop 'fabric-api')
+          KOTLIN_VERSION=$(tomlprop 'kotlin')
+          FABRIC_KOTLIN_VERSION=$(tomlprop 'fabric-kotlin')
+          
+          echo "lb_version=$LB_VERSION" >> "$GITHUB_OUTPUT"
+          echo "minecraft_version=$MINECRAFT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "loader_version=$LOADER_VERSION" >> "$GITHUB_OUTPUT"
+          echo "fabricapi_version=$FABRICAPI_VERSION" >> "$GITHUB_OUTPUT"
+          echo "kotlin_version=$KOTLIN_VERSION" >> "$GITHUB_OUTPUT"
+          echo "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" >> "$GITHUB_OUTPUT"
+          
+          echo "LiquidBounce: $LB_VERSION"
+          echo "Minecraft: $MINECRAFT_VERSION"
+          echo "Fabric Loader: $LOADER_VERSION"
+          echo "Fabric API: $FABRICAPI_VERSION"
+          echo "Kotlin: $KOTLIN_VERSION"
+          echo "Fabric Kotlin: $FABRIC_KOTLIN_VERSION"
+
   build:
     runs-on: ubuntu-latest
+    needs: extract-versions
     if: github.ref == 'refs/heads/nextgen'
     steps:
       - name: Checkout repository and submodules
@@ -33,19 +93,22 @@ jobs:
       - name: Upload artifact
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          LB_VERSION: ${{ needs.extract-versions.outputs.lb_version }}
+          MINECRAFT_VERSION: ${{ needs.extract-versions.outputs.minecraft_version }}
+          LOADER_VERSION: ${{ needs.extract-versions.outputs.loader_version }}
+          FABRICAPI_VERSION: ${{ needs.extract-versions.outputs.fabricapi_version }}
+          KOTLIN_VERSION: ${{ needs.extract-versions.outputs.kotlin_version }}
+          FABRIC_KOTLIN_VERSION: ${{ needs.extract-versions.outputs.fabric_kotlin_version }}
         run: |
-          function gradleprop {
-              grep "^${1}=" gradle.properties | cut -d'=' -f2
-          }
-          export LB_VERSION=$(gradleprop 'mod_version')
-          export MINECRAFT_VERSION=$(gradleprop 'minecraft_version')
-          export LOADER_VERSION=$(gradleprop 'loader_version')
-          export FABRICAPI_VERSION=$(gradleprop 'fabric_version')
-          export KOTLIN_VERSION=$(gradleprop 'kotlin_version')
-          export FABRIC_KOTLIN_VERSION=$(gradleprop 'fabric_kotlin_version')
-          echo Version: $LB_VERSION, Minecraft: $MINECRAFT_VERSION
+          set -euo pipefail
+          
           cd build/libs
-          export JAR=$(find . -regex '.*liquidbounce-[0-9.]*\.jar')
+          JAR=$(find . -regex '.*liquidbounce-[0-9.]*\.jar')
+          if [ -z "$JAR" ]; then
+            echo "[ERROR] built jar not found in build/libs" >&2
+            exit 1
+          fi
+          
           cp $JAR zip/liquidbounce.jar
           cd zip
           zip -r liquidbounce.zip *
@@ -69,6 +132,7 @@ jobs:
 
   verify-pr:
     runs-on: ubuntu-latest
+    needs: extract-versions
     if: github.ref != 'refs/heads/nextgen'
     steps:
       - name: Checkout repository and submodules
@@ -89,8 +153,6 @@ jobs:
         env:
           CI: true
         run: ./gradlew build
-      # Make sure we always run this upload task,
-      # because the previous step may fail if there are findings.
       - name: Upload SARIF to GitHub using the upload-sarif action
         uses: github/codeql-action/upload-sarif@v4
         if: success() || failure()
