@@ -20,11 +20,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMobOwners;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTNTTimer;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode;
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;
@@ -33,17 +30,16 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.state.CameraRenderState;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
-import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -119,6 +115,10 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     private void disableDuplicateNametagsAndInjectMobOwners(S state, PoseStack matrices, SubmitNodeCollector queue, CameraRenderState cameraRenderState, CallbackInfo ci) {
         // Don't render nametags
         var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
+        if (entity == null) {
+            return;
+        }
+
         if (ModuleNametags.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity)) {
             ci.cancel();
         }
