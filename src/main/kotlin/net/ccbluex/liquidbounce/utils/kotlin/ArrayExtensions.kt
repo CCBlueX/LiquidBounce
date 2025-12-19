@@ -70,15 +70,11 @@ inline fun range(
 }
 
 fun ClosedFloatingPointRange<Float>.random(): Float {
-    require(start.isFinite())
-    require(endInclusive.isFinite())
-    return (start + (endInclusive - start) * ThreadLocalRandom.current().nextFloat())
+    return if (start >= endInclusive) start else ThreadLocalRandom.current().nextFloat(start, endInclusive)
 }
 
 fun ClosedFloatingPointRange<Double>.random(): Double {
-    require(start.isFinite())
-    require(endInclusive.isFinite())
-    return start + (endInclusive - start) * ThreadLocalRandom.current().nextDouble()
+    return if (start >= endInclusive) start else ThreadLocalRandom.current().nextDouble(start, endInclusive)
 }
 
 fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double> {
