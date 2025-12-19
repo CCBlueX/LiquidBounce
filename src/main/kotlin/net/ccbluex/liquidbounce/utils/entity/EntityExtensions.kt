@@ -74,8 +74,10 @@ import net.minecraft.util.Mth
 import net.minecraft.core.Position
 import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.Difficulty
+import net.minecraft.world.item.component.UseEffects
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ExplosionDamageCalculator
@@ -176,6 +178,12 @@ fun LocalPlayer.getMovementDirectionOfInput(input: DirectionalInput): Float {
 
 val LocalPlayer.isBlockAction: Boolean
     get() = isUsingItem && useItem.useAnimation == ItemUseAnimation.BLOCK
+
+/**
+ * @see LocalPlayer.isSlowDueToUsingItem
+ */
+val Player.isSlowDueToUsingItem: Boolean
+    get() = isUsingItem && !(useItem[DataComponents.USE_EFFECTS] ?: UseEffects.DEFAULT).canSprint
 
 fun Entity.lastRenderPos() = Vec3(this.xOld, this.yOld, this.zOld)
 

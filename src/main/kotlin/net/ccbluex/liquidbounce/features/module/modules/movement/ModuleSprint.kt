@@ -34,9 +34,11 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
+import net.ccbluex.liquidbounce.utils.entity.isSlowDueToUsingItem
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
@@ -62,7 +64,7 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
      * This is used to stop sprinting when the player is not moving forward
      * without a velocity fix enabled.
      */
-    private val stopOn by multiEnumChoice("StopOn", StopOn.GROUND, StopOn.AIR)
+    private val stopOn by multiEnumChoice("StopOn", StopOn.entries)
 
     val shouldSprintOmnidirectional: Boolean
         get() = running && sprintMode == SprintMode.OMNIDIRECTIONAL ||
@@ -77,17 +79,6 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     val shouldIgnoreCollision
         get() = running && Ignore.COLLISION in ignore
 
-    /**
-     * @see net.minecraft.world.item.component.UseEffects
-     *
-     * Should prevent player start sprinting if using item
-     * with [net.minecraft.world.item.component.UseEffects.canSprint] set to false
-     *
-     * FIXME
-     */
-    val shouldIgnoreUseEffects
-        get() = running && Ignore.USE_EFFECTS in ignore
-
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(priority = CRITICAL_MODIFICATION) { event ->
         if (!event.directionalInput.isMoving) {
@@ -100,7 +91,7 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     }
 
     @Suppress("unused")
-    private val sprintPreventionHandler = handler<SprintEvent> { event ->
+    private val sprintPreventionHandler = handler<SprintEvent>(priority = FINAL_DECISION) { event ->
         // In this case we want to prevent sprinting on movement tick only,
         // because otherwise you could guess from the input change that this is automated.
         if (event.source == SprintEvent.Source.MOVEMENT_TICK && shouldPreventSprint()) {
@@ -136,8 +127,7 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     }
 
     private fun shouldPreventSprint(): Boolean {
-        // FIXME: why it's `shouldIgnoreUseEffects`'s expected effect
-        if (StopOn.USING_ITEM in stopOn && player.isUsingItem) {
+        if (StopOn.USING_ITEM in stopOn && player.isSlowDueToUsingItem) {
             return true
         }
 
@@ -157,7 +147,6 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
         BLINDNESS("Blindness"),
         HUNGER("Hunger"),
         COLLISION("Collision"),
-        USE_EFFECTS("UseEffects"),
     }
 
     private enum class StopOn(override val choiceName: String) : NamedChoice {
