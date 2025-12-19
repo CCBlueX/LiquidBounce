@@ -6,7 +6,7 @@ jdk = "21"
 # Fabric Properties
 # Check these on https://fabricmc.net/versions.html
 minecraft = "1.21.11"
-fabric-loom = "1.14-SNAPSHOT"
+fabric-loom = "1.15.0-alpha.6"
 fabric-loader = "0.18.3"
 fabric-loaderMin = "0.16.14"
 fabric-api = "0.140.0+1.21.11"
