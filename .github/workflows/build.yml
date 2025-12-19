@@ -34,21 +34,22 @@ jobs:
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
+          set -euo pipefail
           function gradleprop {
-              local value=$(grep -E "^${1}[ ]*=[ ]*" gradle.properties | head -n1 | sed -E 's/^${1}[ ]*=[ ]*//')
-              if [ -z "$value" ]; then
-                echo "[ERROR] gradleprop: '${1}' not found or blank in gradle.properties" >&2
-                exit 1
-              fi
-              echo "$value"
+            local value=$(grep -E "^${1}[ ]*=[ ]*" gradle.properties | head -n1 | sed -E 's/^${1}[ ]*=[ ]*//')
+            if [ -z "$value" ]; then
+              echo "[ERROR] gradleprop: '${1}' not found or blank in gradle.properties" >&2
+              exit 1
+            fi
+            echo "$value"
           }
           function tomlprop {
-              local value=$(grep -E "^${1}[ ]*=[ ]*" gradle/libs.versions.toml | head -n1 | sed -E 's/^${1}[ ]*=[ ]*"([^"]*)".*/\1/')
-              if [ -z "$value" ]; then
-                echo "[ERROR] tomlprop: '${1}' not found or blank in gradle/libs.versions.toml" >&2
-                exit 1
-              fi
-              echo "$value"
+            local value=$(grep -E "^${1}[ ]*=[ ]*" gradle/libs.versions.toml | head -n1 | sed -E 's/^${1}[ ]*=[ ]*"([^"]*)".*/\1/')
+            if [ -z "$value" ]; then
+              echo "[ERROR] tomlprop: '${1}' not found or blank in gradle/libs.versions.toml" >&2
+              exit 1
+            fi
+            echo "$value"
           }
           export LB_VERSION=$(gradleprop 'mod_version')
           export MINECRAFT_VERSION=$(tomlprop 'minecraft')
@@ -59,6 +60,10 @@ jobs:
           echo Version: $LB_VERSION, Minecraft: $MINECRAFT_VERSION
           cd build/libs
           export JAR=$(find . -regex '.*liquidbounce-[0-9.]*\.jar')
+          if [ -z "$JAR" ]; then
+            echo "[ERROR] built jar not found in build/libs" >&2
+            exit 1
+          fi
           cp $JAR zip/liquidbounce.jar
           cd zip
           zip -r liquidbounce.zip *
