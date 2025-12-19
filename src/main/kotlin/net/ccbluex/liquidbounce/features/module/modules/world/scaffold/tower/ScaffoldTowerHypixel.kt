@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.core.BlockPos
+import java.util.concurrent.ThreadLocalRandom
 
 object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
 
@@ -54,7 +55,8 @@ object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
         when (player.airTicks % 3) {
             0 -> {
                 player.deltaMovement.y = 0.42
-                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.247 - (Math.random() / 100f)))
+                player.setDeltaMovement(
+                    player.deltaMovement.withStrafe(speed = 0.247 - (ThreadLocalRandom.current().nextFloat() / 100f)))
             }
             2 -> player.deltaMovement.y = 1 - (player.y % 1.0)
         }

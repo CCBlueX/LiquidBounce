@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.utils.kotlin
 import it.unimi.dsi.fastutil.doubles.DoubleIterable
 import net.ccbluex.fastutil.forEachDouble
 import java.util.*
+import java.util.concurrent.ThreadLocalRandom
 import java.util.stream.Stream
 
 inline infix operator fun IntRange.contains(range: IntRange): Boolean {
@@ -71,13 +72,13 @@ inline fun range(
 fun ClosedFloatingPointRange<Float>.random(): Float {
     require(start.isFinite())
     require(endInclusive.isFinite())
-    return (start + (endInclusive - start) * Math.random()).toFloat()
+    return (start + (endInclusive - start) * ThreadLocalRandom.current().nextFloat())
 }
 
 fun ClosedFloatingPointRange<Double>.random(): Double {
     require(start.isFinite())
     require(endInclusive.isFinite())
-    return start + (endInclusive - start) * Math.random()
+    return start + (endInclusive - start) * ThreadLocalRandom.current().nextDouble()
 }
 
 fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double> {
