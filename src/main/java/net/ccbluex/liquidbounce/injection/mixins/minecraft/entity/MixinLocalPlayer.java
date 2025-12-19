@@ -428,6 +428,11 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements ClientPlay
         return !ModuleSprint.INSTANCE.getShouldIgnoreCollision() && original;
     }
 
+    @ModifyExpressionValue(method = "isSlowDueToUsingItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/UseEffects;canSprint()Z"))
+    private boolean hookUseEffects(boolean original) {
+        return ModuleSprint.INSTANCE.getShouldIgnoreUseEffects() || original;
+    }
+
     @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;hasForwardImpulse()Z"))
     private boolean hookIsWalking(boolean original) {
         if (!ModuleSprint.INSTANCE.getShouldSprintOmnidirectional()) {

@@ -62,7 +62,7 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
      * This is used to stop sprinting when the player is not moving forward
      * without a velocity fix enabled.
      */
-    private val stopOn by multiEnumChoice("StopOn", StopOn.entries)
+    private val stopOn by multiEnumChoice("StopOn", StopOn.GROUND, StopOn.AIR)
 
     val shouldSprintOmnidirectional: Boolean
         get() = running && sprintMode == SprintMode.OMNIDIRECTIONAL ||
@@ -76,6 +76,17 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
 
     val shouldIgnoreCollision
         get() = running && Ignore.COLLISION in ignore
+
+    /**
+     * @see net.minecraft.world.item.component.UseEffects
+     *
+     * Should prevent player start sprinting if using item
+     * with [net.minecraft.world.item.component.UseEffects.canSprint] set to false
+     *
+     * FIXME
+     */
+    val shouldIgnoreUseEffects
+        get() = running && Ignore.USE_EFFECTS in ignore
 
     @Suppress("unused")
     private val sprintHandler = handler<SprintEvent>(priority = CRITICAL_MODIFICATION) { event ->
@@ -125,6 +136,11 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     }
 
     private fun shouldPreventSprint(): Boolean {
+        // FIXME: why it's `shouldIgnoreUseEffects`'s expected effect
+        if (StopOn.USING_ITEM in stopOn && player.isUsingItem) {
+            return true
+        }
+
         val deltaYawRad = (player.yRot - (RotationManager.currentRotation ?: return false).yaw).toRadians()
         val forward = player.input.movementForward
         val sideways = player.input.movementSideways
@@ -140,11 +156,13 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     private enum class Ignore(override val choiceName: String) : NamedChoice {
         BLINDNESS("Blindness"),
         HUNGER("Hunger"),
-        COLLISION("Collision")
+        COLLISION("Collision"),
+        USE_EFFECTS("UseEffects"),
     }
 
     private enum class StopOn(override val choiceName: String) : NamedChoice {
         GROUND("Ground"),
         AIR("Air"),
+        USING_ITEM("UsingItem"),
     }
 }
