@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
@@ -85,7 +85,7 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
             waitTicks(delay)
 
             // Apply strafe
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.sqrtSpeed * strength))
+            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed * strength))
 
             if (untilGround) {
                 applyStrafe = true
@@ -98,7 +98,7 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
         if (player.onGround()) {
             applyStrafe = false
         } else if (applyStrafe) {
-            event.movement = event.movement.withStrafe(speed = player.sqrtSpeed * strength)
+            event.movement = event.movement.withStrafe(speed = player.horizontalSpeed * strength)
         }
     }
 

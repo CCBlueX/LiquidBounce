@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
@@ -52,8 +53,8 @@ data class Rotation(
             val diffZ = lookVec.z
 
             return Rotation(
-                Mth.wrapDegrees(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f),
-                Mth.wrapDegrees((-Math.toDegrees(atan2(diffY, hypot(diffX, diffZ)))).toFloat())
+                Mth.wrapDegrees(atan2(diffZ, diffX).toDegrees().toFloat() - 90f),
+                Mth.wrapDegrees(-atan2(diffY, hypot(diffX, diffZ)).toDegrees().toFloat())
             )
         }
     }
@@ -126,6 +127,7 @@ data class Rotation(
         )
     }
 
+    @JvmOverloads
     fun approximatelyEquals(other: Rotation, tolerance: Float = 2f): Boolean {
         return angleTo(other) <= tolerance
     }

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpe
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.effect.MobEffects
@@ -111,13 +111,13 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
                 val groundMin = GROUND_CONSTANT + SPEED_CONSTANT * speedMultiplier
 
                 player.deltaMovement = player.deltaMovement.withStrafe(
-                    speed = player.sqrtSpeed.coerceAtLeast(groundMin)
+                    speed = player.horizontalSpeed.coerceAtLeast(groundMin)
                 )
             } else if (shouldStrafeInAir) {
                 val airMin = AIR_CONSTANT + SPEED_CONSTANT * speedMultiplier
                 player.deltaMovement = player.deltaMovement.withStrafe(
                     strength = 0.7,
-                    speed = player.sqrtSpeed.coerceAtLeast(airMin)
+                    speed = player.horizontalSpeed.coerceAtLeast(airMin)
                 )
             }
         }
@@ -127,7 +127,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         }
 
         if (player.hurtTime >= 1 && damageBoost) {
-            player.deltaMovement = player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(0.5))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(0.5))
         }
     }
 

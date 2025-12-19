@@ -24,12 +24,12 @@ import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 plugins {
-    id("fabric-loom")
-    kotlin("jvm")
-    id("com.gorylenko.gradle-git-properties") version "2.5.4"
-    id("io.gitlab.arturbosch.detekt") version "1.23.8"
-    id("com.github.node-gradle.node") version "7.1.0"
-    id("org.jetbrains.dokka") version "2.1.0"
+    alias(libs.plugins.fabric.loom)
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.gradleGitProperties)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.nodeGradle)
+    alias(libs.plugins.dokka)
 }
 
 base {
@@ -104,79 +104,70 @@ loom {
 
 dependencies {
     // Minecraft
-    minecraft("com.mojang:minecraft:${project.property("minecraft_version")}")
+    minecraft(libs.minecraft)
     mappings(loom.officialMojangMappings())
 
     // Fabric
-    modApi("net.fabricmc:fabric-loader:${project.property("loader_version")}")
-    modApi("net.fabricmc.fabric-api:fabric-api:${project.property("fabric_version")}")
-    modApi("net.fabricmc:fabric-language-kotlin:${project.property("fabric_kotlin_version")}")
+    modApi(libs.fabric.loader)
+    modApi(libs.fabric.api)
+    modApi(libs.fabric.kotlin)
 
     // Mod menu
-    modApi("maven.modrinth:modmenu:${project.property("mod_menu_version")}")
+    modApi(libs.modmenu)
 
     // Recommended mods (on IDE)
-    modApi("maven.modrinth:sodium:${project.property("sodium_version")}")
-    modApi("maven.modrinth:lithium:${project.property("lithium_version")}")
+    modApi(libs.sodium)
+    modApi(libs.lithium)
 
     // ViaFabricPlus
-    modApi("com.viaversion:viafabricplus-api:${project.property("viafabricplus_version")}")
-    modRuntimeOnly("com.viaversion:viafabricplus:${project.property("viafabricplus_version")}")
+    modApi(libs.vfp.api)
+    modRuntimeOnly(libs.vfp)
 
     // Exploit Preventer
-    modApi("com.nikoverflow:ExploitPreventer-API:${project.property("exploit_preventer_api_version")}")
-    modRuntimeOnly("maven.modrinth:exploitpreventer:${project.property("exploit_preventer_mod_version")}")
+    modApi(libs.exploitPreventer.api)
+    modRuntimeOnly(libs.exploitPreventer)
 
     // Minecraft Authlib
-    includeDependency("net.ccbluex:mc-authlib:${project.property("mc_authlib_version")}")
+    includeDependency(libs.mcAuthlib)
 
     // JCEF Support
-    val mcef = "com.github.CCBlueX:mcef:${project.property("mcef_version")}"
-    modApi(mcef)
-    include(mcef)
-    includeDependency("net.ccbluex:netty-httpserver:2.5.0")
+    modApi(libs.mcef)
+    include(libs.mcef)
+    includeDependency(libs.httpServer)
 
     // Discord RPC Support
-    includeDependency("com.github.CCBlueX:DiscordIPC:4.0.0")
+    includeDependency(libs.discordIpc)
 
     // ScriptAPI
     includeDependency("net.fabricmc:tiny-mappings-parser:0.3.0+build.17")
-    includeDependency("org.graalvm.polyglot:polyglot:${project.property("polyglot_version")}")
-    includeDependency("org.graalvm.polyglot:js-community:${project.property("polyglot_version")}")
-    includeDependency("org.graalvm.polyglot:tools-community:${project.property("polyglot_version")}")
-//    includeDependency("org.graalvm.polyglot:python-community:${project.property("polyglot_version")}")
-//    includeDependency("org.graalvm.polyglot:wasm-community:${project.property("polyglot_version")}")
-//    includeDependency("org.graalvm.polyglot:java-community:${project.property("polyglot_version")}")
-//    includeDependency("org.graalvm.polyglot:ruby-community:${project.property("polyglot_version")}")
-//    includeDependency("org.graalvm.polyglot:llvm-native-community:${project.property("polyglot_version")}")
+    includeDependency(libs.polyglot)
+    includeDependency(libs.polyglot.js)
+    includeDependency(libs.polyglot.tools)
 
     // Machine Learning
-    includeDependency("ai.djl:api:${project.property("djl_version")}")
-    includeDependency("ai.djl.pytorch:pytorch-engine:${project.property("djl_version")}")
-//    runtimeOnly("ai.djl.mxnet:mxnet-engine:${project.property("djl_version")}")
-//    runtimeOnly("ai.djl.tensorflow:tensorflow-engine:${project.property("djl_version")}")
+    includeDependency(libs.djl.api)
+    includeDependency(libs.djl.pytorch)
 
     // HTTP library
-    includeDependency("com.squareup.okhttp3:okhttp:${project.property("okhttp_version")}")
-    includeDependency("com.squareup.okhttp3:okhttp-coroutines:${project.property("okhttp_version")}")
+    includeDependency(libs.bundles.okhttp)
 
     // SOCKS5 & HTTP Proxy Support
-    includeDependency("io.netty:netty-handler-proxy:${project.property("netty_version")}")
+    includeDependency(libs.netty.handler.proxy)
 
     // Update Checker
-    includeDependency("com.vdurmont:semver4j:3.1.0")
+    includeDependency(libs.semver4j)
 
     // Name Protect
-    includeDependency("org.ahocorasick:ahocorasick:0.6.3")
+    includeDependency(libs.ahocorasick)
 
     // External utils
-    compileOnlyApi("net.ccbluex:fastutil4k-extensions-only:0.2.2")
-    includeDependency("net.ccbluex:fastutil4k-more-collections:0.2.2")
+    compileOnlyApi(libs.fastutil4k.extensionsOnly)
+    includeDependency(libs.fastutil4k.moreCollections)
 
     // Test libraries
     testImplementation(kotlin("test"))
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${project.property("kotlinx_coroutines_version")}")
-//    testImplementation("net.fabricmc:fabric-loader-junit:${project.property("loader_version")}")
+    testImplementation(libs.kotlinx.coroutines.test)
+//    testImplementation(libs.fabric.loader.junit)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Fix nullable annotations
@@ -197,12 +188,12 @@ tasks.processResources {
     dependsOn("bundleTheme")
 
     val modVersion = providers.gradleProperty("mod_version")
-    val minecraftVersion = providers.gradleProperty("minecraft_version")
-    val fabricVersion = providers.gradleProperty("fabric_version")
-    val loaderVersion = providers.gradleProperty("loader_version")
-    val minLoaderVersion = providers.gradleProperty("min_loader_version")
-    val fabricKotlinVersion = providers.gradleProperty("fabric_kotlin_version")
-    val viafabricplusVersion = providers.gradleProperty("viafabricplus_version")
+    val minecraftVersion = libs.versions.minecraft
+    val fabricVersion = libs.versions.fabric.api
+    val loaderVersion = libs.versions.fabric.loader
+    val minLoaderVersion = libs.versions.fabric.loaderMin
+    val fabricKotlinVersion = libs.versions.fabric.kotlin
+    val viafabricplusVersion = libs.versions.viafabricplus
 
     val contributors = provider {
         JsonOutput.prettyPrint(
@@ -304,8 +295,7 @@ tasks.withType<JavaCompile>().configureEach {
     // If Javadoc is generated, this must be specified in that task too.
     options.encoding = "UTF-8"
 
-    // Minecraft 1.21.1 upwards uses Java 21.
-    options.release = 21
+    options.release = libs.versions.jdk.get().toInt()
 }
 
 tasks.test {
@@ -362,14 +352,15 @@ java {
     // If you remove this line, sources will not be generated.
     withSourcesJar()
 
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(libs.versions.jdk.get().toInt()))
+    }
 }
 
 kotlin {
     compilerOptions {
         suppressWarnings = true
-        jvmToolchain(21)
+        jvmToolchain(libs.versions.jdk.get().toInt())
         freeCompilerArgs.add("-XXLanguage:+ExplicitBackingFields")
         freeCompilerArgs.add("-Xcontext-parameters")
     }

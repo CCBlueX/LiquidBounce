@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.airTicks
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.phys.shapes.Shapes
@@ -76,7 +76,8 @@ class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHop
             }
 
             if (player.hurtTime == 9) {
-                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(0.281)))
+                player.setDeltaMovement(
+                    player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(0.281)))
             }
 
             if ((player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) == 2) {
@@ -91,7 +92,7 @@ class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHop
     private val jumpHandler = handler<PlayerJumpEvent> {
         val atLeast = 0.247 + 0.15 * (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast)))
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(atLeast)))
         shouldStrafe = true
     }
 

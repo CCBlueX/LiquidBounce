@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
@@ -32,7 +32,7 @@ object ScaffoldSpeedLimiterFeature : ToggleableConfigurable(ModuleScaffold, "Spe
 
     @Suppress("unused")
     val moveEvent = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-        if (player.sqrtSpeed > speedLimit) {
+        if (player.horizontalSpeed > speedLimit) {
             it.directionalInput = DirectionalInput.NONE
         }
     }

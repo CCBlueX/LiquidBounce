@@ -45,15 +45,15 @@ object ModuleMobOwners : ClientModule("MobOwners", Category.RENDER) {
 
     private val uuidNameCache = ConcurrentHashMap<UUID, FormattedCharSequence>()
 
-    fun getOwnerInfoText(entity: Entity): FormattedCharSequence? {
-        if (!this.running) {
+    fun getOwnerInfoText(entity: Entity?): FormattedCharSequence? {
+        if (entity == null || !this.running) {
             return null
         }
 
-        val ownerId = when {
-            entity is TamableAnimal -> entity.ownerReference?.uuid
-            entity is Horse -> entity.ownerReference?.uuid
-            entity is Projectile && projectiles -> entity.owner?.uuid
+        val ownerId = when (entity) {
+            is TamableAnimal -> entity.ownerReference?.uuid
+            is Horse -> entity.ownerReference?.uuid
+            is Projectile if projectiles -> entity.owner?.uuid
             else -> null
         } ?: return null
 

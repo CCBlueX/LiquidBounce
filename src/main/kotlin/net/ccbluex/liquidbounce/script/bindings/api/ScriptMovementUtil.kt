@@ -20,14 +20,14 @@ package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 
 @Suppress("unused")
 object ScriptMovementUtil {
 
     @JvmName("getSpeed")
-    fun getSpeed(): Double = player.sqrtSpeed
+    fun getSpeed(): Double = player.horizontalSpeed
 
     @JvmName("isMoving")
     fun isMoving(): Boolean = player.moving

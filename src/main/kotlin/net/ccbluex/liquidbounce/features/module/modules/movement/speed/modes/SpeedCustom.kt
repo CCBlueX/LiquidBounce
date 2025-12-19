@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
@@ -166,9 +166,9 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
 
                     // Fall damage velocity
                     val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
-                        player.sqrtSpeed.coerceAtLeast(0.2857671997172534)
+                        player.horizontalSpeed.coerceAtLeast(0.2857671997172534)
                     } else {
-                        player.sqrtSpeed
+                        player.horizontalSpeed
                     }
                     player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
                 }

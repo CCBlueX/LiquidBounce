@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.wouldBeCloseToFallOff
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -102,7 +102,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
             if (shouldBeActive) {
                 val isOnEdge = player.isCloseToEdge(
                     event.directionalInput,
-                    min(player.sqrtSpeed, edgeDistance.toDouble())
+                    min(player.horizontalSpeed, edgeDistance.toDouble())
                 )
                 if (isOnEdge) {
                     debugParameter("InputOnEdge") { event.directionalInput }
@@ -144,7 +144,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
                         event.directionalInput = event.directionalInput.invert()
                         event.jump = false
                     }
-                    (mode == Mode.CENTER || player.sqrtSpeed > 0.05) -> {
+                    (mode == Mode.CENTER || player.horizontalSpeed > 0.05) -> {
                         val center = center ?: player.blockPosition().bottomCenter
                         val degrees = getDegreesRelativeToView(
                             center.subtract(player.position()),

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
@@ -83,7 +83,7 @@ object FlyHypixelFlat : Choice("HypixelFlat") {
 
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
         player.deltaMovement.y = 0.0314 + (Math.random() / 1000f)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.sqrtSpeed))
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed))
     }
 
     @Suppress("unused")

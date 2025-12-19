@@ -81,6 +81,7 @@ import net.minecraft.core.registries.Registries
 import net.minecraft.core.Holder
 import net.minecraft.core.BlockPos
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 /**
  * Create item with NBT tags
@@ -96,7 +97,7 @@ fun createSplashPotion(name: String, vararg effects: MobEffectInstance): ItemSta
     val itemStack = ItemStack(Items.SPLASH_POTION)
 
     itemStack.set(DataComponents.CUSTOM_NAME, regular(name))
-    itemStack.set<PotionContents>(
+    itemStack.set(
         DataComponents.POTION_CONTENTS,
         PotionContents(Optional.empty(), Optional.empty(), effects.unmodifiable(), Optional.empty())
     )
@@ -113,11 +114,11 @@ fun ItemStack?.getEnchantmentCount(): Int {
 fun ItemStack?.getEnchantment(enchantment: ResourceKey<Enchantment>): Int {
     val enchantments = this?.get(DataComponents.ENCHANTMENTS) ?: return 0
 
-    return enchantments.getLevel(enchantment.toRegistryEntry())
+    return enchantments.getLevel(enchantment.toRegistryEntryOrNull() ?: return 0)
 }
 
 /**
- * @return if this item stack has same [Item] and [net.minecraft.component.ComponentChanges]
+ * @return if this item stack has same [Item] and [net.minecraft.core.component.DataComponentPatch]
  * with the other item stack
  */
 fun ItemStack.isMergeable(other: ItemStack): Boolean {
@@ -156,8 +157,14 @@ val ItemStack.attackDamage: Double
     }
 
 val ItemStack.sharpnessLevel: Int
-    get() = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
+    get() {
+        return EnchantmentHelper.getItemEnchantmentLevel(
+            Enchantments.SHARPNESS.toRegistryEntryOrNull() ?: return 0,
+            this
+        )
+    }
 
+@JvmOverloads
 fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double =
     if (!isOlderThanOrEqual1_8) {
         when (level) {
@@ -188,6 +195,10 @@ private fun Item.getAttributeValue(attribute: Holder<Attribute>): Double {
         }
 
     return attribInstance.value
+}
+
+fun ResourceKey<Enchantment>.toRegistryEntryOrNull(): Holder<Enchantment>? {
+    return mc.level?.registryAccess()?.lookup(Registries.ENCHANTMENT)?.getOrNull()?.get(this)?.getOrNull()
 }
 
 fun ResourceKey<Enchantment>.toRegistryEntry(): Holder<Enchantment> {
