@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.utils.entity.isSlowDueToUsingItem
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECISION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
@@ -91,7 +90,7 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     }
 
     @Suppress("unused")
-    private val sprintPreventionHandler = handler<SprintEvent>(priority = FINAL_DECISION) { event ->
+    private val sprintPreventionHandler = handler<SprintEvent> { event ->
         // In this case we want to prevent sprinting on movement tick only,
         // because otherwise you could guess from the input change that this is automated.
         if (event.source == SprintEvent.Source.MOVEMENT_TICK && shouldPreventSprint()) {
