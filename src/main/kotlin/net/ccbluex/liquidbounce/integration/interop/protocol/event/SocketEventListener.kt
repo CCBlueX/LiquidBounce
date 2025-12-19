@@ -76,23 +76,32 @@ internal object SocketEventListener : EventListener {
         EventManager.unregisterEventHook(eventClass, eventHook)
     }
 
-    private fun writeToSockets(event: Event) = Util.backgroundExecutor().execute {
-        val eventName = event.javaClass.eventName
-        val json = writeBuffer.get().runCatching {
-            JsonWriter(this).use { writer ->
+    private fun writeToSockets(event: Event) {
+        if ((event as WebSocketEvent).serializeAsync) {
+            Util.backgroundExecutor().execute { serializeAndBroadcast(event) }
+        } else {
+            serializeAndBroadcast(event)
+        }
+    }
+
+    private fun serializeAndBroadcast(event: Event) {
+        val json = try {
+            val writer = writeBuffer.get()
+            JsonWriter(writer).use { writer ->
                 writer.beginObject()
-                writer.name("name").value(eventName)
+                writer.name("name").value(event.javaClass.eventName)
                 writer.name("event")
                 (event as WebSocketEvent).serializer.toJson(event, event.javaClass, writer)
                 writer.endObject()
             }
-            toString().also { builder.clear() }
-        }.onFailure {
-            logger.error("Failed to serialize event $event", it)
-        }.getOrNull() ?: return@execute
+            writer.toString().also { writer.builder.clear() }
+        } catch (e: Exception) {
+            logger.error("Failed to serialize event $event", e)
+            return
+        }
 
         httpServer.webSocketController!!.broadcast(json) { _, t ->
-            logger.error("WebSocket event broadcast failed, event: $eventName", t)
+            logger.error("WebSocket event broadcast failed, event: ${event.javaClass.eventName}", t)
         }
     }
 
