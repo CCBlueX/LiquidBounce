@@ -45,16 +45,16 @@ object ModuleTrueSight : ClientModule("TrueSight", Category.RENDER) {
     @JvmStatic
     @Suppress("ComplexCondition")
     fun canRenderEntities(state: LivingEntityRenderState): Boolean {
-        val enabled = this.running && entities;
+        val enabled = this.running && entities
 
-        val entity = (state as EntityRenderStateAddition).`liquid_bounce$getEntity`()
+        val entity = (state as EntityRenderStateAddition).`liquid_bounce$getEntity`() ?: return false
         val livingEntity = entity as? LivingEntity
 
-        return ((enabled
+        return (enabled
                 || livingEntity != null
                 && ModuleESP.running
                 && ModuleESP.requiresTrueSight(livingEntity))
-                && entity.isInvisible)
+            && entity.isInvisible
     }
 
     private enum class Sight(
