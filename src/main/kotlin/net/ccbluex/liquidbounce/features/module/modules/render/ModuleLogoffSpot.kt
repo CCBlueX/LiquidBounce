@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
@@ -44,12 +45,13 @@ import java.util.*
  */
 object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
 
+    @JvmRecord
     private data class LoggedOffPlayer(
         val time: Instant,
-        val entity: Entity
+        val entity: Entity,
     )
 
-    private val lastSeenPlayers = hashMapOf<UUID, LoggedOffPlayer>()
+    private val lastSeenPlayers = Object2ObjectOpenHashMap<UUID, LoggedOffPlayer>()
 
     @Suppress("unused")
     private val entityRemoveHandler = handler<WorldEntityRemoveEvent> { event ->
@@ -121,8 +123,9 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
         super.onDisabled()
     }
 
-    fun isLogoffEntity(state: LivingEntityRenderState) =
-        isLogoffEntity((state as EntityRenderStateAddition).`liquid_bounce$getEntity`().id)
+    fun isLogoffEntity(state: LivingEntityRenderState): Boolean {
+        return isLogoffEntity((state as EntityRenderStateAddition).`liquid_bounce$getEntity`()?.id ?: return false)
+    }
 
     fun isLogoffEntity(entityId: Int) = this.running
         && lastSeenPlayers.any { (_, logOffPlayer) -> logOffPlayer.entity.id == entityId }
