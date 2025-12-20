@@ -65,19 +65,19 @@ internal object VelocityModify : VelocityMode("Modify") {
 
             // Modify packet according to the specified values
             if (horizontal != 0f) {
-                packet.movement.x = (packet.movement.x * horizontal)
-                packet.movement.z = (packet.movement.z * horizontal)
+                packet.movement.x = packet.movement.x * horizontal
+                packet.movement.z = packet.movement.z * horizontal
             } else {
                 // set the horizontal velocity to the player velocity to prevent horizontal slowdown
-                packet.movement.x = ((currentVelocity.x * motionHorizontal) * 8000)
-                packet.movement.z = ((currentVelocity.z * motionHorizontal) * 8000)
+                packet.movement.x = currentVelocity.x * motionHorizontal
+                packet.movement.z = currentVelocity.z * motionHorizontal
             }
 
             if (vertical != 0f) {
-                packet.movement.y = (packet.movement.y * vertical)
+                packet.movement.y = packet.movement.y * vertical
             } else {
                 // set the vertical velocity to the player velocity to prevent vertical slowdown
-                packet.movement.y = ((currentVelocity.y * motionVertical) * 8000)
+                packet.movement.y = currentVelocity.y * motionVertical
             }
 
             NoFallBlink.waitUntilGround = true
