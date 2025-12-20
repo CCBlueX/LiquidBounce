@@ -49,8 +49,8 @@ import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.util.Mth
+import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec2
-import java.util.*
 import kotlin.math.ceil
 
 object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
@@ -70,19 +70,65 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
-    private val fixDirection by boolean("FixDirection", false)
+    private val fixedDirection by boolean("FixedDirection", false)
 
     private object TextureConfigurable : ToggleableConfigurable(this, "Texture", true) {
-
+        val vertexColor by color("VertexColor", Color4b.WHITE)
     }
 
     private object EntityConfigurable : ToggleableConfigurable(this, "Entity", true) {
         val scale by float("Scale", 1f, 0.25F..4F)
     }
 
+    private class ExtraElement(
+        name: String,
+        private val size: Float,
+        private val draw: Renderer,
+    ) : ToggleableConfigurable(this, name, false) {
+        val placement by enumChoice("Placement", Placement.TOP_LEFT)
+
+        fun render(ctx: GuiGraphics, boundingBox: BoundingBox2f) {
+            if (enabled) {
+                ctx.pose().withPush {
+                    when (placement) {
+                        Placement.TOP_LEFT -> translate(boundingBox.xMin, boundingBox.yMin)
+                        Placement.TOP_RIGHT -> translate(boundingBox.xMax - size, boundingBox.yMin)
+                        Placement.BOTTOM_LEFT -> translate(boundingBox.xMin, boundingBox.yMax - size)
+                        Placement.BOTTOM_RIGHT -> translate(boundingBox.xMax - size, boundingBox.yMax - size)
+                    }
+                    draw(ctx)
+                }
+            }
+        }
+
+        private enum class Placement(override val choiceName: String) : NamedChoice {
+            TOP_LEFT("TopLeft"),
+            TOP_RIGHT("TopRight"),
+            BOTTOM_LEFT("BottomLeft"),
+            BOTTOM_RIGHT("BottomRight"),
+        }
+
+        fun interface Renderer {
+            operator fun invoke(ctx: GuiGraphics)
+        }
+    }
+
+    private val extraElements = arrayOf(
+        ExtraElement("Compass", 16F) { ctx ->
+            ctx.renderItem(COMPASS, 0, 0)
+        },
+        ExtraElement("Clock", 16F) { ctx ->
+            ctx.renderItem(CLOCK, 0, 0)
+        },
+    )
+
+    private val COMPASS = Items.COMPASS.defaultInstance
+    private val CLOCK = Items.CLOCK.defaultInstance
+
     init {
         tree(TextureConfigurable)
         tree(EntityConfigurable)
+        extraElements.forEach(::tree)
         ChunkRenderer
         registerComponentListen(this)
     }
@@ -132,15 +178,19 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                     pose().translate(boundingBox.xMin + minimapSize * 0.5F, boundingBox.yMin + minimapSize * 0.5F)
                     pose().scale(scale)
 
-                    if (!fixDirection) {
+                    if (!fixedDirection) {
                         pose().rotate(-(playerRotation.yaw + 180.0F).toRadians())
                     }
                     pose().translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
 
-                    drawMinimapTexture(bounds, ChunkPos(baseX, baseZ), chunksToRenderAround, viewDistance)
+                    drawMinimapTexture(bounds, baseX, baseZ, chunksToRenderAround, viewDistance)
 
-                    drawEntities(event.tickDelta, baseX = baseX.toFloat(), baseZ = baseZ.toFloat())
+                    drawEntities(event.tickDelta, baseX.toFloat(), baseZ.toFloat())
                 }
+            }
+
+            for (element in extraElements) {
+                element.render(this, boundingBox)
             }
 
             val from = Color4b.BLACK.copy(a = 100)
@@ -214,7 +264,8 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
     private fun GuiGraphics.drawMinimapTexture(
         bounds: ScreenRectangle,
-        centerPos: ChunkPos,
+        baseX: Int,
+        baseZ: Int,
         chunksToRenderAround: Int,
         viewDistance: Float,
     ) {
@@ -228,28 +279,29 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             bounds = bounds,
         ) { pose ->
             for (x in -chunksToRenderAround..chunksToRenderAround) {
-                for (y in -chunksToRenderAround..chunksToRenderAround) {
+                for (z in -chunksToRenderAround..chunksToRenderAround) {
                     // Don't render too much
-                    if (x * x + y * y > (viewDistance + 3).sq()) {
+                    if (x * x + z * z > (viewDistance + 3).sq()) {
                         continue
                     }
 
-                    val chunkPos = ChunkPos.asLong(centerPos.x + x, centerPos.z + y)
+                    val chunkPos = ChunkPos.asLong(baseX + x, baseZ + z)
 
                     val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                     val fromX = x.toFloat()
-                    val fromY = y.toFloat()
+                    val fromY = z.toFloat()
                     val toX = fromX + 1F
                     val toY = fromY + 1F
+                    val color = TextureConfigurable.vertexColor.toARGB()
 
                     addVertexWith2DPose(pose, fromX, fromY).setUv(texPosition.xMin, texPosition.yMin)
-                        .setColor(-1)
+                        .setColor(color)
                     addVertexWith2DPose(pose, fromX, toY).setUv(texPosition.xMin, texPosition.yMax)
-                        .setColor(-1)
+                        .setColor(color)
                     addVertexWith2DPose(pose, toX, toY).setUv(texPosition.xMax, texPosition.yMax)
-                        .setColor(-1)
+                        .setColor(color)
                     addVertexWith2DPose(pose, toX, fromY).setUv(texPosition.xMax, texPosition.yMin)
-                        .setColor(-1)
+                        .setColor(color)
                 }
             }
         }
