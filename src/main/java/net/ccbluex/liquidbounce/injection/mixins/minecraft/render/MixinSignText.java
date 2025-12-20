@@ -37,7 +37,7 @@ import java.util.function.Function;
 public class MixinSignText {
 
     @Unique
-    private static final FormattedCharSequence[] LIQUIDBOUNCE$EMPTY = new FormattedCharSequence[4];
+    private static final FormattedCharSequence[] LIQUIDBOUNCE$EMPTY = new FormattedCharSequence[SignText.LINES];
 
     static {
         Arrays.fill(LIQUIDBOUNCE$EMPTY, FormattedCharSequence.EMPTY);

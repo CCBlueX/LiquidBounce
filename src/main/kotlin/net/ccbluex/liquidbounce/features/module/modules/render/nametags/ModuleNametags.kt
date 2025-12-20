@@ -22,11 +22,14 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.renderer.entity.state.EntityRenderState
 import org.joml.Vector2fc
 
 /**
@@ -102,6 +105,11 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
     private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
         nametag.entity.distanceToSqr(mc.cameraEntity!!)
+    }
+
+    fun shouldRenderVanillaNametag(state: EntityRenderState): Boolean {
+        return !running || !((state as EntityRenderStateAddition).`liquid_bounce$getEntity`()
+            ?: return true).shouldBeShown()
     }
 
 }

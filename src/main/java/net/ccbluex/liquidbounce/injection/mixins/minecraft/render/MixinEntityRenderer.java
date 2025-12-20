@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP;
@@ -36,10 +38,12 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -111,17 +115,9 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
         matrices.popPose();
     }
 
-    @Inject(method = "submitNameTag", at = @At("HEAD"), cancellable = true)
-    private void disableDuplicateNametagsAndInjectMobOwners(S state, PoseStack matrices, SubmitNodeCollector queue, CameraRenderState cameraRenderState, CallbackInfo ci) {
-        // Don't render nametags
-        var entity = ((EntityRenderStateAddition) state).liquid_bounce$getEntity();
-        if (entity == null) {
-            return;
-        }
-
-        if (ModuleNametags.INSTANCE.getRunning() && CombatExtensionsKt.shouldBeShown(entity)) {
-            ci.cancel();
-        }
+    @WrapWithCondition(method = "submitNameTag", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitNameTag(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/phys/Vec3;ILnet/minecraft/network/chat/Component;ZIDLnet/minecraft/client/renderer/state/CameraRenderState;)V"))
+    private boolean disableVanillaNametag(SubmitNodeCollector instance, PoseStack poseStack, Vec3 vec3, int i, Component component, boolean b, int j, double v, CameraRenderState cameraRenderState, @Local(argsOnly = true) S state) {
+        return ModuleNametags.INSTANCE.shouldRenderVanillaNametag(state);
     }
 
     @Inject(method = "extractRenderState", at = @At("HEAD"))

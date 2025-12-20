@@ -19,14 +19,18 @@
 package net.ccbluex.liquidbounce.interfaces;
 
 import net.minecraft.world.entity.Entity;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Addition to {@link net.minecraft.client.renderer.entity.state.EntityRenderState}
  */
+@NullMarked
 public interface EntityRenderStateAddition {
 
     void liquid_bounce$setEntity(Entity entity);
 
+    @Nullable
     Entity liquid_bounce$getEntity();
 
 }
