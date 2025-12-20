@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.core.BlockPos
 import kotlin.math.hypot
 
 object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", true) {
@@ -66,8 +65,6 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
         private val colorRainbow by boolean("Rainbow", false)
 
         private val placeTargets by multiEnumChoice("PlaceTargets", AutoFarmTrackedState.Plantable.entries)
-
-        private val mutable = BlockPos.MutableBlockPos()
 
         private object CurrentTarget : ToggleableConfigurable(this.parent, "CurrentTarget", true) {
             private val color by color("Color", Color4b(66, 120, 245, 255))
