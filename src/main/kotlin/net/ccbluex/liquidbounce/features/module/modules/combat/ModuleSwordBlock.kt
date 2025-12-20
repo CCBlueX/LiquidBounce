@@ -18,11 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock
+import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_5
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.world.entity.player.Player
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ShieldItem
 
@@ -31,11 +38,12 @@ import net.minecraft.world.item.ShieldItem
  */
 object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = listOf("OldBlocking")) {
 
+    val onlyVisual by boolean("OnlyVisual", false)
     val hideShieldSlot by boolean("HideShieldSlot", false).doNotIncludeAlways()
     private val alwaysHideShield by boolean("AlwaysHideShield", false).doNotIncludeAlways()
 
     @JvmStatic
-    val Player.isBlockingWithOffhandShield
+    val LivingEntity.isBlockingWithOffhandShield
         get() = isUsingItem && offhandItem.item is ShieldItem && useItem === offhandItem
 
     @JvmOverloads
@@ -52,6 +60,50 @@ object ModuleSwordBlock : ClientModule("SwordBlock", Category.COMBAT, aliases = 
         }
 
         return mainHandStack.isSword || alwaysHideShield
+    }
+
+    @Suppress("UNUSED")
+    private val packetHandler = sequenceHandler<PacketEvent> { event ->
+        if (onlyVisual) {
+            return@sequenceHandler
+        }
+
+        // If we are already on the old combat protocol or anything blockable protocol,
+        // we don't need to do anything
+        if (isOlderThanOrEqual1_8 || isNewerThanOrEquals1_21_5) {
+            return@sequenceHandler
+        }
+
+        val packet = event.packet
+
+        if (packet is ServerboundUseItemPacket) {
+            val hand = packet.hand
+            val itemInHand = player.getItemInHand(hand) // or activeItem
+
+            if (hand == InteractionHand.MAIN_HAND && itemInHand.isSword) {
+                val offHandItem = player.offhandItem
+                if (offHandItem.item !is ShieldItem) {
+                    // Until "now" we should get a shield from the server
+                    waitTicks(1)
+                    interaction.startPrediction(world) { sequence ->
+                        // This time we use a new sequence
+                        ServerboundUseItemPacket(
+                            InteractionHand.OFF_HAND, sequence,
+                            player.yRot, player.xRot
+                        )
+                    }
+                } else {
+                    event.cancelEvent()
+                    // We use the old sequence
+                    network.send(
+                        ServerboundUseItemPacket(
+                            InteractionHand.OFF_HAND, packet.sequence,
+                            player.yRot, player.xRot
+                        )
+                    )
+                }
+            }
+        }
     }
 
 }
