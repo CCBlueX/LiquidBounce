@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -69,17 +70,18 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
-    private val show by multiEnumChoice("Show", EnumSet.allOf(Show::class.java), canBeNone = false)
 
-    private enum class Show(override val choiceName: String) : NamedChoice {
-        TEXTURE("Texture"),
-        ENTITY("Entity"),
+    private object TextureConfigurable : ToggleableConfigurable(this, "Texture", true) {
+
     }
 
-    private inline val showTexture get() = Show.TEXTURE in show
-    private inline val showEntity get() = Show.ENTITY in show
+    private object EntityConfigurable : ToggleableConfigurable(this, "Entity", true) {
+        val scale by float("Scale", 1f, 0.25F..4F)
+    }
 
     init {
+        tree(TextureConfigurable)
+        tree(EntityConfigurable)
         ChunkRenderer
         registerComponentListen(this)
     }
@@ -132,13 +134,9 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                     pose().rotate(-(playerRotation.yaw + 180.0F).toRadians())
                     pose().translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
 
-                    if (showTexture) {
-                        drawMinimapTexture(bounds, ChunkPos(baseX, baseZ), chunksToRenderAround, viewDistance)
-                    }
+                    drawMinimapTexture(bounds, ChunkPos(baseX, baseZ), chunksToRenderAround, viewDistance)
 
-                    if (showEntity) {
-                        drawEntities(event.tickDelta, baseX = baseX.toFloat(), baseZ = baseZ.toFloat())
-                    }
+                    drawEntities(event.tickDelta, baseX = baseX.toFloat(), baseZ = baseZ.toFloat())
                 }
             }
 
@@ -217,6 +215,10 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         chunksToRenderAround: Int,
         viewDistance: Float,
     ) {
+        if (!TextureConfigurable.enabled) {
+            return
+        }
+
         drawCustomElement(
             pipeline = RenderPipelines.GUI_TEXTURED,
             textureSetup = ChunkRenderer.prepareRendering(),
@@ -255,7 +257,13 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         baseX: Float,
         baseZ: Float,
     ) {
+        if (!EntityConfigurable.enabled) {
+            return
+        }
+
         for (entity in RenderedEntities.sortedWith(MINIMAP_ENTITY_ORDER)) {
+            if (entity === player) continue
+
             val color = ModuleESP.getColor(entity)
 
             val pos = entity.interpolateCurrentPosition(tickDelta)
@@ -264,6 +272,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             pose().pushMatrix()
             pose().translate(pos.x.toFloat() / 16.0F - baseX, pos.z.toFloat() / 16.0F - baseZ)
             pose().rotate(rot.yaw.toRadians())
+            pose().scale(EntityConfigurable.scale)
 
             val w = 2.0f
             val h = w * 1.618f
