@@ -93,7 +93,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
                 return LedgeAction.NO_LEDGE
             }
 
-            val targetFullfillsRequirements = target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
+            val targetFullfillsRequirements = target.doesCrosshairTargetMatchRequirements(currentCrosshairTarget)
             val isValidCrosshairTarget = ModuleScaffold.isValidCrosshairTarget(currentCrosshairTarget)
 
             ModuleDebug.debugParameter(this, "targetFullfillsRequirements", targetFullfillsRequirements.toString())

@@ -147,7 +147,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         val crosshairTarget = super.getCrosshairTarget(target ?: return null, rotation)
 
         // Prefer a visible hit result
-        if (crosshairTarget != null && target.doesCrosshairTargetFullFillRequirements(crosshairTarget)) {
+        if (crosshairTarget != null && target.doesCrosshairTargetMatchRequirements(crosshairTarget)) {
             return crosshairTarget
         }
 

@@ -82,7 +82,7 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
     override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
         val crosshairTarget = super.getCrosshairTarget(target ?: return null, rotation)
 
-        if (crosshairTarget != null && target.doesCrosshairTargetFullFillRequirements(crosshairTarget)) {
+        if (crosshairTarget != null && target.doesCrosshairTargetMatchRequirements(crosshairTarget)) {
             return crosshairTarget
         }
 

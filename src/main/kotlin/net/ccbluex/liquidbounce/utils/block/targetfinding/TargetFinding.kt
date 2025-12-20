@@ -337,7 +337,7 @@ data class BlockPlacementTarget(
             false
         )
 
-    fun doesCrosshairTargetFullFillRequirements(crosshairTarget: BlockHitResult): Boolean {
+    fun doesCrosshairTargetMatchRequirements(crosshairTarget: BlockHitResult): Boolean {
         return when {
             crosshairTarget.type != HitResult.Type.BLOCK -> false
             crosshairTarget.blockPos != this.interactedBlockPos -> false
