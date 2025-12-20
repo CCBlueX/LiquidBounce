@@ -587,7 +587,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
 
         doPlacement(currentCrosshairTarget, handToInteractWith, {
-            ScaffoldMovementPlanner.trackPlacedBlock(target)
+            ScaffoldMovementPlanner.trackPlacedBlock(target.placedBlock)
             renderer.addBlock(target.placedBlock)
             currentTarget = null
 

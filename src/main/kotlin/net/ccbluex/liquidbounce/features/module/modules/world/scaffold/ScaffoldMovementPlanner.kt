@@ -182,12 +182,12 @@ object ScaffoldMovementPlanner {
     /**
      * Remembers the last placed blocks and removes old ones.
      */
-    fun trackPlacedBlock(target: BlockPlacementTarget) {
+    fun trackPlacedBlock(target: BlockPos) {
         while (lastPlacedBlocks.size >= MAX_LAST_PLACE_BLOCKS) {
             lastPlacedBlocks.removeFirst()
         }
 
-        lastPlacedBlocks.add(target.placedBlock)
+        lastPlacedBlocks.add(target)
     }
 
     fun reset() {
