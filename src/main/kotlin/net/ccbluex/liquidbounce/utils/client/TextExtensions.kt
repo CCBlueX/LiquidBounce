@@ -112,14 +112,11 @@ fun FormattedCharSequence.toText(): Component {
     return parts.asText()
 }
 
-fun Component.processContent(): Component {
-    fun translateOrSelf(content: ComponentContents): ComponentContents =
-        (content as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: content
-
+fun Component.translated(): Component {
     val content = this.contents
-    val processedContent = translateOrSelf(content)
+    val processedContent = content.translated()
 
-    val processedSiblings = siblings.map(Component::processContent)
+    val processedSiblings = siblings.map(Component::translated)
 
     return if (processedContent === content && processedSiblings == siblings) {
         this
@@ -129,6 +126,9 @@ fun Component.processContent(): Component {
         }
     }
 }
+
+fun ComponentContents.translated(): ComponentContents =
+    (this as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: this
 
 fun TranslatableContents.toTranslatedString(): String = buildString {
     visit {

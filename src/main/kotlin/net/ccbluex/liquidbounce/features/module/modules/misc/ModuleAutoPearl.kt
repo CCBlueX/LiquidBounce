@@ -221,6 +221,7 @@ object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = li
     ): HitResult? =
         TrajectoryInfoRenderer(
             owner = owner,
+            icon = Items.ENDER_PEARL.defaultInstance,
             velocity = velocity,
             pos = pos,
             trajectoryInfo = trajectoryInfo,

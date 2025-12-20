@@ -60,7 +60,7 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
         targetTracker.reset()
 
         // Should check if player is using bow
-        val activeItem = player.useItem?.item
+        val activeItem = player.useItem.item
         if (activeItem !is BowItem && activeItem !is TridentItem) {
             return@tickHandler
         }

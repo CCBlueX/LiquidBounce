@@ -19,8 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -28,21 +26,15 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.math.toFixed
-import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.minecraft.world.entity.TraceableEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
-import java.text.DecimalFormat
-import java.util.function.BiFunction
-import java.util.function.IntFunction
 
 /**
  * Trajectories module
@@ -63,105 +55,11 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
     private val activeTrajectoryArrow get() = Show.ACTIVE_TRAJECTORY_ARROW in show
     private val activeTrajectoryOther get() = Show.ACTIVE_TRAJECTORY_OTHER in show
 
-    private object ShowDetailedInfo : ToggleableConfigurable(this, "ShowDetailedInfo", false) {
-        private val showAt by enumChoice("ShowAt", ShowAt.ENTITY)
-
-        private enum class ShowAt(
-            override val choiceName: String,
-        ) : NamedChoice, BiFunction<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult, Vec3> {
-            OWNER("Owner"),
-            ENTITY("Entity"),
-            LANDING("Landing");
-
-            override fun apply(
-                renderer: TrajectoryInfoRenderer,
-                result: TrajectoryInfoRenderer.SimulationResult,
-            ): Vec3 = when (this) {
-                OWNER -> renderer.owner.position()
-                ENTITY -> result.positions.firstOrNull()
-                LANDING -> result.positions.lastOrNull()
-            } ?: renderer.owner.position()
-        }
-
-        private val ownerName by boolean("OwnerName", true)
-        private val distance by boolean("Distance", true)
-        private val durationUnit by enumChoice("DurationUnit", DurationUnit.TICKS)
-
-        private val TICK_FORMATTER = DecimalFormat("0.#s")
-
-        private enum class DurationUnit(
-            override val choiceName: String,
-        ) : NamedChoice, IntFunction<String> {
-            TICKS("Ticks"),
-            SECONDS("Seconds");
-
-            override fun apply(ticks: Int): String = when (this) {
-                TICKS -> ticks.toString()
-                SECONDS -> TICK_FORMATTER.format(ticks * 0.05)
-            }
-        }
-
-        private val scale by float("Scale", 1F, 0.25F..4F)
-        private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
-
-        val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
-            fun Vec3.calcScreenPosWithOffset(): Vec3f? {
-                return WorldToScreen.calculateScreenPos(add(renderOffset))
-            }
-
-            val context = event.context
-
-            simulationResults.forEachIndexed { index, (renderer, result) ->
-                val screenPos =
-                    when {
-                        showAt === ShowAt.OWNER && renderer.owner === player -> when (renderer.type) {
-                            // If this renderer is created by player holding items and showAt is OWNER,
-                            // then show at the landing position
-                            TrajectoryInfoRenderer.Type.HYPOTHETICAL ->
-                                ShowAt.LANDING.apply(renderer, result).calcScreenPosWithOffset()
-                            else -> {
-                                val centerX = mc.window.guiScaledWidth * 0.5F
-                                val centerY = mc.window.guiScaledHeight * 0.5F
-                                Vec3f(centerX + 50F, centerY + index * (mc.font.lineHeight + 1), 0F)
-                            }
-                        }
-
-                        else -> showAt.apply(renderer, result).calcScreenPosWithOffset()
-                    } ?: return@forEachIndexed
-
-                context.pose().pushMatrix()
-                context.pose().translate(screenPos.x, screenPos.y)
-                context.pose().scale(scale, scale)
-
-                val text = durationUnit.apply(result.positions.size).asText()
-                if (ownerName && renderer.owner !== player) {
-                    text.append(" ").append(renderer.owner.name)
-                }
-                if (distance && result.positions.isNotEmpty()) {
-                    text.append(" ${player.position().distanceTo(result.positions.last()).toFixed(1)}m")
-                }
-
-                var y = 0
-
-                context.drawCenteredString(
-                    mc.font,
-                    text,
-                    0,
-                    y,
-                    Color4b.WHITE.toARGB(),
-                )
-                y += mc.font.lineHeight + 1
-
-                context.pose().popMatrix()
-            }
-        }
-    }
-
     init {
-        tree(ShowDetailedInfo)
+        tree(TrajectoryDetailedInfoRenderer)
     }
 
-    private val simulationResults =
+    internal val simulationResults =
         mutableListOf<Pair<TrajectoryInfoRenderer, TrajectoryInfoRenderer.SimulationResult>>()
 
     override fun onDisabled() {
@@ -179,11 +77,14 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
 
             val trajectoryRenderer = TrajectoryInfoRenderer(
                 owner = (it as? TraceableEntity)?.owner ?: it,
+                icon = TrajectoryData.getRenderIconForOtherEntity(
+                    it, this.activeTrajectoryArrow, this.activeTrajectoryOther
+                ),
                 velocity = it.deltaMovement,
                 pos = it.position(),
                 trajectoryInfo = trajectoryInfo,
                 type = TrajectoryInfoRenderer.Type.REAL,
-                renderOffset = Vec3.ZERO
+                renderOffset = Vec3.ZERO,
             )
 
             val color = TrajectoryData.getColorForEntity(it)
@@ -216,8 +117,10 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         otherPlayer: Player,
         event: WorldRenderEvent
     ) {
-        val trajectoryInfo = otherPlayer.handItems.firstNotNullOfOrNull {
-            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, it.item, this.alwaysShowBow)
+        val (trajectoryInfo, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
+            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack.item, this.alwaysShowBow)?.let {
+                it to stack
+            }
         } ?: return
 
         val rotation = if (otherPlayer === player) {
@@ -233,6 +136,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
 
         val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             owner = otherPlayer,
+            icon = stack,
             trajectoryInfo = trajectoryInfo,
             rotation = rotation,
             partialTicks = event.partialTicks

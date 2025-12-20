@@ -86,7 +86,6 @@ internal fun GuiGraphics.drawNametag(nametag: Nametag, posX: Float, posY: Float)
     // Text
     fontRenderer.draw(
         processedText,
-        x0 = 0f, y0 = 0f,
         shadow = true,
     )
 

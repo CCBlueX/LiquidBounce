@@ -81,24 +81,29 @@ class FontRenderer(
     context(ctx: GuiGraphics)
     override fun draw(
         text: MinecraftTextProcessor.RecyclingProcessedText,
-        x0: Float,
-        y0: Float,
+        x: Float,
+        y: Float,
+        horizontalAnchor: HorizontalAnchor?,
+        verticalAnchor: VerticalAnchor?,
+        scale: Float,
         shadow: Boolean,
-        scale: Float
     ): Float {
+        val x = horizontalAnchor?.anchorToDrawX(x, width = getStringWidth(text, shadow), scale) ?: x
+        val y = verticalAnchor?.anchorToDrawY(y, height, scale) ?: y
+
         var len = 0.0f
 
         if (shadow) {
             len = drawInternal(
                 text,
-                posX = x0 + 2.0f * scale,
-                posY = y0 + 2.0f * scale,
+                posX = x + 2.0f * scale,
+                posY = y + 2.0f * scale,
                 scale,
                 overrideColor = shadowColor
             )
         }
 
-        len = max(len, drawInternal(text, x0, y0, scale))
+        len = max(len, drawInternal(text, x, y, scale))
 
         MinecraftTextProcessor.TEXT_POOL.recycle(text)
 

@@ -52,6 +52,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.entity.projectile.ProjectileUtil
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
@@ -63,8 +64,9 @@ import kotlin.jvm.optionals.getOrNull
 import kotlin.math.cos
 import kotlin.math.sin
 
-class TrajectoryInfoRenderer(
+class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
     val owner: Entity,
+    val icon: ItemStack,
     velocity: Vec3,
     pos: Vec3,
     val trajectoryInfo: TrajectoryInfo,
@@ -99,7 +101,8 @@ class TrajectoryInfoRenderer(
             owner: Entity,
             trajectoryInfo: TrajectoryInfo,
             rotation: Rotation,
-            partialTicks: Float = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
+            icon: ItemStack = ItemStack.EMPTY,
+            partialTicks: Float = mc.deltaTracker.getGameTimeDeltaPartialTick(true),
         ): TrajectoryInfoRenderer {
             val yawRadians = rotation.yaw.toRadians()
             val pitchRadians = rotation.pitch.toRadians()
@@ -129,6 +132,7 @@ class TrajectoryInfoRenderer(
 
             return TrajectoryInfoRenderer(
                 owner = owner,
+                icon = icon,
                 velocity = velocity,
                 pos = pos,
                 trajectoryInfo = trajectoryInfo,

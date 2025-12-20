@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.entity.projectile.hurtingprojectile.Fireball
 import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident
@@ -32,6 +33,7 @@ import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnder
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownExperienceBottle
 import net.minecraft.world.entity.projectile.throwableitemprojectile.AbstractThrownPotion
 import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.CrossbowItem
 import net.minecraft.world.item.EggItem
@@ -40,6 +42,7 @@ import net.minecraft.world.item.ExperienceBottleItem
 import net.minecraft.world.item.FireChargeItem
 import net.minecraft.world.item.FishingRodItem
 import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.ThrowablePotionItem
 import net.minecraft.world.item.TridentItem
@@ -89,7 +92,7 @@ object TrajectoryData {
         activeArrows: Boolean,
         activeOthers: Boolean,
     ): TrajectoryInfo? {
-        if (activeArrows && entity is Arrow && !entity.isInGround()) {
+        if (activeArrows && entity is Arrow && !entity.isInGround) {
             return TrajectoryInfo(0.05, 0.3)
         }
         if (!activeOthers) {
@@ -99,7 +102,7 @@ object TrajectoryData {
         return when (entity) {
             is AbstractThrownPotion -> TrajectoryInfo.POTION
             is ThrownTrident -> {
-                if (!entity.isInGround()) {
+                if (!entity.isInGround) {
                     TrajectoryInfo.TRIDENT
                 } else {
                     null
@@ -111,6 +114,33 @@ object TrajectoryData {
             is ThrownEgg -> TrajectoryInfo.GENERIC
             is Fireball -> TrajectoryInfo.FIREBALL
             else -> null
+        }
+    }
+
+    @JvmStatic
+    fun getRenderIconForOtherEntity(
+        entity: Entity,
+        activeArrows: Boolean,
+        activeOthers: Boolean,
+    ): ItemStack {
+        if (activeArrows && entity is Arrow && !entity.isInGround) {
+            return entity.pickupItemStackOrigin
+        }
+
+        if (!activeOthers) {
+            return ItemStack.EMPTY
+        }
+
+        return when (entity) {
+            is ThrowableItemProjectile -> entity.item
+            is Fireball -> entity.item
+            is AbstractArrow -> if (!entity.isInGround) {
+                entity.pickupItemStackOrigin
+            } else {
+                ItemStack.EMPTY
+            }
+
+            else -> ItemStack.EMPTY
         }
     }
 }

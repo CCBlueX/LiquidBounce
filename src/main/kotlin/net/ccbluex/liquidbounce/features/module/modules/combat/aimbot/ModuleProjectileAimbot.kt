@@ -46,10 +46,6 @@ object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", Category.COMBAT
         val target = targetSelector.targets().firstOrNull() ?: return@tickHandler
 
         val rotation = player.handItems.firstNotNullOfOrNull {
-            if (it.item == null) {
-                return@firstNotNullOfOrNull null
-            }
-
             val trajectory = TrajectoryData.getRenderedTrajectoryInfo(
                 player,
                 it.item,
