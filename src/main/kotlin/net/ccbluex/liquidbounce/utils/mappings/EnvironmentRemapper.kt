@@ -47,7 +47,7 @@ object EnvironmentRemapper {
         val mappings = mappings ?: return null
 
         val minecraftClassEntry = mappings.classEntries?.find { entry ->
-            entry?.get("named") == "net/minecraft/client/MinecraftClient"
+            entry?.get("named") == "net/minecraft/client/Minecraft"
         }
 
         if (minecraftClassEntry == null) {
