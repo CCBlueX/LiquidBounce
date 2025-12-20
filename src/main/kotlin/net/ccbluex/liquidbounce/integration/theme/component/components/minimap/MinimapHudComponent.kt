@@ -70,6 +70,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
+    private val fixDirection by boolean("FixDirection", false)
 
     private object TextureConfigurable : ToggleableConfigurable(this, "Texture", true) {
 
@@ -129,9 +130,11 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             scissorStack.withPush(bounds) {
                 pose().withPush {
                     pose().translate(boundingBox.xMin + minimapSize * 0.5F, boundingBox.yMin + minimapSize * 0.5F)
-                    pose().scale(scale, scale)
+                    pose().scale(scale)
 
-                    pose().rotate(-(playerRotation.yaw + 180.0F).toRadians())
+                    if (!fixDirection) {
+                        pose().rotate(-(playerRotation.yaw + 180.0F).toRadians())
+                    }
                     pose().translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
 
                     drawMinimapTexture(bounds, ChunkPos(baseX, baseZ), chunksToRenderAround, viewDistance)
