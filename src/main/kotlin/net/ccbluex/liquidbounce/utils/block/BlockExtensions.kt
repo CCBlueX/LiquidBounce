@@ -539,6 +539,8 @@ enum class SwingMode(
     }
 }
 
+val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.direction)
+
 fun doPlacement(
     rayTraceResult: BlockHitResult,
     hand: InteractionHand = InteractionHand.MAIN_HAND,

@@ -70,6 +70,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
+import net.ccbluex.liquidbounce.utils.block.targetBlockPos
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -527,11 +528,22 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             isValidBlock(player.getItemInHand(it))
         }
 
+        fun commonPlaceSucceed(placed: BlockPos) {
+            ScaffoldMovementPlanner.trackPlacedBlock(placed)
+            renderer.addBlock(placed)
+            ScaffoldEagleFeature.onBlockPlacement()
+            ScaffoldBlinkFeature.onBlockPlacement()
+            ScaffoldSprintControlFeature.onBlockPlacement()
+        }
+
         if (simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving
             && SimulatePlacementAttempts.clicker.isClickTick
         ) {
             SimulatePlacementAttempts.clicker.click {
-                doPlacement(currentCrosshairTarget!!, suitableHand!!, swingMode = swingMode)
+                doPlacement(currentCrosshairTarget!!, suitableHand!!, {
+                    commonPlaceSucceed(currentCrosshairTarget.targetBlockPos)
+                    true
+                }, swingMode = swingMode)
                 true
             }
         }
@@ -587,10 +599,8 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
 
         doPlacement(currentCrosshairTarget, handToInteractWith, {
-            ScaffoldMovementPlanner.trackPlacedBlock(target.placedBlock)
-            renderer.addBlock(target.placedBlock)
+            commonPlaceSucceed(target.placedBlock)
             currentTarget = null
-
             wasSuccessful = true
             true
         }, swingMode = swingMode)
@@ -606,9 +616,6 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
         if (wasSuccessful) {
             ScaffoldMovementPrediction.onPlace(currentOptimalLine, previousFallOffPos)
-            ScaffoldEagleFeature.onBlockPlacement()
-            ScaffoldBlinkFeature.onBlockPlacement()
-            ScaffoldSprintControlFeature.onBlockPlacement()
 
             waitTicks(currentDelay)
         }
