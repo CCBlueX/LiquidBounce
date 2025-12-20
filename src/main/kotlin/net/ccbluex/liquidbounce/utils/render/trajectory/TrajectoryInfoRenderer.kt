@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.utils.render.trajectory
 
+import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
@@ -42,23 +43,22 @@ import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.move
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.scale
+import net.ccbluex.liquidbounce.utils.math.scaleMut
 import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
-import net.minecraft.world.phys.shapes.CollisionContext
-import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.entity.projectile.ProjectileUtil
+import net.minecraft.world.level.ClipContext
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
-import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.level.ClipContext
+import net.minecraft.world.phys.shapes.CollisionContext
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.cos
 import kotlin.math.sin
@@ -87,7 +87,7 @@ class TrajectoryInfoRenderer(
         HYPOTHETICAL,
 
         /**
-         * From a moving entity, such as [net.minecraft.entity.projectile.ProjectileEntity].
+         * From a moving entity, such as [net.minecraft.world.entity.projectile.Projectile].
          */
         REAL,
     }
@@ -96,23 +96,23 @@ class TrajectoryInfoRenderer(
         @JvmStatic
         @JvmOverloads
         fun getHypotheticalTrajectory(
-            entity: Entity,
+            owner: Entity,
             trajectoryInfo: TrajectoryInfo,
             rotation: Rotation,
             partialTicks: Float = mc.deltaTracker.getGameTimeDeltaPartialTick(true)
         ): TrajectoryInfoRenderer {
-            val yawRadians = rotation.yaw / 180f * Math.PI.toFloat()
-            val pitchRadians = rotation.pitch / 180f * Math.PI.toFloat()
+            val yawRadians = rotation.yaw.toRadians()
+            val pitchRadians = rotation.pitch.toRadians()
 
-            val interpolatedOffset = entity.interpolateCurrentPosition(partialTicks) - entity.position()
+            val interpolatedOffset = owner.interpolateCurrentPosition(partialTicks) - owner.position()
 
             val pos = Vec3(
-                entity.x,
-                entity.eyeY - 0.10000000149011612,
-                entity.z
+                owner.x,
+                owner.eyeY - 0.10000000149011612,
+                owner.z
             )
 
-            val velocity = Vec3(
+            var velocity = Vec3(
                 -sin(yawRadians) * cos(pitchRadians).toDouble(),
                 -sin((rotation.pitch + trajectoryInfo.roll).toRadians()).toDouble(),
                 cos(yawRadians) * cos(pitchRadians).toDouble()
@@ -120,15 +120,15 @@ class TrajectoryInfoRenderer(
 
             //In Freeze, this momentum is the residual value before freezing.
             if (trajectoryInfo.copiesPlayerVelocity && !ModuleFreeze.running) {
-            velocity.move(
-                    x = entity.deltaMovement.x,
-                    y = if (entity.onGround()) 0.0 else entity.deltaMovement.y,
-                    z = entity.deltaMovement.z
+                velocity = velocity.add(
+                    owner.deltaMovement.x,
+                    if (owner.onGround()) 0.0 else owner.deltaMovement.y,
+                    owner.deltaMovement.z
                 )
             }
 
             return TrajectoryInfoRenderer(
-                owner = entity,
+                owner = owner,
                 velocity = velocity,
                 pos = pos,
                 trajectoryInfo = trajectoryInfo,
@@ -156,7 +156,7 @@ class TrajectoryInfoRenderer(
                 trajectoryInfo.drag
             }
 
-            velocity.scale(drag).move(y = -trajectoryInfo.gravity)
+            velocity.scaleMut(drag).move(y = -trajectoryInfo.gravity)
         }
 
         val positions = mutableListOf<Vec3>()
@@ -325,7 +325,7 @@ private fun drawHitEntities(
             withPositionRelativeToCamera(pos) {
                 drawBox(
                     entity
-                        .getDimensions(entity.pose)!!
+                        .getDimensions(entity.pose)
                         .makeBoundingBox(Vec3.ZERO),
                     entityHitColor,
                 )

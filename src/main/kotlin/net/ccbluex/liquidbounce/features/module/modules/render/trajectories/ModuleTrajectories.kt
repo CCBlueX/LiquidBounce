@@ -232,7 +232,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         }
 
         val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-            entity = otherPlayer,
+            owner = otherPlayer,
             trajectoryInfo = trajectoryInfo,
             rotation = rotation,
             partialTicks = event.partialTicks

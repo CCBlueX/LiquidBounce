@@ -161,10 +161,10 @@ fun Vec3.move(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vec3 = apply {
 
 fun Vec3.move(other: Vec3): Vec3 = move(other.x, other.y, other.z)
 
-fun Vec3.scale(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vec3 = apply {
+fun Vec3.scaleMut(x: Double = 0.0, y: Double = 0.0, z: Double = 0.0): Vec3 = apply {
     this.x *= x
     this.y *= y
     this.z *= z
 }
 
-fun Vec3.scale(scale: Double = 1.0): Vec3 = scale(x = scale, y = scale, z = scale)
+fun Vec3.scaleMut(scale: Double = 1.0): Vec3 = scaleMut(x = scale, y = scale, z = scale)
