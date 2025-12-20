@@ -29,12 +29,12 @@ enum class BoxVertexIterator {
         }
 
         override fun sideMask(side: Direction): Int = when (side) {
-            Direction.DOWN -> 0x00_000F.inv()
-            Direction.UP -> 0x00_00F0.inv()
-            Direction.NORTH -> 0x00_0F00.inv()
-            Direction.EAST -> 0x00_F000.inv()
-            Direction.SOUTH -> 0x0F_0000.inv()
-            Direction.WEST -> 0xF0_0000.inv()
+            Direction.DOWN -> 0x00_000F
+            Direction.UP -> 0x00_00F0
+            Direction.NORTH -> 0x00_0F00
+            Direction.EAST -> 0x00_F000
+            Direction.SOUTH -> 0x0F_0000
+            Direction.WEST -> 0xF0_0000
         }
     },
     OUTLINE {
@@ -43,12 +43,12 @@ enum class BoxVertexIterator {
         }
 
         override fun sideMask(side: Direction): Int = when (side) {
-            Direction.DOWN -> 0b0000_0000_0000_0000_1111_1111.inv()
-            Direction.UP -> 0b1111_1111_0000_0000_0000_0000.inv()
-            Direction.NORTH -> 0b0000_0011_0000_1111_0000_0011.inv()
-            Direction.EAST -> 0b0000_1100_0011_1100_0000_1100.inv()
-            Direction.SOUTH -> 0b0011_0000_1111_0000_0011_0000.inv()
-            Direction.WEST -> 0b1100_0000_1100_0011_1100_0000.inv()
+            Direction.DOWN -> 0b0000_0000_0000_0000_1111_1111
+            Direction.UP -> 0b1111_1111_0000_0000_0000_0000
+            Direction.NORTH -> 0b0000_0011_0000_1111_0000_0011
+            Direction.EAST -> 0b0000_1100_0011_1100_0000_1100
+            Direction.SOUTH -> 0b0011_0000_1111_0000_0011_0000
+            Direction.WEST -> 0b1100_0000_1100_0011_1100_0000
         }
     };
 

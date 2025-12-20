@@ -39,7 +39,7 @@ import net.minecraft.util.Mth
  * This class is not thread-safe. You can use it on the render thread. (the most recommended way)
  */
 @Suppress("TooManyFunctions")
-class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) {
+class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) : BlockCuller.Owner {
 
     private val inList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
     private val currentList = Long2ObjectLinkedOpenHashMap<CurrentBlockData>()
@@ -178,7 +178,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     /**
      * Checks whether the position (in long value) is rendered.
      */
-    internal operator fun contains(pos: Long): Boolean {
+    override operator fun contains(pos: Long): Boolean {
         return inList.containsKey(pos) || currentList.containsKey(pos) || outList.containsKey(pos)
     }
 
@@ -186,7 +186,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
      * Adds a block to be rendered. First it will make an appear-animation, then
      * it will continue to get rendered until it's removed or the world changes.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      */
     fun addBlock(pos: BlockPos, update: Boolean = true, box: AABB = FULL_BOX) {
         val longValue = pos.asLong()

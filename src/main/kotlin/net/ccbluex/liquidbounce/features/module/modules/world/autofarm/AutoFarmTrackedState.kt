@@ -60,7 +60,7 @@ sealed interface AutoFarmTrackedState {
                 val result = emptyEnumSet<Direction>()
                 val mutable = BlockPos.MutableBlockPos()
                 for (dir in DIRECTIONS_HORIZONTAL) {
-                    mutable.set(pos).move(dir)
+                    mutable.setWithOffset(pos, dir)
                     if (world.getBlockState(mutable).isAir) {
                         result.add(dir)
                     }

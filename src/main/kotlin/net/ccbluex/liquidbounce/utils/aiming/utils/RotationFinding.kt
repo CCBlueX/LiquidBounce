@@ -266,7 +266,6 @@ fun raytraceBlockSide(
             range(0.05..0.95 step 0.1, 0.05..0.95 step 0.1) { a, b ->
                 val spot = pointOnBlockSide(side, a, b, box) + pos.toVec3d()
 
-                ModuleDebug.debugGeometry(ModuleAutoFarm, "deddee", ModuleDebug.DebuggedPoint(spot, Color4b.RED))
                 bestRotationTracker.considerSpot(
                     spot,
                     box,

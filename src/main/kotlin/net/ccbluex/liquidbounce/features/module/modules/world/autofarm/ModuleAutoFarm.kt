@@ -80,7 +80,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
     private val disableOnFullInventory by boolean("DisableOnFullInventory", false)
 
-    private object AutoPlaceCrops : ToggleableConfigurable(this, "AutoPlace", true) {
+    private object AutoPlaceCrops : ToggleableConfigurable(this, "AutoPlant", true, aliases = listOf("AutoPlace")) {
         val swapBackDelay by intRange("SwapBackDelay", 1..2, 1..20, "ticks")
     }
 
@@ -257,7 +257,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
             hotbarItems.any { it in type.items }
         }
 
-        if (!allowedTypes.isEmpty()) return false
+        if (allowedTypes.isEmpty()) return false
 
         val blocksToPlace =
             eyesPos.searchBlocksInCuboid(radius) { _, state ->

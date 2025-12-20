@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.drawBoxSide
+import net.ccbluex.liquidbounce.render.drawBoxSides
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.core.Direction
+import net.minecraft.core.BlockPos
 import kotlin.math.hypot
 
 object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", true) {
@@ -66,6 +66,8 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
         private val colorRainbow by boolean("Rainbow", false)
 
         private val placeTargets by multiEnumChoice("PlaceTargets", AutoFarmTrackedState.Plantable.entries)
+
+        private val mutable = BlockPos.MutableBlockPos()
 
         private object CurrentTarget : ToggleableConfigurable(this.parent, "CurrentTarget", true) {
             private val color by color("Color", Color4b(66, 120, 245, 255))
@@ -106,22 +108,13 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                                 )
                             }
 
-                            AutoFarmTrackedState.Plantable.SOUL_SAND,
-                            AutoFarmTrackedState.Plantable.FARM -> if (type in placeTargets) {
-                                drawBoxSide(
+                            is AutoFarmTrackedState.Plantable -> if (type in placeTargets) {
+                                val availableSides = type.findPlantableSides(pos, world.getBlockState(pos))
+                                drawBoxSides(
                                     FULL_BOX,
-                                    side = Direction.UP,
+                                    sides = availableSides,
                                     faceColor = placeColor,
                                     outlineColor = if (outline) baseColor.with(a = 100) else null,
-                                )
-                            }
-
-                            AutoFarmTrackedState.Plantable.JUNGLE_LOGS -> if (type in placeTargets) {
-                                drawBox(
-                                    FULL_BOX,
-                                    faceColor = placeColor,
-                                    outlineColor = if (outline) baseColor.with(a = 100) else null,
-                                    faceVertices = 0xFF_FF00.inv(), // Without UP & DOWN
                                 )
                             }
 

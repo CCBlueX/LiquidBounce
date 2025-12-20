@@ -333,14 +333,14 @@ private fun WorldRenderEnvironment.drawBox(
     pipeline: RenderPipeline,
     useOutlineVertices: Boolean = false,
     color: Color4b,
-    verticesToUse: Int = -1
+    verticesToUse: Int = -1,
 ) = drawCustomMesh(pipeline) { matrix ->
-    val check = verticesToUse != -1
+    val check = verticesToUse and 0xFFFFFF != 0xFFFFFF
 
     // Draw the vertices of the box
     if (useOutlineVertices) {
         box.forEachOutlineVertex { i, x, y, z ->
-            if (check && (verticesToUse and (1 shl i)) != 0) {
+            if (check && (verticesToUse and (1 shl i)) == 0) {
                 return@forEachOutlineVertex
             }
 
@@ -349,7 +349,7 @@ private fun WorldRenderEnvironment.drawBox(
         }
     } else {
         box.forEachFaceVertex { i, x, y, z ->
-            if (check && (verticesToUse and (1 shl i)) != 0) {
+            if (check && (verticesToUse and (1 shl i)) == 0) {
                 return@forEachFaceVertex
             }
 
@@ -392,6 +392,22 @@ fun WorldRenderEnvironment.drawBoxSide(
     outlineColor,
     faceVertices = BoxVertexIterator.FACE.sideMask(side),
     outlineVertices = BoxVertexIterator.OUTLINE.sideMask(side),
+)
+
+/**
+ * Function to draw a colored [box] with specified [sides].
+ */
+fun WorldRenderEnvironment.drawBoxSides(
+    box: AABB,
+    sides: Iterable<Direction>,
+    faceColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) = drawBox(
+    box,
+    faceColor,
+    outlineColor,
+    faceVertices = sides.fold(0) { acc, side -> acc or BoxVertexIterator.FACE.sideMask(side) },
+    outlineVertices = sides.fold(0) { acc, side -> acc or BoxVertexIterator.OUTLINE.sideMask(side) },
 )
 
 /**
