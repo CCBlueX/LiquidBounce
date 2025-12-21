@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.times
+import net.ccbluex.liquidbounce.event.repeated
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -126,7 +126,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
             lastPlacements.add(target.targetPos to Chronometer(System.currentTimeMillis()))
 
             if (target.hotbarItemSlot.itemStack.item == Items.SCAFFOLDING) {
-                times<MovementInputEvent>(3) {
+                repeated<MovementInputEvent>(3) {
                     it.sneak = true
                 }
             }
