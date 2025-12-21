@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.network.isMovementYFallDamage
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
@@ -156,7 +157,6 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
 
             if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
                 val velocityX = packet.movement.x
-                val velocityY = packet.movement.y
                 val velocityZ = packet.movement.z
 
                 ticksTimeout = velocityTimeout
@@ -165,7 +165,7 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
                     waitTicks(1)
 
                     // Fall damage velocity
-                    val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
+                    val speed = if (velocityX == 0.0 && velocityZ == 0.0 && packet.isMovementYFallDamage()) {
                         player.horizontalSpeed.coerceAtLeast(0.2857671997172534)
                     } else {
                         player.horizontalSpeed

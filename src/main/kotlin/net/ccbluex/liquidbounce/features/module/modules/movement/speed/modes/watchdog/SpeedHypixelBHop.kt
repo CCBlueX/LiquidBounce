@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
+import net.ccbluex.liquidbounce.utils.network.isMovementYFallDamage
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -112,13 +113,12 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
 
         if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
             val velocityX = packet.movement.x
-            val velocityY = packet.movement.y
             val velocityZ = packet.movement.z
 
             waitTicks(1)
 
             // Fall damage velocity
-            val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
+            val speed = if (velocityX == 0.0 && velocityZ == 0.0 && packet.isMovementYFallDamage()) {
                 player.horizontalSpeed.coerceAtLeast(
                     BASH *
                         (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
