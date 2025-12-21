@@ -554,7 +554,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleCombineMobs,
             ModuleAspect,
             ModuleAutoF5,
-            ModuleChams,
+//            ModuleChams,
             ModuleBedPlates,
             ModuleNoBob,
             ModuleNoFov,
