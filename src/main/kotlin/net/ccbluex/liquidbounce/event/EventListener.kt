@@ -101,7 +101,7 @@ inline fun <reified T : Event> EventListener.until(
 inline fun <reified T : Event> EventListener.once(
     priority: Short = 0,
     crossinline handler: (T) -> Unit
-): EventHook<T> = until(priority) { event -> // Don't use `repated` 'cause for no overhead
+): EventHook<T> = until(priority) { event -> // Don't use `repeated` 'cause for no overhead
     handler(event)
     true // This will unregister the handler after the first call
 }
