@@ -93,9 +93,9 @@ object VelocityIntave : VelocityMode("Intave") {
             val packet = event.packet
 
             if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
-                val velocityX = packet.movement.x / 8000.0
-                val velocityY = packet.movement.y / 8000.0
-                val velocityZ = packet.movement.z / 8000.0
+                val velocityX = packet.movement.x
+                val velocityY = packet.movement.y
+                val velocityZ = packet.movement.z
 
                 // Check if the player is taking fall damage
                 // We set this on every packet, because if the player gets hit afterward,

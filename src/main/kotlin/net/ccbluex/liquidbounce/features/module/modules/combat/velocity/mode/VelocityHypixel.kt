@@ -45,8 +45,8 @@ internal object VelocityHypixel : VelocityMode("Hypixel") {
                     return@handler
                 }
             }
-            packet.movement.x = (player.deltaMovement.x * 8000)
-            packet.movement.z = (player.deltaMovement.z * 8000)
+            packet.movement.x = player.deltaMovement.x
+            packet.movement.z = player.deltaMovement.z
         }
     }
 
