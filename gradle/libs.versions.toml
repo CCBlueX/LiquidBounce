@@ -34,7 +34,7 @@ exploit_preventer_api = "0.0.1"
 exploit_preventer_mod = "0.1.7"
 sodium = "mc1.21.11-0.8.1-fabric"
 lithium = "mc1.21.11-0.21.1-fabric"
-viafabricplus = "4.4.0"
+viafabricplus = "4.4.1"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
