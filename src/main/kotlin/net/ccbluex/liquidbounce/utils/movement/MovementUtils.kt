@@ -18,11 +18,14 @@
  */
 package net.ccbluex.liquidbounce.utils.movement
 
+import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -91,8 +94,9 @@ fun findEdgeCollision(
     val extendedFrom = from - lineVec * 1000.0
     val extendedTo = to + lineVec * 1000.0
 
+    val cache = objectHashSetOf<AABB>()
     while (true) {
-        val boxesContainingFrom = boundingBoxes.filter { it.contains(currentFrom) }
+        val boxesContainingFrom = boundingBoxes.filterTo(cache) { it.contains(currentFrom) }
 
         // If there is no bounding box containing from, we would fall off
         if (boxesContainingFrom.isEmpty()) {
@@ -105,7 +109,7 @@ fun findEdgeCollision(
         }
 
         currentFrom =
-            boxesContainingFrom.map {
+            boxesContainingFrom.mapToArray {
                 val res = it.clip(extendedTo, extendedFrom)
 
                 // This ray-cast should never fail.
@@ -113,6 +117,7 @@ fun findEdgeCollision(
             }.minBy { it.distanceToSqr(to) }
 
         boundingBoxes.removeAll(boxesContainingFrom)
+        cache.clear()
     }
 }
 
@@ -165,7 +170,7 @@ private fun collectCollisionBoundingBoxes(
                     boundingBox.maxZ + 0.3,
                 ).move(pos)
 
-            if (adjustedBox.clip(extendedFrom, extendedTo) == null) {
+            if (adjustedBox.clip(extendedFrom, extendedTo).isEmpty) {
                 continue
             }
 
@@ -177,5 +182,5 @@ private fun collectCollisionBoundingBoxes(
 }
 
 fun LocalPlayer.stopXZVelocity() {
-    this.setDeltaMovement(Vec3(0.0, this.deltaMovement.y, 0.0))
+    this.setDeltaMovement(this.deltaMovement.copy(x = 0.0, z = 0.0))
 }

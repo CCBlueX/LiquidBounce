@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.math.add
+import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.ccbluex.liquidbounce.utils.math.geometry.PlaneSection
@@ -194,7 +195,7 @@ fun findVisiblePointFromVirtualEye(
     for (spot in points) {
         val vecFromEyes = spot - virtualEyes
         val raycastTarget = vecFromEyes * 2.0 + virtualEyes
-        val spotOnBox = box.clip(virtualEyes, raycastTarget).getOrNull() ?: continue
+        val spotOnBox = box.firstHit(virtualEyes, raycastTarget) ?: continue
 
         val rayStart = spotOnBox.subtract(vecFromEyes.normalize().scale(rangeToTest))
 

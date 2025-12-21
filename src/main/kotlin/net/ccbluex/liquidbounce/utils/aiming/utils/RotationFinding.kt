@@ -24,7 +24,6 @@ import net.ccbluex.fastutil.step
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -38,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.kotlin.range
+import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -51,7 +51,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
-import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 
 private val ITERATION_PROPORTIONS = 0.05..0.95 step 0.1
@@ -316,11 +315,7 @@ fun raytraceBox(
     val wallsRangeSquared = wallsRange * wallsRange
 
     val preferredSpot = rotationPreference.getPreferredSpotOnBox(box, eyes, range)
-    val preferredSpotOnBox = if (box.contains(eyes) && box.contains(preferredSpot)) {
-        preferredSpot
-    } else {
-        box.clip(eyes, preferredSpot).getOrNull()
-    }
+    val preferredSpotOnBox = box.firstHit(from = eyes, to = preferredSpot)
 
     if (preferredSpotOnBox != null) {
         val preferredSpotDistance = eyes.distanceToSqr(preferredSpotOnBox)
@@ -382,14 +377,10 @@ private fun BestRotationTracker.considerSpot(
     // Elongate the line so we have no issues with fp-precision
     val raycastTarget = (preferredSpot - eyes) * 2.0 + eyes
 
-    val spotOnBox = if (box.contains(eyes) && box.contains(raycastTarget)) {
-        raycastTarget
-    } else {
-        box.clip(eyes, raycastTarget).getOrNull() ?: return
-    }
+    val spotOnBox = box.firstHit(eyes, raycastTarget) ?: return
     val distSq = eyes.distanceToSqr(spotOnBox)
 
-    val visible = visibilityPredicate.isVisible(eyes, raycastTarget)
+    val visible = visibilityPredicate.isVisible(eyes, spotOnBox)
 
     // Is either spot visible or distance within wall range?
     if ((!visible || distSq >= rangeSquared) && distSq >= wallsRangeSquared) {
