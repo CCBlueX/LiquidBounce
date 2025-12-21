@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.copy
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.move
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -119,7 +120,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
                 -sin(yawRadians) * cos(pitchRadians).toDouble(),
                 -sin((rotation.pitch + trajectoryInfo.roll).toRadians()).toDouble(),
                 cos(yawRadians) * cos(pitchRadians).toDouble()
-            ).normalize().scale(trajectoryInfo.initialVelocity)
+            ).withLength(trajectoryInfo.initialVelocity)
 
             //In Freeze, this momentum is the residual value before freezing.
             if (trajectoryInfo.copiesPlayerVelocity && !ModuleFreeze.running) {

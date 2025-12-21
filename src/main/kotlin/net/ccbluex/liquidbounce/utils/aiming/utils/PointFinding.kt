@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.ccbluex.liquidbounce.utils.math.geometry.PlaneSection
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
@@ -197,7 +198,7 @@ fun findVisiblePointFromVirtualEye(
         val raycastTarget = vecFromEyes * 2.0 + virtualEyes
         val spotOnBox = box.firstHit(virtualEyes, raycastTarget) ?: continue
 
-        val rayStart = spotOnBox.subtract(vecFromEyes.normalize().scale(rangeToTest))
+        val rayStart = spotOnBox - vecFromEyes.withLength(rangeToTest)
 
         val visible = visibilityPredicate.isVisible(rayStart, spotOnBox)
 

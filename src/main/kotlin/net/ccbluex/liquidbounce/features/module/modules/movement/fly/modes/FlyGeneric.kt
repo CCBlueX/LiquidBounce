@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.minecraft.world.level.block.LiquidBlock
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
@@ -137,7 +138,7 @@ internal object FlyCreative : Choice("Creative") {
         if (forceFlight) player.abilities.flying = true
 
         if (player.deltaMovement.lengthSqr() > maxVelocity.sq()) {
-            player.deltaMovement = player.deltaMovement.normalize().scale(maxVelocity.toDouble())
+            player.deltaMovement = player.deltaMovement.withLength(maxVelocity.toDouble())
         }
 
         if (shouldFlyDown()) {

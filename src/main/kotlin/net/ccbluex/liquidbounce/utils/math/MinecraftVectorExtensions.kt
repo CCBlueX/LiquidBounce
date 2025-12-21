@@ -31,6 +31,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
 import org.joml.Vector3f
 import org.joml.Vector3fc
+import kotlin.math.sqrt
 
 inline operator fun Vec2.component1() = this.x
 inline operator fun Vec2.component2() = this.y
@@ -63,11 +64,21 @@ inline operator fun Vec3.minus(other: Vec3i): Vec3 =
 
 inline operator fun Vec3.times(scalar: Double): Vec3 = scale(scalar)
 
-val Vec3.isLikelyZero: Boolean
-    get() = Mth.equal(this.lengthSqr(), 1.0E-6)
+/**
+ * `this.normalize().scale(newLength)`
+ *
+ * @return a [Vec3] with same direction as the receiver and length of [newLength].
+ */
+fun Vec3.withLength(newLength: Double): Vec3 {
+    val lengthSq = lengthSqr()
+    return if (Mth.equal(lengthSq, 0.0)) Vec3.ZERO else scale(newLength / sqrt(lengthSq))
+}
 
-val Vec2.isLikelyZero: Boolean
-    get() = Mth.equal(this.lengthSquared(), 1.0E-6F)
+inline val Vec3.isLikelyZero: Boolean
+    get() = Mth.equal(this.lengthSqr(), 0.0)
+
+inline val Vec2.isLikelyZero: Boolean
+    get() = Mth.equal(this.lengthSquared(), 0.0F)
 
 inline fun Vec3.copy(x: Double = this.x, y: Double = this.y, z: Double = this.z) = Vec3(x, y, z)
 
@@ -87,11 +98,8 @@ inline operator fun Vec3.component1(): Double = this.x
 inline operator fun Vec3.component2(): Double = this.y
 inline operator fun Vec3.component3(): Double = this.z
 
-fun ChunkPos.contains(blockPos: Long): Boolean =
+operator fun ChunkPos.contains(blockPos: Long): Boolean =
     BlockPos.getX(blockPos) in minBlockX..maxBlockX && BlockPos.getZ(blockPos) in minBlockZ..maxBlockZ
-
-fun ChunkPos.contains(blockPos: BlockPos): Boolean =
-    blockPos.x in minBlockX..maxBlockX && blockPos.z in minBlockZ..maxBlockZ
 
 fun Iterable<Vec3>.average(): Vec3 {
     val result = Vec3(0.0, 0.0, 0.0)

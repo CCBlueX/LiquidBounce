@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.math.findFunctionMinimumByBisect
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.phys.Vec3
@@ -172,7 +173,7 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
         ModuleDebug.debugGeometry(
             ModuleProjectileAimbot, "inboundDirection", ModuleDebug.DebuggedLineSegment(
                 entityPositionOnImpact,
-                entityPositionOnImpact.add(directionOnImpact.normalize().scale(2.0)),
+                entityPositionOnImpact.add(directionOnImpact.withLength(2.0)),
                 Color4b.BLUE
             )
         )

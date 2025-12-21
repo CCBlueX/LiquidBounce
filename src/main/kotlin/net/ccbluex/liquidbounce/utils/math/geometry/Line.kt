@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.math.geometry
 
 import net.ccbluex.liquidbounce.utils.math.getCoordinate
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.preferOver
 import net.minecraft.world.phys.AABB
@@ -95,26 +96,15 @@ open class Line(val position: Vec3, val direction: Vec3) {
      * Finds the closest point on the box's surface to the [position] in positive [direction].
      */
     fun getPointOnBoxInDirection(box: AABB): Vec3? {
-        val candidates = Direction.entries.mapNotNull { dir ->
+        return Direction.entries.mapNotNull { dir ->
             val positionCoordinate = position.get(dir.axis)
             val directionCoordinate = direction.get(dir.axis)
             computeIntersection(box.getCoordinate(dir), positionCoordinate, directionCoordinate)?.let { factor ->
                 val pointOnFace = dir.unitVec3.scale(factor)
-                val directionalPointsOnFace = position.add(direction.normalize().scale(factor))
+                val directionalPointsOnFace = position.add(direction.withLength(factor))
                 pointOnFace.preferOver(directionalPointsOnFace)
             }
-        }
-
-        var minDistanceSq = Double.POSITIVE_INFINITY
-        var intersection: Vec3? = null
-        candidates.forEach { candidate ->
-            if (position.distanceToSqr(candidate) < minDistanceSq) {
-                minDistanceSq = position.distanceToSqr(candidate)
-                intersection = candidate
-            }
-        }
-
-        return intersection
+        }.minByOrNull(position::distanceToSqr)
     }
 
     private fun computeIntersection(plane: Double, pos: Double, dir: Double): Double? {

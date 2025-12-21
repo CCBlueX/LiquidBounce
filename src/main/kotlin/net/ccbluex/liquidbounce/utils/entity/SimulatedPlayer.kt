@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -94,7 +95,7 @@ class SimulatedPlayer(
     private var submergedFluidTag: HashSet<TagKey<Fluid>>
 ) : PlayerSimulation {
     private val world: Level
-        get() = player.level()!!
+        get() = player.level()
 
     companion object {
         fun fromClientPlayer(input: SimulatedPlayerInput): SimulatedPlayer {
@@ -823,7 +824,7 @@ class SimulatedPlayer(
             vec3d = vec3d.scale(speed * 1.0)
             val f = 0.003
             if (abs(vec3d3.x) < 0.003 && abs(vec3d3.z) < 0.003 && vec3d.length() < 0.0045000000000000005) {
-                vec3d = vec3d.normalize().scale(0.0045000000000000005)
+                vec3d = vec3d.withLength(0.0045000000000000005)
             }
             velocity += vec3d
         }

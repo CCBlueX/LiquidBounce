@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.copy
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
@@ -234,7 +235,7 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
                 lookVec.x * NEAR_GROUND_HORIZONTAL_BOOST,
                 lookVec.y * NEAR_GROUND_VERTICAL_REDUCTION,
                 lookVec.z * NEAR_GROUND_HORIZONTAL_BOOST
-            ).normalize().scale(boostFactor)
+            ).withLength(boostFactor)
         } else {
             lookVec.scale(boostFactor)
         }
