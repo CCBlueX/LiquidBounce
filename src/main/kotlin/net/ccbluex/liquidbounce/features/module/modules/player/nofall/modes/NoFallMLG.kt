@@ -126,7 +126,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
             lastPlacements.add(target.targetPos to Chronometer(System.currentTimeMillis()))
 
             if (target.hotbarItemSlot.itemStack.item == Items.SCAFFOLDING) {
-                times<MovementInputEvent>(2) {
+                times<MovementInputEvent>(3) {
                     it.sneak = true
                 }
             }
