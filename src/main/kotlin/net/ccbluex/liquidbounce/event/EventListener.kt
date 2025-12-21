@@ -106,6 +106,20 @@ inline fun <reified T : Event> EventListener.once(
     true // This will unregister the handler after the first call
 }
 
+inline fun <reified T : Event> EventListener.times(
+    times: Int,
+    priority: Short = 1,
+    crossinline handler: (T) -> Unit
+): EventHook<T> {
+    require(times > 0) { "times must be > 0" }
+
+    var called = 0
+    return until<T>(priority) { event ->
+        handler(event)
+        ++called >= times
+    }
+}
+
 /**
  * Returns computed [ReadWriteProperty] based on the [accumulator] of specific event.
  *

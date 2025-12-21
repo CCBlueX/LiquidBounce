@@ -20,8 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.times
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -45,10 +47,10 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.item.Items
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Blocks
 
 internal object NoFallMLG : NoFallMode("MLG") {
     private val minFallDist by float("MinFallDistance", 5f, 2f..50f)
@@ -68,6 +70,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
     private val netherItems =
         setOf(
             // overworld
+            Items.SCAFFOLDING,
             Items.COBWEB,
             Items.POWDER_SNOW_BUCKET,
             Items.HAY_BLOCK,
@@ -121,6 +124,12 @@ internal object NoFallMLG : NoFallMode("MLG") {
 
         val onSuccess: () -> Boolean = {
             lastPlacements.add(target.targetPos to Chronometer(System.currentTimeMillis()))
+
+            if (target.hotbarItemSlot.itemStack.item == Items.SCAFFOLDING) {
+                times<MovementInputEvent>(2) {
+                    it.sneak = true
+                }
+            }
 
             true
         }
