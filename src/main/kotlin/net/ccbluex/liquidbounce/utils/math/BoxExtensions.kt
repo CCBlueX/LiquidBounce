@@ -82,9 +82,6 @@ fun AABB.isHitByLine(start: Vec3, p: Vec3): Boolean {
     return tEntry <= tExit
 }
 
-val AABB.size: Double
-    get() = this.xsize * this.ysize * this.zsize
-
 fun AABB.getCoordinate(direction: Direction): Double {
     return if (direction.axisDirection == Direction.AxisDirection.POSITIVE) {
         this.max(direction.axis)

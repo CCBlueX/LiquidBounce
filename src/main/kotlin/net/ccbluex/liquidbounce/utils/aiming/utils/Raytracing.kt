@@ -137,16 +137,22 @@ fun raycast(
 /**
  * Allows you to check if a point is behind a wall
  *
- * @see player#canSee
+ * @see net.minecraft.world.entity.LivingEntity.hasLineOfSight
  */
 fun canSeePointFrom(
     eyes: Vec3,
     vec3: Vec3,
-) = world.clip(
-    ClipContext(
-        eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player,
-    ),
-).type == HitResult.Type.MISS
+): Boolean {
+    return world.clip(
+        ClipContext(
+            eyes,
+            vec3,
+            ClipContext.Block.COLLIDER,
+            ClipContext.Fluid.NONE,
+            player,
+        ),
+    ).type == HitResult.Type.MISS
+}
 
 /**
  * Allows you to check if your enemy is behind a wall

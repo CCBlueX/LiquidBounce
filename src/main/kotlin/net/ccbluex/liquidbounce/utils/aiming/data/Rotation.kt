@@ -47,11 +47,11 @@ data class Rotation(
         }
 
         @JvmStatic
-        fun fromRotationVec(lookVec: Vec3): Rotation {
-            val diffX = lookVec.x
-            val diffY = lookVec.y
-            val diffZ = lookVec.z
+        fun fromRotationVec(lookVec: Vec3): Rotation =
+            fromRotationVec(lookVec.x, lookVec.y, lookVec.z)
 
+        @JvmStatic
+        fun fromRotationVec(diffX: Double, diffY: Double, diffZ: Double): Rotation {
             return Rotation(
                 Mth.wrapDegrees(atan2(diffZ, diffX).toDegrees().toFloat() - 90f),
                 Mth.wrapDegrees(-atan2(diffY, hypot(diffX, diffZ)).toDegrees().toFloat())

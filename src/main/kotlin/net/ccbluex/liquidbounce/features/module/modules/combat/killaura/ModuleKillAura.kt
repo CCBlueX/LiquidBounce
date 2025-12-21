@@ -399,7 +399,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
      *
      *  @return The best spot to attack the entity
      */
-    private fun findRotation(entity: LivingEntity, range: Double): RotationWithVector? {
+    private fun findRotation(entity: Entity, range: Double): RotationWithVector? {
         val eyes = player.eyePosition
         val point = pointTracker.findPoint(eyes, entity)
 

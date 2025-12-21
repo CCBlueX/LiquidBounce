@@ -24,7 +24,7 @@ import net.minecraft.world.phys.Vec3
 
 interface RotationPreference : Comparator<Rotation> {
 
-    fun getPreferredSpot(eyesPos: Vec3, range: Double, ): Vec3
+    fun getPreferredSpot(eyesPos: Vec3, range: Double): Vec3
 
     fun getPreferredSpotOnBox(box: AABB, eyesPos: Vec3, range: Double): Vec3 {
         return getPreferredSpot(eyesPos, range)

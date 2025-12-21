@@ -29,6 +29,8 @@ import net.minecraft.core.Position
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import org.joml.Vector3f
+import org.joml.Vector3fc
 
 inline operator fun Vec2.component1() = this.x
 inline operator fun Vec2.component2() = this.y
@@ -50,11 +52,11 @@ inline operator fun Vec3i.minus(other: Vec3i): Vec3i = subtract(other)
 
 inline operator fun Vec3i.times(scalar: Int): Vec3i = multiply(scalar)
 
-inline operator fun Vec3.plus(other: Vec3): Vec3 = add(other)
+inline operator fun Vec3.plus(other: Position): Vec3 = add(other.x(), other.y(), other.z())
 
 inline operator fun Vec3.plus(other: Vec3i): Vec3 = add(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
 
-inline operator fun Vec3.minus(other: Vec3): Vec3 = subtract(other)
+inline operator fun Vec3.minus(other: Position): Vec3 = subtract(other.x(), other.y(), other.z())
 
 inline operator fun Vec3.minus(other: Vec3i): Vec3 =
     subtract(other.x.toDouble(), other.y.toDouble(), other.z.toDouble())
@@ -67,16 +69,19 @@ val Vec3.isLikelyZero: Boolean
 val Vec2.isLikelyZero: Boolean
     get() = Mth.equal(this.lengthSquared(), 1.0E-6F)
 
-inline fun Vec3.interpolate(start: Vec3, multiple: Double) =
-    Vec3(
-        this.x.interpolate(start.x, multiple),
-        this.y.interpolate(start.y, multiple),
-        this.z.interpolate(start.z, multiple),
-    )
-
-inline fun Double.interpolate(old: Double, scale: Double) = old + (this - old) * scale
-
 inline fun Vec3.copy(x: Double = this.x, y: Double = this.y, z: Double = this.z) = Vec3(x, y, z)
+
+fun Vector3fc.toVec3d(): Vec3 =
+    Vec3(this.x().toDouble(), this.y().toDouble(), this.z().toDouble())
+
+inline fun Vector3f.set(vec3d: Vec3): Vector3f =
+    set(vec3d.x, vec3d.y, vec3d.z)
+
+inline fun Vector3f.add(vec3d: Vec3): Vector3f =
+    add(vec3d.x.toFloat(), vec3d.y.toFloat(), vec3d.z.toFloat())
+
+inline fun Vector3f.sub(vec3d: Vec3): Vector3f =
+    sub(vec3d.x.toFloat(), vec3d.y.toFloat(), vec3d.z.toFloat())
 
 inline operator fun Vec3.component1(): Double = this.x
 inline operator fun Vec3.component2(): Double = this.y
@@ -95,27 +100,7 @@ fun Iterable<Vec3>.average(): Vec3 {
         result.move(vec)
         i++
     }
-    return result.scale(1.0 / i)
-}
-
-inline fun forEach3D(v0: Vec3, v1: Vec3, step: Double, fn: (Double, Double, Double) -> Unit) {
-    val (startX, startY, startZ) = v0
-    val (endX, endY, endZ) = v1
-
-    var x = startX
-    while (x <= endX) {
-        var y = startY
-        while (y <= endY) {
-            var z = startZ
-            while (z <= endZ) {
-                fn(x, y, z)
-
-                z += step
-            }
-            y += step
-        }
-        x += step
-    }
+    return result.scaleMut(1.0 / i)
 }
 
 inline fun Vec3i.toVec3d(): Vec3 = Vec3.atLowerCornerOf(this)

@@ -355,7 +355,7 @@ fun Entity.squareBoxedDistanceTo(entity: Entity, offsetPos: Vec3): Double {
 }
 
 fun AABB.squaredBoxedDistanceTo(otherPos: Vec3): Double {
-    val pos = getNearestPoint(otherPos, this)
+    val pos = getNearestPoint(otherPos)
 
     return pos.distanceToSqr(otherPos)
 }
@@ -386,16 +386,16 @@ fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
 /**
  * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
  */
-fun getNearestPoint(from: Vec3, box: AABB): Vec3 {
+fun AABB.getNearestPoint(from: Position): Vec3 {
     return Vec3(
-        from.x.coerceIn(box.minX, box.maxX),
-        from.y.coerceIn(box.minY, box.maxY),
-        from.z.coerceIn(box.minZ, box.maxZ),
+        from.x().coerceIn(minX, maxX),
+        from.y().coerceIn(minY, maxY),
+        from.z().coerceIn(minZ, maxZ),
     )
 }
 
 fun getNearestPointOnSide(from: Vec3, box: AABB, side: Direction): Vec3 {
-    val nearestPointInBlock = getNearestPoint(from, box)
+    val nearestPointInBlock = box.getNearestPoint(from)
 
     val x = nearestPointInBlock.x
     val y = nearestPointInBlock.y

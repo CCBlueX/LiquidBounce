@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.lastRenderPos
-import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
 import net.minecraft.client.gui.GuiGraphics
 import com.mojang.blaze3d.vertex.PoseStack
@@ -101,7 +100,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
             env.matrixStack.translate(mc.gameRenderer.mainCamera.position().reverse())
 
-            val interpolated = entity.position().interpolate(entity.lastRenderPos(), partialTicks.toDouble())
+            val interpolated = entity.lastRenderPos().lerp(entity.position(), partialTicks.toDouble())
                 .add(0.2, 1.25, 0.0)
 
             env.matrixStack.translate(interpolated)
@@ -279,8 +278,8 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             }
 
             with(env) {
-                startBatch()
                 withPositionRelativeToCamera(pos) {
+                    // Don't use batch mode because `drawGradientCircle` uses TRIANGLE_STRIP
                     drawGradientCircle(
                         radius,
                         radius,
@@ -295,11 +294,11 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                         color,
                         color
                     )
+
                     if (outline.enabled) {
                         drawCircleOutline(radius, outline.color)
                     }
                 }
-                commitBatch()
             }
         }
 

@@ -42,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
-import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
@@ -149,7 +148,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
 
         fun update(velocity: Vec3) = set(pos + velocity)
 
-        fun interpolate(tickDelta: Float) = pos.interpolate(lastPos, tickDelta.toDouble())
+        fun interpolate(tickDelta: Float) = lastPos.lerp(pos, tickDelta.toDouble())
     }
 
     override fun onEnabled() {
@@ -174,7 +173,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
             val target = getCameraLookingAt() ?: return@handler
 
             // interpolate to prevent tp into block
-            PositionState.set(target.interpolate(PositionState.pos, 0.9))
+            PositionState.set(PositionState.pos.lerp(target, 0.9))
         }
     }
 

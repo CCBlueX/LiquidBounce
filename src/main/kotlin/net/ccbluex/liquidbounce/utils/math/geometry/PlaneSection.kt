@@ -34,7 +34,7 @@ import kotlin.math.sqrt
 class PlaneSection(
     val originPoint: Vec3,
     val dirVec1: Vec3,
-    val dirVec2: Vec3
+    val dirVec2: Vec3,
 ) {
 
     inline fun castPointsOnUniformly(maxPoints: Int, consumer: (Vec3) -> Unit) {

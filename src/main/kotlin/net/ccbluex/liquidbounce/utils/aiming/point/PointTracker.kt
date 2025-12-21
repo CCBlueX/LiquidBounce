@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.projectPointsOnBox
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import java.awt.Color
@@ -61,15 +61,14 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
      */
     private val delay = tree(PointProcessorDelay(this))
 
-    private val processors
-        get() = listOf(delay, lazy, gaussian).filter { processor -> processor.enabled }
+    private val processors = arrayOf(delay, lazy, gaussian)
 
     /**
      * The point tracker is being used to track a certain point of an entity.
      *
      * @param entity The entity we want to track.
      */
-    fun findPoint(eyes: Vec3, entity: LivingEntity, ticks: Int = 0): PointInsideBox {
+    fun findPoint(eyes: Vec3, entity: Entity, ticks: Int = 0): PointInsideBox {
         // Predict target position
         val targetPos = PositionExtrapolation.getBestForEntity(entity)
             .getPositionInTicks(ticks.toDouble())
@@ -104,22 +103,23 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
             })
         }
 
-        val pos = pointsWithExempts.minByOrNull { it.distanceTo(eyes) }
-            ?: bestHitVector
+        val pos = pointsWithExempts.minByOrNull { it.distanceToSqr(eyes) } ?: bestHitVector
         var point = PointInsideBox(pos, box)
         for (processor in processors) {
-            point = processor.process(point)
+            if (processor.enabled) {
+                point = processor.process(point)
+            }
         }
         return point
     }
 
-    private fun AABB.getPoints(eyes: Vec3) = mutableListOf<Vec3>().apply {
+    private fun AABB.getPoints(eyes: Vec3) = buildList {
         projectPointsOnBox(eyes, this@getPoints) { point ->
             add(point)
         }
     }
 
-    private fun AABB.getPseudoClosest(eyes: Vec3) = getNearestPoint(eyes, this)
+    private fun AABB.getPseudoClosest(eyes: Vec3) = getNearestPoint(eyes)
 
     private fun AABB.getPseudoFurthest(eyes: Vec3) = Vec3(
         eyes.x.coerceAtLeast(maxX).coerceAtMost(minX),

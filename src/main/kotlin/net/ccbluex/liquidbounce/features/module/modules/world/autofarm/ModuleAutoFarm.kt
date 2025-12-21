@@ -242,7 +242,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
     private fun updateTargetToHarvest(radius: Float, radiusSquared: Float, eyesPos: Vec3): Boolean {
         val blocksToBreak = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
             !state.isAir && pos.readyForHarvest(state) &&
-                    getNearestPoint(eyesPos, AABB(pos)).distanceToSqr(eyesPos) <= radiusSquared
+                AABB(pos).getNearestPoint(eyesPos).distanceToSqr(eyesPos) <= radiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
         return updateTarget(blocksToBreak)
@@ -308,7 +308,7 @@ object ModuleAutoFarm : ClientModule("AutoFarm", Category.WORLD) {
 
         val blocksToFertile = eyesPos.searchBlocksInCuboid(radius) { pos, state ->
             !state.isAir && pos.canUseBoneMeal(state) &&
-                getNearestPoint(eyesPos, AABB(pos)).distanceToSqr(eyesPos) <= radiusSquared
+                AABB(pos).getNearestPoint(eyesPos).distanceToSqr(eyesPos) <= radiusSquared
         }.sortedBy { it.first.getCenterDistanceSquared() }
 
         return updateTarget(blocksToFertile)

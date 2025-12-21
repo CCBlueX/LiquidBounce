@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.utils.entity
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.phys.Vec3
 import kotlin.math.max
@@ -36,7 +36,7 @@ interface PositionExtrapolation {
     fun getPositionInTicks(ticks: Double): Vec3
 
     companion object {
-        fun getBestForEntity(target: LivingEntity): PositionExtrapolation {
+        fun getBestForEntity(target: Entity): PositionExtrapolation {
             return when (target) {
                 is Player -> PlayerSimulationExtrapolation(target)
                 else -> LinearPositionExtrapolation(target)
@@ -59,7 +59,7 @@ class LinearPositionExtrapolation(
     private val basePosition: Vec3,
     private val velocity: Vec3
 ) : PositionExtrapolation {
-    constructor(entity: LivingEntity) : this(entity.position(), entity.position() - entity.lastPos)
+    constructor(entity: Entity) : this(entity.position(), entity.position() - entity.lastPos)
 
     override fun getPositionInTicks(ticks: Double): Vec3 {
         return basePosition + velocity * ticks

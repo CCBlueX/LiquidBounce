@@ -47,7 +47,7 @@ abstract class ToggleableConfigurable(
     @get:JvmName("getEnabledValue")
     val enabledValue: Value<Boolean> = boolean("Enabled", enabled)
         .also(::onEnabledValueRegistration)
-        .onChange { state -> onToggled(state) }
+        .onChange(::onToggled)
 
     @ScriptApiRequired
     override var enabled by enabledValue

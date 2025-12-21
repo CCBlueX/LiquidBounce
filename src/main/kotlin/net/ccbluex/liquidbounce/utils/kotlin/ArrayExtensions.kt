@@ -55,6 +55,21 @@ inline fun range(iterable1: DoubleIterable, iterable2: DoubleIterable, operation
 }
 
 inline fun range(
+    iterable1: DoubleIterable,
+    iterable2: DoubleIterable,
+    iterable3: DoubleIterable,
+    operation: (Double, Double, Double) -> Unit,
+) {
+    iterable1.forEachDouble { d1 ->
+        iterable2.forEachDouble { d2 ->
+            iterable3.forEachDouble { d3 ->
+                operation(d1, d2, d3)
+            }
+        }
+    }
+}
+
+inline fun range(
     iterable1: IntProgression,
     iterable2: IntProgression,
     iterable3: IntProgression,
