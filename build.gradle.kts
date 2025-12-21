@@ -95,6 +95,10 @@ allprojects {
             name = "NikOverflow"
             url = uri("https://reposilite.nikoverflow.com/releases")
         }
+        maven {
+            name = "ParchmentMC"
+            url = uri("https://maven.parchmentmc.org")
+        }
     }
 }
 
@@ -105,7 +109,10 @@ loom {
 dependencies {
     // Minecraft
     minecraft(libs.minecraft)
-    mappings(loom.officialMojangMappings())
+    mappings(loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${libs.versions.minecraft.get()}:2025.12.20@zip")
+    })
 
     // Fabric
     modApi(libs.fabric.loader)

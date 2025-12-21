@@ -5,6 +5,7 @@ jdk = "21"
 
 # Fabric Properties
 # Check these on https://fabricmc.net/versions.html
+# https://mods.upcraft.dev/dev/versions
 minecraft = "1.21.11"
 fabric-loom = "1.14-SNAPSHOT"
 fabric-loader = "0.18.3"
