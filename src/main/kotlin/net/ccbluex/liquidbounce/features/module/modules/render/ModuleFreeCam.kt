@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
 import net.minecraft.client.CameraType
 import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.core.Direction
@@ -114,6 +115,8 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
     }
 
     private val midClickCameraTeleport by boolean("MidClickCameraTeleport", false)
+
+    private val keepSneaking by boolean("KeepSneaking", false)
 
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
@@ -188,12 +191,19 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
         val velocity = Vec3.ZERO
             .withStrafe(speed, input = event.directionalInput)
             .with(Direction.Axis.Y, yAxisMovement * speed)
-        ModuleDebug.debugParameter(this, "Velocity", velocity.toString())
+        ModuleDebug.debugParameter(this, "Velocity", velocity)
         PositionState.update(velocity)
 
         event.directionalInput = DirectionalInput.NONE
         event.jump = false
         event.sneak = false
+    }
+
+    @Suppress("unused")
+    private val forceSneakHandler = handler<MovementInputEvent>(priority = OBJECTION_AGAINST_EVERYTHING) { event ->
+        if (keepSneaking) {
+            event.sneak = true
+        }
     }
 
     @Suppress("unused")
