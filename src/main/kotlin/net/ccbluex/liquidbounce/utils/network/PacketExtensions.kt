@@ -22,5 +22,5 @@ package net.ccbluex.liquidbounce.utils.network
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 fun ClientboundSetEntityMotionPacket.isMovementYFallDamage(): Boolean {
-    return this.movement.y.toRawBits() == -4633060179779189496
+    return this.movement.y.toRawBits() == -4633060179779189496L // -0.0783739241897089
 }
