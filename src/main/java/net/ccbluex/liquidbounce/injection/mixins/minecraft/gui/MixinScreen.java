@@ -45,8 +45,6 @@ import javax.annotation.Nullable;
 
 @Mixin(Screen.class)
 public abstract class MixinScreen implements ScreenAddition {
-    @Shadow
-    protected abstract void removeWidget(GuiEventListener child);
 
     @Final
     @Shadow
@@ -94,7 +92,7 @@ public abstract class MixinScreen implements ScreenAddition {
 
     @Inject(method = "renderWithTooltipAndSubtitles", at = @At("HEAD"), cancellable = true)
     private void cancelRenderByChestStealer(CallbackInfo ci) {
-        if (FeatureSilentScreen.INSTANCE.getShouldHide()) {
+        if (LiquidBounce.INSTANCE.isInitialized() && FeatureSilentScreen.INSTANCE.getShouldHide()) {
             ci.cancel();
         }
     }
