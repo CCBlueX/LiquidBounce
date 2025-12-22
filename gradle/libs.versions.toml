@@ -36,6 +36,9 @@ exploit_preventer_mod = "0.1.7"
 sodium = "mc1.21.11-0.8.1-fabric"
 lithium = "mc1.21.11-0.21.1-fabric"
 viafabricplus = "4.4.1"
+# Mods for compatibility test (runtime only)
+immediatelyFast = "1.14.1+1.21.11-fabric"
+iris = "1.10.3+1.21.11-fabric"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
@@ -92,6 +95,8 @@ vfp-api = { group = "com.viaversion", name = "viafabricplus-api", version.ref = 
 vfp = { group = "com.viaversion", name = "viafabricplus", version.ref = "viafabricplus" }
 exploitPreventer-api = { group = "com.nikoverflow", name = "ExploitPreventer-API", version.ref = "exploit_preventer_api" }
 exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", version.ref = "exploit_preventer_mod" }
+immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
+iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
 
 [plugins]
 fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }

@@ -42,8 +42,8 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 
 /**
- * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMinecraftClient
- * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHandledScreen
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMinecraft
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinAbstractContainerScreen
  */
 object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentScreen", false) {
 
