@@ -94,7 +94,7 @@ public abstract class MixinScreen implements ScreenAddition {
 
     @Inject(method = "renderWithTooltipAndSubtitles", at = @At("HEAD"), cancellable = true)
     private void cancelRenderByChestStealer(CallbackInfo ci) {
-        if (FeatureSilentScreen.getShouldHide()) {
+        if (FeatureSilentScreen.INSTANCE.getShouldHide()) {
             ci.cancel();
         }
     }

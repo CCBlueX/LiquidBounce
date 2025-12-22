@@ -83,7 +83,7 @@ public abstract class MixinAbstractContainerScreen<T extends AbstractContainerMe
             ci.cancel();
         }
 
-        if (FeatureSilentScreen.getShouldHide()) {
+        if (FeatureSilentScreen.INSTANCE.getShouldHide()) {
             ci.cancel();
         }
     }
