@@ -26,7 +26,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import java.util.*
 
-object HorizonAntiBotMode : AntibotMode("Horizon") {
+object HorizonAntiBotMode : AntiBotMode("Horizon") {
 
     private val botList = objectHashSetOf<UUID>()
 

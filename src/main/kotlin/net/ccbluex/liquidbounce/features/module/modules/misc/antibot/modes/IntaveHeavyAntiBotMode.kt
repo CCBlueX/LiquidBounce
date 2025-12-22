@@ -32,7 +32,7 @@ import java.util.*
  *
  * Tested on: gamster.org and a private server with latest Intave as of 7/28/2022.
  */
-object IntaveHeavyAntiBotMode : AntibotMode("IntaveHeavy") {
+object IntaveHeavyAntiBotMode : AntiBotMode("IntaveHeavy") {
 
     private val suspectList = hashMapOf<UUID, SuspectInfo>()
     private val botList = objectHashSetOf<UUID>()

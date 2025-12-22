@@ -33,7 +33,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
 import java.util.*
 
-object MatrixAntiBotMode : AntibotMode("Matrix") {
+object MatrixAntiBotMode : AntiBotMode("Matrix") {
 
     private val suspectList = objectHashSetOf<UUID>()
     private val botList = objectHashSetOf<UUID>()

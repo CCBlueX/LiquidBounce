@@ -51,7 +51,7 @@ import java.util.function.Predicate
 import kotlin.math.abs
 
 @Suppress("MagicNumber")
-object CustomAntiBotMode : AntibotMode("Custom") {
+object CustomAntiBotMode : AntiBotMode("Custom") {
 
     private object InvalidGround : ToggleableConfigurable(ModuleAntiBot, "InvalidGround", true) {
         val vlToConsiderAsBot by int("VLToConsiderAsBot", 10, 1..50, "flags")
@@ -62,15 +62,16 @@ object CustomAntiBotMode : AntibotMode("Custom") {
         CustomConditions.NO_GAME_MODE,
         CustomConditions.ILLEGAL_PITCH,
         CustomConditions.FAKE_ENTITY_ID,
-        CustomConditions.ILLEGAL_NAME,
     )
 
     private object AlwaysInRadius : ToggleableConfigurable(ModuleAntiBot, "AlwaysInRadius", false) {
         val alwaysInRadiusRange by float("AlwaysInRadiusRange", 20f, 5f..30f)
     }
 
-    private object Age : ToggleableConfigurable(ModuleAntiBot, "Age", false) {
-        val minimum by int("Minimum", 20, 0..120, "ticks")
+    private object Age : ToggleableConfigurable(ModuleAntiBot, "Age", false), AntiBotPredicate {
+        private val minimum by int("Minimum", 20, 0..120, "ticks")
+
+        override fun isBot(entity: Player): Boolean = entity.tickCount < minimum
     }
 
     private object Armor : ToggleableConfigurable(ModuleAntiBot, "Armor", false) {
@@ -175,11 +176,29 @@ object CustomAntiBotMode : AntibotMode("Custom") {
         }
     }
 
+    private object Name : ToggleableConfigurable(ModuleAntiBot, "Name", true), AntiBotPredicate {
+        private val lengthRange by intRange("Length", 3..16, 1..32)
+        private val validateChars by boolean("ValidateChars", true)
+
+        private val VALID_CHARS_OF_NAME = BitSet(128).apply {
+            set('0'.code, '9'.code + 1)
+            set('a'.code, 'z'.code + 1)
+            set('A'.code, 'Z'.code + 1)
+            set('_'.code)
+        }
+
+        override fun isBot(entity: Player): Boolean {
+            val name = entity.scoreboardName
+            return name.length !in lengthRange || (validateChars && name.any { !VALID_CHARS_OF_NAME[it.code] })
+        }
+    }
+
     init {
         tree(InvalidGround)
         tree(AlwaysInRadius)
         tree(Age)
         tree(Armor)
+        tree(Name)
     }
 
     private val flyingSet = Int2IntOpenHashMap()
@@ -280,9 +299,10 @@ object CustomAntiBotMode : AntibotMode("Custom") {
         return when {
             InvalidGround.enabled && hasInvalidGround(entity) -> true
             AlwaysInRadius.enabled && !notAlwaysInRadiusSet.contains(entityId) -> true
-            Age.enabled && entity.tickCount < Age.minimum -> true
+            Age.enabled && Age.isBot(entity) -> true
             Armor.enabled && armorSet.contains(entityId) -> true
-            else -> customConditions.any { it.isBot.test(entity) }
+            Name.enabled && Name.isBot(entity) -> true
+            else -> customConditions.any { it.isBot(entity) }
         }
     }
 
@@ -296,18 +316,11 @@ object CustomAntiBotMode : AntibotMode("Custom") {
         armorSet.clear()
     }
 
-    private val VALID_CHARS_OF_NAME = BitSet(128).apply {
-        set('0'.code, '9'.code + 1)
-        set('a'.code, 'z'.code + 1)
-        set('A'.code, 'Z'.code + 1)
-        set('_'.code)
-    }
-
     @Suppress("unused")
     private enum class CustomConditions(
         override val choiceName: String,
-        val isBot: Predicate<Player>
-    ) : NamedChoice {
+        private val isBot: AntiBotPredicate
+    ) : NamedChoice, AntiBotPredicate by isBot {
         DUPLICATE("Duplicate", { suspected ->
             isADuplicate(suspected.gameProfile)
         }),
@@ -319,10 +332,6 @@ object CustomAntiBotMode : AntibotMode("Custom") {
         }),
         FAKE_ENTITY_ID("FakeEntityID", { suspected ->
             suspected.id !in 0..1_000_000_000
-        }),
-        ILLEGAL_NAME("IllegalName", { suspected ->
-            val name = suspected.scoreboardName
-            name.length !in 3..16 || name.any { !VALID_CHARS_OF_NAME[it.code] }
         }),
         NEED_IT("NeedHit", { suspected ->
             !hitSet.contains(suspected.id)

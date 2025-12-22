@@ -22,12 +22,10 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.minecraft.world.entity.player.Player
 
-sealed class AntibotMode(name: String) : Choice(name) {
+sealed class AntiBotMode(name: String) : Choice(name), AntiBotPredicate {
     final override val parent: ChoiceConfigurable<*>
         get() = ModuleAntiBot.modes
 
     open fun reset() { }
-    abstract fun isBot(entity: Player): Boolean
 }
