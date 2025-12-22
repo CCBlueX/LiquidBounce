@@ -42,7 +42,7 @@ object ModuleTextFieldProtect : ClientModule("TextFieldProtect", Category.MISC) 
     private const val MASK_CHAR = '*'
 
     fun protect(input: String, firstCharacterIndex: Int): String {
-        return if (patterns.none { it.matches(input) }) {
+        return if (!running || patterns.none { it.matches(input) }) {
             input
         } else {
             MASK_CHAR.repeat(firstCharacterIndex)
