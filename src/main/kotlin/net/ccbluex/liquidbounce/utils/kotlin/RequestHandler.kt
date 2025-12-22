@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.event.EventListener
 import net.minecraft.client.Minecraft
 import java.util.concurrent.PriorityBlockingQueue
 
@@ -63,6 +63,6 @@ class RequestHandler<T> {
      * @param provider module which requested value
      */
     class Request<T>(
-        var expiresIn: Int, val priority: Int, val provider: ClientModule, val value: T
+        var expiresIn: Int, val priority: Int, val provider: EventListener, val value: T
     )
 }

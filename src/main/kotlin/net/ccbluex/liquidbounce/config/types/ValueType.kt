@@ -21,28 +21,32 @@ package net.ccbluex.liquidbounce.config.types
 
 import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
+import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer.registryItemDeserializer
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT
+import net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT
 
 enum class ValueType(
     val deserializer: HumanInputDeserializer.StringDeserializer<*>? = null,
-    val completer: AutoCompletionProvider.CompletionHandler = AutoCompletionProvider.defaultCompleter
+    val completer: AutoCompletionProvider = AutoCompletionProvider.Default
 ) {
 
     // Primitive Types
     BOOLEAN(HumanInputDeserializer.booleanDeserializer, AutoCompletionProvider.booleanCompleter),
-    FLOAT(HumanInputDeserializer.floatDeserializer),
-    FLOAT_RANGE(HumanInputDeserializer.floatRangeDeserializer),
-    INT(HumanInputDeserializer.intDeserializer),
-    INT_RANGE(HumanInputDeserializer.intRangeDeserializer),
+    FLOAT(HumanInputDeserializer.floatDeserializer, AutoCompletionProvider.rangedCompleter),
+    FLOAT_RANGE(HumanInputDeserializer.floatRangeDeserializer, AutoCompletionProvider.rangedCompleter),
+    INT(HumanInputDeserializer.intDeserializer, AutoCompletionProvider.rangedCompleter),
+    INT_RANGE(HumanInputDeserializer.intRangeDeserializer, AutoCompletionProvider.rangedCompleter),
     TEXT(HumanInputDeserializer.textDeserializer),
     COLOR(HumanInputDeserializer.colorDeserializer),
 
     // Registry Types
-    BLOCK(HumanInputDeserializer.blockDeserializer),
-    ITEM(HumanInputDeserializer.itemDeserializer),
-    SOUND(HumanInputDeserializer.soundDeserializer),
-    STATUS_EFFECT(HumanInputDeserializer.statusEffectDeserializer),
-    SCREEN_HANDLER,
-    ENTITY_TYPE,
+    BLOCK(registryItemDeserializer(BuiltInRegistries.BLOCK)),
+    ITEM(registryItemDeserializer(BuiltInRegistries.ITEM)),
+    SOUND(registryItemDeserializer(SOUND_EVENT)),
+    STATUS_EFFECT(registryItemDeserializer(MOB_EFFECT)),
+    SCREEN_HANDLER(registryItemDeserializer(BuiltInRegistries.MENU)),
+    ENTITY_TYPE(registryItemDeserializer(BuiltInRegistries.ENTITY_TYPE)),
     CLIENT_PACKET,
     SERVER_PACKET,
     CLIENT_MODULE(HumanInputDeserializer.clientModuleDeserializer),
@@ -57,7 +61,7 @@ enum class ValueType(
     // Configuration Types
     CHOICE(completer = AutoCompletionProvider.choiceCompleter),
     CHOOSE(completer = AutoCompletionProvider.chooseCompleter),
-    MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer),
+    MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer, AutoCompletionProvider.multiChooseCompleter),
     LIST,
     MUTABLE_LIST,
     ITEM_LIST,

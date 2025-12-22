@@ -22,12 +22,8 @@ import com.mojang.brigadier.StringReader
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.world.level.block.Block
 import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.world.effect.MobEffect
-import net.minecraft.world.item.Item
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.sounds.SoundEvent
+import net.minecraft.core.Registry
 import net.minecraft.resources.Identifier
 import java.awt.Color
 import java.io.File
@@ -63,29 +59,10 @@ object HumanInputDeserializer {
         }
     }
 
-    val blockDeserializer: StringDeserializer<Block> = StringDeserializer {
-        val block = BuiltInRegistries.BLOCK.getOptional(Identifier.read(StringReader(it))).getOrNull()
+    fun <T : Any> registryItemDeserializer(registry: Registry<T>) = StringDeserializer {
+        val item = registry.getOptional(Identifier.read(StringReader(it))).getOrNull()
 
-        requireNotNull(block) { "Unknown block '$it'" }
-    }
-
-    val itemDeserializer: StringDeserializer<Item> = StringDeserializer {
-        val block = BuiltInRegistries.ITEM.getOptional(Identifier.read(StringReader(it))).getOrNull()
-
-        requireNotNull(block) { "Unknown item '$it'" }
-    }
-
-    val soundDeserializer: StringDeserializer<SoundEvent> = StringDeserializer {
-        val sound = BuiltInRegistries.SOUND_EVENT.getOptional(Identifier.read(StringReader(it))).getOrNull()
-
-        requireNotNull(sound) { "Unknown sound '$it'" }
-    }
-
-    val statusEffectDeserializer: StringDeserializer<MobEffect> = StringDeserializer {
-        val effect = BuiltInRegistries.MOB_EFFECT.getOptional(Identifier.read(StringReader(it)))
-            .getOrNull()
-
-        requireNotNull(effect) { "Unknown status effect '$it'" }
+        requireNotNull(item) { "Unknown item '$it'" }
     }
 
     val clientModuleDeserializer: StringDeserializer<ClientModule> = StringDeserializer {

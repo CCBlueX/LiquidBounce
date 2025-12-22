@@ -198,6 +198,10 @@ open class Configurable(
     // Common value types
 
     fun <T : Configurable> tree(configurable: T): T {
+        require(configurable.base == null) {
+            "Configurable '${configurable.name}' is already added to a parent '${configurable.base?.name}'"
+        }
+
         inner.add(configurable)
         configurable.base = this
         return configurable
@@ -205,6 +209,16 @@ open class Configurable(
 
     fun <T : Configurable> treeAll(vararg configurable: T) {
         configurable.forEach(this::tree)
+    }
+
+    fun <T : Configurable> drop(configurable: T): T {
+        require(configurable.base === this) {
+            "Configurable '${configurable.name}' is not a child of '${this.name}'."
+        }
+
+        inner.remove(configurable)
+        configurable.base = null
+        return configurable
     }
 
     fun <T : Any> value(

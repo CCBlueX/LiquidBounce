@@ -134,6 +134,9 @@ open class ItemListValue<T : MutableSet<E>, E>(
 
 }
 
+/**
+ *
+ */
 class RegistryListValue<T : SequencedSet<E>, E>(
     name: String,
     value: T,
