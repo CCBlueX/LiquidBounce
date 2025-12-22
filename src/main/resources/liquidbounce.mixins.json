@@ -29,6 +29,7 @@
     "minecraft.client.MixinKeyMapping",
     "minecraft.client.MixinLevel",
     "minecraft.client.MixinMinecraft",
+    "minecraft.client.MixinMinecraftWindowTitle",
     "minecraft.client.MixinMouseHandler",
     "minecraft.client.MixinMouseHandlerAccessor",
     "minecraft.client.MixinOptions",

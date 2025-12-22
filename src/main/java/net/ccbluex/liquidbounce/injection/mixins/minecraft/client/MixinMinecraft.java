@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import static net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt.getUsesViaFabricPlus;
-
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -38,7 +36,6 @@ import net.ccbluex.liquidbounce.event.events.SessionEvent;
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent;
 import net.ccbluex.liquidbounce.event.events.UseCooldownEvent;
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent;
-import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCooldown;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraAutoBlock;
@@ -49,11 +46,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInte
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.integration.IntegrationListener;
-import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
-import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
-import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
-import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
@@ -65,12 +58,10 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.Options;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.User;
 import com.mojang.blaze3d.platform.Window;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.server.IntegratedServer;
-import net.minecraft.util.Util;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -177,87 +168,6 @@ public abstract class MixinMinecraft {
             ordinal = 0, shift = At.Shift.AFTER))
     private void onSessionInit(CallbackInfo callback) {
         EventManager.INSTANCE.callEvent(new SessionEvent(getUser()));
-    }
-
-    /**
-     * Modify window title to our client title.
-     * Example: LiquidBounce v1.0.0 | 1.16.3
-     *
-     * @param callback our window title
-     *                 <p>
-     *                 todo: modify constant Minecraft instead
-     */
-    @Inject(method = "createTitle", at = @At(
-            value = "INVOKE",
-            target = "Ljava/lang/StringBuilder;append(Ljava/lang/String;)Ljava/lang/StringBuilder;",
-            ordinal = 1),
-            cancellable = true)
-    private void getClientTitle(CallbackInfoReturnable<String> callback) {
-        if (HideAppearance.INSTANCE.isHidingNow()) {
-            return;
-        }
-
-        LiquidBounce.INSTANCE.getLogger().debug("Modifying window title");
-
-        StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
-        titleBuilder.append(" v");
-        titleBuilder.append(LiquidBounce.INSTANCE.getClientVersion());
-        titleBuilder.append(" ");
-
-        if (LiquidBounce.IN_DEVELOPMENT) {
-            titleBuilder.append("(dev) ");
-        }
-
-        titleBuilder.append(LiquidBounce.INSTANCE.getClientCommit());
-
-        titleBuilder.append(" | ");
-
-        // ViaFabricPlus compatibility
-        if (getUsesViaFabricPlus()) {
-            var protocolVersion = VfpCompatibility.INSTANCE.unsafeGetProtocolVersion();
-
-            if (protocolVersion != null) {
-                titleBuilder.append(protocolVersion.getName());
-            } else {
-                titleBuilder.append(SharedConstants.getCurrentVersion().name());
-            }
-        } else {
-            titleBuilder.append(SharedConstants.getCurrentVersion().name());
-        }
-
-        // For debugging purposes, will be removed until we have a stable release
-        if (Util.getPlatform() == Util.OS.WINDOWS) {
-            if (BrowserBackendManager.INSTANCE.getBrowserBackend().isInitialized() &&
-                    BrowserBackendManager.INSTANCE.getBrowserBackend().isAccelerationSupported()) {
-                var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
-
-                if (accelerated != null && accelerated.get()) {
-                    titleBuilder.append(" | (UI Renderer Acceleration is ON");
-                    // Hotkey only works when not in-game
-                    if (this.level == null && this.player == null) {
-                        titleBuilder.append(" - Toggle with F12");
-                    }
-                    titleBuilder.append(")");
-                }
-            }
-        }
-
-        ClientPacketListener clientPlayNetworkHandler = this.getConnection();
-        if (clientPlayNetworkHandler != null && clientPlayNetworkHandler.getConnection().isConnected()) {
-            titleBuilder.append(" - ");
-            ServerData serverInfo = this.getCurrentServer();
-            if (this.singleplayerServer != null && !this.singleplayerServer.isPublished()) {
-                titleBuilder.append(I18n.get("title.singleplayer"));
-            } else if (serverInfo != null && serverInfo.isRealm()) {
-                titleBuilder.append(I18n.get("title.multiplayer.realms"));
-            } else if (this.singleplayerServer == null && (serverInfo == null || !serverInfo.isLan())) {
-                titleBuilder.append(I18n.get("title.multiplayer.other"));
-            } else {
-                titleBuilder.append(I18n.get("title.multiplayer.lan"));
-            }
-        }
-
-        callback.setReturnValue(titleBuilder.toString());
     }
 
     /**
