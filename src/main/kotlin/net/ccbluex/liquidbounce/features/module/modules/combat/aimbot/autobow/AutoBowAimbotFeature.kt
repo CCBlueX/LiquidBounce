@@ -81,7 +81,7 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
         var rotation: Rotation? = null
         targetTracker.selectFirst { enemy ->
 
-            rotation = if (throughWall){
+            rotation = if (throughWall) {
                 SituationalProjectileAngleCalculator
                     .calculateAngleForEntity(projectileInfo, enemy)
             }else{
