@@ -21,7 +21,11 @@ package net.ccbluex.liquidbounce.features.account
 
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
-import net.ccbluex.liquidbounce.authlib.account.*
+import net.ccbluex.liquidbounce.authlib.account.AlteningAccount
+import net.ccbluex.liquidbounce.authlib.account.CrackedAccount
+import net.ccbluex.liquidbounce.authlib.account.MicrosoftAccount
+import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
+import net.ccbluex.liquidbounce.authlib.account.SessionAccount
 import net.ccbluex.liquidbounce.authlib.yggdrasil.clientIdentifier
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.ValueType
@@ -34,8 +38,8 @@ import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.session.ProfileKeys
-import net.minecraft.client.session.Session
+import net.ccbluex.liquidbounce.utils.client.with
+import net.minecraft.client.multiplayer.ProfileKeyPairManager
 import java.net.Proxy
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -53,11 +57,11 @@ object AccountManager : Configurable("Accounts"), EventListener {
         ConfigSystem.root(this)
 
         try {
-            initialSession = SessionBundle(mc.session, mc.sessionService, mc.profileKeys)
-            logger.info("Initial session saved: ${mc.session.username} (${mc.session.uuidOrNull})")
+            initialSession = SessionBundle(mc.user, mc.services.sessionService, mc.profileKeyPairManager)
+            logger.info("Initial session saved: ${mc.user.name} (${mc.user.profileId})")
         } catch (e: Exception) {
             logger.error("Failed to save initial session", e)
-            initialSession = SessionBundle(mc.session, null, ProfileKeys.MISSING)
+            initialSession = SessionBundle(mc.user, null, ProfileKeyPairManager.EMPTY_KEY_MANAGER)
         }
     }
 
@@ -82,7 +86,6 @@ object AccountManager : Configurable("Accounts"), EventListener {
             compatSession.username, compatSession.uuid, compatSession.token,
             Optional.empty(),
             Optional.of(clientIdentifier),
-            Session.AccountType.byName(compatSession.type),
             AccountService.getService(account)
         )
 
@@ -90,14 +93,18 @@ object AccountManager : Configurable("Accounts"), EventListener {
             // In this case the environment doesn't matter, as it is only used for the profile key
             val environment = YggdrasilEnvironment.PROD.environment
             val userAuthenticationService = YggdrasilUserApiService(session.accessToken, Proxy.NO_PROXY, environment)
-            ProfileKeys.create(userAuthenticationService, session, mc.runDirectory.toPath())
+            ProfileKeyPairManager.create(userAuthenticationService, session, mc.gameDirectory.toPath())
         }.onFailure {
-            logger.error("Failed to create profile keys for ${session.username} due to ${it.message}")
-        }.getOrDefault(ProfileKeys.MISSING)
+            logger.error("Failed to create profile keys for ${session.name} due to ${it.message}")
+        }.getOrDefault(ProfileKeyPairManager.EMPTY_KEY_MANAGER)
 
-        mc.session = session
-        mc.sessionService = service.createMinecraftSessionService()
-        mc.profileKeys = profileKeys
+        mc.user = session
+        mc.services = mc.services.with(
+            service.createMinecraftSessionService(),
+            service.servicesKeySet,
+            service.createProfileRepository(),
+        )
+        mc.profileKeyPairManager = profileKeys
 
         EventManager.callEvent(SessionEvent(session))
         EventManager.callEvent(AccountManagerLoginResultEvent(username = account.profile?.username))
@@ -276,7 +283,8 @@ object AccountManager : Configurable("Accounts"), EventListener {
             error("Altening API Token is empty!")
         }
 
-        val account = AlteningAccount.generateAccount(apiToken).also { accounts += it }
+        val account = AlteningAccount.generateAccount(apiToken)
+        accounts += account
 
         // Store configurable
         ConfigSystem.store(this@AccountManager)
@@ -298,12 +306,14 @@ object AccountManager : Configurable("Accounts"), EventListener {
 
     fun restoreInitial() {
         val initialSession = initialSession
-        mc.session = initialSession.session
-        mc.sessionService = initialSession.sessionService
-        mc.profileKeys = initialSession.profileKeys
+        mc.user = initialSession.session
+        mc.services = mc.services.with(
+            initialSession.sessionService ?: mc.services.sessionService
+        )
+        mc.profileKeyPairManager = initialSession.profileKeys
 
-        EventManager.callEvent(SessionEvent(mc.session))
-        EventManager.callEvent(AccountManagerLoginResultEvent(username = mc.session.username))
+        EventManager.callEvent(SessionEvent(mc.user))
+        EventManager.callEvent(AccountManagerLoginResultEvent(username = mc.user.name))
     }
 
     fun favoriteAccount(id: Int) {
@@ -338,7 +348,7 @@ object AccountManager : Configurable("Accounts"), EventListener {
     fun removeAccount(id: Int): MinecraftAccount {
         val account = accounts.removeAt(id).apply { ConfigSystem.store(this@AccountManager) }
         EventManager.callEvent(AccountManagerRemovalResultEvent(account.profile?.username))
-        return account;
+        return account
     }
 
     fun newSessionAccount(token: String) {
@@ -348,25 +358,31 @@ object AccountManager : Configurable("Accounts"), EventListener {
         }
 
         // Create a new cracked account
-        accounts += SessionAccount(token).also { it.refresh() }.apply {
-            val profile = this.profile
-
-            if (profile == null) {
-                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
-                return
-            }
-
-            // Check if an account already exists
-            if (accounts.any { it.profile?.username.equals(profile.username, true) }) {
-                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Account already exists!"))
-                return
-            }
-
-            // Store configurable
-            ConfigSystem.store(this@AccountManager)
-
-            EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
+        val account = SessionAccount(token)
+        try {
+            account.refresh()
+        } catch (exception: Exception) {
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = exception.message ?: "Unknown error"))
+            return
         }
+
+        val profile = account.profile
+
+        if (profile == null) {
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+            return
+        }
+
+        // Check if an account already exists
+        if (accounts.any { it.profile?.username.equals(profile.username, true) }) {
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Account already exists!"))
+            return
+        }
+
+        // Store configurable
+        accounts += account
+        ConfigSystem.store(this@AccountManager)
+        EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
     }
 
 }

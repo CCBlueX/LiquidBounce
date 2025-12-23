@@ -23,9 +23,10 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import java.util.*
 
 // TODO multiple paths a tick if enough placements in none rotation mode
@@ -42,7 +43,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableConfigurable(placer, "
 
     // what block helping blocks can be, by default just "trash blocks", meaning very common blocks
     val filter by enumChoice("Filter", Filter.BLACKLIST)
-    val blocks by blocks("Blocks", hashSetOf())
+    val blocks by blocks("Blocks", blockSortedSetOf())
 
     // we don't have to consistently search, every once in a while is okay, see `delay`
     val chronometer = Chronometer()
@@ -74,7 +75,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableConfigurable(placer, "
             }
 
             for (direction in Direction.entries) {
-                val neighbor = currentNode.position.offset(direction)
+                val neighbor = currentNode.position.relative(direction)
 
                 // skip visited nodes
                 if (closedList.contains(neighbor)) {
@@ -88,8 +89,8 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableConfigurable(placer, "
                     // exclude blocks where the structure is...
                     // this useless because we already search the shortest path under all structure blocks?
                     placer.blocks.keys.contains(neighbor.asLong()) ||
-                    neighbor.getManhattanDistance(targetPos) > depth ||
-                    player.eyePos.squaredDistanceTo(neighbor.toCenterPos()) > rangeSq ||
+                    neighbor.distManhattan(targetPos) > depth ||
+                    player.eyePosition.distanceToSqr(neighbor.center) > rangeSq ||
                     neighbor.isBlockedByEntities()
                     ) {
                     closedList.add(neighbor)
@@ -125,9 +126,9 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableConfigurable(placer, "
     }
 
     private fun canPlace(pos: BlockPos): Boolean {
-        val cache = BlockPos.Mutable()
+        val cache = BlockPos.MutableBlockPos()
         return Direction.entries.any {
-            !cache.set(pos, it).getState()!!.isReplaceable
+            !cache.setWithOffset(pos, it).getState()!!.canBeReplaced()
         }
     }
 

@@ -30,8 +30,15 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.dropPort
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.rootDomain
+import net.ccbluex.liquidbounce.utils.client.warning
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
 
 /**
  * Notifies you about staff actions.
@@ -42,8 +49,8 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
     private val serverStaffList = hashMapOf<String, Set<String>>()
 
     override suspend fun enabledEffect() {
-        val serverEntry = mc.currentServerEntry ?: return
-        val address = serverEntry.address.dropPort().rootDomain()
+        val serverEntry = mc.currentServer ?: return
+        val address = serverEntry.ip.dropPort().rootDomain()
 
         if (serverStaffList.containsKey(address)) {
             return
@@ -55,7 +62,7 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
 
     @Suppress("unused")
     val handleServerConnect = sequenceHandler<ServerConnectEvent> { event ->
-        val address = event.serverInfo.address.dropPort().rootDomain()
+        val address = event.serverInfo.ip.dropPort().rootDomain()
 
         if (serverStaffList.containsKey(address)) {
             return@sequenceHandler
@@ -63,7 +70,7 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
         serverStaffList[address] = emptySet()
 
         // Keeps us from loading the staff list multiple times
-        tickUntil { inGame && mc.currentScreen != null }
+        tickUntil { inGame && mc.screen != null }
 
         // Load the staff list
         loadStaffList(address)
@@ -73,9 +80,9 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerListS2CPacket) {
+        if (packet is ClientboundPlayerInfoUpdatePacket) {
             // playerAdditionEntries returns empty if the packet is not marked with ADD_PLAYER
-            val entries = packet.playerAdditionEntries
+            val entries = packet.newEntries()
 
             for (entry in entries) {
                 val profile = entry.profile ?: continue
@@ -118,8 +125,8 @@ object ModuleAntiStaff : ClientModule("AntiStaff", Category.MISC) {
     }
 
     private fun isStaff(username: String): Boolean {
-        val serverEntry = mc.currentServerEntry ?: return false
-        val serverAddress = serverEntry.address?.dropPort()?.rootDomain() ?: return false
+        val serverEntry = mc.currentServer ?: return false
+        val serverAddress = serverEntry.ip?.dropPort()?.rootDomain() ?: return false
         val staffs = serverStaffList[serverAddress] ?: return false
 
         return staffs.contains(username)

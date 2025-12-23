@@ -21,7 +21,13 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.event
 
 import com.google.gson.stream.JsonWriter
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.ALL_EVENT_CLASSES
+import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.EventHook
+import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.eventName
+import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.httpServer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.util.Util
@@ -52,7 +58,10 @@ internal object SocketEventListener : EventListener {
             error("Event $name is already registered")
         }
 
-        val eventHook = EventHook(this, handler = ::writeToSockets)
+        val eventHook = newEventHook(
+            priority = Short.MIN_VALUE, // Make sure to read final state
+            handler = ::writeToSockets,
+        )
 
         registeredEvents[eventClass] = eventHook
         EventManager.registerEventHook(eventClass, eventHook)
@@ -67,25 +76,33 @@ internal object SocketEventListener : EventListener {
         EventManager.unregisterEventHook(eventClass, eventHook)
     }
 
-    private fun writeToSockets(event: Event) = Util.getMainWorkerExecutor().execute {
-        val json = writeBuffer.get().runCatching {
-            JsonWriter(this).use { writer ->
+    private fun writeToSockets(event: Event) {
+        if ((event as WebSocketEvent).serializeAsync) {
+            Util.backgroundExecutor().execute { serializeAndBroadcast(event) }
+        } else {
+            serializeAndBroadcast(event)
+        }
+    }
+
+    private fun serializeAndBroadcast(event: Event) {
+        val json = try {
+            val writer = writeBuffer.get()
+            JsonWriter(writer).use { writer ->
                 writer.beginObject()
                 writer.name("name").value(event.javaClass.eventName)
                 writer.name("event")
                 (event as WebSocketEvent).serializer.toJson(event, event.javaClass, writer)
                 writer.endObject()
             }
-            toString().also { builder.clear() }
-        }.onFailure {
-            logger.error("Failed to serialize event $event", it)
-        }.getOrNull() ?: return@execute
+            writer.toString().also { writer.builder.clear() }
+        } catch (e: Exception) {
+            logger.error("Failed to serialize event $event", e)
+            return
+        }
 
-        httpServer.webSocketController.broadcast(json) { _, t ->
-            logger.error("WebSocket event broadcast failed, JSON: $json", t)
+        httpServer.webSocketController!!.broadcast(json) { _, t ->
+            logger.error("WebSocket event broadcast failed, event: ${event.javaClass.eventName}", t)
         }
     }
-
-
 
 }

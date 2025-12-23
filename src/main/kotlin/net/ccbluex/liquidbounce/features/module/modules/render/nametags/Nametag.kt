@@ -18,60 +18,41 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.LivingEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
 
 class Nametag private constructor(
     val entity: Entity,
     /**
      * The text to render as nametag
      */
-    val text: Text,
+    val text: Component,
     /**
      * The items that should be rendered above the name tag
      */
     val items: List<ItemStack>
 ) {
 
-    var screenPos: Vec3? = null
+    var screenPos: Vec3f? = null
         private set
 
-    constructor(entity: LivingEntity) : this(entity, NametagTextFormatter(entity).format(), createItemList(entity))
+    constructor(entity: LivingEntity) : this(
+        entity,
+        NametagTextFormatter.format(entity),
+        NametagEquipment.createItemList(entity),
+    )
 
-    fun calculateScreenPos(tickDelta: Float) {
+    fun calculateScreenPos(tickDelta: Float): Vec3f? {
         val nametagPos = entity.interpolateCurrentPosition(tickDelta)
             .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
 
         screenPos = WorldToScreen.calculateScreenPos(nametagPos)
-    }
-
-    companion object {
-
-        /**
-         * Creates a list of items that should be rendered above the name tag. Currently, it is the item in main hand,
-         * the item in off-hand (as long as it exists) and the armor items.
-         */
-        private fun createItemList(entity: LivingEntity): List<ItemStack> {
-            return buildList(6) {
-                this += entity.getEquippedStack(EquipmentSlot.MAINHAND)
-                this += entity.getEquippedStack(EquipmentSlot.HEAD)
-                this += entity.getEquippedStack(EquipmentSlot.CHEST)
-                this += entity.getEquippedStack(EquipmentSlot.LEGS)
-                this += entity.getEquippedStack(EquipmentSlot.FEET)
-
-                if (!isOlderThanOrEqual1_8) {
-                    this += entity.getEquippedStack(EquipmentSlot.OFFHAND)
-                }
-            }
-        }
-
+        return screenPos
     }
 
 }

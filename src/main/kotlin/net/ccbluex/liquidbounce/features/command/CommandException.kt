@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command
 
-import net.minecraft.text.MutableText
+import net.minecraft.network.chat.MutableComponent
 
-class CommandException(val text: MutableText, cause: Throwable? = null, val usageInfo: List<String>? = null) :
+class CommandException(val text: MutableComponent, cause: Throwable? = null, val usageInfo: List<String>? = null) :
     Exception(text.string, cause)

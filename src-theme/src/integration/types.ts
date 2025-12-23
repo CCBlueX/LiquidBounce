@@ -144,6 +144,7 @@ export interface ChooseSetting extends Setting<string> {
 export interface MultiChooseSetting extends Setting<string[]> {
     choices: string[];
     canBeNone: boolean;
+    isOrderSensitive: boolean;
 }
 
 export interface ListSetting extends Setting<string[]> {
@@ -172,8 +173,13 @@ export interface TogglableSetting extends Setting<ModuleSetting[]> {
 
 export interface InputBind {
     boundKey: string;
-    action: "Toggle" | "Hold";
+    action: BindAction;
+    modifiers: BindModifier[];
 }
+
+export type BindAction = "Toggle" | "Hold";
+
+export type BindModifier = "Shift" | "Control" | "Alt" | "Super";
 
 export interface PersistentStorageItem {
     key: string;
@@ -365,7 +371,7 @@ export interface Theme {
     settings: { [name: string]: any };
 }
 
-export interface Component {
+export interface HudComponent {
     name: string;
     id: string;
     settings: { [name: string]: any };
@@ -392,7 +398,10 @@ export enum VerticalAlignment {
     CENTER_TRANSLATED = "CenterTranslated",
 }
 
+export type OS = "linux" | "solaris" | "windows" | "mac" | "unknown";
+
 export interface ClientInfo {
+    os: OS;
     gameVersion: string;
     clientVersion: string;
     clientName: string;

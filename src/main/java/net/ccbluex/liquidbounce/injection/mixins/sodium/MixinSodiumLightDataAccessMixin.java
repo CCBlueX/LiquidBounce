@@ -20,9 +20,13 @@ package net.ccbluex.liquidbounce.injection.mixins.sodium;
 
 import net.caffeinemc.mods.sodium.client.model.light.data.LightDataAccess;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockRenderView;
-import org.spongepowered.asm.mixin.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockAndTintGetter;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
@@ -32,10 +36,10 @@ public class MixinSodiumLightDataAccessMixin {
 
     @Shadow
     @Final
-    private BlockPos.Mutable pos;
+    private BlockPos.MutableBlockPos pos;
 
     @Shadow
-    protected BlockRenderView level;
+    protected BlockAndTintGetter level;
 
     /**
      * Maximum light level for all color channels.

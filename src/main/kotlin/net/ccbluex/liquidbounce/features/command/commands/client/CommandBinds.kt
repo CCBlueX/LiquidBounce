@@ -20,21 +20,37 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandExecutor
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.enumChoice
 import net.ccbluex.liquidbounce.features.command.builder.module
 import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.highlight
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.onClickRun
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.input.availableInputKeys
 import net.ccbluex.liquidbounce.utils.input.bind
 import net.ccbluex.liquidbounce.utils.input.inputByName
+import net.ccbluex.liquidbounce.utils.input.renderText
 import net.ccbluex.liquidbounce.utils.input.unbind
-import net.minecraft.client.util.InputUtil
-import net.minecraft.util.Formatting
+import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.ChatFormatting
 
 /**
  * Binds Command
@@ -48,14 +64,14 @@ object CommandBinds : Command.Factory {
         return CommandBuilder
             .begin("binds")
             .hub()
-            .subcommand(addSubcommand())
-            .subcommand(removeSubcommand())
-            .subcommand(listSubcommand())
-            .subcommand(clearSubcommand())
+            .subcommand(addSubcommand)
+            .subcommand(removeSubcommand)
+            .subcommand(listSubcommand)
+            .subcommand(clearSubcommand)
             .build()
     }
 
-    private fun clearSubcommand() = CommandBuilder
+    private val clearSubcommand = CommandBuilder
         .begin("clear")
         .handler {
             ModuleManager.forEach { it.bindValue.unbind() }
@@ -63,30 +79,57 @@ object CommandBinds : Command.Factory {
         }
         .build()
 
-    private fun listSubcommand() = CommandBuilder
+    private val listSubcommand = CommandBuilder
         .begin("list")
         .pagedQuery(
             pageSize = 8,
             header = {
-                result("bindings").withColor(Formatting.RED).bold(true)
+                result("bindings").withColor(ChatFormatting.RED).bold(true)
             },
             items = {
                 ModuleManager.filter { !it.bind.isUnbound }
             },
             eachRow = { _, module ->
+                val bind = module.bind
                 "\u2B25 ".asText()
-                    .formatted(Formatting.BLUE)
-                    .append(variable(module.name).copyable())
+                    .withStyle(ChatFormatting.BLUE)
+                    .append(
+                        markAsError("[\u2715] ")
+                            .onHover(
+                                HoverEvent.ShowText(
+                                    "Unbind ".asText().append(variable(module.name))
+                                )
+                            )
+                            .onClickRun {
+                                runCatching {
+                                    handleRemoveBind(setOf(module))
+                                }.onFailure(CommandExecutor::handleExceptions)
+                            }
+                    )
+                    .append(highlight(module.name).copyable())
                     .append(regular(": "))
-                    .append(regular(module.bind.keyName).copyable())
-                    .append(regular("("))
-                    .append(variable(module.bind.action.choiceName))
-                    .append(regular(")"))
+                    .append(bind.renderText())
             }
         )
 
+    private fun handleRemoveBind(modules: Set<ClientModule>) {
+        modules.forEach { module ->
+            if (module.bind.isUnbound) {
+                throw CommandException(removeSubcommand.result("moduleNotBound"))
+            }
 
-    private fun removeSubcommand() = CommandBuilder
+            module.bindValue.unbind()
+
+            chat(
+                regular(removeSubcommand.result("bindRemoved", variable(module.name))),
+                metadata = MessageMetadata(id = "Binds#${module.name}")
+            )
+        }
+
+        ModuleClickGui.reload()
+    }
+
+    private val removeSubcommand = CommandBuilder
         .begin("remove")
         .parameter(
             ParameterBuilder.modules { mod -> !mod.bind.isUnbound }
@@ -95,25 +138,11 @@ object CommandBinds : Command.Factory {
         )
         .handler {
             val modules = args[0] as Set<ClientModule>
-
-            modules.forEach { module ->
-                if (module.bind.isUnbound) {
-                    throw CommandException(command.result("moduleNotBound"))
-                }
-
-                module.bindValue.unbind()
-
-                chat(
-                    regular(command.result("bindRemoved", variable(module.name))),
-                    metadata = MessageMetadata(id = "Binds#${module.name}")
-                )
-            }
-
-            ModuleClickGui.reload()
+            handleRemoveBind(modules)
         }
         .build()
 
-    private fun addSubcommand() = CommandBuilder
+    private val addSubcommand = CommandBuilder
         .begin("add")
         .parameter(
             ParameterBuilder.module()
@@ -126,24 +155,33 @@ object CommandBinds : Command.Factory {
                 .autocompletedFrom { availableInputKeys }
                 .required()
                 .build()
+        ).parameter(
+            ParameterBuilder.enumChoice<InputBind.BindAction>("action")
+                .optional()
+                .build()
+        )
+        .parameter(
+            ParameterBuilder.enumChoice<InputBind.Modifier>("modifiers")
+                .vararg()
+                .optional()
+                .build()
         )
         .handler {
             val module = args[0] as ClientModule
             val keyName = args[1] as String
+            val action = args.getOrNull(2) as InputBind.BindAction? ?: module.bind.action
+            val modifiers = args.getOrNull(3) as Set<InputBind.Modifier>? ?: module.bind.modifiers
 
             val bindKey = inputByName(keyName)
-            if (bindKey == InputUtil.UNKNOWN_KEY) {
+            if (bindKey == InputConstants.UNKNOWN) {
                 throw CommandException(command.result("unknownKey"))
             }
 
-            module.bindValue.bind(bindKey)
+            module.bindValue.bind(bindKey, action, modifiers)
             ModuleClickGui.reload()
             chat(
                 regular(
-                    command.result(
-                        "moduleBound", variable(module.name),
-                        variable(module.bind.keyName)
-                    )
+                    command.result("moduleBound", variable(module.name), module.bind.renderText())
                 ), metadata = MessageMetadata(id = "Binds#${module.name}")
             )
         }

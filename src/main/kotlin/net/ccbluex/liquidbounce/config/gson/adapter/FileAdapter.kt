@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.config.gson.adapter
 
-import com.google.gson.*
+import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter

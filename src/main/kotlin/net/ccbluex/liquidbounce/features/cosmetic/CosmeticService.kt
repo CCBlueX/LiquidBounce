@@ -29,12 +29,12 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.toMD5
-import net.minecraft.client.session.Session
 import java.util.*
 
 /**
@@ -97,7 +97,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
         val clientAccount = ClientAccountManager.clientAccount
 
         // Check if the client account is available and the requested UUID is the same as the session UUID
-        if ((uuid == mc.session.uuidOrNull || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
+        if ((uuid == mc.user.profileId || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
             clientAccount.cosmetics?.let { cosmetics ->
                 done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return)
                 return
@@ -150,7 +150,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
         // Check if the client account is available and the requested UUID is the same as the session UUID
         val clientAccount = ClientAccountManager.clientAccount
 
-        if ((uuid == mc.session.uuidOrNull || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
+        if ((uuid == mc.user.profileId || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
             clientAccount.cosmetics?.let { cosmetics ->
                 return cosmetics.find { cosmetic -> cosmetic.category == category }
             }
@@ -165,37 +165,35 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
 
     fun hasCosmetic(uuid: UUID, category: CosmeticCategory) = getCosmetic(uuid, category) != null
 
-    private fun transferTemporaryOwnership(uuid: UUID) {
+    private suspend fun transferTemporaryOwnership(uuid: UUID) {
         val clientAccount = ClientAccountManager.clientAccount
         if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
             return
         }
 
-        withScope {
-            runCatching {
-                clientAccount.transferTemporaryOwnership(uuid)
-            }.onSuccess {
-                logger.info("[Cosmetics] Transferred cape ownership to $uuid")
+        runCatching {
+            clientAccount.transferTemporaryOwnership(uuid)
+        }.onSuccess {
+            logger.info("[Cosmetics] Transferred cape ownership to $uuid")
 
-                // Refresh carriers after transfer
-                refreshCarriers(true) {
-                    logger.info("[Cosmetics] Successfully loaded ${carriers.size} cosmetics carriers.")
-                }
-            }.onFailure {
-                logger.error("[Cosmetics] Failed to transfer cosmetic ownership to $uuid", it)
+            // Refresh carriers after transfer
+            refreshCarriers(true) {
+                logger.info("[Cosmetics] Successfully loaded ${carriers.size} cosmetics carriers.")
             }
+        }.onFailure {
+            logger.error("[Cosmetics] Failed to transfer cosmetic ownership to $uuid", it)
         }
     }
 
     @Suppress("unused")
-    private val sessionHandler = handler<SessionEvent> { event ->
-        val session = event.session
+    private val sessionHandler = suspendHandler<SessionEvent> {
+        val session = it.session
 
         // Check if the account is valid
-        if (session.accountType == Session.AccountType.LEGACY || session.accessToken.length < 2) {
-            return@handler
+        if (session.accessToken.length < 2) {
+            return@suspendHandler
         }
-        val uuid = session.uuidOrNull ?: return@handler
+        val uuid = session.profileId
 
         transferTemporaryOwnership(uuid)
     }

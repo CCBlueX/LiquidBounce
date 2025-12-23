@@ -24,17 +24,21 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawBoxSide
+import net.ccbluex.liquidbounce.render.drawGradientSides
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.hole.Hole
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManager
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
 import net.ccbluex.liquidbounce.utils.block.hole.HoleTracker
 import net.ccbluex.liquidbounce.utils.math.box
 import net.ccbluex.liquidbounce.utils.math.from
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -77,7 +81,7 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
 
         @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
-            val pos = player.blockPos
+            val pos = player.blockPosition()
             val vDistance = verticalDistance
             val hDistance = horizontalDistance
 
@@ -86,9 +90,9 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 
-                    val valOutOfRange = abs(pos.y - positions.minY) > vDistance
-                    val xzOutOfRange = abs(pos.x - positions.minX) > hDistance ||
-                        abs(pos.z - positions.minZ) > hDistance
+                    val valOutOfRange = abs(pos.y - positions.minY()) > vDistance
+                    val xzOutOfRange = abs(pos.x - positions.minX()) > hDistance ||
+                        abs(pos.z - positions.minZ()) > hDistance
                     if (valOutOfRange || xzOutOfRange) {
                         return@forEach
                     }
@@ -120,7 +124,7 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
         @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val glowHeight = glowHeightSetting.toDouble()
-            val pos = player.blockPos
+            val pos = player.blockPosition()
             val vDistance = verticalDistance
             val hDistance = horizontalDistance
 
@@ -128,9 +132,9 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 
-                    val valOutOfRange = abs(pos.y - positions.minY) > vDistance
-                    val xzOutOfRange = abs(pos.x - positions.minX) > hDistance ||
-                        abs(pos.z - positions.minZ) > hDistance
+                    val valOutOfRange = abs(pos.y - positions.minY()) > vDistance
+                    val xzOutOfRange = abs(pos.x - positions.minX()) > hDistance ||
+                        abs(pos.z - positions.minZ()) > hDistance
                     if (valOutOfRange || xzOutOfRange) {
                         return@forEach
                     }
@@ -153,10 +157,10 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
         }
     }
 
-    private fun Hole.color() = when {
-        type == Hole.Type.ONE_ONE && bedrockOnly -> colorBedrock
-        type == Hole.Type.ONE_TWO -> color1by2
-        type == Hole.Type.TWO_TWO -> color2by2
+    private fun Hole.color() = when (type) {
+        Hole.Type.ONE_ONE if bedrockOnly -> colorBedrock
+        Hole.Type.ONE_TWO -> color1by2
+        Hole.Type.TWO_TWO -> color2by2
         else -> color1by1
     }
 
@@ -165,9 +169,9 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
             return 1f
         }
 
-        val verticalDistanceFraction = (player.pos.y - pos.y) / verticalDistance
+        val verticalDistanceFraction = (player.position().y - pos.y) / verticalDistance
         val horizontalDistanceFraction =
-            Vec3d(player.pos.x - pos.x, 0.0, player.pos.z - pos.z).length() / horizontalDistance
+            Vec3(player.position().x - pos.x, 0.0, player.position().z - pos.z).length() / horizontalDistance
 
         val fade = (1 - max(verticalDistanceFraction, horizontalDistanceFraction)) / distanceFade
 

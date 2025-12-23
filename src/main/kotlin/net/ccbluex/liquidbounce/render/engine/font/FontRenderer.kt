@@ -21,14 +21,17 @@ package net.ccbluex.liquidbounce.render.engine.font
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntStack
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.AbstractFontRenderer
+import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
+import net.ccbluex.liquidbounce.render.drawGlyphOnCurrentLayer
+import net.ccbluex.liquidbounce.render.drawHorizontalLine
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.text.Text
-import org.joml.Vector3f
-import org.joml.Vector3fc
+import net.ccbluex.liquidbounce.utils.render.textureSetup
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.network.chat.Component
 import java.awt.Font
 import kotlin.math.max
 
@@ -52,9 +55,6 @@ class FontRenderer(
     // Caches
     private val underlinesIdxStack = IntArrayList()
     private val strikethroughIdxStack = IntArrayList()
-    private val positionCache = Vector3f()
-    private val charPos1 = Vector3f()
-    private val charPos2 = Vector3f()
 
     override val height: Float = font.styles.firstNotNullOf { it?.height }
 
@@ -74,31 +74,36 @@ class FontRenderer(
         elements().reverse(0, size)
     }
 
-    override fun process(text: Text, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
+    override fun process(text: Component, defaultColor: Color4b): MinecraftTextProcessor.RecyclingProcessedText {
         return MinecraftTextProcessor.process(text.sanitizeForeignInput(), defaultColor)
     }
 
-    context(environment: GUIRenderEnvironment)
+    context(ctx: GuiGraphics)
     override fun draw(
         text: MinecraftTextProcessor.RecyclingProcessedText,
-        x0: Float,
-        y0: Float,
+        x: Float,
+        y: Float,
+        horizontalAnchor: HorizontalAnchor?,
+        verticalAnchor: VerticalAnchor?,
+        scale: Float,
         shadow: Boolean,
-        z: Float,
-        scale: Float
     ): Float {
+        val x = horizontalAnchor?.anchorToDrawX(x, width = getStringWidth(text, shadow), scale) ?: x
+        val y = verticalAnchor?.anchorToDrawY(y, height, scale) ?: y
+
         var len = 0.0f
 
         if (shadow) {
             len = drawInternal(
                 text,
-                pos = positionCache.set(x0 + 2.0f * scale, y0 + 2.0f * scale, z),
+                posX = x + 2.0f * scale,
+                posY = y + 2.0f * scale,
                 scale,
                 overrideColor = shadowColor
             )
         }
 
-        len = max(len, drawInternal(text, positionCache.set(x0, y0, z * 2.0F), scale))
+        len = max(len, drawInternal(text, x, y, scale))
 
         MinecraftTextProcessor.TEXT_POOL.recycle(text)
 
@@ -110,34 +115,35 @@ class FontRenderer(
      *
      * @return The resulting x value
      */
-    context(environment: GUIRenderEnvironment)
+    context(ctx: GuiGraphics)
     @Suppress("CognitiveComplexMethod")
     private fun drawInternal(
         text: ProcessedText,
-        pos: Vector3fc,
+        posX: Float,
+        posY: Float,
         scale: Float,
         overrideColor: Color4b? = null
     ): Float {
         if (text.chars.isEmpty()) {
-            return pos.x()
+            return posX
         }
 
         val underlineStack = loadUnderlines(text)
         val strikethroughStack = loadStrikethroughs(text)
 
-        var x = pos.x()
-        var y = pos.y() + this.ascent * scale
-        val z = pos.z()
+        var x = posX
+        var y = posY + this.ascent * scale
+        var color: Color4b? = null
 
-        var strikeThroughStartX: Float? = null
-        var underlineStartX: Float? = null
+        var strikeThroughStartX: Float = Float.NaN
+        var underlineStartX: Float = Float.NaN
 
         val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
 
         text.chars.forEachIndexed { charIdx, processedChar ->
             val glyph = this.glyphManager.requestGlyph(this.font, processedChar.font, processedChar.char)
                 ?: fallbackGlyph
-            val color = overrideColor ?: processedChar.color
+            color = overrideColor ?: processedChar.color
 
             if (!underlineStack.isEmpty && underlineStack.topInt() == charIdx) {
                 underlineStack.popInt()
@@ -148,7 +154,7 @@ class FontRenderer(
                 strikeThroughStartX = x
             }
 
-            drawChar(glyph, x, y, z, scale, color)
+            drawChar(glyph, x, y, scale, color)
 
             val layoutInfo =
                 if (!processedChar.obfuscated) glyph.renderInfo.layoutInfo else fallbackGlyph.renderInfo.layoutInfo
@@ -158,13 +164,23 @@ class FontRenderer(
 
             if (!underlineStack.isEmpty && underlineStack.topInt() == charIdx) {
                 underlineStack.popInt()
-                drawLine(underlineStartX!!, x, y, z, color, false)
+                drawLine(underlineStartX, x, y, color, false)
             }
 
             if (!strikethroughStack.isEmpty && strikethroughStack.topInt() == charIdx) {
                 strikethroughStack.popInt()
-                drawLine(strikeThroughStartX!!, x, y, z, color, true)
+                drawLine(strikeThroughStartX, x, y, color, true)
             }
+        }
+
+        if (!underlineStack.isEmpty && !underlineStartX.isNaN()) {
+            underlineStack.popInt()
+            drawLine(underlineStartX, x, y, color!!, false)
+        }
+
+        if (!strikethroughStack.isEmpty && !strikeThroughStartX.isNaN()) {
+            strikethroughStack.popInt()
+            drawLine(strikeThroughStartX, x, y, color!!, true)
         }
 
         return x
@@ -199,46 +215,41 @@ class FontRenderer(
         }
     }
 
-    context(environment: GUIRenderEnvironment)
+    context(ctx: GuiGraphics)
     private fun drawLine(
         x0: Float,
         x1: Float,
         y: Float,
-        z: Float,
         color: Color4b,
         through: Boolean
     ) {
-        val y = if (through) y - this.height + this.ascent else y + 1f
-        environment.drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
-            vertex(matrix, x0, y, z).color(color)
-            vertex(matrix, x1, y, z).color(color)
-        }
+        val y = if (through) y - this.height * 0.85f + this.ascent else y + 1f
+        ctx.drawHorizontalLine(x0, x1, y, 1f, color)
     }
 
-    context(environment: GUIRenderEnvironment)
+    context(ctx: GuiGraphics)
     private fun drawChar(
         glyph: GlyphDescriptor,
         x: Float,
         y: Float,
-        z: Float,
         scale: Float,
         color: Color4b,
     ) {
         val renderInfo = glyph.renderInfo
         // We don't need to render whitespaces.
         if (renderInfo.atlasLocation != null && !color.isTransparent) {
-            val x1 = x + renderInfo.glyphBounds.xMin * scale
-            val y1 = y + renderInfo.glyphBounds.yMin * scale
-            val x2 = x + (renderInfo.glyphBounds.xMin + renderInfo.atlasLocation.atlasWidth) * scale
-            val y2 = y + (renderInfo.glyphBounds.yMin + renderInfo.atlasLocation.atlasHeight) * scale
+            val x0 = x + renderInfo.glyphBounds.xMin * scale
+            val y0 = y + renderInfo.glyphBounds.yMin * scale
+            val x1 = x + (renderInfo.glyphBounds.xMin + renderInfo.atlasLocation.atlasWidth) * scale
+            val y1 = y + (renderInfo.glyphBounds.yMin + renderInfo.atlasLocation.atlasHeight) * scale
+            val uv1 = renderInfo.atlasLocation.uvCoordinatesOnTexture.min
+            val uv2 = renderInfo.atlasLocation.uvCoordinatesOnTexture.max
+            val argb = color.toARGB()
 
-            environment.drawTextureQuad(
-                glyph.page.texture.glTexture,
-                charPos1.set(x1, y1, z),
-                renderInfo.atlasLocation.uvCoordinatesOnTexture.min,
-                charPos2.set(x2, y2, z),
-                renderInfo.atlasLocation.uvCoordinatesOnTexture.max,
-                color.toARGB(),
+            ctx.drawGlyphOnCurrentLayer(
+                glyph.page.texture.textureSetup,
+                x0 = x0, y0 = y0, x1 = x1, y1 = y1,
+                u1 = uv1.u, v1 = uv1.v, u2 = uv2.u, v2 = uv2.v, argb = argb,
             )
         }
     }

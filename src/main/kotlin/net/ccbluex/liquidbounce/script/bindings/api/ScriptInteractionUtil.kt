@@ -20,15 +20,20 @@ package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.attack
-import net.minecraft.entity.Entity
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
 
 @Suppress("unused")
 object ScriptInteractionUtil {
@@ -44,18 +49,18 @@ object ScriptInteractionUtil {
     }
 
     @JvmName("interactEntity")
-    fun interactEntity(entity: Entity, hand: Hand) {
+    fun interactEntity(entity: Entity, hand: InteractionHand) {
         // Safety check
         if (entity == mc.player) {
             return
         }
 
-        mc.interactionManager?.interactEntity(mc.player, entity, hand)
+        mc.gameMode?.interact(mc.player!!, entity, hand)
     }
 
     @JvmName("useItem")
-    fun useItem(hand: Hand) {
-        mc.interactionManager?.interactItem(mc.player, hand)
+    fun useItem(hand: InteractionHand) {
+        mc.gameMode?.useItem(mc.player!!, hand)
     }
 
     /**
@@ -64,8 +69,8 @@ object ScriptInteractionUtil {
      * @return true if the block was placed, false otherwise
      */
     @JvmName("placeBlock")
-    fun placeBlock(blockPos: BlockPos, hand: Hand): Boolean {
-        val itemStack = player.getStackInHand(hand)
+    fun placeBlock(blockPos: BlockPos, hand: InteractionHand): Boolean {
+        val itemStack = player.getItemInHand(hand)
         val blockPlacementOptions = BlockPlacementTargetFindingOptions(
             BlockOffsetOptions(
                 listOf(Vec3i.ZERO),
@@ -73,7 +78,7 @@ object ScriptInteractionUtil {
             ),
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = itemStack,
-            PlayerLocationOnPlacement(position = player.pos),
+            PlayerLocationOnPlacement(position = player.position()),
         )
 
         val bestPlacement = findBestBlockPlacementTarget(blockPos, blockPlacementOptions)

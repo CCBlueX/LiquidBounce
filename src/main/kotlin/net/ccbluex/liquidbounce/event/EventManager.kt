@@ -19,11 +19,126 @@
 package net.ccbluex.liquidbounce.event
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
-import net.ccbluex.liquidbounce.event.events.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
+import net.ccbluex.liquidbounce.event.events.AccountManagerLoginResultEvent
+import net.ccbluex.liquidbounce.event.events.AccountManagerMessageEvent
+import net.ccbluex.liquidbounce.event.events.AccountManagerRemovalResultEvent
+import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
+import net.ccbluex.liquidbounce.event.events.BlockAttackEvent
+import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
+import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
+import net.ccbluex.liquidbounce.event.events.BlockCountChangeEvent
+import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
+import net.ccbluex.liquidbounce.event.events.BlockSlipperinessMultiplierEvent
+import net.ccbluex.liquidbounce.event.events.BlockVelocityMultiplierEvent
+import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
+import net.ccbluex.liquidbounce.event.events.BrowserUrlChangeEvent
+import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
+import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
+import net.ccbluex.liquidbounce.event.events.ChatSendEvent
+import net.ccbluex.liquidbounce.event.events.ChunkDeltaUpdateEvent
+import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
+import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
+import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
+import net.ccbluex.liquidbounce.event.events.ClickGuiValueChangeEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
+import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
+import net.ccbluex.liquidbounce.event.events.ClientPlayerDataEvent
+import net.ccbluex.liquidbounce.event.events.ClientPlayerInventoryEvent
+import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
+import net.ccbluex.liquidbounce.event.events.ClientStartEvent
+import net.ccbluex.liquidbounce.event.events.ComponentsUpdateEvent
+import net.ccbluex.liquidbounce.event.events.DeathEvent
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
+import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
+import net.ccbluex.liquidbounce.event.events.EntityEquipmentChangeEvent
+import net.ccbluex.liquidbounce.event.events.EntityHealthUpdateEvent
+import net.ccbluex.liquidbounce.event.events.EntityMarginEvent
+import net.ccbluex.liquidbounce.event.events.FluidPushEvent
+import net.ccbluex.liquidbounce.event.events.FpsChangeEvent
+import net.ccbluex.liquidbounce.event.events.FpsLimitEvent
+import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
+import net.ccbluex.liquidbounce.event.events.GameModeChangeEvent
+import net.ccbluex.liquidbounce.event.events.GameRenderEvent
+import net.ccbluex.liquidbounce.event.events.GameRenderTaskQueueEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
+import net.ccbluex.liquidbounce.event.events.InputHandleEvent
+import net.ccbluex.liquidbounce.event.events.ItemLoreQueryEvent
+import net.ccbluex.liquidbounce.event.events.KeyEvent
+import net.ccbluex.liquidbounce.event.events.KeybindChangeEvent
+import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
+import net.ccbluex.liquidbounce.event.events.KeyboardCharEvent
+import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
+import net.ccbluex.liquidbounce.event.events.ModuleActivationEvent
+import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.event.events.MouseCursorEvent
+import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
+import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
+import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
+import net.ccbluex.liquidbounce.event.events.PipelineEvent
+import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
+import net.ccbluex.liquidbounce.event.events.PlayerFluidCollisionCheckEvent
+import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
+import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
+import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerPushOutEvent
+import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
+import net.ccbluex.liquidbounce.event.events.PlayerSneakMultiplier
+import net.ccbluex.liquidbounce.event.events.PlayerStepEvent
+import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent
+import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
+import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
+import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
+import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
+import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
+import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
+import net.ccbluex.liquidbounce.event.events.ScaleFactorChangeEvent
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.event.events.ScreenEvent
+import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
+import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
+import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
+import net.ccbluex.liquidbounce.event.events.ServerPingedEvent
+import net.ccbluex.liquidbounce.event.events.SessionEvent
+import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
+import net.ccbluex.liquidbounce.event.events.SprintEvent
+import net.ccbluex.liquidbounce.event.events.TagEntityEvent
+import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
+import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
+import net.ccbluex.liquidbounce.event.events.TitleEvent
+import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
+import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
+import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
+import net.ccbluex.liquidbounce.event.events.WindowResizeEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
-import java.util.concurrent.CopyOnWriteArrayList
+import net.minecraft.ReportedException
 
 /**
  * Contains all classes of events. Used to create lookup tables ahead of time
@@ -52,7 +167,6 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     InputHandleEvent::class.java,
     MovementInputEvent::class.java,
     SprintEvent::class.java,
-    SneakNetworkEvent::class.java,
     KeyEvent::class.java,
     MouseRotationEvent::class.java,
     KeybindChangeEvent::class.java,
@@ -121,7 +235,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     BlockCountChangeEvent::class.java,
     BedStateChangeEvent::class.java,
     GameModeChangeEvent::class.java,
-    ComponentsUpdate::class.java,
+    ComponentsUpdateEvent::class.java,
     ResourceReloadEvent::class.java,
     ProxyCheckResultEvent::class.java,
     ScaleFactorChangeEvent::class.java,
@@ -142,7 +256,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     ClickGuiValueChangeEvent::class.java,
     BlockAttackEvent::class.java,
     QueuePacketEvent::class.java,
-    MinecraftAutoJumpEvent::class.java,
+    AllowAutoJumpEvent::class.java,
     WorldEntityRemoveEvent::class.java,
     TitleEvent.Title::class.java,
     TitleEvent.Subtitle::class.java,
@@ -155,10 +269,15 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
  */
 object EventManager {
 
-    private val registry: Map<Class<out Event>, CopyOnWriteArrayList<EventHook<in Event>>> =
+    private val registry: Map<Class<out Event>, EventHookRegistry<in Event>> =
         ALL_EVENT_CLASSES.associateWithTo(
             Reference2ObjectOpenHashMap(ALL_EVENT_CLASSES.size)
-        ) { CopyOnWriteArrayList() }
+        ) { EventHookRegistry() }
+
+    private val flows: Map<Class<out Event>, MutableSharedFlow<Event>> =
+        ALL_EVENT_CLASSES.associateWithTo(
+            Reference2ObjectOpenHashMap(ALL_EVENT_CLASSES.size)
+        ) { MutableSharedFlow(replay = 0, extraBufferCapacity = 0) }
 
     init {
         CoroutineTicker
@@ -174,10 +293,7 @@ object EventManager {
         @Suppress("UNCHECKED_CAST")
         val hook = eventHook as EventHook<in Event>
 
-        if (!handlers.contains(hook)) {
-            // `handlers` is sorted descending by EventHook.priority
-            handlers.sortedInsert(hook) { -it.priority }
-        }
+        handlers.addIfAbsent(hook)
 
         return eventHook
     }
@@ -192,7 +308,7 @@ object EventManager {
 
     fun unregisterEventHandler(eventListener: EventListener) {
         registry.values.forEach {
-            it.removeIf { it.handlerClass == eventListener }
+            it.remove(eventListener)
         }
     }
 
@@ -212,7 +328,8 @@ object EventManager {
             return event
         }
 
-        val target = registry[event.javaClass] ?: return event
+        val eventType = event.javaClass
+        val target = registry[eventType] ?: return event
 
         event.isCompleted = false
         for (eventHook in target) {
@@ -220,14 +337,33 @@ object EventManager {
                 continue
             }
 
-            runCatching {
+            try {
                 eventHook.handler.accept(event)
-            }.onFailure {
-                logger.error("Exception while executing handler.", it)
+            } catch (e: ReportedException) {
+                ErrorHandler.fatal(
+                    error = e,
+                    needToReport = true,
+                    additionalMessage = "Event (${eventType.simpleName}) handler of ${eventHook.handlerClass}"
+                )
+            } catch (e: Throwable) {
+                logger.error("Exception while executing event handler", e)
             }
         }
         event.isCompleted = true
 
+        @Suppress("UNCHECKED_CAST")
+        (flows[event.javaClass] as MutableSharedFlow<T>).tryEmit(event)
+
         return event
+    }
+
+    /**
+     * Gets a [SharedFlow] for the given event class.
+     * The flow receives the event instances after all [EventHook]s are executed.
+     * So the [Event.isCompleted] will be true when the event is emitted.
+     */
+    fun <T : Event> flowOf(eventClass: Class<T>): SharedFlow<T> {
+        @Suppress("UNCHECKED_CAST")
+        return flows[eventClass] as SharedFlow<T>
     }
 }

@@ -48,13 +48,13 @@ object ClientInteropServer {
 
     val url get() = "http://127.0.0.1:$port"
 
-    fun start() {
+    suspend fun start() {
         runCatching {
             // RestAPI
             httpServer.apply {
-                routeController.apply {
+                routing {
                     get("/", ::getRootResponse)
-                    registerInteropFunctions(this)
+                    registerInteropFunctions()
 
                     LiquidBounce.resource("themes/liquidbounce.zip").use { stream ->
                         zip("/resource/liquidbounce", stream)
@@ -67,9 +67,6 @@ object ClientInteropServer {
                 middleware(CorsMiddleware())
                 middleware(AuthMiddleware())
             }
-
-            // Register events with @WebSocketEvent annotation
-            SocketEventListener.registerAll()
         }.onFailure {
             ErrorHandler.fatal(it, additionalMessage = "Register endpoints")
         }
@@ -79,9 +76,15 @@ object ClientInteropServer {
     }
 
     private var attempt = 0
-    private fun startServer(port: Int): Int {
+
+    private suspend fun startServer(port: Int): Int {
         return try {
-            httpServer.start(port)
+            val actualPort = httpServer.start(port)
+
+            // Register events with @WebSocketEvent annotation
+            SocketEventListener.registerAll()
+
+            actualPort
         } catch (bindException: BindException) {
             if (attempt >= 5) {
                 ErrorHandler.fatal(bindException, additionalMessage = "Bind interop server")

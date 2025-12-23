@@ -33,12 +33,19 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongDa
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.block.enums.NoteBlockInstrument
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
-import net.minecraft.text.MutableText
-import net.minecraft.util.Formatting
-import net.minecraft.util.math.MathHelper
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.removeMessage
+import net.ccbluex.liquidbounce.utils.client.textLoadingBar
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.ChatFormatting
+import net.minecraft.util.Mth
 import java.util.*
 
 /**
@@ -80,14 +87,14 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlaySoundS2CPacket) {
+        if (event.packet is ClientboundSoundPacket) {
             this.engine?.handleSoundPacket(event.packet)
         }
     }
 
     override suspend fun enabledEffect() {
         val messageMetadata = MessageMetadata(id = "M${this.name}#loaded", remove = false)
-        mc.inGameHud.chatHud.removeMessage(messageMetadata.id)
+        mc.gui.chat.removeMessage(messageMetadata.id)
 
         if (!checkRequirements()) {
             this.enabled = false
@@ -114,7 +121,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         showSongInfo(songData, messageMetadata)
 
         this.engine = NotebotEngine(songData, blocksAndRequirements)
-        chat(message("startTesting").formatted(Formatting.GREEN), this)
+        chat(message("startTesting").withStyle(ChatFormatting.GREEN), this)
     }
 
     fun setRenderedBlocks(blocks: List<NoteBlockTracker>) {
@@ -128,7 +135,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     }
 
     private suspend fun loadSongData(): SongData? {
-        chat(message("startLoading").formatted(Formatting.GREEN), this)
+        chat(message("startLoading").withStyle(ChatFormatting.GREEN), this)
 
         val songData = withContext(Dispatchers.IO) {
             NbsLoader.load(song.absoluteFile)
@@ -189,10 +196,10 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     private val progressMessageMetadata = MessageMetadata(id = "M$name#progress", remove = false)
 
     private fun removeProgressMessage() {
-        mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
+        mc.gui.chat.removeMessage(progressMessageMetadata.id)
     }
 
-    fun sendNewProgressMessage(name: MutableText, progress: Int, total: Int) {
+    fun sendNewProgressMessage(name: MutableComponent, progress: Int, total: Int) {
         removeProgressMessage()
 
         val percent = (progress.toDouble() / total.toDouble() * 100.0).toInt()
@@ -208,7 +215,7 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
     }
 
     fun getPlayedNote(note: NbsNoteBlock): InstrumentNote {
-        val noteValue = MathHelper.clamp(note.key - 33, 0, 24)
+        val noteValue = Mth.clamp(note.key - 33, 0, 24)
         val instrument = if (!this.pianoOnly) {
             note.instrument.toInt()
         } else {

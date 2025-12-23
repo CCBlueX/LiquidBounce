@@ -24,7 +24,8 @@ import com.viaversion.viafabricplus.ViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility1_8
 import net.minecraft.SharedConstants
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 
 // Only runs once
 val usesViaFabricPlus = runCatching {
@@ -34,7 +35,7 @@ val usesViaFabricPlus = runCatching {
     ViaFabricPlus.getImpl().registerOnChangeProtocolVersionCallback { _, _ ->
         // Update the window title
         mc.execute {
-            mc.updateWindowTitle()
+            mc.updateTitle()
         }
     }
 
@@ -44,8 +45,10 @@ val usesViaFabricPlus = runCatching {
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
-val defaultProtocolVersion = ClientProtocolVersion(SharedConstants.getGameVersion().name,
-    SharedConstants.getGameVersion().protocolVersion)
+val defaultProtocolVersion = ClientProtocolVersion(
+    SharedConstants.getCurrentVersion().name(),
+    SharedConstants.getCurrentVersion().protocolVersion()
+)
 
 val protocolVersion: ClientProtocolVersion
     get() = runCatching {
@@ -94,7 +97,7 @@ val isOlderThanOrEquals1_7_10: Boolean
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isOlderThanOrEqual1_7_10
     }.onFailure {
-        logger.error("Failed to check if the server is using 1.7.10", it)
+        logger.error("Failed to check if the server is using 1.7.10-", it)
     }.getOrDefault(false)
 
 val isNewerThanOrEquals1_16: Boolean
@@ -103,6 +106,28 @@ val isNewerThanOrEquals1_16: Boolean
         usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_16
     }.onFailure {
         logger.error("Failed to check if the server is using 1.16+", it)
+    }.getOrDefault(false)
+
+/**
+ * Since 1.21.5 anything can be used to blocking
+ */
+val isNewerThanOrEquals1_21_5: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_5
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.21.5+", it)
+    }.getOrDefault(false)
+
+/**
+ * Since 1.21.6 the [ServerboundPlayerCommandPacket.Action] removed 2 entries for sneaking
+ */
+val isNewerThanOrEquals1_21_6: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_6
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.21.6+", it)
     }.getOrDefault(false)
 
 val isOlderThanOrEqual1_11_1: Boolean

@@ -18,35 +18,53 @@
  */
 package net.ccbluex.liquidbounce.render
 
+import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
+import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.minecraft.text.Text
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.network.chat.Component
 
 abstract class AbstractFontRenderer<T : ProcessedText> {
+
     abstract val size: Float
     abstract val height: Float
 
     /**
-     * Draws a string with minecraft font markup to this object.
+     * Draws a string with minecraft font markup.
      *
-     * @param defaultColor The color of the font when no minecraft-markup applies
-     * @param shadow Add a shadow to the font?
-     * @return The width of the font, without considering the scaling
+     * @param x Anchor X position
+     * @param y Anchor Y position
+     * @param horizontalAnchor Horizontal anchor of the text, null -> [HorizontalAnchor.START]
+     * @param verticalAnchor Vertical anchor of the text, null -> [VerticalAnchor.TOP]
+     * @param scale Render scale applied to width and height
+     * @param shadow Draw shadow of text
+     *
+     * @return The unscaled width of [text]
      */
+    context(ctx: GuiGraphics)
     @Suppress("LongParameterList")
-    context(environment: GUIRenderEnvironment)
     abstract fun draw(
         text: T,
-        x0: Float,
-        y0: Float,
+        x: Float = 0f,
+        y: Float = 0f,
+        horizontalAnchor: HorizontalAnchor? = null,
+        verticalAnchor: VerticalAnchor? = null,
+        scale: Float = 1.0f,
         shadow: Boolean = false,
-        z: Float = 0.0f,
-        scale: Float = 1.0f
     ): Float
 
-    fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T = process(text.asPlainText(), defaultColor)
-    abstract fun process(text: Text, defaultColor: Color4b = Color4b.WHITE): T
+    /**
+     * @param defaultColor The color of the font when no minecraft-markup applies
+     */
+    fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T =
+        process(text.asPlainText(), defaultColor)
+
+    /**
+     * @param defaultColor The color of the font when no minecraft-markup applies
+     */
+    abstract fun process(text: Component, defaultColor: Color4b = Color4b.WHITE): T
 
     /**
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting
@@ -56,9 +74,4 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
         shadow: Boolean = false
     ): Float
 
-    val ProcessedText.width: Float
-        get() = getStringWidth(this, false)
-
-    val ProcessedText.widthWithShadow: Float
-        get() = getStringWidth(this, true)
 }

@@ -28,26 +28,60 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.block.Block
-import net.minecraft.command.argument.ItemStackArgument
-import net.minecraft.command.argument.ItemStringReader
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.component.type.AttributeModifiersComponent
-import net.minecraft.component.type.PotionContentsComponent
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.enchantment.EnchantmentHelper
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.attribute.EntityAttribute
-import net.minecraft.entity.attribute.EntityAttributeInstance
-import net.minecraft.entity.attribute.EntityAttributes
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.item.*
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.entry.RegistryEntry
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.Block
+import net.minecraft.commands.arguments.item.ItemInput
+import net.minecraft.commands.arguments.item.ItemParser
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.item.component.ItemAttributeModifiers
+import net.minecraft.world.item.alchemy.PotionContents
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.EnchantmentHelper
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.ai.attributes.Attribute
+import net.minecraft.world.entity.ai.attributes.AttributeInstance
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.item.ArmorStandItem
+import net.minecraft.world.item.ArrowItem
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.BoatItem
+import net.minecraft.world.item.BowItem
+import net.minecraft.world.item.BrushItem
+import net.minecraft.world.item.BucketItem
+import net.minecraft.world.item.CrossbowItem
+import net.minecraft.world.item.HangingEntityItem
+import net.minecraft.world.item.EggItem
+import net.minecraft.world.item.EmptyMapItem
+import net.minecraft.world.item.EnderEyeItem
+import net.minecraft.world.item.EnderpearlItem
+import net.minecraft.world.item.ExperienceBottleItem
+import net.minecraft.world.item.FireChargeItem
+import net.minecraft.world.item.FireworkRocketItem
+import net.minecraft.world.item.FishingRodItem
+import net.minecraft.world.item.FlintAndSteelItem
+import net.minecraft.world.item.BottleItem
+import net.minecraft.world.item.InstrumentItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.KnowledgeBookItem
+import net.minecraft.world.item.PlaceOnWaterBlockItem
+import net.minecraft.world.item.PotionItem
+import net.minecraft.world.item.ShieldItem
+import net.minecraft.world.item.SnowballItem
+import net.minecraft.world.item.SpawnEggItem
+import net.minecraft.world.item.SpyglassItem
+import net.minecraft.world.item.TridentItem
+import net.minecraft.world.item.WindChargeItem
+import net.minecraft.world.item.WritableBookItem
+import net.minecraft.world.item.WrittenBookItem
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.Registries
+import net.minecraft.core.Holder
+import net.minecraft.core.BlockPos
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 /**
  * Create item with NBT tags
@@ -55,59 +89,59 @@ import java.util.*
  * @docs https://minecraft.gamepedia.com/Commands/give
  */
 fun createItem(stack: String, amount: Int = 1): ItemStack =
-    ItemStringReader(mc.world!!.registryManager).consume(StringReader(stack)).let {
-        ItemStackArgument(it.item, it.components).createStack(amount, false)
+    ItemParser(mc.level!!.registryAccess()).parse(StringReader(stack)).let {
+        ItemInput(it.item, it.components).createItemStack(amount, false)
     }
 
-fun createSplashPotion(name: String, vararg effects: StatusEffectInstance): ItemStack {
+fun createSplashPotion(name: String, vararg effects: MobEffectInstance): ItemStack {
     val itemStack = ItemStack(Items.SPLASH_POTION)
 
-    itemStack.set(DataComponentTypes.CUSTOM_NAME, regular(name))
-    itemStack.set<PotionContentsComponent>(
-        DataComponentTypes.POTION_CONTENTS,
-        PotionContentsComponent(Optional.empty(), Optional.empty(), effects.unmodifiable(), Optional.empty())
+    itemStack.set(DataComponents.CUSTOM_NAME, regular(name))
+    itemStack.set(
+        DataComponents.POTION_CONTENTS,
+        PotionContents(Optional.empty(), Optional.empty(), effects.unmodifiable(), Optional.empty())
     )
 
     return itemStack
 }
 
 fun ItemStack?.getEnchantmentCount(): Int {
-    val enchantments = this?.get(DataComponentTypes.ENCHANTMENTS) ?: return 0
+    val enchantments = this?.get(DataComponents.ENCHANTMENTS) ?: return 0
 
-    return enchantments.size
+    return enchantments.size()
 }
 
-fun ItemStack?.getEnchantment(enchantment: RegistryKey<Enchantment>): Int {
-    val enchantments = this?.get(DataComponentTypes.ENCHANTMENTS) ?: return 0
+fun ItemStack?.getEnchantment(enchantment: ResourceKey<Enchantment>): Int {
+    val enchantments = this?.get(DataComponents.ENCHANTMENTS) ?: return 0
 
-    return enchantments.getLevel(enchantment.toRegistryEntry())
+    return enchantments.getLevel(enchantment.toRegistryEntryOrNull() ?: return 0)
 }
 
 /**
- * @return if this item stack has same [Item] and [net.minecraft.component.ComponentChanges]
+ * @return if this item stack has same [Item] and [net.minecraft.core.component.DataComponentPatch]
  * with the other item stack
  */
 fun ItemStack.isMergeable(other: ItemStack): Boolean {
-    return this.item == other.item && this.componentChanges == other.componentChanges
+    return this.item == other.item && this.componentsPatch == other.componentsPatch
 }
 
 fun ItemStack.canMerge(other: ItemStack): Boolean {
-    return this.isMergeable(other) && this.count + other.count <= this.maxCount
+    return this.isMergeable(other) && this.count + other.count <= this.maxStackSize
 }
 
-fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = item.components
+fun ItemStack.getAttributeValue(attribute: Holder<Attribute>) = item.components()
     .getOrDefault(
-        DataComponentTypes.ATTRIBUTE_MODIFIERS,
-        AttributeModifiersComponent.DEFAULT
+        DataComponents.ATTRIBUTE_MODIFIERS,
+        ItemAttributeModifiers.EMPTY
     )
     .modifiers
     .filter { modifier -> modifier.attribute == attribute }
-    .firstNotNullOfOrNull { modifier -> modifier.modifier.value }
+    .firstNotNullOfOrNull { modifier -> modifier.modifier.amount }
 
 val ItemStack.attackDamage: Double
     get() {
-        val entityBaseDamage = player.getAttributeValue(EntityAttributes.ATTACK_DAMAGE)
-        val baseDamage = getAttributeValue(EntityAttributes.ATTACK_DAMAGE)
+        val entityBaseDamage = player.getAttributeValue(Attributes.ATTACK_DAMAGE)
+        val baseDamage = getAttributeValue(Attributes.ATTACK_DAMAGE)
             ?: return 0.0
 
         /*
@@ -123,8 +157,14 @@ val ItemStack.attackDamage: Double
     }
 
 val ItemStack.sharpnessLevel: Int
-    get() = EnchantmentHelper.getLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
+    get() {
+        return EnchantmentHelper.getItemEnchantmentLevel(
+            Enchantments.SHARPNESS.toRegistryEntryOrNull() ?: return 0,
+            this
+        )
+    }
 
+@JvmOverloads
 fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double =
     if (!isOlderThanOrEqual1_8) {
         when (level) {
@@ -136,33 +176,37 @@ fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Double =
     }
 
 val ItemStack.attackSpeed: Double
-    get() = item.getAttributeValue(EntityAttributes.ATTACK_SPEED)
+    get() = item.getAttributeValue(Attributes.ATTACK_SPEED)
 
 val ItemStack.durability
-    get() = this.maxDamage - this.damage
+    get() = this.maxDamage - this.damageValue
 
-private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Double {
-    val attribInstance = EntityAttributeInstance(attribute) {}
+private fun Item.getAttributeValue(attribute: Holder<Attribute>): Double {
+    val attribInstance = AttributeInstance(attribute) {}
 
-    this.components
-        .getOrDefault(DataComponentTypes.ATTRIBUTE_MODIFIERS, AttributeModifiersComponent.DEFAULT)
-        .applyModifiers(EquipmentSlot.MAINHAND) { attrib, modifier ->
+    this.components()
+        .getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY)
+        .forEach(EquipmentSlot.MAINHAND) { attrib, modifier ->
             if (attrib != attribute) {
-                return@applyModifiers
+                return@forEach
             }
 
-            attribInstance.addTemporaryModifier(modifier)
+            attribInstance.addTransientModifier(modifier)
         }
 
     return attribInstance.value
 }
 
-fun RegistryKey<Enchantment>.toRegistryEntry(): RegistryEntry<Enchantment> {
-    val world = mc.world
+fun ResourceKey<Enchantment>.toRegistryEntryOrNull(): Holder<Enchantment>? {
+    return mc.level?.registryAccess()?.lookup(Registries.ENCHANTMENT)?.getOrNull()?.get(this)?.getOrNull()
+}
+
+fun ResourceKey<Enchantment>.toRegistryEntry(): Holder<Enchantment> {
+    val world = mc.level
     requireNotNull(world) { "World is null" }
 
-    val registry = world.registryManager.getOrThrow(RegistryKeys.ENCHANTMENT)
-    return registry.getOptional(this).orElseThrow { IllegalArgumentException("Unknown enchantment key $this") }
+    val registry = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+    return registry.get(this).orElseThrow { IllegalArgumentException("Unknown enchantment key $this") }
 }
 
 /**
@@ -179,7 +223,7 @@ fun ItemStack.getBlock(): Block? {
 
 fun ItemStack.isFullBlock(): Boolean {
     val block = this.getBlock() ?: return false
-    return block.defaultState.isFullCube(mc.world!!, BlockPos.ORIGIN)
+    return block.defaultBlockState().isCollisionShapeFullBlock(mc.level!!, BlockPos.ZERO)
 }
 
 fun ItemStack.isInteractable(): Boolean {
@@ -187,28 +231,28 @@ fun ItemStack.isInteractable(): Boolean {
         return false
     }
 
-    return this.get(DataComponentTypes.EQUIPPABLE) != null // TODO: curse of binding
-        || this.get(DataComponentTypes.CONSUMABLE) != null
+    return this.get(DataComponents.EQUIPPABLE) != null // TODO: curse of binding
+        || this.get(DataComponents.CONSUMABLE) != null
 
         // from the use() method:
         || item is BoatItem
         || (item is BowItem && Slots.All.any { it.itemStack.item is ArrowItem })
         || item is BucketItem // TODO: water/lava between an interactable block and the player (for empty buckets)
         || (item is CrossbowItem &&
-            (Slots.All.any { it.itemStack.item is ArrowItem}
-                || player.offHandStack.item is FireworkRocketItem))
+            (Slots.All.any { it.itemStack.item is ArrowItem }
+                || player.offhandItem.item is FireworkRocketItem))
         || item is EggItem
         || item is EmptyMapItem
         || item is EnderEyeItem
-        || item is EnderPearlItem
+        || item is EnderpearlItem
         || item is ExperienceBottleItem
         || item is FireworkRocketItem
         || item is FishingRodItem
-        || item is GlassBottleItem // TODO: water between an interactable block and the player
-        || item is GoatHornItem // TODO: item delay?
+        || item is BottleItem // TODO: water between an interactable block and the player
+        || item is InstrumentItem // TODO: item delay?
         || item is KnowledgeBookItem
         || (isSword && isOlderThanOrEqual1_8)
-        || item is PlaceableOnWaterItem // TODO: water between an interactable block and the player
+        || item is PlaceOnWaterBlockItem // TODO: water between an interactable block and the player
         || item is ShieldItem
         || item is SnowballItem
         || item is SpawnEggItem
@@ -222,7 +266,7 @@ fun ItemStack.isInteractable(): Boolean {
         || item is ArmorStandItem
         || item is BlockItem
         || item is BrushItem
-        || item is DecorationItem // TODO: presence of other item frames and paintings on target blocks
+        || item is HangingEntityItem // TODO: presence of other item frames and paintings on target blocks
         || item is FireChargeItem
         || item is FlintAndSteelItem
         || item is PotionItem

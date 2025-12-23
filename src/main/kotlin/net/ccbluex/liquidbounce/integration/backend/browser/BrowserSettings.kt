@@ -33,7 +33,7 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
             accelerated = boolean("Accelerated(BETA)", false).onChanged {
                 mc.execute {
                     IntegrationListener.restart()
-                    mc.updateWindowTitle()
+                    mc.updateTitle()
                 }
             }
         }

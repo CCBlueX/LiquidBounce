@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.Esp2DMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspBoxMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspOutlineMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
@@ -32,8 +31,8 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
 
 /**
  * ESP module
@@ -61,6 +60,8 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     }
     private val friendColor by color("Friends", Color4b.GREEN)
 
+    internal val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
     }
@@ -80,7 +81,7 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     }
 
     private fun getBaseColor(entity: LivingEntity): Color4b {
-        if (entity is PlayerEntity) {
+        if (entity is Player) {
             if (FriendManager.isFriend(entity) && friendColor.a > 0) {
                 return friendColor
             }

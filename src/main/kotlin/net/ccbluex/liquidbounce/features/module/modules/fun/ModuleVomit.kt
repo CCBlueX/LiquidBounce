@@ -22,11 +22,15 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.inventory.*
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.util.math.random.Random
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.findEmptyStorageSlotsInInventory
+import net.ccbluex.liquidbounce.utils.inventory.findItemsInContainer
+import net.ccbluex.liquidbounce.utils.inventory.findNonEmptyStorageSlotsInInventory
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.util.RandomSource
 
 /**
  * Vomit module
@@ -37,12 +41,12 @@ import net.minecraft.util.math.random.Random
 object ModuleVomit : ClientModule("Vomit", Category.FUN) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
-    private val random = Random.create()
+    private val random = RandomSource.create()
 
     @Suppress("unused")
     private val vomitHandler = handler<ScheduleInventoryActionEvent> { event ->
         if (player.isCreative) {
-            val blockItem = Registries.BLOCK.getRandom(random).get().value()
+            val blockItem = BuiltInRegistries.BLOCK.getRandom(random).get().value()
             val randomStack = ItemStack(blockItem, 64)
             val emptySlots = findEmptyStorageSlotsInInventory()
 
@@ -70,7 +74,7 @@ object ModuleVomit : ClientModule("Vomit", Category.FUN) {
             // We specifically only want to choose slots that we can store items in, as
             // e.g. the offhand slot is not a storage slot on 1.8 servers and therefore can cause issues
             val playerSlot = findNonEmptyStorageSlotsInInventory()
-            val container = mc.currentScreen as? GenericContainerScreen
+            val container = mc.screen as? ContainerScreen
 
             val randomSlot = if (playerSlot.isEmpty()) {
                 // Attempt to drop from the container

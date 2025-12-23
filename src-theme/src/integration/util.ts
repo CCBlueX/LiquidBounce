@@ -37,6 +37,14 @@ export function intToRgba(value: number): number[] {
     return [red, green, blue, alpha];
 }
 
+export const swap = (array: any[], i: number, j: number) => {
+    if (i < 0 || i >= array.length || j < 0 || j >= array.length) return;
+
+    const it = array[i];
+    array[i] = array[j];
+    array[j] = it;
+}
+
 export const getHashParams = (): URLSearchParams => {
     const hash = window.location.hash.split('?')[1] || '';
     return new URLSearchParams(hash);

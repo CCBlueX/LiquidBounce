@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -31,10 +30,11 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
@@ -43,11 +43,11 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.BlockPos
 
 /**
  * AutoTool module
@@ -154,7 +154,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
     }
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val blocks by blocks("Blocks", referenceHashSetOf())
+    private val blocks by blocks("Blocks", blockSortedSetOf())
 
     private object SilkTouchHandler : ToggleableConfigurable(
         this, "SilkTouchHandler", enabled = false
@@ -162,7 +162,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
         private val filter by enumChoice("Filter", Filter.WHITELIST)
         private val blocks by blocks(
             "Blocks",
-            referenceHashSetOf(Blocks.ENDER_CHEST, Blocks.GLOWSTONE, Blocks.SEA_LANTERN, Blocks.TURTLE_EGG),
+            blockSortedSetOf(Blocks.ENDER_CHEST, Blocks.GLOWSTONE, Blocks.SEA_LANTERN, Blocks.TURTLE_EGG),
         )
 
         fun test(blockState: BlockState, itemStack: ItemStack): Boolean =
@@ -212,7 +212,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
     }
 
     fun switchToBreakBlock(pos: BlockPos) {
-        if (requireSneaking && !player.isSneaking || RequireNearBed.enabled && !RequireNearBed.matches()) {
+        if (requireSneaking && !player.isShiftKeyDown || RequireNearBed.enabled && !RequireNearBed.matches()) {
             return
         }
 
@@ -233,7 +233,7 @@ object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
             !player.isCreative && durabilityCheck && SilkTouchHandler.test(blockState, stack)
         }.maxWithOrNull(
             Comparator.comparingDouble<T> {
-                it.itemStack.getMiningSpeedMultiplier(blockState).toDouble()
+                it.itemStack.getDestroySpeed(blockState).toDouble()
             }.thenDescending(ItemSlot.PREFER_NEARBY)
         ) ?: return null
 

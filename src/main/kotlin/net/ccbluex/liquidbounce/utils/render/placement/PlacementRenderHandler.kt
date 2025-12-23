@@ -21,14 +21,16 @@ package net.ccbluex.liquidbounce.utils.render.placement
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.EMPTY_BOX
+import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.math.iterator
-import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.MathHelper
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import net.minecraft.util.Mth
 
 /**
  * A renderer instance that can be added to a [PlacementRenderer], it contains the core logic.
@@ -37,7 +39,7 @@ import net.minecraft.util.math.MathHelper
  * This class is not thread-safe. You can use it on the render thread. (the most recommended way)
  */
 @Suppress("TooManyFunctions")
-class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) {
+class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, val id: Int = 0) : BlockCuller.Owner {
 
     private val inList = Long2ObjectLinkedOpenHashMap<InOutBlockData>()
     private val currentList = Long2ObjectLinkedOpenHashMap<CurrentBlockData>()
@@ -46,16 +48,16 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     private val culler = BlockCuller(this)
 
     @JvmRecord
-    private data class InOutBlockData(val startTime: Long, val cullData: Long, val box: Box) {
+    private data class InOutBlockData(val startTime: Long, val cullData: Long, val box: AABB) {
         fun toCurrent() = CurrentBlockData(cullData, box)
     }
 
     @JvmRecord
-    private data class CurrentBlockData(val cullData: Long, val box: Box) {
+    private data class CurrentBlockData(val cullData: Long, val box: AABB) {
         fun toInOut(startTime: Long) = InOutBlockData(startTime, cullData, box)
     }
 
-    private val blockPosCache = BlockPos.Mutable()
+    private val blockPosCache = BlockPos.MutableBlockPos()
 
     fun render(event: WorldRenderEvent, time: Long) {
         val matrixStack = event.matrixStack
@@ -66,8 +68,8 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
 
             renderEnvironmentForWorld(matrixStack) {
                 startBatch()
-                fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: Box, colorFactor: Float) {
-                    withPositionRelativeToCamera(blockPos.toVec3d()) {
+                fun drawEntryBox(blockPos: BlockPos, cullData: Long, box: AABB, colorFactor: Float) {
+                    withPositionRelativeToCamera(blockPos) {
                         drawBox(
                             box,
                             color.fade(colorFactor),
@@ -84,7 +86,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     val value = entry.value
 
                     val sizeFactor = startSizeCurve.getFactor(value.startTime, time, inTime.toFloat())
-                    val expand = MathHelper.lerp(sizeFactor, startSize, 1f)
+                    val expand = Mth.lerp(sizeFactor, startSize, 1f)
                     val box = getBox(if (expand < 1f) 1f - expand else expand, value.box)
                     val colorFactor = fadeInCurve.getFactor(value.startTime, time, inTime.toFloat())
 
@@ -115,7 +117,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
                     val value = entry.value
 
                     val sizeFactor = endSizeCurve.getFactor(value.startTime, time, outTime.toFloat())
-                    val expand = 1f - MathHelper.lerp(sizeFactor, 1f, endSize)
+                    val expand = 1f - Mth.lerp(sizeFactor, 1f, endSize)
                     val box = getBox(expand, value.box)
                     val colorFactor = 1f - fadeOutCurve.getFactor(value.startTime, time, outTime.toFloat())
 
@@ -134,13 +136,13 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
         }
     }
 
-    private fun getBox(expand: Float, box: Box): Box {
+    private fun getBox(expand: Float, box: AABB): AABB {
         return when (expand) {
             1f -> box
             0f -> EMPTY_BOX
             else -> {
                 val f = if (expand < 1) -0.5 * expand else (expand - 1) * 0.5
-                box.expand(box.lengthX * f, box.lengthY * f, box.lengthZ * f)
+                box.inflate(box.xsize * f, box.ysize * f, box.zsize * f)
             }
         }
     }
@@ -176,7 +178,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     /**
      * Checks whether the position (in long value) is rendered.
      */
-    internal operator fun contains(pos: Long): Boolean {
+    override operator fun contains(pos: Long): Boolean {
         return inList.containsKey(pos) || currentList.containsKey(pos) || outList.containsKey(pos)
     }
 
@@ -184,9 +186,9 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
      * Adds a block to be rendered. First it will make an appear-animation, then
      * it will continue to get rendered until it's removed or the world changes.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      */
-    fun addBlock(pos: BlockPos, update: Boolean = true, box: Box = FULL_BOX) {
+    fun addBlock(pos: BlockPos, update: Boolean = true, box: AABB = FULL_BOX) {
         val longValue = pos.asLong()
         if (!currentList.containsKey(longValue) && !inList.containsKey(longValue)) {
             inList.put(longValue, InOutBlockData(System.currentTimeMillis(), 0L, box))
@@ -206,7 +208,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     fun removeBlock(pos: BlockPos) {
         val longValue = pos.asLong()
         var cullData = 0L
-        var box: Box? = null
+        var box: AABB? = null
 
         currentList.remove(longValue)?.let {
             cullData = it.cullData
@@ -246,7 +248,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
      *
      * This method won't affect positions that are in the state of fading out.
      */
-    fun updateBox(pos: BlockPos, box: Box) {
+    fun updateBox(pos: BlockPos, box: AABB) {
         val longValue = pos.asLong()
         var needUpdate = false
 

@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.minecraft.client.option.Perspective
-import net.minecraft.client.option.Perspective.THIRD_PERSON_BACK
-import net.minecraft.client.option.Perspective.THIRD_PERSON_FRONT
+import net.minecraft.client.CameraType
+import net.minecraft.client.CameraType.THIRD_PERSON_BACK
+import net.minecraft.client.CameraType.THIRD_PERSON_FRONT
 
 object ModuleFreeLook : ClientModule(
     "FreeLook", Category.RENDER, disableOnQuit = true, bindAction = InputBind.BindAction.HOLD
@@ -45,8 +45,8 @@ object ModuleFreeLook : ClientModule(
     val invertedView get() = perspective.perspective == THIRD_PERSON_FRONT
 
     override fun onEnabled() {
-        cameraYaw = player.yaw
-        cameraPitch = player.pitch
+        cameraYaw = player.yRot
+        cameraPitch = player.xRot
     }
 
     @Suppress("unused")
@@ -69,7 +69,7 @@ object ModuleFreeLook : ClientModule(
     @Suppress("unused")
     private enum class PerspectiveChoice(
         override val choiceName: String,
-        val perspective: Perspective
+        val perspective: CameraType
     ) : NamedChoice {
         FRONT("Front", THIRD_PERSON_FRONT),
         BACK("Back", THIRD_PERSON_BACK)

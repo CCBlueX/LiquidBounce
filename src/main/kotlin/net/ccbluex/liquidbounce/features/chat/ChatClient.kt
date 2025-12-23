@@ -41,12 +41,31 @@ import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import net.ccbluex.liquidbounce.authlib.yggdrasil.GameProfileRepository
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.*
-import net.ccbluex.liquidbounce.features.chat.packet.*
+import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
+import net.ccbluex.liquidbounce.features.chat.packet.ClientErrorPacket
+import net.ccbluex.liquidbounce.features.chat.packet.ClientMessagePacket
+import net.ccbluex.liquidbounce.features.chat.packet.ClientMojangInfoPacket
+import net.ccbluex.liquidbounce.features.chat.packet.ClientNewJWTPacket
+import net.ccbluex.liquidbounce.features.chat.packet.ClientPrivateMessagePacket
+import net.ccbluex.liquidbounce.features.chat.packet.ClientSuccessPacket
+import net.ccbluex.liquidbounce.features.chat.packet.Packet
+import net.ccbluex.liquidbounce.features.chat.packet.PacketDeserializer
+import net.ccbluex.liquidbounce.features.chat.packet.PacketSerializer
+import net.ccbluex.liquidbounce.features.chat.packet.ServerBanUserPacket
+import net.ccbluex.liquidbounce.features.chat.packet.ServerLoginJWTPacket
+import net.ccbluex.liquidbounce.features.chat.packet.ServerLoginMojangPacket
+import net.ccbluex.liquidbounce.features.chat.packet.ServerMessagePacket
+import net.ccbluex.liquidbounce.features.chat.packet.ServerPrivateMessagePacket
+import net.ccbluex.liquidbounce.features.chat.packet.ServerRequestJWTPacket
+import net.ccbluex.liquidbounce.features.chat.packet.ServerRequestMojangInfoPacket
+import net.ccbluex.liquidbounce.features.chat.packet.ServerUnbanUserPacket
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.awaitSuspend
 import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
+import net.ccbluex.netty.http.coroutines.syncSuspend
 import java.net.URI
 import java.util.*
 
@@ -128,7 +147,7 @@ class ChatClient {
 
         val bootstrap = Bootstrap()
 
-        bootstrap.clientChannelAndGroup(tryToUseEpoll = true)
+        bootstrap.clientChannelAndGroup(true)
             .handler(object : ChannelInitializer<SocketChannel>() {
 
                 /**
@@ -150,8 +169,8 @@ class ChatClient {
 
             })
 
-        channel = bootstrap.connect(uri.host, uri.port).awaitSuspend().channel()!!
-        handler.handshakeFuture.awaitSuspend()
+        channel = bootstrap.connect(uri.host, uri.port).syncSuspend().channel()!!
+        handler.handshakeFuture.syncSuspend()
     }.onFailure {
         EventManager.callEvent(ClientChatErrorEvent(it.localizedMessage ?: it.message ?: it.javaClass.name))
 
@@ -242,11 +261,15 @@ class ChatClient {
                 runCatching {
                     val sessionHash = packet.sessionHash
 
-                    mc.sessionService.joinServer(mc.session.uuidOrNull, mc.session.accessToken, sessionHash)
+                    mc.services.sessionService.joinServer(
+                        mc.user.profileId,
+                        mc.user.accessToken,
+                        sessionHash
+                    )
                     sendPacket(
                         ServerLoginMojangPacket(
-                            mc.session.username,
-                            mc.session.uuidOrNull,
+                            mc.user.name,
+                            mc.user.profileId,
                             allowMessages = true
                         )
                     )

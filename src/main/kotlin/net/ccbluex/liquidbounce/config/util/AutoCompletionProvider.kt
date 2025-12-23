@@ -21,31 +21,50 @@
 package net.ccbluex.liquidbounce.config.util
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.ChooseListValue
+import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
+import net.ccbluex.liquidbounce.config.types.RangedValue
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 
-object AutoCompletionProvider {
+fun interface AutoCompletionProvider {
 
-    val defaultCompleter = CompletionHandler { emptyArray() }
+    /**
+     * Gives an array with all possible completions for the [value].
+     */
+    fun possible(value: Value<*>): Iterable<String>
 
-    val booleanCompleter = CompletionHandler { arrayOf("true", "false") }
+    companion object Default : AutoCompletionProvider {
+        override fun possible(value: Value<*>): Iterable<String> = emptyList()
 
-    val choiceCompleter = CompletionHandler { value ->
-        (value as ChoiceConfigurable<*>).choices.mapToArray { it.choiceName }
-    }
+        @JvmStatic
+        fun ofConst(strings: List<String>): AutoCompletionProvider {
+            return AutoCompletionProvider { strings }
+        }
 
-    val chooseCompleter = CompletionHandler { value ->
-        (value as ChooseListValue<*>).choices.mapToArray { it.choiceName }
-    }
+        @JvmField
+        val booleanCompleter = ofConst(listOf("true", "false"))
 
-    fun interface CompletionHandler {
+        @JvmField
+        val rangedCompleter = AutoCompletionProvider { value ->
+            val range = (value as RangedValue<*>).range
+            listOf(range.start.toString(), range.endInclusive.toString())
+        }
 
-        /**
-         * Gives an array with all possible completions for the [value].
-         */
-        fun possible(value: Value<*>): Array<String>
+        @JvmField
+        val choiceCompleter = AutoCompletionProvider { value ->
+            (value as ChoiceConfigurable<*>).choices.mapToArray { it.choiceName }.asList()
+        }
 
+        @JvmField
+        val chooseCompleter = AutoCompletionProvider { value ->
+            (value as ChooseListValue<*>).choices.mapToArray { it.choiceName }.asList()
+        }
+
+        @JvmField
+        val multiChooseCompleter = AutoCompletionProvider { value ->
+            (value as MultiChooseListValue<*>).choices.mapToArray { it.choiceName }.asList()
+        }
     }
 
 }

@@ -49,7 +49,7 @@ object ConfigSystem {
 
     // Config directory folder
     val rootFolder = File(
-        mc.runDirectory, LiquidBounce.CLIENT_NAME
+        mc.gameDirectory, LiquidBounce.CLIENT_NAME
     ).apply {
         // Check if there is already a config folder and if not create new folder
         // (mkdirs not needed - .minecraft should always exist)
@@ -118,9 +118,12 @@ object ConfigSystem {
     /**
      * Create a ZIP file of root configurable files
      */
-    fun backup(fileName: String, configurables: Collection<Configurable> = this.configurables) {
-        val zipFile = File(backupFolder, "$fileName.zip")
-        check(!zipFile.exists()) { "Backup file already exists" }
+    fun backup(fileName: String, configurables: Iterable<Configurable> = this.configurables) {
+        var zipFile = File(backupFolder, "$fileName.zip")
+        var suffix = 1
+        while (zipFile.exists()) {
+            zipFile = File(backupFolder, "${fileName}_${suffix++}.zip")
+        }
 
         configurables.map { configurable -> configurable.jsonFile }.createZipArchive(zipFile)
     }

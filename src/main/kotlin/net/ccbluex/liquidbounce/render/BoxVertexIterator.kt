@@ -19,43 +19,43 @@
 
 package net.ccbluex.liquidbounce.render
 
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
+import net.minecraft.world.phys.AABB
+import net.minecraft.core.Direction
 
 enum class BoxVertexIterator {
     FACE {
-        override fun forEachVertex(box: Box, consumer: Consumer) {
+        override fun forEachVertex(box: AABB, consumer: Consumer) {
             box.forEachFaceVertex(consumer::invoke)
         }
 
         override fun sideMask(side: Direction): Int = when (side) {
-            Direction.DOWN -> 0x00_000F.inv()
-            Direction.UP -> 0x00_00F0.inv()
-            Direction.NORTH -> 0x00_0F00.inv()
-            Direction.EAST -> 0x00_F000.inv()
-            Direction.SOUTH -> 0x0F_0000.inv()
-            Direction.WEST -> 0xF0_0000.inv()
+            Direction.DOWN -> 0x00_000F
+            Direction.UP -> 0x00_00F0
+            Direction.NORTH -> 0x00_0F00
+            Direction.EAST -> 0x00_F000
+            Direction.SOUTH -> 0x0F_0000
+            Direction.WEST -> 0xF0_0000
         }
     },
     OUTLINE {
-        override fun forEachVertex(box: Box, consumer: Consumer) {
+        override fun forEachVertex(box: AABB, consumer: Consumer) {
             box.forEachOutlineVertex(consumer::invoke)
         }
 
         override fun sideMask(side: Direction): Int = when (side) {
-            Direction.DOWN -> 0b0000_0000_0000_0000_1111_1111.inv()
-            Direction.UP -> 0b1111_1111_0000_0000_0000_0000.inv()
-            Direction.NORTH -> 0b0000_0011_0000_1111_0000_0011.inv()
-            Direction.EAST -> 0b0000_1100_0011_1100_0000_1100.inv()
-            Direction.SOUTH -> 0b0011_0000_1111_0000_0011_0000.inv()
-            Direction.WEST -> 0b1100_0000_1100_0011_1100_0000.inv()
+            Direction.DOWN -> 0b0000_0000_0000_0000_1111_1111
+            Direction.UP -> 0b1111_1111_0000_0000_0000_0000
+            Direction.NORTH -> 0b0000_0011_0000_1111_0000_0011
+            Direction.EAST -> 0b0000_1100_0011_1100_0000_1100
+            Direction.SOUTH -> 0b0011_0000_1111_0000_0011_0000
+            Direction.WEST -> 0b1100_0000_1100_0011_1100_0000
         }
     };
 
     /**
      * For Java and JS usage.
      */
-    abstract fun forEachVertex(box: Box, consumer: Consumer)
+    abstract fun forEachVertex(box: AABB, consumer: Consumer)
 
     /**
      * For [drawBox].
@@ -67,7 +67,7 @@ enum class BoxVertexIterator {
     }
 }
 
-inline fun Box.forEachFaceVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
+inline fun AABB.forEachFaceVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
     var i = 0
     // down
     fn(i++, minX, minY, minZ)
@@ -108,7 +108,7 @@ inline fun Box.forEachFaceVertex(fn: (index: Int, x: Double, y: Double, z: Doubl
     // i == 24
 }
 
-inline fun Box.forEachOutlineVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
+inline fun AABB.forEachOutlineVertex(fn: (index: Int, x: Double, y: Double, z: Double) -> Unit) {
     var i = 0
     // down north
     fn(i++, minX, minY, minZ)

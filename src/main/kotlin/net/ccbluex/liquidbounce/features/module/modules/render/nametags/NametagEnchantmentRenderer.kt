@@ -20,7 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
+import net.ccbluex.fastutil.objectLinkedSetOf
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -28,40 +29,39 @@ import net.ccbluex.liquidbounce.render.engine.type.Rect
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.getEnchantmentCount
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.LivingEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.util.Formatting
-import net.minecraft.client.resource.language.I18n
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.resources.language.I18n
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.Registries
+import net.minecraft.ChatFormatting
 import org.joml.Vector2f
 import org.joml.component1
 import org.joml.component2
 import kotlin.math.hypot
 
 private object EnchantmentDisplayHelper {
-    private val enchantmentAbbreviationCache = LruCache<RegistryKey<Enchantment>, String>(128)
+    private val enchantmentAbbreviationCache = LruCache<ResourceKey<Enchantment>, String>(128)
 
     private val knownCurses = ReferenceSet.of(
         Enchantments.BINDING_CURSE,
         Enchantments.VANISHING_CURSE
     )
 
-    fun getEnchantmentInfo(enchantment: RegistryKey<Enchantment>): EnchantmentInfo {
+    fun getEnchantmentInfo(enchantment: ResourceKey<Enchantment>): EnchantmentInfo {
         return EnchantmentInfo(
             displayName = getAbbreviation(enchantment),
             isCurse = isCurse(enchantment)
         )
     }
 
-    private fun getEnchantmentName(enchantment: RegistryKey<Enchantment>): String {
-        val idPath = enchantment.value.toString().substringAfter(':')
+    private fun getEnchantmentName(enchantment: ResourceKey<Enchantment>): String {
+        val idPath = enchantment.identifier().toString().substringAfter(':')
         val translationKey = "enchantment.minecraft.$idPath"
-        return I18n.translate(translationKey)
+        return I18n.get(translationKey)
     }
 
     private fun getSingleWordAbbreviation(word: String): String = word.take(3)
@@ -104,22 +104,34 @@ private object EnchantmentDisplayHelper {
         }
     }
 
-    private fun getAbbreviation(enchantment: RegistryKey<Enchantment>): String {
+    private fun getAbbreviation(enchantment: ResourceKey<Enchantment>): String {
         return enchantmentAbbreviationCache.getOrPut(enchantment) {
             val name = getEnchantmentName(enchantment)
             processName(name)
         }
     }
 
-    private fun isCurse(enchantment: RegistryKey<Enchantment>): Boolean = enchantment in knownCurses
+    private fun isCurse(enchantment: ResourceKey<Enchantment>): Boolean = enchantment in knownCurses
 }
 
+@JvmRecord
 private data class EnchantmentInfo(
     val displayName: String,
     val isCurse: Boolean = false
 )
 
-object NametagEnchantmentRenderer {
+internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNametags, "Enchantment", true) {
+
+    private val slots by multiEnumChoice(
+        "Slots",
+        objectLinkedSetOf(
+            EquipmentSlotChoice.MAINHAND, EquipmentSlotChoice.OFFHAND,
+            EquipmentSlotChoice.HEAD, EquipmentSlotChoice.CHEST,
+            EquipmentSlotChoice.LEGS, EquipmentSlotChoice.FEET,
+        ),
+        canBeNone = true
+    )
+
     private const val MAX_ENCHANTMENTS_PER_ITEM = 10
     private const val FIXED_SCALE = 0.6f
     private const val LINE_HEIGHT = 14f
@@ -128,11 +140,11 @@ object NametagEnchantmentRenderer {
     private const val CELL_HEIGHT = LINE_HEIGHT + PADDING * 2
     private const val VERTICAL_SPACING = 4f
     private const val FRAME_MARGIN = 6f
-    private val BG_COLOR_NORMAL = Color4b.BLACK.with(a = 200)
-    private val BG_COLOR_CURSE = Color4b.RED.darker().with(a = 200)
+    private val BG_COLOR_NORMAL = Color4b.BLACK.alpha(200)
+    private val BG_COLOR_CURSE = Color4b.RED.darker().alpha(200)
 
     private val supportedEnchantments by lazy {
-        mc.world?.registryManager?.getOrThrow(RegistryKeys.ENCHANTMENT)?.keys?.toList() ?: emptyList()
+        mc.level?.registryAccess()?.lookupOrThrow(Registries.ENCHANTMENT)?.registryKeySet()?.toList() ?: emptyList()
     }
 
     @JvmRecord
@@ -148,14 +160,11 @@ object NametagEnchantmentRenderer {
         val width: Float
     )
 
-    context(env: GUIRenderEnvironment)
-    fun drawEntityEnchantments(
+    fun GuiGraphics.drawEntityEnchantments(
         entity: LivingEntity,
         worldX: Float,
         worldY: Float,
     ) {
-        if (!NametagShowOptions.ENCHANTMENTS.isShowing()) return
-
         val itemsWithEnchantments = getEntityItemsWithEnchantments(entity)
         if (itemsWithEnchantments.isEmpty()) return
 
@@ -214,14 +223,10 @@ object NametagEnchantmentRenderer {
         return cells.asList()
     }
 
-    private fun getEntityItemsWithEnchantments(entity: LivingEntity): List<ItemStack> = listOf(
-        entity.mainHandStack,
-        entity.offHandStack,
-        entity.getEquippedStack(EquipmentSlot.HEAD),
-        entity.getEquippedStack(EquipmentSlot.CHEST),
-        entity.getEquippedStack(EquipmentSlot.LEGS),
-        entity.getEquippedStack(EquipmentSlot.FEET)
-    ).filter { !it.isEmpty && it.getEnchantmentCount() > 0 }
+    private fun getEntityItemsWithEnchantments(entity: LivingEntity): List<ItemStack> =
+        slots.mapToArray {
+            entity.getItemBySlot(it.slot)
+        }.filter { !it.isEmpty && it.getEnchantmentCount() > 0 }
 
     private fun createCell(
         info: EnchantmentInfo? = null,
@@ -229,14 +234,14 @@ object NametagEnchantmentRenderer {
         isEllipsis: Boolean = false
     ): EnchantCell {
         val text = if (isEllipsis) {
-            "${Formatting.GRAY}..."
+            "${ChatFormatting.GRAY}..."
         } else {
             val textColor = when {
-                info?.isCurse == true -> Formatting.RED
-                level >= 4 -> Formatting.GOLD
-                level == 3 -> Formatting.YELLOW
-                level == 2 -> Formatting.GREEN
-                else -> Formatting.WHITE
+                info?.isCurse == true -> ChatFormatting.RED
+                level >= 4 -> ChatFormatting.GOLD
+                level == 3 -> ChatFormatting.YELLOW
+                level == 2 -> ChatFormatting.GREEN
+                else -> ChatFormatting.WHITE
             }
             "${textColor}${info?.displayName} $level"
         }
@@ -250,7 +255,7 @@ object NametagEnchantmentRenderer {
         )
     }
 
-    private fun GUIRenderEnvironment.renderEnchantmentColumn(
+    private fun GuiGraphics.renderEnchantmentColumn(
         cells: List<EnchantCell>,
         x: Float,
         y: Float,
@@ -270,7 +275,7 @@ object NametagEnchantmentRenderer {
             )
             val bgColor = if (cell.isCurse) BG_COLOR_CURSE else BG_COLOR_NORMAL
 
-            drawCellBackground(rect, bgColor)
+            drawQuad(rect.x1, rect.y1, rect.x2, rect.y2, fillColor = bgColor)
 
             val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
             val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
@@ -280,24 +285,12 @@ object NametagEnchantmentRenderer {
                 textX,
                 textY,
                 shadow = true,
-                z = 0.001f,
                 scale = FIXED_SCALE
             )
         }
     }
 
-    context(environment: GUIRenderEnvironment)
-    private fun drawCellBackground(
-        rect: Rect,
-        color: Color4b
-    ) {
-        val leftTop = Vector2f(rect.x1, rect.y1)
-        val rightBottom = Vector2f(rect.x2, rect.y2)
-        environment.drawQuad(leftTop, rightBottom, 0F, fillColor = color)
-    }
-
-    context(environment: GUIRenderEnvironment)
-    private fun drawEnchantmentColumns(
+    private fun GuiGraphics.drawEnchantmentColumns(
         x: Float,
         y: Float,
         columnData: List<EnchantColumn>
@@ -323,20 +316,16 @@ object NametagEnchantmentRenderer {
         var columnX = x - halfTotalWidth
         columnData.forEach { column ->
             val columnCenterX = columnX + column.width / 2
-            environment.renderEnchantmentColumn(column.cells, columnCenterX, y)
+            renderEnchantmentColumn(column.cells, columnCenterX, y)
             columnX += column.width + COLUMN_SPACING
         }
     }
 
-    context(environment: GUIRenderEnvironment)
-    private fun drawGroupBorder(rect: Rect) {
+    private fun GuiGraphics.drawGroupBorder(rect: Rect) {
         // Drawing a semi-transparent background instead of just lines for better visibility
-        val leftTop = Vector2f(rect.x1, rect.y1)
-        val rightBottom = Vector2f(rect.x2, rect.y2)
-        environment.drawQuad(
-            leftTop,
-            rightBottom,
-            z = 0F,
+        drawQuad(
+            rect.x1, rect.y1,
+            rect.x2, rect.y2,
             fillColor = Color4b.BLACK.with(a = 100),
             outlineColor = Color4b.RED,
         )

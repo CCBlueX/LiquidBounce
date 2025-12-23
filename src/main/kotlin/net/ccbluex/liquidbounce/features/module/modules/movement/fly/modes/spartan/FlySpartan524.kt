@@ -41,7 +41,7 @@ internal object FlySpartan524 : Choice("Spartan524") {
         get() = modes
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
-        val yaw = Math.toRadians(player.yaw.toDouble())
+        val yaw = Math.toRadians(player.yRot.toDouble())
         event.movement.x = -sin(yaw) * 0.28
         event.movement.y = 0.0
         event.movement.z = cos(yaw) * 0.28

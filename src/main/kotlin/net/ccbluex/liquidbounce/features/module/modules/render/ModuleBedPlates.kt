@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import kotlinx.coroutines.Dispatchers
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.additions.drawStackCount
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
@@ -36,22 +37,25 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
+import net.ccbluex.liquidbounce.utils.block.bed.SurroundingBlock
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.Vec3
 import java.util.function.Predicate
 
 object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTracker.Subscriber {
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII")
 
     private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+    private val outline by boolean("Outline", false)
 
     override val maxLayers by int("MaxLayers", 5, 1..5).onChanged {
         BedBlockTracker.triggerRescan()
@@ -59,15 +63,17 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val showBed by boolean("ShowBed", true)
     private val textShadow by boolean("TextShadow", true)
     private val scale by float("Scale", 1.5f, 0.5f..3.0f)
-    private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
-    private val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
+    private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F, aliases = listOf("MaxDistance"))
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
     private val compact by boolean("Compact", true)
+    private val preventOverlap by boolean("PreventOverlap", true)
     private val filterMode = choices("FilterMode", 0) {
         arrayOf(FilterMode.Predefined, FilterMode.Custom)
     }
     private val ignoreSelfBed = choices("IgnoreSelfBed", 0, ::isSelfBedChoices)
+    private val ignoreAdjacent by boolean("IgnoreAdjacent", false)
 
     private sealed class FilterMode(name: String) : Choice(name), Predicate<Block> {
         final override val parent: ChoiceConfigurable<*>
@@ -99,13 +105,14 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
             )
 
             override fun test(block: Block): Boolean {
-                val state = block.defaultState
-                return !(state.isAir || !state.isSolidBlock(world, BlockPos.ORIGIN) && block !in WHITELIST_NON_SOLID)
+                val state = block.defaultBlockState()
+                return !(state.isAir ||
+                    !state.isRedstoneConductor(world, BlockPos.ZERO) && block !in WHITELIST_NON_SOLID)
             }
         }
 
         object Custom : FilterMode("Custom") {
-            private val blocks by blocks("Blocks", ReferenceOpenHashSet())
+            private val blocks by blocks("Blocks", blockSortedSetOf())
             private val filter by enumChoice("Filter", Filter.BLACKLIST)
 
             override fun test(block: Block): Boolean {
@@ -114,21 +121,43 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
         }
     }
 
-    private data class BedStateAndDistance(
+    private data class BedStateRenderState(
         @JvmField val bedState: BedState,
         @JvmField var distance: Double,
-    ) : Comparable<BedStateAndDistance> {
-        override fun compareTo(other: BedStateAndDistance): Int {
+        @JvmField var surrounding: List<SurroundingBlock>,
+        @JvmField var itemStacksForRender: List<ItemStack>,
+    ) : Comparable<BedStateRenderState> {
+        constructor(bedState: BedState) : this(bedState, 0.0, emptyList(), emptyList())
+
+        override fun compareTo(other: BedStateRenderState): Int {
             return distance.compareTo(other.distance)
         }
     }
 
-    private val beds = ArrayList<BedStateAndDistance>()
+    private val beds = ArrayList<BedStateRenderState>()
 
     private fun updateAndSortBeds() {
-        val cameraPos = (mc.cameraEntity ?: mc.player ?: return).pos
-        beds.forEach {
-            it.distance = it.bedState.pos.distanceTo(cameraPos)
+        val cameraPos = (mc.cameraEntity ?: mc.player ?: return).position()
+        beds.forEach { renderState ->
+            val bedState = renderState.bedState
+            renderState.distance = bedState.pos.distanceTo(cameraPos)
+
+            val surrounding = (if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks)
+                .filter { filterMode.activeChoice.test(it.block) }
+            renderState.surrounding = surrounding
+
+            renderState.itemStacksForRender = if (showBed) {
+                val bedItemStack = bedState.block.asItem().defaultInstance
+                if (surrounding.isEmpty()) {
+                    listOf(bedItemStack)
+                } else {
+                    val list = ArrayList<ItemStack>(surrounding.size + 1)
+                    list.add(bedItemStack) // Add bed itself at first
+                    surrounding.mapTo(list) { it.block.createItemStackForRendering(it.count) }
+                }
+            } else {
+                surrounding.mapToArray { it.block.createItemStackForRendering(it.count) }.asList()
+            }
         }
         beds.sort()
     }
@@ -138,7 +167,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     private val bedStateChangeHandler = suspendHandler<BedStateChangeEvent>(Dispatchers.Minecraft) { event ->
         beds.clear()
         beds.ensureCapacity(event.bedStates.size)
-        event.bedStates.mapTo(beds) { BedStateAndDistance(it, 0.0) }
+        event.bedStates.mapTo(beds, ::BedStateRenderState)
         updateAndSortBeds()
     }
 
@@ -149,72 +178,81 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
     @Suppress("unused")
     private val renderHandler = handler<OverlayRenderEvent> { event ->
+        fun isAdjacentAndNotEquals(pos1: BlockPos, pos2: BlockPos): Boolean {
+            return pos1 != pos2 && pos1.distManhattan(pos2) <= 1
+        }
+
         beds.sort()
 
         var i = 0
-        for ((bedState, distance) in beds) {
-            if (ignoreSelfBed.activeChoice.isSelfBed(bedState.block, bedState.trackedBlockPos)) {
-                continue
-            }
+        for ((bedState, distance, surrounding, itemStacksForRender) in beds) {
+            val currPos = bedState.trackedBlockPos
 
-            if (distance > maxDistance || i++ > maxCount) {
+            if (distance > maximumDistance || i > maxCount) {
                 break // because list beds are sorted by distance (ASC), so we break at first item out of range
             }
 
-            val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
-            val surrounding = (if (compact) bedState.compactSurroundingBlocks else bedState.surroundingBlocks)
-                .filter { filterMode.activeChoice.test(it.block) }
-
-            val blocksAsItemStacks = if (showBed) {
-                val list = ArrayList<ItemStack>(surrounding.size + 1) // Add bed itself at first
-                list.add(bedState.block.asItem().defaultStack)
-                surrounding.mapTo(list) { it.block.createItemStackForRendering(it.count) }
-            } else {
-                surrounding.map { it.block.createItemStackForRendering(it.count) }
+            if (ignoreSelfBed.activeChoice.isSelfBed(bedState.block, currPos) ||
+                ignoreAdjacent && beds.any { isAdjacentAndNotEquals(it.bedState.trackedBlockPos, currPos) }
+            ) {
+                continue
             }
 
-            event.context.drawItemStackList(blocksAsItemStacks)
+            val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
+
+            val outlineColor = if (outline) Color4b(bedState.block.color.mapColor.col) else Color4b.TRANSPARENT
+
+            event.context.drawItemStackList(itemStacksForRender)
                 .rowLength(Int.MAX_VALUE)
                 .scale(scale)
-                .center(screenPos)
-                .rectBackground(color = backgroundColor.toARGB())
+                .centerX(screenPos.x)
+                .centerY(screenPos.y)
+                .rectBackground(backgroundColor, outlineColor)
                 .itemStackRenderer { textRenderer, index, stack, x, y ->
                     if (index == 0 && showBed) {
                         // bed
-                        drawItem(stack, x, y)
+                        renderItem(stack, x, y)
                         drawStackCount(textRenderer, stack, x, y, "${distance.toInt()}m")
                     } else {
                         val surroundingBlock = surrounding[if (showBed) index - 1 else index]
-                        val defaultState = surroundingBlock.block.defaultState
+                        val defaultState = surroundingBlock.block.defaultBlockState()
                         val color =
-                            if (highlightUnbreakable && defaultState.isToolRequired
-                                && Slots.Hotbar.findSlot { s -> s.isSuitableFor(defaultState) } == null
+                            if (highlightUnbreakable && defaultState.requiresCorrectToolForDrops()
+                                && Slots.Hotbar.findSlot { s -> s.isCorrectToolForDrops(defaultState) } == null
                             ) {
                                 Color4b.RED
                             } else {
                                 Color4b.WHITE
                             }.toARGB()
 
-                        drawItem(stack, x, y)
+                        renderItem(stack, x, y)
                         val countString = stack.count.toString()
-                        matrices.withPush {
-                            translate(0.0F, 0.0F, 200.0F)
+                        pose().withPush {
                             // draw layer text
                             if (!compact) {
-                                drawText(textRenderer, ROMAN_NUMERALS[surroundingBlock.layer], x, y, color, textShadow)
+                                drawString(
+                                    textRenderer,
+                                    ROMAN_NUMERALS[surroundingBlock.layer],
+                                    x,
+                                    y,
+                                    color,
+                                    textShadow,
+                                )
                             }
                             // drawStackCount, with custom color (copied from DrawContext)
-                            drawText(
+                            drawString(
                                 textRenderer,
                                 countString,
-                                x + 19 - 2 - textRenderer.getWidth(countString),
+                                x + 19 - 2 - textRenderer.width(countString),
                                 y + 6 + 3,
                                 color,
                                 textShadow,
                             )
                         }
                     }
-                }.draw()
+                }.draw(preventOverlap)
+
+            i++
         }
     }
 

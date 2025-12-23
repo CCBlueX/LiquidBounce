@@ -36,8 +36,22 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.util.Formatting
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.dropPort
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.protocolVersion
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.rootDomain
+import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
+import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.ChatFormatting
 import java.io.Reader
 import java.io.Writer
 import java.text.SimpleDateFormat
@@ -122,7 +136,7 @@ object AutoConfig {
         modules: Collection<Configurable> = emptyList()
     ) {
         chat(metadata = MessageMetadata(prefix = false))
-        chat(regular("Auto Config").formatted(Formatting.LIGHT_PURPLE).bold(true))
+        chat(regular("Auto Config").withStyle(ChatFormatting.LIGHT_PURPLE).bold(true))
 
         val name = jsonObject.string("name") ?: throw IllegalArgumentException("Auto Config has no name")
         when (name) {
@@ -213,11 +227,11 @@ object AutoConfig {
         chat(
             regular("for protocol "),
             variable("$pName $pVersion")
-                .styled {
+                .withStyle {
                     if (!matchesVersion) {
-                        it.withFormatting(Formatting.RED, Formatting.BOLD)
+                        it.applyFormats(ChatFormatting.RED, ChatFormatting.BOLD)
                     } else {
-                        it.withFormatting(Formatting.GREEN)
+                        it.applyFormat(ChatFormatting.GREEN)
                     }
                 },
             regular(" and your current protocol is "),
@@ -269,7 +283,7 @@ object AutoConfig {
         jsonObject.add("modules", moduleTree.asJsonObject)
         jsonObject.add("spoofers", spooferTree.asJsonObject)
 
-        val author = mc.session.username
+        val author = mc.user.name
 
         val now = Date()
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy")
@@ -284,8 +298,8 @@ object AutoConfig {
         jsonObject.addProperty("time", time)
         jsonObject.addProperty("clientVersion", LiquidBounce.clientVersion)
         jsonObject.addProperty("clientCommit", LiquidBounce.clientCommit)
-        mc.currentServerEntry?.let {
-            jsonObject.addProperty("serverAddress", it.address.dropPort().rootDomain())
+        mc.currentServer?.let {
+            jsonObject.addProperty("serverAddress", it.ip.dropPort().rootDomain())
         }
         jsonObject.addProperty("protocolName", protocolName)
         jsonObject.addProperty("protocolVersion", protocolVersion)

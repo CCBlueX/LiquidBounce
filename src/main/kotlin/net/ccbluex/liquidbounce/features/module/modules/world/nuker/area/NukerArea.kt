@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.areaMode
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
-import net.minecraft.block.BlockState
-import net.minecraft.block.ShapeContext
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.Vec3
 
 sealed class NukerArea(name: String) : Choice(name) {
 
@@ -37,7 +37,7 @@ sealed class NukerArea(name: String) : Choice(name) {
     abstract fun lookupTargets(radius: Float, count: Int? = null): List<Pair<BlockPos, BlockState>>
 
     protected fun isPositionAvailable(
-        eyesPos: Vec3d,
+        eyesPos: Vec3,
         rangeSquared: Double,
         pos: BlockPos,
         state: BlockState,
@@ -46,16 +46,16 @@ sealed class NukerArea(name: String) : Choice(name) {
             return false
         }
 
-        val shape = state.getOutlineShape(world, pos, ShapeContext.of(player))
+        val shape = state.getShape(world, pos, CollisionContext.of(player))
 
         if (shape.isEmpty) {
             return false
         }
 
-        val vec3d = shape.offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-            .getClosestPointTo(eyesPos)
+        val vec3d = shape.move(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+            .closestPointTo(eyesPos)
             .orElse(null) ?: return false
 
-        return vec3d.squaredDistanceTo(eyesPos) <= rangeSquared
+        return vec3d.distanceToSqr(eyesPos) <= rangeSquared
     }
 }

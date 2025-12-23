@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.google.common.collect.Sets
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
@@ -26,19 +25,28 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.FULL_BOX
+import net.ccbluex.liquidbounce.render.GenericColorMode
+import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
+import net.ccbluex.liquidbounce.render.GenericStaticColorMode
+import net.ccbluex.liquidbounce.render.MapColorMode
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
-import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.math.BlockPos
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.core.BlockPos
+import java.util.concurrent.ConcurrentSkipListSet
 
 /**
  * BlockESP module
@@ -51,7 +59,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
     private val modes = choices("Mode", Glow, arrayOf(Box, Glow, Outline))
     private val targets by blocks(
         "Targets",
-        Sets.newConcurrentHashSet(findBlocksEndingWith("_BED", "DRAGON_EGG"))
+        ConcurrentSkipListSet(findBlocksEndingWith("_BED", "DRAGON_EGG"))
     ).onChange {
         if (running) {
             onDisabled()
@@ -68,6 +76,8 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         )
     }
 
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
     private object Box : Choice("Box") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
@@ -75,15 +85,15 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         private val outline by boolean("Outline", true)
 
         @Suppress("unused")
-        val renderHandler = handler<WorldRenderEvent> { event ->
+        private val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
-            drawBoxMode(mc.framebuffer, matrixStack, this.outline, false)
+            drawBoxMode(mc.mainRenderTarget, matrixStack, this.outline, false)
         }
 
         fun drawBoxMode(
-            framebuffer: Framebuffer,
-            matrixStack: MatrixStack,
+            framebuffer: RenderTarget,
+            matrixStack: PoseStack,
             drawOutline: Boolean,
             fullAlpha: Boolean,
         ): Boolean {
@@ -110,18 +120,24 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             var dirty = false
 
             startBatch()
+            val maxDistanceSq = maximumDistance.sq()
             for (blockPos in blocks) {
+                val distanceSq = blockPos.cameraDistanceSq()
+                if (distanceSq > maxDistanceSq) {
+                    continue
+                }
+
                 val blockState = blockPos.getState() ?: continue
 
                 if (blockState.isAir) {
                     continue
                 }
 
-                val outlineShape = blockState.getOutlineShape(world, blockPos)
+                val outlineShape = blockState.getShape(world, blockPos)
                 val boundingBox = if (outlineShape.isEmpty) {
                     FULL_BOX
                 } else {
-                    outlineShape.boundingBox
+                    outlineShape.bounds()
                 }
 
                 var color = colorMode.getColor(Pair(blockPos, blockState))
@@ -130,7 +146,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                     color = color.with(a = 255)
                 }
 
-                withPositionRelativeToCamera(blockPos.toVec3d()) {
+                withPositionRelativeToCamera(blockPos) {
                     drawBox(
                         boundingBox,
                         faceColor = color,

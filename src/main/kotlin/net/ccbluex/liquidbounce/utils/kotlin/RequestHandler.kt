@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.client.MinecraftClient
+import net.ccbluex.liquidbounce.event.EventListener
+import net.minecraft.client.Minecraft
 import java.util.concurrent.PriorityBlockingQueue
 
 class RequestHandler<T> {
@@ -42,7 +42,7 @@ class RequestHandler<T> {
     fun getActiveRequestValue(): T? {
         var top = activeRequests.peek() ?: return null
 
-        if (MinecraftClient.getInstance()?.isOnThread != false) {
+        if (Minecraft.getInstance()?.isSameThread != false) {
             // we remove all outdated requests here
             while (top.expiresIn <= currentTick || !top.provider.running) {
                 activeRequests.remove()
@@ -63,6 +63,6 @@ class RequestHandler<T> {
      * @param provider module which requested value
      */
     class Request<T>(
-        var expiresIn: Int, val priority: Int, val provider: ClientModule, val value: T
+        var expiresIn: Int, val priority: Int, val provider: EventListener, val value: T
     )
 }

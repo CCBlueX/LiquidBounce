@@ -51,7 +51,7 @@ fun getAccounts(requestObject: RequestObject): FullHttpResponse {
             addProperty("uuid", profile.uuid.toString())
             addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
             add("bans", interopGson.toJsonTree(account.bans))
-            addProperty("type", account.type)
+            addProperty("type", account.type.commonName)
             addProperty("favorite", account.favorite)
         })
     }
@@ -73,7 +73,7 @@ fun postNewMicrosoftAccount(requestObject: RequestObject): FullHttpResponse {
 fun postClipboardMicrosoftAccount(requestObject: RequestObject): FullHttpResponse {
     AccountManager.newMicrosoftAccount {
         mc.execute {
-            GLFW.glfwSetClipboardString(mc.window.handle, it)
+            GLFW.glfwSetClipboardString(mc.window.handle(), it)
             EventManager.callEvent(AccountManagerMessageEvent("Copied login url to clipboard"))
         }
     }
@@ -182,7 +182,7 @@ fun postLoginSessionAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postRestoreInitial(requestObject: RequestObject): FullHttpResponse {
     AccountManager.restoreInitial()
-    return httpOk(interopGson.toJsonTree(mc.session))
+    return httpOk(interopGson.toJsonTree(mc.user))
 }
 
 // PUT /api/v1/client/accounts/favorite
@@ -222,7 +222,8 @@ fun deleteAccount(requestObject: RequestObject): FullHttpResponse {
         addProperty("username", profile.username)
         addProperty("uuid", profile.uuid.toString())
         addProperty("avatar", formatAvatarUrl(profile.uuid, profile.username))
-        addProperty("type", account.type)
+
+        addProperty("type", account.type.commonName)
     })
 }
 

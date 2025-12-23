@@ -23,25 +23,25 @@ package net.ccbluex.liquidbounce.deeplearn.data
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.minecraft.util.math.Vec2f
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec2
+import net.minecraft.world.phys.Vec3
 import java.io.File
 
 @JvmRecord
 data class TrainingData(
     @SerializedName(CURRENT_DIRECTION_VECTOR)
-    val currentVector: Vec3d,
+    val currentVector: Vec3,
     @SerializedName(PREVIOUS_DIRECTION_VECTOR)
-    val previousVector: Vec3d,
+    val previousVector: Vec3,
     @SerializedName(TARGET_DIRECTION_VECTOR)
-    val targetVector: Vec3d,
+    val targetVector: Vec3,
     @SerializedName(DELTA_VECTOR)
-    val velocityDelta: Vec2f,
+    val velocityDelta: Vec2,
 
     @SerializedName(P_DIFF)
-    val playerDiff: Vec3d,
+    val playerDiff: Vec3,
     @SerializedName(T_DIFF)
-    val targetDiff: Vec3d,
+    val targetDiff: Vec3,
 
     @SerializedName(DISTANCE)
     val distance: Float,
@@ -88,7 +88,7 @@ data class TrainingData(
             previousVelocityDelta.deltaPitch,
 
             // Speed
-            targetDiff.horizontalLength().toFloat() + playerDiff.horizontalLength().toFloat(),
+            targetDiff.horizontalDistance().toFloat() + playerDiff.horizontalDistance().toFloat(),
 
             // Distance
             distance.toFloat()

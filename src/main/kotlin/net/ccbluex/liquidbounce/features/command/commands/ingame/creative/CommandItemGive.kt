@@ -23,9 +23,13 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.item
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.item.createItem
-import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 
 /**
  * ItemGive Command
@@ -55,17 +59,18 @@ object CommandItemGive : Command.Factory {
                 val amount = args.getOrElse(1, defaultValue = { 1 }) as Int // default one
 
                 val itemStack = createItem(item, amount.coerceIn(1..64))
-                val emptySlot = player.inventory.emptySlot
+                val emptySlot = player.inventory.freeSlot
 
                 if (emptySlot == -1) {
                     throw CommandException(command.result("noEmptySlot"))
                 }
 
-                player.inventory.setStack(emptySlot, itemStack)
-                network.sendPacket(CreativeInventoryActionC2SPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot,
+                player.inventory.setItem(emptySlot, itemStack)
+                network.send(
+                    ServerboundSetCreativeModeSlotPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot,
                     itemStack))
                 chat(
-                    regular(command.result("itemGiven", itemStack.toHoverableText(),
+                    regular(command.result("itemGiven", itemStack.displayName,
                         variable(itemStack.count.toString()))),
                     command
                 )

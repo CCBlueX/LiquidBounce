@@ -107,7 +107,7 @@ object ScaffoldSprintControlFeature : ToggleableConfigurable(ModuleScaffold, "Sp
                 }
 
                 SprintMode.NO_SPRINT_ON_GROUND -> {
-                    event.sprint = !player.isOnGround
+                    event.sprint = !player.onGround()
                 }
 
                 SprintMode.DO_NOT_CHANGE -> { }
@@ -133,7 +133,7 @@ object ScaffoldSprintControlFeature : ToggleableConfigurable(ModuleScaffold, "Sp
                 }
 
                 SprintMode.NO_SPRINT_ON_GROUND -> {
-                    event.sprint = !player.isOnGround
+                    event.sprint = !player.onGround()
                 }
 
                 SprintMode.DO_NOT_CHANGE -> { }

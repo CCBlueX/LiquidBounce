@@ -18,16 +18,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTexture
+import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
-import net.ccbluex.liquidbounce.render.setUniform
 import net.ccbluex.liquidbounce.utils.kotlin.optional
-import kotlin.use
+import net.ccbluex.liquidbounce.utils.render.clearColor
+import net.ccbluex.liquidbounce.utils.render.copyFrom
+import net.ccbluex.liquidbounce.utils.render.createUbo
+import net.ccbluex.liquidbounce.utils.render.putVec4
+import net.ccbluex.liquidbounce.utils.render.writeStd140
 
 /**
  * Module ItemChams
@@ -35,6 +42,7 @@ import kotlin.use
  * Applies visual effects to your held items.
  *
  * @see MixinGameRenderer
+ * @see net.minecraft.client.render.LightmapTextureManager
  *
  * @author ccetl
  */
@@ -49,37 +57,67 @@ object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
 
     private var edited = false
 
-    fun applyToTexture(texture: GpuTexture) {
+    private val storedLightmapTexture = gpuDevice.createTexture(
+        "$name - Lightmap Texture",
+        GpuTexture.USAGE_RENDER_ATTACHMENT or GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_COPY_SRC,
+        TextureFormat.RGBA8,
+        16, 16, 1, 1,
+    )
+
+    private val UBO = gpuDevice.createUbo(
+        labelGetter = { "$name UBO" },
+        std140Size = {
+            int
+            float
+            vec4
+            float
+            vec4
+            float
+            int
+        },
+    ).slice()
+
+    private val sampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR, false)
+
+    fun applyToTexture(textureView: GpuTextureView) {
         if (!this.running || edited) return
 
-        gpuDevice.createCommandEncoder().createRenderPass(
-            texture,
-            optional(-1),
+        this.storedLightmapTexture.copyFrom(source = textureView.texture())
+
+        UBO.writeStd140 {
+            putInt(0)
+            putFloat(alpha / 255f)
+            putVec4(blendColor)
+            putFloat(layerSize)
+            putVec4(glowColor)
+            putFloat(falloff)
+            putInt(layers)
+        }
+
+        textureView.createRenderPass(
+            { "$name Pass" },
+            clearColor = optional(-1),
         ).use { pass ->
             pass.setPipeline(ClientRenderPipelines.ItemChams)
 
-            pass.bindSampler("texture0", texture)
-            pass.bindSampler("image", texture)
-            pass.setUniform("useImage", 0)
-            pass.setUniform("blendColor", blendColor)
-            pass.setUniform("alpha", alpha / 255f)
-            pass.setUniform("sampleMul", layerSize)
-            pass.setUniform("glowColor", glowColor)
-            pass.setUniform("falloff", falloff)
-            pass.setUniform("layerCount", layers)
+            pass.bindTexture("texture0", textureView, sampler)
+            pass.bindTexture("image", textureView, sampler)
+            pass.setUniform("ItemChamsData", UBO)
 
-            pass.drawFullScreenPositionTexture()
+            pass.draw(0, 3)
         }
 
         edited = true
     }
 
-    fun resetTexture(texture: GpuTexture) {
+    fun resetTexture(texture: GpuTextureView) {
         if (!edited) return
 
-        gpuDevice.createCommandEncoder().clearColorTexture(texture, -1)
+        texture.texture().copyFrom(source = this.storedLightmapTexture)
+        storedLightmapTexture.clearColor(-1)
 
         edited = false
     }
+
 
 }

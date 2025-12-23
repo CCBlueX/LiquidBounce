@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -27,18 +26,24 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
+import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.minecraft.entity.Entity
-import net.minecraft.entity.ItemEntity
-import net.minecraft.entity.projectile.ArrowEntity
-import net.minecraft.entity.projectile.PersistentProjectileEntity.PickupPermission
-import net.minecraft.entity.projectile.SpectralArrowEntity
-import net.minecraft.entity.projectile.TridentEntity
-import net.minecraft.util.math.Box
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.entity.projectile.arrow.Arrow
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow.Pickup
+import net.minecraft.world.entity.projectile.arrow.SpectralArrow
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident
+import net.minecraft.world.phys.AABB
 
 /**
  * ItemESP module
@@ -52,7 +57,8 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         get() = "liquidbounce.module.itemEsp"
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val items by items("Items", ReferenceOpenHashSet())
+    private val items by items("Items", itemSortedSetOf())
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     private object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {
         val regularArrows by boolean("RegularArrows", true)
@@ -85,7 +91,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        private val box = Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
+        private val box = AABB(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
 
         private val entities = mutableListOf<Entity>()
 
@@ -97,7 +103,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
             entities.clear()
-            world.entities.filterTo(entities, ::shouldRender)
+            world.entitiesForRendering().filterTo(entities, ::shouldRender)
         }
 
         @Suppress("unused")
@@ -134,25 +140,31 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
             get() = modes
     }
 
-    fun shouldRender(it: Entity?) : Boolean {
-        if (it is ItemEntity) return filter(it.stack.item, items)
-        if (it is TridentEntity) return showTridents
+    fun shouldRender(entity: Entity?) : Boolean {
+        if (entity == null) return false
 
-        // arrow checks
-        // The server never sends the actual pickupType of arrows fired
-        // from Infinity-enchanted bows to clients. :(
-        // Therefore, those arrows are still rendered as collectible, even though they shouldn't be.
-        // The same applies to tridents thrown and arrows fired by players in Creative mode.
+        val distanceSq = entity.eyePosition.cameraDistanceSq()
+        if (distanceSq > maximumDistance.sq()) return false
 
-        // However, it's not completely useless — arrows shot by mobs such as skeletons and pillagers are not rendered.
-        val isArrow = it is ArrowEntity || it is SpectralArrowEntity
-        if (!isArrow || !ShowArrows.enabled || it.pickupType != PickupPermission.ALLOWED) {
-            return false
-        }
+        return when (entity) {
+            is ItemEntity -> filter(entity.item.item, items)
 
-        return when (it) {
-            is SpectralArrowEntity -> ShowArrows.spectralArrows
-            is ArrowEntity -> if (it.color == -1) ShowArrows.regularArrows else ShowArrows.arrowsWithEffects
+            is ThrownTrident -> showTridents
+
+            // arrow checks
+            // The server never sends the actual pickupType of arrows fired
+            // from Infinity-enchanted bows to clients. :(
+            // Therefore, those arrows are still rendered as collectible, even though they shouldn't be.
+            // The same applies to tridents thrown and arrows fired by players in Creative mode.
+
+            // However, it's not completely useless:
+            // arrows shot by mobs such as skeletons and pillagers are not rendered.
+            is Arrow if ShowArrows.running && entity.pickup == Pickup.ALLOWED ->
+                if (entity.color == -1) ShowArrows.regularArrows else ShowArrows.arrowsWithEffects
+
+            is SpectralArrow if ShowArrows.running && entity.pickup == Pickup.ALLOWED ->
+                ShowArrows.spectralArrows
+
             else -> false
         }
     }

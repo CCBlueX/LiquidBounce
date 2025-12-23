@@ -24,10 +24,12 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.item.ItemStack
-import net.minecraft.item.MaceItem
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.MaceItem
 import java.util.function.BooleanSupplier
 
 @Suppress("unused")
@@ -41,10 +43,10 @@ enum class KillAuraRequirements(
 
     override fun getAsBoolean(): Boolean =
         when (this) {
-            CLICK -> mc.options.attackKey.isPressedOnAny || mc.options.attackKey.wasPressedRecently(250)
-            WEAPON -> player.mainHandStack.isWeapon()
-            VANILLA_NAME -> player.mainHandStack.customName == null
-            NOT_BREAKING -> mc.interactionManager?.isBreakingBlock == false
+            CLICK -> mc.options.keyAttack.isPressedOnAny || mc.options.keyAttack.wasPressedRecently(250)
+            WEAPON -> player.mainHandItem.isWeapon()
+            VANILLA_NAME -> player.mainHandItem.customName == null
+            NOT_BREAKING -> mc.gameMode?.isDestroying == false
         }
 }
 
@@ -52,4 +54,4 @@ enum class KillAuraRequirements(
  * Check if the item is a weapon.
  */
 private fun ItemStack.isWeapon() = this.isSword || !isOlderThanOrEqual1_8 && this.isAxe
-    || this.item is MaceItem
+    || this.item is MaceItem || this.getEnchantment(Enchantments.KNOCKBACK) > 0

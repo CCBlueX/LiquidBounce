@@ -24,8 +24,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.net.URI;
-import java.util.*;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import javax.swing.*;
@@ -67,9 +67,9 @@ public final class LiquidInstruction {
         null,
         """
             Welcome to %s!
-            
+
             This file is a Fabric mod, you should use it with a launcher and Fabric.
-            
+
             You can click the button below to open the manual installation guide, or download the LiquidLauncher.
             If you need help, you can join our Discord server for support.
             If you found any bugs or have any feature requests, please report them on our GitHub repository.

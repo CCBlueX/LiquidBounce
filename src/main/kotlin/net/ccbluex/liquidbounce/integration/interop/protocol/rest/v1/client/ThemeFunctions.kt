@@ -27,7 +27,11 @@ import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.*
+import net.ccbluex.netty.http.util.httpBadRequest
+import net.ccbluex.netty.http.util.httpFile
+import net.ccbluex.netty.http.util.httpNoContent
+import net.ccbluex.netty.http.util.httpNotFound
+import net.ccbluex.netty.http.util.httpOk
 
 // GET /api/v1/client/theme/:id
 @Suppress("UNUSED_PARAMETER")

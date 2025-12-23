@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
+import net.ccbluex.liquidbounce.utils.entity.isSlowDueToUsingItem
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
@@ -101,7 +102,7 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     private val jumpHandler = handler<PlayerJumpEvent> { event ->
         if (sprintMode == SprintMode.OMNIDIRECTIONAL && shouldSprintOmnidirectional) {
             // Allows us to sprint boost in every direction
-            event.yaw = getMovementDirectionOfInput(player.yaw, DirectionalInput(player.input))
+            event.yaw = getMovementDirectionOfInput(player.yRot, DirectionalInput(player.input))
         }
     }
 
@@ -115,23 +116,27 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
             return@handler
         }
 
-        val yaw = getMovementDirectionOfInput(player.yaw, DirectionalInput(player.input))
+        val yaw = getMovementDirectionOfInput(player.yRot, DirectionalInput(player.input))
 
         // todo: unhook pitch - AimPlan needs support for only yaw or pitch operation
-        val rotation = Rotation(yaw, player.pitch)
+        val rotation = Rotation(yaw, player.xRot)
 
         RotationManager.setRotationTarget(rotationsConfigurable.toRotationTarget(rotation), Priority.NOT_IMPORTANT,
             this@ModuleSprint)
     }
 
     private fun shouldPreventSprint(): Boolean {
-        val deltaYawRad = (player.yaw - (RotationManager.currentRotation ?: return false).yaw).toRadians()
+        if (StopOn.USING_ITEM in stopOn && player.isSlowDueToUsingItem) {
+            return true
+        }
+
+        val deltaYawRad = (player.yRot - (RotationManager.currentRotation ?: return false).yaw).toRadians()
         val forward = player.input.movementForward
         val sideways = player.input.movementSideways
 
         val hasForwardMovement = forward * deltaYawRad.fastCos() + sideways * deltaYawRad.fastSin() > 1.0E-5
 
-        return (if (player.isOnGround) StopOn.GROUND in stopOn else StopOn.AIR in stopOn)
+        return (if (player.onGround()) StopOn.GROUND in stopOn else StopOn.AIR in stopOn)
             && !shouldSprintOmnidirectional
             && RotationManager.activeRotationTarget?.movementCorrection == MovementCorrection.OFF
             && !hasForwardMovement
@@ -140,11 +145,12 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     private enum class Ignore(override val choiceName: String) : NamedChoice {
         BLINDNESS("Blindness"),
         HUNGER("Hunger"),
-        COLLISION("Collision")
+        COLLISION("Collision"),
     }
 
     private enum class StopOn(override val choiceName: String) : NamedChoice {
         GROUND("Ground"),
         AIR("Air"),
+        USING_ITEM("UsingItem"),
     }
 }

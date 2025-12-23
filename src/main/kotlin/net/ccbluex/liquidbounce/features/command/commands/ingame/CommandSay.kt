@@ -43,7 +43,7 @@ object CommandSay : Command.Factory {
             .handler {
                 val message = (args[0] as Array<*>).joinToString(" ") { it as String }
 
-                network.sendChatMessage(message)
+                network.sendChat(message)
             }
             .build()
     }

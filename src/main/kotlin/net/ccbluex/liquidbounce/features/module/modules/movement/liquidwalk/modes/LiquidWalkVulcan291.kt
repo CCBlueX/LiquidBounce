@@ -49,7 +49,7 @@ internal object LiquidWalkVulcan291 : Choice("Vulcan291") {
             Timer.requestTimerSpeed(1.125f, Priority.IMPORTANT_FOR_USAGE_1, ModuleLiquidWalk)
 
             // Acts as a high-jump
-            player.velocity.y = motion.toDouble()
+            player.deltaMovement.y = motion.toDouble()
         } else {
             Timer.requestTimerSpeed(1.0f, Priority.IMPORTANT_FOR_USAGE_1, ModuleLiquidWalk)
         }

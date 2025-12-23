@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.ModuleInventoryMove
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
 object InventoryMoveTimerFeature : ToggleableConfigurable(ModuleInventoryMove, "Timer", false) {
 
@@ -31,7 +31,7 @@ object InventoryMoveTimerFeature : ToggleableConfigurable(ModuleInventoryMove, "
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (mc.currentScreen is HandledScreen<*>) {
+        if (mc.screen is AbstractContainerScreen<*>) {
             Timer.requestTimerSpeed(speed, Priority.IMPORTANT_FOR_USAGE_2, ModuleInventoryMove)
         }
     }

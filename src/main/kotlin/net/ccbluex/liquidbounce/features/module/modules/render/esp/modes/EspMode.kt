@@ -19,12 +19,20 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.modes
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.world.entity.Entity
 
 sealed class EspMode(
     name: String,
     val requiresTrueSight: Boolean = false
 ) : Choice(name) {
-    override val parent
+    final override val parent
         get() = modes
+
+    fun shouldRender(entity: Entity?): Boolean {
+        return entity != null && entity.position().cameraDistanceSq() < ModuleESP.maximumDistance.sq()
+    }
 }

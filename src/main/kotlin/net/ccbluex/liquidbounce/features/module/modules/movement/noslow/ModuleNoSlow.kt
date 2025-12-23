@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow
 
+import it.unimi.dsi.fastutil.floats.FloatFloatImmutablePair
 import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -33,7 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sl
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slowness.NoSlowSlowness
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sneaking.NoSlowSneaking
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.soulsand.NoSlowSoulsand
-import net.minecraft.item.consume.UseAction
+import net.minecraft.world.item.ItemUseAnimation
 
 /**
  * NoSlow module
@@ -58,19 +59,29 @@ object ModuleNoSlow : ClientModule("NoSlow", Category.MOVEMENT) {
 
     @Suppress("unused")
     private val multiplierHandler = handler<PlayerUseMultiplier> { event ->
-        val action = player.activeItem.useAction ?: return@handler
-        val mul = multiplier(action)
+        val action = player.useItem.useAnimation
+        val mul = multiplier(action, event.forward, event.sideways)
 
         event.forward = mul.firstFloat()
         event.sideways = mul.secondFloat()
     }
 
-    private fun multiplier(action: UseAction) = when (action) {
-        UseAction.NONE -> NoSlowUseActionHandler.DEFAULT_USE_MUL
-        UseAction.EAT, UseAction.DRINK -> NoSlowConsume.getMultiplier()
-        UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN, UseAction.BRUSH -> NoSlowBlock.getMultiplier()
-        UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR -> NoSlowBow.getMultiplier()
-        UseAction.BUNDLE -> NoSlowBundle.getMultiplier()
+    private fun multiplier(action: ItemUseAnimation, forward: Float, sideways: Float) = when (action) {
+        ItemUseAnimation.NONE -> FloatFloatImmutablePair(forward, sideways)
+        ItemUseAnimation.EAT, ItemUseAnimation.DRINK -> NoSlowConsume.getMultiplier(forward, sideways)
+        ItemUseAnimation.BLOCK, ItemUseAnimation.SPYGLASS,
+        ItemUseAnimation.TOOT_HORN, ItemUseAnimation.BRUSH -> NoSlowBlock.getMultiplier(
+            forward,
+            sideways
+        )
+
+        ItemUseAnimation.BOW, ItemUseAnimation.TRIDENT,
+        ItemUseAnimation.CROSSBOW, ItemUseAnimation.SPEAR -> NoSlowBow.getMultiplier(
+            forward,
+            sideways
+        )
+
+        ItemUseAnimation.BUNDLE -> NoSlowBundle.getMultiplier(forward, sideways)
     }
 
 }

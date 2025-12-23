@@ -19,36 +19,38 @@
 
 package net.ccbluex.liquidbounce.utils.aiming.point
 
+import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.Position
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
-data class PointInsideBox(val pos: Vec3d, val box: Box) {
-    init {
-        pos.x = pos.x.coerceIn(box.minX, box.maxX)
-        pos.y = pos.y.coerceIn(box.minY, box.maxY)
-        pos.z = pos.z.coerceIn(box.minZ, box.maxZ)
-    }
+@ConsistentCopyVisibility
+@JvmRecord
+data class PointInsideBox private constructor(val pos: Vec3, val box: AABB) : Position {
 
     fun distanceTo(point: PointInsideBox) = pos.distanceTo(point.pos)
 
-    fun distanceTo(point: Vec3d) = pos.distanceTo(point)
+    fun distanceTo(point: Vec3) = pos.distanceTo(point)
 
-    fun squaredDistanceTo(point: PointInsideBox) = pos.squaredDistanceTo(point.pos)
+    fun squaredDistanceTo(point: PointInsideBox) = pos.distanceToSqr(point.pos)
 
-    fun squaredDistanceTo(point: Vec3d) = pos.squaredDistanceTo(point)
+    fun squaredDistanceTo(point: Vec3) = pos.distanceToSqr(point)
 
-    operator fun plus(other: Vec3d) = PointInsideBox(pos + other, box.offset(other))
+    operator fun plus(other: Position) = Companion(pos + other, box + other)
 
-    operator fun minus(other: Vec3d) = PointInsideBox(pos - other, box.offset(other.negate()))
+    operator fun minus(other: Position) = Companion(pos - other, box - other)
 
-    override fun equals(other: Any?) = other is PointInsideBox && pos == other.pos && box == other.box
+    // Delegation
+    override fun x(): Double = pos.x()
+    override fun y(): Double = pos.y()
+    override fun z(): Double = pos.z()
 
-    override fun hashCode(): Int {
-        var result = pos.hashCode()
-        result = 31 * result + box.hashCode()
-        return result
+    companion object {
+        @JvmStatic
+        @JvmName("of")
+        operator fun invoke(pos: Vec3, box: AABB) = PointInsideBox(box.getNearestPoint(pos), box)
     }
 
 }

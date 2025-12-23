@@ -21,8 +21,7 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
-import java.util.Collections
-import java.util.EnumMap
+import java.util.*
 import kotlin.experimental.ExperimentalTypeInference
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =
@@ -31,9 +30,6 @@ fun <T> Array<out T>?.unmodifiable(): List<T> =
         size == 1 -> Collections.singletonList(this[0])
         else -> ObjectImmutableList(this)
     }
-
-inline fun <T> Comparator<in T>.max(a: T, b: T): T = if (compare(a, b) > 0) a else b
-inline fun <T> Comparator<in T>.min(a: T, b: T): T = if (compare(a, b) < 0) a else b
 
 inline fun <reified K : Enum<K>, V> enumMapOf(): EnumMap<K, V> = EnumMap(K::class.java)
 

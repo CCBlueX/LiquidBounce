@@ -15,22 +15,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
-import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuTexture
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.ccbluex.liquidbounce.utils.render.uploadRect
-import net.minecraft.client.texture.NativeImageBackedTexture
-import net.minecraft.util.math.ChunkPos
+import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.client.gui.render.TextureSetup
 import org.joml.Vector2i
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import java.util.function.BiConsumer
@@ -52,12 +49,10 @@ private const val MAX_ATLAS_POSITIONS: Int = ATLAS_SIZE * ATLAS_SIZE - 1
 private val NOT_LOADED_ATLAS_POSITION = MinimapTextureAtlasManager.AtlasPosition(0, 0)
 
 class MinimapTextureAtlasManager {
-    private val texture = NativeImageBackedTexture(
+    private val texture = DynamicTexture(
         { "$CLIENT_NAME MinimapTexture" },
         ATLAS_SIZE * 16, ATLAS_SIZE * 16, false
-    ).apply {
-        glTexture.setTextureFilter(FilterMode.NEAREST, false)
-    }
+    )
 
     private val availableAtlasPositions = ObjectArrayList<AtlasPosition>(MAX_ATLAS_POSITIONS).apply {
         for (x in 0 until ATLAS_SIZE) {
@@ -82,25 +77,25 @@ class MinimapTextureAtlasManager {
             for (y in 0..15) {
                 val color = if ((x and 1) xor (y and 1) == 0) Color4b.BLACK.toARGB() else Color4b.WHITE.toARGB()
 
-                this.texture.image!!.setColorArgb(x, y, color)
+                this.texture.pixels!!.setPixel(x, y, color)
             }
         }
 
         this.dirtyAtlasPositions.add(NOT_LOADED_ATLAS_POSITION)
     }
 
-    private fun allocate(chunkPos: ChunkPos): AtlasPosition {
+    private fun allocate(chunkPos: Long): AtlasPosition {
         return lock.write {
             val atlasPosition =
                 availableAtlasPositions.removeLastOrNull() ?: error("No more space in the texture atlas!")
-            chunkPosAtlasPosMap.put(chunkPos.toLong(), atlasPosition)
+            chunkPosAtlasPosMap.put(chunkPos, atlasPosition)
             atlasPosition
         }
     }
 
-    fun deallocate(chunkPos: ChunkPos) {
+    fun deallocate(chunkPos: Long) {
         lock.write {
-            chunkPosAtlasPosMap.remove(chunkPos.toLong())?.apply(availableAtlasPositions::push)
+            chunkPosAtlasPosMap.remove(chunkPos)?.apply(availableAtlasPositions::push)
         }
     }
 
@@ -112,21 +107,21 @@ class MinimapTextureAtlasManager {
         }
     }
 
-    fun getOrNotLoadedTexture(chunkPos: ChunkPos): AtlasPosition {
+    fun getOrNotLoadedTexture(chunkPos: Long): AtlasPosition {
         return get(chunkPos) ?: NOT_LOADED_ATLAS_POSITION
     }
 
-    fun get(chunkPos: ChunkPos): AtlasPosition? {
-        return lock.read { chunkPosAtlasPosMap[chunkPos.toLong()] }
+    fun get(chunkPos: Long): AtlasPosition? {
+        return lock.read { chunkPosAtlasPosMap[chunkPos] }
     }
 
-    private fun getOrAllocate(chunkPos: ChunkPos): AtlasPosition {
-        return chunkPosAtlasPosMap[chunkPos.toLong()] ?: allocate(chunkPos)
+    private fun getOrAllocate(chunkPos: Long): AtlasPosition {
+        return chunkPosAtlasPosMap[chunkPos] ?: allocate(chunkPos)
     }
 
     fun editChunk(
-        chunkPos: ChunkPos,
-        editor: BiConsumer<NativeImageBackedTexture, AtlasPosition>,
+        chunkPos: Long,
+        editor: BiConsumer<DynamicTexture, AtlasPosition>,
     ) {
         val atlasPosition = getOrAllocate(chunkPos)
 
@@ -140,12 +135,12 @@ class MinimapTextureAtlasManager {
     /**
      * Uploads texture changes to the GPU
      *
-     * @return the [GpuTexture] of the texture
+     * @return the [TextureSetup] of the texture
      */
-    fun prepareRendering(): GpuTexture {
+    fun prepareRendering(): TextureSetup {
         lock.read {
             if (this.dirtyAtlasPositions.isEmpty()) {
-                return this.texture.glTexture
+                return this.texture.textureSetup
             }
 
             val dirtyChunks = this.dirtyAtlasPositions.size
@@ -160,7 +155,7 @@ class MinimapTextureAtlasManager {
             this.dirtyAtlasPositions.clear()
         }
 
-        return this.texture.glTexture
+        return this.texture.textureSetup
     }
 
     private fun uploadFullTexture() {

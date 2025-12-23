@@ -19,19 +19,28 @@
 package net.ccbluex.liquidbounce.utils.combat
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.fastutil.objectLinkedSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.RangedValue
-import net.ccbluex.liquidbounce.config.types.ValueType.*
+import net.ccbluex.liquidbounce.config.types.ValueType.FLOAT
+import net.ccbluex.liquidbounce.config.types.ValueType.FLOAT_RANGE
+import net.ccbluex.liquidbounce.config.types.ValueType.INT
+import net.ccbluex.liquidbounce.config.types.ValueType.INT_RANGE
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.DummyRangedValueProvider
+import net.ccbluex.liquidbounce.utils.client.NoneRangedValueProvider
+import net.ccbluex.liquidbounce.utils.client.RangedValueProvider
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.mob.Angerable
-import net.minecraft.entity.mob.HostileEntity
-import net.minecraft.entity.player.PlayerEntity
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.NeutralMob
+import net.minecraft.world.entity.monster.Monster
+import net.minecraft.world.entity.player.Player
 import java.util.function.Predicate
 
 /**
@@ -93,12 +102,22 @@ open class TargetSelector(
     private val range = rangeValue.register(this)
     private val fov by float("FOV", 180f, 0f..180f)
     private val hurtTime by int("HurtTime", 10, 0..10)
-    private val priority by enumChoice("Priority", defaultPriority)
+
+    @Suppress("unused", "UnusedPrivateProperty")
+    private val priority by multiEnumChoice(
+        name = "Priority",
+        default = objectLinkedSetOf(TargetPriority.TYPE, defaultPriority),
+        canBeNone = false,
+    ).onChanged { set ->
+        comparator = ComparatorChain(comparisonFunctions = set.toTypedArray())
+    }
+
+    private var comparator: Comparator<in LivingEntity> = TargetPriority.TYPE
 
     /**
      * Counts available targets.
      */
-    fun countTargets(): Int = world.entities.count { entity ->
+    fun countTargets(): Int = world.entitiesForRendering().count { entity ->
         entity is LivingEntity && validate(entity)
     }
 
@@ -108,7 +127,7 @@ open class TargetSelector(
     fun targets(): MutableList<LivingEntity> {
         val entities = ObjectArrayList<LivingEntity>()
 
-        for (entity in world.entities) {
+        for (entity in world.entitiesForRendering()) {
             if (entity is LivingEntity && validate(entity)) {
                 entities.add(entity)
             }
@@ -118,13 +137,7 @@ open class TargetSelector(
             return entities
         }
 
-        entities.sortWith(
-            if (priority == TargetPriority.DISTANCE) {
-                COMPARATOR_BY_TYPE.thenComparing(TargetPriority.DISTANCE.comparator)
-            } else {
-                COMPARATOR_BY_TYPE.thenComparing(priority.comparator).thenComparing(TargetPriority.DISTANCE.comparator)
-            }
-        )
+        entities.sortWith(this.comparator)
 
         // Update max distance squared
         closestSquaredEnemyDistance = entities.minOf { it.squaredBoxedDistanceTo(player) }
@@ -176,38 +189,60 @@ open class TargetSelector(
 
 }
 
-private val COMPARATOR_BY_TYPE: Comparator<LivingEntity> = Comparator.comparingInt { entity ->
-    when (entity) {
-        is PlayerEntity -> 0
-        is HostileEntity -> 1
-        is Angerable if entity.angryAt == player.uuid -> 2
-        else -> Int.MAX_VALUE
-    }
-}
+enum class TargetPriority(override val choiceName: String) : NamedChoice, Comparator<LivingEntity> {
+    /**
+     * Player first
+     */
+    TYPE("Type") {
+        private fun weight(entity: LivingEntity): Int =
+            when (entity) {
+                is Player -> 0
+                is Monster -> 1
+                is NeutralMob if entity.persistentAngerTarget == player.uuid -> 2
+                else -> Int.MAX_VALUE
+            }
 
-enum class TargetPriority(override val choiceName: String, val comparator: Comparator<in LivingEntity>) : NamedChoice {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            weight(o1) compareTo weight(o2)
+    },
+
     /**
      * Lowest health first
      */
-    HEALTH("Health", Comparator.comparingDouble { it.getActualHealth().toDouble() }),
+    HEALTH("Health") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o1.getActualHealth() compareTo o2.getActualHealth()
+    },
 
     /**
      * Closest to you first
      */
-    DISTANCE("Distance", Comparator.comparingDouble { it.squaredBoxedDistanceTo(player) }),
+    DISTANCE("Distance") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o1.squaredBoxedDistanceTo(player) compareTo o2.squaredBoxedDistanceTo(player)
+    },
 
     /**
      * Closest to your crosshair first
      */
-    DIRECTION("Direction", Comparator.comparingDouble { RotationUtil.crosshairAngleToEntity(it).toDouble() }),
+    DIRECTION("Direction") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            RotationUtil.crosshairAngleToEntity(o1) compareTo RotationUtil.crosshairAngleToEntity(o2)
+    },
 
     /**
      * With the lowest hurt time first
      */
-    HURT_TIME("HurtTime", Comparator.comparingInt { it.hurtTime }),
+    HURT_TIME("HurtTime") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o1.hurtTime compareTo o2.hurtTime
+    },
 
     /**
      * Oldest entity first
      */
-    AGE("Age", Comparator.comparingInt { -it.age }),
+    AGE("Age") {
+        override fun compare(o1: LivingEntity, o2: LivingEntity): Int =
+            o2.tickCount compareTo o1.tickCount
+    },
 }

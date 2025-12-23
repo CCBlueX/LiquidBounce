@@ -29,5 +29,14 @@ import net.ccbluex.liquidbounce.config.gson.interopGson
  */
 interface WebSocketEvent {
     val serializer: Gson get() = interopGson
+
+    /**
+     * Indicates whether the event should be serialized asynchronously.
+     * If set to true, the event will be serialized in a separate thread.
+     *
+     * The most common situation you need to set this to `false` is the event contains **mutable** states
+     * that is modified after the event is created.
+     */
+    val serializeAsync: Boolean get() = true
 }
 

@@ -21,10 +21,14 @@ package net.ccbluex.liquidbounce.event
 
 import kotlinx.atomicfu.atomic
 import kotlinx.atomicfu.updateAndGet
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 sealed interface SuspendHandlerBehavior {

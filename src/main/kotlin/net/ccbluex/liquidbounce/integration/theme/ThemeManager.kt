@@ -37,15 +37,17 @@ import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ChatScreen
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.ChatScreen
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import java.io.File
 
 object ThemeManager : Configurable("theme") {
 
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
 
-    val themes = mutableListOf<Theme>()
+    val themes: List<Theme>
+        field = mutableListOf()
     val themeIds get() = themes.map { theme -> theme.metadata.id }
 
     private var currentTheme by text("Theme", "liquidbounce").onChanged {
@@ -79,7 +81,7 @@ object ThemeManager : Configurable("theme") {
             }
         }
 
-    private val takesInputHandler = InputAcceptor { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
+    private val takesInputHandler = InputAcceptor { mc.screen != null && mc.screen !is ChatScreen }
 
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->
@@ -93,6 +95,11 @@ object ThemeManager : Configurable("theme") {
             return@onChange enabled
         }
 
+    internal val reloader = ResourceManagerReloadListener { resourceManager ->
+        themes.forEach { it.onResourceManagerReload(resourceManager) }
+        logger.info("Reloaded ${themes.size} themes.")
+    }
+
     init {
         ConfigSystem.root(this)
     }
@@ -105,7 +112,7 @@ object ThemeManager : Configurable("theme") {
     suspend fun load() {
         fun Theme.addIfUnloaded() {
             if (themes.none { it.metadata.id.equals(this.metadata.id, true) }) {
-                themes += this
+                themes.add(this)
             } else {
                 logger.warn("Theme with ID '${this.metadata.id}' is already loaded, skipping duplicate.")
             }
@@ -210,7 +217,7 @@ object ThemeManager : Configurable("theme") {
     }
 
     @Suppress("LongParameterList")
-    fun drawBackground(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
+    fun drawBackground(context: GuiGraphics, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
         val background = if (shaderEnabled) {
             theme.themeBackgroundShader
         } else {

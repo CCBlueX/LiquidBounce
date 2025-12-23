@@ -9,22 +9,20 @@
     import {onMount} from "svelte";
     import {getComponents, getGameWindow, getMetadata} from "../../integration/rest";
     import {listen} from "../../integration/ws";
-    import type {Component, Metadata} from "../../integration/types";
+    import type {HudComponent, Metadata} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
     import type {ComponentsUpdateEvent, ScaleFactorChangeEvent} from "../../integration/events";
     import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
     import Effects from "./elements/Effects.svelte";
     import BlockCounter from "./elements/BlockCounter.svelte";
-    import ArmorItems from "./elements/inventory/ArmorItems.svelte";
-    import InventoryContainer from "./elements/inventory/InventoryContainer.svelte";
     import Text from "./elements/Text.svelte";
-    import CraftingInput from "./elements/inventory/CraftingInput.svelte";
     import DraggableComponent from "./elements/DraggableComponent.svelte";
     import KeyBinds from "./elements/KeyBinds.svelte";
+    import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
 
     let zoom = 100;
     let metadata: Metadata;
-    let components: Component[] = [];
+    let components: HudComponent[] = [];
 
     onMount(async () => {
         const gameWindow = await getGameWindow();
@@ -57,7 +55,7 @@
                 {#if c.name === "Watermark"}
                     <Watermark/>
                 {:else if c.name === "ArrayList"}
-                    <ArrayList/>
+                    <ArrayList settings={c.settings}/>
                 {:else if c.name === "TabGui"}
                     <TabGui/>
                 {:else if c.name === "Notifications"}
@@ -65,17 +63,24 @@
                 {:else if c.name === "TargetHud"}
                     <TargetHud/>
                 {:else if c.name === "BlockCounter"}
-                    <BlockCounter/>
+                    <BlockCounter settings={c.settings}/>
                 {:else if c.name === "Hotbar"}
                     <HotBar/>
                 {:else if c.name === "Scoreboard"}
-                    <Scoreboard/>
+                    <Scoreboard settings={c.settings}/>
                 {:else if c.name === "ArmorItems"}
-                    <ArmorItems/>
+                    <GenericPlayerInventory
+                            rowLength={1}
+                            backgroundColor="transparent"
+                            gap="2px"
+                            getRenderedStacks={it => Array.from(it.armor).reverse()}
+                    />
                 {:else if c.name === "Inventory"}
-                    <InventoryContainer/>
+                    <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.main.slice(9)} />
                 {:else if c.name === "CraftingInventory"}
-                    <CraftingInput/>
+                    <GenericPlayerInventory rowLength={2} getRenderedStacks={it => it.crafting} />
+                {:else if c.name === "EnderChestInventory"}
+                    <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.enderChest} />
                 {:else if c.name === "Taco"}
                     <Taco/>
                 {:else if c.name === "Keystrokes"}

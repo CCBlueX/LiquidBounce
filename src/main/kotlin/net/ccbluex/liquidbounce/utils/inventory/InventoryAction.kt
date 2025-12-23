@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.slot.SlotActionType
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.inventory.ClickType
 
 sealed interface InventoryAction {
 
@@ -37,68 +37,68 @@ sealed interface InventoryAction {
 
     @JvmRecord
     data class Click(
-        val screen: HandledScreen<*>? = null,
+        val screen: AbstractContainerScreen<*>? = null,
         val slot: ItemSlot,
         val button: Int,
-        val actionType: SlotActionType,
+        val actionType: ClickType,
     ) : InventoryAction {
 
         companion object {
 
             @JvmStatic
             fun performThrow(
-                screen: HandledScreen<*>? = null,
+                screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
             ) = Click(
                 screen,
                 slot = slot,
                 button = 1,
-                actionType = SlotActionType.THROW
+                actionType = ClickType.THROW
             )
 
             @JvmStatic
             fun performQuickMove(
-                screen: HandledScreen<*>? = null,
+                screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
             ) = Click(
                 screen,
                 slot = slot,
                 button = 0,
-                actionType = SlotActionType.QUICK_MOVE
+                actionType = ClickType.QUICK_MOVE
             )
 
             @JvmStatic
             fun performSwap(
-                screen: HandledScreen<*>? = null,
+                screen: AbstractContainerScreen<*>? = null,
                 from: ItemSlot,
                 to: HotbarItemSlot
             ) = Click(
                 screen,
                 slot = from,
                 button = to.hotbarSlotForServer,
-                actionType = SlotActionType.SWAP
+                actionType = ClickType.SWAP
             )
 
             @JvmStatic
             fun performPickupAll(
-                screen: HandledScreen<*>? = null,
+                screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
             ) = Click(
                 screen,
                 slot = slot,
                 button = 0,
-                actionType = SlotActionType.PICKUP_ALL
+                actionType = ClickType.PICKUP_ALL
             )
 
             @JvmStatic
             fun performPickup(
-                screen: HandledScreen<*>? = null,
+                screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot
             ) = Click(
                 screen,
                 slot = slot,
                 button = 0,
-                actionType = SlotActionType.PICKUP
+                actionType = ClickType.PICKUP
             )
 
             /**
@@ -106,7 +106,7 @@ sealed interface InventoryAction {
              */
             @JvmStatic
             fun performMergeStack(
-                screen: HandledScreen<*>? = null,
+                screen: AbstractContainerScreen<*>? = null,
                 slot: ItemSlot,
             ) = listOf(
                 performPickup(screen, slot = slot),
@@ -123,20 +123,20 @@ sealed interface InventoryAction {
             }
 
             // Screen is null, which means we are targeting the player inventory
-            if (requiresPlayerInventoryOpen() && player.currentScreenHandler.isPlayerInventory &&
-                !interaction.hasRidingInventory()
+            if (requiresPlayerInventoryOpen() && player.containerMenu.isPlayerInventory &&
+                !interaction.isServerControlledInventory
             ) {
                 return true
             }
 
             // Check if current screen is the same as the screen we want to interact with
-            val screen = mc.currentScreen as? HandledScreen<*> ?: return false
+            val screen = mc.screen as? AbstractContainerScreen<*> ?: return false
             return screen.syncId == this.screen.syncId
         }
 
         override fun performAction(): Boolean {
             val slotId = slot.getIdForServer(screen) ?: return false
-            interaction.clickSlot(screen?.syncId ?: 0, slotId, button, actionType, player)
+            interaction.handleInventoryMouseClick(screen?.syncId ?: 0, slotId, button, actionType, player)
             InventoryManager.lastClickedSlot = slotId
 
             return true
@@ -154,7 +154,7 @@ sealed interface InventoryAction {
                 .minByOrNull { slot.distance(it) } ?: return false
 
             val slotId = closestEmptySlot.getIdForServer(screen)
-            interaction.clickSlot(screen.syncId, slotId, 0, SlotActionType.PICKUP, player)
+            interaction.handleInventoryMouseClick(screen.syncId, slotId, 0, ClickType.PICKUP, player)
             InventoryManager.lastClickedSlot = slotId
             return true
         }
@@ -182,15 +182,15 @@ sealed interface InventoryAction {
 
     @JvmRecord
     data class CloseScreen(
-        val screen: HandledScreen<*>,
+        val screen: AbstractContainerScreen<*>,
     ) : InventoryAction {
 
         // Check if current handler is the same as the screen we want to close
         override fun canPerformAction(inventoryConstraints: InventoryConstraints) =
-            player.currentScreenHandler.syncId == screen.syncId
+            player.containerMenu.containerId == screen.syncId
 
         override fun performAction(): Boolean {
-            player.closeHandledScreen()
+            player.closeContainer()
             return true
         }
 
@@ -219,8 +219,8 @@ sealed interface InventoryAction {
             }
 
             // Screen is null, which means we are targeting the player inventory
-            if (requiresPlayerInventoryOpen() && player.currentScreenHandler.isPlayerInventory &&
-                !interaction.hasRidingInventory()
+            if (requiresPlayerInventoryOpen() && player.containerMenu.isPlayerInventory &&
+                !interaction.isServerControlledInventory
             ) {
                 return true
             }
@@ -233,10 +233,10 @@ sealed interface InventoryAction {
 
             if (slot != null) {
                 val slotId = slot.getIdForServer(null) ?: return false
-                interaction.clickCreativeStack(itemStack, slotId)
+                interaction.handleCreativeModeItemAdd(itemStack, slotId)
                 InventoryManager.lastClickedSlot = slotId
             } else {
-                interaction.dropCreativeStack(itemStack)
+                interaction.handleCreativeModeItemDrop(itemStack)
             }
             return true
         }

@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeConfigurable
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleConfigurable
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.option.Perspective
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.CameraType
 
 /**
  * Automatically goes into F5 mode when opening the inventory
@@ -37,10 +37,12 @@ object ModuleAutoF5 : ClientModule("AutoF5", Category.RENDER) {
 
     @Suppress("unused")
     private val perspectiveHandler = handler<PerspectiveEvent> { event ->
-        val screen = mc.currentScreen
+        val screen = mc.screen
 
-        if (screen is HandledScreen<*> && checkScreenHandlerType.isValid(screen) && checkScreenTitle.isValid(screen)) {
-            event.perspective = Perspective.THIRD_PERSON_BACK
+        if (screen is AbstractContainerScreen<*>
+            && checkScreenHandlerType.isValid(screen) && checkScreenTitle.isValid(screen)
+        ) {
+            event.perspective = CameraType.THIRD_PERSON_BACK
         }
     }
 

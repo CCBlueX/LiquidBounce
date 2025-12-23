@@ -24,19 +24,31 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
 import net.ccbluex.liquidbounce.features.account.SessionWithService
-import net.minecraft.client.session.Session
+import net.ccbluex.liquidbounce.features.account.couldBeOnline
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.User
 import java.lang.reflect.Type
 
-object SessionSerializer : JsonSerializer<Session> {
-    override fun serialize(src: Session?, typeOfSrc: Type, context: JsonSerializationContext) = src?.let {
+val User.accountType
+    get() = when {
+        !this.couldBeOnline()
+            || profileId == null
+            || mc.isOfflineDeveloperMode -> "legacy" // cracked
+        xuid.isEmpty || clientId.isEmpty -> "mojang" // Mojang account
+        xuid.isPresent || clientId.isPresent -> "msa" // Microsoft account
+        else -> "legacy"
+    }
+
+object SessionSerializer : JsonSerializer<User> {
+    override fun serialize(src: User?, typeOfSrc: Type, context: JsonSerializationContext) = src?.let {
         JsonObject().apply {
             val service = SessionWithService.getService(src)
 
-            addProperty("username", it.username)
-            addProperty("uuid", it.uuidOrNull.toString())
+            addProperty("username", it.name)
+            addProperty("uuid", it.profileId.toString())
             addProperty("service", service.choiceName)
-            addProperty("type", it.accountType.getName())
-            addProperty("avatar", formatAvatarUrl(it.uuidOrNull, it.username))
+            addProperty("type", it.accountType)
+            addProperty("avatar", formatAvatarUrl(it.profileId, it.name))
             addProperty("online", service.canJoinOnline)
             addProperty("premium", service.canJoinOnline) // todo: deprecated, kept for compatibility
         }

@@ -19,8 +19,6 @@
 
 package net.ccbluex.liquidbounce.utils.collection
 
-import kotlin.collections.AbstractList
-
 /**
  * Creates a virtual [List] represents the lists get from receiver with [transform].
  * It assumes all transformed list are immutable. Modify them leads to undefined behavior.

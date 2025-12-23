@@ -17,9 +17,11 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 @file:Suppress("TooManyFunctions")
+
 package net.ccbluex.liquidbounce.render.engine.type
 
-import net.minecraft.text.TextColor
+import net.minecraft.network.chat.TextColor
+import org.joml.Vector4f
 import java.awt.Color
 
 @JvmRecord
@@ -194,4 +196,9 @@ data class Color4b @JvmOverloads constructor(val r: Int, val g: Int, val b: Int,
     fun toAwtColor(): Color = Color(r, g, b, a)
 
     fun toTextColor(): TextColor = TextColor.fromRgb(toARGB())
+
+    @JvmOverloads
+    fun toVector4f(dest: Vector4f = Vector4f()): Vector4f {
+        return dest.set(r / 255f, g / 255f, b / 255f, a / 255f)
+    }
 }

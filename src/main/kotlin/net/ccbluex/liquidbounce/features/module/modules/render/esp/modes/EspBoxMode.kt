@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP.getColor
@@ -27,7 +26,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.minecraft.util.math.Box
+import net.minecraft.world.phys.AABB
 
 object EspBoxMode : EspMode("Box") {
 
@@ -36,17 +35,13 @@ object EspBoxMode : EspMode("Box") {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-        val entitiesWithBoxes = RenderedEntities.mapToArray { entity ->
-            val dimensions = entity.getDimensions(entity.pose)
-            val d = dimensions.width.toDouble() / 2.0
-
-            entity to Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(expand.toDouble())
-        }
-
-        renderEnvironmentForWorld(matrixStack) {
+        renderEnvironmentForWorld(event.matrixStack) {
             startBatch()
-            entitiesWithBoxes.forEach { (entity, box) ->
+            for (entity in RenderedEntities) {
+                val dimensions = entity.getDimensions(entity.pose)
+                val d = dimensions.width.toDouble() / 2.0
+                val box = AABB(-d, 0.0, -d, d, dimensions.height.toDouble(), d).inflate(expand.toDouble())
+
                 val pos = entity.interpolateCurrentPosition(event.partialTicks)
                 val color = getColor(entity)
 

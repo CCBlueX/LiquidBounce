@@ -24,27 +24,27 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool.fin
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.minecraft.block.BlockState
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.util.Hand
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.minecraft.world.InteractionHand
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
 
     private val switch by boolean("Switch", false)
 
     override fun isInvalid(mineTarget: MineTarget, state: BlockState): Boolean {
-        return state.getHardness(world, mineTarget.targetPos) == 1f && !player.isCreative
+        return state.getDestroySpeed(world, mineTarget.targetPos) == 1f && !player.isCreative
     }
 
     override fun onCannotLookAtTarget(mineTarget: MineTarget) {
         // send always a packet to keep the target
-        interaction.sendSequencedPacket(world) { sequence ->
-            PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+        interaction.startPrediction(world) { sequence ->
+            ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                 mineTarget.targetPos,
                 Direction.DOWN,
                 sequence
@@ -53,7 +53,7 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
     }
 
     override fun shouldTarget(blockPos: BlockPos, state: BlockState): Boolean {
-        return state.getHardness(world, blockPos) > 0f
+        return state.getDestroySpeed(world, blockPos) > 0f
     }
 
     override fun start(mineTarget: MineTarget) {
@@ -61,16 +61,16 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
     }
 
     override fun finish(mineTarget: MineTarget) {
-        interaction.sendSequencedPacket(world) { sequence ->
-            PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+        interaction.startPrediction(world) { sequence ->
+            ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                 mineTarget.targetPos,
-                mineTarget.direction,
+                mineTarget.direction!!,
                 sequence,
             )
         }
 
-        ModulePacketMine.swingMode.swing(Hand.MAIN_HAND)
+        ModulePacketMine.swingMode.swing(InteractionHand.MAIN_HAND)
 
         mineTarget.finished = true
     }
@@ -83,14 +83,14 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
         // some blocks only break when holding a certain tool
         val oldSlot = player.inventory.selectedSlot
         val state = world.getBlockState(mineTarget.targetPos)
-        var shouldSwitch = switch && state.isToolRequired
+        var shouldSwitch = switch && state.requiresCorrectToolForDrops()
         if (shouldSwitch && ModuleAutoTool.running) {
             ModuleAutoTool.switchToBreakBlock(mineTarget.targetPos)
             shouldSwitch = false
         } else if (shouldSwitch) {
             val slot1 = Slots.Hotbar.findBestToolToMineBlock(state)?.hotbarSlot
             if (slot1 != null && slot1 != oldSlot) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(slot1))
+                network.send(ServerboundSetCarriedItemPacket(slot1))
             } else {
                 shouldSwitch = false
             }
@@ -98,17 +98,17 @@ object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
 
         // Alright, for some reason when we spam STOP_DESTROY_BLOCK
         // server accepts us to destroy the same block instantly over and over.
-        interaction.sendSequencedPacket(world) { sequence ->
-            PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+        interaction.startPrediction(world) { sequence ->
+            ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK,
                 mineTarget.targetPos,
-                mineTarget.direction,
+                mineTarget.direction!!,
                 sequence,
             )
         }
 
         if (shouldSwitch) {
-            network.sendPacket(UpdateSelectedSlotC2SPacket(oldSlot))
+            network.send(ServerboundSetCarriedItemPacket(oldSlot))
         }
 
         return false

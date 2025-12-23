@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.utils.kotlin
 import it.unimi.dsi.fastutil.doubles.DoubleIterable
 import net.ccbluex.fastutil.forEachDouble
 import java.util.*
+import java.util.concurrent.ThreadLocalRandom
 import java.util.stream.Stream
 
 inline infix operator fun IntRange.contains(range: IntRange): Boolean {
@@ -54,6 +55,21 @@ inline fun range(iterable1: DoubleIterable, iterable2: DoubleIterable, operation
 }
 
 inline fun range(
+    iterable1: DoubleIterable,
+    iterable2: DoubleIterable,
+    iterable3: DoubleIterable,
+    operation: (Double, Double, Double) -> Unit,
+) {
+    iterable1.forEachDouble { d1 ->
+        iterable2.forEachDouble { d2 ->
+            iterable3.forEachDouble { d3 ->
+                operation(d1, d2, d3)
+            }
+        }
+    }
+}
+
+inline fun range(
     iterable1: IntProgression,
     iterable2: IntProgression,
     iterable3: IntProgression,
@@ -69,15 +85,11 @@ inline fun range(
 }
 
 fun ClosedFloatingPointRange<Float>.random(): Float {
-    require(start.isFinite())
-    require(endInclusive.isFinite())
-    return (start + (endInclusive - start) * Math.random()).toFloat()
+    return if (start >= endInclusive) start else ThreadLocalRandom.current().nextFloat(start, endInclusive)
 }
 
 fun ClosedFloatingPointRange<Double>.random(): Double {
-    require(start.isFinite())
-    require(endInclusive.isFinite())
-    return start + (endInclusive - start) * Math.random()
+    return if (start >= endInclusive) start else ThreadLocalRandom.current().nextDouble(start, endInclusive)
 }
 
 fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double> {

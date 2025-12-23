@@ -20,17 +20,61 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArmorItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArrowItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BlockItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BowItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.CrossbowItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.FoodItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MaceItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.MiningToolItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PotionItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.PrimitiveItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.RodItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ShieldItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SpearItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.SwordItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ThrowableItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.VirtualItemSlot
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.item.ArmorComparator
+import net.ccbluex.liquidbounce.utils.item.ArmorKitParameters
+import net.ccbluex.liquidbounce.utils.item.ArmorPiece
+import net.ccbluex.liquidbounce.utils.item.foodComponent
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
+import net.ccbluex.liquidbounce.utils.item.isAxe
+import net.ccbluex.liquidbounce.utils.item.isFood
+import net.ccbluex.liquidbounce.utils.item.isHoe
+import net.ccbluex.liquidbounce.utils.item.isMiningTool
+import net.ccbluex.liquidbounce.utils.item.isPickaxe
+import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
+import net.ccbluex.liquidbounce.utils.item.isShovel
+import net.ccbluex.liquidbounce.utils.item.isSpear
+import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.fluid.LavaFluid
-import net.minecraft.fluid.WaterFluid
-import net.minecraft.item.*
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.level.material.LavaFluid
+import net.minecraft.world.level.material.WaterFluid
+import net.minecraft.world.item.ArrowItem
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.BowItem
+import net.minecraft.world.item.BucketItem
+import net.minecraft.world.item.CrossbowItem
+import net.minecraft.world.item.EggItem
+import net.minecraft.world.item.EnderpearlItem
+import net.minecraft.world.item.FishingRodItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.MaceItem
+import net.minecraft.world.item.PotionItem
+import net.minecraft.world.item.ShieldItem
+import net.minecraft.world.item.SnowballItem
+import net.minecraft.world.item.WindChargeItem
 import java.util.function.Predicate
 
 @JvmRecord
@@ -59,6 +103,8 @@ enum class ItemType(
     ARMOR(true, allocationPriority = Priority.IMPORTANT_FOR_PLAYER_LIFE),
     SWORD(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
     WEAPON(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
+    SPEAR(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_3, providedFunction = ItemFunction.WEAPON_LIKE),
+    MACE(true, allocationPriority = Priority.IMPORTANT_FOR_USAGE_2, providedFunction = ItemFunction.WEAPON_LIKE),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
@@ -92,6 +138,10 @@ enum class ItemSortChoice(
 ) : NamedChoice {
     SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
     WEAPON("Weapon", ItemCategory(ItemType.WEAPON, 0)),
+    SPEAR("Spear", ItemCategory(ItemType.SPEAR, 0)),
+    MACE("Mace", ItemCategory(ItemType.MACE, 0), {
+        it.item is MaceItem
+    }),
     BOW("Bow", ItemCategory(ItemType.BOW, 0)),
     CROSSBOW("Crossbow", ItemCategory(ItemType.CROSSBOW, 0)),
     AXE("Axe", ItemCategory(ItemType.TOOL, MiningToolItemFacet.MASK_AXE), { it.isAxe }),
@@ -126,7 +176,7 @@ class ItemCategorization(
     companion object {
         @JvmStatic
         private fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
-            return ArmorPiece(VirtualItemSlot(item.defaultStack, ItemSlotType.ARMOR, id))
+            return ArmorPiece(VirtualItemSlot(item.defaultInstance, ItemSlotType.ARMOR, id))
         }
 
         /**
@@ -198,7 +248,7 @@ class ItemCategorization(
 
                 Items.MILK_BUCKET -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 2)))
                 is BucketItem -> {
-                    when (item.fluid) {
+                    when (item.content) {
                         is WaterFluid -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 0)))
                         is LavaFluid -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 1)))
                         else -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 3)))
@@ -207,7 +257,7 @@ class ItemCategorization(
                 is PotionItem -> {
                     val areAllEffectsGood =
                         itemStack.getPotionEffects()
-                            .all { it.effectType in PotionItemFacet.GOOD_STATUS_EFFECTS }
+                            .all { it.effect in PotionItemFacet.GOOD_STATUS_EFFECTS }
 
                     if (areAllEffectsGood) {
                         add(PotionItemFacet(slot))
@@ -216,7 +266,7 @@ class ItemCategorization(
                     }
                 }
 
-                is EnderPearlItem -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.PEARL, 0)))
+                is EnderpearlItem -> add(PrimitiveItemFacet(slot, ItemCategory(ItemType.PEARL, 0)))
 
                 Items.GOLDEN_APPLE -> {
                     add(FoodItemFacet(slot))
@@ -234,6 +284,10 @@ class ItemCategorization(
                     itemStack.isPlayerArmor -> add(ArmorItemFacet(slot, futureArmorToKeep, armorComparator))
 
                     itemStack.isSword -> add(SwordItemFacet(slot))
+
+                    itemStack.isSpear -> add(SpearItemFacet(slot))
+
+                    itemStack.item is MaceItem -> add(MaceItemFacet(slot))
 
                     itemStack.isMiningTool -> add(MiningToolItemFacet(slot))
 

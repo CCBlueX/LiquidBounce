@@ -30,7 +30,13 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlacementPlan
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -39,10 +45,11 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.item.Items
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3i
+import net.ccbluex.liquidbounce.utils.world.waterEvaporates
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.item.Items
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
 
 /**
  * Module Extinguish
@@ -78,7 +85,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
     @Suppress("unused")
     private val rotationUpdateHandler = handler<RotationUpdateEvent> {
         // we can't place water in the nether
-        if (world.dimension.ultrawarm) {
+        if (world.waterEvaporates) {
             return@handler
         }
 
@@ -109,7 +116,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
             lastExtinguishPos = null
         }
 
-        if (player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE) || (notDuringCombat && CombatManager.isInCombat)) {
+        if (player.hasEffect(MobEffects.FIRE_RESISTANCE) || (notDuringCombat && CombatManager.isInCombat)) {
             return null
         }
 
@@ -189,7 +196,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
             ),
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = bucket.itemStack,
-            PlayerLocationOnPlacement(position = player.pos),
+            PlayerLocationOnPlacement(position = player.position()),
         )
 
         val bestPlacementPlan = findBestBlockPlacementTarget(blockPos, options) ?: return null

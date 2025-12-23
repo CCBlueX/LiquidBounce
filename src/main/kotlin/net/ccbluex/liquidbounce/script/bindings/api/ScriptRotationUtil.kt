@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.entity.Entity
+import net.minecraft.world.entity.Entity
 import kotlin.math.sqrt
 
 /**
@@ -58,7 +58,7 @@ object ScriptRotationUtil {
 
         // Finds the best spot (and undefined if no spot was found)
         val (rotation, _) = raytraceBox(
-            mc.player!!.eyePos,
+            mc.player!!.eyePosition,
             box,
             range = sqrt(range),
             wallsRange = throughWallsRange
@@ -77,7 +77,7 @@ object ScriptRotationUtil {
     @JvmName("newRotationEntity")
     fun newRotationEntity(entity: Entity) = Rotation.lookingAt(
         point = entity.boundingBox.center,
-        from = mc.player!!.eyePos
+        from = mc.player!!.eyePosition
     )
 
     /**

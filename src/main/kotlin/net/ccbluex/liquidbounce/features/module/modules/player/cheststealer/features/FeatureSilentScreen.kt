@@ -29,32 +29,31 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.Modu
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer.canBeStolen
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.BackgroundChoice.Companion.backgroundChoices
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.block.anotherChestPartDirection
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.inventory.getSlotsInContainer
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.Vec3
 
 /**
- * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMinecraftClient
- * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinHandledScreen
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMinecraft
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinAbstractContainerScreen
  */
 object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentScreen", false) {
 
-    @get:JvmStatic
     val unlockCursor by boolean("UnlockCursor", false)
 
     private val drawInventoryTag = object : ToggleableConfigurable(this, "DrawInventoryTag", enabled = true) {
 
         private val background = choices(this, "Background", 0, ::backgroundChoices)
         private val scale by float("Scale", 1.5F, 0.25F..4F)
-        private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+        private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
         private val showTitle by boolean("ShowTitle", false)
 
         init {
@@ -62,7 +61,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             doNotIncludeAlways()
         }
 
-        private fun getRenderPos(): Vec3? {
+        private fun getRenderPos(): Vec3f? {
             val pos = lastInteractedBlock ?: return null
             val state = pos.getState() ?: return null
             val anotherPartDirection = state.anotherChestPartDirection()
@@ -70,11 +69,11 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
             // Double chest
             val centerPos = anotherPartDirection?.let {
                 pos.toVec3d(
-                    0.5 + anotherPartDirection.offsetX * 0.5,
-                    0.5 + anotherPartDirection.offsetY * 0.5,
-                    0.5 + anotherPartDirection.offsetZ * 0.5,
+                    0.5 + anotherPartDirection.stepX * 0.5,
+                    0.5 + anotherPartDirection.stepY * 0.5,
+                    0.5 + anotherPartDirection.stepZ * 0.5,
                 )
-            } ?: pos.toCenterPos()
+            } ?: pos.center
 
             return WorldToScreen.calculateScreenPos(centerPos.add(renderOffset))
         }
@@ -85,11 +84,12 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
 
             val pos = getRenderPos() ?: return@handler
 
-            val containerScreen = mc.currentScreen as HandledScreen<*>
+            val containerScreen = mc.screen as AbstractContainerScreen<*>
 
             event.context.drawItemStackList(containerScreen.getSlotsInContainer().mapToArray { it.itemStack })
                 .title(containerScreen.title.takeIf { showTitle })
-                .center(pos)
+                .centerX(pos.x)
+                .centerY(pos.y)
                 .scale(scale)
                 .background(background.activeChoice)
                 .draw()
@@ -100,21 +100,23 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
         tree(drawInventoryTag)
     }
 
-    @get:JvmStatic
     var shouldHide = false
+        private set
 
-    val screenHandler = handler<ScreenEvent> { event ->
+    @Suppress("unused")
+    private val screenHandler = handler<ScreenEvent> { event ->
         shouldHide = event.screen?.canBeStolen() == true
     }
 
     @Volatile
     private var lastInteractedBlock: BlockPos? = null
 
-    val packetHandler = handler<PacketEvent> { event ->
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
         // TODO: handle other interactions
-        if (packet is PlayerInteractBlockC2SPacket && packet.blockHitResult.type === HitResult.Type.BLOCK) {
-            lastInteractedBlock = packet.blockHitResult.blockPos
+        if (packet is ServerboundUseItemOnPacket && packet.hitResult.type === HitResult.Type.BLOCK) {
+            lastInteractedBlock = packet.hitResult.blockPos
         }
     }
 

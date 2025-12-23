@@ -20,7 +20,7 @@
 
 package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.text.TextColor;
+import net.minecraft.network.chat.TextColor;
 
 public interface ClientTextColorAdditions {
     boolean liquid_bounce$doesBypassingNameProtect();

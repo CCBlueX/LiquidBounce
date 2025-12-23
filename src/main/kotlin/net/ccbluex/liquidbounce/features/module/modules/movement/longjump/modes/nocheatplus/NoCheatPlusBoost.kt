@@ -43,8 +43,8 @@ internal object NoCheatPlusBoost : Choice("NoCheatPlusBoost") {
 
     val repeatable = tickHandler {
         if (ModuleLongJump.canBoost) {
-            player.velocity.x *= ncpBoost.toDouble()
-            player.velocity.z *= ncpBoost.toDouble()
+            player.deltaMovement.x *= ncpBoost.toDouble()
+            player.deltaMovement.z *= ncpBoost.toDouble()
             ModuleLongJump.boosted = true
         }
         ModuleLongJump.canBoost = false

@@ -19,7 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.asItemFacetComparator
@@ -29,8 +31,8 @@ import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.enchantment.Enchantments
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.item.enchantment.Enchantments
 import kotlin.math.ceil
 import kotlin.math.pow
 
@@ -61,7 +63,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 SECONDARY_VALUE_ESTIMATOR.asItemFacetComparator(),
                 compareByCondition { it.itemStack.isSword },
                 PREFER_BETTER_DURABILITY,
-                Comparator.comparingInt { it.itemStack.get(DataComponentTypes.ENCHANTABLE)?.value ?: 0 },
+                Comparator.comparingInt { it.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
