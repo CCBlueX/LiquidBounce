@@ -38,7 +38,7 @@ lithium = "mc1.21.11-0.21.1-fabric"
 viafabricplus = "4.4.1"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.14.1+1.21.11-fabric"
-iris = "1.10.3+1.21.11-fabric"
+iris = "1.19.x+"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
