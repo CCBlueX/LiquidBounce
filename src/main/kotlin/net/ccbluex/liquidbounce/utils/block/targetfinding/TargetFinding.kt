@@ -114,10 +114,12 @@ class PlayerLocationOnPlacement(
  * @param interactionDirection the direction the interaction should take place in. If the [blockPosToInteractWith] is
  * not the target pos, this will always point to it
  */
-data class BlockTargetPlan(
+private data class BlockTargetPlan(
     val blockPosToInteractWith: BlockPos,
     val interactionDirection: Direction,
 ) {
+
+    // FIXME: find actual point with raycast
     /**
      * The center of the target block face
      */
@@ -139,9 +141,35 @@ data class BlockTargetPlan(
 
 }
 
-enum class BlockTargetingMode {
-    PLACE_AT_NEIGHBOR,
-    REPLACE_EXISTING_BLOCK
+private enum class BlockTargetingMode {
+    PLACE_AT_NEIGHBOR {
+        override fun getTargetPlan(
+            pos: BlockPos,
+            direction: Direction
+        ): BlockTargetPlan? {
+            val currPos = pos.offset(direction.opposite.unitVec3i)
+            val currState = currPos.getState() ?: return null
+
+            if (currState.canBeReplaced()) {
+                return null
+            }
+
+            return BlockTargetPlan(currPos, direction)
+        }
+    },
+
+    REPLACE_EXISTING_BLOCK {
+        override fun getTargetPlan(
+            pos: BlockPos,
+            direction: Direction
+        ): BlockTargetPlan = BlockTargetPlan(pos, direction)
+    };
+
+    /**
+     * @return null if it is impossible to target the block with the given parameters
+     */
+    abstract fun getTargetPlan(pos: BlockPos, direction: Direction): BlockTargetPlan?
+
 }
 
 private fun findBestTargetPlanForTargetPosition(
@@ -151,10 +179,14 @@ private fun findBestTargetPlanForTargetPosition(
 ): BlockTargetPlan? {
     val directions = Direction.entries
 
+    val playerEyePositionOnPlacement = targetFindingOptions.playerLocationOnPlacement.position.add(
+        0.0,
+        player.eyeHeight.toDouble(),
+        0.0
+    )
+
     val options = directions.mapNotNull { direction ->
-        val targetPlan =
-            getTargetPlanForPositionAndDirection(posToInvestigate, direction, mode)
-                ?: return@mapNotNull null
+        val targetPlan = mode.getTargetPlan(posToInvestigate, direction) ?: return@mapNotNull null
 
         // Check if the target face is pointing away from the player
         if (!targetFindingOptions.faceHandlingOptions.considerFacingAwayFaces &&
@@ -167,12 +199,6 @@ private fun findBestTargetPlanForTargetPosition(
 
     val currentRotation = RotationManager.serverRotation
 
-    val playerEyePositionOnPlacement = targetFindingOptions.playerLocationOnPlacement.position.add(
-        0.0,
-        player.eyeHeight.toDouble(),
-        0.0
-    )
-
     return options.minByOrNull {
         val targetRotation = Rotation.lookingAt(point = it.targetPositionOnBlock, from = playerEyePositionOnPlacement)
 
@@ -180,32 +206,8 @@ private fun findBestTargetPlanForTargetPosition(
     }
 }
 
-/**
- * @return null if it is impossible to target the block with the given parameters
- */
-fun getTargetPlanForPositionAndDirection(
-    pos: BlockPos,
-    direction: Direction,
-    mode: BlockTargetingMode
-): BlockTargetPlan? {
-    when (mode) {
-        BlockTargetingMode.PLACE_AT_NEIGHBOR -> {
-            val currPos = pos.offset(direction.opposite.unitVec3i)
-            val currState = currPos.getState() ?: return null
-
-            if (currState.canBeReplaced()) {
-                return null
-            }
-
-            return BlockTargetPlan(currPos, direction)
-        }
-        BlockTargetingMode.REPLACE_EXISTING_BLOCK -> {
-            return BlockTargetPlan(pos, direction)
-        }
-    }
-}
-
-class PointOnFace(val face: AlignedFace, val point: Vec3)
+@JvmRecord
+data class PointOnFace(val face: AlignedFace, val point: Vec3)
 
 fun findBestBlockPlacementTarget(pos: BlockPos, options: BlockPlacementTargetFindingOptions): BlockPlacementTarget? {
     val state = pos.getState()!!
