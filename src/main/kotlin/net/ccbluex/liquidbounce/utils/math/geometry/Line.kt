@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.math.geometry
 
 import net.ccbluex.liquidbounce.utils.math.getCoordinate
+import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.preferOver
@@ -33,11 +34,8 @@ open class Line(val position: Vec3, val direction: Vec3) {
 
     companion object {
         @JvmStatic
-        fun fromPoints(p1: Vec3, p2: Vec3, normalized: Boolean = false): Line {
-            val direction = p2.subtract(p1)
-            val finalDirection = if (normalized) direction.normalize() else direction
-
-            return Line(p1, finalDirection)
+        fun fromPoints(begin: Vec3, end: Vec3): Line {
+            return Line(begin, end - begin)
         }
     }
 

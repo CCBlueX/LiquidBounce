@@ -31,6 +31,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
 import org.joml.Vector3f
 import org.joml.Vector3fc
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 inline operator fun Vec2.component1() = this.x
@@ -73,6 +74,14 @@ fun Vec3.withLength(newLength: Double): Vec3 {
     val lengthSq = lengthSqr()
     return if (Mth.equal(lengthSq, 0.0)) Vec3.ZERO else scale(newLength / sqrt(lengthSq))
 }
+
+@JvmOverloads
+fun Vec3.isNormalized(tolerance: Double = 1e-4): Boolean =
+    abs(this.lengthSqr() - 1.0) < tolerance
+
+@JvmOverloads
+fun Vec3.normalizeIfNeeded(tolerance: Double = 1e-4): Vec3 =
+    if (isNormalized(tolerance)) this else normalize()
 
 inline val Vec3.isLikelyZero: Boolean
     get() = Mth.equal(this.lengthSqr(), 0.0)

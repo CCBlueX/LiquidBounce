@@ -19,10 +19,13 @@
 package net.ccbluex.liquidbounce.utils.math.geometry
 
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
+import net.ccbluex.liquidbounce.utils.math.normalizeIfNeeded
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 
-class NormalizedPlane(val pos: Vec3, val normalVec: Vec3) {
+class NormalizedPlane(val pos: Vec3, normalVec: Vec3) {
+
+    val normalVec: Vec3 = normalVec.normalizeIfNeeded()
 
     fun intersectionPhi(line: Line): Double? {
         val d = this.pos.dot(this.normalVec)
@@ -90,6 +93,7 @@ class NormalizedPlane(val pos: Vec3, val normalVec: Vec3) {
     }
 
     companion object {
+        @JvmStatic
         fun fromPoints(a: Vec3, b: Vec3, c: Vec3): NormalizedPlane {
             val ab = b.subtract(a)
             val ac = c.subtract(a)
@@ -97,6 +101,7 @@ class NormalizedPlane(val pos: Vec3, val normalVec: Vec3) {
             return fromParams(a, ab, ac)
         }
 
+        @JvmStatic
         fun fromParams(base: Vec3, directionA: Vec3, directionB: Vec3): NormalizedPlane {
             val normalVec = directionA.cross(directionB).normalize()
 

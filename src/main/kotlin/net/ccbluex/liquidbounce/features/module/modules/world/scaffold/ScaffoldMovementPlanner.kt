@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.player
@@ -39,7 +38,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
-import kotlin.math.acos
 import kotlin.math.round
 
 object ScaffoldMovementPlanner {
@@ -86,7 +84,7 @@ object ScaffoldMovementPlanner {
     }
 
     private fun divergesTooMuchFromDirection(lastBlocksLine: Line, direction: Vec3): Boolean {
-        return acos(lastBlocksLine.direction.dot(direction)) > 50.0F.toRadians()
+        return lastBlocksLine.direction.dot(direction) < 0.5 // cos(60deg)
     }
 
     /**
@@ -166,6 +164,8 @@ object ScaffoldMovementPlanner {
      * follow (NORTH, NORTH_EAST, EAST, etc.). This function chooses such a direction based on the current angle.
      * i.e. if we were looking like 30° to the right, we would choose the direction NORTH_EAST (1.0, 0.0, 1.0).
      * And scaffold would move diagonally to the right.
+     *
+     * @return normalized direction vector without y value
      */
     private fun chooseDirection(currentAngle: Float): Vec3 {
         // Transform the angle ([-180; 180]) to [0; 8]
