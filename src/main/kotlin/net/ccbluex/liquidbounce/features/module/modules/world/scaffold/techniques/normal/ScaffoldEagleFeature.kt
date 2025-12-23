@@ -37,8 +37,8 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
     private var placedBlocks = 0
 
     @Suppress("unused")
-    val stateUpdateHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { event ->
-        if (mode == EagleMode.INPUT && shouldEagle(event.directionalInput)) {
+    private val stateUpdateHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { event ->
+        if (shouldEagle(event.directionalInput)) {
             event.sneak = true
         }
     }
