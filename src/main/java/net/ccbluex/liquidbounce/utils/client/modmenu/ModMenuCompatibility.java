@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.utils.client.modmenu;
 
 import com.terraformersmc.modmenu.ModMenu;
 import com.terraformersmc.modmenu.util.mod.Mod;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
-
+@NullMarked
 public enum ModMenuCompatibility {
     INSTANCE;
 
@@ -35,7 +35,7 @@ public enum ModMenuCompatibility {
      * @param id the modid to remove
      * @return mod container in the {@link ModMenu} system
      */
-    public final @Nullable Mod removeModUnchecked(@NotNull String id) {
+    public final @Nullable Mod removeModUnchecked(String id) {
         var mod = ModMenu.MODS.remove(id);
         var rootMod = ModMenu.ROOT_MODS.remove(id);
 
@@ -48,7 +48,7 @@ public enum ModMenuCompatibility {
      * @param id modid to associate the mod container
      * @param mod mod container in the {@link ModMenu} system to add
      */
-    public final void addModUnchecked(@NotNull String id, @NotNull Mod mod) {
+    public final void addModUnchecked(String id, Mod mod) {
         ModMenu.MODS.put(id, mod);
         ModMenu.ROOT_MODS.put(id, mod);
     }

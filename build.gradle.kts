@@ -179,9 +179,6 @@ dependencies {
 //    testImplementation(libs.fabric.loader.junit)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    // Fix nullable annotations
-    compileOnlyApi("com.google.code.findbugs:jsr305:3.0.2")
-
     afterEvaluate {
         includeDependency.incoming.resolutionResult.allDependencies.forEach {
             val apiDependency = dependencies.api(it.requested.toString()) {

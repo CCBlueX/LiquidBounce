@@ -73,7 +73,7 @@ object HideAppearance : EventListener {
     var isHidingNow = false
         set(value) {
             field = value
-            mc.execute(::updateClient)
+            mc.schedule(::updateClient)
 
             if (modMenuPresent) {
                 if (value) {

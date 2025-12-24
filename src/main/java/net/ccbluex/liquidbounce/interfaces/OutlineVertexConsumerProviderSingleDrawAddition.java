@@ -22,9 +22,10 @@ package net.ccbluex.liquidbounce.interfaces;
 
 import net.minecraft.client.renderer.rendertype.RenderType;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.Nullable;
-
+@NullMarked
 public interface OutlineVertexConsumerProviderSingleDrawAddition {
     /**
      * {@link net.minecraft.client.renderer.OutlineBufferSource#getBuffer(RenderType)} creates a consumer which
