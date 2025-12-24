@@ -46,7 +46,7 @@ kotlin = "2.2.10"
 # https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test/overview
 kotlinx-coroutines = "1.10.2"
 # https://maven.fabricmc.net/net/fabricmc/fabric-language-kotlin/
-fabric-kotlin = "1.13.5+kotlin.2.2.10"
+fabric-kotlin = "1.13.8+"
 
 # Netty, should be sync with game version
 # https://mvnrepository.com/artifact/io.netty/netty-all
