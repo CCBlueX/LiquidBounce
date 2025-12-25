@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.client.scaledDimension
 import net.ccbluex.liquidbounce.utils.client.toRadians
@@ -41,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
 import net.ccbluex.liquidbounce.utils.math.Easing
+import net.minecraft.client.CameraType
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec2
 import kotlin.collections.component1
@@ -55,10 +57,12 @@ import kotlin.math.sqrt
  */
 object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("PointerESP")) {
 
+    private val tiltAngle by floatRange("TiltAngle", 45f..90f, 0f..90f)
+
     private val radius by float("Radius", 40f, 2f..200f)
 
     private val pointer = object : Configurable("Pointer") {
-        val width by float("Width", 10f, 1f..100f)
+        val width by float("Width", 8f, 1f..100f)
         val height by float("Height", 10f, 1f..100f)
     }
 
@@ -114,9 +118,23 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
                 translate(width * 0.5f, height * 0.5f)
 
                 val yawRad = player.getYRot(it.tickDelta).toRadians()
+                val pitchRad = run {
+                    val pitch = player.getXRot(it.tickDelta)
+                    if (pitch >= 0) {
+                        pitch.coerceIn(tiltAngle)
+                    } else {
+                        pitch.coerceIn(-tiltAngle.start, -tiltAngle.endInclusive)
+                    }
+                }.toRadians()
                 val playerPos = player.interpolateCurrentPosition(it.tickDelta)
 
-                rotate(-yawRad)
+                // Rotate Z (simulation)
+                val yScale = (pitchRad).fastSin()
+                // TODO: fix this
+                scale(1f, if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) -yScale else yScale)
+
+                rotate(if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) yawRad else -yawRad)
+
                 val p1 = Vec2(-pointer.width * 0.5f, 0f)
                 val p2 = Vec2(0f, pointer.height)
                 val p3 = Vec2(pointer.width * 0.5f, 0f)
