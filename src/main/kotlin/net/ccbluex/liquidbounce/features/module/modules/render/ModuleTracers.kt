@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.GenericColorMode
+import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawLines
@@ -55,6 +56,7 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
     private val modes = choices("ColorMode", 0) {
         arrayOf(
             DistanceColor,
+            GenericEntityHealthColorMode(it),
             GenericStaticColorMode(it, Color4b(0, 160, 255, 255)),
             GenericRainbowColorMode(it)
         )

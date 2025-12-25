@@ -21,23 +21,32 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.RangedValue.Companion.squared
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
+import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
+import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.client.scaledDimension
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
+import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
+import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec2
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.math.atan2
+import kotlin.math.sqrt
 
 /**
  * Radar module
@@ -53,13 +62,38 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
         val height by float("Height", 10f, 1f..100f)
     }
 
-    private val distanceRangeSq by floatRange("Distance", 0F..128F, 0F..512F).squared()
-
-    // TODO: color option
-    // TODO: distance-based alpha
-
     init {
         tree(pointer)
+    }
+
+    private val colorModes = choices("ColorMode", 0) {
+        arrayOf(
+            GenericEntityHealthColorMode(it),
+            GenericStaticColorMode(it, Color4b.WHITE.with(a = 100)),
+            GenericRainbowColorMode(it)
+        )
+    }
+
+    private val distanceRangeSq by floatRange("Distance", 0F..128F, 0F..512F).squared()
+
+    private object DistanceBasedAlpha : ToggleableConfigurable(this, "DistanceBasedAlpha", false) {
+        private val distanceRange by floatRange("Distance", 0F..128F, 0F..512F)
+        private val alphaRange by floatRange("Alpha", 1f..1f, 0f..1f)
+        private val curve by easing("Curve", Easing.LINEAR)
+
+        fun getAlpha(distanceSq: Double): Int {
+            return (alphaRange.valueAtProportion(
+                curve.transform(
+                    distanceRange.proportionOfValue(
+                        distanceRange.endInclusive - sqrt(distanceSq).toFloat()
+                    )
+                )
+            ) * 255f).floorToInt()
+        }
+    }
+
+    init {
+        tree(DistanceBasedAlpha)
     }
 
     override fun onEnabled() {
@@ -83,12 +117,22 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
                 val playerPos = player.interpolateCurrentPosition(it.tickDelta)
 
                 rotate(-yawRad)
+                val p1 = Vec2(-pointer.width * 0.5f, 0f)
+                val p2 = Vec2(0f, pointer.height)
+                val p3 = Vec2(pointer.width * 0.5f, 0f)
 
                 for (entity in RenderedEntities) {
                     if (entity === player) continue
                     val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
 
-                    if (entityPos.cameraDistanceSq() !in distanceRangeSq) continue
+                    val cameraDistanceSq = entityPos.cameraDistanceSq()
+                    if (cameraDistanceSq !in distanceRangeSq) continue
+
+                    var color = colorModes.activeChoice.getColor(entity)
+                    if (DistanceBasedAlpha.enabled) {
+                        val alpha = DistanceBasedAlpha.getAlpha(cameraDistanceSq)
+                        color = color.alpha(alpha)
+                    }
 
                     val diffX = entityPos.x - playerPos.x
                     val diffZ = entityPos.z - playerPos.z
@@ -97,10 +141,8 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
                         rotate(atan2(diffZ, diffX).toFloat() + Mth.HALF_PI)
                         translate(0f, radius)
                         drawTriangle(
-                            Vec2(-pointer.width * 0.5f, 0f),
-                            Vec2(0f, pointer.height),
-                            Vec2(pointer.width * 0.5f, 0f),
-                            fillColor = Color4b.WHITE
+                            p1, p2, p3,
+                            fillColor = colorModes.activeChoice.getColor(entity),
                         )
                     }
                 }

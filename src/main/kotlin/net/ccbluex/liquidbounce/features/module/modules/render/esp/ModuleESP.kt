@@ -71,16 +71,10 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     }
 
     fun getColor(entity: LivingEntity): Color4b {
-        val baseColor = getBaseColor(entity)
-
         if (entity.hurtTime > 0) {
             return Color4b.RED
         }
 
-        return baseColor
-    }
-
-    private fun getBaseColor(entity: LivingEntity): Color4b {
         if (entity is Player) {
             if (FriendManager.isFriend(entity) && friendColor.a > 0) {
                 return friendColor
