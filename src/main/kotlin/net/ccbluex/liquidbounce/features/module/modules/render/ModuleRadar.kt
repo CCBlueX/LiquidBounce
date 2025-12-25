@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.types.RangedValue.Companion.squared
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -29,6 +31,7 @@ import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.scaledDimension
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec2
@@ -43,6 +46,22 @@ import kotlin.math.atan2
  */
 object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("PointerESP")) {
 
+    private val radius by float("Radius", 40f, 2f..200f)
+
+    private val pointer = object : Configurable("Pointer") {
+        val width by float("Width", 10f, 1f..100f)
+        val height by float("Height", 10f, 1f..100f)
+    }
+
+    private val distanceRangeSq by floatRange("Distance", 0F..128F, 0F..512F).squared()
+
+    // TODO: color option
+    // TODO: distance-based alpha
+
+    init {
+        tree(pointer)
+    }
+
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
         super.onEnabled()
@@ -53,30 +72,34 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
         super.onDisabled()
     }
 
-    private val render2D = handler<OverlayRenderEvent> {
+    @Suppress("unused")
+    private val renderHandler = handler<OverlayRenderEvent> {
         with(it.context) {
             pose().withPush {
                 val (width, height) = mc.window.scaledDimension
-                translate(width / 2f, height / 2f)
+                translate(width * 0.5f, height * 0.5f)
 
-                val yaw = player.getYRot(it.tickDelta)
+                val yawRad = player.getYRot(it.tickDelta).toRadians()
                 val playerPos = player.interpolateCurrentPosition(it.tickDelta)
 
-                pose().rotate(-yaw.toRadians())
+                rotate(-yawRad)
 
                 for (entity in RenderedEntities) {
                     if (entity === player) continue
+                    val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
+
+                    if (entityPos.cameraDistanceSq() !in distanceRangeSq) continue
+
+                    val diffX = entityPos.x - playerPos.x
+                    val diffZ = entityPos.z - playerPos.z
 
                     withPush {
-                        val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
-                        val diffX = entityPos.x - playerPos.x
-                        val diffZ = entityPos.z - playerPos.z
                         rotate(atan2(diffZ, diffX).toFloat() + Mth.HALF_PI)
-                        translate(0f, 10f)
+                        translate(0f, radius)
                         drawTriangle(
-                            Vec2(-5f, 0f),
-                            Vec2(0f, 10f),
-                            Vec2(5f, 0f),
+                            Vec2(-pointer.width * 0.5f, 0f),
+                            Vec2(0f, pointer.height),
+                            Vec2(pointer.width * 0.5f, 0f),
                             fillColor = Color4b.WHITE
                         )
                     }
