@@ -47,9 +47,10 @@ object HatsChinaHat : HatsMode("ChinaHat") {
         val peak by float("Peak", 0.3f, 0.01f..2f)
         val showInFirstPerson by boolean("FirstPersonView", true)
     }
-     init {
-         tree(HatSettings)
-     }
+
+    init {
+        tree(HatSettings)
+    }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent>{
