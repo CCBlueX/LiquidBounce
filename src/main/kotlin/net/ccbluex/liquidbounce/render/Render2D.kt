@@ -43,7 +43,7 @@ import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
 
 /**
- * Primitive version of [ScreenRect.transformEachVertex]
+ * Primitive version of [ScreenRectangle.transformMaxBounds]
  */
 private fun Matrix3x2f.transformEachVertex(
     sameAxis: Int, otherAxis: Int, width: Int, height: Int,
@@ -124,11 +124,13 @@ fun GuiGraphics.drawLines(
     points: FloatArray,
     argb: Int,
     bounds: ScreenRectangle,
+    cull: Boolean = true,
 ) {
     this.guiRenderState.submitGuiElement(
         LineGuiElementRenderState(
             points,
             argb,
+            ClientRenderPipelines.GUI.lines(cull),
             copyPose(),
             this.scissorStack.peek(),
             bounds,
@@ -199,22 +201,25 @@ fun GuiGraphics.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Floa
     this.drawQuad(x, y1, x + thickness, y2, color)
 }
 
+@Suppress("LongParameterList")
 fun GuiGraphics.drawTriangle(
-    p1: Vec2, p2: Vec2, p3: Vec2,
+    x0: Float, y0: Float, x1: Float, y1: Float, x2: Float, y2: Float,
     fillColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
+    cull: Boolean = true,
 ) {
-    val minX = minOf(p1.x, p2.x, p3.x)
-    val minY = minOf(p1.y, p2.y, p3.y)
-    val maxX = maxOf(p1.x, p2.x, p3.x)
-    val maxY = maxOf(p1.y, p2.y, p3.y)
+    val minX = minOf(x0, x1, x2)
+    val minY = minOf(y0, y1, y2)
+    val maxX = maxOf(x0, x1, x2)
+    val maxY = maxOf(y0, y1, y2)
     val bounds = createBounds(minX, minY, maxX - minX, maxY - minY)
 
     if (fillColor != null && !fillColor.isTransparent) {
         this.guiRenderState.submitGuiElement(
             TriangleGuiElementRenderState(
-                p1.x, p1.y, p2.x, p2.y, p3.x, p3.y,
+                x0, y0, x1, y1, x2, y2,
                 fillColor.toARGB(),
+                ClientRenderPipelines.GUI.triangles(cull),
                 copyPose(),
                 this.scissorStack.peek(),
                 bounds,
@@ -225,18 +230,27 @@ fun GuiGraphics.drawTriangle(
     if (outlineColor != null && !outlineColor.isTransparent) {
         drawLines(
             floatArrayOf(
-                p1.x, p1.y,
-                p2.x, p2.y,
-                p2.x, p2.y,
-                p3.x, p3.y,
-                p1.x, p1.y,
-                p3.x, p3.y,
+                x0, y0,
+                x1, y1,
+                x1, y1,
+                x2, y2,
+                x2, y2,
+                x0, y0,
             ),
             outlineColor.toARGB(),
             bounds,
         )
     }
 }
+
+fun GuiGraphics.drawTriangle(
+    p1: Vec2, p2: Vec2, p3: Vec2,
+    fillColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) = drawTriangle(
+    p1.x, p1.y, p2.x, p2.y, p3.x, p3.y,
+    fillColor, outlineColor,
+)
 
 @Suppress("LongParameterList")
 inline fun GuiGraphics.drawGlyphOnCurrentLayer(

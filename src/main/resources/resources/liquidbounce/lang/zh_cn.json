@@ -777,6 +777,7 @@
   "liquidbounce.module.notebot.messages.songInfoTicksPerGameTick": "每游戏刻的 tick：%s",
   "liquidbounce.module.notebot.messages.songInfoTickLength": "Tick 长度：%s",
   "liquidbounce.module.notebot.messages.songInfoTotalNotes": "总音符数：%s",
+  "liquidbounce.module.radar.description": "在界面上显示选中实体的相对方向。",
   "liquidbounce.module.guiCloser.description": "如果GUI的标题与指定的模式匹配，则将其关闭。",
   "liquidbounce.module.yggdrasilSignatureFix.description": "取消Authlib Yggdrasil验证，可能解决部分服务器无法显示玩家皮肤的问题。",
   "liquidbounce.module.reportHelper.description": "自动开始举报并为您确认。",

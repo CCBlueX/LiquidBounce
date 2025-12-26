@@ -33,7 +33,7 @@ import org.joml.Vector3f
 /**
  * @author minecrrrr
  */
-object HatsConeHat : HatsMode("ConeHat") {
+object HatsConeHat : HatsMode("Cone") {
 
     private val height by float("HeightOffset", 0.1f, 0f..1f)
 

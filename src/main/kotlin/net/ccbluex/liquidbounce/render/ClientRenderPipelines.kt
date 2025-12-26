@@ -132,17 +132,33 @@ object ClientRenderPipelines {
     }
 
     object GUI {
-        @JvmField
-        val Lines = newPipeline("gui/lines") {
+        private val Lines = newPipeline("gui/lines") {
             withSnippet(RenderPipelines.GUI_SNIPPET)
             withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.DEBUG_LINES)
         }
 
-        @JvmField
-        val Triangles = newPipeline("gui/triangles") {
+        private val Triangles = newPipeline("gui/triangles") {
             withSnippet(RenderPipelines.GUI_SNIPPET)
             withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLES)
         }
+
+        private val LinesNoCull = newPipeline("gui/lines_no_cull") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withCull(false)
+            withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.DEBUG_LINES)
+        }
+
+        private val TrianglesNoCull = newPipeline("gui/triangles_no_cull") {
+            withSnippet(RenderPipelines.GUI_SNIPPET)
+            withCull(false)
+            withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLES)
+        }
+
+        @JvmStatic
+        fun lines(cull: Boolean) = if (cull) Lines else LinesNoCull
+
+        @JvmStatic
+        fun triangles(cull: Boolean) = if (cull) Triangles else TrianglesNoCull
     }
 
     @JvmField
