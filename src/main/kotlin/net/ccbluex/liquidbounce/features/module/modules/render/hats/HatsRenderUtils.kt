@@ -37,3 +37,12 @@ fun getTorusPoints(mainAngel: Double, tubeAngel: Double, radius: Float, tubeRadi
 
 }
 
+fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float): Float {
+
+    val innerRadius = baseRadius * sharpness
+
+    val f = (Math.PI / points)
+    val r = (abs(angle % (f * 2) - f) / f).toFloat()
+
+    return innerRadius + (baseRadius - innerRadius) * (1f - r)
+}

@@ -30,6 +30,7 @@ object ModuleHats : ClientModule("Hats", Category.RENDER) {
             HatsConeHat,
             HatsHalo,
             HatsOrbs,
+            HatsFlower,
         )
     ).apply { tagBy(this) }
 
