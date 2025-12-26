@@ -360,6 +360,16 @@ private fun WorldRenderEnvironment.drawBox(
 }
 
 /**
+ * Draw box for outline/glow shader.
+ */
+fun WorldRenderEnvironment.drawBoxOutlined(
+    box: AABB,
+    color: Color4b,
+) {
+    drawBox(box, ClientRenderPipelines.OutlineQuads, color = color, verticesToUse = -1)
+}
+
+/**
  * Function to draw a colored [box].
  */
 fun WorldRenderEnvironment.drawBox(

@@ -196,6 +196,17 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
+    /**
+     * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP
+     * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
+     */
+    @JvmField
+    val OutlineQuads = newPipeline("outline_quads") {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+        withBlend(COVERING_BLEND)
+    }
+
     @JvmField
     val TexQuads = newPipeline("tex_quads") {
         withSnippet(RenderPipelines.GUI_TEXTURED_SNIPPET)
