@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.client.CameraType
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.util.Mth
+import org.joml.Matrix3x2f
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.math.atan2
@@ -59,10 +60,44 @@ import kotlin.math.sqrt
  */
 object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("PointerESP")) {
 
-    private val tiltAngle by floatRange("TiltAngle", 45f..90f, 0f..90f).onChanged {
-        tiltAngleNeg = -it
+    private val tiltModes = choices("Tilt", 0) {
+        arrayOf(TiltMode.Static, TiltMode.ByPitch)
     }
-    private var tiltAngleNeg: ClosedFloatingPointRange<Float> = -tiltAngle
+
+    private sealed class TiltMode(name: String) : Choice(name) {
+        final override val parent: ChoiceConfigurable<*>
+            get() = tiltModes
+
+        abstract fun transform(pose: Matrix3x2f, partialTick: Float)
+
+        object Static : TiltMode("Static") {
+            private val angle by float("Angle", 90f, -90f..90f, "deg")
+
+            override fun transform(pose: Matrix3x2f, partialTick: Float) {
+                pose.scale(1f, angle.fastSin())
+            }
+        }
+
+        object ByPitch : TiltMode("ByPitch") {
+            private val limitation by floatRange("Limitation", 45f..90f, 0f..90f, "deg").onChanged {
+                limitationNeg = -it
+            }
+            private var limitationNeg: ClosedFloatingPointRange<Float> = -limitation
+
+            override fun transform(pose: Matrix3x2f, partialTick: Float) {
+                val pitchRad = run {
+                    val pitch = player.getXRot(partialTick)
+                    if (pitch >= 0) {
+                        pitch.coerceIn(limitation)
+                    } else {
+                        pitch.coerceIn(limitationNeg)
+                    }
+                }.toRadians()
+
+                pose.scale(1f, pitchRad.fastSin())
+            }
+        }
+    }
 
     private val radius by float("Radius", 40f, 2f..200f)
 
@@ -162,19 +197,13 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
                 translate(width * 0.5f, height * 0.5f)
 
                 val yawRad = player.getYRot(it.tickDelta).toRadians()
-                val pitchRad = run {
-                    val pitch = player.getXRot(it.tickDelta)
-                    if (pitch >= 0) {
-                        pitch.coerceIn(tiltAngle)
-                    } else {
-                        pitch.coerceIn(tiltAngleNeg)
-                    }
-                }.toRadians()
                 val playerPos = player.interpolateCurrentPosition(it.tickDelta)
 
-                // Rotate Z (simulation)
-                val yScale = (pitchRad).fastSin()
-                scale(if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) -1f else 1f, yScale)
+                tiltModes.activeChoice.transform(this, it.tickDelta)
+
+                if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) {
+                    scale(-1f, 1f)
+                }
 
                 rotate(-yawRad)
 
