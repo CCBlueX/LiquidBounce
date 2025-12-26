@@ -20,7 +20,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.RangedValue.Companion.squared
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.Choice
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -32,7 +33,6 @@ import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.client.scaledDimension
 import net.ccbluex.liquidbounce.utils.client.toRadians
@@ -42,9 +42,8 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.client.CameraType
+import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.util.Mth
-import net.minecraft.world.phys.Vec2
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.math.atan2
@@ -61,13 +60,31 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
 
     private val radius by float("Radius", 40f, 2f..200f)
 
-    private val pointer = object : Configurable("Pointer") {
-        val width by float("Width", 8f, 1f..100f)
-        val height by float("Height", 10f, 1f..100f)
+    private val pointerModes = choices("PointerMode", 0) {
+        arrayOf(PointerMode.Triangle)
     }
 
-    init {
-        tree(pointer)
+    private sealed class PointerMode(name: String) : Choice(name) {
+        final override val parent: ChoiceConfigurable<*>
+            get() = pointerModes
+
+        context(ctx: GuiGraphics)
+        abstract fun draw(color: Color4b)
+
+        object Triangle : PointerMode("Triangle") {
+            private val width by float("Width", 8f, 1f..100f)
+            private val height by float("Height", 10f, 1f..100f)
+
+            context(ctx: GuiGraphics)
+            override fun draw(color: Color4b) {
+                ctx.drawTriangle(
+                    x0 = -width * 0.5f, y0 = 0f,
+                    x1 = 0f, y1 = height,
+                    x2 = width * 0.5f, y2 = 0f,
+                    fillColor = color,
+                )
+            }
+        }
     }
 
     private val colorModes = choices("ColorMode", 0) {
@@ -134,10 +151,6 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
 
                 rotate(-yawRad)
 
-                val p1 = Vec2(-pointer.width * 0.5f, 0f)
-                val p2 = Vec2(0f, pointer.height)
-                val p3 = Vec2(pointer.width * 0.5f, 0f)
-
                 for (entity in RenderedEntities) {
                     if (entity === player) continue
                     val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
@@ -157,10 +170,9 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
                     withPush {
                         rotate(atan2(diffZ, diffX).toFloat() + Mth.HALF_PI)
                         translate(0f, radius)
-                        drawTriangle(
-                            p1, p2, p3,
-                            fillColor = color,
-                        )
+                        with(this@with) {
+                            pointerModes.activeChoice.draw(color = color)
+                        }
                     }
                 }
             }
