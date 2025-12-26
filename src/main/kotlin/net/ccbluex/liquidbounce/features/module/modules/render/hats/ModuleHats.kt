@@ -30,4 +30,5 @@ object ModuleHats : ClientModule("Hats", Category.RENDER) {
             HatsChinaHat
         )
     ).apply { tagBy(this) }
+
 }

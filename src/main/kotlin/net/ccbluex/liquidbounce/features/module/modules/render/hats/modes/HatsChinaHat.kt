@@ -33,60 +33,47 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import kotlin.math.cos
 import kotlin.math.sin
 
- /**
+/**
  * @author minecrrrr
- * */
-
-
+ */
 object HatsChinaHat : HatsMode("ChinaHat") {
 
     private val height by float("HeightOffset", 0.1f, 0f..1f)
 
     private val color by color("Color", Color4b(0, 0, 255, 125))
-    private val hatSettings = tree(HatSettings())
 
-    private class HatSettings : Configurable("HatSettings") {
-
+    private object HatSettings : Configurable("HatSettings") {
         val radius by float("Radius", 0.6f, 0.1f..2f)
         val peak by float("Peak", 0.3f, 0.01f..2f)
         val showInFirstPerson by boolean("FirstPersonView", true)
-
     }
+     init {
+         tree(HatSettings)
+     }
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent>{
         val player = mc.player ?: return@handler
 
-        if (mc.options.cameraType.isFirstPerson && !hatSettings.showInFirstPerson) return@handler
+        if (mc.options.cameraType.isFirstPerson && !HatSettings.showInFirstPerson) return@handler
             renderEnvironmentForWorld(it.matrixStack) {
-
-                val pos = player.interpolateCurrentPosition(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
-
-
+                val pos = player.interpolateCurrentPosition(it.partialTicks)
 
                 withPositionRelativeToCamera(pos.add(0.0, player.bbHeight + height.toDouble(), 0.0)) {
                     drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-                        run {
+                        val segments = 40
 
-                            val segments = 40
+                        for (i in 0 until segments) {
+                            val angle1 = i * Math.PI * 2 / segments
+                            val angle2 = (i + 1) * Math.PI * 2 / segments
+                            addVertex(matrix, 0f, HatSettings.peak, 0f).color(color)
+                            val x2 = (sin(angle1) * HatSettings.radius).toFloat()
+                            val z2 = (cos(angle1) * HatSettings.radius).toFloat()
+                            addVertex(matrix, x2, 0f, z2).color(color)
 
-                            for (i in 0 until segments) {
-
-                                val angle1 = i * Math.PI * 2 / segments
-                                val angle2 = (i + 1) * Math.PI * 2 / segments
-                                addVertex(matrix, 0f, hatSettings.peak, 0f).color(color)
-
-                                val x2 = (sin(angle1) * hatSettings.radius).toFloat()
-                                val z2 = (cos(angle1) * hatSettings.radius).toFloat()
-                                addVertex(matrix, x2, 0f, z2).color(color)
-
-                                val x1 = (sin(angle2) * hatSettings.radius).toFloat()
-                                val z1 = (cos(angle2) * hatSettings.radius).toFloat()
-                                addVertex(matrix, x1, 0f, z1).color(color)
-
-
-                            }
-
+                            val x1 = (sin(angle2) * HatSettings.radius).toFloat()
+                            val z1 = (cos(angle2) * HatSettings.radius).toFloat()
+                            addVertex(matrix, x1, 0f, z1).color(color)
                         }
                     }
                 }
