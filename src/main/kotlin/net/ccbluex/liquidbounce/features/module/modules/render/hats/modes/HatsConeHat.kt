@@ -23,15 +23,12 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.color
-import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import kotlin.math.cos
-import kotlin.math.sin
+import org.joml.Vector3f
 
 /**
  * @author minecrrrr
@@ -59,24 +56,16 @@ object HatsConeHat : HatsMode("ConeHat") {
         if (mc.options.cameraType.isFirstPerson && !HatSettings.showInFirstPerson) return@handler
             renderEnvironmentForWorld(it.matrixStack) {
                 val pos = player.interpolateCurrentPosition(it.partialTicks)
+                val peakOffset = Vector3f(0f, HatSettings.peak, 0f)
 
                 withPositionRelativeToCamera(pos.add(0.0, player.bbHeight + height.toDouble(), 0.0)) {
-                    drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-                        val segments = 40
-
-                        for (i in 0 until segments) {
-                            val angle1 = i * Math.PI * 2 / segments
-                            val angle2 = (i + 1) * Math.PI * 2 / segments
-                            addVertex(matrix, 0f, HatSettings.peak, 0f).color(color)
-                            val x2 = (sin(angle1) * HatSettings.radius).toFloat()
-                            val z2 = (cos(angle1) * HatSettings.radius).toFloat()
-                            addVertex(matrix, x2, 0f, z2).color(color)
-
-                            val x1 = (sin(angle2) * HatSettings.radius).toFloat()
-                            val z1 = (cos(angle2) * HatSettings.radius).toFloat()
-                            addVertex(matrix, x1, 0f, z1).color(color)
-                        }
-                    }
+                    drawGradientCircle(
+                        outerRadius = HatSettings.radius,
+                        innerRadius = 0f,
+                        outerColor = color,
+                        innerColor = color,
+                        innerOffset = peakOffset,
+                    )
                 }
             }
     }

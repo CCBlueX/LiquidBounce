@@ -24,23 +24,20 @@ package net.ccbluex.liquidbounce.render
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.PoseStack
+import net.ccbluex.liquidbounce.render.utils.UnitCircle
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
-import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
 import org.joml.Matrix4f
@@ -464,40 +461,32 @@ private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3f>, colo
     }
 }
 
-private const val CIRCLE_RES = 40
-
-// using a val instead of a function for better performance
-private val circlePoints: Array<Vector3fc> = Array(CIRCLE_RES + 1) {
-    val theta = Mth.PI * 2f * it / CIRCLE_RES
-    Vector3f(theta.fastCos(), 0f, theta.fastSin())
-}
-
 /**
  * Function to draw a circle of the size [outerRadius] with a cutout of size [innerRadius]
  *
  * @param outerRadius The radius of the circle
  * @param innerRadius The radius inside the circle (the cutout)
- * @param outerColor4b The color of the outer edges
- * @param innerColor4b The color of the inner edges
+ * @param outerColor The color of the outer edges
+ * @param innerColor The color of the inner edges
  */
 fun WorldRenderEnvironment.drawGradientCircle(
     outerRadius: Float,
     innerRadius: Float,
-    outerColor4b: Color4b,
-    innerColor4b: Color4b,
+    outerColor: Color4b,
+    innerColor: Color4b,
     innerOffset: Vector3fc = Vector3f(),
 ) {
     drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
         val innerP = Vector3f()
         val outerP = Vector3f()
-        for (p in circlePoints) {
-            outerP.set(p).mul(outerRadius)
-            innerP.set(p).mul(innerRadius).add(innerOffset)
+        UnitCircle.forEach { cosine, sine ->
+            outerP.set(cosine * outerRadius, 0f, sine * outerRadius)
+            innerP.set(cosine * innerRadius, 0f, sine * innerRadius).add(innerOffset)
 
             addVertex(matrix, outerP.x, outerP.y, outerP.z)
-                .setColor(outerColor4b.toARGB())
+                .setColor(outerColor.toARGB())
             addVertex(matrix, innerP.x, innerP.y, innerP.z)
-                .setColor(innerColor4b.toARGB())
+                .setColor(innerColor.toARGB())
         }
     }
 }
@@ -510,12 +499,8 @@ fun WorldRenderEnvironment.drawGradientCircle(
  */
 fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) =
     drawCustomMesh(ClientRenderPipelines.LineStrip) { matrix ->
-        val point = Vector3f()
-        for (p in circlePoints) {
-            point.set(p).mul(radius)
-
-            addVertex(matrix, point.x, point.y, point.z)
-                .setColor(color4b.toARGB())
+        UnitCircle.forEach(radius) { x, z ->
+            addVertex(matrix, x, 0f, z).setColor(color4b.toARGB())
         }
     }
 
