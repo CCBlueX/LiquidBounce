@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.toEnumSet
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.world.level.block.Block
 import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.item.Item
@@ -198,8 +199,8 @@ open class Configurable(
     // Common value types
 
     fun <T : Configurable> tree(configurable: T): T {
-        require(configurable.base == null) {
-            "Configurable '${configurable.name}' is already added to a parent '${configurable.base?.name}'"
+        if (configurable.base != null) {
+            logger.warn("Configurable '${configurable.name}' is already added to a parent '${configurable.base?.name}'")
         }
 
         inner.add(configurable)

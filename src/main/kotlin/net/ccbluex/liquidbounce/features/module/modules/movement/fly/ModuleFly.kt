@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypix
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar.FlyHycraftDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel10thMar
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel20thApr
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel26thDec
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel27thJan
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartan524
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
@@ -85,6 +86,7 @@ object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = listOf("Glid
             FlySentinel20thApr,
             FlySentinel27thJan,
             FlySentinel10thMar,
+            FlySentinel26thDec,
 
             FlyVerusB3896Damage,
             FlyVerusB3869Flat,
