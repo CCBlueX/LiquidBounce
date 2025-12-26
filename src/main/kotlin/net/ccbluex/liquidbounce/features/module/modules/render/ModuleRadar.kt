@@ -74,15 +74,33 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
         object Triangle : PointerMode("Triangle") {
             private val width by float("Width", 8f, 1f..100f)
             private val height by float("Height", 10f, 1f..100f)
+            private val tailConcaveSize by float("TailConcaveSize", 2f, 0f..50f).onChange {
+                minOf(it, height)
+            }
 
             context(ctx: GuiGraphics)
             override fun draw(color: Color4b) {
-                ctx.drawTriangle(
-                    x0 = -width * 0.5f, y0 = 0f,
-                    x1 = 0f, y1 = height,
-                    x2 = width * 0.5f, y2 = 0f,
-                    fillColor = color,
-                )
+                if (Mth.equal(tailConcaveSize, 0f)) {
+                    ctx.drawTriangle(
+                        x0 = -width * 0.5f, y0 = 0f,
+                        x1 = 0f, y1 = height,
+                        x2 = width * 0.5f, y2 = 0f,
+                        fillColor = color
+                    )
+                } else {
+                    ctx.drawTriangle(
+                        x0 = -width * 0.5f, y0 = 0f,
+                        x1 = 0f, y1 = height,
+                        x2 = 0f, y2 = tailConcaveSize,
+                        fillColor = color
+                    ) // left
+                    ctx.drawTriangle(
+                        x0 = 0f, y0 = tailConcaveSize,
+                        x1 = 0f, y1 = height,
+                        x2 = width * 0.5f, y2 = 0f,
+                        fillColor = color
+                    ) // right
+                }
             }
         }
     }
