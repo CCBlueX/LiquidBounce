@@ -42,23 +42,14 @@ object HatsChinaHat : HatsMode("ChinaHat") {
 
     private val height by float("HeightOffset", 0.1f, 0f..1f)
 
-    private val colors = tree(Color())
-    private class Color : Configurable("Color") {
-
-        val red by int("Red", 0, 0..255)
-        val green by int("Green", 0, 0..255)
-        val blue by int("Blue", 255, 0..255)
-        val alpha by int("Alpha", 125, 0..255)
-
-
-    }
+    private val color by color("Color", Color4b(0, 0, 255, 125))
     private val hatSettings = tree(HatSettings())
 
     private class HatSettings : Configurable("HatSettings") {
 
         val radius by float("Radius", 0.6f, 0.1f..2f)
         val peak by float("Peak", 0.3f, 0.01f..2f)
-        val showInFirstPerson by boolean("FirstPersonView, true)
+        val showInFirstPerson by boolean("FirstPersonView", true)
 
     }
 
@@ -80,8 +71,6 @@ object HatsChinaHat : HatsMode("ChinaHat") {
                             val segments = 40
 
                             for (i in 0 until segments) {
-
-                                val color = Color4b(colors.red, colors.green, colors.blue, colors.alpha)
 
                                 val angle1 = i * Math.PI * 2 / segments
                                 val angle2 = (i + 1) * Math.PI * 2 / segments
