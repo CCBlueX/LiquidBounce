@@ -22,11 +22,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsChinaHat
 
 abstract class HatsMode(name: String) : Choice(name) {
 
-    override val parent: ChoiceConfigurable<*>
+    final override val parent: ChoiceConfigurable<*>
         get() = modes
 
 }

@@ -21,13 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsChinaHat
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsConeHat
 
 object ModuleHats : ClientModule("Hats", Category.RENDER) {
 
     val modes = choices(
-        "Mode", HatsChinaHat, arrayOf(
-            HatsChinaHat
+        "Mode", HatsConeHat, arrayOf(
+            HatsConeHat
         )
     ).apply { tagBy(this) }
 

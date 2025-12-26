@@ -36,7 +36,7 @@ import kotlin.math.sin
 /**
  * @author minecrrrr
  */
-object HatsChinaHat : HatsMode("ChinaHat") {
+object HatsConeHat : HatsMode("ConeHat") {
 
     private val height by float("HeightOffset", 0.1f, 0f..1f)
 
