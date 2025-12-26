@@ -54,18 +54,14 @@ object HatsConeHat : HatsMode("Cone") {
     private val renderHandler = handler<WorldRenderEvent>{
         val player = mc.player ?: return@handler
 
-        // Check if the cone should be rendered in first-person view.
         if (mc.options.cameraType.isFirstPerson && !HatSettings.showInFirstPerson) return@handler
 
         renderEnvironmentForWorld(it.matrixStack) {
             
-            // Get the player's interpolated position for smooth rendering.
             val pos = player.interpolateCurrentPosition(it.partialTicks)
 
-            // Create an offset vector for the cone's peak.
             val peakOffset = Vector3f(0f, HatSettings.peak, 0f)
 
-            // Translate render position relative to the camera and player's head.
             withPositionRelativeToCamera(pos.add(0.0, player.bbHeight + height.toDouble(), 0.0)) {
 
                 // Draw a gradient circle forming the cone base with the apex at peakOffset.
