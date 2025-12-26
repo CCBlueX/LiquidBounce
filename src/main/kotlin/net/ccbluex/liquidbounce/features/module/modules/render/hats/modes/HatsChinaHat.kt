@@ -58,7 +58,7 @@ object HatsChinaHat : HatsMode("ChinaHat") {
 
         val radius by float("Radius", 0.6f, 0.1f..2f)
         val peak by float("Peak", 0.3f, 0.01f..2f)
-        val showInFirstPerson by boolean("FirstPersonVisibility", true)
+        val showInFirstPerson by boolean("FirstPersonView, true)
 
     }
 
