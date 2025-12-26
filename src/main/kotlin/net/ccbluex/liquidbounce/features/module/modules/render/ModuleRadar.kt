@@ -159,7 +159,7 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
                         translate(0f, radius)
                         drawTriangle(
                             p1, p2, p3,
-                            fillColor = colorModes.activeChoice.getColor(entity),
+                            fillColor = color,
                         )
                     }
                 }
