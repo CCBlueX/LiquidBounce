@@ -19,18 +19,21 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsConeHat
+import kotlin.math.cos
+import kotlin.math.sin
 
-object ModuleHats : ClientModule("Hats", Category.RENDER) {
+fun getAngle(i: Int, segments: Int) = i * Math.PI * 2 / segments
+fun getNextAngle(i: Int, segments: Int) = (i + 1) * Math.PI * 2 / segments
+fun getPointX(angle: Double, radius: Float) = (sin(angle) * radius).toFloat()
+fun getPointZ(angle: Double, radius: Float) = (cos(angle) * radius).toFloat()
 
-    val modes = choices(
-        "Mode", HatsConeHat, arrayOf(
-            HatsConeHat,
-            HatsHalo,
-            HatsOrbs,
-        )
-    ).apply { tagBy(this) }
+fun getTorusPoints(mainAngel: Double, tubeAngel: Double, radius: Float, tubeRadius: Float ): Triple<Float, Float, Float> {
+
+    val x = ((radius + tubeRadius * cos(tubeAngel)) * sin(mainAngel)).toFloat()
+    val y = (tubeRadius * sin(tubeAngel)).toFloat()
+    val z = ((radius + tubeRadius * cos(tubeAngel)) * cos(mainAngel)).toFloat()
+
+    return Triple(x, y, z)
 
 }
+
