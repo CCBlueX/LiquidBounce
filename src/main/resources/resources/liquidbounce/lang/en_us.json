@@ -771,6 +771,7 @@
   "liquidbounce.module.notebot.messages.songInfoTicksPerGameTick": "Ticks per game tick: %s",
   "liquidbounce.module.notebot.messages.songInfoTickLength": "Tick length: %s",
   "liquidbounce.module.notebot.messages.songInfoTotalNotes": "Total notes: %s",
+  "liquidbounce.module.radar.description": "Shows the direction of rendered entities on GUI.",
   "liquidbounce.module.guiCloser.description": "Closes GUIs if their title matches specified patterns.",
   "liquidbounce.module.yggdrasilSignatureFix.description": "Disables Authlib Yggdrasil signature check, may fix missing skins on some servers.",
   "liquidbounce.module.reportHelper.description": "Automatically starts a report and confirms it for you.",
