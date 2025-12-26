@@ -43,7 +43,7 @@ import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
 
 /**
- * Primitive version of [ScreenRect.transformEachVertex]
+ * Primitive version of [ScreenRectangle.transformMaxBounds]
  */
 private fun Matrix3x2f.transformEachVertex(
     sameAxis: Int, otherAxis: Int, width: Int, height: Int,

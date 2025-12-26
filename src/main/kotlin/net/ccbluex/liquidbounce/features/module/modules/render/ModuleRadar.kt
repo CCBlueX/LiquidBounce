@@ -57,7 +57,7 @@ import kotlin.math.sqrt
  */
 object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("PointerESP")) {
 
-    private val tiltAngle by floatRange("TiltAngle", 45f..90f, 0f..90f)
+//    private val tiltAngle by floatRange("TiltAngle", 45f..90f, 0f..90f)
 
     private val radius by float("Radius", 40f, 2f..200f)
 
@@ -118,22 +118,21 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
                 translate(width * 0.5f, height * 0.5f)
 
                 val yawRad = player.getYRot(it.tickDelta).toRadians()
-                val pitchRad = run {
-                    val pitch = player.getXRot(it.tickDelta)
-                    if (pitch >= 0) {
-                        pitch.coerceIn(tiltAngle)
-                    } else {
-                        pitch.coerceIn(-tiltAngle.start, -tiltAngle.endInclusive)
-                    }
-                }.toRadians()
+//                val pitchRad = run {
+//                    val pitch = player.getXRot(it.tickDelta)
+//                    if (pitch >= 0) {
+//                        pitch.coerceIn(tiltAngle)
+//                    } else {
+//                        pitch.coerceIn(-tiltAngle.endInclusive, -tiltAngle.start)
+//                    }
+//                }.toRadians()
                 val playerPos = player.interpolateCurrentPosition(it.tickDelta)
 
                 // Rotate Z (simulation)
-                val yScale = (pitchRad).fastSin()
-                // TODO: fix this
-                scale(1f, if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) -yScale else yScale)
+//                val yScale = (pitchRad).fastSin()
+//                scale(1f, yScale)
 
-                rotate(if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) yawRad else -yawRad)
+                rotate(-yawRad)
 
                 val p1 = Vec2(-pointer.width * 0.5f, 0f)
                 val p2 = Vec2(0f, pointer.height)
