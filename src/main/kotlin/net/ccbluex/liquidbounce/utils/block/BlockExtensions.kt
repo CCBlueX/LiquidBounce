@@ -156,6 +156,16 @@ val BlockPos.outlineBox: AABB
 val BlockPos.collisionShape: VoxelShape
     get() = this.getState()!!.getCollisionShape(world, this)
 
+fun BlockState.outlineBox(blockPos: BlockPos): AABB {
+    val outlineShape = this.getShape(world, blockPos)
+
+    return if (outlineShape.isEmpty) {
+        FULL_BOX
+    } else {
+        outlineShape.bounds()
+    }
+}
+
 fun VoxelShape.getClosestSquaredDistanceTo(position: Position): Double {
     var minDistanceSq = Double.MAX_VALUE
     forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->

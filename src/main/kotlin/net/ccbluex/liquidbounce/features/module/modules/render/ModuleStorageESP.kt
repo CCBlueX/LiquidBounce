@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
-import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxOutlined
 import net.ccbluex.liquidbounce.render.drawLine
@@ -40,7 +39,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -190,18 +189,11 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     continue
                 }
 
-                val state = pos.getState()
+                val blockState = world.getBlockState(blockPos)
 
-                if (state == null || state.isAir) {
-                    continue
-                }
+                if (blockState.isAir) continue
 
-                val outlineShape = state.getShape(world, pos)
-                val boundingBox = if (outlineShape.isEmpty) {
-                    FULL_BOX
-                } else {
-                    outlineShape.bounds()
-                }
+                val boundingBox = blockState.outlineBox(blockPos)
 
                 blockBoxes.add(BlockBox(pos.asLong(), boundingBox, color))
             }
@@ -239,26 +231,20 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 // non-model blocks are already processed by WorldRenderer where we injected code which renders
                 // their outline
                 startBatch()
-                for ((pos, type) in StorageScanner.iterate()) {
-                    if (type.color.isTransparent || !type.shouldRender(pos)) continue
+                for ((blockPos, type) in StorageScanner.iterate()) {
+                    if (type.color.isTransparent || !type.shouldRender(blockPos)) continue
 
-                    val state = pos.getState() ?: continue
+                    val blockState = world.getBlockState(blockPos)
 
                     // non-model blocks are already processed by WorldRenderer where we injected code which renders
                     // their outline
-                    if (state.renderShape != RenderShape.MODEL || state.isAir) {
+                    if (blockState.renderShape != RenderShape.MODEL || blockState.isAir) {
                         continue
                     }
 
-                    val outlineShape = state.getShape(world, pos)
+                    val boundingBox = blockState.outlineBox(blockPos)
 
-                    val boundingBox = if (outlineShape.isEmpty) {
-                        FULL_BOX
-                    } else {
-                        outlineShape.bounds()
-                    }
-
-                    withPositionRelativeToCamera(pos) {
+                    withPositionRelativeToCamera(blockPos) {
                         drawBoxOutlined(boundingBox, type.color)
                     }
 
