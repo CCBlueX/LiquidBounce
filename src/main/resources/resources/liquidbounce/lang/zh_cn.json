@@ -750,7 +750,7 @@
   "liquidbounce.module.betterTab.description": "对标签列表进行了多项改进。",
   "liquidbounce.module.betterTitle.description": "对游戏字幕的改进。",
   "liquidbounce.module.betterInventory.description": "改进物品栏的可视化功能。",
-  "liquidbounce.module.noBlockInteract.description": "阻止你与方块进行交互.",
+  "liquidbounce.module.noBlockInteract.description": "阻止你与方块进行交互。",
   "liquidbounce.module.noEntityInteract.description": "阻止你与特定类型实体交互。",
   "liquidbounce.module.autoPearl.description": "跟随敌人珍珠的轨迹瞄准并投掷珍珠。",
   "liquidbounce.module.replenish.description": "自动用物品栏中的物品填充快捷栏，使物品数量保持设定的阈值。",
