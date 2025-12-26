@@ -62,8 +62,8 @@ object HatsConeHat : HatsMode("ConeHat") {
                     drawGradientCircle(
                         outerRadius = HatSettings.radius,
                         innerRadius = 0f,
-                        outerColor4b = color,
-                        innerColor4b = color,
+                        outerColor = color,
+                        innerColor = color,
                         innerOffset = peakOffset,
                     )
                 }
