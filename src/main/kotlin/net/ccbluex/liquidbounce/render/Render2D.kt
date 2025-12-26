@@ -124,11 +124,13 @@ fun GuiGraphics.drawLines(
     points: FloatArray,
     argb: Int,
     bounds: ScreenRectangle,
+    cull: Boolean = true,
 ) {
     this.guiRenderState.submitGuiElement(
         LineGuiElementRenderState(
             points,
             argb,
+            ClientRenderPipelines.GUI.lines(cull),
             copyPose(),
             this.scissorStack.peek(),
             bounds,
@@ -204,6 +206,7 @@ fun GuiGraphics.drawTriangle(
     x0: Float, y0: Float, x1: Float, y1: Float, x2: Float, y2: Float,
     fillColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
+    cull: Boolean = true,
 ) {
     val minX = minOf(x0, x1, x2)
     val minY = minOf(y0, y1, y2)
@@ -216,6 +219,7 @@ fun GuiGraphics.drawTriangle(
             TriangleGuiElementRenderState(
                 x0, y0, x1, y1, x2, y2,
                 fillColor.toARGB(),
+                ClientRenderPipelines.GUI.triangles(cull),
                 copyPose(),
                 this.scissorStack.peek(),
                 bounds,

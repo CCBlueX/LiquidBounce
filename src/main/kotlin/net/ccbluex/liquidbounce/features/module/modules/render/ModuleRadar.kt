@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawTriangle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.client.scaledDimension
 import net.ccbluex.liquidbounce.utils.client.toRadians
@@ -40,8 +41,10 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
+import net.ccbluex.liquidbounce.utils.kotlin.unaryMinus
 import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
 import net.ccbluex.liquidbounce.utils.math.Easing
+import net.minecraft.client.CameraType
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.util.Mth
 import kotlin.collections.component1
@@ -56,7 +59,10 @@ import kotlin.math.sqrt
  */
 object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("PointerESP")) {
 
-//    private val tiltAngle by floatRange("TiltAngle", 45f..90f, 0f..90f)
+    private val tiltAngle by floatRange("TiltAngle", 45f..90f, 0f..90f).onChanged {
+        tiltAngleNeg = -it
+    }
+    private var tiltAngleNeg: ClosedFloatingPointRange<Float> = -tiltAngle
 
     private val radius by float("Radius", 40f, 2f..200f)
 
@@ -85,20 +91,23 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
                         x0 = -width * 0.5f, y0 = 0f,
                         x1 = 0f, y1 = height,
                         x2 = width * 0.5f, y2 = 0f,
-                        fillColor = color
+                        fillColor = color,
+                        cull = false,
                     )
                 } else {
                     ctx.drawTriangle(
                         x0 = -width * 0.5f, y0 = 0f,
                         x1 = 0f, y1 = height,
                         x2 = 0f, y2 = tailConcaveSize,
-                        fillColor = color
+                        fillColor = color,
+                        cull = false,
                     ) // left
                     ctx.drawTriangle(
                         x0 = 0f, y0 = tailConcaveSize,
                         x1 = 0f, y1 = height,
                         x2 = width * 0.5f, y2 = 0f,
-                        fillColor = color
+                        fillColor = color,
+                        cull = false,
                     ) // right
                 }
             }
@@ -153,19 +162,19 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
                 translate(width * 0.5f, height * 0.5f)
 
                 val yawRad = player.getYRot(it.tickDelta).toRadians()
-//                val pitchRad = run {
-//                    val pitch = player.getXRot(it.tickDelta)
-//                    if (pitch >= 0) {
-//                        pitch.coerceIn(tiltAngle)
-//                    } else {
-//                        pitch.coerceIn(-tiltAngle.endInclusive, -tiltAngle.start)
-//                    }
-//                }.toRadians()
+                val pitchRad = run {
+                    val pitch = player.getXRot(it.tickDelta)
+                    if (pitch >= 0) {
+                        pitch.coerceIn(tiltAngle)
+                    } else {
+                        pitch.coerceIn(tiltAngleNeg)
+                    }
+                }.toRadians()
                 val playerPos = player.interpolateCurrentPosition(it.tickDelta)
 
                 // Rotate Z (simulation)
-//                val yScale = (pitchRad).fastSin()
-//                scale(1f, yScale)
+                val yScale = (pitchRad).fastSin()
+                scale(if (mc.options.cameraType == CameraType.THIRD_PERSON_FRONT) -1f else 1f, yScale)
 
                 rotate(-yawRad)
 
