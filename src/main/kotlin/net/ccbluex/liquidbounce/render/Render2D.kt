@@ -199,6 +199,7 @@ fun GuiGraphics.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Floa
     this.drawQuad(x, y1, x + thickness, y2, color)
 }
 
+@Suppress("LongParameterList")
 fun GuiGraphics.drawTriangle(
     x0: Float, y0: Float, x1: Float, y1: Float, x2: Float, y2: Float,
     fillColor: Color4b? = Color4b.TRANSPARENT,
