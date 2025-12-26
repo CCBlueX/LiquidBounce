@@ -88,6 +88,10 @@ fun ClosedFloatingPointRange<Float>.random(): Float {
     return if (start >= endInclusive) start else ThreadLocalRandom.current().nextFloat(start, endInclusive)
 }
 
+inline operator fun ClosedFloatingPointRange<Float>.unaryMinus(): ClosedFloatingPointRange<Float> {
+    return -endInclusive..-start
+}
+
 fun ClosedFloatingPointRange<Double>.random(): Double {
     return if (start >= endInclusive) start else ThreadLocalRandom.current().nextDouble(start, endInclusive)
 }

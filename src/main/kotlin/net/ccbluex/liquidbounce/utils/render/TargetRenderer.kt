@@ -42,7 +42,6 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
 import net.minecraft.util.Mth
 import com.mojang.math.Axis
-import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import kotlin.math.cos
@@ -336,9 +335,9 @@ class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GuiGraphics>(
             val minY = screenPos.y - 10 * size
             val maxY = screenPos.y
             ctx.drawTriangle(
-                Vec2(minX, minY),
-                Vec2(midX, maxY),
-                Vec2(maxX, minY),
+                x0 = minX, y0 = minY,
+                x1 = midX, y1 = maxY,
+                x2 = maxX, y2 = minY,
                 color,
                 outlineColor,
             )

@@ -68,6 +68,8 @@ class MapColorMode(
 class GenericEntityHealthColorMode(
     override val parent: ChoiceConfigurable<*>
 ) : GenericColorMode<LivingEntity>("Health") {
+    private val alpha by int("Alpha", 255, 0..255)
+
     override fun getColor(param: LivingEntity): Color4b {
         val maxHealth = param.maxHealth
         val health = param.getActualHealth().coerceAtMost(maxHealth)
@@ -77,6 +79,6 @@ class GenericEntityHealthColorMode(
         val red = (255 * (1 - healthPercentage)).toInt().coerceIn(0..255)
         val green = (255 * healthPercentage).toInt().coerceIn(0..255)
 
-        return Color4b(red, green, 0)
+        return Color4b(red, green, 0, alpha)
     }
 }
