@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.abs
 
 fun getAngle(i: Int, segments: Int) = i * Math.PI * 2 / segments
 fun getNextAngle(i: Int, segments: Int) = (i + 1) * Math.PI * 2 / segments
