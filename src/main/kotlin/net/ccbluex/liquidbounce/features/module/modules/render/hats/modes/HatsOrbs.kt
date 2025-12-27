@@ -103,16 +103,32 @@ object HatsOrbs : HatsMode("Orbs") {
                         val dx = x - cosA; val dz = z + sinA 
 
                         // Rendering of the top part of the rhombus (4 faces/8 triangles).
-                        addVertex(matrix, x, top, z).color(color); addVertex(matrix, dx, y, dz).color(color); addVertex(matrix, ax, y, az).color(color)
-                        addVertex(matrix, x, top, z).color(color); addVertex(matrix, ax, y, az).color(color); addVertex(matrix, bx, y, bz).color(color)
-                        addVertex(matrix, x, top, z).color(color); addVertex(matrix, bx, y, bz).color(color); addVertex(matrix, cx, y, cz).color(color)
-                        addVertex(matrix, x, top, z).color(color); addVertex(matrix, cx, y, cz).color(color); addVertex(matrix, dx, y, dz).color(color)
+                        addVertex(matrix, x, top, z).color(color)
+                        addVertex(matrix, dx, y, dz).color(color)
+                        addVertex(matrix, ax, y, az).color(color)
+                        addVertex(matrix, x, top, z).color(color)
+                        addVertex(matrix, ax, y, az).color(color)
+                        addVertex(matrix, bx, y, bz).color(color)
+                        addVertex(matrix, x, top, z).color(color)
+                        addVertex(matrix, bx, y, bz).color(color)
+                        addVertex(matrix, cx, y, cz).color(color)
+                        addVertex(matrix, x, top, z).color(color)
+                        addVertex(matrix, cx, y, cz).color(color)
+                        addVertex(matrix, dx, y, dz).color(color)
 
                         // Rendering of the bottom part of the rhombus (4 faces/8 triangles).
-                        addVertex(matrix, x, bottom, z).color(color); addVertex(matrix, dx, y, dz).color(color); addVertex(matrix, ax, y, az).color(color)
-                        addVertex(matrix, x, bottom, z).color(color); addVertex(matrix, ax, y, az).color(color); addVertex(matrix, bx, y, bz).color(color)
-                        addVertex(matrix, x, bottom, z).color(color); addVertex(matrix, bx, y, bz).color(color); addVertex(matrix, cx, y, cz).color(color)
-                        addVertex(matrix, x, bottom, z).color(color); addVertex(matrix, cx, y, cz).color(color); addVertex(matrix, dx, y, dz).color(color)
+                        addVertex(matrix, x, bottom, z).color(color)
+                        addVertex(matrix, dx, y, dz).color(color)
+                        addVertex(matrix, ax, y, az).color(color)
+                        addVertex(matrix, x, bottom, z).color(color) 
+                        addVertex(matrix, ax, y, az).color(color)
+                        addVertex(matrix, bx, y, bz).color(color)
+                        addVertex(matrix, x, bottom, z).color(color)
+                        addVertex(matrix, bx, y, bz).color(color)
+                        addVertex(matrix, cx, y, cz).color(color)
+                        addVertex(matrix, x, bottom, z).color(color)
+                        addVertex(matrix, cx, y, cz).color(color) 
+                        addVertex(matrix, dx, y, dz).color(color)
                     }
 
                 }
