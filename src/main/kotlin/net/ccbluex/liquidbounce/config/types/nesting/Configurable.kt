@@ -365,16 +365,16 @@ open class Configurable(
         registryList(name, default, ValueType.ITEM)
 
     fun <C : SequencedSet<SoundEvent>> sounds(name: String, default: C) =
-        registryList(name, default, ValueType.SOUND)
+        registryList(name, default, ValueType.SOUND_EVENT)
 
-    fun <C : SequencedSet<MobEffect>> statusEffects(name: String, default: C) =
-        registryList(name, default, ValueType.STATUS_EFFECT)
+    fun <C : SequencedSet<MobEffect>> mobEffects(name: String, default: C) =
+        registryList(name, default, ValueType.MOB_EFFECT)
 
-    fun <C : SequencedSet<Identifier>> clientPackets(name: String, default: C) =
-        registryList(name, default, ValueType.CLIENT_PACKET)
+    fun <C : SequencedSet<Identifier>> c2sPackets(name: String, default: C) =
+        registryList(name, default, ValueType.C2S_PACKET)
 
-    fun <C : SequencedSet<Identifier>> serverPackets(name: String, default: C) =
-        registryList(name, default, ValueType.SERVER_PACKET)
+    fun <C : SequencedSet<Identifier>> s2cPackets(name: String, default: C) =
+        registryList(name, default, ValueType.S2C_PACKET)
 
     fun <C : SequencedSet<EntityType<*>>> entityTypes(name: String, default: C) =
         registryList(name, default, ValueType.ENTITY_TYPE)

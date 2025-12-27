@@ -147,7 +147,7 @@ class CheckScreenHandlerTypeConfigurable(
             BuiltInRegistries.MENU.asComparator(),
             MenuType.GENERIC_9x3, MenuType.GENERIC_9x6, MenuType.SHULKER_BOX,
         ),
-        ValueType.SCREEN_HANDLER
+        ValueType.MENU
     )
     private val filter by enumChoice("Filter", Filter.WHITELIST)
 
