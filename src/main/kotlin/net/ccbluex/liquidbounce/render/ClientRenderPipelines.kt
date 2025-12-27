@@ -216,13 +216,18 @@ object ClientRenderPipelines {
 
     // Special
 
+    /**
+     * @see RenderPipelines.ENTITY_OUTLINE_BLIT
+     * @see RenderPipelines.OUTLINE_SNIPPET
+     */
     @JvmField
     val Outline = newPipeline("outline") {
         screenQuad()
         withFragmentShader(ClientShaders.OUTLINE_FSH_ID)
         withSampler("InSampler")
         withBlend(BlendFunction.ENTITY_OUTLINE_BLIT)
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withDepthWrite(false)
+        withColorWrite(true, false)
     }
 
     @JvmField
@@ -234,6 +239,7 @@ object ClientRenderPipelines {
         withUniform("ItemChamsData", UniformType.UNIFORM_BUFFER)
         withoutBlend()
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withDepthWrite(false)
     }
 
     @JvmField
