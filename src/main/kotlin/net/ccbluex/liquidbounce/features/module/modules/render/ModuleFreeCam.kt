@@ -41,12 +41,12 @@ import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
 import net.minecraft.client.CameraType
 import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -81,7 +81,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
         LIQUID("Liquid"),
     }
 
-    private val cancelOn by multiEnumChoice("CancelOn", emptyEnumSet<CancelOn>())
+    private val cancelOn by multiEnumChoice("CancelOn", enumSetOf<CancelOn>())
 
     /**
      * Navigation configuration for the FreeCam module

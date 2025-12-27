@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ArmorItemFacet
@@ -55,7 +56,6 @@ import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.level.material.LavaFluid
 import net.minecraft.world.level.material.WaterFluid
@@ -183,12 +183,12 @@ class ItemCategorization(
          * We expect to be full armor to be diamond armor.
          */
         @JvmStatic
-        private val diamondArmorPieces: Map<EquipmentSlot, ArmorPiece> = enumMapOf {
-            put(EquipmentSlot.HEAD, constructArmorPiece(Items.DIAMOND_HELMET, 0))
-            put(EquipmentSlot.CHEST, constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1))
-            put(EquipmentSlot.LEGS, constructArmorPiece(Items.DIAMOND_LEGGINGS, 2))
-            put(EquipmentSlot.FEET, constructArmorPiece(Items.DIAMOND_BOOTS, 3))
-        }
+        private val diamondArmorPieces: Map<EquipmentSlot, ArmorPiece> = enumMapOf(
+            EquipmentSlot.HEAD, constructArmorPiece(Items.DIAMOND_HELMET, 0),
+            EquipmentSlot.CHEST, constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1),
+            EquipmentSlot.LEGS, constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
+            EquipmentSlot.FEET, constructArmorPiece(Items.DIAMOND_BOOTS, 3),
+        )
     }
 
     /**

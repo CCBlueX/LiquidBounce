@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -46,7 +47,6 @@ import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.ChatFormatting
 import net.minecraft.util.Mth
-import java.util.*
 
 /**
  * Notebot Module
@@ -225,13 +225,13 @@ object ModuleNotebot : ClientModule("Notebot", Category.FUN, disableOnQuit = tru
         return InstrumentNote(instrument, noteValue)
     }
 
-    fun getRequiredInstruments(songData: SongData): EnumSet<NoteBlockInstrument> {
+    fun getRequiredInstruments(songData: SongData): Set<NoteBlockInstrument> {
         if (pianoOnly) {
-            return EnumSet.of(NoteBlockInstrument.HARP)
+            return setOf(NoteBlockInstrument.HARP)
         }
 
         return songData.nbs.noteBlocks
-            .mapTo(EnumSet.noneOf(NoteBlockInstrument::class.java)) {
+            .mapTo(enumSetOf()) {
                 InstrumentNote.getInstrumentEnumFromId(it.instrument.toInt())
             }
     }

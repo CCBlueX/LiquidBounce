@@ -21,9 +21,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.trigger
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
-import java.util.*
 
 /**
  * Can be used for different server that use paper to join a game
@@ -39,7 +39,7 @@ object AutoQueueTriggerMessage : AutoQueueTrigger("Message") {
 
     private val chatTypes by multiEnumChoice(
         "ChatTypes",
-        EnumSet.of(ChatReceiveEvent.ChatType.GAME_MESSAGE),
+        enumSetOf(ChatReceiveEvent.ChatType.GAME_MESSAGE),
         canBeNone = false,
     )
 

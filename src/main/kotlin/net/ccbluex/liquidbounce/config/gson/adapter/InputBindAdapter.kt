@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.authlib.utils.array
 import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetOf
 import java.lang.reflect.Type
 
 object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind> {
@@ -70,7 +70,7 @@ object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind>
         val actionStr = jsonObject.string("action")
         val action = InputBind.BindAction.entries.find { it.choiceName.equals(actionStr, ignoreCase = true) }
             ?: InputBind.BindAction.TOGGLE
-        val modifierSet = jsonObject.array("modifiers")?.mapNotNullTo(emptyEnumSet<InputBind.Modifier>()) { element ->
+        val modifierSet = jsonObject.array("modifiers")?.mapNotNullTo(enumSetOf<InputBind.Modifier>()) { element ->
             InputBind.Modifier.of(element.asString)
         }.orEmpty()
 

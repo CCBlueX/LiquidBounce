@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import java.util.*
 
 open class ListValue<T : MutableCollection<E>, E>(
@@ -158,17 +158,17 @@ class RegistryListValue<T : SequencedSet<E>, E>(
 
     companion object {
         @JvmField
-        internal val TYPE_TO_REGISTRY_NAME = enumMapOf<ValueType, String> {
-            put(ValueType.BLOCK, "blocks")
-            put(ValueType.ITEM, "items")
-            put(ValueType.SOUND, "sounds")
-            put(ValueType.STATUS_EFFECT, "statuseffects")
-            put(ValueType.CLIENT_PACKET, "clientpackets")
-            put(ValueType.SERVER_PACKET, "serverpackets")
-            put(ValueType.ENTITY_TYPE, "entity_type")
-            put(ValueType.SCREEN_HANDLER, "screen_handler")
-            put(ValueType.CLIENT_MODULE, "client_module")
-        }
+        internal val TYPE_TO_REGISTRY_NAME = enumMapOf<ValueType, String>(
+            ValueType.BLOCK, "blocks",
+            ValueType.ITEM, "items",
+            ValueType.SOUND, "sounds",
+            ValueType.STATUS_EFFECT, "statuseffects",
+            ValueType.CLIENT_PACKET, "clientpackets",
+            ValueType.SERVER_PACKET, "serverpackets",
+            ValueType.ENTITY_TYPE, "entity_type",
+            ValueType.SCREEN_HANDLER, "screen_handler",
+            ValueType.CLIENT_MODULE, "client_module",
+        )
     }
 
 }

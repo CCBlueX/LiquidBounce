@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import java.util.*
-import kotlin.experimental.ExperimentalTypeInference
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =
     when {
@@ -30,24 +29,3 @@ fun <T> Array<out T>?.unmodifiable(): List<T> =
         size == 1 -> Collections.singletonList(this[0])
         else -> ObjectImmutableList(this)
     }
-
-inline fun <reified K : Enum<K>, V> enumMapOf(): EnumMap<K, V> = EnumMap(K::class.java)
-
-@JvmName("enumMapOfBuilder")
-@OptIn(ExperimentalTypeInference::class)
-inline fun <reified K : Enum<K>, V> enumMapOf(
-    @BuilderInference block: EnumMap<K, V>.() -> Unit
-): EnumMap<K, V> = enumMapOf<K, V>().apply(block)
-
-@JvmName("enumMapOfMapper")
-inline fun <reified K : Enum<K>, V> enumMapOf(
-    mapper: (K) -> V
-): EnumMap<K, V> = enumMapOf<K, V> {
-    K::class.java.enumConstants.forEach {
-        put(it, mapper(it))
-    }
-}
-
-@JvmName("enumMapOfPairs")
-inline fun <reified K : Enum<K>, V> enumMapOf(vararg pairs: Pair<K, V>): EnumMap<K, V> =
-    enumMapOf<K, V>().apply { putAll(pairs) }

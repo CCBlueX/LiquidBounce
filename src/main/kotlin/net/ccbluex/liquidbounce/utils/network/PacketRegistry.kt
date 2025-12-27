@@ -21,7 +21,7 @@
 package net.ccbluex.liquidbounce.utils.network
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
+import net.ccbluex.fastutil.enumMapOf
 import net.minecraft.network.protocol.PacketFlow
 import net.minecraft.resources.Identifier
 

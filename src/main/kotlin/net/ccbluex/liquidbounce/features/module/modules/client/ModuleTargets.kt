@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.combat.Targets
@@ -34,7 +35,7 @@ object ModuleTargets : ClientModule(
     aliases = listOf("Enemies")
 ) {
     val combatConfigurable = multiEnumChoice("Combat",
-        default = EnumSet.of(
+        default = enumSetOf(
             Targets.PLAYERS,
             Targets.HOSTILE,
             Targets.ANGERABLE,
@@ -45,7 +46,7 @@ object ModuleTargets : ClientModule(
     )
 
     val visualConfigurable = multiEnumChoice("Visual",
-        default = EnumSet.of(
+        default = enumSetOf(
             Targets.PLAYERS,
             Targets.HOSTILE,
             Targets.ANGERABLE,

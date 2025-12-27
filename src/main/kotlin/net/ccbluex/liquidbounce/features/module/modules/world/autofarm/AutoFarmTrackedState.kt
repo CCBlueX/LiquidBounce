@@ -19,11 +19,11 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.objectArraySetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_HORIZONTAL
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.tags.BlockTags
@@ -57,7 +57,7 @@ sealed interface AutoFarmTrackedState {
             override fun isBlockMatches(state: BlockState): Boolean = state.`is`(BlockTags.JUNGLE_LOGS)
 
             override fun findPlantableNeighbors0(pos: BlockPos, state: BlockState): Collection<Direction> {
-                val result = emptyEnumSet<Direction>()
+                val result = enumSetOf<Direction>()
                 val mutable = BlockPos.MutableBlockPos()
                 for (dir in DIRECTIONS_HORIZONTAL) {
                     mutable.setWithOffset(pos, dir)
