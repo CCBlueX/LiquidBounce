@@ -33,7 +33,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.phys.HitResult
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Vec3i
 
 @Suppress("unused")
 object ScriptInteractionUtil {
@@ -72,10 +71,7 @@ object ScriptInteractionUtil {
     fun placeBlock(blockPos: BlockPos, hand: InteractionHand): Boolean {
         val itemStack = player.getItemInHand(hand)
         val blockPlacementOptions = BlockPlacementTargetFindingOptions(
-            BlockOffsetOptions(
-                listOf(Vec3i.ZERO),
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-            ),
+            BlockOffsetOptions.Default,
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = itemStack,
             PlayerLocationOnPlacement(position = player.position()),
@@ -86,7 +82,6 @@ object ScriptInteractionUtil {
 
         // Check if block is reachable to the player
         val rayTraceResult = raycast(bestPlacement.rotation)
-            ?: return false
 
         // If the type we are aiming at is not a block, we can't place it
         if (rayTraceResult.type != HitResult.Type.BLOCK) {

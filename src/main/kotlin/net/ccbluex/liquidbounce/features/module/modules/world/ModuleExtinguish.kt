@@ -172,10 +172,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
         val playerPos = frameOnGround.pos.toBlockPos()
 
         val options = BlockPlacementTargetFindingOptions(
-            BlockOffsetOptions(
-                listOf(Vec3i.ZERO),
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-            ),
+            BlockOffsetOptions.Default,
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = waterBucketSlot.itemStack,
             PlayerLocationOnPlacement(position = frameOnGround.pos),
@@ -190,10 +187,7 @@ object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
         val bucket = Slots.OffhandWithHotbar.findClosestSlot(Items.BUCKET) ?: return null
 
         val options = BlockPlacementTargetFindingOptions(
-            BlockOffsetOptions(
-                listOf(Vec3i.ZERO),
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-            ),
+            BlockOffsetOptions.Default,
             FaceHandlingOptions(CenterTargetPositionFactory),
             stackToPlaceWith = bucket.itemStack,
             PlayerLocationOnPlacement(position = player.position()),

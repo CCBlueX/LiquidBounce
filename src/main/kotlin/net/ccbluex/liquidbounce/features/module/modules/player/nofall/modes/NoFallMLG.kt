@@ -203,10 +203,7 @@ internal object NoFallMLG : NoFallMode("MLG") {
     ): PlacementPlan? {
         val options =
             BlockPlacementTargetFindingOptions(
-                BlockOffsetOptions(
-                    listOf(Vec3i.ZERO),
-                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-                ),
+                BlockOffsetOptions.Default,
                 FaceHandlingOptions(CenterTargetPositionFactory),
                 stackToPlaceWith = item.itemStack,
                 PlayerLocationOnPlacement(position = player.position()),
