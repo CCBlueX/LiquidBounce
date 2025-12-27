@@ -19,16 +19,21 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.abs
 
 fun getAngle(i: Int, segments: Int) = i * Math.PI * 2 / segments
 fun getNextAngle(i: Int, segments: Int) = (i + 1) * Math.PI * 2 / segments
 fun getPointX(angle: Double, radius: Float) = (sin(angle) * radius).toFloat()
 fun getPointZ(angle: Double, radius: Float) = (cos(angle) * radius).toFloat()
 
-fun getTorusPoints(mainAngel: Double, tubeAngel: Double, radius: Float, tubeRadius: Float ): Triple<Float, Float, Float> {
+fun getTorusPoints(
+    mainAngel: Double,
+    tubeAngel: Double,
+    radius: Float,
+    tubeRadius: Float
+): Triple<Float, Float, Float> {
 
     val x = ((radius + tubeRadius * cos(tubeAngel)) * sin(mainAngel)).toFloat()
     val y = (tubeRadius * sin(tubeAngel)).toFloat()

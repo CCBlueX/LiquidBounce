@@ -51,7 +51,7 @@ object HatsHalo : HatsMode("Halo") {
 
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent>{
+    private val renderHandler = handler<WorldRenderEvent> {
         val player = mc.player ?: return@handler
 
         if (mc.options.cameraType.isFirstPerson && !HatSettings.showInFirstPerson) return@handler
@@ -79,10 +79,30 @@ object HatsHalo : HatsMode("Halo") {
                             val tubeCurrentAngleTorus = getAngle(tubeI, tubeSegments)
                             val tubeNextAngleTorus = getNextAngle(tubeI, tubeSegments)
 
-                            val p1 = getTorusPoints(mainCurrentAngleTorus, tubeCurrentAngleTorus, HatSettings.radius, HatSettings.tubeRadius)
-                            val p2 = getTorusPoints(mainCurrentAngleTorus, tubeNextAngleTorus, HatSettings.radius, HatSettings.tubeRadius)
-                            val p3 = getTorusPoints(mainNextAngleTorus, tubeCurrentAngleTorus, HatSettings.radius, HatSettings.tubeRadius)
-                            val p4 = getTorusPoints(mainNextAngleTorus, tubeNextAngleTorus, HatSettings.radius, HatSettings.tubeRadius)
+                            val p1 = getTorusPoints(
+                                mainCurrentAngleTorus,
+                                tubeCurrentAngleTorus,
+                                HatSettings.radius,
+                                HatSettings.tubeRadius
+                            )
+                            val p2 = getTorusPoints(
+                                mainCurrentAngleTorus,
+                                tubeNextAngleTorus,
+                                HatSettings.radius,
+                                HatSettings.tubeRadius
+                            )
+                            val p3 = getTorusPoints(
+                                mainNextAngleTorus,
+                                tubeCurrentAngleTorus,
+                                HatSettings.radius,
+                                HatSettings.tubeRadius
+                            )
+                            val p4 = getTorusPoints(
+                                mainNextAngleTorus,
+                                tubeNextAngleTorus,
+                                HatSettings.radius,
+                                HatSettings.tubeRadius
+                            )
 
                             addVertex(matrix, p1.first, p1.second, p1.third).color(color)
                             addVertex(matrix, p2.first, p2.second, p2.third).color(color)

@@ -72,8 +72,7 @@ object HatsOrbs : HatsMode("Orbs") {
 
         renderEnvironmentForWorld(it.matrixStack) {
             withPositionRelativeToCamera(pos.add(0.0, player.bbHeight + height.toDouble(), 0.0)) {
-                drawCustomMesh(ClientRenderPipelines.Triangles) {
-                        matrix ->
+                drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
 
                     val time = (System.currentTimeMillis() / 1000.0) * HatSettings.speed
 
@@ -87,20 +86,28 @@ object HatsOrbs : HatsMode("Orbs") {
                         val z = getPointZ(angle, HatSettings.radius)
 
                         val y = if (HatSettings.WaveSettings.enabled) {
-                            sin(time * HatSettings.WaveSettings.waveSpeed + i).toFloat() * HatSettings.WaveSettings.waveHeight
-                        } else 0f
+                            sin(time * HatSettings.WaveSettings.waveSpeed + i).toFloat() *
+                                HatSettings.WaveSettings.waveHeight
+                        } else {
+                            0f
+                        }
 
-                        val rotAngle = if(HatSettings.OrbRotation.enabled) time * HatSettings.OrbRotation.speedRot else 0.0
+                        val rotAngle =
+                            if (HatSettings.OrbRotation.enabled) time * HatSettings.OrbRotation.speedRot else 0.0
                         val sinA = (sin(rotAngle)).toFloat() * HatSettings.size
                         val cosA = (cos(rotAngle)).toFloat() * HatSettings.size
 
                         val top = y + HatSettings.size
                         val bottom = y - HatSettings.size
 
-                        val ax = x + sinA; val az = z + cosA 
-                        val bx = x + cosA; val bz = z - sinA 
-                        val cx = x - sinA; val cz = z - cosA 
-                        val dx = x - cosA; val dz = z + sinA 
+                        val ax = x + sinA
+                        val az = z + cosA
+                        val bx = x + cosA
+                        val bz = z - sinA
+                        val cx = x - sinA
+                        val cz = z - cosA
+                        val dx = x - cosA
+                        val dz = z + sinA
 
                         // Rendering of the top part of the rhombus (4 faces/8 triangles).
                         addVertex(matrix, x, top, z).color(color)
@@ -120,14 +127,14 @@ object HatsOrbs : HatsMode("Orbs") {
                         addVertex(matrix, x, bottom, z).color(color)
                         addVertex(matrix, dx, y, dz).color(color)
                         addVertex(matrix, ax, y, az).color(color)
-                        addVertex(matrix, x, bottom, z).color(color) 
+                        addVertex(matrix, x, bottom, z).color(color)
                         addVertex(matrix, ax, y, az).color(color)
                         addVertex(matrix, bx, y, bz).color(color)
                         addVertex(matrix, x, bottom, z).color(color)
                         addVertex(matrix, bx, y, bz).color(color)
                         addVertex(matrix, cx, y, cz).color(color)
                         addVertex(matrix, x, bottom, z).color(color)
-                        addVertex(matrix, cx, y, cz).color(color) 
+                        addVertex(matrix, cx, y, cz).color(color)
                         addVertex(matrix, dx, y, dz).color(color)
                     }
 
