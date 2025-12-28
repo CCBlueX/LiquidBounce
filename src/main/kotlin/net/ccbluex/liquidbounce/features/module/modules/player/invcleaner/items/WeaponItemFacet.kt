@@ -90,7 +90,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.WEAPON, 0)
+        get() = ItemType.WEAPON.defaultCategory
 
     override val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
         get() = listOf(ObjectIntPair.of(ItemFunction.WEAPON_LIKE, 1))

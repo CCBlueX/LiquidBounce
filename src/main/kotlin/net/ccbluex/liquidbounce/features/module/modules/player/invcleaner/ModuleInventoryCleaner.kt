@@ -19,11 +19,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap
+import it.unimi.dsi.fastutil.objects.Reference2IntMap
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
-import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.fastutil.objectIntArrayMapOf
+import net.ccbluex.fastutil.referenceIntArrayMapOf
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -103,11 +104,11 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
 
             val constraintProvider = AmountConstraintProvider(
                 desiredItemsPerCategory = objectIntArrayMapOf(
-                    ItemSortChoice.BLOCK.category!!, maxBlocks,
-                    ItemSortChoice.THROWABLES.category!!, maxThrowables,
-                    ItemCategory(ItemType.ARROW, 0), maxArrows,
+                    ItemType.BLOCK.defaultCategory, maxBlocks,
+                    ItemType.THROWABLE.defaultCategory, maxThrowables,
+                    ItemType.ARROW.defaultCategory, maxArrows,
                 ),
-                desiredValuePerFunction = enumMapOf(
+                desiredValuePerFunction = referenceIntArrayMapOf(
                     ItemFunction.FOOD, maxFoods,
                     ItemFunction.WEAPON_LIKE, 1,
                 )
@@ -198,7 +199,7 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
 
     private class AmountConstraintProvider(
         val desiredItemsPerCategory: Object2IntMap<ItemCategory>,
-        val desiredValuePerFunction: Map<ItemFunction, Int>,
+        val desiredValuePerFunction: Reference2IntMap<ItemFunction>,
     ) {
         fun getConstraints(facet: ItemFacet): MutableList<ItemConstraintInfo> {
             val constraints = mutableListOf<ItemConstraintInfo>()

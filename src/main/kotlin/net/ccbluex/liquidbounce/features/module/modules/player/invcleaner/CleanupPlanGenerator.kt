@@ -37,10 +37,13 @@ class CleanupPlanGenerator(
      * Keeps track of where a specific type of item should be placed. e.g. BLOCK -> [Hotbar 7, Hotbar 8]
      */
     private val categoryToSlotsMap: Map<ItemCategory, List<ItemSlot>> =
-        template.slotContentMap.entries
-            .filter { (_, itemType) -> itemType.category != null }
-            .groupBy { (_, itemType) -> itemType.category!! }
-            .mapValues { (_, entries) -> entries.map { (slot, _) -> slot } }
+        buildMap<ItemCategory, ArrayList<ItemSlot>> {
+            for ((slot, itemType) in template.slotContentMap) {
+                val category = itemType.category.takeUnless { it.isEmpty() } ?: continue
+                getOrPut(category) { ArrayList(2) }
+                    .add(slot)
+            }
+        }
 
     fun generatePlan(): InventoryCleanupPlan {
         val categorizer = ItemCategorization(availableItems)

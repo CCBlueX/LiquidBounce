@@ -30,5 +30,5 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
  */
 class SwordItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.SWORD, 0)
+        get() = ItemType.SWORD.defaultCategory
 }

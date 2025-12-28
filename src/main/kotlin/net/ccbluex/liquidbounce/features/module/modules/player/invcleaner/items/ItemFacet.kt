@@ -31,7 +31,7 @@ import net.minecraft.world.item.ItemStack
 
 open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
     open val category: ItemCategory
-        get() = ItemCategory(ItemType.NONE, 0)
+        get() = ItemType.NONE.defaultCategory
 
     open val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
         get() = emptyList()

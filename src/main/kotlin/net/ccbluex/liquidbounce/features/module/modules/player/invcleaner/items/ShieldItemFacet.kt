@@ -41,7 +41,7 @@ class ShieldItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.SHIELD, 0)
+        get() = ItemType.SHIELD.defaultCategory
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as ShieldItemFacet)
