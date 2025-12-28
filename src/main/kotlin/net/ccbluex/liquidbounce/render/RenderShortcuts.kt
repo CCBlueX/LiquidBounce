@@ -148,9 +148,27 @@ inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) 
     }
 }
 
+inline fun WorldRenderEnvironment.drawCustomMeshTextured(
+    texture: AbstractTexture,
+    pipeline: RenderPipeline = ClientRenderPipelines.TexQuads, // TODO: implement this
+    drawer: VertexConsumer.(Matrix4fc) -> Unit,
+) {
+    val matrix = matrixStack.last().pose()
+
+    val buffer = getOrCreateBuffer(texture)
+
+    drawer(buffer, matrix)
+
+    if (!isBatchMode) {
+        buffer.build()?.let {
+            draw(pipeline, it)
+        }
+    }
+}
+
 inline fun WorldRenderEnvironment.drawCustomMesh(
     pipeline: RenderPipeline,
-    drawer: VertexConsumer.(Matrix4fc) -> Unit
+    drawer: VertexConsumer.(Matrix4fc) -> Unit,
 ) {
     val matrix = matrixStack.last().pose()
 

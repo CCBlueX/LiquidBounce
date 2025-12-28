@@ -22,7 +22,6 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.textures.GpuTextureView
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -34,14 +33,13 @@ import net.minecraft.client.Camera
 import com.mojang.blaze3d.vertex.Tesselator
 import com.mojang.blaze3d.vertex.PoseStack
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
-import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.minecraft.client.renderer.texture.AbstractTexture
-import net.minecraft.core.Direction
 import net.minecraft.core.Position
 import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
 import org.joml.Vector3fc
 import org.joml.Vector4f
+import java.util.Collections.singletonMap
 
 /**
  * Context representing the rendering environment.
@@ -61,6 +59,17 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
             shaderTextures["Sampler0"] = texture
         } else {
             shaderTextures.remove("Sampler0")
+        }
+    }
+
+    fun getOrCreateBuffer(texture: AbstractTexture): BufferBuilder {
+        return if (isBatchMode) {
+            texQuadsBatchBuffer.computeIfAbsent(texture) {
+                ClientTesselator.begin(texture.textureView)
+            }
+        } else {
+            val pipeline = ClientRenderPipelines.TexQuads
+            Tesselator.getInstance().begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
         }
     }
 
@@ -89,21 +98,43 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
             }
         }
         batchBuffer.clear()
+
+        texQuadsBatchBuffer.fastIterator().forEach { (texture, bufferBuilder) ->
+            bufferBuilder.build()?.let {
+                draw(ClientRenderPipelines.TexQuads, it, singletonMap("Sampler0", texture))
+                ClientTesselator.allocator(texture.textureView).clear()
+            }
+        }
+        texQuadsBatchBuffer.clear()
     }
 
-    fun draw(pipeline: RenderPipeline, builtBuffer: MeshData) = drawMesh(
+    @JvmOverloads
+    fun draw(
+        pipeline: RenderPipeline,
+        builtBuffer: MeshData,
+        shaderTextureProvider: Map<String, AbstractTexture> = this.shaderTextures,
+    ) = drawMesh(
         pipeline,
         builtBuffer,
         this.framebuffer,
         shaderColor = shaderColor.toVector4f(shaderColorVec),
-        shaderTextureProvider = this.shaderTextures,
+        shaderTextureProvider = shaderTextureProvider,
     )
 
     companion object {
         @JvmStatic
         private val shaderColorVec = Vector4f()
+
         @JvmStatic
-        private val batchBuffer = Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()
+        private val batchBuffer =
+            Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()
+
+        /**
+         * @see ClientRenderPipelines.TexQuads
+         */
+        @JvmStatic
+        private val texQuadsBatchBuffer =
+            Reference2ReferenceOpenHashMap<AbstractTexture, BufferBuilder>()
     }
 }
 

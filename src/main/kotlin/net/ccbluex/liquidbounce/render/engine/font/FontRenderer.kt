@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.drawCustomMeshTextured
 import net.ccbluex.liquidbounce.render.drawGlyphOnCurrentLayer
 import net.ccbluex.liquidbounce.render.drawHorizontalLine
 import net.ccbluex.liquidbounce.render.drawLine
@@ -308,9 +309,7 @@ class FontRenderer(
                     u1 = uv1.u, v1 = uv1.v, u2 = uv2.u, v2 = uv2.v, argb = argb,
                 )
             } else {
-                ctx as WorldRenderEnvironment
-                ctx.sampler0(glyph.page.texture) // TODO textured batch
-                ctx.drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
+                (ctx as WorldRenderEnvironment).drawCustomMeshTextured(glyph.page.texture) { matrix ->
                     addVertex(matrix, x0, y0, z)
                         .setUv(uv1.u, uv1.v)
                         .setColor(argb)
