@@ -83,7 +83,7 @@ internal object HatsFlower : HatsMode("Flower") {
                     val rotAngle = if(HatFlowerSettings.FlowerSpin.enabled) {
                         getRotationAngle(HatFlowerSettings.FlowerSpin.spinSpeed)
                     } else 0.0
-                    val outerSegments = HatFlowerSettings.petalCount * 12
+                    val outerSegments = HatFlowerSettings.petalCount * 120
                     val innerSegments = HatFlowerSettings.petalCount * 2
                     val petalPoints = HatFlowerSettings.petalCount
 
