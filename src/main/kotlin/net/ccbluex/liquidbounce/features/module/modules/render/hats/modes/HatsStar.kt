@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import org.joml.Quaternionf
 
 /**
  * @author minecrrrr
@@ -72,19 +71,6 @@ internal object HatsStar : HatsMode("Star") {
 
             val pos = player.interpolateCurrentPosition(it.partialTicks)
 
-            val yaw = player.getYRot(it.partialTicks);  val pitch = player.getXRot(it.partialTicks)
-
-            val q = Quaternionf()
-            if (!mc.options.cameraType.isFirstPerson) {
-
-                q.rotationY(Math.toRadians((-yaw).toDouble()).toFloat())
-            } else {
-                q.rotationY(Math.toRadians((-yaw).toDouble()).toFloat())
-            }
-            q.rotateX(Math.toRadians(pitch.toDouble()).toFloat())
-
-            it.matrixStack.rotateAround(q, 0f, 0f, 0f)
-
             withPositionRelativeToCamera(pos.add(0.0,
                 (player.bbHeight + height).toDouble(), 0.0)) {
                 drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
@@ -99,6 +85,7 @@ internal object HatsStar : HatsMode("Star") {
 
                         val mainCurrentAngleStar = getAngle(mainI, outerSegments)
                         val mainNextAngleStar = getNextAngle(mainI, outerSegments)
+
                         val currentRadius = getStarRadius(mainCurrentAngleStar,
                             HatStarSettings.radius, points, HatStarSettings.sharpness)
                         val nextRadius = getStarRadius(mainNextAngleStar,

@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.util.Mth
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -58,8 +60,8 @@ fun getRotationAngle(speed: Float): Double {
 }
 
 fun getToroidalMeshCords(outerCurrentAngle: Double, outerNextAngle: Double, innerCurrentAngle: Double,
-    innerNextAngle: Double, rotationAngle: Double, currentRadius: Float, nextRadius: Float,
-    innerRadius: Float ): TorusQuad  {
+                         innerNextAngle: Double, rotationAngle: Double, currentRadius: Float, nextRadius: Float,
+                         innerRadius: Float ): TorusQuad  {
 
     return TorusQuad (
         getTorusPoints(
@@ -87,3 +89,24 @@ data class TorusQuad(
     val p3: Triple<Float, Float, Float>,
     val p4: Triple<Float, Float, Float>
 )
+
+fun getColorByAngle(angle: Double, color1: Color4b, color2: Color4b, speed: Float = 0f): Color4b {
+
+    val timeOffset = if (speed > 0) (System.currentTimeMillis() % 10000L) / 10000.0 * Math.PI * 2 else 0.0
+
+    val progress = (Mth.sin(angle + timeOffset) * 0.5 + 0.5).toFloat()
+
+    return lerpColor(color1, color2, progress)
+}
+
+fun lerpColor(c1: Color4b, c2: Color4b, progress: Float): Color4b {
+
+    val p = progress.coerceIn(0f, 1f)
+
+    val r = (c1.r and 0xFF) + (((c2.r and 0xFF) - (c1.r and 0xFF)) * p).toInt()
+    val g = (c1.g and 0xFF) + (((c2.g and 0xFF) - (c1.g and 0xFF)) * p).toInt()
+    val b = (c1.b and 0xFF) + (((c2.b and 0xFF) - (c1.b and 0xFF)) * p).toInt()
+    val a = (c1.a and 0xFF) + (((c2.a and 0xFF) - (c1.a and 0xFF)) * p).toInt()
+
+    return Color4b(r, g, b, a)
+}

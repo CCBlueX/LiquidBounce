@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.getColorByAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getNextAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getRotationAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getStarRadius
@@ -43,7 +44,11 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 internal object HatsFlower : HatsMode("Flower") {
 
     private val height by float("HeightOffset", 0.2f, 0f..1f)
-    private val color by color("Color", Color4b(0, 0, 255, 125))
+    private object Colors : Configurable("Colors") {
+        val syncColors by boolean("SyncColors", true)
+        val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
+        val secondColor by color("SecondColor", Color4b(0, 0, 255, 125))
+    }
 
     private object HatFlowerSettings : Configurable("HatSettings") {
         val radius by float("Radius", 0.3f, 0.1f..2f)
@@ -59,6 +64,7 @@ internal object HatsFlower : HatsMode("Flower") {
     init {
         tree(HatFlowerSettings)
         tree(HatFlowerSettings.FlowerSpin)
+        tree(Colors)
     }
 
 
@@ -93,9 +99,9 @@ internal object HatsFlower : HatsMode("Flower") {
                             HatFlowerSettings.sharpness
                         )
                         val nextRadius = getStarRadius(
-                            mainNextAngleFlower, 
-                            HatFlowerSettings.radius, 
-                            petalPoints, 
+                            mainNextAngleFlower,
+                            HatFlowerSettings.radius,
+                            petalPoints,
                             HatFlowerSettings.sharpness
                         )
 
@@ -103,6 +109,12 @@ internal object HatsFlower : HatsMode("Flower") {
 
                             val tubeCurrentAngleFlower = getAngle(tubeI, innerSegments)
                             val tubeNextAngleFlower = getNextAngle(tubeI, innerSegments)
+
+                            val color = getColorByAngle(
+                                mainCurrentAngleFlower,
+                                Colors.firstColor,
+                                if(!Colors.syncColors)Colors.secondColor else Colors.firstColor
+                            )
 
                             val quad = getToroidalMeshCords(
                                 mainCurrentAngleFlower,

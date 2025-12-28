@@ -20,12 +20,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.getColorByAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getNextAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getTorusPoints
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.getRotationAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.getToroidalMeshCords
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
@@ -40,24 +43,33 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 internal object HatsHalo : HatsMode("Halo") {
 
     private val height by float("HeightOffset", 0.2f, 0f..1f)
-    private val color by color("Color", Color4b(0, 0, 255, 125))
+    private object Colors : Configurable("Colors") {
+        val syncColors by boolean("SyncColors", true)
+        val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
+        val secondColor by color("SecondColor", Color4b(0, 0, 255, 125))
+    }
 
-    private object HatSettings : Configurable("HatSettings") {
+    private object HatHaloSettings : Configurable("HatSettings") {
         val radius by float("Radius", 0.3f, 0.1f..2f)
         val tubeRadius by float("Thickness", 0.05f, 0.01f..1f)
         val showInFirstPerson by boolean("FirstPersonView", true)
+        object HaloSpin : ToggleableConfigurable(this@HatsHalo, "Spin", true) {
+            val spinSpeed by float("Speed", 1f, 0.1f..10f)
+        }
     }
 
     init {
-        tree(HatSettings)
+        tree(HatHaloSettings)
+        tree(HatHaloSettings.HaloSpin)
+        tree(Colors)
     }
 
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> {
+    private val renderHandler = handler<WorldRenderEvent>{
         val player = mc.player ?: return@handler
 
-        if (mc.options.cameraType.isFirstPerson && !HatSettings.showInFirstPerson) return@handler
+        if (mc.options.cameraType.isFirstPerson && !HatHaloSettings.showInFirstPerson) return@handler
 
         renderEnvironmentForWorld(it.matrixStack) {
 
@@ -67,6 +79,9 @@ internal object HatsHalo : HatsMode("Halo") {
 
                 drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
 
+                    val rotAngle = if(HatHaloSettings.HaloSpin.enabled) {
+                        getRotationAngle(HatHaloSettings.HaloSpin.spinSpeed)
+                    } else 0.0
                     val mainSegments = 40
                     val tubeSegments = 12
 
@@ -82,38 +97,41 @@ internal object HatsHalo : HatsMode("Halo") {
                             val tubeCurrentAngleTorus = getAngle(tubeI, tubeSegments)
                             val tubeNextAngleTorus = getNextAngle(tubeI, tubeSegments)
 
-                            val p1 = getTorusPoints(
+                            val color = getColorByAngle(
                                 mainCurrentAngleTorus,
-                                tubeCurrentAngleTorus,
-                                HatSettings.radius,
-                                HatSettings.tubeRadius
-                            )
-                            val p2 = getTorusPoints(
-                                mainCurrentAngleTorus,
-                                tubeNextAngleTorus,
-                                HatSettings.radius,
-                                HatSettings.tubeRadius
-                            )
-                            val p3 = getTorusPoints(
-                                mainNextAngleTorus,
-                                tubeCurrentAngleTorus,
-                                HatSettings.radius,
-                                HatSettings.tubeRadius
-                            )
-                            val p4 = getTorusPoints(
-                                mainNextAngleTorus,
-                                tubeNextAngleTorus,
-                                HatSettings.radius,
-                                HatSettings.tubeRadius
+                                Colors.firstColor,
+                                if(!Colors.syncColors) Colors.secondColor else Colors.firstColor
                             )
 
-                            addVertex(matrix, p1.first, p1.second, p1.third).color(color)
-                            addVertex(matrix, p2.first, p2.second, p2.third).color(color)
-                            addVertex(matrix, p3.first, p3.second, p3.third).color(color)
+                            val quad = getToroidalMeshCords(
+                                mainCurrentAngleTorus,
+                                mainNextAngleTorus,
+                                tubeCurrentAngleTorus,
+                                tubeNextAngleTorus,
+                                rotAngle,
+                                HatHaloSettings.radius,
+                                HatHaloSettings.radius,
+                                HatHaloSettings.tubeRadius
+                            )
 
-                            addVertex(matrix, p2.first, p2.second, p2.third).color(color)
-                            addVertex(matrix, p4.first, p4.second, p4.third).color(color)
-                            addVertex(matrix, p3.first, p3.second, p3.third).color(color)
+                            addVertex(matrix, quad.p1.first,
+                                quad.p1.second, quad.p1.third).color(color)
+
+                            addVertex(matrix, quad.p2.first,
+                                quad.p2.second, quad.p2.third).color(color)
+
+                            addVertex(matrix, quad.p3.first,
+                                quad.p3.second, quad.p3.third).color(color)
+
+                            addVertex(matrix, quad.p2.first,
+                                quad.p2.second, quad.p2.third).color(color)
+
+                            addVertex(matrix, quad.p4.first,
+                                quad.p4.second,
+                                quad.p4.third).color(color)
+
+                            addVertex(matrix, quad.p3.first,
+                                quad.p3.second, quad.p3.third).color(color)
                         }
                     }
                 }

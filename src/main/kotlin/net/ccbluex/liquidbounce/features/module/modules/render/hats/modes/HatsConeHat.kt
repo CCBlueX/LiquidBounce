@@ -33,43 +33,54 @@ import org.joml.Vector3f
 /**
  * @author minecrrrr
  */
-object HatsConeHat : HatsMode("Cone") {
+internal object HatsConeHat : HatsMode("Cone") {
 
 
     private val height by float("HeightOffset", 0.1f, 0f..1f)
 
-    private val color by color("Color", Color4b(0, 0, 255, 125))
+    private object Colors : Configurable("Colors") {
+        val syncColors by boolean("SyncColors", true)
+        val innerColor by color("InnerColor", Color4b(0, 0, 255, 125))
+        val outerColor by color("OuterColor", Color4b(0, 0, 255, 125))
+    }
 
-    private object HatSettings : Configurable("HatSettings") {
-        val radius by float("Radius", 0.6f, 0.1f..2f)
+
+    private object HatConeSettings : Configurable("HatSettings") {
+        object RadiusSettings : Configurable("RadiusSettings") {
+            val outerRadius by float("OuterRadius", 0.6f, 0.1f..2f)
+            val innerRadius by float("InnerRadius", 0f, 0f..1f)
+
+        }
         val peak by float("Peak", 0.3f, 0.01f..2f)
         val showInFirstPerson by boolean("FirstPersonView", true)
     }
 
     init {
-        tree(HatSettings)
+        tree(HatConeSettings)
+        tree(HatConeSettings.RadiusSettings)
+        tree(Colors)
     }
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> {
+    private val renderHandler = handler<WorldRenderEvent>{
         val player = mc.player ?: return@handler
 
-        if (mc.options.cameraType.isFirstPerson && !HatSettings.showInFirstPerson) return@handler
+        if (mc.options.cameraType.isFirstPerson && !HatConeSettings.showInFirstPerson) return@handler
 
         renderEnvironmentForWorld(it.matrixStack) {
 
-        val pos = player.interpolateCurrentPosition(it.partialTicks)
+            val pos = player.interpolateCurrentPosition(it.partialTicks)
 
-            val peakOffset = Vector3f(0f, HatSettings.peak, 0f)
+            val peakOffset = Vector3f(0f, HatConeSettings.peak, 0f)
 
             withPositionRelativeToCamera(pos.add(0.0, player.bbHeight + height.toDouble(), 0.0)) {
 
                 // Draw a gradient circle forming the cone base with the apex at peakOffset.
                 drawGradientCircle(
-                    outerRadius = HatSettings.radius,
-                    innerRadius = 0f,
-                    outerColor = color,
-                    innerColor = color,
+                    outerRadius = HatConeSettings.RadiusSettings.outerRadius,
+                    innerRadius = HatConeSettings.RadiusSettings.innerRadius,
+                    outerColor = Colors.outerColor,
+                    innerColor = if(!Colors.syncColors)Colors.innerColor else Colors.outerColor,
                     innerOffset = peakOffset,
                 )
             }
