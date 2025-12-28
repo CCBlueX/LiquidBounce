@@ -75,6 +75,30 @@ fun getItemTexture(requestObject: RequestObject) = run {
     httpFileStream(buffer.inputStream(), contentLength = buffer.size.toInt(), contentType = "image/png")
 }
 
+// GET /api/v1/client/effectTexture
+@Suppress("UNUSED_PARAMETER")
+fun getEffectTexture(requestObject: RequestObject) = run {
+    val effectId = requestObject.queryParams["id"]
+        ?: return@run httpBadRequest("Missing effect ID parameter")
+    val cleanEffectId = if (effectId.startsWith("minecraft:")) {
+        effectId.substring(10)
+    } else {
+        effectId
+    }
+    
+    val effectIdentifier = Identifier.parse("minecraft:textures/mob_effect/${cleanEffectId}.png")
+    
+    try {
+        val resource = mc.resourceManager.getResourceOrThrow(effectIdentifier)
+        resource.open().use {
+            httpFileStream(it)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        httpBadRequest("Effect texture not found: $effectId")
+    }
+}
+
 // GET /api/v1/client/skin
 fun getSkin(requestObject: RequestObject) = run {
     val uuid = requestObject.queryParams["uuid"]?.let { UUID.fromString(it) }

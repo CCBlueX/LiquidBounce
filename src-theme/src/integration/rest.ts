@@ -708,3 +708,7 @@ export async function setTyping(typing: boolean) {
 export function itemTextureUrl(identifier: string) {
     return `${REST_BASE}/api/v1/client/resource/itemTexture?id=${identifier}`
 }
+
+export function effectTextureUrl(effectId: string) {
+    return `${REST_BASE}/api/v1/client/resource/effectTexture?id=${effectId}`
+}
