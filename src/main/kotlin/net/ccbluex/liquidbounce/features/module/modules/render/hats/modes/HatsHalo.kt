@@ -34,7 +34,10 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 
-object HatsHalo : HatsMode("Halo") {
+/**
+ * @author minecrrrr
+ */
+internal object HatsHalo : HatsMode("Halo") {
 
     private val height by float("HeightOffset", 0.2f, 0f..1f)
     private val color by color("Color", Color4b(0, 0, 255, 125))

@@ -38,6 +38,9 @@ import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import org.joml.Quaternionf
 
+/**
+ * @author minecrrrr
+ */
 internal object HatsStar : HatsMode("Star") {
 
     private val height by float("HeightOffset", 0.2f, 0f..1f)

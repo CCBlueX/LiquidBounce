@@ -37,7 +37,10 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import kotlin.math.cos
 import kotlin.math.sin
 
-object HatsOrbs : HatsMode("Orbs") {
+/**
+ * @author minecrrrr
+ */
+internal object HatsOrbs : HatsMode("Orbs") {
 
     private val height by float("HeightOffset", 0.2f, 0f..1f)
     val color by color("color", Color4b(0, 0, 255, 125))
