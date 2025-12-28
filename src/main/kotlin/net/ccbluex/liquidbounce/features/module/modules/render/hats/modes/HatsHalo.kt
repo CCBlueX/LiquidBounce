@@ -79,8 +79,8 @@ internal object HatsHalo : HatsMode("Halo") {
 
                 drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
 
-                    val mainSegments = 120
-                    val tubeSegments = 12
+                    val mainSegments = 600
+                    val tubeSegments = 60
 
                     // Main loop for creating the torus (donut) using segments.
                     for (mainI in 0 until mainSegments) {

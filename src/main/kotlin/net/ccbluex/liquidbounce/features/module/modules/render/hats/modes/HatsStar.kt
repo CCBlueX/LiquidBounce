@@ -87,8 +87,8 @@ internal object HatsStar : HatsMode("Star") {
                     } else {
                         0.0
                     }
-                    val outerSegments = HatStarSettings.pointsCount * 60
-                    val innerSegments = HatStarSettings.pointsCount
+                    val outerSegments = HatStarSettings.pointsCount * 120
+                    val innerSegments = HatStarSettings.pointsCount * 2
                     val points = HatStarSettings.pointsCount
 
                     for (mainI in 0 until outerSegments) {

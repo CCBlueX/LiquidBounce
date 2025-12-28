@@ -84,7 +84,7 @@ internal object HatsConeHat : HatsMode("Cone") {
             withPositionRelativeToCamera(pos.add(0.0, player.bbHeight + height.toDouble(), 0.0)) {
 
                 drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
-                    val segments = 120
+                    val segments = 600
                     for (i in 0..segments) {
                         val angle = (i.toDouble() / segments) * Math.PI * 2
                         val cosine = cos(angle).toFloat()
