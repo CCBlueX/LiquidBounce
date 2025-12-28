@@ -27,7 +27,13 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsOr
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsFlower
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsStar
 
+/**
+ * @author minecrrrr
+ */
 object ModuleHats : ClientModule("Hats", Category.RENDER) {
+
+    val height by float("HeightOffset", 0.1f, 0f..2f)
+    val showInFirstPerson by boolean("FirstPersonView", true)
 
     val modes = choices(
         "Mode", HatsConeHat, arrayOf(

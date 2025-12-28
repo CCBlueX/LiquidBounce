@@ -22,11 +22,15 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.util.Mth
 import org.joml.Vector2f
+import org.joml.Vector3f
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
 
+/**
+ * @author minecrrrr
+ */
 fun getAngle(i: Int, segments: Int) = i * Math.PI * 2 / segments
 fun getNextAngle(i: Int, segments: Int) = (i + 1) * Math.PI * 2 / segments
 fun getPointX(angle: Double, radius: Float) = (sin(angle) * radius).toFloat()
@@ -37,13 +41,13 @@ fun getTorusPoints(
     tubeAngel: Double,
     radius: Float,
     tubeRadius: Float
-): Triple<Float, Float, Float> {
+): Vector3f {
 
     val x = ((radius + tubeRadius * cos(tubeAngel)) * sin(mainAngel)).toFloat()
     val y = (tubeRadius * sin(tubeAngel)).toFloat()
     val z = ((radius + tubeRadius * cos(tubeAngel)) * cos(mainAngel)).toFloat()
 
-    return Triple(x, y, z)
+    return Vector3f(x, y, z)
 
 }
 
@@ -88,10 +92,10 @@ fun getToroidalMeshCords(outerCurrentAngle: Double, outerNextAngle: Double, inne
 }
 
 data class TorusQuad(
-    val p1: Triple<Float, Float, Float>,
-    val p2: Triple<Float, Float, Float>,
-    val p3: Triple<Float, Float, Float>,
-    val p4: Triple<Float, Float, Float>
+    val p1: Vector3f,
+    val p2: Vector3f,
+    val p3: Vector3f,
+    val p4: Vector3f,
 )
 
 fun getColorByAngle(angle: Double, color1: Color4b, color2: Color4b, speed: Float): Color4b {

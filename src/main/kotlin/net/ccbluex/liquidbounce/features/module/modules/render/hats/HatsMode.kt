@@ -16,13 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
 
+/**
+ * @author minecrrrr
+ */
 abstract class HatsMode(name: String) : Choice(name) {
 
     final override val parent: ChoiceConfigurable<*>

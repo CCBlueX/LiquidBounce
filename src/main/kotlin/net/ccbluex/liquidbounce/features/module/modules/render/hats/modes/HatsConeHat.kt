@@ -35,14 +35,13 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import org.joml.Vector3f
 import kotlin.math.cos
 import kotlin.math.sin
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.height
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.showInFirstPerson
 
 /**
  * @author minecrrrr
  */
 internal object HatsConeHat : HatsMode("Cone") {
-
-
-    private val height by float("HeightOffset", 0.1f, 0f..1f)
 
     private object Colors : Configurable("Colors") {
         val syncColors by boolean("SyncColors", true)
@@ -57,10 +56,8 @@ internal object HatsConeHat : HatsMode("Cone") {
     private object HatConeSettings : Configurable("HatSettings") {
         object RadiusSettings : Configurable("RadiusSettings") {
             val outerRadius by float("OuterRadius", 0.6f, 0.1f..2f)
-
         }
         val peak by float("Peak", 0.3f, 0.01f..2f)
-        val showInFirstPerson by boolean("FirstPersonView", true)
     }
 
     init {
@@ -73,7 +70,7 @@ internal object HatsConeHat : HatsMode("Cone") {
     private val renderHandler = handler<WorldRenderEvent>{
         val player = mc.player ?: return@handler
 
-        if (mc.options.cameraType.isFirstPerson && !HatConeSettings.showInFirstPerson) return@handler
+        if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return@handler
 
         renderEnvironmentForWorld(it.matrixStack) {
 

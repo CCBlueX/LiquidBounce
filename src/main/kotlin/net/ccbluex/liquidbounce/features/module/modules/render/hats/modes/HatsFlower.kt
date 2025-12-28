@@ -57,13 +57,14 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import org.joml.Vector2f
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.height
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.showInFirstPerson
 
 /**
  * @author minecrrrr
  */
 internal object HatsFlower : HatsMode("Flower") {
 
-    private val height by float("HeightOffset", 0.2f, 0f..1f)
     private object Colors : Configurable("Colors") {
         val syncColors by boolean("SyncColors", true)
         val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
@@ -76,7 +77,6 @@ internal object HatsFlower : HatsMode("Flower") {
     private object HatFlowerSettings : Configurable("HatSettings") {
         val radius by float("Radius", 0.3f, 0.1f..2f)
         val tubeRadius by float("Thickness", 0.05f, 0.01f..1f)
-        val showInFirstPerson by boolean("FirstPersonView", true)
         val sharpness by float("Sharpness", 0.6f, 0.1f..0.9f)
         val petalCount by int("PetalCount", 5, 5..15)
         object FlowerSpin : ToggleableConfigurable(this@HatsFlower, "Spin", true) {
@@ -96,7 +96,7 @@ internal object HatsFlower : HatsMode("Flower") {
     private val renderHandler = handler<WorldRenderEvent> {
         val player = mc.player ?: return@handler
 
-        if (mc.options.cameraType.isFirstPerson && !HatFlowerSettings.showInFirstPerson) return@handler
+        if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return@handler
 
         renderEnvironmentForWorld(it.matrixStack) {
 
@@ -156,18 +156,18 @@ internal object HatsFlower : HatsMode("Flower") {
                                 HatFlowerSettings.tubeRadius
                             )
 
-                            addVertex(matrix, quad.p1.first,
-                                quad.p1.second, quad.p1.third).color(color)
-                            addVertex(matrix, quad.p2.first,
-                                quad.p2.second, quad.p2.third).color(color)
-                            addVertex(matrix, quad.p3.first,
-                                quad.p3.second, quad.p3.third).color(color)
-                            addVertex(matrix, quad.p2.first,
-                                quad.p2.second, quad.p2.third).color(color)
-                            addVertex(matrix, quad.p4.first,
-                                quad.p4.second, quad.p4.third).color(color)
-                            addVertex(matrix, quad.p3.first,
-                                quad.p3.second, quad.p3.third).color(color)
+                            addVertex(matrix, quad.p1.x,
+                                quad.p1.y, quad.p1.z).color(color)
+                            addVertex(matrix, quad.p2.x,
+                                quad.p2.y, quad.p2.z).color(color)
+                            addVertex(matrix, quad.p3.x,
+                                quad.p3.y, quad.p3.z).color(color)
+                            addVertex(matrix, quad.p2.x,
+                                quad.p2.y, quad.p2.z).color(color)
+                            addVertex(matrix, quad.p4.x,
+                                quad.p4.y, quad.p4.z).color(color)
+                            addVertex(matrix, quad.p3.x,
+                                quad.p3.y, quad.p3.z).color(color)
                         }
                     }
                 }
