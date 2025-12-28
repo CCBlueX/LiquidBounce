@@ -82,7 +82,7 @@ internal object HatsHalo : HatsMode("Halo") {
                     val rotAngle = if(HatHaloSettings.HaloSpin.enabled) {
                         getRotationAngle(HatHaloSettings.HaloSpin.spinSpeed)
                     } else 0.0
-                    val mainSegments = 40
+                    val mainSegments = 120
                     val tubeSegments = 12
 
                     // Main loop for creating the torus (donut) using segments.
