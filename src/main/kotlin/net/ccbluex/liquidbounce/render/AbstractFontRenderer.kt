@@ -32,7 +32,7 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
     abstract val height: Float
 
     /**
-     * Draws a string with minecraft font markup.
+     * Draws a string with minecraft font markup on GUI with [GuiGraphics].
      *
      * @param x Anchor X position
      * @param y Anchor Y position
@@ -49,6 +49,22 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
         text: T,
         x: Float = 0f,
         y: Float = 0f,
+        horizontalAnchor: HorizontalAnchor? = null,
+        verticalAnchor: VerticalAnchor? = null,
+        scale: Float = 1.0f,
+        shadow: Boolean = false,
+    ): Float
+
+    /**
+     * The 3D version.
+     */
+    context(ctx: WorldRenderEnvironment)
+    @Suppress("LongParameterList")
+    abstract fun draw(
+        text: T,
+        x: Float = 0f,
+        y: Float = 0f,
+        z: Float = 0f,
         horizontalAnchor: HorizontalAnchor? = null,
         verticalAnchor: VerticalAnchor? = null,
         scale: Float = 1.0f,

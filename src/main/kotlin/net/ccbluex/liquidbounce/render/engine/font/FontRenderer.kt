@@ -22,10 +22,15 @@ import it.unimi.dsi.fastutil.ints.IntArrayList
 import it.unimi.dsi.fastutil.ints.IntStack
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.AbstractFontRenderer
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.color
+import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.drawGlyphOnCurrentLayer
 import net.ccbluex.liquidbounce.render.drawHorizontalLine
+import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -94,16 +99,51 @@ class FontRenderer(
         var len = 0.0f
 
         if (shadow) {
-            len = drawInternal(
+            len = commonDraw(
                 text,
                 posX = x + 2.0f * scale,
                 posY = y + 2.0f * scale,
+                posZ = Float.NaN,
                 scale,
                 overrideColor = shadowColor
             )
         }
 
-        len = max(len, drawInternal(text, x, y, scale))
+        len = max(len, commonDraw(text, x, y, Float.NaN, scale, overrideColor = null))
+
+        MinecraftTextProcessor.TEXT_POOL.recycle(text)
+
+        return len
+    }
+
+    context(ctx: WorldRenderEnvironment)
+    override fun draw(
+        text: MinecraftTextProcessor.RecyclingProcessedText,
+        x: Float,
+        y: Float,
+        z: Float,
+        horizontalAnchor: HorizontalAnchor?,
+        verticalAnchor: VerticalAnchor?,
+        scale: Float,
+        shadow: Boolean
+    ): Float {
+        val x = horizontalAnchor?.anchorToDrawX(x, width = getStringWidth(text, shadow), scale) ?: x
+        val y = verticalAnchor?.anchorToDrawY(y, height, scale) ?: y
+
+        var len = 0.0f
+
+        if (shadow) {
+            len = commonDraw(
+                text,
+                posX = x + 2.0f * scale,
+                posY = y + 2.0f * scale,
+                posZ = z,
+                scale,
+                overrideColor = shadowColor
+            )
+        }
+
+        len = max(len, commonDraw(text, x, y, z + 0.001f, scale, overrideColor = null))
 
         MinecraftTextProcessor.TEXT_POOL.recycle(text)
 
@@ -111,18 +151,20 @@ class FontRenderer(
     }
 
     /**
-     * Draws a string with minecraft font markup to this object.
+     * @param ctx [GuiGraphics] or [WorldRenderEnvironment]
+     * @param posZ if it's [Float.NaN], then use 2D rendering; or else use 3D rendering
      *
      * @return The resulting x value
      */
-    context(ctx: GuiGraphics)
+    context(ctx: Any)
     @Suppress("CognitiveComplexMethod")
-    private fun drawInternal(
+    private fun commonDraw(
         text: ProcessedText,
         posX: Float,
         posY: Float,
+        posZ: Float,
         scale: Float,
-        overrideColor: Color4b? = null
+        overrideColor: Color4b?,
     ): Float {
         if (text.chars.isEmpty()) {
             return posX
@@ -154,7 +196,7 @@ class FontRenderer(
                 strikeThroughStartX = x
             }
 
-            drawChar(glyph, x, y, scale, color)
+            drawChar(glyph, x, y, posZ, scale, color)
 
             val layoutInfo =
                 if (!processedChar.obfuscated) glyph.renderInfo.layoutInfo else fallbackGlyph.renderInfo.layoutInfo
@@ -164,23 +206,23 @@ class FontRenderer(
 
             if (!underlineStack.isEmpty && underlineStack.topInt() == charIdx) {
                 underlineStack.popInt()
-                drawLine(underlineStartX, x, y, color, false)
+                drawLine(underlineStartX, x, y, posZ, color, false)
             }
 
             if (!strikethroughStack.isEmpty && strikethroughStack.topInt() == charIdx) {
                 strikethroughStack.popInt()
-                drawLine(strikeThroughStartX, x, y, color, true)
+                drawLine(strikeThroughStartX, x, y, posZ, color, true)
             }
         }
 
         if (!underlineStack.isEmpty && !underlineStartX.isNaN()) {
             underlineStack.popInt()
-            drawLine(underlineStartX, x, y, color!!, false)
+            drawLine(underlineStartX, x, y, posZ, color!!, false)
         }
 
         if (!strikethroughStack.isEmpty && !strikeThroughStartX.isNaN()) {
             strikethroughStack.popInt()
-            drawLine(strikeThroughStartX, x, y, color!!, true)
+            drawLine(strikeThroughStartX, x, y, posZ, color!!, true)
         }
 
         return x
@@ -215,23 +257,36 @@ class FontRenderer(
         }
     }
 
-    context(ctx: GuiGraphics)
+    context(ctx: Any)
     private fun drawLine(
         x0: Float,
         x1: Float,
         y: Float,
+        z: Float,
         color: Color4b,
         through: Boolean
     ) {
         val y = if (through) y - this.height * 0.85f + this.ascent else y + 1f
-        ctx.drawHorizontalLine(x0, x1, y, 1f, color)
+        if (z.isNaN()) {
+            (ctx as GuiGraphics).drawHorizontalLine(x0, x1, y, 1f, color)
+        } else {
+            (ctx as WorldRenderEnvironment).drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
+                val y0 = y
+                val y1 = y + 1f
+                addVertex(matrix, x0, y0, z).color(color)
+                addVertex(matrix, x0, y1, z).color(color)
+                addVertex(matrix, x1, y1, z).color(color)
+                addVertex(matrix, x1, y0, z).color(color)
+            }
+        }
     }
 
-    context(ctx: GuiGraphics)
+    context(ctx: Any)
     private fun drawChar(
         glyph: GlyphDescriptor,
         x: Float,
         y: Float,
+        z: Float,
         scale: Float,
         color: Color4b,
     ) {
@@ -246,11 +301,22 @@ class FontRenderer(
             val uv2 = renderInfo.atlasLocation.uvCoordinatesOnTexture.max
             val argb = color.toARGB()
 
-            ctx.drawGlyphOnCurrentLayer(
-                glyph.page.texture.textureSetup,
-                x0 = x0, y0 = y0, x1 = x1, y1 = y1,
-                u1 = uv1.u, v1 = uv1.v, u2 = uv2.u, v2 = uv2.v, argb = argb,
-            )
+            if (z.isNaN()) {
+                (ctx as GuiGraphics).drawGlyphOnCurrentLayer(
+                    glyph.page.texture.textureSetup,
+                    x0 = x0, y0 = y0, x1 = x1, y1 = y1,
+                    u1 = uv1.u, v1 = uv1.v, u2 = uv2.u, v2 = uv2.v, argb = argb,
+                )
+            } else {
+                ctx as WorldRenderEnvironment
+                ctx.sampler0(glyph.page.texture)
+                ctx.drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
+                    addVertex(matrix, x0, y0, z).setUv(uv1.u, uv1.v).setColor(argb)
+                    addVertex(matrix, x0, y1, z).setUv(uv1.u, uv2.v).setColor(argb)
+                    addVertex(matrix, x1, y1, z).setUv(uv2.u, uv2.v).setColor(argb)
+                    addVertex(matrix, x1, y0, z).setUv(uv2.u, uv1.v).setColor(argb)
+                }
+            }
         }
     }
 

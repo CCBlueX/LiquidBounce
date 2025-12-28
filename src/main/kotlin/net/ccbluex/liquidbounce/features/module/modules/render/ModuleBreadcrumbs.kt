@@ -41,6 +41,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
+import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector4f
 import java.util.*
@@ -149,7 +150,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
     private data class TrailPart(val x: Double, val y: Double, val z: Double, val creationTime: Long)
 
     private class RenderData(
-        val matrix: Matrix4f,
+        val matrix: Matrix4fc,
         val bufferBuilder: VertexConsumer,
         val color: Vector4f,
         val lines: Boolean

@@ -44,6 +44,7 @@ import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
 import org.joml.Matrix4f
+import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.joml.Vector4f
@@ -149,7 +150,7 @@ inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) 
 
 inline fun WorldRenderEnvironment.drawCustomMesh(
     pipeline: RenderPipeline,
-    drawer: VertexConsumer.(Matrix4f) -> Unit
+    drawer: VertexConsumer.(Matrix4fc) -> Unit
 ) {
     val matrix = matrixStack.last().pose()
 
