@@ -128,11 +128,13 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
+            startBatch()
             for (particle in particles) {
                 if (!particle.visible) continue
 
                 particle.render(event.partialTicks)
             }
+            commitBatch()
         }
     }
 
@@ -219,8 +221,6 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         fun render(partialTicks: Float) {
             val interpPos = prevPos.lerp(pos, partialTicks.toDouble())
             env.withPositionRelativeToCamera(interpPos) {
-                env.sampler0(particleImage.texture)
-
                 val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - spawnTime) / 12000f)
                 val rotation = if (rotate) {
                     (rotation + 90f) % 360f
@@ -243,8 +243,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
                     )
                 )
 
-                drawSquareTexture(size, renderColor.toARGB())
-                env.sampler0(null)
+                drawSquareTexture(particleImage.texture, size, renderColor.toARGB())
             }
         }
     }

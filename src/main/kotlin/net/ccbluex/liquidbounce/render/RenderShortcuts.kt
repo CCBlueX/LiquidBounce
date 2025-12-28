@@ -24,7 +24,6 @@ package net.ccbluex.liquidbounce.render
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -37,6 +36,7 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.PoseStack
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
@@ -149,19 +149,19 @@ inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) 
 }
 
 inline fun WorldRenderEnvironment.drawCustomMeshTextured(
-    texture: AbstractTexture,
+    sampler0: AbstractTexture,
     pipeline: RenderPipeline = ClientRenderPipelines.TexQuads, // TODO: implement this
     drawer: VertexConsumer.(Matrix4fc) -> Unit,
 ) {
     val matrix = matrixStack.last().pose()
 
-    val buffer = getOrCreateBuffer(texture)
+    val buffer = getOrCreateBuffer(sampler0)
 
     drawer(buffer, matrix)
 
     if (!isBatchMode) {
         buffer.build()?.let {
-            draw(pipeline, it)
+            draw(pipeline, it, shaderTextureProvider = Object2ObjectMaps.singleton("Sampler0", sampler0))
         }
     }
 }
@@ -310,9 +310,10 @@ private fun WorldRenderEnvironment.drawLines(
 }
 
 fun WorldRenderEnvironment.drawSquareTexture(
+    sampler0: AbstractTexture,
     size: Float,
     argb: Int,
-) = drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
+) = drawCustomMeshTextured(sampler0) { matrix ->
     addVertex(matrix, 0.0f, -size, 0.0f)
         .setUv(0.0f, 0.0f)
         .setColor(argb)
