@@ -72,19 +72,6 @@ internal object HatsStar : HatsMode("Star") {
 
             val pos = player.interpolateCurrentPosition(it.partialTicks)
 
-            val yaw = player.getYRot(it.partialTicks);  val pitch = player.getXRot(it.partialTicks)
-
-            val q = Quaternionf()
-            if (!mc.options.cameraType.isFirstPerson) {
-
-                q.rotationY(Math.toRadians((-yaw).toDouble()).toFloat())
-            } else {
-                q.rotationY(Math.toRadians((-yaw).toDouble()).toFloat())
-            }
-            q.rotateX(Math.toRadians(pitch.toDouble()).toFloat())
-
-            it.matrixStack.rotateAround(q, 0f, 0f, 0f)
-
             withPositionRelativeToCamera(pos.add(0.0,
                 (player.bbHeight + height).toDouble(), 0.0)) {
                 drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
