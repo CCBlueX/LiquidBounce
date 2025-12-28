@@ -80,11 +80,6 @@ import java.util.function.Predicate
 @JvmRecord
 data class ItemCategory(val type: ItemType, val subtype: Int) {
     fun isEmpty(): Boolean = type == ItemType.NONE
-
-    companion object {
-        @JvmField
-        val EMPTY = ItemType.NONE.defaultCategory
-    }
 }
 
 enum class ItemType(
@@ -170,8 +165,8 @@ enum class ItemSortChoice(
     POTION("Potion", ItemType.POTION.defaultCategory),
     BLOCK("Block", ItemType.BLOCK.defaultCategory, { it.item is BlockItem }),
     THROWABLES("Throwables", ItemType.THROWABLE.defaultCategory),
-    IGNORE("Ignore", ItemCategory.EMPTY),
-    NONE("None", ItemCategory.EMPTY),
+    IGNORE("Ignore", ItemType.NONE.defaultCategory),
+    NONE("None", ItemType.NONE.defaultCategory),
 }
 
 /**
