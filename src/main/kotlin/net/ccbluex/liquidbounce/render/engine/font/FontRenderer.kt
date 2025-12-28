@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.drawCustomMeshTextured
 import net.ccbluex.liquidbounce.render.drawGlyphOnCurrentLayer
 import net.ccbluex.liquidbounce.render.drawHorizontalLine
-import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.font.processor.MinecraftTextProcessor
 import net.ccbluex.liquidbounce.render.engine.font.processor.ProcessedText
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -39,7 +38,6 @@ import net.ccbluex.liquidbounce.utils.render.textureSetup
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.network.chat.Component
 import java.awt.Font
-import kotlin.math.max
 
 class FontRenderer(
     /**
@@ -87,54 +85,41 @@ class FontRenderer(
     context(ctx: GuiGraphics)
     override fun draw(
         text: MinecraftTextProcessor.RecyclingProcessedText,
-        x: Float,
-        y: Float,
-        horizontalAnchor: HorizontalAnchor?,
-        verticalAnchor: VerticalAnchor?,
-        scale: Float,
-        shadow: Boolean,
-    ): Float {
-        val x = horizontalAnchor?.anchorToDrawX(x, width = getStringWidth(text, shadow), scale) ?: x
-        val y = verticalAnchor?.anchorToDrawY(y, height, scale) ?: y
-
-        var len = 0.0f
-
-        if (shadow) {
-            len = commonDraw(
-                text,
-                posX = x + 2.0f * scale,
-                posY = y + 2.0f * scale,
-                posZ = Float.NaN,
-                scale,
-                overrideColor = shadowColor
-            )
-        }
-
-        len = max(len, commonDraw(text, x, y, Float.NaN, scale, overrideColor = null))
-
-        MinecraftTextProcessor.TEXT_POOL.recycle(text)
-
-        return len
-    }
+        parameters: DrawParameters,
+    ): Float = commonDraw(text, parameters)
 
     context(ctx: WorldRenderEnvironment)
     override fun draw(
         text: MinecraftTextProcessor.RecyclingProcessedText,
-        x: Float,
-        y: Float,
-        z: Float,
-        horizontalAnchor: HorizontalAnchor?,
-        verticalAnchor: VerticalAnchor?,
-        scale: Float,
-        shadow: Boolean,
+        parameters: DrawParameters,
+    ): Float = commonDraw(text, parameters)
+
+    context(ctx: Any)
+    @Suppress("CognitiveComplexMethod")
+    private fun commonDraw(
+        text: MinecraftTextProcessor.RecyclingProcessedText,
+        parameters: DrawParameters,
     ): Float {
-        val x = horizontalAnchor?.anchorToDrawX(x, width = getStringWidth(text, shadow), scale) ?: x
-        val y = verticalAnchor?.anchorToDrawY(y, height, scale) ?: y
+        val scale = parameters.scale
+
+        val x = parameters.horizontalAnchor?.anchorToDrawX(
+            x = parameters.x,
+            width = getStringWidth(text, parameters.shadow),
+            scale,
+        ) ?: parameters.x
+
+        val y = parameters.verticalAnchor?.anchorToDrawY(
+            y = parameters.y,
+            height,
+            scale,
+        ) ?: parameters.y
+
+        val z = parameters.z
 
         var len = 0.0f
 
-        if (shadow) {
-            len = commonDraw(
+        if (parameters.shadow) {
+            len = drawInternal(
                 text,
                 posX = x + 2.0f * scale,
                 posY = y + 2.0f * scale,
@@ -144,7 +129,10 @@ class FontRenderer(
             )
         }
 
-        len = max(len, commonDraw(text, x, y, z + 0.001f, scale, overrideColor = null))
+        len = maxOf(
+            len,
+            drawInternal(text, x, y, if (z.isNaN()) z else z + 0.001f, scale, overrideColor = null)
+        )
 
         MinecraftTextProcessor.TEXT_POOL.recycle(text)
 
@@ -159,7 +147,7 @@ class FontRenderer(
      */
     context(ctx: Any)
     @Suppress("CognitiveComplexMethod")
-    private fun commonDraw(
+    private fun drawInternal(
         text: ProcessedText,
         posX: Float,
         posY: Float,

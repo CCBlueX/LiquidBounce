@@ -280,13 +280,12 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
             val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
             val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
 
-            ModuleNametags.fontRenderer.draw(
-                cell.processedText,
-                textX,
-                textY,
-                shadow = true,
+            ModuleNametags.fontRenderer.draw(cell.processedText) {
+                this.x = textX
+                this.y = textY
+                shadow = true
                 scale = FIXED_SCALE
-            )
+            }
         }
     }
 

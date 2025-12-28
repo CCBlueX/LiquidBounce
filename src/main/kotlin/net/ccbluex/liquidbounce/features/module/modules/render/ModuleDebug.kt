@@ -129,13 +129,12 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
                 var posX = 300
                 var posY = 500
 
-                fontRenderer.draw(
-                    fontRenderer.process("Graph"),
-                    posX.toFloat(),
-                    posY.toFloat(),
-                    shadow = true,
+                fontRenderer.draw("Graph".asPlainText()) {
+                    x = posX.toFloat()
+                    y = posY.toFloat()
+                    shadow = true
                     scale = 0.3f
-                )
+                }
 
                 curve.xAxis.range.step(0.1f).forEachFloat { x ->
                     var y = curve.transform(x)
@@ -295,23 +294,21 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
         with(event.context) {
             // Draw
-            fontRenderer.draw(
-                fontRenderer.process("Debugging"),
-                120f,
-                22f,
-                shadow = true,
+            fontRenderer.draw("Debugging".asPlainText()) {
+                x = 120f
+                y = 22f
+                shadow = true
                 scale = 0.3f
-            )
+            }
 
             // Draw text line one by one
             textList.forEachIndexed { index, text ->
-                fontRenderer.draw(
-                    fontRenderer.process(text),
-                    120f,
-                    40 + ((fontRenderer.height * 0.17f) * index),
-                    shadow = true,
+                fontRenderer.draw(text) {
+                    x = 120f
+                    y = 40 + ((fontRenderer.height * 0.17f) * index)
+                    shadow = true
                     scale = 0.17f
-                )
+                }
             }
         }
     }
