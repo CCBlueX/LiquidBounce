@@ -26,7 +26,7 @@
     let components: HudComponent[] = [];
 
     onMount(async () => {
-        getClientInfo().then(info => os.set(info.os));
+        $os = (await getClientInfo()).os;
 
         const gameWindow = await getGameWindow();
         zoom = gameWindow.scaleFactor * 50;
