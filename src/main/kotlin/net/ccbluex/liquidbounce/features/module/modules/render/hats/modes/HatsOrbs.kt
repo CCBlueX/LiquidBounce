@@ -37,13 +37,14 @@ import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import kotlin.math.cos
 import kotlin.math.sin
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.height
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.showInFirstPerson
 
 /**
  * @author minecrrrr
  */
 internal object HatsOrbs : HatsMode("Orbs") {
+
+    val height by float("HeightOffset", 0.1f, 0f..2f)
+    val showInFirstPerson by boolean("FirstPersonView", true)
 
     val color by color("color", Color4b(0, 0, 255, 125))
 
@@ -73,9 +74,9 @@ internal object HatsOrbs : HatsMode("Orbs") {
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> {
         val player = mc.player ?: return@handler
-        if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return@handler
         val pos = player.interpolateCurrentPosition(it.partialTicks)
 
+        if (mc.options.cameraType.isFirstPerson && !HatsFlower.showInFirstPerson) return@handler
         renderEnvironmentForWorld(it.matrixStack) {
             withPositionRelativeToCamera(pos.add(0.0, player.bbHeight + height.toDouble(), 0.0)) {
                 drawCustomMesh(ClientRenderPipelines.Triangles) {

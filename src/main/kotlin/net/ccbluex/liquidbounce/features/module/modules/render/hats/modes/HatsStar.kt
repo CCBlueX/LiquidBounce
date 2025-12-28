@@ -33,20 +33,27 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.getToroidalM
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import org.joml.Vector2f
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.height
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.showInFirstPerson
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.Colors
 
 /**
  * @author minecrrrr
  */
 internal object HatsStar : HatsMode("Star") {
-    object ColorSpin : ToggleableConfigurable(this@HatsStar, "ColorSpin", true) {
-        val spinSpeed by float("SpinSpeed", 1f, 0.1f..10f)
+
+    val height by float("HeightOffset", 0.1f, 0f..2f)
+    val showInFirstPerson by boolean("FirstPersonView", true)
+
+    private object Colors : Configurable("Colors") {
+        val syncColors by boolean("SyncColors", true)
+        val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
+        val secondColor by color("SecondColor", Color4b(0, 0, 255, 125))
+        object ColorSpin : ToggleableConfigurable(this@HatsStar, "ColorSpin", true) {
+            val spinSpeed by float("SpinSpeed", 1f, 0.1f..10f)
+        }
     }
 
     private object HatStarSettings : Configurable("HatSettings") {
@@ -63,7 +70,7 @@ internal object HatsStar : HatsMode("Star") {
         tree(HatStarSettings)
         tree(HatStarSettings.StarSpin)
         tree(Colors)
-        tree(ColorSpin)
+        tree(Colors.ColorSpin)
     }
 
 
@@ -117,7 +124,7 @@ internal object HatsStar : HatsMode("Star") {
                                 mainCurrentAngleStar,
                                 Colors.firstColor,
                                 if(!Colors.syncColors)Colors.secondColor else Colors.firstColor,
-                                if(ColorSpin.enabled) ColorSpin.spinSpeed else {
+                                if(Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
                                     0f
                                 },
                             )

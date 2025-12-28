@@ -17,25 +17,6 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
- *
- * Copyright (c) 2015 - 2025 CCBlueX
- *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- */
-
 package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -52,21 +33,27 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.getToroidalM
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import org.joml.Vector2f
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.height
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.showInFirstPerson
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.Colors
 
 /**
  * @author minecrrrr
  */
 internal object HatsFlower : HatsMode("Flower") {
 
-    object ColorSpin : ToggleableConfigurable(this@HatsFlower, "ColorSpin", true) {
-        val spinSpeed by float("SpinSpeed", 1f, 0.1f..10f)
+    val height by float("HeightOffset", 0.1f, 0f..2f)
+    val showInFirstPerson by boolean("FirstPersonView", true)
+
+    private object Colors : Configurable("Colors") {
+        val syncColors by boolean("SyncColors", true)
+        val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
+        val secondColor by color("SecondColor", Color4b(0, 0, 255, 125))
+        object ColorSpin : ToggleableConfigurable(this@HatsFlower, "ColorSpin", true) {
+            val spinSpeed by float("SpinSpeed", 1f, 0.1f..10f)
+        }
     }
 
     private object HatFlowerSettings : Configurable("HatSettings") {
@@ -83,7 +70,7 @@ internal object HatsFlower : HatsMode("Flower") {
         tree(HatFlowerSettings)
         tree(HatFlowerSettings.FlowerSpin)
         tree(Colors)
-        tree(ColorSpin)
+        tree(Colors.ColorSpin)
     }
 
 
@@ -135,7 +122,7 @@ internal object HatsFlower : HatsMode("Flower") {
                                 mainCurrentAngleFlower,
                                 Colors.firstColor,
                                 if(!Colors.syncColors)Colors.secondColor else Colors.firstColor,
-                                if(ColorSpin.enabled) ColorSpin.spinSpeed else {
+                                if(Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
                                     0f
                                 }
                             )
