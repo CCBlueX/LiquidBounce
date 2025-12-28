@@ -20,15 +20,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
-import net.ccbluex.liquidbounce.render.drawGradientCircle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.getColorByAngle
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.color
+import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import org.joml.Vector3f
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * @author minecrrrr
@@ -40,15 +46,17 @@ internal object HatsConeHat : HatsMode("Cone") {
 
     private object Colors : Configurable("Colors") {
         val syncColors by boolean("SyncColors", true)
-        val innerColor by color("InnerColor", Color4b(0, 0, 255, 125))
-        val outerColor by color("OuterColor", Color4b(0, 0, 255, 125))
+        val firstColor by color("InnerColor", Color4b(0, 0, 255, 125))
+        val secondColor by color("OuterColor", Color4b(0, 0, 255, 125))
+        object ColorSpin : ToggleableConfigurable(this@HatsConeHat, "ColorSpin", true) {
+            val spinSpeed by float("SpinSpeed", 1f, 0.1f..10f)
+        }
     }
 
 
     private object HatConeSettings : Configurable("HatSettings") {
         object RadiusSettings : Configurable("RadiusSettings") {
             val outerRadius by float("OuterRadius", 0.6f, 0.1f..2f)
-            val innerRadius by float("InnerRadius", 0f, 0f..1f)
 
         }
         val peak by float("Peak", 0.3f, 0.01f..2f)
@@ -75,14 +83,29 @@ internal object HatsConeHat : HatsMode("Cone") {
 
             withPositionRelativeToCamera(pos.add(0.0, player.bbHeight + height.toDouble(), 0.0)) {
 
-                // Draw a gradient circle forming the cone base with the apex at peakOffset.
-                drawGradientCircle(
-                    outerRadius = HatConeSettings.RadiusSettings.outerRadius,
-                    innerRadius = HatConeSettings.RadiusSettings.innerRadius,
-                    outerColor = Colors.outerColor,
-                    innerColor = if(!Colors.syncColors)Colors.innerColor else Colors.outerColor,
-                    innerOffset = peakOffset,
-                )
+                drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
+                    val segments = 120
+                    for (i in 0..segments) {
+                        val angle = (i.toDouble() / segments) * Math.PI * 2
+                        val cosine = cos(angle).toFloat()
+                        val sine = sin(angle).toFloat()
+
+                        val color = getColorByAngle(
+                            angle,
+                            Colors.firstColor,
+                            if(!Colors.syncColors) { Colors.secondColor } else {
+                                Colors.firstColor
+                            },
+                            if(Colors.ColorSpin.enabled) { Colors.ColorSpin.spinSpeed
+                            } else {
+                                0.0f
+                            },
+                        )
+
+                        addVertex(matrix, cosine * HatConeSettings.RadiusSettings.outerRadius, 0f, sine * HatConeSettings.RadiusSettings.outerRadius).color(color)
+                        addVertex(matrix, 0f, HatConeSettings.peak, 0f).color(color)
+                    }
+                }
             }
         }
     }
