@@ -51,14 +51,14 @@ object HatsConeHat : HatsMode("Cone") {
     }
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent>{
+    private val renderHandler = handler<WorldRenderEvent> {
         val player = mc.player ?: return@handler
 
         if (mc.options.cameraType.isFirstPerson && !HatSettings.showInFirstPerson) return@handler
 
         renderEnvironmentForWorld(it.matrixStack) {
-            
-            val pos = player.interpolateCurrentPosition(it.partialTicks)
+
+        val pos = player.interpolateCurrentPosition(it.partialTicks)
 
             val peakOffset = Vector3f(0f, HatSettings.peak, 0f)
 

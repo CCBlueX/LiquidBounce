@@ -37,6 +37,9 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 
+/**
+ * @author minecrrrr
+ */
 internal object HatsFlower : HatsMode("Flower") {
 
     private val height by float("HeightOffset", 0.2f, 0f..1f)
@@ -60,7 +63,7 @@ internal object HatsFlower : HatsMode("Flower") {
 
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent>{
+    private val renderHandler = handler<WorldRenderEvent> {
         val player = mc.player ?: return@handler
 
         if (mc.options.cameraType.isFirstPerson && !HatFlowerSettings.showInFirstPerson) return@handler
@@ -82,10 +85,19 @@ internal object HatsFlower : HatsMode("Flower") {
 
                         val mainCurrentAngleFlower = getAngle(mainI, outerSegments)
                         val mainNextAngleFlower = getNextAngle(mainI, outerSegments)
-                        val currentRadius = getStarRadius(mainCurrentAngleFlower,
-                            HatFlowerSettings.radius, petalPoints, HatFlowerSettings.sharpness)
-                        val nextRadius = getStarRadius(mainNextAngleFlower,
-                            HatFlowerSettings.radius, petalPoints, HatFlowerSettings.sharpness)
+
+                        val currentRadius = getStarRadius(
+                            mainCurrentAngleFlower,
+                            HatFlowerSettings.radius,
+                            petalPoints,
+                            HatFlowerSettings.sharpness
+                        )
+                        val nextRadius = getStarRadius(
+                            mainNextAngleFlower, 
+                            HatFlowerSettings.radius, 
+                            petalPoints, 
+                            HatFlowerSettings.sharpness
+                        )
 
                         for (tubeI in 0 until innerSegments) {
 
