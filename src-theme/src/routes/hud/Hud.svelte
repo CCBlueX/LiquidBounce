@@ -54,7 +54,7 @@
 <div class="hud" style="zoom: {zoom}%">
     {#each components as c}
         {#if c.settings.enabled}
-            <DraggableComponent name={c.name} id={c.id} alignment={c.settings.alignment} >
+            <DraggableComponent alignment={c.settings.alignment} >
                 {#if c.name === "Watermark"}
                     <Watermark/>
                 {:else if c.name === "ArrayList"}
