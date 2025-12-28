@@ -198,12 +198,12 @@ class Command(
                 joiner.add(name)
             }
 
-            output.add(this.name + " " + joiner.toString())
+            output.add(getFullName() + " " + joiner.toString())
         }
 
         for (subcommand in subcommands) {
             for (subcommandUsage in subcommand.usage()) {
-                output.add(this.name + " " + subcommandUsage)
+                output.add(subcommandUsage)
             }
         }
 
