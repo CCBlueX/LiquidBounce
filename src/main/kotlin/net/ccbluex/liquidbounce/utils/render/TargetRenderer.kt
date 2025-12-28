@@ -106,7 +106,6 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
             with(env) {
                 startBatch()
-                sampler0(ghostModeTexture)
                 drawParticle(
                     { sin, cos -> Vec3(sin, cos, -cos) },
                     { sin, cos -> Vec3(-sin, -cos, cos) }
@@ -122,7 +121,6 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                     { sin, cos -> Vec3(sin, sin, -cos) }
                 )
                 commitBatch()
-                sampler0(null)
             }
 
             env.matrixStack.popPose()
@@ -153,7 +151,7 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
                 val alpha = Mth.clamp(color.a - (i * alphaFactor), 0, color.a)
                 val renderColor = color.alpha(alpha)
 
-                drawSquareTexture(size, renderColor.toARGB())
+                drawSquareTexture(ghostModeTexture, size, renderColor.toARGB())
 
                 with(matrixStack) {
                     translate(-size / 2.0, -size / 2.0, 0.0)

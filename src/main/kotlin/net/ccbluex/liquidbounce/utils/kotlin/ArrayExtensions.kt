@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.doubles.DoubleIterable
 import net.ccbluex.fastutil.forEachDouble
-import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import java.util.stream.Stream
 
@@ -118,15 +117,6 @@ inline fun <T, C : Collection<T>> C.forEachWithSelf(action: (T, index: Int, self
         action(item, i, this)
     }
 }
-
-inline fun <reified T : Enum<T>> Array<out T>.toEnumSet(): EnumSet<T> =
-    toCollection(emptyEnumSet())
-
-inline fun <reified T : Enum<T>> Iterable<T>.toEnumSet(): EnumSet<T> =
-    toCollection(emptyEnumSet())
-
-inline fun <reified T : Enum<T>> emptyEnumSet(): EnumSet<T> =
-    EnumSet.noneOf(T::class.java)
 
 /**
  * Inserts a new element into a sorted list while maintaining the order.

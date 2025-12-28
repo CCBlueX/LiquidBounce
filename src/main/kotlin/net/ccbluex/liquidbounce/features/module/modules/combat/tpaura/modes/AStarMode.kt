@@ -46,7 +46,7 @@ import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
@@ -133,7 +133,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
             drawLineStrip(
                 argb = Color4b.WHITE.toARGB(),
                 positions = path.mapToArray {
-                    relativeToCamera(it.toVec3d(0.5, 0.5, 0.5)).toVec3()
+                    relativeToCamera(it.toVec3d(0.5, 0.5, 0.5)).toVec3f()
                 }
             )
         }

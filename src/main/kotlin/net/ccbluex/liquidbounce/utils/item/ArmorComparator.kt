@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.utils.client.roundToDecimalPlaces
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.core.component.DataComponents

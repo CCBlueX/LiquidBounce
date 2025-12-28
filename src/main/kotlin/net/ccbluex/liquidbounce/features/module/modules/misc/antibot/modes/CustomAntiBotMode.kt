@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
+import net.ccbluex.fastutil.enumMapOf
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -31,7 +33,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -135,14 +136,14 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
             )
         }
 
-        private val BASE = EnumSet.of(
+        private val BASE = enumSetOf(
             ArmorPredicate.NOTHING, ArmorPredicate.LEATHER,
             ArmorPredicate.CHAIN, ArmorPredicate.IRON,
             ArmorPredicate.GOLD, ArmorPredicate.DIAMOND,
             ArmorPredicate.NETHERITE,
         )
 
-        private val HELMET = EnumSet.of(
+        private val HELMET = enumSetOf(
             ArmorPredicate.NOTHING, ArmorPredicate.LEATHER,
             ArmorPredicate.CHAIN, ArmorPredicate.IRON,
             ArmorPredicate.GOLD, ArmorPredicate.DIAMOND,
@@ -150,19 +151,19 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
             ArmorPredicate.PUMPKIN, ArmorPredicate.SKULL,
         )
 
-        private val CHESTPLATE = EnumSet.of(
+        private val CHESTPLATE = enumSetOf(
             ArmorPredicate.NOTHING, ArmorPredicate.LEATHER,
             ArmorPredicate.CHAIN, ArmorPredicate.IRON,
             ArmorPredicate.GOLD, ArmorPredicate.DIAMOND,
             ArmorPredicate.NETHERITE, ArmorPredicate.ELYTRA,
         )
 
-        private val values = enumMapOf<EquipmentSlot, MultiChooseListValue<ArmorPredicate>> {
-            this[EquipmentSlot.HEAD] = multiEnumChoice("Helmet", EnumSet.of(ArmorPredicate.NOTHING), HELMET)
-            this[EquipmentSlot.CHEST] = multiEnumChoice("Chestplate", EnumSet.of(ArmorPredicate.NOTHING), CHESTPLATE)
-            this[EquipmentSlot.LEGS] = multiEnumChoice("Leggings", EnumSet.of(ArmorPredicate.NOTHING), BASE)
-            this[EquipmentSlot.FEET] = multiEnumChoice("Boots", EnumSet.of(ArmorPredicate.NOTHING), BASE)
-        }
+        private val values = enumMapOf<EquipmentSlot, MultiChooseListValue<ArmorPredicate>>(
+            EquipmentSlot.HEAD, multiEnumChoice("Helmet", enumSetOf(ArmorPredicate.NOTHING), HELMET),
+            EquipmentSlot.CHEST, multiEnumChoice("Chestplate", enumSetOf(ArmorPredicate.NOTHING), CHESTPLATE),
+            EquipmentSlot.LEGS, multiEnumChoice("Leggings", enumSetOf(ArmorPredicate.NOTHING), BASE),
+            EquipmentSlot.FEET, multiEnumChoice("Boots", enumSetOf(ArmorPredicate.NOTHING), BASE),
+        )
 
         fun isValid(entity: Player): Boolean {
             return values.all { (slot, value) ->

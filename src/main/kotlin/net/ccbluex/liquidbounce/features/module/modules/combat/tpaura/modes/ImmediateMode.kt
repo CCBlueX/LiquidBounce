@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.phys.Vec3
@@ -69,8 +69,8 @@ object ImmediateMode : TpAuraChoice("Immediate") {
         renderEnvironmentForWorld(matrixStack) {
             desyncPlayerPosition?.let { playerPosition ->
                 drawLine(
-                    relativeToCamera(player.position().add(0.0, 1.0, 0.0)).toVec3(),
-                    relativeToCamera(playerPosition.add(0.0, 1.0, 0.0)).toVec3(),
+                    relativeToCamera(player.position().add(0.0, 1.0, 0.0)).toVec3f(),
+                    relativeToCamera(playerPosition.add(0.0, 1.0, 0.0)).toVec3f(),
                     Color4b.WHITE.toARGB(),
                 )
             }

@@ -46,7 +46,7 @@ import net.ccbluex.liquidbounce.utils.math.move
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.scaleMut
 import net.ccbluex.liquidbounce.utils.math.set
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer.Companion.getHypotheticalTrajectory
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
@@ -285,7 +285,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         renderEnvironmentForWorld(matrixStack) {
             drawLineStrip(
                 color.toARGB(),
-                positions = positions.mapToArray { relativeToCamera(it + renderOffset).toVec3() })
+                positions = positions.mapToArray { relativeToCamera(it + renderOffset).toVec3f() })
         }
     }
 

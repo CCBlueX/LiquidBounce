@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.utils.math
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.util.Mth
 import net.minecraft.core.Position
@@ -120,14 +121,13 @@ fun Iterable<Vec3>.average(): Vec3 {
     return result.scaleMut(1.0 / i)
 }
 
-inline fun Vec3i.toVec3d(): Vec3 = Vec3.atLowerCornerOf(this)
 inline fun Vec3i.toVec3d(
     xOffset: Double = 0.0,
     yOffset: Double = 0.0,
     zOffset: Double = 0.0,
 ): Vec3 = Vec3(x + xOffset, y + yOffset, z + zOffset)
 
-inline fun Vec3.toVec3(): Vec3f = Vec3f(this.x, this.y, this.z)
+inline fun Vec3.toVec3f(): Vec3f = Vec3f(this.x, this.y, this.z)
 
 @Deprecated("use this.toBlockPos instead", replaceWith = ReplaceWith("this.toBlockPos"))
 inline fun Vec3.toVec3i(): Vec3i = toBlockPos()

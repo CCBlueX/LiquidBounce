@@ -42,7 +42,7 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
@@ -137,7 +137,7 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT, disableOnQuit = 
         renderEnvironmentForWorld(event.matrixStack) {
             drawLineStrip(
                 argb = Color4b(0x00, 0x80, 0xFF, 0xFF).toARGB(),
-                positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() },
+                positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3f() },
             )
         }
     }

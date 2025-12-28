@@ -68,8 +68,8 @@ import java.util.concurrent.ConcurrentHashMap
 object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val clientPackets by clientPackets("ClientPackets", sortedSetOf())
-    private val serverPackets by serverPackets("ServerPackets", sortedSetOf())
+    private val clientPackets by c2sPackets("C2SPackets", sortedSetOf())
+    private val serverPackets by s2cPackets("S2CPackets", sortedSetOf())
     private val showFieldType by boolean("ShowFieldType", true)
 
     private val outputTarget by multiEnumChoice("OutputTarget", OutputTarget.CHAT, canBeNone = false).onChanged {

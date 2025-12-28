@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.math.toFixed
@@ -133,12 +132,11 @@ object TrajectoryDetailedInfoRenderer : ToggleableConfigurable(ModuleTrajectorie
                 for (text in texts) {
                     val processedText = fontRenderer.process(text, color)
 
-                    fontRenderer.draw(
-                        processedText,
-                        x = 0f, y = y,
-                        horizontalAnchor = HorizontalAnchor.CENTER,
-                        shadow = true,
-                    )
+                    fontRenderer.draw(processedText) {
+                        this.y = y
+                        horizontalAnchor = HorizontalAnchor.CENTER
+                        shadow = true
+                    }
 
                     y += fontRenderer.height + 1f
                 }

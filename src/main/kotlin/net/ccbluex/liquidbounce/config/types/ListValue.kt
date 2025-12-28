@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import java.util.*
 
 open class ListValue<T : MutableCollection<E>, E>(
@@ -115,7 +115,7 @@ open class ItemListValue<T : MutableSet<E>, E>(
 ) : ListValue<T, E>(
     name,
     value,
-    ValueType.ITEM_LIST,
+    ValueType.NAMED_ITEM_LIST,
     innerValueType,
     innerType
 ) {
@@ -154,21 +154,19 @@ class RegistryListValue<T : SequencedSet<E>, E>(
      * This is used to determine the registry endpoint for the API.
      */
     @Exclude
-    val registry: String = TYPE_TO_REGISTRY_NAME[innerValueType] ?: error("Unsupported registry type: $innerValueType")
-
-    companion object {
-        @JvmField
-        internal val TYPE_TO_REGISTRY_NAME = enumMapOf<ValueType, String> {
-            put(ValueType.BLOCK, "blocks")
-            put(ValueType.ITEM, "items")
-            put(ValueType.SOUND, "sounds")
-            put(ValueType.STATUS_EFFECT, "statuseffects")
-            put(ValueType.CLIENT_PACKET, "clientpackets")
-            put(ValueType.SERVER_PACKET, "serverpackets")
-            put(ValueType.ENTITY_TYPE, "entity_type")
-            put(ValueType.SCREEN_HANDLER, "screen_handler")
-            put(ValueType.CLIENT_MODULE, "client_module")
-        }
-    }
+    val registry: String =
+        VALUE_TYPE_TO_REGISTRY_NAME[innerValueType] ?: error("Unsupported registry type: $innerValueType")
 
 }
+
+private val VALUE_TYPE_TO_REGISTRY_NAME = enumMapOf(
+    ValueType.BLOCK, "block",
+    ValueType.ITEM, "item",
+    ValueType.SOUND_EVENT, "sound_event",
+    ValueType.MOB_EFFECT, "mob_effect",
+    ValueType.C2S_PACKET, "c2s_packet",
+    ValueType.S2C_PACKET, "s2c_packet",
+    ValueType.ENTITY_TYPE, "entity_type",
+    ValueType.MENU, "menu",
+    ValueType.CLIENT_MODULE, "client_module",
+)
