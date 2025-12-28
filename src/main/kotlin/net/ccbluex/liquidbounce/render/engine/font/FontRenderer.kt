@@ -125,7 +125,7 @@ class FontRenderer(
         horizontalAnchor: HorizontalAnchor?,
         verticalAnchor: VerticalAnchor?,
         scale: Float,
-        shadow: Boolean
+        shadow: Boolean,
     ): Float {
         val x = horizontalAnchor?.anchorToDrawX(x, width = getStringWidth(text, shadow), scale) ?: x
         val y = verticalAnchor?.anchorToDrawY(y, height, scale) ?: y
@@ -309,12 +309,20 @@ class FontRenderer(
                 )
             } else {
                 ctx as WorldRenderEnvironment
-                ctx.sampler0(glyph.page.texture)
+                ctx.sampler0(glyph.page.texture) // TODO textured batch
                 ctx.drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
-                    addVertex(matrix, x0, y0, z).setUv(uv1.u, uv1.v).setColor(argb)
-                    addVertex(matrix, x0, y1, z).setUv(uv1.u, uv2.v).setColor(argb)
-                    addVertex(matrix, x1, y1, z).setUv(uv2.u, uv2.v).setColor(argb)
-                    addVertex(matrix, x1, y0, z).setUv(uv2.u, uv1.v).setColor(argb)
+                    addVertex(matrix, x0, y0, z)
+                        .setUv(uv1.u, uv1.v)
+                        .setColor(argb)
+                    addVertex(matrix, x0, y1, z)
+                        .setUv(uv1.u, uv2.v)
+                        .setColor(argb)
+                    addVertex(matrix, x1, y1, z)
+                        .setUv(uv2.u, uv2.v)
+                        .setColor(argb)
+                    addVertex(matrix, x1, y0, z)
+                        .setUv(uv2.u, uv1.v)
+                        .setColor(argb)
                 }
             }
         }

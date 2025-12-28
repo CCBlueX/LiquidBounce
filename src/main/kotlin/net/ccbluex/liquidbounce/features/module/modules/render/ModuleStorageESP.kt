@@ -43,7 +43,7 @@ import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity
@@ -270,7 +270,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             longLines {
                 for ((blockPos, type) in StorageScanner.iterate()) {
                     if (!type.tracers || type.color.isTransparent || !type.shouldRender(blockPos)) continue
-                    val pos = relativeToCamera(blockPos.center).toVec3()
+                    val pos = relativeToCamera(blockPos.center).toVec3f()
 
                     drawLine(eyeVector, pos, type.color.toARGB())
                 }

@@ -34,7 +34,9 @@ import net.minecraft.client.Camera
 import com.mojang.blaze3d.vertex.Tesselator
 import com.mojang.blaze3d.vertex.PoseStack
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
+import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.minecraft.client.renderer.texture.AbstractTexture
+import net.minecraft.core.Direction
 import net.minecraft.core.Position
 import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i

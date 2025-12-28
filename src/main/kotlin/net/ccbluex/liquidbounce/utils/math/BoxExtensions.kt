@@ -43,6 +43,17 @@ inline operator fun AABB.plus(offset: Vec3i): AABB =
 inline operator fun AABB.minus(offset: Vec3i): AABB =
     this.move(-offset.x.toDouble(), -offset.y.toDouble(), -offset.z.toDouble())
 
+fun AABB.centerPointOf(side: Direction): Vec3 {
+    return when (side) {
+        Direction.DOWN -> Vec3(minX + xsize * 0.5, minY, minZ + zsize * 0.5)
+        Direction.UP -> Vec3(minX + xsize * 0.5, maxY, minZ + zsize * 0.5)
+        Direction.NORTH -> Vec3(minX + xsize * 0.5, minY + ysize * 0.5, minZ)
+        Direction.SOUTH -> Vec3(minX + xsize * 0.5, minY + ysize * 0.5, maxZ)
+        Direction.WEST -> Vec3(minX, minY + ysize * 0.5, minZ + zsize * 0.5)
+        Direction.EAST -> Vec3(maxX, minY + ysize * 0.5, minZ + zsize * 0.5)
+    }
+}
+
 /**
  * Tests if the infinite line resulting from [start] and the point [p] will intersect this box.
  */

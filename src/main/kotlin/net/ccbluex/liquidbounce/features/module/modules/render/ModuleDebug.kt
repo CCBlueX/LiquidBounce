@@ -57,7 +57,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
 import net.minecraft.world.phys.AABB
@@ -101,7 +101,7 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
             renderEnvironmentForWorld(event.matrixStack) {
                 drawLineStrip(
                     Color4b.BLUE.toARGB(),
-                    positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3() },
+                    positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3f() },
                 )
             }
         }
@@ -372,8 +372,8 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
 
         override fun render(env: WorldRenderEnvironment) {
             env.drawLine(
-                env.relativeToCamera(from).toVec3(),
-                env.relativeToCamera(to).toVec3(),
+                env.relativeToCamera(from).toVec3f(),
+                env.relativeToCamera(to).toVec3f(),
                 color.toARGB(),
             )
         }
@@ -387,9 +387,9 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     ) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
             env.drawTriangle(
-                p1 = env.relativeToCamera(p1).toVec3(),
-                p2 = env.relativeToCamera(p2).toVec3(),
-                p3 = env.relativeToCamera(p2).toVec3(),
+                p1 = env.relativeToCamera(p1).toVec3f(),
+                p2 = env.relativeToCamera(p2).toVec3f(),
+                p3 = env.relativeToCamera(p2).toVec3f(),
                 argb = color.toARGB(),
             )
         }
@@ -398,8 +398,8 @@ object ModuleDebug : ClientModule("Debug", Category.RENDER) {
     class DebuggedLineSegment(val from: Vec3, val to: Vec3, override val color: Color4b) : DebuggedGeometry {
         override fun render(env: WorldRenderEnvironment) {
             env.drawLine(
-                env.relativeToCamera(from).toVec3(),
-                env.relativeToCamera(to).toVec3(),
+                env.relativeToCamera(from).toVec3f(),
+                env.relativeToCamera(to).toVec3f(),
                 color.toARGB(),
             )
         }

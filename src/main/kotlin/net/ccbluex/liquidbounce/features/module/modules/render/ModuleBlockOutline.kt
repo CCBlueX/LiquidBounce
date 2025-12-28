@@ -26,13 +26,20 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLevelRenderer
 import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
+import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
+import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.client.floorToInt
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.Easing
+import net.ccbluex.liquidbounce.utils.math.centerPointOf
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
@@ -40,6 +47,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.shapes.VoxelShape
+import org.joml.Quaternionf
 
 /**
  * Block Outline module
@@ -113,14 +121,8 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
             .camera?.position() ?: return@handler)
 
         renderEnvironmentForWorld(event.matrixStack) {
-//            withPositionRelativeToCamera(player.position()) {
-//                startBatch()
-//                FontManager.FONT_RENDERER.draw(
-//                    FontManager.FONT_RENDERER.process("Test"),
-//                    shadow = true,
-//                )
-//                commitBatch()
-//            }
+            drawTextOnBlockSide(blockPos, side)
+
             if (sideOnly) {
                 drawBoxSide(
                     translatedPosition,
@@ -135,6 +137,29 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
                     outlineColor,
                 )
             }
+        }
+    }
+
+    private fun WorldRenderEnvironment.drawTextOnBlockSide(blockPos: BlockPos, side: Direction) {
+        withPositionRelativeToCamera(AABB(blockPos).centerPointOf(side)) {
+            startBatch()
+
+            // Default text direction: X-Y plane
+            matrixStack.mulPose(side.rotation)
+            matrixStack.mulPose(Quaternionf().rotateX(Mth.HALF_PI))
+
+            val fontRenderer = FontManager.FONT_RENDERER
+            val progressPercentage =
+                (world.getBlockState(blockPos).getDestroyProgress(player, world, blockPos) * 100).floorToInt()
+            fontRenderer.draw(
+                fontRenderer.process("$progressPercentage%"),
+                horizontalAnchor = HorizontalAnchor.CENTER,
+                verticalAnchor = VerticalAnchor.MIDDLE,
+                scale = 1f / fontRenderer.size * 0.25f,
+                shadow = true,
+            )
+
+            commitBatch()
         }
     }
 
