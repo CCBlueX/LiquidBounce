@@ -39,9 +39,6 @@ import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import org.joml.Vector2f
 
-/**
- * @author minecrrrr
- */
 internal object HatsStar : HatsMode("Star") {
 
     private val height by float("HeightOffset", 0.2f, 0f..1f)
@@ -60,7 +57,6 @@ internal object HatsStar : HatsMode("Star") {
         val showInFirstPerson by boolean("FirstPersonView", true)
         val sharpness by float("Sharpness", 0.6f, 0.1f..0.9f)
         val pointsCount by int("PointsCount", 5, 5..15)
-        val smooth by boolean("Smooth", false)
         object StarSpin : ToggleableConfigurable(this@HatsStar, "Spin", true) {
             val spinSpeed by float("Speed", 1f, 0.1f..10f)
         }
@@ -105,7 +101,6 @@ internal object HatsStar : HatsMode("Star") {
                             HatStarSettings.radius,
                             points,
                             HatStarSettings.sharpness,
-                            HatStarSettings.smooth,
                             1.75,
                         )
                         val nextRadius = getStarRadius(
@@ -113,7 +108,6 @@ internal object HatsStar : HatsMode("Star") {
                             HatStarSettings.radius,
                             points,
                             HatStarSettings.sharpness,
-                            HatStarSettings.smooth,
                             1.75,
                         )
 

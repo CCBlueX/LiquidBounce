@@ -115,7 +115,7 @@ fun lerpColor(c1: Color4b, c2: Color4b, progress: Float): Color4b {
     return Color4b(r, g, b, a)
 }
 
-fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float, smooth: Boolean, exponent: Double): Float{
+fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float, exponent: Double): Float{
 
     val section = (Math.PI * 2) / points
     val m = (angle % section) / section
@@ -123,11 +123,7 @@ fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Floa
 
     val linearProgress = 1.0 - dist
 
-    val radius = if (smooth) {
-        baseRadius * (1.0 - sharpness + sharpness * dist)
-    } else {
-        baseRadius * (1.0 - sharpness + sharpness * linearProgress.pow(exponent))
-    }
+    val radius = baseRadius * (1.0 - sharpness + sharpness * linearProgress.pow(exponent))
 
     return radius.toFloat()
 }
