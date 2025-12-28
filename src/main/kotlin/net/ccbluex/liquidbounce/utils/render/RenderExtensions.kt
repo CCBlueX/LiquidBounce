@@ -29,7 +29,6 @@ import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
-import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -39,7 +38,6 @@ import net.minecraft.client.renderer.texture.AbstractTexture
 import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.gui.render.TextureSetup
-import net.minecraft.client.Screenshot
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
@@ -143,7 +141,7 @@ fun GpuTexture.saveToFile(file: File): CompletableFuture<*> =
     }, Util.ioPool())
 
 /**
- * @see ScreenshotRecorder.takeScreenshot
+ * @see net.minecraft.client.Screenshot.takeScreenshot
  */
 @JvmOverloads
 fun GpuTexture.toNativeImage(mipLevel: Int = 0): CompletableFuture<NativeImage> {
@@ -327,11 +325,13 @@ inline fun GpuDevice.createUbo(
         std140Size(std140Size).toLong()
     )
 
-inline fun ByteBuffer.writeStd140(): Std140Builder = Std140Builder.intoBuffer(this)
+inline fun ByteBuffer.writeStd140(action: Std140Builder.() -> Unit) {
+    Std140Builder.intoBuffer(this).apply(action)
+}
 
 inline fun GpuBufferSlice.writeStd140(action: Std140Builder.() -> Unit): GpuBufferSlice =
     this.mapBuffer(read = false, write = true).use {
-        it.data().writeStd140().apply(action)
+        it.data().writeStd140(action)
 
         this
     }

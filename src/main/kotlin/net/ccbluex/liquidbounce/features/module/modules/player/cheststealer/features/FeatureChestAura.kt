@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -41,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.ChestBlock
@@ -80,7 +80,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
     private val trackManualInteractions by boolean("TrackManualInteractions", true)
 
-    private val pauseOn by multiEnumChoice("PauseOn", emptyEnumSet<PauseCondition>())
+    private val pauseOn by multiEnumChoice("PauseOn", enumSetOf<PauseCondition>())
 
     @Suppress("unused")
     private enum class PauseCondition(override val choiceName: String) : NamedChoice, BooleanSupplier {

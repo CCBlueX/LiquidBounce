@@ -84,10 +84,9 @@ internal fun GuiGraphics.drawNametag(nametag: Nametag, posX: Float, posY: Float)
     )
 
     // Text
-    fontRenderer.draw(
-        processedText,
-        shadow = true,
-    )
+    fontRenderer.draw(processedText) {
+        shadow = true
+    }
 
     // Draw enchantments directly for the entity (regardless of whether items are shown)
     if (NametagEnchantmentRenderer.running && nametag.entity is LivingEntity) {

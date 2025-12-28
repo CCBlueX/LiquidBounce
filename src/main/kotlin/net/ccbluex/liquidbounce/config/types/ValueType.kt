@@ -23,8 +23,6 @@ import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer.registryItemDeserializer
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT
-import net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT
 
 enum class ValueType(
     val deserializer: HumanInputDeserializer.StringDeserializer<*>? = null,
@@ -43,12 +41,12 @@ enum class ValueType(
     // Registry Types
     BLOCK(registryItemDeserializer(BuiltInRegistries.BLOCK)),
     ITEM(registryItemDeserializer(BuiltInRegistries.ITEM)),
-    SOUND(registryItemDeserializer(SOUND_EVENT)),
-    STATUS_EFFECT(registryItemDeserializer(MOB_EFFECT)),
-    SCREEN_HANDLER(registryItemDeserializer(BuiltInRegistries.MENU)),
+    SOUND_EVENT(registryItemDeserializer(BuiltInRegistries.SOUND_EVENT)),
+    MOB_EFFECT(registryItemDeserializer(BuiltInRegistries.MOB_EFFECT)),
+    MENU(registryItemDeserializer(BuiltInRegistries.MENU)),
     ENTITY_TYPE(registryItemDeserializer(BuiltInRegistries.ENTITY_TYPE)),
-    CLIENT_PACKET,
-    SERVER_PACKET,
+    C2S_PACKET,
+    S2C_PACKET,
     CLIENT_MODULE(HumanInputDeserializer.clientModuleDeserializer),
 
     KEY(HumanInputDeserializer.keyDeserializer),
@@ -64,7 +62,7 @@ enum class ValueType(
     MULTI_CHOOSE(HumanInputDeserializer.textArrayDeserializer, AutoCompletionProvider.multiChooseCompleter),
     LIST,
     MUTABLE_LIST,
-    ITEM_LIST,
+    NAMED_ITEM_LIST,
     REGISTRY_LIST,
     CURVE,
 

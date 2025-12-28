@@ -79,7 +79,15 @@ class BlockPlacementTargetFindingOptions(
 class BlockOffsetOptions(
     val offsetsToInvestigate: List<Vec3i>,
     val priorityComparator: Comparator<Vec3i>,
-)
+) {
+    companion object {
+        @JvmField
+        val Default = BlockOffsetOptions(
+            listOf(Vec3i.ZERO),
+            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+        )
+    }
+}
 
 /**
  * Decides how scaffold processes the faces of the considered target blocks.

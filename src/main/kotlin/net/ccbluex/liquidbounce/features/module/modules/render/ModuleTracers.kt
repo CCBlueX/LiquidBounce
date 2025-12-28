@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.util.Mth
@@ -126,7 +126,7 @@ object ModuleTracers : ClientModule("Tracers", Category.RENDER) {
                         EntityTaggingManager.getTag(entity).color ?: modes.activeChoice.getColor(entity)
                     }
 
-                    val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3()
+                    val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
 
                     drawLines(
                         argb = color.toARGB(),

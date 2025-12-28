@@ -167,9 +167,9 @@ class BlockPlacer(
         }
 
         // return if no blocks are available
-        slotFinder(null) ?: return@handler
+        val slot = slotFinder(null) ?: return@handler
 
-        val itemStack = ItemStack(Items.SANDSTONE)
+        val itemStack = slot.itemStack
 
         inaccessible.clear()
         rotationMode.activeChoice.onTickStart()
@@ -257,10 +257,7 @@ class BlockPlacer(
             }
 
             val searchOptions = BlockPlacementTargetFindingOptions(
-                BlockOffsetOptions(
-                    listOf(Vec3i.ZERO),
-                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-                ),
+                BlockOffsetOptions.Default,
                 FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
                 stackToPlaceWith = itemStack,
                 PlayerLocationOnPlacement(position = player.position()),

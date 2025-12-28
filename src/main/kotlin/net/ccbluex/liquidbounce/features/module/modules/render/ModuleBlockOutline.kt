@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.math.Easing
+import net.ccbluex.liquidbounce.utils.math.minus
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
@@ -45,7 +46,7 @@ import net.minecraft.world.phys.shapes.VoxelShape
  *
  * TODO: Implement GUI Information Panel
  *
- * [MixinWorldRenderer.cancelBlockOutline]
+ * @see MixinLevelRenderer.cancelBlockOutline
  */
 object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliases = listOf("BlockOverlay")) {
 
@@ -69,7 +70,7 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val target = mc.hitResult
-        if (target !is BlockHitResult || target.getType() == HitResult.Type.MISS) {
+        if (target !is BlockHitResult || target.type == HitResult.Type.MISS) {
             resetPositions()
             return@handler
         }
@@ -106,11 +107,9 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
             finalPosition
         }
 
-        val translatedPosition = renderPosition.move(
-            mc.entityRenderDispatcher
-                .camera?.position()
-                ?.reverse() ?: return@handler
-        )
+        val translatedPosition = renderPosition - (mc.entityRenderDispatcher
+            .camera?.position() ?: return@handler)
+
         renderEnvironmentForWorld(event.matrixStack) {
             if (sideOnly) {
                 drawBoxSide(

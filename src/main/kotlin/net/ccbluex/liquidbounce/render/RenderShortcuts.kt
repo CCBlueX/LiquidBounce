@@ -35,12 +35,14 @@ import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
 import org.joml.Matrix4f
+import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.joml.Vector4f
@@ -144,9 +146,27 @@ inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) 
     }
 }
 
+inline fun WorldRenderEnvironment.drawCustomMeshTextured(
+    sampler0: AbstractTexture,
+    pipeline: RenderPipeline = ClientRenderPipelines.TexQuads, // TODO: implement this
+    drawer: VertexConsumer.(Matrix4fc) -> Unit,
+) {
+    val matrix = matrixStack.last().pose()
+
+    val buffer = getOrCreateBuffer(sampler0)
+
+    drawer(buffer, matrix)
+
+    if (!isBatchMode) {
+        buffer.build()?.let {
+            draw(pipeline, it, shaderTextureProvider = Object2ObjectMaps.singleton("Sampler0", sampler0))
+        }
+    }
+}
+
 inline fun WorldRenderEnvironment.drawCustomMesh(
     pipeline: RenderPipeline,
-    drawer: VertexConsumer.(Matrix4f) -> Unit
+    drawer: VertexConsumer.(Matrix4fc) -> Unit,
 ) {
     val matrix = matrixStack.last().pose()
 
@@ -288,9 +308,10 @@ private fun WorldRenderEnvironment.drawLines(
 }
 
 fun WorldRenderEnvironment.drawSquareTexture(
+    sampler0: AbstractTexture,
     size: Float,
     argb: Int,
-) = drawCustomMesh(ClientRenderPipelines.TexQuads) { matrix ->
+) = drawCustomMeshTextured(sampler0) { matrix ->
     addVertex(matrix, 0.0f, -size, 0.0f)
         .setUv(0.0f, 0.0f)
         .setColor(argb)
@@ -354,6 +375,16 @@ private fun WorldRenderEnvironment.drawBox(
                 .setColor(color.toARGB())
         }
     }
+}
+
+/**
+ * Draw box for outline/glow shader.
+ */
+fun WorldRenderEnvironment.drawBoxOutlined(
+    box: AABB,
+    color: Color4b,
+) {
+    drawBox(box, ClientRenderPipelines.OutlineQuads, color = color, verticesToUse = -1)
 }
 
 /**

@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import kotlin.math.hypot
 
 object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", true) {
@@ -46,8 +46,8 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
             renderEnvironmentForWorld(event.matrixStack) {
                 AutoFarmAutoWalk.walkTarget?.let { target ->
                     drawLine(
-                        relativeToCamera(player.interpolateCurrentPosition(event.partialTicks)).toVec3(),
-                        relativeToCamera(target).toVec3(),
+                        relativeToCamera(player.interpolateCurrentPosition(event.partialTicks)).toVec3f(),
+                        relativeToCamera(target).toVec3f(),
                         color.toARGB(),
                     )
                 }

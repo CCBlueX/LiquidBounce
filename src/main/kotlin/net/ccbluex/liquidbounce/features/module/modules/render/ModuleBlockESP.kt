@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.GenericColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
@@ -37,7 +36,6 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -45,6 +43,8 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
+import net.ccbluex.liquidbounce.render.drawBoxOutlined
+import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.minecraft.core.BlockPos
 import java.util.concurrent.ConcurrentSkipListSet
 
@@ -95,7 +95,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             framebuffer: RenderTarget,
             matrixStack: PoseStack,
             drawOutline: Boolean,
-            fullAlpha: Boolean,
+            isOutlineShader: Boolean,
         ): Boolean {
             var dirty = false
 
@@ -103,7 +103,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 dirty = drawInternal(
                     BlockTracker.allPositions(),
                     colorMode.activeChoice,
-                    fullAlpha,
+                    isOutlineShader,
                     drawOutline
                 )
             }
@@ -114,7 +114,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         private fun WorldRenderEnvironment.drawInternal(
             blocks: Sequence<BlockPos>,
             colorMode: GenericColorMode<Pair<BlockPos, BlockState>>,
-            fullAlpha: Boolean,
+            isOutlineShader: Boolean,
             drawOutline: Boolean
         ): Boolean {
             var dirty = false
@@ -122,36 +122,26 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             startBatch()
             val maxDistanceSq = maximumDistance.sq()
             for (blockPos in blocks) {
-                val distanceSq = blockPos.cameraDistanceSq()
-                if (distanceSq > maxDistanceSq) {
-                    continue
-                }
+                if (blockPos.cameraDistanceSq() > maxDistanceSq) continue
 
-                val blockState = blockPos.getState() ?: continue
+                val blockState = world.getBlockState(blockPos)
 
-                if (blockState.isAir) {
-                    continue
-                }
+                if (blockState.isAir) continue
 
-                val outlineShape = blockState.getShape(world, blockPos)
-                val boundingBox = if (outlineShape.isEmpty) {
-                    FULL_BOX
-                } else {
-                    outlineShape.bounds()
-                }
+                val boundingBox = blockState.outlineBox(blockPos)
 
-                var color = colorMode.getColor(Pair(blockPos, blockState))
-
-                if (fullAlpha) {
-                    color = color.with(a = 255)
-                }
+                val color = colorMode.getColor(Pair(blockPos, blockState))
 
                 withPositionRelativeToCamera(blockPos) {
-                    drawBox(
-                        boundingBox,
-                        faceColor = color,
-                        outlineColor = if (drawOutline) color.with(a = 150) else null,
-                    )
+                    if (isOutlineShader) {
+                        drawBoxOutlined(boundingBox, color.alpha(255))
+                    } else {
+                        drawBox(
+                            boundingBox,
+                            faceColor = color,
+                            outlineColor = if (drawOutline) color.with(a = 150) else null,
+                        )
+                    }
                 }
 
                 dirty = true
@@ -176,7 +166,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 event.framebuffer,
                 event.matrixStack,
                 drawOutline = false,
-                fullAlpha = true
+                isOutlineShader = true
             )
 
             if (dirty) {
@@ -200,7 +190,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 event.framebuffer,
                 event.matrixStack,
                 drawOutline = false,
-                fullAlpha = true
+                isOutlineShader = true
             )
 
             if (dirty) {

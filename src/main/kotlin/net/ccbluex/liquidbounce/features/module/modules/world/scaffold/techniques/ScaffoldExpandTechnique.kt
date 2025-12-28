@@ -55,10 +55,7 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
             val position = getTargetedPosition(expandPos(predictedPos, i))
 
             val searchOptions = BlockPlacementTargetFindingOptions(
-                BlockOffsetOptions(
-                    listOf(Vec3i.ZERO),
-                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-                ),
+                BlockOffsetOptions.Default,
                 FaceHandlingOptions(
                     CenterTargetPositionFactory,
                     considerFacingAwayFaces = true

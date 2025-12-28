@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min
@@ -231,7 +231,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
             drawLineStrip(
                 argb = lineColor.toARGB(),
                 positions = tickBuffer.mapToArray { tick ->
-                    relativeToCamera(tick.position).toVec3()
+                    relativeToCamera(tick.position).toVec3f()
                 }
             )
         }

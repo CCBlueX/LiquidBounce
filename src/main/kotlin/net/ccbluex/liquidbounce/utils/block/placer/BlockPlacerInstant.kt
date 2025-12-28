@@ -59,10 +59,7 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
     }
 
     val searchOptions = BlockPlacementTargetFindingOptions(
-        BlockOffsetOptions(
-            listOf(Vec3i.ZERO),
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-        ),
+        BlockOffsetOptions.Default,
         FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
         stackToPlaceWith = Items.SANDSTONE.defaultInstance,
         PlayerLocationOnPlacement(position = player.position(), pose = player.pose),

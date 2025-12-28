@@ -32,28 +32,42 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
     abstract val height: Float
 
     /**
-     * Draws a string with minecraft font markup.
-     *
-     * @param x Anchor X position
-     * @param y Anchor Y position
-     * @param horizontalAnchor Horizontal anchor of the text, null -> [HorizontalAnchor.START]
-     * @param verticalAnchor Vertical anchor of the text, null -> [VerticalAnchor.TOP]
-     * @param scale Render scale applied to width and height
-     * @param shadow Draw shadow of text
+     * Draws a string with minecraft font markup on GUI with [GuiGraphics].
      *
      * @return The unscaled width of [text]
      */
     context(ctx: GuiGraphics)
-    @Suppress("LongParameterList")
-    abstract fun draw(
-        text: T,
-        x: Float = 0f,
-        y: Float = 0f,
-        horizontalAnchor: HorizontalAnchor? = null,
-        verticalAnchor: VerticalAnchor? = null,
-        scale: Float = 1.0f,
-        shadow: Boolean = false,
-    ): Float
+    abstract fun draw(text: T, parameters: DrawParameters): Float
+
+    context(ctx: GuiGraphics)
+    inline fun draw(text: T, parameters: DrawParameters.() -> Unit = {}): Float {
+        DrawParameters.reset2D()
+        parameters(DrawParameters)
+        return draw(text, DrawParameters)
+    }
+
+    context(ctx: GuiGraphics)
+    inline fun draw(text: Component, parameters: DrawParameters.() -> Unit = {}): Float =
+        draw(process(text), parameters)
+
+    /**
+     * Draws a string with minecraft font markup on GUI with [WorldRenderEnvironment].
+     *
+     * @return The unscaled width of [text]
+     */
+    context(ctx: WorldRenderEnvironment)
+    abstract fun draw(text: T, parameters: DrawParameters): Float
+
+    context(ctx: WorldRenderEnvironment)
+    inline fun draw(text: T, parameters: DrawParameters.() -> Unit = {}): Float {
+        DrawParameters.reset3D()
+        parameters(DrawParameters)
+        return draw(text, DrawParameters)
+    }
+
+    context(ctx: WorldRenderEnvironment)
+    inline fun draw(text: Component, parameters: DrawParameters.() -> Unit = {}): Float =
+        draw(process(text), parameters)
 
     /**
      * @param defaultColor The color of the font when no minecraft-markup applies
@@ -73,5 +87,59 @@ abstract class AbstractFontRenderer<T : ProcessedText> {
         text: ProcessedText,
         shadow: Boolean = false
     ): Float
+
+    /**
+     * @param x Anchor X position
+     * @param y Anchor Y position
+     * @param z Z offset. [Float.NaN] for 2D rendering
+     * @param horizontalAnchor Horizontal anchor of the text, null -> [HorizontalAnchor.START]
+     * @param verticalAnchor Vertical anchor of the text, null -> [VerticalAnchor.TOP]
+     * @param scale Render scale applied to width and height
+     * @param shadow Draw shadow of text
+     */
+    object DrawParameters {
+        @JvmField
+        var x: Float = 0f
+
+        @JvmField
+        var y: Float = 0f
+
+        @JvmField
+        var z: Float = 0f
+
+        @JvmField
+        var horizontalAnchor: HorizontalAnchor? = null
+
+        @JvmField
+        var verticalAnchor: VerticalAnchor? = null
+
+        @JvmField
+        var scale: Float = 1f
+
+        @JvmField
+        var shadow: Boolean = false
+
+        @JvmStatic
+        fun reset2D() {
+            x = 0f
+            y = 0f
+            z = Float.NaN
+            horizontalAnchor = null
+            verticalAnchor = null
+            scale = 1f
+            shadow = false
+        }
+
+        @JvmStatic
+        fun reset3D() {
+            x = 0f
+            y = 0f
+            z = 0f
+            horizontalAnchor = null
+            verticalAnchor = null
+            scale = 1f
+            shadow = false
+        }
+    }
 
 }
