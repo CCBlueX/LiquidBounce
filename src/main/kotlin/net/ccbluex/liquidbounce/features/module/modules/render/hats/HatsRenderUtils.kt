@@ -46,3 +46,38 @@ fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Floa
 
     return innerRadius + (baseRadius - innerRadius) * (1f - r)
 }
+
+fun getRotationAngle(speed: Float): Double {
+    return (System.currentTimeMillis() % 360000) * 0.001 * speed
+}
+
+fun getToroidalMeshCords(outerCurrentAngle: Double, outerNextAngle: Double, innerCurrentAngle: Double,
+    innerNextAngle: Double, rotationAngle: Double, currentRadius: Float, nextRadius: Float,
+    innerRadius: Float ): TorusQuad  {
+
+    return TorusQuad (
+        getTorusPoints(
+            outerCurrentAngle + rotationAngle,
+            innerCurrentAngle, currentRadius, innerRadius
+        ),
+        getTorusPoints(
+            outerCurrentAngle + rotationAngle,
+            innerNextAngle, currentRadius, innerRadius
+        ),
+        getTorusPoints(
+            outerNextAngle + rotationAngle,
+            innerCurrentAngle, nextRadius, innerRadius
+        ),
+        getTorusPoints(
+            outerNextAngle + rotationAngle,
+            innerNextAngle, nextRadius, innerRadius
+        ),
+    )
+}
+
+data class TorusQuad(
+    val p1: Triple<Float, Float, Float>,
+    val p2: Triple<Float, Float, Float>,
+    val p3: Triple<Float, Float, Float>,
+    val p4: Triple<Float, Float, Float>
+)

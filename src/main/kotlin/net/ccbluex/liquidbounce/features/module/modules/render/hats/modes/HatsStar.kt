@@ -36,26 +36,27 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import org.joml.Quaternionf
 
-internal object HatsFlower : HatsMode("Flower") {
+internal object HatsStar : HatsMode("Star") {
 
     private val height by float("HeightOffset", 0.2f, 0f..1f)
     private val color by color("Color", Color4b(0, 0, 255, 125))
 
-    private object HatFlowerSettings : Configurable("HatSettings") {
+    private object HatStarSettings : Configurable("HatSettings") {
         val radius by float("Radius", 0.3f, 0.1f..2f)
         val tubeRadius by float("Thickness", 0.05f, 0.01f..1f)
         val showInFirstPerson by boolean("FirstPersonView", true)
         val sharpness by float("Sharpness", 0.6f, 0.1f..0.9f)
-        val petalCount by int("PetalCount", 5, 5..15)
-        object FlowerSpin : ToggleableConfigurable(this@HatsFlower, "Spin", true) {
+        val pointsCount by int("PointsCount", 5, 5..15)
+        object StarSpin : ToggleableConfigurable(this@HatsStar, "Spin", true) {
             val spinSpeed by float("Speed", 1f, 0.1f..10f)
         }
     }
 
     init {
-        tree(HatFlowerSettings)
-        tree(HatFlowerSettings.FlowerSpin)
+        tree(HatStarSettings)
+        tree(HatStarSettings.StarSpin)
     }
 
 
@@ -63,62 +64,70 @@ internal object HatsFlower : HatsMode("Flower") {
     private val renderHandler = handler<WorldRenderEvent>{
         val player = mc.player ?: return@handler
 
-        if (mc.options.cameraType.isFirstPerson && !HatFlowerSettings.showInFirstPerson) return@handler
-
+        if (mc.options.cameraType.isFirstPerson && !HatStarSettings.showInFirstPerson) return@handler
         renderEnvironmentForWorld(it.matrixStack) {
 
             val pos = player.interpolateCurrentPosition(it.partialTicks)
+
+            val yaw = player.getYRot(it.partialTicks);  val pitch = player.getXRot(it.partialTicks)
+
+            val q = Quaternionf()
+            if (!mc.options.cameraType.isFirstPerson) {
+
+                q.rotationY(Math.toRadians((-yaw).toDouble()).toFloat())
+            } else {
+                q.rotationY(Math.toRadians((-yaw).toDouble()).toFloat())
+            }
+            q.rotateX(Math.toRadians(pitch.toDouble()).toFloat())
+
+            it.matrixStack.rotateAround(q, 0f, 0f, 0f)
+
             withPositionRelativeToCamera(pos.add(0.0,
                 (player.bbHeight + height).toDouble(), 0.0)) {
                 drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-                    val rotAngle = if(HatFlowerSettings.FlowerSpin.enabled) {
-                        getRotationAngle(HatFlowerSettings.FlowerSpin.spinSpeed)
+                    val rotAngle = if(HatStarSettings.StarSpin.enabled) {
+                        getRotationAngle(HatStarSettings.StarSpin.spinSpeed)
                     } else 0.0
-                    val outerSegments = HatFlowerSettings.petalCount * 12
-                    val innerSegments = HatFlowerSettings.petalCount * 2
-                    val petalPoints = HatFlowerSettings.petalCount
+                    val outerSegments = HatStarSettings.pointsCount * 2
+                    val innerSegments = HatStarSettings.pointsCount
+                    val points = HatStarSettings.pointsCount
 
                     for (mainI in 0 until outerSegments) {
 
-                        val mainCurrentAngleFlower = getAngle(mainI, outerSegments)
-                        val mainNextAngleFlower = getNextAngle(mainI, outerSegments)
-                        val currentRadius = getStarRadius(mainCurrentAngleFlower,
-                            HatFlowerSettings.radius, petalPoints, HatFlowerSettings.sharpness)
-                        val nextRadius = getStarRadius(mainNextAngleFlower,
-                            HatFlowerSettings.radius, petalPoints, HatFlowerSettings.sharpness)
+                        val mainCurrentAngleStar = getAngle(mainI, outerSegments)
+                        val mainNextAngleStar = getNextAngle(mainI, outerSegments)
+                        val currentRadius = getStarRadius(mainCurrentAngleStar,
+                            HatStarSettings.radius, points, HatStarSettings.sharpness)
+                        val nextRadius = getStarRadius(mainNextAngleStar,
+                            HatStarSettings.radius, points, HatStarSettings.sharpness)
 
                         for (tubeI in 0 until innerSegments) {
 
-                            val tubeCurrentAngleFlower = getAngle(tubeI, innerSegments)
-                            val tubeNextAngleFlower = getNextAngle(tubeI, innerSegments)
+                            val tubeCurrentAngleStar = getAngle(tubeI, innerSegments)
+                            val tubeNextAngleStar = getNextAngle(tubeI, innerSegments)
 
                             val quad = getToroidalMeshCords(
-                                mainCurrentAngleFlower,
-                                mainNextAngleFlower,
-                                tubeCurrentAngleFlower,
-                                tubeNextAngleFlower,
+                                mainCurrentAngleStar,
+                                mainNextAngleStar,
+                                tubeCurrentAngleStar,
+                                tubeNextAngleStar,
                                 rotAngle,
                                 currentRadius,
                                 nextRadius,
-                                HatFlowerSettings.tubeRadius
+                                HatStarSettings.tubeRadius
                             )
 
-                            addVertex(matrix, quad.p1.first,
-                                quad.p1.second, quad.p1.third).color(color)
-                            addVertex(matrix, quad.p2.first,
-                                quad.p2.second, quad.p2.third).color(color)
-                            addVertex(matrix, quad.p3.first,
-                                quad.p3.second, quad.p3.third).color(color)
-                            addVertex(matrix, quad.p2.first,
-                                quad.p2.second, quad.p2.third).color(color)
-                            addVertex(matrix, quad.p4.first,
-                                quad.p4.second, quad.p4.third).color(color)
-                            addVertex(matrix, quad.p3.first,
-                                quad.p3.second, quad.p3.third).color(color)
+                            addVertex(matrix, quad.p1.first, quad.p1.second, quad.p1.third).color(color)
+                            addVertex(matrix, quad.p2.first, quad.p2.second, quad.p2.third).color(color)
+                            addVertex(matrix, quad.p3.first, quad.p3.second, quad.p3.third).color(color)
+                            addVertex(matrix, quad.p2.first, quad.p2.second, quad.p2.third).color(color)
+                            addVertex(matrix, quad.p4.first, quad.p4.second, quad.p4.third).color(color)
+                            addVertex(matrix, quad.p3.first, quad.p3.second, quad.p3.third).color(color)
                         }
                     }
                 }
             }
         }
     }
+
 }
