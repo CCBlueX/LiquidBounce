@@ -22,9 +22,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsConeHat
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsFlower
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsHalo
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsOrbs
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsFlower
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsStar
 
 object ModuleHats : ClientModule("Hats", Category.RENDER) {
 

@@ -21,8 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.util.Mth
+import org.joml.Vector2f
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.pow
 import kotlin.math.sin
 
 fun getAngle(i: Int, segments: Int) = i * Math.PI * 2 / segments
@@ -45,7 +47,7 @@ fun getTorusPoints(
 
 }
 
-fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float): Float {
+fun getFlowerRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float): Float {
 
     val innerRadius = baseRadius * sharpness
 
@@ -60,9 +62,11 @@ fun getRotationAngle(speed: Float): Double {
 }
 
 fun getToroidalMeshCords(outerCurrentAngle: Double, outerNextAngle: Double, innerCurrentAngle: Double,
-                         innerNextAngle: Double, rotationAngle: Double, currentRadius: Float, nextRadius: Float,
+                         innerNextAngle: Double, rotationAngle: Double, radii: Vector2f,
                          innerRadius: Float ): TorusQuad  {
 
+    val currentRadius = radii.x
+    val nextRadius = radii.y
     return TorusQuad (
         getTorusPoints(
             outerCurrentAngle + rotationAngle,
@@ -90,7 +94,7 @@ data class TorusQuad(
     val p4: Triple<Float, Float, Float>
 )
 
-fun getColorByAngle(angle: Double, color1: Color4b, color2: Color4b, speed: Float = 0f): Color4b {
+fun getColorByAngle(angle: Double, color1: Color4b, color2: Color4b, speed: Float): Color4b {
 
     val timeOffset = if (speed > 0) (System.currentTimeMillis() % 10000L) / 10000.0 * Math.PI * 2 else 0.0
 
@@ -109,4 +113,21 @@ fun lerpColor(c1: Color4b, c2: Color4b, progress: Float): Color4b {
     val a = (c1.a and 0xFF) + (((c2.a and 0xFF) - (c1.a and 0xFF)) * p).toInt()
 
     return Color4b(r, g, b, a)
+}
+
+fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float, smooth: Boolean, exponent: Double): Float{
+
+    val section = (Math.PI * 2) / points
+    val m = (angle % section) / section
+    val dist = abs(m * 2.0 - 1.0)
+
+    val linearProgress = 1.0 - dist
+
+    val radius = if (smooth) {
+        baseRadius * (1.0 - sharpness + sharpness * dist)
+    } else {
+        baseRadius * (1.0 - sharpness + sharpness * linearProgress.pow(exponent))
+    }
+
+    return radius.toFloat()
 }

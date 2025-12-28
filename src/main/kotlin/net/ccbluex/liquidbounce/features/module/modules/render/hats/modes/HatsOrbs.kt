@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getPointX
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getPointZ
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.getRotationAngle
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
@@ -45,7 +46,7 @@ internal object HatsOrbs : HatsMode("Orbs") {
     private val height by float("HeightOffset", 0.2f, 0f..1f)
     val color by color("color", Color4b(0, 0, 255, 125))
 
-    private object HatSettings : Configurable("HatSettings") {
+    private object HatOrbsSettings : Configurable("HatSettings") {
         val radius by float("Radius", 0.5f, 0f..2f)
         val speed by float("Speed", 0.5f, 0.1f..10f)
         val size by float("OrbsSize", 0.1f, 0.01f..0.5f)
@@ -56,16 +57,16 @@ internal object HatsOrbs : HatsMode("Orbs") {
             val waveSpeed by float("WaveSpeed", 2.0f, 0.1f..10f)
         }
 
-        object OrbRotation : ToggleableConfigurable(this@HatsOrbs, "OrbRotation", true) {
-            val speedRot by float("RotationSpeed", 2.0f, 0.1f..10f)
+        object OrbRotation : ToggleableConfigurable(this@HatsOrbs, "Spin", true) {
+            val speedRot by float("SpinSpeed", 2.0f, 0.1f..10f)
         }
 
     }
 
     init {
-        tree(HatSettings)
-        tree(HatSettings.WaveSettings)
-        tree(HatSettings.OrbRotation)
+        tree(HatOrbsSettings)
+        tree(HatOrbsSettings.WaveSettings)
+        tree(HatOrbsSettings.OrbRotation)
     }
 
     @Suppress("unused")
@@ -75,42 +76,38 @@ internal object HatsOrbs : HatsMode("Orbs") {
 
         renderEnvironmentForWorld(it.matrixStack) {
             withPositionRelativeToCamera(pos.add(0.0, player.bbHeight + height.toDouble(), 0.0)) {
-                drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+                drawCustomMesh(ClientRenderPipelines.Triangles) {
+                        matrix ->
 
-                    val time = (System.currentTimeMillis() / 1000.0) * HatSettings.speed
+                    val time = (System.currentTimeMillis() / 1000.0) * HatOrbsSettings.speed
 
 
                     // Loop for rendering each individual orb (orbit).
-                    for (i in 0 until HatSettings.count) {
+                    for (i in 0 until HatOrbsSettings.count) {
 
-                        val angle = getAngle(i, HatSettings.count) + time
+                        val angle = getAngle(i, HatOrbsSettings.count) + time
 
-                        val x = getPointX(angle, HatSettings.radius)
-                        val z = getPointZ(angle, HatSettings.radius)
+                        val x = getPointX(angle, HatOrbsSettings.radius)
+                        val z = getPointZ(angle, HatOrbsSettings.radius)
 
-                        val y = if (HatSettings.WaveSettings.enabled) {
-                            sin(time * HatSettings.WaveSettings.waveSpeed + i).toFloat() *
-                                HatSettings.WaveSettings.waveHeight
-                        } else {
-                            0f
-                        }
+                        val y = if (HatOrbsSettings.WaveSettings.enabled) {
+                            sin(time * HatOrbsSettings.WaveSettings.waveSpeed + i).toFloat() *
+                                HatOrbsSettings.WaveSettings.waveHeight
+                        } else 0f
 
-                        val rotAngle =
-                            if (HatSettings.OrbRotation.enabled) time * HatSettings.OrbRotation.speedRot else 0.0
-                        val sinA = (sin(rotAngle)).toFloat() * HatSettings.size
-                        val cosA = (cos(rotAngle)).toFloat() * HatSettings.size
+                        val rotAngle = if(HatOrbsSettings.OrbRotation.enabled) {
+                            getRotationAngle(HatOrbsSettings.OrbRotation.speedRot)
+                        } else 0.0
+                        val sinA = (sin(rotAngle)).toFloat() * HatOrbsSettings.size
+                        val cosA = (cos(rotAngle)).toFloat() * HatOrbsSettings.size
 
-                        val top = y + HatSettings.size
-                        val bottom = y - HatSettings.size
+                        val top = y + HatOrbsSettings.size
+                        val bottom = y - HatOrbsSettings.size
 
-                        val ax = x + sinA
-                        val az = z + cosA
-                        val bx = x + cosA
-                        val bz = z - sinA
-                        val cx = x - sinA
-                        val cz = z - cosA
-                        val dx = x - cosA
-                        val dz = z + sinA
+                        val ax = x + sinA; val az = z + cosA
+                        val bx = x + cosA; val bz = z - sinA
+                        val cx = x - sinA; val cz = z - cosA
+                        val dx = x - cosA; val dz = z + sinA
 
                         // Rendering of the top part of the rhombus (4 faces/8 triangles).
                         addVertex(matrix, x, top, z).color(color)

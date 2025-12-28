@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getColorByAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getNextAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getRotationAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getToroidalMeshCords
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.color
@@ -36,6 +35,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import org.joml.Vector2f
 
 /**
  * @author minecrrrr
@@ -47,21 +47,21 @@ internal object HatsHalo : HatsMode("Halo") {
         val syncColors by boolean("SyncColors", true)
         val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
         val secondColor by color("SecondColor", Color4b(0, 0, 255, 125))
+        object ColorSpin : ToggleableConfigurable(this@HatsHalo, "ColorSpin", true) {
+            val spinSpeed by float("SpinSpeed", 1f, 0.1f..10f)
+        }
     }
 
     private object HatHaloSettings : Configurable("HatSettings") {
         val radius by float("Radius", 0.3f, 0.1f..2f)
         val tubeRadius by float("Thickness", 0.05f, 0.01f..1f)
         val showInFirstPerson by boolean("FirstPersonView", true)
-        object HaloSpin : ToggleableConfigurable(this@HatsHalo, "Spin", true) {
-            val spinSpeed by float("Speed", 1f, 0.1f..10f)
-        }
     }
 
     init {
         tree(HatHaloSettings)
-        tree(HatHaloSettings.HaloSpin)
         tree(Colors)
+        tree(Colors.ColorSpin)
     }
 
 
@@ -79,9 +79,6 @@ internal object HatsHalo : HatsMode("Halo") {
 
                 drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
 
-                    val rotAngle = if(HatHaloSettings.HaloSpin.enabled) {
-                        getRotationAngle(HatHaloSettings.HaloSpin.spinSpeed)
-                    } else 0.0
                     val mainSegments = 120
                     val tubeSegments = 12
 
@@ -100,17 +97,20 @@ internal object HatsHalo : HatsMode("Halo") {
                             val color = getColorByAngle(
                                 mainCurrentAngleTorus,
                                 Colors.firstColor,
-                                if(!Colors.syncColors) Colors.secondColor else Colors.firstColor
+                                if(!Colors.syncColors) Colors.secondColor else Colors.firstColor,
+                                if(Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
+                                    0.0f
+                                }
                             )
 
+                            val radii = Vector2f(HatHaloSettings.radius, HatHaloSettings.radius)
                             val quad = getToroidalMeshCords(
                                 mainCurrentAngleTorus,
                                 mainNextAngleTorus,
                                 tubeCurrentAngleTorus,
                                 tubeNextAngleTorus,
-                                rotAngle,
-                                HatHaloSettings.radius,
-                                HatHaloSettings.radius,
+                                0.0,
+                                radii,
                                 HatHaloSettings.tubeRadius
                             )
 
