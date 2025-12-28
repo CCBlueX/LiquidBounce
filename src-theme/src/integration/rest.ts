@@ -31,6 +31,10 @@ import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
+export async function textureUrl(texture: string) {
+    return `${API_BASE}/client/resource/itemTexture?id=${texture}`
+}
+
 export async function getMetadata(): Promise<Metadata> {
     const response = await fetch(`metadata.json`);
     const data: Metadata = await response.json();

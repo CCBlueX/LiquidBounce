@@ -1,5 +1,6 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
+    import {textureUrl} from "../../../../integration/rest";
 
     const dispatch = createEventDispatcher<{
         toggle: { value: string, enabled: boolean }
@@ -9,13 +10,23 @@
     export let name: string;
     export let icon: string | undefined;
     export let enabled: boolean;
+
+    let showingFallbackImage = false;
+
+    async function showFallbackIcon(event: Event) {
+        const img = event.currentTarget as HTMLImageElement;
+
+        showingFallbackImage = true;
+        img.src = await textureUrl("minecraft:grass_block");
+    }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="item" class:has-icon={icon !== undefined} on:click={() => dispatch("toggle", {enabled: !enabled, value:value})}>
+<div class="item" class:has-icon={icon !== undefined}
+     on:click={() => dispatch("toggle", {enabled: !enabled, value:value})}>
     {#if icon}
-        <img class="icon" src="{icon}" alt={value}/>
+        <img class="icon" class:fallback={showingFallbackImage} src="{icon}" alt={value} on:error={showFallbackIcon}/>
     {/if}
     <div class="name">{name}</div>
     <div class="tick">
@@ -46,7 +57,12 @@
   .icon {
     height: 25px;
     width: 25px;
+
+    &.fallback {
+      filter: grayscale(1);
+    }
   }
+
   .name {
     font-size: 12px;
     color: $clickgui-text-color;
