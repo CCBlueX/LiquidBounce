@@ -48,9 +48,7 @@ fun getResource(requestObject: RequestObject) = run {
         ?: return@run httpBadRequest("Invalid identifier $identifier")
     val resource = mc.resourceManager.getResourceOrThrow(minecraftIdentifier)
 
-    resource.open().use {
-        httpFileStream(it)
-    }
+    return httpFileStream(resource.open(), contentType = "image/png")
 }
 
 // GET /api/v1/client/itemTexture
@@ -90,9 +88,7 @@ fun getEffectTexture(requestObject: RequestObject): FullHttpResponse {
     val resource = mc.resourceManager.getResource(textureId).getOrNull()
         ?: return httpBadRequest("Mob effect texture of $minecraftIdentifier not found")
 
-    return resource.open().use {
-        httpFileStream(it)
-    }
+    return httpFileStream(resource.open(), contentType = "image/png")
 }
 
 // GET /api/v1/client/skin
@@ -112,8 +108,6 @@ fun getSkin(requestObject: RequestObject) = run {
         val resource = mc.resourceManager.getResource(bodyTexturePath)
             .getOrNull() ?: return@run httpInternalServerError("Texture not found")
 
-        resource.open().use {
-            httpFileStream(it)
-        }
+        httpFileStream(resource.open(), contentType = "image/png")
     }
 }
