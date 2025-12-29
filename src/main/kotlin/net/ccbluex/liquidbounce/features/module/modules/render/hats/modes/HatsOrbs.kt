@@ -22,10 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getPointX
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getPointZ
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getRotationAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.*
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color
@@ -85,7 +82,7 @@ internal object HatsOrbs : HatsMode("Orbs") {
 
                 val rotAngle = if (HatOrbsSettings.OrbRotation.enabled) {
                     getRotationAngle(HatOrbsSettings.OrbRotation.speedRot)
-                } else { 0.0 } 
+                } else { 0.0 }
                 val sinA = (sin(rotAngle)).toFloat() * HatOrbsSettings.size
                 val cosA = (cos(rotAngle)).toFloat() * HatOrbsSettings.size
 

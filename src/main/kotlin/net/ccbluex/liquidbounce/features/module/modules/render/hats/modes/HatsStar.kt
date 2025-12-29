@@ -22,12 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getColorByAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getNextAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getRotationAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getStarRadius
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getToroidalMeshCords
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.*
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addVertex
