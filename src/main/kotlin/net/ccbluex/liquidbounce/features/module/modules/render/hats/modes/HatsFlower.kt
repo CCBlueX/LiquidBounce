@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.getRotationA
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getToroidalMeshCords
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -122,30 +123,12 @@ internal object HatsFlower : HatsMode("Flower") {
                         HatFlowerSettings.tubeRadius
                     )
 
-                    addVertex(
-                        matrix, quad.p1.x,
-                        quad.p1.y, quad.p1.z
-                    ).color(color)
-                    addVertex(
-                        matrix, quad.p2.x,
-                        quad.p2.y, quad.p2.z
-                    ).color(color)
-                    addVertex(
-                        matrix, quad.p3.x,
-                        quad.p3.y, quad.p3.z
-                    ).color(color)
-                    addVertex(
-                        matrix, quad.p2.x,
-                        quad.p2.y, quad.p2.z
-                    ).color(color)
-                    addVertex(
-                        matrix, quad.p4.x,
-                        quad.p4.y, quad.p4.z
-                    ).color(color)
-                    addVertex(
-                        matrix, quad.p3.x,
-                        quad.p3.y, quad.p3.z
-                    ).color(color)
+                    addVertex(matrix, quad.p1).color(color)
+                    addVertex(matrix, quad.p2).color(color)
+                    addVertex(matrix, quad.p3).color(color)
+                    addVertex(matrix, quad.p2).color(color)
+                    addVertex(matrix, quad.p4).color(color)
+                    addVertex(matrix, quad.p3).color(color)
                 }
             }
         }

@@ -338,6 +338,10 @@ fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: I
 }
 
 @Suppress("NOTHING_TO_INLINE")
+inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vector3fc): VertexConsumer =
+    addVertex(pose, pos.x(), pos.y(), pos.z())
+
+@Suppress("NOTHING_TO_INLINE")
 inline fun VertexConsumer.color(color: Color4b): VertexConsumer = setColor(color.toARGB())
 
 /**
