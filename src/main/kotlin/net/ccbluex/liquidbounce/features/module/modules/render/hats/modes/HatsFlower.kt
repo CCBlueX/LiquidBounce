@@ -106,8 +106,8 @@ internal object HatsFlower : HatsMode("Flower") {
                     val color = getColorByAngle(
                         mainCurrentAngleFlower,
                         Colors.firstColor,
-                        if (!Colors.syncColors) Colors.secondColor else Colors.firstColor,
-                        if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
+                        if (!Colors.syncColors)  {Colors.secondColor } else { Colors.firstColor },
+                        if (Colors.ColorSpin.enabled) { Colors.ColorSpin.spinSpeed } else {
                             0f
                         }
                     )

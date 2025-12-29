@@ -81,11 +81,11 @@ internal object HatsOrbs : HatsMode("Orbs") {
                 val y = if (HatOrbsSettings.WaveSettings.enabled) {
                     sin(time * HatOrbsSettings.WaveSettings.waveSpeed + i).toFloat() *
                         HatOrbsSettings.WaveSettings.waveHeight
-                } else 0f
+                } else { 0f }
 
                 val rotAngle = if (HatOrbsSettings.OrbRotation.enabled) {
                     getRotationAngle(HatOrbsSettings.OrbRotation.speedRot)
-                } else 0.0
+                } else { 0.0 } 
                 val sinA = (sin(rotAngle)).toFloat() * HatOrbsSettings.size
                 val cosA = (cos(rotAngle)).toFloat() * HatOrbsSettings.size
 
