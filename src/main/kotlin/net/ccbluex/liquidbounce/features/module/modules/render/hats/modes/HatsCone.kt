@@ -58,6 +58,7 @@ internal object HatsCone : HatsMode("Cone") {
         tree(HatConeSettings)
         tree(HatConeSettings.RadiusSettings)
         tree(Colors)
+        tree(Colors.ColorSpin)
     }
 
     override fun WorldRenderEnvironment.drawHat() {

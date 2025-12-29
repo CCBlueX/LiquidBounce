@@ -54,7 +54,7 @@ internal object HatsStar : HatsMode("Star") {
     private object HatStarSettings : Configurable("HatSettings") {
         val radius by float("Radius", 0.3f, 0.1f..2f)
         val tubeRadius by float("Thickness", 0.05f, 0.01f..1f)
-        val sharpness by float("Sharpness", 0.6f, 0.1f..0.9f)
+        val sharpness by float("Sharpness", 0.6f, 0.1f..0.7f)
         val pointsCount by int("PointsCount", 5, 5..15)
 
         object StarSpin : ToggleableConfigurable(this@HatsStar, "Spin", true) {
