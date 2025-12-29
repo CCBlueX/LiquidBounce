@@ -21,20 +21,16 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getPointX
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getPointZ
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getRotationAngle
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -68,85 +64,72 @@ internal object HatsOrbs : HatsMode("Orbs") {
         tree(HatOrbsSettings.OrbRotation)
     }
 
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> {
-        val player = mc.player ?: return@handler
-        val pos = player.interpolateCurrentPosition(it.partialTicks)
+    override fun WorldRenderEnvironment.drawHat() {
+        drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
 
-        if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return@handler
-        renderEnvironmentForWorld(it.matrixStack) {
-            withPositionRelativeToCamera(pos.add(0.0, player.bbHeight + height.toDouble(), 0.0)) {
-                drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-
-                    val time = (System.currentTimeMillis() / 1000.0) * HatOrbsSettings.speed
+            val time = (System.currentTimeMillis() / 1000.0) * HatOrbsSettings.speed
 
 
-                    // Loop for rendering each individual orb (orbit).
-                    for (i in 0 until HatOrbsSettings.count) {
+            // Loop for rendering each individual orb (orbit).
+            for (i in 0 until HatOrbsSettings.count) {
 
-                        val angle = getAngle(i, HatOrbsSettings.count) + time
+                val angle = getAngle(i, HatOrbsSettings.count) + time
 
-                        val x = getPointX(angle, HatOrbsSettings.radius)
-                        val z = getPointZ(angle, HatOrbsSettings.radius)
+                val x = getPointX(angle, HatOrbsSettings.radius)
+                val z = getPointZ(angle, HatOrbsSettings.radius)
 
-                        val y = if (HatOrbsSettings.WaveSettings.enabled) {
-                            sin(time * HatOrbsSettings.WaveSettings.waveSpeed + i).toFloat() *
-                                HatOrbsSettings.WaveSettings.waveHeight
-                        } else 0f
+                val y = if (HatOrbsSettings.WaveSettings.enabled) {
+                    sin(time * HatOrbsSettings.WaveSettings.waveSpeed + i).toFloat() *
+                        HatOrbsSettings.WaveSettings.waveHeight
+                } else 0f
 
-                        val rotAngle = if (HatOrbsSettings.OrbRotation.enabled) {
-                            getRotationAngle(HatOrbsSettings.OrbRotation.speedRot)
-                        } else 0.0
-                        val sinA = (sin(rotAngle)).toFloat() * HatOrbsSettings.size
-                        val cosA = (cos(rotAngle)).toFloat() * HatOrbsSettings.size
+                val rotAngle = if (HatOrbsSettings.OrbRotation.enabled) {
+                    getRotationAngle(HatOrbsSettings.OrbRotation.speedRot)
+                } else 0.0
+                val sinA = (sin(rotAngle)).toFloat() * HatOrbsSettings.size
+                val cosA = (cos(rotAngle)).toFloat() * HatOrbsSettings.size
 
-                        val top = y + HatOrbsSettings.size
-                        val bottom = y - HatOrbsSettings.size
+                val top = y + HatOrbsSettings.size
+                val bottom = y - HatOrbsSettings.size
 
-                        val ax = x + sinA
-                        val az = z + cosA
-                        val bx = x + cosA
-                        val bz = z - sinA
-                        val cx = x - sinA
-                        val cz = z - cosA
-                        val dx = x - cosA
-                        val dz = z + sinA
+                val ax = x + sinA
+                val az = z + cosA
+                val bx = x + cosA
+                val bz = z - sinA
+                val cx = x - sinA
+                val cz = z - cosA
+                val dx = x - cosA
+                val dz = z + sinA
 
-                        // Rendering of the top part of the rhombus (4 faces/8 triangles).
-                        addVertex(matrix, x, top, z).color(color)
-                        addVertex(matrix, dx, y, dz).color(color)
-                        addVertex(matrix, ax, y, az).color(color)
-                        addVertex(matrix, x, top, z).color(color)
-                        addVertex(matrix, ax, y, az).color(color)
-                        addVertex(matrix, bx, y, bz).color(color)
-                        addVertex(matrix, x, top, z).color(color)
-                        addVertex(matrix, bx, y, bz).color(color)
-                        addVertex(matrix, cx, y, cz).color(color)
-                        addVertex(matrix, x, top, z).color(color)
-                        addVertex(matrix, cx, y, cz).color(color)
-                        addVertex(matrix, dx, y, dz).color(color)
+                // Rendering of the top part of the rhombus (4 faces/8 triangles).
+                addVertex(matrix, x, top, z).color(color)
+                addVertex(matrix, dx, y, dz).color(color)
+                addVertex(matrix, ax, y, az).color(color)
+                addVertex(matrix, x, top, z).color(color)
+                addVertex(matrix, ax, y, az).color(color)
+                addVertex(matrix, bx, y, bz).color(color)
+                addVertex(matrix, x, top, z).color(color)
+                addVertex(matrix, bx, y, bz).color(color)
+                addVertex(matrix, cx, y, cz).color(color)
+                addVertex(matrix, x, top, z).color(color)
+                addVertex(matrix, cx, y, cz).color(color)
+                addVertex(matrix, dx, y, dz).color(color)
 
-                        // Rendering of the bottom part of the rhombus (4 faces/8 triangles).
-                        addVertex(matrix, x, bottom, z).color(color)
-                        addVertex(matrix, dx, y, dz).color(color)
-                        addVertex(matrix, ax, y, az).color(color)
-                        addVertex(matrix, x, bottom, z).color(color)
-                        addVertex(matrix, ax, y, az).color(color)
-                        addVertex(matrix, bx, y, bz).color(color)
-                        addVertex(matrix, x, bottom, z).color(color)
-                        addVertex(matrix, bx, y, bz).color(color)
-                        addVertex(matrix, cx, y, cz).color(color)
-                        addVertex(matrix, x, bottom, z).color(color)
-                        addVertex(matrix, cx, y, cz).color(color)
-                        addVertex(matrix, dx, y, dz).color(color)
-                    }
-
-                }
-
+                // Rendering of the bottom part of the rhombus (4 faces/8 triangles).
+                addVertex(matrix, x, bottom, z).color(color)
+                addVertex(matrix, dx, y, dz).color(color)
+                addVertex(matrix, ax, y, az).color(color)
+                addVertex(matrix, x, bottom, z).color(color)
+                addVertex(matrix, ax, y, az).color(color)
+                addVertex(matrix, bx, y, bz).color(color)
+                addVertex(matrix, x, bottom, z).color(color)
+                addVertex(matrix, bx, y, bz).color(color)
+                addVertex(matrix, cx, y, cz).color(color)
+                addVertex(matrix, x, bottom, z).color(color)
+                addVertex(matrix, cx, y, cz).color(color)
+                addVertex(matrix, dx, y, dz).color(color)
             }
-
         }
-
     }
 
 }

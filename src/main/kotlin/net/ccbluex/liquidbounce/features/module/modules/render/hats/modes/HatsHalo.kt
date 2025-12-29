@@ -21,20 +21,16 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getColorByAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getNextAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getToroidalMeshCords
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import org.joml.Vector2f
 
 /**
@@ -63,82 +59,68 @@ internal object HatsHalo : HatsMode("Halo") {
         tree(Colors.ColorSpin)
     }
 
+    override fun WorldRenderEnvironment.drawHat() {
+        drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
 
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> {
-        val player = mc.player ?: return@handler
+            val mainSegments = 600
+            val tubeSegments = 60
 
-        if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return@handler
+            // Main loop for creating the torus (donut) using segments.
+            for (mainI in 0 until mainSegments) {
 
-        renderEnvironmentForWorld(it.matrixStack) {
+                val mainCurrentAngleTorus = getAngle(mainI, mainSegments)
+                val mainNextAngleTorus = getNextAngle(mainI, mainSegments)
 
-            val pos = player.interpolateCurrentPosition(it.partialTicks)
+                // Nested loop for rendering the torus "thickness".
+                for (tubeI in 0 until tubeSegments) {
 
-            withPositionRelativeToCamera(pos.add(0.0, (player.bbHeight + height).toDouble(), 0.0)) {
+                    val tubeCurrentAngleTorus = getAngle(tubeI, tubeSegments)
+                    val tubeNextAngleTorus = getNextAngle(tubeI, tubeSegments)
 
-                drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-
-                    val mainSegments = 600
-                    val tubeSegments = 60
-
-                    // Main loop for creating the torus (donut) using segments.
-                    for (mainI in 0 until mainSegments) {
-
-                        val mainCurrentAngleTorus = getAngle(mainI, mainSegments)
-                        val mainNextAngleTorus = getNextAngle(mainI, mainSegments)
-
-                        // Nested loop for rendering the torus "thickness".
-                        for (tubeI in 0 until tubeSegments) {
-
-                            val tubeCurrentAngleTorus = getAngle(tubeI, tubeSegments)
-                            val tubeNextAngleTorus = getNextAngle(tubeI, tubeSegments)
-
-                            val color = getColorByAngle(
-                                mainCurrentAngleTorus,
-                                Colors.firstColor,
-                                if (!Colors.syncColors) Colors.secondColor else Colors.firstColor,
-                                if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
-                                    0.0f
-                                }
-                            )
-
-                            val radii = Vector2f(HatHaloSettings.radius, HatHaloSettings.radius)
-                            val quad = getToroidalMeshCords(
-                                mainCurrentAngleTorus,
-                                mainNextAngleTorus,
-                                tubeCurrentAngleTorus,
-                                tubeNextAngleTorus,
-                                0.0,
-                                radii,
-                                HatHaloSettings.tubeRadius
-                            )
-
-                            addVertex(
-                                matrix, quad.p1.x,
-                                quad.p1.y, quad.p1.z
-                            ).color(color)
-                            addVertex(
-                                matrix, quad.p2.x,
-                                quad.p2.y, quad.p2.z
-                            ).color(color)
-                            addVertex(
-                                matrix, quad.p3.x,
-                                quad.p3.y, quad.p3.z
-                            ).color(color)
-                            addVertex(
-                                matrix, quad.p2.x,
-                                quad.p2.y, quad.p2.z
-                            ).color(color)
-                            addVertex(
-                                matrix, quad.p4.x,
-                                quad.p4.y, quad.p4.z
-                            ).color(color)
-                            addVertex(
-                                matrix, quad.p3.x,
-                                quad.p3.y, quad.p3.z
-                            ).color(color)
+                    val color = getColorByAngle(
+                        mainCurrentAngleTorus,
+                        Colors.firstColor,
+                        if (!Colors.syncColors) Colors.secondColor else Colors.firstColor,
+                        if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
+                            0.0f
                         }
-                    }
+                    )
+
+                    val radii = Vector2f(HatHaloSettings.radius, HatHaloSettings.radius)
+                    val quad = getToroidalMeshCords(
+                        mainCurrentAngleTorus,
+                        mainNextAngleTorus,
+                        tubeCurrentAngleTorus,
+                        tubeNextAngleTorus,
+                        0.0,
+                        radii,
+                        HatHaloSettings.tubeRadius
+                    )
+
+                    addVertex(
+                        matrix, quad.p1.x,
+                        quad.p1.y, quad.p1.z
+                    ).color(color)
+                    addVertex(
+                        matrix, quad.p2.x,
+                        quad.p2.y, quad.p2.z
+                    ).color(color)
+                    addVertex(
+                        matrix, quad.p3.x,
+                        quad.p3.y, quad.p3.z
+                    ).color(color)
+                    addVertex(
+                        matrix, quad.p2.x,
+                        quad.p2.y, quad.p2.z
+                    ).color(color)
+                    addVertex(
+                        matrix, quad.p4.x,
+                        quad.p4.y, quad.p4.z
+                    ).color(color)
+                    addVertex(
+                        matrix, quad.p3.x,
+                        quad.p3.y, quad.p3.z
+                    ).color(color)
                 }
             }
         }

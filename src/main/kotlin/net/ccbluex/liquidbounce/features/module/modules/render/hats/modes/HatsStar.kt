@@ -21,8 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getColorByAngle
@@ -31,12 +29,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.getRotationA
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getStarRadius
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getToroidalMeshCords
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import org.joml.Vector2f
 
 /**
@@ -72,85 +68,68 @@ internal object HatsStar : HatsMode("Star") {
         tree(Colors.ColorSpin)
     }
 
+    override fun WorldRenderEnvironment.drawHat() {
+        drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
+            val rotAngle = if (HatStarSettings.StarSpin.enabled) {
+                getRotationAngle(HatStarSettings.StarSpin.spinSpeed)
+            } else {
+                0.0
+            }
+            val outerSegments = HatStarSettings.pointsCount * 120
+            val innerSegments = HatStarSettings.pointsCount * 2
+            val points = HatStarSettings.pointsCount
 
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> {
-        val player = mc.player ?: return@handler
+            for (mainI in 0 until outerSegments) {
 
-        if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return@handler
-        renderEnvironmentForWorld(it.matrixStack) {
+                val mainCurrentAngleStar = getAngle(mainI, outerSegments)
+                val mainNextAngleStar = getNextAngle(mainI, outerSegments)
 
-            val pos = player.interpolateCurrentPosition(it.partialTicks)
-
-            withPositionRelativeToCamera(
-                pos.add(
-                    0.0,
-                    (player.bbHeight + height).toDouble(), 0.0
+                val currentRadius = getStarRadius(
+                    mainCurrentAngleStar,
+                    HatStarSettings.radius,
+                    points,
+                    HatStarSettings.sharpness,
+                    1.75,
                 )
-            ) {
-                drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-                    val rotAngle = if (HatStarSettings.StarSpin.enabled) {
-                        getRotationAngle(HatStarSettings.StarSpin.spinSpeed)
-                    } else {
-                        0.0
-                    }
-                    val outerSegments = HatStarSettings.pointsCount * 120
-                    val innerSegments = HatStarSettings.pointsCount * 2
-                    val points = HatStarSettings.pointsCount
+                val nextRadius = getStarRadius(
+                    mainNextAngleStar,
+                    HatStarSettings.radius,
+                    points,
+                    HatStarSettings.sharpness,
+                    1.75,
+                )
 
-                    for (mainI in 0 until outerSegments) {
+                for (tubeI in 0 until innerSegments) {
 
-                        val mainCurrentAngleStar = getAngle(mainI, outerSegments)
-                        val mainNextAngleStar = getNextAngle(mainI, outerSegments)
+                    val tubeCurrentAngleStar = getAngle(tubeI, innerSegments)
+                    val tubeNextAngleStar = getNextAngle(tubeI, innerSegments)
 
-                        val currentRadius = getStarRadius(
-                            mainCurrentAngleStar,
-                            HatStarSettings.radius,
-                            points,
-                            HatStarSettings.sharpness,
-                            1.75,
-                        )
-                        val nextRadius = getStarRadius(
-                            mainNextAngleStar,
-                            HatStarSettings.radius,
-                            points,
-                            HatStarSettings.sharpness,
-                            1.75,
-                        )
+                    val color = getColorByAngle(
+                        mainCurrentAngleStar,
+                        Colors.firstColor,
+                        if (!Colors.syncColors) Colors.secondColor else Colors.firstColor,
+                        if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
+                            0f
+                        },
+                    )
 
-                        for (tubeI in 0 until innerSegments) {
+                    val radii = Vector2f(currentRadius, nextRadius)
+                    val quad = getToroidalMeshCords(
+                        mainCurrentAngleStar,
+                        mainNextAngleStar,
+                        tubeCurrentAngleStar,
+                        tubeNextAngleStar,
+                        rotAngle,
+                        radii,
+                        HatStarSettings.tubeRadius
+                    )
 
-                            val tubeCurrentAngleStar = getAngle(tubeI, innerSegments)
-                            val tubeNextAngleStar = getNextAngle(tubeI, innerSegments)
-
-                            val color = getColorByAngle(
-                                mainCurrentAngleStar,
-                                Colors.firstColor,
-                                if (!Colors.syncColors) Colors.secondColor else Colors.firstColor,
-                                if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
-                                    0f
-                                },
-                            )
-
-                            val radii = Vector2f(currentRadius, nextRadius)
-                            val quad = getToroidalMeshCords(
-                                mainCurrentAngleStar,
-                                mainNextAngleStar,
-                                tubeCurrentAngleStar,
-                                tubeNextAngleStar,
-                                rotAngle,
-                                radii,
-                                HatStarSettings.tubeRadius
-                            )
-
-                            addVertex(matrix, quad.p1.x, quad.p1.y, quad.p1.z).color(color)
-                            addVertex(matrix, quad.p2.x, quad.p2.y, quad.p2.z).color(color)
-                            addVertex(matrix, quad.p3.x, quad.p3.y, quad.p3.z).color(color)
-                            addVertex(matrix, quad.p2.x, quad.p2.y, quad.p2.z).color(color)
-                            addVertex(matrix, quad.p4.x, quad.p4.y, quad.p4.z).color(color)
-                            addVertex(matrix, quad.p3.x, quad.p3.y, quad.p3.z).color(color)
-                        }
-                    }
+                    addVertex(matrix, quad.p1.x, quad.p1.y, quad.p1.z).color(color)
+                    addVertex(matrix, quad.p2.x, quad.p2.y, quad.p2.z).color(color)
+                    addVertex(matrix, quad.p3.x, quad.p3.y, quad.p3.z).color(color)
+                    addVertex(matrix, quad.p2.x, quad.p2.y, quad.p2.z).color(color)
+                    addVertex(matrix, quad.p4.x, quad.p4.y, quad.p4.z).color(color)
+                    addVertex(matrix, quad.p3.x, quad.p3.y, quad.p3.z).color(color)
                 }
             }
         }
