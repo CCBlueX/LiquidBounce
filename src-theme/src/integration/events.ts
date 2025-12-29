@@ -9,6 +9,7 @@ import type {
     Server,
     Session, Setting,
     TextComponent,
+    StatusEffect,
 } from "./types";
 
 
@@ -51,6 +52,7 @@ export interface EventMap {
     //UserInterfaceEvents.kt
     fps: FpsChangeEvent;
     clientPlayerData: ClientPlayerDataEvent;
+    clientPlayerEffect: ClientPlayerEffectEvent;
     clientPlayerInventory: ClientPlayerInventoryEvent;
     title: TitleEventTitle;
     subtitle: TitleEventSubtitle;
@@ -113,6 +115,10 @@ export interface ComponentsUpdateEvent {
 
 export interface ClientPlayerDataEvent {
     playerData: PlayerData;
+}
+
+export interface ClientPlayerEffectEvent {
+    effects: StatusEffect[];
 }
 
 export interface OverlayMessageEvent {

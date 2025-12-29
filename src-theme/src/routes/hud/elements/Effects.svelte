@@ -1,6 +1,6 @@
 <script lang="ts">
     import {listen} from "../../../integration/ws";
-    import type {ClientPlayerDataEvent} from "../../../integration/events";
+    import type {ClientPlayerDataEvent, ClientPlayerEffectEvent} from "../../../integration/events";
     import type {StatusEffect} from "../../../integration/types";
     import {effectTextureUrl} from "../../../integration/rest";
 
@@ -8,6 +8,10 @@
 
     listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
         effects = event.playerData.effects;
+    });
+
+    listen("clientPlayerEffect", (event: ClientPlayerEffectEvent) => {
+        effects = event.effects;
     });
 
     function formatTime(duration: number): string {
