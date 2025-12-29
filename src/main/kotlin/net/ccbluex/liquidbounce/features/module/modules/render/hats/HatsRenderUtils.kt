@@ -100,7 +100,11 @@ data class TorusQuad(
 
 fun getColorByAngle(angle: Double, color1: Color4b, color2: Color4b, speed: Float): Color4b {
 
-    val timeOffset = if (speed > 0) (System.currentTimeMillis() % 10000L) / 10000.0 * Math.PI * 2 else 0.0
+    val timeOffset = if (speed > 0f) {
+        ((System.currentTimeMillis().toDouble() / 10000.0) * speed.toDouble() % 1.0) * (Math.PI * 2.0)
+    } else {
+        0.0
+    }
 
     val progress = (Mth.sin(angle + timeOffset) * 0.5 + 0.5).toFloat()
 
