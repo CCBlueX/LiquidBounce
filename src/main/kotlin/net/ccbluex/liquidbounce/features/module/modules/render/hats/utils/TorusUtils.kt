@@ -44,28 +44,27 @@ fun getTorusPoints(
 }
 
 
-fun getToroidalMeshCords(outerCurrentAngle: Double, outerNextAngle: Double, innerCurrentAngle: Double,
-                         innerNextAngle: Double, rotationAngle: Double, radii: Vector2f,
+fun getToroidalMeshCords(angles: TorusAngles, radii: Vector2f,
                          innerRadius: Float ): TorusQuad  {
 
     val currentRadius = radii.x
     val nextRadius = radii.y
     return TorusQuad (
         getTorusPoints(
-            outerCurrentAngle + rotationAngle,
-            innerCurrentAngle, currentRadius, innerRadius
+            angles.outerCurrentAngle + angles.rotationAngle,
+            angles.innerCurrentAngle, currentRadius, innerRadius
         ),
         getTorusPoints(
-            outerCurrentAngle + rotationAngle,
-            innerNextAngle, currentRadius, innerRadius
+            angles.outerCurrentAngle + angles.rotationAngle,
+            angles.innerNextAngle, currentRadius, innerRadius
         ),
         getTorusPoints(
-            outerNextAngle + rotationAngle,
-            innerCurrentAngle, nextRadius, innerRadius
+            angles.outerNextAngle + angles.rotationAngle,
+            angles.innerCurrentAngle, nextRadius, innerRadius
         ),
         getTorusPoints(
-            outerNextAngle + rotationAngle,
-            innerNextAngle, nextRadius, innerRadius
+            angles.outerNextAngle + angles.rotationAngle,
+            angles.innerNextAngle, nextRadius, innerRadius
         ),
     )
 }
@@ -78,3 +77,10 @@ data class TorusQuad(
     val p4: Vector3f,
 )
 
+data class TorusAngles(
+    val outerCurrentAngle: Double,
+    val outerNextAngle: Double,
+    val innerCurrentAngle: Double,
+    val innerNextAngle: Double,
+    val rotationAngle: Double,
+)

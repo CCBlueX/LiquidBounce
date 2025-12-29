@@ -22,7 +22,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.*
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getPointZ
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getPointX
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getRotationAngle
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color

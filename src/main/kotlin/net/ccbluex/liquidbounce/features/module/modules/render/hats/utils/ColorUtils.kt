@@ -25,6 +25,13 @@ import net.minecraft.util.Mth
 /**
  * @author minecrrrr
 * */
+fun getCurrentStepColor(angle: Double, colors: Colors): Color4b {
+    val first = colors.firstColor
+    val second = if (!colors.syncColors) colors.secondColor else colors.firstColor
+    val speed = if (colors.spinColors) colors.spinSpeed else 0f
+
+    return getColorByAngle(angle, first, second, speed)
+}
 
 fun getColorByAngle(angle: Double, color1: Color4b, color2: Color4b, speed: Float): Color4b {
 
@@ -50,3 +57,13 @@ fun lerpColor(c1: Color4b, c2: Color4b, progress: Float): Color4b {
 
     return Color4b(r, g, b, a)
 }
+
+// --- Data Classes ---
+
+data class Colors(
+    val syncColors: Boolean,
+    val firstColor: Color4b,
+    val secondColor: Color4b,
+    val spinColors: Boolean,
+    val spinSpeed: Float,
+)

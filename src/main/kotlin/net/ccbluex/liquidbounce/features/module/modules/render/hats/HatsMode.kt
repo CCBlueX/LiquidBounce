@@ -24,10 +24,18 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Angles
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Radiuses
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.TorusAngles
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.TorusQuad
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getToroidalMeshCords
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import org.joml.Vector2f
 
 /**
  * @author minecrrrr
@@ -55,5 +63,35 @@ abstract class HatsMode(name: String) : Choice(name) {
             }
         }
     }
+
+    protected fun innerI(
+        innerSegments: Int,
+        angles: Angles,
+        radiuses: Radiuses,
+        innerI: Int): MeshStepResult {
+
+        val innerCurAngle = getAngle(innerI, innerSegments)
+        val innerNextAngle = getNextAngle(innerI, innerSegments)
+
+        val radii = Vector2f(radiuses.outerCurRadius, radiuses.outerNextRadius)
+
+        val Angles = TorusAngles(
+            angles.outerCurAngle,
+            angles.outerNextAngle,
+            innerCurAngle,
+            innerNextAngle,
+            angles.rotationAngle,
+        )
+        val pos = getToroidalMeshCords(
+            Angles,
+            radii,
+            radiuses.innerRadius,
+        )
+        return MeshStepResult(pos)
+    }
+
+    data class MeshStepResult(
+        val pos: TorusQuad,
+    )
 
 }

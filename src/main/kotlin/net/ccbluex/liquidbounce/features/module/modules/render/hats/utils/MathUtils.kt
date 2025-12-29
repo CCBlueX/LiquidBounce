@@ -51,3 +51,17 @@ fun getFlowerRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Fl
 
     return innerRadius + (baseRadius - innerRadius) * (1f - r)
 }
+
+// --- Data Classes ---
+
+data class Angles(
+    val outerCurAngle: Double,
+    val outerNextAngle: Double,
+    val rotationAngle: Double,
+)
+
+data class Radiuses(
+    val outerCurRadius: Float,
+    val outerNextRadius: Float,
+    val innerRadius: Float,
+)

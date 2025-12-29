@@ -22,7 +22,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.*
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Colors
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getCurrentStepColor
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color
@@ -61,6 +62,14 @@ internal object HatsCone : HatsMode("Cone") {
         tree(Colors.ColorSpin)
     }
 
+    private val colors get() = Colors(
+        Colors.syncColors,
+        Colors.firstColor,
+        Colors.secondColor,
+        Colors.ColorSpin.enabled,
+        Colors.ColorSpin.spinSpeed,
+    )
+
     override fun WorldRenderEnvironment.drawHat() {
 
         drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
@@ -70,20 +79,7 @@ internal object HatsCone : HatsMode("Cone") {
                 val cosine = cos(angle).toFloat()
                 val sine = sin(angle).toFloat()
 
-                val color = getColorByAngle(
-                    angle,
-                    Colors.firstColor,
-                    if (!Colors.syncColors) {
-                        Colors.secondColor
-                    } else {
-                        Colors.firstColor
-                    },
-                    if (Colors.ColorSpin.enabled) {
-                        Colors.ColorSpin.spinSpeed
-                    } else {
-                        0.0f
-                    },
-                )
+                val color = getCurrentStepColor(angle, colors)
 
                 addVertex(
                     matrix,

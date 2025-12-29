@@ -22,7 +22,11 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.*
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.TorusAngles
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getColorByAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getToroidalMeshCords
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addVertex
@@ -47,8 +51,8 @@ internal object HatsHalo : HatsMode("Halo") {
     }
 
     private object HatHaloSettings : Configurable("HatSettings") {
-        val radius by float("Radius", 0.3f, 0.1f..2f)
-        val tubeRadius by float("Thickness", 0.05f, 0.01f..1f)
+        val outerRadius by float("Radius", 0.3f, 0.1f..2f)
+        val innerRadius by float("Thickness", 0.05f, 0.01f..1f)
     }
 
     init {
@@ -60,47 +64,49 @@ internal object HatsHalo : HatsMode("Halo") {
     override fun WorldRenderEnvironment.drawHat() {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
 
-            val mainSegments = 600
-            val tubeSegments = 60
+            val outerSegments = 600
+            val innerSegments = 60
 
             // Main loop for creating the torus (donut) using segments.
-            for (mainI in 0 until mainSegments) {
+            for (outerI in 0 until outerSegments) {
 
-                val mainCurrentAngleTorus = getAngle(mainI, mainSegments)
-                val mainNextAngleTorus = getNextAngle(mainI, mainSegments)
+                val outerCurAngleTorus = getAngle(outerI, outerSegments)
+                val outerNextAngleTorus = getNextAngle(outerI, outerSegments)
 
                 // Nested loop for rendering the torus "thickness".
-                for (tubeI in 0 until tubeSegments) {
+                for (innerI in 0 until innerSegments) {
 
-                    val tubeCurrentAngleTorus = getAngle(tubeI, tubeSegments)
-                    val tubeNextAngleTorus = getNextAngle(tubeI, tubeSegments)
+                    val innerCurAngleTorus = getAngle(innerI, innerSegments)
+                    val innerNextAngleTorus = getNextAngle(innerI, innerSegments)
 
                     val color = getColorByAngle(
-                        mainCurrentAngleTorus,
+                        outerCurAngleTorus,
                         Colors.firstColor,
-                        if (!Colors.syncColors) { Colors.secondColor } else { Colors.firstColor },
+                        if (!Colors.syncColors) Colors.secondColor else { Colors.firstColor },
                         if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
                             0.0f
                         }
                     )
-
-                    val radii = Vector2f(HatHaloSettings.radius, HatHaloSettings.radius)
-                    val quad = getToroidalMeshCords(
-                        mainCurrentAngleTorus,
-                        mainNextAngleTorus,
-                        tubeCurrentAngleTorus,
-                        tubeNextAngleTorus,
+                    val Angles = TorusAngles(
+                        outerCurAngleTorus,
+                        outerNextAngleTorus,
+                        innerCurAngleTorus,
+                        innerNextAngleTorus,
                         0.0,
+                    )
+                    val radii = Vector2f(HatHaloSettings.outerRadius, HatHaloSettings.outerRadius)
+                    val pos = getToroidalMeshCords(
+                        Angles,
                         radii,
-                        HatHaloSettings.tubeRadius
+                        HatHaloSettings.innerRadius
                     )
 
-                    addVertex(matrix, quad.p1).color(color)
-                    addVertex(matrix, quad.p2).color(color)
-                    addVertex(matrix, quad.p3).color(color)
-                    addVertex(matrix, quad.p2).color(color)
-                    addVertex(matrix, quad.p4).color(color)
-                    addVertex(matrix, quad.p3).color(color)
+                    addVertex(matrix, pos.p1).color(color)
+                    addVertex(matrix, pos.p2).color(color)
+                    addVertex(matrix, pos.p3).color(color)
+                    addVertex(matrix, pos.p2).color(color)
+                    addVertex(matrix, pos.p4).color(color)
+                    addVertex(matrix, pos.p3).color(color)
                 }
             }
         }
