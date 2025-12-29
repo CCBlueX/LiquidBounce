@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
+import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
@@ -43,7 +44,8 @@ import kotlin.jvm.optionals.getOrNull
 fun getResource(requestObject: RequestObject) = run {
     val identifier = requestObject.queryParams["id"]
         ?: return@run httpBadRequest("Missing identifier parameter")
-    val minecraftIdentifier = Identifier.parse(identifier)
+    val minecraftIdentifier = Identifier.tryParse(identifier)
+        ?: return@run httpBadRequest("Invalid identifier $identifier")
     val resource = mc.resourceManager.getResourceOrThrow(minecraftIdentifier)
 
     resource.open().use {
@@ -60,8 +62,8 @@ fun getItemTexture(requestObject: RequestObject) = run {
 
     val identifier = requestObject.queryParams["id"]
         ?: return@run httpBadRequest("Missing identifier parameter")
-    val minecraftIdentifier = runCatching { Identifier.parse(identifier) }.getOrNull()
-        ?: return@run httpBadRequest("Invalid identifier")
+    val minecraftIdentifier = Identifier.tryParse(identifier)
+        ?: return@run httpBadRequest("Invalid identifier $identifier")
 
     val alternativeIdentifier = ItemImageAtlas.resolveAliasIfPresent(minecraftIdentifier)
 
@@ -77,19 +79,19 @@ fun getItemTexture(requestObject: RequestObject) = run {
 
 // GET /api/v1/client/effectTexture
 @Suppress("UNUSED_PARAMETER")
-fun getEffectTexture(requestObject: RequestObject) = run {
-    val effectId = requestObject.queryParams["id"]?.let { Identifier.tryParse(it) }
-        ?: return@run httpBadRequest("Missing effect ID parameter")
+fun getEffectTexture(requestObject: RequestObject): FullHttpResponse {
+    val identifier = requestObject.queryParams["id"]
+        ?: return httpBadRequest("Missing identifier parameter")
+    val minecraftIdentifier = Identifier.tryParse(identifier)
+        ?: return httpBadRequest("Invalid identifier $identifier")
 
-    val textureId = Identifier.withDefaultNamespace("textures/mob_effect/${effectId.path}.png")
+    val textureId = Identifier.withDefaultNamespace("textures/mob_effect/${minecraftIdentifier.path}.png")
 
-    try {
-        val resource = mc.resourceManager.getResourceOrThrow(textureId)
-        resource.open().use {
-            httpFileStream(it)
-        }
-    } catch (e: Exception) {
-        httpBadRequest("Effect texture not found: $effectId")
+    val resource = mc.resourceManager.getResource(textureId).getOrNull()
+        ?: return httpBadRequest("Mob effect texture of $minecraftIdentifier not found")
+
+    return resource.open().use {
+        httpFileStream(it)
     }
 }
 
