@@ -20,12 +20,8 @@
         return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    function convertToRoman(n: number): string {
+    function formatAmplifier(n: number): string {
         return (n + 1).toString();
-    }
-
-    function getEffectIcon(effectId: string): string {
-        return effectTextureUrl(effectId);
     }
 </script>
 
@@ -34,8 +30,8 @@
     <div class="effects">
         {#each effects as e}
             <div class="effect">
-                <img class="effect-icon" src={getEffectIcon(e.effect)} alt={e.localizedName} />
-                <span class="name">{e.localizedName} <span class="amplifier">{convertToRoman(e.amplifier)}</span></span>
+                <img class="effect-icon" src={effectTextureUrl(e.effect)} alt={e.localizedName} />
+                <span class="name">{e.localizedName} <span class="amplifier">{formatAmplifier(e.amplifier)}</span></span>
                 <span class="duration">{formatTime(e.duration)}</span>
             </div>
         {/each}
@@ -91,6 +87,9 @@
 
     .name {
       flex: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
       color: white;
     }
 
