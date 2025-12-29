@@ -75,7 +75,7 @@ abstract class HatsMode(name: String) : Choice(name) {
 
         val radii = Vector2f(radiuses.outerCurRadius, radiuses.outerNextRadius)
 
-        val Angles = TorusAngles(
+        val angles = TorusAngles(
             angles.outerCurAngle,
             angles.outerNextAngle,
             innerCurAngle,
@@ -83,7 +83,7 @@ abstract class HatsMode(name: String) : Choice(name) {
             angles.rotationAngle,
         )
         val pos = getToroidalMeshCords(
-            Angles,
+            angles,
             radii,
             radiuses.innerRadius,
         )

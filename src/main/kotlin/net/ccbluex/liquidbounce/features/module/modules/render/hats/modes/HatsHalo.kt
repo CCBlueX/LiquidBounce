@@ -82,10 +82,8 @@ internal object HatsHalo : HatsMode("Halo") {
                     val color = getColorByAngle(
                         outerCurAngleTorus,
                         Colors.firstColor,
-                        if (!Colors.syncColors) Colors.secondColor else { Colors.firstColor },
-                        if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
-                            0.0f
-                        }
+                        if (!Colors.syncColors) Colors.secondColor else Colors.firstColor,
+                        if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else 0.0f
                     )
                     val Angles = TorusAngles(
                         outerCurAngleTorus,
