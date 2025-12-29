@@ -32,9 +32,9 @@ fastutil4k = "0.2.3"
 # Recommended mods
 modmenu = "17.0.0-beta.1"
 exploit_preventer_api = "0.0.1"
-exploit_preventer_mod = "0.1.7"
-sodium = "mc1.21.11-0.8.1-fabric"
-lithium = "mc1.21.11-0.21.1-fabric"
+exploit_preventer_mod = "0.1.8"
+sodium = "mc1.21.11-0.8.2-fabric"
+lithium = "mc1.21.11-0.21.2-fabric"
 viafabricplus = "4.4.1"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.14.1+1.21.11-fabric"
