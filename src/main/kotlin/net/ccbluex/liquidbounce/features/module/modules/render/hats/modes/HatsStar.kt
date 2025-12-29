@@ -44,13 +44,11 @@ import org.joml.Vector2f
  */
 internal object HatsStar : HatsMode("Star") {
 
-    val height by float("HeightOffset", 0.1f, 0f..2f)
-    val showInFirstPerson by boolean("FirstPersonView", true)
-
     private object Colors : Configurable("Colors") {
         val syncColors by boolean("SyncColors", true)
         val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
         val secondColor by color("SecondColor", Color4b(0, 0, 255, 125))
+
         object ColorSpin : ToggleableConfigurable(this@HatsStar, "ColorSpin", true) {
             val spinSpeed by float("SpinSpeed", 1f, 0.1f..10f)
         }
@@ -61,6 +59,7 @@ internal object HatsStar : HatsMode("Star") {
         val tubeRadius by float("Thickness", 0.05f, 0.01f..1f)
         val sharpness by float("Sharpness", 0.6f, 0.1f..0.9f)
         val pointsCount by int("PointsCount", 5, 5..15)
+
         object StarSpin : ToggleableConfigurable(this@HatsStar, "Spin", true) {
             val spinSpeed by float("Speed", 1f, 0.1f..10f)
         }
@@ -75,7 +74,7 @@ internal object HatsStar : HatsMode("Star") {
 
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent>{
+    private val renderHandler = handler<WorldRenderEvent> {
         val player = mc.player ?: return@handler
 
         if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return@handler
@@ -83,10 +82,14 @@ internal object HatsStar : HatsMode("Star") {
 
             val pos = player.interpolateCurrentPosition(it.partialTicks)
 
-            withPositionRelativeToCamera(pos.add(0.0,
-                (player.bbHeight + height).toDouble(), 0.0)) {
+            withPositionRelativeToCamera(
+                pos.add(
+                    0.0,
+                    (player.bbHeight + height).toDouble(), 0.0
+                )
+            ) {
                 drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-                    val rotAngle = if(HatStarSettings.StarSpin.enabled) {
+                    val rotAngle = if (HatStarSettings.StarSpin.enabled) {
                         getRotationAngle(HatStarSettings.StarSpin.spinSpeed)
                     } else {
                         0.0
@@ -123,8 +126,8 @@ internal object HatsStar : HatsMode("Star") {
                             val color = getColorByAngle(
                                 mainCurrentAngleStar,
                                 Colors.firstColor,
-                                if(!Colors.syncColors)Colors.secondColor else Colors.firstColor,
-                                if(Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
+                                if (!Colors.syncColors) Colors.secondColor else Colors.firstColor,
+                                if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
                                     0f
                                 },
                             )

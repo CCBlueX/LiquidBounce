@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getColorByAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.getFlowerRadius
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getNextAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getRotationAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.getFlowerRadius
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.getToroidalMeshCords
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.color
@@ -44,13 +44,11 @@ import org.joml.Vector2f
  */
 internal object HatsFlower : HatsMode("Flower") {
 
-    val height by float("HeightOffset", 0.1f, 0f..2f)
-    val showInFirstPerson by boolean("FirstPersonView", true)
-
     private object Colors : Configurable("Colors") {
         val syncColors by boolean("SyncColors", true)
         val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
         val secondColor by color("SecondColor", Color4b(0, 0, 255, 125))
+
         object ColorSpin : ToggleableConfigurable(this@HatsFlower, "ColorSpin", true) {
             val spinSpeed by float("SpinSpeed", 1f, 0.1f..10f)
         }
@@ -61,6 +59,7 @@ internal object HatsFlower : HatsMode("Flower") {
         val tubeRadius by float("Thickness", 0.05f, 0.01f..1f)
         val sharpness by float("Sharpness", 0.6f, 0.1f..0.9f)
         val petalCount by int("PetalCount", 5, 5..15)
+
         object FlowerSpin : ToggleableConfigurable(this@HatsFlower, "Spin", true) {
             val spinSpeed by float("Speed", 1f, 0.1f..10f)
         }
@@ -83,10 +82,14 @@ internal object HatsFlower : HatsMode("Flower") {
         renderEnvironmentForWorld(it.matrixStack) {
 
             val pos = player.interpolateCurrentPosition(it.partialTicks)
-            withPositionRelativeToCamera(pos.add(0.0,
-                (player.bbHeight + height).toDouble(), 0.0)) {
+            withPositionRelativeToCamera(
+                pos.add(
+                    0.0,
+                    (player.bbHeight + height).toDouble(), 0.0
+                )
+            ) {
                 drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-                    val rotAngle = if(HatFlowerSettings.FlowerSpin.enabled) {
+                    val rotAngle = if (HatFlowerSettings.FlowerSpin.enabled) {
                         getRotationAngle(HatFlowerSettings.FlowerSpin.spinSpeed)
                     } else {
                         0.0
@@ -121,8 +124,8 @@ internal object HatsFlower : HatsMode("Flower") {
                             val color = getColorByAngle(
                                 mainCurrentAngleFlower,
                                 Colors.firstColor,
-                                if(!Colors.syncColors)Colors.secondColor else Colors.firstColor,
-                                if(Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
+                                if (!Colors.syncColors) Colors.secondColor else Colors.firstColor,
+                                if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
                                     0f
                                 }
                             )
@@ -138,18 +141,30 @@ internal object HatsFlower : HatsMode("Flower") {
                                 HatFlowerSettings.tubeRadius
                             )
 
-                            addVertex(matrix, quad.p1.x,
-                                quad.p1.y, quad.p1.z).color(color)
-                            addVertex(matrix, quad.p2.x,
-                                quad.p2.y, quad.p2.z).color(color)
-                            addVertex(matrix, quad.p3.x,
-                                quad.p3.y, quad.p3.z).color(color)
-                            addVertex(matrix, quad.p2.x,
-                                quad.p2.y, quad.p2.z).color(color)
-                            addVertex(matrix, quad.p4.x,
-                                quad.p4.y, quad.p4.z).color(color)
-                            addVertex(matrix, quad.p3.x,
-                                quad.p3.y, quad.p3.z).color(color)
+                            addVertex(
+                                matrix, quad.p1.x,
+                                quad.p1.y, quad.p1.z
+                            ).color(color)
+                            addVertex(
+                                matrix, quad.p2.x,
+                                quad.p2.y, quad.p2.z
+                            ).color(color)
+                            addVertex(
+                                matrix, quad.p3.x,
+                                quad.p3.y, quad.p3.z
+                            ).color(color)
+                            addVertex(
+                                matrix, quad.p2.x,
+                                quad.p2.y, quad.p2.z
+                            ).color(color)
+                            addVertex(
+                                matrix, quad.p4.x,
+                                quad.p4.y, quad.p4.z
+                            ).color(color)
+                            addVertex(
+                                matrix, quad.p3.x,
+                                quad.p3.y, quad.p3.z
+                            ).color(color)
                         }
                     }
                 }

@@ -42,13 +42,11 @@ import org.joml.Vector2f
  */
 internal object HatsHalo : HatsMode("Halo") {
 
-    val height by float("HeightOffset", 0.1f, 0f..2f)
-    val showInFirstPerson by boolean("FirstPersonView", true)
-
     private object Colors : Configurable("Colors") {
         val syncColors by boolean("SyncColors", true)
         val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
         val secondColor by color("SecondColor", Color4b(0, 0, 255, 125))
+
         object ColorSpin : ToggleableConfigurable(this@HatsHalo, "ColorSpin", true) {
             val spinSpeed by float("SpinSpeed", 1f, 0.1f..10f)
         }
@@ -67,7 +65,7 @@ internal object HatsHalo : HatsMode("Halo") {
 
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent>{
+    private val renderHandler = handler<WorldRenderEvent> {
         val player = mc.player ?: return@handler
 
         if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return@handler
@@ -98,8 +96,8 @@ internal object HatsHalo : HatsMode("Halo") {
                             val color = getColorByAngle(
                                 mainCurrentAngleTorus,
                                 Colors.firstColor,
-                                if(!Colors.syncColors) Colors.secondColor else Colors.firstColor,
-                                if(Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
+                                if (!Colors.syncColors) Colors.secondColor else Colors.firstColor,
+                                if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else {
                                     0.0f
                                 }
                             )
@@ -115,18 +113,30 @@ internal object HatsHalo : HatsMode("Halo") {
                                 HatHaloSettings.tubeRadius
                             )
 
-                            addVertex(matrix, quad.p1.x,
-                                quad.p1.y, quad.p1.z).color(color)
-                            addVertex(matrix, quad.p2.x,
-                                quad.p2.y, quad.p2.z).color(color)
-                            addVertex(matrix, quad.p3.x,
-                                quad.p3.y, quad.p3.z).color(color)
-                            addVertex(matrix, quad.p2.x,
-                                quad.p2.y, quad.p2.z).color(color)
-                            addVertex(matrix, quad.p4.x,
-                                quad.p4.y, quad.p4.z).color(color)
-                            addVertex(matrix, quad.p3.x,
-                                quad.p3.y, quad.p3.z).color(color)
+                            addVertex(
+                                matrix, quad.p1.x,
+                                quad.p1.y, quad.p1.z
+                            ).color(color)
+                            addVertex(
+                                matrix, quad.p2.x,
+                                quad.p2.y, quad.p2.z
+                            ).color(color)
+                            addVertex(
+                                matrix, quad.p3.x,
+                                quad.p3.y, quad.p3.z
+                            ).color(color)
+                            addVertex(
+                                matrix, quad.p2.x,
+                                quad.p2.y, quad.p2.z
+                            ).color(color)
+                            addVertex(
+                                matrix, quad.p4.x,
+                                quad.p4.y, quad.p4.z
+                            ).color(color)
+                            addVertex(
+                                matrix, quad.p3.x,
+                                quad.p3.y, quad.p3.z
+                            ).color(color)
                         }
                     }
                 }

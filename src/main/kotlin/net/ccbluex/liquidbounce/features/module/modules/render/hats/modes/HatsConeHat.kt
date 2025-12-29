@@ -41,13 +41,11 @@ import kotlin.math.sin
  */
 internal object HatsConeHat : HatsMode("Cone") {
 
-    val height by float("HeightOffset", 0.1f, 0f..2f)
-    val showInFirstPerson by boolean("FirstPersonView", true)
-
     private object Colors : Configurable("Colors") {
         val syncColors by boolean("SyncColors", true)
         val firstColor by color("InnerColor", Color4b(0, 0, 255, 125))
         val secondColor by color("OuterColor", Color4b(0, 0, 255, 125))
+
         object ColorSpin : ToggleableConfigurable(this@HatsConeHat, "ColorSpin", true) {
             val spinSpeed by float("SpinSpeed", 1f, 0.1f..10f)
         }
@@ -58,6 +56,7 @@ internal object HatsConeHat : HatsMode("Cone") {
         object RadiusSettings : Configurable("RadiusSettings") {
             val outerRadius by float("OuterRadius", 0.6f, 0.1f..2f)
         }
+
         val peak by float("Peak", 0.3f, 0.01f..2f)
     }
 
@@ -68,7 +67,7 @@ internal object HatsConeHat : HatsMode("Cone") {
     }
 
     @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent>{
+    private val renderHandler = handler<WorldRenderEvent> {
         val player = mc.player ?: return@handler
 
         if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return@handler
@@ -91,16 +90,24 @@ internal object HatsConeHat : HatsMode("Cone") {
                         val color = getColorByAngle(
                             angle,
                             Colors.firstColor,
-                            if(!Colors.syncColors) { Colors.secondColor } else {
+                            if (!Colors.syncColors) {
+                                Colors.secondColor
+                            } else {
                                 Colors.firstColor
                             },
-                            if(Colors.ColorSpin.enabled) { Colors.ColorSpin.spinSpeed
+                            if (Colors.ColorSpin.enabled) {
+                                Colors.ColorSpin.spinSpeed
                             } else {
                                 0.0f
                             },
                         )
 
-                        addVertex(matrix, cosine * HatConeSettings.RadiusSettings.outerRadius, 0f, sine * HatConeSettings.RadiusSettings.outerRadius).color(color)
+                        addVertex(
+                            matrix,
+                            cosine * HatConeSettings.RadiusSettings.outerRadius,
+                            0f,
+                            sine * HatConeSettings.RadiusSettings.outerRadius
+                        ).color(color)
                         addVertex(matrix, 0f, HatConeSettings.peak, 0f).color(color)
                     }
                 }
