@@ -53,19 +53,19 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.InteractionResult
-import net.minecraft.world.InteractionHand
-import net.minecraft.world.phys.HitResult
-import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
-import net.minecraft.core.Direction
+import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.Shapes
-import net.minecraft.world.level.ClipContext
 import java.util.function.ToDoubleFunction
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
@@ -124,15 +124,6 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
         get() = if (ModuleAutoTool.isInventoryConsidered) Slots.Hotbar + Slots.Inventory else Slots.Hotbar
 
     private var currentTarget: DestroyerTarget? = null
-    private fun clearCurrentTarget() {
-        currentTarget?.let {
-            interaction.stopDestroyBlock()
-            targetRenderer.removeBlock(it.pos)
-        }
-
-        currentTarget = null
-    }
-
     private var oldTarget: DestroyerTarget? = null
 
     override fun onDisabled() {
@@ -153,9 +144,6 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
         oldTarget = currentTarget
         updateCurrentTarget()
-        currentTarget?.let {
-            targetRenderer.addBlock(it.pos)
-        }
     }
 
     @Suppress("unused")
@@ -164,12 +152,12 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
             return@tickHandler
         }
 
-        // Delay if the target changed - this also includes when introducing a new target from null.
-        if (oldTarget != currentTarget) {
-            if (currentTarget == null || delay > 0) {
-                clearCurrentTarget()
-            }
-
+        // If we don't have any new target, and we had one before, stop breaking.
+        if (oldTarget != null && currentTarget == null) {
+            interaction.stopDestroyBlock()
+            return@tickHandler
+        } else if (oldTarget != currentTarget && delay > 0) {
+            interaction.stopDestroyBlock()
             waitTicks(delay)
         }
 
@@ -180,6 +168,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
         val destroyerTarget = currentTarget ?: return@tickHandler
         val currentRotation = RotationManager.serverRotation
+        targetRenderer.addBlock(destroyerTarget.pos)
 
         if (ModulePacketMine.running && destroyerTarget.action == DestroyAction.DESTROY) {
             ModulePacketMine.setTarget(destroyerTarget.pos)
@@ -252,6 +241,15 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
                 updateSurroundings(pos)
             }
         }
+    }
+
+    private fun clearCurrentTarget() {
+        interaction.stopDestroyBlock()
+
+        currentTarget?.let { target ->
+            targetRenderer.removeBlock(target.pos)
+        }
+        currentTarget = null
     }
 
     private fun searchPossibleTargetPositions(): List<BlockPos> {
