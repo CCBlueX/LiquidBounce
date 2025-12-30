@@ -74,8 +74,7 @@ object CommandLocalConfig : Command.Factory {
         .begin("save")
         .alias("create")
         .parameter(
-            ParameterBuilder
-                .begin<String>("name")
+            ParameterBuilder.begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .autocompletedFrom {
                     ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
@@ -90,8 +89,7 @@ object CommandLocalConfig : Command.Factory {
                 .build()
         )
         .parameter(
-            ParameterBuilder
-                .begin<String>("include")
+            ParameterBuilder.begin<String>("include")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .autocompletedFrom { listOf("binds", "hidden") }
                 .vararg()
@@ -108,13 +106,12 @@ object CommandLocalConfig : Command.Factory {
             }
 
             val overwrite = args.getOrNull(1) as Boolean? ?: false
-
             @Suppress("UNCHECKED_CAST")
             val include = args.getOrNull(2) as Array<*>? ?: emptyArray<String>()
 
             val includeConfiguration = IncludeConfiguration(
                 includeBinds = include.contains("binds"),
-                includeHidden = include.contains("hidden")
+                includeHidden = include.contains("hidden"),
             )
 
             val file = ConfigSystem.userConfigsFolder.resolve("$name.json")
