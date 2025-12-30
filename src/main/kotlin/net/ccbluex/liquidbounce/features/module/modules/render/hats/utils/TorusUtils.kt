@@ -28,7 +28,7 @@ import kotlin.math.sin
  * @author minecrrrr
  */
 // --- Generic Torus ---
-fun getTorusPoints(
+private fun getTorusPoints(
     mainAngle: Double,
     tubeAngle: Double,
     radius: Float,

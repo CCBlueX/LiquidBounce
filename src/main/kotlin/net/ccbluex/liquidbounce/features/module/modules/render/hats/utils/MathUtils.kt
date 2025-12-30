@@ -19,9 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats.utils
 
-import kotlin.math.abs
 import kotlin.math.cos
-import kotlin.math.pow
 import kotlin.math.sin
 
 // --- Common ---
@@ -32,24 +30,6 @@ fun getPointZ(angle: Double, radius: Float) = (cos(angle) * radius).toFloat()
 
 fun getRotationAngle(speed: Float): Double {
     return (System.currentTimeMillis() % 360000) * 0.001 * speed
-}
-
-// --- Geometry ---
-fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float, exponent: Double): Float {
-    val section = (Math.PI * 2) / points
-    val m = (angle % section) / section
-    val dist = abs(m * 2.0 - 1.0)
-    val linearProgress = 1.0 - dist
-
-    return (baseRadius * (1.0 - sharpness + sharpness * linearProgress.pow(exponent))).toFloat()
-}
-
-fun getFlowerRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float): Float {
-    val innerRadius = baseRadius * sharpness
-    val f = (Math.PI / points)
-    val r = (abs(angle % (f * 2) - f) / f).toFloat()
-
-    return innerRadius + (baseRadius - innerRadius) * (1f - r)
 }
 
 // --- Data Classes ---

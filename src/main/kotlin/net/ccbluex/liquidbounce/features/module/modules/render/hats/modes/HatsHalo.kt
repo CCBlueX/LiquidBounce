@@ -75,7 +75,6 @@ internal object HatsHalo : HatsMode("Halo") {
 
                 // Nested loop for rendering the torus "thickness".
                 for (innerI in 0 until innerSegments) {
-
                     val innerCurAngleTorus = getAngle(innerI, innerSegments)
                     val innerNextAngleTorus = getNextAngle(innerI, innerSegments)
 
@@ -85,7 +84,7 @@ internal object HatsHalo : HatsMode("Halo") {
                         if (!Colors.syncColors) Colors.secondColor else Colors.firstColor,
                         if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else 0.0f
                     )
-                    val Angles = TorusAngles(
+                    val angles = TorusAngles(
                         outerCurAngleTorus,
                         outerNextAngleTorus,
                         innerCurAngleTorus,
@@ -94,7 +93,7 @@ internal object HatsHalo : HatsMode("Halo") {
                     )
                     val radii = Vector2f(HatHaloSettings.outerRadius, HatHaloSettings.outerRadius)
                     val pos = getToroidalMeshCords(
-                        Angles,
+                        angles,
                         radii,
                         HatHaloSettings.innerRadius
                     )

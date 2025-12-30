@@ -55,7 +55,6 @@ internal object HatsOrbs : HatsMode("Orbs") {
         object OrbRotation : ToggleableConfigurable(this@HatsOrbs, "Spin", true) {
             val speedRot by float("SpinSpeed", 2.0f, 0.1f..10f)
         }
-
     }
 
     init {
@@ -66,9 +65,7 @@ internal object HatsOrbs : HatsMode("Orbs") {
 
     override fun WorldRenderEnvironment.drawHat() {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-
             val time = (System.currentTimeMillis() / 1000.0) * HatOrbsSettings.speed
-
 
             // Loop for rendering each individual orb (orbit).
             for (i in 0 until HatOrbsSettings.count) {

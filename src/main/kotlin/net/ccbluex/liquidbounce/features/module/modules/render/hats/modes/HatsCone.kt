@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.util.Mth
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -72,11 +73,10 @@ internal object HatsCone : HatsMode("Cone") {
         )
 
     override fun WorldRenderEnvironment.drawHat() {
-
         drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
             val segments = 600
             for (i in 0..segments) {
-                val angle = (i.toDouble() / segments) * Math.PI * 2
+                val angle = (i.toDouble() / segments) * Mth.TWO_PI
                 val cosine = cos(angle).toFloat()
                 val sine = sin(angle).toFloat()
 

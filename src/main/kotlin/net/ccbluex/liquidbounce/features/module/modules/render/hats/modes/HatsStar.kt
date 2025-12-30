@@ -29,14 +29,14 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAng
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getCurrentStepColor
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getRotationAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getStarRadius
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-
+import kotlin.math.abs
+import kotlin.math.pow
 
 /**
  * @author minecrrrr
@@ -82,7 +82,6 @@ internal object HatsStar : HatsMode("Star") {
 
     override fun WorldRenderEnvironment.drawHat() {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-
             val rotAngle = if (HatStarSettings.StarSpin.enabled) {
                 getRotationAngle(HatStarSettings.StarSpin.spinSpeed)
             } else {
@@ -115,7 +114,6 @@ internal object HatsStar : HatsMode("Star") {
                 val color = getCurrentStepColor(outerCurAngleStar, colors)
 
                 for (innerI in 0 until innerSegments) {
-
                     val angles = Angles(
                         outerCurAngleStar,
                         outerNextAngleStar,
@@ -126,7 +124,6 @@ internal object HatsStar : HatsMode("Star") {
                         nextRadius,
                         HatStarSettings.innerRadius
                     )
-
 
                     val result = innerI(innerSegments, angles, radiuses, innerI)
 
@@ -139,6 +136,15 @@ internal object HatsStar : HatsMode("Star") {
                 }
             }
         }
+    }
+
+    private fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float, exponent: Double): Float {
+        val section = (Math.PI * 2) / points
+        val m = (angle % section) / section
+        val dist = abs(m * 2.0 - 1.0)
+        val linearProgress = 1.0 - dist
+
+        return (baseRadius * (1.0 - sharpness + sharpness * linearProgress.pow(exponent))).toFloat()
     }
 
 }

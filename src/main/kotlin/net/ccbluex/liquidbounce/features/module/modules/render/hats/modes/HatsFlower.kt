@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Colors
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Radiuses
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getCurrentStepColor
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getFlowerRadius
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getRotationAngle
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
@@ -36,6 +35,7 @@ import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import kotlin.math.abs
 
 /**
  * @author minecrrrr
@@ -137,5 +137,14 @@ internal object HatsFlower : HatsMode("Flower") {
             }
         }
     }
+
+    private fun getFlowerRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float): Float {
+        val innerRadius = baseRadius * sharpness
+        val f = (Math.PI / points)
+        val r = (abs(angle % (f * 2) - f) / f).toFloat()
+
+        return innerRadius + (baseRadius - innerRadius) * (1f - r)
+    }
+
 }
 
