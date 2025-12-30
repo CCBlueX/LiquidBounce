@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.boolean
 import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -83,8 +84,7 @@ object CommandLocalConfig : Command.Factory {
                 .build()
         )
         .parameter(
-            ParameterBuilder.begin<Boolean>("overwrite")
-                .verifiedBy(ParameterBuilder.BOOLEAN_VALIDATOR)
+            ParameterBuilder.boolean("overwrite")
                 .optional()
                 .build()
         )
@@ -126,9 +126,7 @@ object CommandLocalConfig : Command.Factory {
                 }
 
                 file.createNewFile()
-                file.bufferedWriter().use {
-                    serializeAutoConfig(it, includeConfiguration)
-                }
+                serializeAutoConfig(file.bufferedWriter(), includeConfiguration)
                 chat(regular(command.result("created", variable(name))))
             } catch (e: Exception) {
                 chat(regular(command.result("failedToCreate", variable(name))))
