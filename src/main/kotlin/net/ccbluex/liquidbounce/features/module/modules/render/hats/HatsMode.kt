@@ -69,8 +69,7 @@ abstract class HatsMode(name: String) : Choice(name) {
         angles: Angles,
         radiuses: Radiuses,
         innerI: Int
-    ): MeshStepResult {
-
+    ): TorusQuad {
         val innerCurAngle = getAngle(innerI, innerSegments)
         val innerNextAngle = getNextAngle(innerI, innerSegments)
 
@@ -88,11 +87,7 @@ abstract class HatsMode(name: String) : Choice(name) {
             radii,
             radiuses.innerRadius,
         )
-        return MeshStepResult(pos)
+        return pos
     }
-
-    data class MeshStepResult(
-        val pos: TorusQuad,
-    )
 
 }

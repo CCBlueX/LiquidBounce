@@ -31,6 +31,8 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.fastCos
+import net.ccbluex.liquidbounce.utils.client.fastSin
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -85,10 +87,10 @@ internal object HatsOrbs : HatsMode("Orbs") {
                 val rotAngle = if (HatOrbsSettings.OrbRotation.enabled) {
                     getRotationAngle(HatOrbsSettings.OrbRotation.speedRot)
                 } else {
-                    0.0
+                    0.0F
                 }
-                val sinA = (sin(rotAngle)).toFloat() * HatOrbsSettings.size
-                val cosA = (cos(rotAngle)).toFloat() * HatOrbsSettings.size
+                val sinA = rotAngle.fastSin() * HatOrbsSettings.size
+                val cosA = rotAngle.fastCos() * HatOrbsSettings.size
 
                 val top = y + HatOrbsSettings.size
                 val bottom = y - HatOrbsSettings.size

@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.util.Mth
 import kotlin.math.abs
 import kotlin.math.pow
 
@@ -85,7 +86,7 @@ internal object HatsStar : HatsMode("Star") {
             val rotAngle = if (HatStarSettings.StarSpin.enabled) {
                 getRotationAngle(HatStarSettings.StarSpin.spinSpeed)
             } else {
-                0.0
+                0.0F
             }
             val points = HatStarSettings.pointsCount
             val outerSegments = points * 120
@@ -101,50 +102,48 @@ internal object HatsStar : HatsMode("Star") {
                     HatStarSettings.outerRadius,
                     points,
                     HatStarSettings.sharpness,
-                    1.75,
+                    1.75F,
                 )
                 val nextRadius = getStarRadius(
                     outerNextAngleStar,
                     HatStarSettings.outerRadius,
                     points,
                     HatStarSettings.sharpness,
-                    1.75,
+                    1.75F,
                 )
 
                 val color = getCurrentStepColor(outerCurAngleStar, colors)
+                val angles = Angles(
+                    outerCurAngleStar,
+                    outerNextAngleStar,
+                    rotAngle,
+                )
+                val radiuses = Radiuses(
+                    curRadius,
+                    nextRadius,
+                    HatStarSettings.innerRadius
+                )
 
                 for (innerI in 0 until innerSegments) {
-                    val angles = Angles(
-                        outerCurAngleStar,
-                        outerNextAngleStar,
-                        rotAngle,
-                    )
-                    val radiuses = Radiuses(
-                        curRadius,
-                        nextRadius,
-                        HatStarSettings.innerRadius
-                    )
-
-                    val result = innerI(innerSegments, angles, radiuses, innerI)
-
-                    addVertex(matrix, result.pos.p1).color(color)
-                    addVertex(matrix, result.pos.p2).color(color)
-                    addVertex(matrix, result.pos.p3).color(color)
-                    addVertex(matrix, result.pos.p2).color(color)
-                    addVertex(matrix, result.pos.p4).color(color)
-                    addVertex(matrix, result.pos.p3).color(color)
+                    val pos = innerI(innerSegments, angles, radiuses, innerI)
+                    addVertex(matrix, pos.p1).color(color)
+                    addVertex(matrix, pos.p2).color(color)
+                    addVertex(matrix, pos.p3).color(color)
+                    addVertex(matrix, pos.p2).color(color)
+                    addVertex(matrix, pos.p4).color(color)
+                    addVertex(matrix, pos.p3).color(color)
                 }
             }
         }
     }
 
-    private fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float, exponent: Double): Float {
-        val section = (Math.PI * 2) / points
+    private fun getStarRadius(angle: Float, baseRadius: Float, points: Int, sharpness: Float, exponent: Float): Float {
+        val section = Mth.TWO_PI / points
         val m = (angle % section) / section
-        val dist = abs(m * 2.0 - 1.0)
-        val linearProgress = 1.0 - dist
+        val dist = abs(m * 2.0F - 1.0F)
+        val linearProgress = 1.0F - dist
 
-        return (baseRadius * (1.0 - sharpness + sharpness * linearProgress.pow(exponent))).toFloat()
+        return (baseRadius * (1.0F - sharpness + sharpness * linearProgress.pow(exponent)))
     }
 
 }

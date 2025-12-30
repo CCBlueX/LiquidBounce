@@ -25,7 +25,7 @@ import net.minecraft.util.Mth
 /**
  * @author minecrrrr
  * */
-fun getCurrentStepColor(angle: Double, colors: Colors): Color4b {
+fun getCurrentStepColor(angle: Float, colors: Colors): Color4b {
     val first = colors.firstColor
     val second = if (!colors.syncColors) colors.secondColor else colors.firstColor
     val speed = if (colors.spinColors) colors.spinSpeed else 0f
@@ -33,7 +33,7 @@ fun getCurrentStepColor(angle: Double, colors: Colors): Color4b {
     return getColorByAngle(angle, first, second, speed)
 }
 
-fun getColorByAngle(angle: Double, color1: Color4b, color2: Color4b, speed: Float): Color4b {
+fun getColorByAngle(angle: Float, color1: Color4b, color2: Color4b, speed: Float): Color4b {
     val timeOffset = if (speed > 0f) {
         ((System.currentTimeMillis().toDouble() / 10000.0) * speed.toDouble() % 1.0) * Mth.TWO_PI
     } else {

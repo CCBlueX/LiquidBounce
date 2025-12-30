@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.render.addVertex
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.util.Mth
 import kotlin.math.abs
 
 /**
@@ -84,7 +85,7 @@ internal object HatsFlower : HatsMode("Flower") {
             val rotAngle = if (HatFlowerSettings.FlowerSpin.enabled) {
                 getRotationAngle(HatFlowerSettings.FlowerSpin.spinSpeed)
             } else {
-                0.0
+                0.0F
             }
             val petals = HatFlowerSettings.petalCount
             val outerSegments = petals * 120
@@ -111,37 +112,35 @@ internal object HatsFlower : HatsMode("Flower") {
 
                 val color = getCurrentStepColor(outerCurAngleFlower, colors)
 
+                val angles = Angles(
+                    outerCurAngleFlower,
+                    outerNextAngleFlower,
+                    rotAngle,
+                )
+                val radiuses = Radiuses(
+                    curRadius,
+                    nextRadius,
+                    HatFlowerSettings.innerRadius
+                )
+
                 // Inner
                 for (innerI in 0 until innerSegments) {
-
-                    val angles = Angles(
-                        outerCurAngleFlower,
-                        outerNextAngleFlower,
-                        rotAngle,
-                    )
-                    val radiuses = Radiuses(
-                        curRadius,
-                        nextRadius,
-                        HatFlowerSettings.innerRadius
-                    )
-
-                    val result = innerI(innerSegments, angles, radiuses, innerI)
-
-                    addVertex(matrix, result.pos.p1).color(color)
-                    addVertex(matrix, result.pos.p2).color(color)
-                    addVertex(matrix, result.pos.p3).color(color)
-                    addVertex(matrix, result.pos.p2).color(color)
-                    addVertex(matrix, result.pos.p4).color(color)
-                    addVertex(matrix, result.pos.p3).color(color)
+                    val pos = innerI(innerSegments, angles, radiuses, innerI)
+                    addVertex(matrix, pos.p1).color(color)
+                    addVertex(matrix, pos.p2).color(color)
+                    addVertex(matrix, pos.p3).color(color)
+                    addVertex(matrix, pos.p2).color(color)
+                    addVertex(matrix, pos.p4).color(color)
+                    addVertex(matrix, pos.p3).color(color)
                 }
             }
         }
     }
 
-    private fun getFlowerRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float): Float {
+    private fun getFlowerRadius(angle: Float, baseRadius: Float, points: Int, sharpness: Float): Float {
         val innerRadius = baseRadius * sharpness
-        val f = (Math.PI / points)
-        val r = (abs(angle % (f * 2) - f) / f).toFloat()
+        val f = Mth.PI / points
+        val r = abs(angle % (f * 2) - f) / f
 
         return innerRadius + (baseRadius - innerRadius) * (1f - r)
     }

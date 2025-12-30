@@ -19,25 +19,26 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats.utils
 
+import net.minecraft.util.Mth
 import kotlin.math.cos
 import kotlin.math.sin
 
 // --- Common ---
-fun getAngle(i: Int, segments: Int) = i * Math.PI * 2 / segments
-fun getNextAngle(i: Int, segments: Int) = (i + 1) * Math.PI * 2 / segments
+fun getAngle(i: Int, segments: Int) = i * Mth.TWO_PI / segments
+fun getNextAngle(i: Int, segments: Int) = (i + 1) * Mth.TWO_PI / segments
 fun getPointX(angle: Double, radius: Float) = (sin(angle) * radius).toFloat()
 fun getPointZ(angle: Double, radius: Float) = (cos(angle) * radius).toFloat()
 
-fun getRotationAngle(speed: Float): Double {
-    return (System.currentTimeMillis() % 360000) * 0.001 * speed
+fun getRotationAngle(speed: Float): Float {
+    return (System.currentTimeMillis() % 360000) * 0.001F * speed
 }
 
 // --- Data Classes ---
 
 data class Angles(
-    val outerCurAngle: Double,
-    val outerNextAngle: Double,
-    val rotationAngle: Double,
+    val outerCurAngle: Float,
+    val outerNextAngle: Float,
+    val rotationAngle: Float,
 )
 
 data class Radiuses(

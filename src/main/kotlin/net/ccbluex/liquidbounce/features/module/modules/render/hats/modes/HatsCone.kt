@@ -76,9 +76,9 @@ internal object HatsCone : HatsMode("Cone") {
         drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
             val segments = 600
             for (i in 0..segments) {
-                val angle = (i.toDouble() / segments) * Mth.TWO_PI
-                val cosine = cos(angle).toFloat()
-                val sine = sin(angle).toFloat()
+                val angle = (i.toFloat() / segments) * Mth.TWO_PI
+                val cosine = cos(angle)
+                val sine = sin(angle)
 
                 val color = getCurrentStepColor(angle, colors)
 

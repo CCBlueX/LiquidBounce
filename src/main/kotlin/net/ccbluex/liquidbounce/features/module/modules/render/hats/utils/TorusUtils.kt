@@ -29,15 +29,15 @@ import kotlin.math.sin
  */
 // --- Generic Torus ---
 private fun getTorusPoints(
-    mainAngle: Double,
-    tubeAngle: Double,
+    mainAngle: Float,
+    tubeAngle: Float,
     radius: Float,
     tubeRadius: Float
 ): Vector3f {
 
-    val x = ((radius + tubeRadius * cos(tubeAngle)) * sin(mainAngle)).toFloat()
-    val y = (tubeRadius * sin(tubeAngle)).toFloat()
-    val z = ((radius + tubeRadius * cos(tubeAngle)) * cos(mainAngle)).toFloat()
+    val x = ((radius + tubeRadius * cos(tubeAngle)) * sin(mainAngle))
+    val y = (tubeRadius * sin(tubeAngle))
+    val z = ((radius + tubeRadius * cos(tubeAngle)) * cos(mainAngle))
 
     return Vector3f(x, y, z)
 
@@ -80,9 +80,9 @@ data class TorusQuad(
 )
 
 data class TorusAngles(
-    val outerCurrentAngle: Double,
-    val outerNextAngle: Double,
-    val innerCurrentAngle: Double,
-    val innerNextAngle: Double,
-    val rotationAngle: Double,
+    val outerCurrentAngle: Float,
+    val outerNextAngle: Float,
+    val innerCurrentAngle: Float,
+    val innerNextAngle: Float,
+    val rotationAngle: Float,
 )
