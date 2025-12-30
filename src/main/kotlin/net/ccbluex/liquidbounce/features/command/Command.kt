@@ -23,8 +23,11 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.PlainText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.joinToText
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.onHover
@@ -34,6 +37,7 @@ import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
 import java.util.*
 
 @Suppress("LongParameterList")
@@ -54,8 +58,11 @@ class Command(
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
-    val description: String
-        get() = translation("$translationBaseKey.description").string
+    val description: MutableComponent
+        get() = translation("$translationBaseKey.description")
+
+    fun nameAsText(): Component =
+        this.name.asPlainText(Style.EMPTY.withHoverEvent(HoverEvent.ShowText(this.description)))
 
     /**
      * For navigation purposes.
@@ -158,47 +165,28 @@ class Command(
     }
 
     /**
-     * Returns the name of the command with the name of its parent classes
-     */
-    private fun getFullName(): String {
-        val parent = this.parentCommand
-
-        return if (parent == null) {
-            this.name
-        } else {
-            parent.getFullName() + " " + this.name
-        }
-    }
-
-    /**
      * Returns the formatted usage information of this command
      *
-     * e.g. <code>command_name subcommand_name <required_arg> [[<optional_vararg>]...</code>
+     * e.g.
+     * ```
+     * command_name subcommand_name <required_arg> [[<optional_vararg>]...
+     * ```
      */
-    fun usage(): List<String> {
-        val output = ArrayList<String>()
+    fun usage(): List<Component> {
+        val output = ArrayList<Component>()
 
         // Don't show non-executable commands as executable
         if (executable) {
-            val joiner = StringJoiner(" ")
+            // Names
+            val textParts = ArrayList<Component>()
+            generateSequence(this) { it.parentCommand }.mapTo(textParts) { it.nameAsText() }
+            textParts.reverse()
 
-            for (parameter in parameters) {
-                var name = parameter.name
+            // Params
+            textParts.ensureCapacity(textParts.size + parameters.size)
+            parameters.mapTo(textParts) { it.nameAsText() }
 
-                name = if (parameter.required) {
-                    "<$name>"
-                } else {
-                    "[<$name>]"
-                }
-
-                if (parameter.vararg) {
-                    name += "..."
-                }
-
-                joiner.add(name)
-            }
-
-            output.add(getFullName() + " " + joiner.toString())
+            output.add(textParts.joinToText(PlainText.SPACE))
         }
 
         for (subcommand in subcommands) {

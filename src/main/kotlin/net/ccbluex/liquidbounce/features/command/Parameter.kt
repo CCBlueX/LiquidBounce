@@ -19,7 +19,11 @@
 package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.Style
 
 /**
  * Provides autocompletion for one specific parameter
@@ -62,6 +66,22 @@ class Parameter<T : Any>(
 
     val description: MutableComponent
         get() = translation("$translationBaseKey.description")
+
+    fun nameAsText(): Component {
+        var name = this.name
+
+        name = if (this.required) {
+            "<$name>"
+        } else {
+            "[<$name>]"
+        }
+
+        if (this.vararg) {
+            name += "..."
+        }
+
+        return name.asPlainText(Style.EMPTY.withHoverEvent(HoverEvent.ShowText(this.description)))
+    }
 
     fun interface Verificator<T : Any> {
         /**

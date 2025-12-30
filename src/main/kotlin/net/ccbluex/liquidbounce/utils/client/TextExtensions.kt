@@ -36,6 +36,7 @@ import net.minecraft.network.chat.ComponentContents
 import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.ChatFormatting
 import java.util.*
+import java.util.function.Function
 import java.util.regex.Pattern
 
 private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
@@ -47,23 +48,23 @@ fun String.stripMinecraftColorCodes(): String {
 inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(this)
 
 /**
- * Returns a [MutableText] from the receiver.
- * If you just need a [Text], use [asPlainText] instead.
+ * Returns a [MutableComponent] from the receiver.
+ * If you just need a [Component], use [asPlainText] instead.
  */
 inline fun String.asText(): MutableComponent = Component.literal(this)
 
 /**
- * Returns an immutable [Text] from the receiver.
+ * Returns an immutable [Component] from the receiver.
  */
 inline fun String.asPlainText(): Component = PlainText.of(this, Style.EMPTY)
 
 /**
- * Returns an immutable [Text] from the receiver with [style].
+ * Returns an immutable [Component] from the receiver with [style].
  */
 inline fun String.asPlainText(style: Style): Component = PlainText.of(this, style)
 
 /**
- * Returns an immutable [Text] from the receiver with [formatting].
+ * Returns an immutable [Component] from the receiver with [formatting].
  */
 inline fun String.asPlainText(formatting: ChatFormatting): Component = PlainText.of(this, formatting)
 
@@ -78,6 +79,38 @@ inline fun List<Component>.asText(): Component = TextList.of(this)
 inline fun Array<out Component>.asText(): Component = TextList.of(this.unmodifiable())
 
 inline fun textOf(vararg parts: Component): Component = parts.asText()
+
+fun <T> Collection<T>.joinToText(
+    separator: Component,
+    prefix: Component? = null,
+    postfix: Component? = null,
+    transform: Function<T, Component>,
+): Component {
+    if (isEmpty()) {
+        return PlainText.EMPTY
+    }
+
+    val iterator = iterator()
+    val offset = if (prefix == null) 0 else 1
+    var arraySize = this.size * 2 - 1
+    if (prefix != null) arraySize++
+    if (postfix != null) arraySize++
+
+    return Array(arraySize) { i ->
+        when {
+            i == 0 && prefix != null -> prefix
+            i == arraySize - 1 && postfix != null -> postfix
+            i % 2 == offset -> transform.apply(iterator.next())
+            else -> separator
+        }
+    }.asText()
+}
+
+/**
+ * Joins a list of [Component] into a single [Component] with the given [separator].
+ */
+fun Collection<Component>.joinToText(separator: Component): Component =
+    joinToText(separator, transform = Function.identity())
 
 fun FormattedCharSequence.toText(): Component {
     if (this is Component) return this

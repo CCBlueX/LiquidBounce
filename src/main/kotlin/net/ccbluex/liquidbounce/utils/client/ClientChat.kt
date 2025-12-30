@@ -234,24 +234,6 @@ fun notification(title: String, message: Component, severity: NotificationEvent.
 fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message, severity))
 
-/**
- * Joins a list of [Text] into a single [Text] with the given [separator].
- */
-fun Collection<Component>.joinToText(separator: Component): Component {
-    if (isEmpty()) {
-        return PlainText.EMPTY
-    }
-
-    val iterator = iterator()
-    return Array(this.size * 2 - 1) { i ->
-        if (i % 2 == 0) {
-            iterator.next()
-        } else {
-            separator
-        }
-    }.asText()
-}
-
 val TextColor.bypassesNameProtection: Boolean
     @Suppress("CAST_NEVER_SUCCEEDS")
     get() = (this as ClientTextColorAdditions).`liquid_bounce$doesBypassingNameProtect`()
