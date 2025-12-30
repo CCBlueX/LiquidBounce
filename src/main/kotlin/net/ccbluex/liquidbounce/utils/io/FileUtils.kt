@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.io
 
 import java.io.IOException
 import java.io.RandomAccessFile
+import java.util.BitSet
 
 /**
  * Skips the current line in the file.
@@ -48,4 +49,17 @@ fun RandomAccessFile.skipLine(): Long {
     }
 
     return read
+}
+
+@JvmField
+val ILLEGAL_FILE_NAME_CHARS_WINDOWS = BitSet(128).apply {
+    set('\\'.code)
+    set('/'.code)
+    set(':'.code)
+    set('*'.code)
+    set('?'.code)
+    set('"'.code)
+    set('<'.code)
+    set('>'.code)
+    set('|'.code)
 }
