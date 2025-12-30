@@ -22,14 +22,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Colors
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getRotationAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getStarRadius
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getCurrentStepColor
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Angles
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Colors
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Radiuses
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getCurrentStepColor
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getRotationAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getStarRadius
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addVertex
@@ -71,13 +71,15 @@ internal object HatsStar : HatsMode("Star") {
         tree(Colors.ColorSpin)
     }
 
-    private val colors get() = Colors(
-        Colors.syncColors,
-        Colors.firstColor,
-        Colors.secondColor,
-        Colors.ColorSpin.enabled,
-        Colors.ColorSpin.spinSpeed,
-    )
+    private val colors
+        get() = Colors(
+            Colors.syncColors,
+            Colors.firstColor,
+            Colors.secondColor,
+            Colors.ColorSpin.enabled,
+            Colors.ColorSpin.spinSpeed,
+        )
+
     override fun WorldRenderEnvironment.drawHat() {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
 

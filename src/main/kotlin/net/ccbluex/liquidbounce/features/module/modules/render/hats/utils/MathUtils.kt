@@ -35,7 +35,7 @@ fun getRotationAngle(speed: Float): Double {
 }
 
 // --- Geometry ---
-fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float, exponent: Double): Float{
+fun getStarRadius(angle: Double, baseRadius: Float, points: Int, sharpness: Float, exponent: Double): Float {
     val section = (Math.PI * 2) / points
     val m = (angle % section) / section
     val dist = abs(m * 2.0 - 1.0)

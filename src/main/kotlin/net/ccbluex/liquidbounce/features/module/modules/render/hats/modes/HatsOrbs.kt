@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getPointZ
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getPointX
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getPointZ
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getRotationAngle
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
@@ -81,11 +81,15 @@ internal object HatsOrbs : HatsMode("Orbs") {
                 val y = if (HatOrbsSettings.WaveSettings.enabled) {
                     sin(time * HatOrbsSettings.WaveSettings.waveSpeed + i).toFloat() *
                         HatOrbsSettings.WaveSettings.waveHeight
-                } else { 0f }
+                } else {
+                    0f
+                }
 
                 val rotAngle = if (HatOrbsSettings.OrbRotation.enabled) {
                     getRotationAngle(HatOrbsSettings.OrbRotation.speedRot)
-                } else { 0.0 }
+                } else {
+                    0.0
+                }
                 val sinA = (sin(rotAngle)).toFloat() * HatOrbsSettings.size
                 val cosA = (cos(rotAngle)).toFloat() * HatOrbsSettings.size
 

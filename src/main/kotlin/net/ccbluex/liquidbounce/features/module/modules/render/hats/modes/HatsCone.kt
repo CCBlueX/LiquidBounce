@@ -62,13 +62,14 @@ internal object HatsCone : HatsMode("Cone") {
         tree(Colors.ColorSpin)
     }
 
-    private val colors get() = Colors(
-        Colors.syncColors,
-        Colors.firstColor,
-        Colors.secondColor,
-        Colors.ColorSpin.enabled,
-        Colors.ColorSpin.spinSpeed,
-    )
+    private val colors
+        get() = Colors(
+            Colors.syncColors,
+            Colors.firstColor,
+            Colors.secondColor,
+            Colors.ColorSpin.enabled,
+            Colors.ColorSpin.spinSpeed,
+        )
 
     override fun WorldRenderEnvironment.drawHat() {
 

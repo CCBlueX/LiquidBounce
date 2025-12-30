@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.TorusAngles
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getColorByAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getToroidalMeshCords
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
