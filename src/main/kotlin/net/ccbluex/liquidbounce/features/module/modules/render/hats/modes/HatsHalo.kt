@@ -88,9 +88,14 @@ internal object HatsHalo : HatsMode("Halo") {
                     0.0F,
                 )
 
-                val color = if(!isHurt)getCurrentStepColor(outerCurAngleTorus,
-                    colors
-                ) else Color4b(255, 0, 0, Colors.firstColor.a)
+                val color = if(!isHurt) {
+                    getCurrentStepColor(
+                        outerCurAngleTorus,
+                        colors
+                    )
+                } else {
+                    Color4b(255, 0, 0, Colors.firstColor.a)
+                }
 
                 val radiuses = Radiuses(
                     HatHaloSettings.outerRadius,

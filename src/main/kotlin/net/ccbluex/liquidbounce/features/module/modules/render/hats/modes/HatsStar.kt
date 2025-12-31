@@ -112,9 +112,14 @@ internal object HatsStar : HatsMode("Star") {
                     1.75F,
                 )
 
-                val color = if(!isHurt)getCurrentStepColor(outerCurAngleStar,
-                    colors
-                ) else Color4b(255, 0, 0, Colors.firstColor.a)
+                val color = if(!isHurt) {
+                    getCurrentStepColor(
+                        outerCurAngleStar,
+                        colors
+                    )
+                } else {
+                    Color4b(255, 0, 0, Colors.firstColor.a)
+                }
                 val angles = Angles(
                     outerCurAngleStar,
                     outerNextAngleStar,
