@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
@@ -60,7 +59,7 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
     private val range = float("Range", 4.2f, 1f..8f)
 
     val targetTracker = tree(TargetTracker(TargetPriority.DIRECTION, range = range))
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    private val targetRenderer = tree(WorldTargetRenderer(this, targetTracker))
     private val pointTracker = tree(PointTracker(this))
 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
@@ -128,10 +127,6 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
         if (IgnoreOpened.CONTAINER !in ignores && (InventoryManager.isInventoryOpen ||
                 mc.screen is AbstractContainerScreen<*>)) {
             return@handler
-        }
-
-        renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(target, partialTicks)
         }
 
         val currentRotation = playerRotation ?: return@handler

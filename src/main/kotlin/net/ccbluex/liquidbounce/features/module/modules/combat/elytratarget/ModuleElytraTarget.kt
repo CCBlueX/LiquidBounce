@@ -20,12 +20,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.world.entity.LivingEntity
@@ -47,7 +44,7 @@ object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
         tree(AutoFirework)
     }
 
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    private val targetRenderer = tree(WorldTargetRenderer(this, targetTracker))
     private val safe by boolean("Safe", true)
     private val alwaysGlide by boolean("AlwaysGlide", false)
 
@@ -73,17 +70,6 @@ object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
         get() = super.running && player.isFallFlying
 
     internal val target get() = targetTracker.target
-
-    @Suppress("unused")
-    private val renderTargetHandler = handler<WorldRenderEvent> { event ->
-        val target = targetTracker.target
-            ?.takeIf { targetRenderer.enabled }
-            ?: return@handler
-
-        renderEnvironmentForWorld(event.matrixStack) {
-            targetRenderer.render(target, event.partialTicks)
-        }
-    }
 
     @Suppress("unused")
     private val targetUpdateHandler = tickHandler {

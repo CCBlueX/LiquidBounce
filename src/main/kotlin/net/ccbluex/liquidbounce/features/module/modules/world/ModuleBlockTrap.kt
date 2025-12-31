@@ -21,11 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.placer.placeInstantOnBlockUpdate
 import net.ccbluex.liquidbounce.utils.client.FloatValueProvider
@@ -73,7 +71,7 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
         FloatValueProvider("Range", 4f, 1f..6f)
     ))
 
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    private val targetRenderer = tree(WorldTargetRenderer(this, targetTracker))
 
     override fun onDisabled() {
         placer.disable()
@@ -92,15 +90,6 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
 
         val plan = findTrapPlan(target)
         placer.update(plan.sortedWith(placePriority.comparator).toSet())
-    }
-
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> {
-        val target = targetTracker.target ?: return@handler
-
-        renderEnvironmentForWorld(it.matrixStack) {
-            targetRenderer.render(target, it.partialTicks)
-        }
     }
 
     @Suppress("unused")

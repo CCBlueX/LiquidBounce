@@ -21,8 +21,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -53,7 +51,7 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
         tree(rotationConfigurable)
     }
 
-    private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow))
+    private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow, targetTracker))
 
     @Suppress("unused")
     private val tickRepeatable = tickHandler {
@@ -83,15 +81,6 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
             provider = ModuleAutoBow,
             configurable = rotationConfigurable
         )
-    }
-
-    @Suppress("unused")
-    private val renderHandler = handler<OverlayRenderEvent> { event ->
-        val target = targetTracker.target ?: return@handler
-
-        with(event.context) {
-            targetRenderer.render(target, event.tickDelta)
-        }
     }
 
 }

@@ -43,14 +43,19 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.util.Mth
 import com.mojang.math.Axis
 import net.ccbluex.liquidbounce.config.types.toTextureProperty
+import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMeshTextured
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.plus
+import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.network.chat.Style
@@ -74,24 +79,29 @@ sealed class TargetRenderer<Ctx: Any>(
 
     abstract val appearance: ChoiceConfigurable<out TargetRenderAppearance<in Ctx>>
 
-    context(env: Ctx)
-    fun render(entity: Entity, partialTicks: Float) {
-        if (!enabled) {
-            return
-        }
-
-        appearance.activeChoice.render(entity, partialTicks)
-    }
-
 }
 
 private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
     .toNativeImage().asTexture { "TargetRenderer Ghost" }
 
-class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvironment>(module) {
+class WorldTargetRenderer(
+    module: ClientModule,
+    target: () -> Entity?,
+) : TargetRenderer<WorldRenderEnvironment>(module) {
+
+    constructor(module: ClientModule, targetTracker: TargetTracker) : this(module, targetTracker::target)
 
     override val appearance = choices(module, "Mode", 2) {
         arrayOf(Legacy(), Circle(module), GlowingCircle(module), Ghost(), Text(module), Image(module))
+    }
+
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> {
+        val target = target() ?: return@handler
+
+        renderEnvironmentForWorld(it.matrixStack) {
+            appearance.activeChoice.render(target, it.partialTicks)
+        }
     }
 
     inner class Ghost : WorldTargetRenderAppearance("Ghost") {
@@ -418,9 +428,24 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
 
 }
 
-class OverlayTargetRenderer(module: ClientModule) : TargetRenderer<GuiGraphics>(module) {
+class OverlayTargetRenderer(
+    module: ClientModule,
+    target: () -> Entity?,
+) : TargetRenderer<GuiGraphics>(module) {
+
+    constructor(module: ClientModule, targetTracker: TargetTracker) : this(module, targetTracker::target)
+
     override val appearance = choices<TargetRenderAppearance<GuiGraphics>>(module, "Mode") {
         arrayOf(Arrow())
+    }
+
+    @Suppress("unused")
+    private val renderHandler = handler<OverlayRenderEvent> { event ->
+        val target = target() ?: return@handler
+
+        with(event.context) {
+            appearance.activeChoice.render(target, event.tickDelta)
+        }
     }
 
     private inner class Arrow : OverlayTargetRenderAppearance("Arrow") {
