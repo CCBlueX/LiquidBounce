@@ -42,6 +42,18 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
 import net.minecraft.util.Mth
 import com.mojang.math.Axis
+import net.ccbluex.liquidbounce.config.types.toTextureProperty
+import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.color
+import net.ccbluex.liquidbounce.render.drawCustomMeshTextured
+import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
+import net.ccbluex.liquidbounce.render.engine.font.VerticalAnchor
+import net.ccbluex.liquidbounce.render.withPush
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.plus
+import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
+import net.minecraft.network.chat.Style
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3f
 import kotlin.math.cos
@@ -79,7 +91,7 @@ private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
 class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvironment>(module) {
 
     override val appearance = choices(module, "Mode", 2) {
-        arrayOf(Legacy(), Circle(module), GlowingCircle(module), Ghost())
+        arrayOf(Legacy(), Circle(module), GlowingCircle(module), Ghost(), Text(module), Image(module))
     }
 
     inner class Ghost : WorldTargetRenderAppearance("Ghost") {
@@ -191,6 +203,105 @@ class WorldTargetRenderer(module: ClientModule) : TargetRenderer<WorldRenderEnvi
             with(env) {
                 withPositionRelativeToCamera(pos) {
                     drawBox(box, color)
+                }
+            }
+        }
+    }
+
+    inner class Image(module: ClientModule) : WorldTargetRenderAppearance("Image") {
+
+        override val parent: ChoiceConfigurable<*>
+            get() = appearance
+
+        private val scale by float("Scale", 1f, 0.01f..10f)
+        private val color by color("ColorModulator", Color4b.WHITE)
+        private val texture by file("File").toTextureProperty(module)
+
+        private val heightMode = choices(module, "HeightMode") {
+            arrayOf(
+                HeightMode.Feet(it),
+                HeightMode.Top(it),
+                HeightMode.Relative(it),
+                HeightMode.Health(it),
+                HeightMode.Animated(it),
+            )
+        }
+
+        context(env: WorldRenderEnvironment)
+        override fun render(entity: Entity, partialTicks: Float) {
+            val texture = this.texture ?: return
+            val nativeImage = texture.pixels ?: return
+            val max = maxOf(nativeImage.height, nativeImage.width)
+            val normWidth = nativeImage.width.toFloat() / max
+            val normHeight = nativeImage.height.toFloat() / max
+
+            val height = heightMode.activeChoice.getHeight(entity, partialTicks)
+            val pos = entity.interpolateCurrentPosition(partialTicks)
+                .add(0.0, height, 0.0)
+
+            with(env) {
+                withPositionRelativeToCamera(pos + (camera.position() - pos).normalize()) {
+                    matrixStack.withPush {
+                        mulPose(camera.rotation())
+
+                        scale(scale * normWidth, -scale * normHeight, scale)
+
+                        drawCustomMeshTextured(texture) { matrix ->
+                            addVertex(matrix, -0.5f, -0.5f, 0f).setUv(0f, 0f).color(color)
+                            addVertex(matrix, -0.5f, 0.5f, 0f).setUv(0f, 1f).color(color)
+                            addVertex(matrix, 0.5f, 0.5f, 0f).setUv(1f, 1f).color(color)
+                            addVertex(matrix, 0.5f, -0.5f, 0f).setUv(1f, 0f).color(color)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    inner class Text(module: ClientModule) : WorldTargetRenderAppearance("Text") {
+
+        override val parent: ChoiceConfigurable<*>
+            get() = appearance
+
+        private val textScale by float("Scale", 0.25f, 0.01f..4f)
+        private val textShadow by boolean("Shadow", true)
+        private val color by color("Color", Color4b.LIQUID_BOUNCE)
+
+        private val text by text("Text", "TARGET")
+
+        private val heightMode = choices(module, "HeightMode") {
+            arrayOf(
+                HeightMode.Feet(it),
+                HeightMode.Top(it),
+                HeightMode.Relative(it),
+                HeightMode.Health(it),
+                HeightMode.Animated(it),
+            )
+        }
+
+        private val fontRenderer get() = FontManager.FONT_RENDERER
+
+        context(env: WorldRenderEnvironment)
+        override fun render(entity: Entity, partialTicks: Float) {
+            val height = heightMode.activeChoice.getHeight(entity, partialTicks)
+            val pos = entity.interpolateCurrentPosition(partialTicks)
+                .add(0.0, height, 0.0)
+
+            with(env) {
+                withPositionRelativeToCamera(pos + (camera.position() - pos).normalize()) {
+                    matrixStack.withPush {
+                        mulPose(camera.rotation())
+
+                        val globalScale = 1.0F / fontRenderer.size
+                        scale(globalScale, -globalScale, globalScale)
+
+                        fontRenderer.draw(text.asPlainText(Style.EMPTY + color)) {
+                            this.horizontalAnchor = HorizontalAnchor.CENTER
+                            this.verticalAnchor = VerticalAnchor.MIDDLE
+                            this.shadow = textShadow
+                            this.scale = textScale
+                        }
+                    }
                 }
             }
         }

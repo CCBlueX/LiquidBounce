@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.render
 
+import com.google.common.base.Suppliers
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.buffers.Std140Builder
@@ -246,6 +247,10 @@ fun NativeImage.registerTexture(identifier: Identifier) {
 }
 
 inline fun InputStream.toNativeImage(): NativeImage = NativeImage.read(this)
+
+inline fun NativeImage.asTexture(
+    name: String = "Texture NativeImage@${this.hashCode()} (${this.width}x${this.height})",
+) = DynamicTexture(Suppliers.ofInstance(name), this)
 
 @JvmOverloads
 inline fun NativeImage.asTexture(

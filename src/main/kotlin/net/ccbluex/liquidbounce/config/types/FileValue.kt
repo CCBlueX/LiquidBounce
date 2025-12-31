@@ -20,15 +20,34 @@ package net.ccbluex.liquidbounce.config.types
 
 import com.google.gson.Gson
 import com.google.gson.JsonElement
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.FileDialogMode.OPEN_DIRECTORY
 import net.ccbluex.liquidbounce.config.types.FileDialogMode.OPEN_FILE
 import net.ccbluex.liquidbounce.config.types.FileDialogMode.SAVE_FILE
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
+import net.ccbluex.liquidbounce.utils.render.asTexture
+import net.ccbluex.liquidbounce.utils.render.toNativeImage
+import net.minecraft.ChatFormatting
+import net.minecraft.client.renderer.texture.DynamicTexture
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.tinyfd.TinyFileDialogs
 import java.io.File
+import kotlin.properties.ReadOnlyProperty
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A value file input that supports different file dialog modes and optional file type filtering.
@@ -137,4 +156,36 @@ enum class FileDialogMode(val title: String) {
             }
         }
     }
+}
+
+/**
+ * Convert the [FileValue] to a [ReadOnlyProperty] of [DynamicTexture].
+ */
+fun FileValue.toTextureProperty(
+    owner: ToggleableConfigurable,
+    printErrorToChat: Boolean = true,
+): ReadOnlyProperty<Any?, DynamicTexture?> {
+    var texture: DynamicTexture? = null
+    ioScope.launch {
+        asStateFlow().filter { it.isFile }.collectLatest { file ->
+            while (!inGame || !owner.running) {
+                delay(1.seconds)
+            }
+
+            try {
+                val nativeImage = file.inputStream().toNativeImage()
+                withContext(Dispatchers.Minecraft) {
+                    texture = nativeImage.asTexture("(${owner.name}) File texture: ${file.name}")
+                }
+            } catch (e: Exception) {
+                val message = "Failed to load texture from '${file.name}' for ${owner.name}"
+                if (owner.running && printErrorToChat) {
+                    chat("$message (${e.javaClass.simpleName})".asPlainText(ChatFormatting.RED))
+                }
+                logger.error(message, e)
+            }
+        }
+    }
+
+    return ReadOnlyProperty { _, _ -> texture }
 }
