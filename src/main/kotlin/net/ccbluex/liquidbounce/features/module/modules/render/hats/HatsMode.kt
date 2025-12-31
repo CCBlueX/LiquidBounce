@@ -44,6 +44,9 @@ import kotlin.math.sin
  * @author minecrrrr
  */
 abstract class HatsMode(name: String) : Choice(name) {
+    final override val parent: ChoiceConfigurable<*>
+        get() = modes
+
     // --- Settings ---
     protected val height by float("HeightOffset", 0.1f, 0f..2f)
 
@@ -59,9 +62,6 @@ abstract class HatsMode(name: String) : Choice(name) {
     }
 
     protected val showInFirstPerson by boolean("FirstPersonView", true)
-
-    final override val parent: ChoiceConfigurable<*>
-        get() = modes
 
     init {
         tree(FriendsOptions)

@@ -20,13 +20,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Angles
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Colors
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Radiuses
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getCurrentStepColor
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
@@ -40,15 +38,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
  */
 internal object HatsHalo : HatsMode("Halo") {
 
-    private object Colors : Configurable("Colors") {
-        val syncColors by boolean("SyncColors", true)
-        val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
-        val secondColor by color("SecondColor", Color4b(0, 0, 255, 125))
-
-        object ColorSpin : ToggleableConfigurable(this@HatsHalo, "ColorSpin", true) {
-            val spinSpeed by float("SpinSpeed", 1f, 0.1f..10f)
-        }
-    }
+    private val colors = HatsColorSettings()
 
     private object HatHaloSettings : Configurable("HatSettings") {
         val outerRadius by float("Radius", 0.3f, 0.1f..2f)
@@ -57,18 +47,8 @@ internal object HatsHalo : HatsMode("Halo") {
 
     init {
         tree(HatHaloSettings)
-        tree(Colors)
-        tree(Colors.ColorSpin)
+        tree(colors)
     }
-
-    private val colors
-        get() = Colors(
-            Colors.syncColors,
-            Colors.firstColor,
-            Colors.secondColor,
-            Colors.ColorSpin.enabled,
-            Colors.ColorSpin.spinSpeed,
-        )
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
@@ -89,12 +69,10 @@ internal object HatsHalo : HatsMode("Halo") {
                 )
 
                 val color = if (!isHurt) {
-                    getCurrentStepColor(
-                        outerCurAngleTorus,
-                        colors
-                    )
+                    colors
+                        .getCurrentStepColor(outerCurAngleTorus)
                 } else {
-                    Color4b(255, 0, 0, Colors.firstColor.a)
+                    Color4b(255, 0, 0, colors.firstColor.a)
                 }
 
                 val radiuses = Radiuses(
