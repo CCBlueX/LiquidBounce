@@ -8,7 +8,7 @@ jdk = "21"
 # https://mods.upcraft.dev/dev/versions
 minecraft = "1.21.11"
 fabric-loom = "1.14-SNAPSHOT"
-fabric-loader = "0.18.3"
+fabric-loader = "0.18.4"
 fabric-loaderMin = "0.16.14"
 fabric-api = "0.140.0+1.21.11"
 
