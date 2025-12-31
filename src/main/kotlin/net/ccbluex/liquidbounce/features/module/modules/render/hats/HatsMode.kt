@@ -37,7 +37,9 @@ import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.minecraft.world.entity.EquipmentSlot
 import org.joml.Vector2f
+import com.mojang.blaze3d.shaders.UniformType
 
 /**
  * @author minecrrrr
@@ -45,6 +47,9 @@ import org.joml.Vector2f
 abstract class HatsMode(name: String) : Choice(name) {
     // --- Settings ---
     protected val height by float("HeightOffset", 0.1f, 0f..2f)
+    protected object EquipOffset : Configurable("EquipmentOffset") {
+        val equipmentOffset by float("ArmorOffset", 0.1f, 0f..1f)
+    }
     val hurtMarked by boolean("ShowDamage", true)
     protected object FriendsOptions : Configurable("FriendsOptions") {
         val friendView by boolean("ViewOnFriend", true)
@@ -83,8 +88,14 @@ abstract class HatsMode(name: String) : Choice(name) {
                 val hurtMarked = entity.hurtTime > 0 && hurtMarked
                 val pos = entity.interpolateCurrentPosition(it.partialTicks)
 
+                val equipOffset = if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
+                    EquipOffset.equipmentOffset.toDouble()
+                } else {
+                    0.0
+                }
+
                 renderEnvironmentForWorld(it.matrixStack) {
-                    withPositionRelativeToCamera(pos.add(0.0, entity.bbHeight + height.toDouble(), 0.0)) {
+                    withPositionRelativeToCamera(pos.add(0.0, entity.bbHeight + height.toDouble() + equipOffset, 0.0)) {
                         drawHat(hurtMarked)
                     }
                 }
