@@ -102,7 +102,7 @@ object CommandLocalConfig : Command.Factory {
             if (name.isBlank() || name.contains('/') ||
                 (Util.getPlatform() == Util.OS.WINDOWS && name.any { ILLEGAL_FILE_NAME_CHARS_WINDOWS.get(it.code) })
             ) {
-                throw CommandException(command.result("nameUnavailable", variable(name)))
+                throw CommandException(command.result("invalidFileName", variable(name)))
             }
 
             val overwrite = args.getOrNull(1) as Boolean? ?: false
