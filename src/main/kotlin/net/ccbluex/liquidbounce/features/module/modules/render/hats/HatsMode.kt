@@ -42,35 +42,42 @@ import org.joml.Vector2f
  * @author minecrrrr
  */
 abstract class HatsMode(name: String) : Choice(name) {
-
-    final override val parent: ChoiceConfigurable<*>
-        get() = modes
-
+    // --- Settings ---
     protected val height by float("HeightOffset", 0.1f, 0f..2f)
     protected val showInFirstPerson by boolean("FirstPersonView", true)
     protected val friendView by boolean("ViewOnFriend", true)
+    val distance by int("Distance", 64, 8..512, "blocks")
 
+    final override val parent: ChoiceConfigurable<*>
+        get() = modes
+    // --- Render ---
     protected abstract fun WorldRenderEnvironment.drawHat()
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> {
         val world = net.ccbluex.liquidbounce.utils.client.world
+        val player = mc.player ?: return@handler
 
         for (entity in world.players()) {
             val isMe = entity == player
             val isFriend = FriendManager.isFriend(entity)
+            val inDistance = player.distanceTo(entity) <= distance
 
-            if(!isMe && !isFriend) return@handler
+            val shouldRender = if (isMe) {
+                !mc.options.cameraType.isFirstPerson || showInFirstPerson
+            } else {
+                inDistance && (isFriend && friendView)
+            }
 
-            if (!isMe && !(friendView)) continue
+            if (shouldRender) {
 
-            if (isMe && mc.options.cameraType.isFirstPerson && !showInFirstPerson) continue
 
-            val pos = entity.interpolateCurrentPosition(it.partialTicks)
+                val pos = entity.interpolateCurrentPosition(it.partialTicks)
 
-            renderEnvironmentForWorld(it.matrixStack) {
-                withPositionRelativeToCamera(pos.add(0.0, entity.bbHeight + height.toDouble(), 0.0)) {
-                    drawHat()
+                renderEnvironmentForWorld(it.matrixStack) {
+                    withPositionRelativeToCamera(pos.add(0.0, entity.bbHeight + height.toDouble(), 0.0)) {
+                        drawHat()
+                    }
                 }
             }
         }
