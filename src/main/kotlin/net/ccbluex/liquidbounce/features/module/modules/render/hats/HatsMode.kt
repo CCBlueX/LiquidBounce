@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Angles
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Radiuses
@@ -47,23 +48,33 @@ abstract class HatsMode(name: String) : Choice(name) {
 
     protected val height by float("HeightOffset", 0.1f, 0f..2f)
     protected val showInFirstPerson by boolean("FirstPersonView", true)
+    protected val friendView by boolean("ViewOnFriend", true)
 
     protected abstract fun WorldRenderEnvironment.drawHat()
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> {
-        val player = mc.player ?: return@handler
-        val pos = player.interpolateCurrentPosition(it.partialTicks)
+        val world = net.ccbluex.liquidbounce.utils.client.world
 
-        if (mc.options.cameraType.isFirstPerson && !showInFirstPerson) return@handler
+        for (entity in world.players()) {
+            val isMe = entity == player
+            val isFriend = FriendManager.isFriend(entity)
 
-        renderEnvironmentForWorld(it.matrixStack) {
-            withPositionRelativeToCamera(pos.add(0.0, player.bbHeight + height.toDouble(), 0.0)) {
-                drawHat()
+            if(!isMe && !isFriend) return@handler
+
+            if (!isMe && !(friendView)) continue
+
+            if (isMe && mc.options.cameraType.isFirstPerson && !showInFirstPerson) continue
+
+            val pos = entity.interpolateCurrentPosition(it.partialTicks)
+
+            renderEnvironmentForWorld(it.matrixStack) {
+                withPositionRelativeToCamera(pos.add(0.0, entity.bbHeight + height.toDouble(), 0.0)) {
+                    drawHat()
+                }
             }
         }
     }
-
     protected fun innerI(
         innerSegments: Int,
         angles: Angles,
