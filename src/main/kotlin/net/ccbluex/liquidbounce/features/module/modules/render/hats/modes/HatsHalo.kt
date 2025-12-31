@@ -23,9 +23,10 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Angles
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Colors
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Radiuses
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getColorByAngle
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getCurrentStepColor
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
@@ -60,7 +61,16 @@ internal object HatsHalo : HatsMode("Halo") {
         tree(Colors.ColorSpin)
     }
 
-    override fun WorldRenderEnvironment.drawHat() {
+    private val colors
+        get() = Colors(
+            Colors.syncColors,
+            Colors.firstColor,
+            Colors.secondColor,
+            Colors.ColorSpin.enabled,
+            Colors.ColorSpin.spinSpeed,
+        )
+
+    override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
             val outerSegments = 600
             val innerSegments = 60
@@ -78,12 +88,9 @@ internal object HatsHalo : HatsMode("Halo") {
                     0.0F,
                 )
 
-                val color = getColorByAngle(
-                    outerCurAngleTorus,
-                    Colors.firstColor,
-                    if (!Colors.syncColors) Colors.secondColor else Colors.firstColor,
-                    if (Colors.ColorSpin.enabled) Colors.ColorSpin.spinSpeed else 0.0f
-                )
+                val color = if(!isHurt)getCurrentStepColor(outerCurAngleTorus,
+                    colors
+                ) else Color4b(255, 0, 0, Colors.firstColor.a)
 
                 val radiuses = Radiuses(
                     HatHaloSettings.outerRadius,

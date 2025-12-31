@@ -72,7 +72,7 @@ internal object HatsCone : HatsMode("Cone") {
             Colors.ColorSpin.spinSpeed,
         )
 
-    override fun WorldRenderEnvironment.drawHat() {
+    override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
             val segments = 600
             for (i in 0..segments) {
@@ -80,7 +80,7 @@ internal object HatsCone : HatsMode("Cone") {
                 val cosine = cos(angle)
                 val sine = sin(angle)
 
-                val color = getCurrentStepColor(angle, colors)
+                val color = if(!isHurt)getCurrentStepColor(angle, colors) else Color4b(255, 0, 0, Colors.firstColor.a)
 
                 addVertex(
                     matrix,

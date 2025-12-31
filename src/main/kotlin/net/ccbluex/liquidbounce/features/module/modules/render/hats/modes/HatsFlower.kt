@@ -80,7 +80,7 @@ internal object HatsFlower : HatsMode("Flower") {
             Colors.ColorSpin.spinSpeed,
         )
 
-    override fun WorldRenderEnvironment.drawHat() {
+    override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
             val rotAngle = if (HatFlowerSettings.FlowerSpin.enabled) {
                 getRotationAngle(HatFlowerSettings.FlowerSpin.spinSpeed)
@@ -110,7 +110,9 @@ internal object HatsFlower : HatsMode("Flower") {
                     HatFlowerSettings.sharpness
                 )
 
-                val color = getCurrentStepColor(outerCurAngleFlower, colors)
+                val color = if(!isHurt)getCurrentStepColor(outerCurAngleFlower,
+                    colors
+                ) else Color4b(255, 0, 0, Colors.firstColor.a)
 
                 val angles = Angles(
                     outerCurAngleFlower,

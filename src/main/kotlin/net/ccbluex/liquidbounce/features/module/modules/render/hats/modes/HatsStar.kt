@@ -81,7 +81,7 @@ internal object HatsStar : HatsMode("Star") {
             Colors.ColorSpin.spinSpeed,
         )
 
-    override fun WorldRenderEnvironment.drawHat() {
+    override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
             val rotAngle = if (HatStarSettings.StarSpin.enabled) {
                 getRotationAngle(HatStarSettings.StarSpin.spinSpeed)
@@ -112,7 +112,9 @@ internal object HatsStar : HatsMode("Star") {
                     1.75F,
                 )
 
-                val color = getCurrentStepColor(outerCurAngleStar, colors)
+                val color = if(!isHurt)getCurrentStepColor(outerCurAngleStar,
+                    colors
+                ) else Color4b(255, 0, 0, Colors.firstColor.a)
                 val angles = Angles(
                     outerCurAngleStar,
                     outerNextAngleStar,

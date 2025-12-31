@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
@@ -44,14 +45,22 @@ import org.joml.Vector2f
 abstract class HatsMode(name: String) : Choice(name) {
     // --- Settings ---
     protected val height by float("HeightOffset", 0.1f, 0f..2f)
+    val hurtMarked by boolean("ShowDamage", true)
+    protected object FriendsOptions : Configurable("FriendsOptions") {
+        val friendView by boolean("ViewOnFriend", true)
+        val distance by int("Distance", 64, 8..512, "blocks")
+    }
     protected val showInFirstPerson by boolean("FirstPersonView", true)
-    protected val friendView by boolean("ViewOnFriend", true)
-    val distance by int("Distance", 64, 8..512, "blocks")
 
     final override val parent: ChoiceConfigurable<*>
         get() = modes
+
+    init {
+        tree(FriendsOptions)
+    }
+
     // --- Render ---
-    protected abstract fun WorldRenderEnvironment.drawHat()
+    protected abstract fun WorldRenderEnvironment.drawHat(isHurt: Boolean)
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> {
@@ -61,22 +70,22 @@ abstract class HatsMode(name: String) : Choice(name) {
         for (entity in world.players()) {
             val isMe = entity == player
             val isFriend = FriendManager.isFriend(entity)
-            val inDistance = player.distanceTo(entity) <= distance
+            val inDistance = player.distanceTo(entity) <= FriendsOptions.distance
 
             val shouldRender = if (isMe) {
                 !mc.options.cameraType.isFirstPerson || showInFirstPerson
             } else {
-                inDistance && (isFriend && friendView)
+                inDistance && (isFriend && FriendsOptions.friendView)
             }
 
             if (shouldRender) {
 
-
+                val hurtMarked = entity.hurtTime > 0 && hurtMarked
                 val pos = entity.interpolateCurrentPosition(it.partialTicks)
 
                 renderEnvironmentForWorld(it.matrixStack) {
                     withPositionRelativeToCamera(pos.add(0.0, entity.bbHeight + height.toDouble(), 0.0)) {
-                        drawHat()
+                        drawHat(hurtMarked)
                     }
                 }
             }

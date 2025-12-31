@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
-import kotlin.math.cos
 import kotlin.math.sin
 
 /**
@@ -65,7 +64,7 @@ internal object HatsOrbs : HatsMode("Orbs") {
         tree(HatOrbsSettings.OrbRotation)
     }
 
-    override fun WorldRenderEnvironment.drawHat() {
+    override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
             val time = (System.currentTimeMillis() / 1000.0) * HatOrbsSettings.speed
 
@@ -104,6 +103,7 @@ internal object HatsOrbs : HatsMode("Orbs") {
                 val dx = x - cosA
                 val dz = z + sinA
 
+                val color = if(!isHurt)color else Color4b(255, 0, 0, color.a)
                 // Rendering of the top part of the rhombus (4 faces/8 triangles).
                 addVertex(matrix, x, top, z).color(color)
                 addVertex(matrix, dx, y, dz).color(color)
