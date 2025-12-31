@@ -68,7 +68,7 @@ import net.ccbluex.liquidbounce.utils.inventory.isInContainerScreen
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
@@ -118,14 +118,9 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
     init {
         tree(KillAuraAutoBlock)
-    }
-
-    // Target rendering
-    private val targetRenderer = tree(WorldTargetRenderer(this) {
-        targetTracker.target?.takeUnless { ModuleElytraTarget.isSameTargetRendering(it) }
-    })
-
-    init {
+        tree(TargetRenderer(this) {
+            targetTracker.target?.takeUnless { ModuleElytraTarget.isSameTargetRendering(it) }
+        })
         tree(KillAuraFailSwing)
         tree(KillAuraFightBot)
     }

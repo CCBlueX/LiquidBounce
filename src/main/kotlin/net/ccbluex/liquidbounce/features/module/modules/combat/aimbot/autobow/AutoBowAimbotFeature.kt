@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.render.OverlayTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.TridentItem
@@ -49,9 +49,8 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
     init {
         tree(targetTracker)
         tree(rotationConfigurable)
+        tree(TargetRenderer(AutoBowAimbotFeature, targetTracker))
     }
-
-    private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow, targetTracker))
 
     @Suppress("unused")
     private val tickRepeatable = tickHandler {

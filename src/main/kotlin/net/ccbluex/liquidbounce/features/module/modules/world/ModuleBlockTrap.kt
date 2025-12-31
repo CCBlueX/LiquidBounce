@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.range
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.world.entity.Entity
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
@@ -71,7 +71,9 @@ object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
         FloatValueProvider("Range", 4f, 1f..6f)
     ))
 
-    private val targetRenderer = tree(WorldTargetRenderer(this, targetTracker))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
     override fun onDisabled() {
         placer.disable()

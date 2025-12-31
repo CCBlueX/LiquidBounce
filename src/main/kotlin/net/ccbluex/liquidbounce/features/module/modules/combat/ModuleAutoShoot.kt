@@ -46,7 +46,7 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.EggItem
@@ -93,7 +93,9 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     /**
      * The target renderer to render the target, which we are currently aiming at.
      */
-    private val targetRenderer = tree(WorldTargetRenderer(this, targetTracker))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
     private val tickUntilReset by int("TicksUntillSlotReset", 1, 0..20)

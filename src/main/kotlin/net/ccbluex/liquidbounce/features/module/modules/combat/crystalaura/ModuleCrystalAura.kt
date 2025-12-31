@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.FloatValueProvider
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 
 /**
  * Module CrystalAura
@@ -73,7 +73,9 @@ object ModuleCrystalAura : ClientModule(
         )
     }
 
-    private val targetRenderer = tree(WorldTargetRenderer(this, targetTracker))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
     val rotationMode = choices(this, "RotationMode") {
         arrayOf(

@@ -45,7 +45,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.Entity
 
@@ -59,7 +59,10 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
     private val range = float("Range", 4.2f, 1f..8f)
 
     val targetTracker = tree(TargetTracker(TargetPriority.DIRECTION, range = range))
-    private val targetRenderer = tree(WorldTargetRenderer(this, targetTracker))
+
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
     private val pointTracker = tree(PointTracker(this))
 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")

@@ -54,7 +54,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.LivingEntity
@@ -94,7 +94,9 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
-    private val targetRenderer = tree(WorldTargetRenderer(this, targetTracker))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
     private val hitTimeout by int("HitTimeout", 30, 5..200, "ticks")
     private val pullOnOutOfRange by boolean("PullOnOutOfRange", true)
