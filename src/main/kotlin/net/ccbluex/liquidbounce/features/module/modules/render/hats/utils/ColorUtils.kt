@@ -33,7 +33,7 @@ fun getCurrentStepColor(angle: Float, colors: Colors): Color4b {
     return getColorByAngle(angle, first, second, speed)
 }
 
-fun getColorByAngle(angle: Float, color1: Color4b, color2: Color4b, speed: Float): Color4b {
+private fun getColorByAngle(angle: Float, color1: Color4b, color2: Color4b, speed: Float): Color4b {
     val timeOffset = if (speed > 0f) {
         ((System.currentTimeMillis().toDouble() / 10000.0) * speed.toDouble() % 1.0) * Mth.TWO_PI
     } else {

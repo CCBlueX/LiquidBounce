@@ -88,7 +88,7 @@ internal object HatsHalo : HatsMode("Halo") {
                     0.0F,
                 )
 
-                val color = if(!isHurt) {
+                val color = if (!isHurt) {
                     getCurrentStepColor(
                         outerCurAngleTorus,
                         colors

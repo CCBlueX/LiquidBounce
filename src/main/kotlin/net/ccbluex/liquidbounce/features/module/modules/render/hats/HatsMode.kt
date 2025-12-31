@@ -28,18 +28,17 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Angles
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Radiuses
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.TorusAngles
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.TorusQuad
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getToroidalMeshCords
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.world.entity.EquipmentSlot
 import org.joml.Vector2f
-import com.mojang.blaze3d.shaders.UniformType
+import org.joml.Vector3f
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * @author minecrrrr
@@ -47,14 +46,18 @@ import com.mojang.blaze3d.shaders.UniformType
 abstract class HatsMode(name: String) : Choice(name) {
     // --- Settings ---
     protected val height by float("HeightOffset", 0.1f, 0f..2f)
+
     protected object EquipOffset : Configurable("EquipmentOffset") {
         val equipmentOffset by float("ArmorOffset", 0.1f, 0f..1f)
     }
+
     val hurtMarked by boolean("ShowDamage", true)
+
     protected object FriendsOptions : Configurable("FriendsOptions") {
         val friendView by boolean("ViewOnFriend", true)
         val distance by int("Distance", 64, 8..512, "blocks")
     }
+
     protected val showInFirstPerson by boolean("FirstPersonView", true)
 
     final override val parent: ChoiceConfigurable<*>
@@ -102,6 +105,7 @@ abstract class HatsMode(name: String) : Choice(name) {
             }
         }
     }
+
     protected fun innerI(
         innerSegments: Int,
         angles: Angles,
@@ -127,5 +131,62 @@ abstract class HatsMode(name: String) : Choice(name) {
         )
         return pos
     }
+
+    private fun getTorusPoints(
+        mainAngle: Float,
+        tubeAngle: Float,
+        radius: Float,
+        tubeRadius: Float
+    ): Vector3f {
+        val x = ((radius + tubeRadius * cos(tubeAngle)) * sin(mainAngle))
+        val y = (tubeRadius * sin(tubeAngle))
+        val z = ((radius + tubeRadius * cos(tubeAngle)) * cos(mainAngle))
+
+        return Vector3f(x, y, z)
+    }
+
+    private fun getToroidalMeshCords(
+        angles: TorusAngles,
+        radii: Vector2f,
+        innerRadius: Float
+    ): TorusQuad {
+        val currentRadius = radii.x
+        val nextRadius = radii.y
+        return TorusQuad(
+            getTorusPoints(
+                angles.outerCurrentAngle + angles.rotationAngle,
+                angles.innerCurrentAngle, currentRadius, innerRadius
+            ),
+            getTorusPoints(
+                angles.outerCurrentAngle + angles.rotationAngle,
+                angles.innerNextAngle, currentRadius, innerRadius
+            ),
+            getTorusPoints(
+                angles.outerNextAngle + angles.rotationAngle,
+                angles.innerCurrentAngle, nextRadius, innerRadius
+            ),
+            getTorusPoints(
+                angles.outerNextAngle + angles.rotationAngle,
+                angles.innerNextAngle, nextRadius, innerRadius
+            ),
+        )
+    }
+
+    // --- Data Classes ---
+    protected data class TorusQuad(
+        val p1: Vector3f,
+        val p2: Vector3f,
+        val p3: Vector3f,
+        val p4: Vector3f,
+    )
+
+    protected data class TorusAngles(
+        val outerCurrentAngle: Float,
+        val outerNextAngle: Float,
+        val innerCurrentAngle: Float,
+        val innerNextAngle: Float,
+        val rotationAngle: Float,
+    )
+
 
 }

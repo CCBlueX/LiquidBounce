@@ -110,7 +110,7 @@ internal object HatsFlower : HatsMode("Flower") {
                     HatFlowerSettings.sharpness
                 )
 
-                val color = if(!isHurt) {
+                val color = if (!isHurt) {
                     getCurrentStepColor(
                         outerCurAngleFlower,
                         colors
