@@ -31,10 +31,11 @@ import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.roundToInt
 
-data class Rotation(
-    var yaw: Float,
-    var pitch: Float,
-    var isNormalized: Boolean = false
+@JvmRecord
+data class Rotation @JvmOverloads constructor(
+    val yaw: Float,
+    val pitch: Float,
+    val isNormalized: Boolean = false,
 ) {
 
     companion object {
@@ -61,6 +62,9 @@ data class Rotation(
 
     val directionVector: Vec3
         get() = Vec3.directionFromRotation(pitch, yaw)
+
+    val xRot: Float get() = pitch
+    val yRot: Float get() = yaw
 
     /**
      * Fixes GCD and Modulo 360° at yaw

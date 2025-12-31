@@ -56,8 +56,8 @@ public class MixinServerboundUseItemPacket {
             return;
         }
 
-        this.yRot = rotation.getYaw();
-        this.xRot = rotation.getPitch();
+        this.yRot = rotation.yRot();
+        this.xRot = rotation.xRot();
     }
 
     /**

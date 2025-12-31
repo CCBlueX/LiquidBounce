@@ -121,7 +121,7 @@ public abstract class MixinKeyboardInput extends MixinClientInput {
             return input;
         }
 
-        float deltaYaw = player.getYRot() - rotation.getYaw();
+        float deltaYaw = player.getYRot() - rotation.yRot();
 
         float newX = x * Mth.cos(deltaYaw * DEG_TO_RAD) - z *
                 Mth.sin(deltaYaw * DEG_TO_RAD);

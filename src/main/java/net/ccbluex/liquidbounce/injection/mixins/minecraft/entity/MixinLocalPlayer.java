@@ -290,7 +290,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements ClientPlay
         }
 
         var rotation = RotationManager.INSTANCE.getCurrentRotation();
-        return rotation != null ? rotation.getDirectionVector() : original;
+        return rotation != null ? rotation.directionVector() : original;
     }
 
     @ModifyExpressionValue(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/projectile/ProjectileUtil;getEntityHitResult(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;D)Lnet/minecraft/world/phys/EntityHitResult;"))
@@ -349,7 +349,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements ClientPlay
             return original;
         }
 
-        return rotation.getYaw();
+        return rotation.yRot();
     }
 
     @ModifyExpressionValue(method = {"sendPosition",
@@ -360,7 +360,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements ClientPlay
             return original;
         }
 
-        return rotation.getPitch();
+        return rotation.xRot();
     }
 
     @ModifyReturnValue(method = "isAutoJumpEnabled", at = @At("RETURN"))

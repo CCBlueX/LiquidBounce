@@ -90,7 +90,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
             return original;
         }
 
-        return rotation.getYaw();
+        return rotation.yRot();
     }
 
     @Inject(method = "isReducedDebugInfo", at = @At("HEAD"), cancellable = true)

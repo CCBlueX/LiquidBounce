@@ -39,7 +39,7 @@ public abstract class MixinItem {
         if (player == Minecraft.getInstance().player) {
             var rotation = RotationManager.INSTANCE.getCurrentRotation();
             if (rotation != null) {
-                return rotation.getDirectionVector();
+                return rotation.directionVector();
             }
         }
 

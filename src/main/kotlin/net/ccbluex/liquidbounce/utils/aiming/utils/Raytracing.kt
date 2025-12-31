@@ -127,7 +127,7 @@ fun raycast(
         ClipContext(
             start,
             end,
-            ClipContext.Block.OUTLINE,
+            ClipContext.Block.COLLIDER,
             if (includeFluids) ClipContext.Fluid.ANY else ClipContext.Fluid.NONE,
             entity,
         ),
@@ -205,7 +205,7 @@ fun facingBlock(
     val searchedPos =
         mc.level?.clip(
             ClipContext(
-                eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player!!,
+                eyes, vec3, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player!!,
             ),
         ) ?: return false
 
