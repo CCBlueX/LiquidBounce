@@ -117,6 +117,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBe
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.reporthelper.ModuleReportHelper
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleWaterSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAnchor
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce
@@ -497,6 +498,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleSpider,
             ModuleTargetStrafe,
             ModuleAnchor,
+            ModuleWaterSpeed,
 
             // Player
             ModuleAntiVoid,
