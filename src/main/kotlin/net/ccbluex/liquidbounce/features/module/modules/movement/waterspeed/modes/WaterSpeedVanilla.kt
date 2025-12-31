@@ -35,12 +35,12 @@ object WaterSpeedVanilla : WaterSpeedMode("Vanilla") {
 
     val autoSwim by boolean("AutoSwimming", true)
     val speed by float("Speed", 0.1f, 0.01f..10f)
-    object SprintBoost : ToggleableConfigurable(this@WaterSpeedVanilla, "SprintBoost", true) {
+    object SwimmingBoost : ToggleableConfigurable(this@WaterSpeedVanilla, "SwimmingBoost", true) {
         val sprintBoost by float("Boost", 0.30f, 0.01f..10f)
     }
 
     init {
-        tree(SprintBoost)
+        tree(SwimmingBoost)
     }
 
     @Suppress("unused")
@@ -58,9 +58,14 @@ object WaterSpeedVanilla : WaterSpeedMode("Vanilla") {
                 player.isSwimming = true
             }
 
-            val Speed = if(player.isSprinting && SprintBoost.enabled) speed * (1.0 + SprintBoost.sprintBoost) else speed
+            val speed = if(player.isSprinting && SwimmingBoost.enabled) {
+                speed * (1.0 + SwimmingBoost.sprintBoost)
+            } else {
+                speed
+            }
 
-            player.deltaMovement = Vec3(-(finalYawRad).fastSin().toDouble() * Speed.toDouble(), player.deltaMovement.y, (finalYawRad).fastCos().toDouble() * Speed.toDouble())
+            player.deltaMovement = Vec3(-(finalYawRad).fastSin().toDouble() * speed.toDouble(),
+                player.deltaMovement.y, (finalYawRad).fastCos().toDouble() * speed.toDouble())
         }
         if(mc.options.keyJump.isDown && player.isInWater) {
             player.deltaMovement = Vec3(player.deltaMovement.x, 0.25, player.deltaMovement.z)
