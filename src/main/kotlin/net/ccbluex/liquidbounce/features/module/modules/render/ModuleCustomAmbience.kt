@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.textures.GpuTexture
 import net.ccbluex.liquidbounce.config.types.group.ToggleableValueGroup
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.renderer.fog.FogData
+import net.minecraft.client.renderer.state.LightmapRenderState
 
 /**
  * CustomAmbience module
@@ -89,7 +91,12 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
      * FIXME: redesign
      */
     object CustomLightmap : ToggleableValueGroup(this, "CustomLightmap", false) {
-        val color by color("Color", Color4b.LIQUID_BOUNCE)
+        private val color by color("Color", Color4b.LIQUID_BOUNCE)
+
+        fun edit(texture: GpuTexture, lightmapRenderState: LightmapRenderState) {
+            gpuDevice.createCommandEncoder().clearColorTexture(texture, color.argb)
+        }
+
     }
 
     object SkyColor : ToggleableValueGroup(this, "SkyColor", false) {

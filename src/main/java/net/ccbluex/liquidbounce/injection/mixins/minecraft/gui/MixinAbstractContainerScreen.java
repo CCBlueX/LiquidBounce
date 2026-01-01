@@ -25,16 +25,16 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMouseHandlerAccessor;
 import net.minecraft.client.MouseHandler;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.util.Util;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ClickType;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
@@ -61,7 +61,7 @@ public abstract class MixinAbstractContainerScreen<T extends AbstractContainerMe
     private ItemStack lastQuickMoved;
 
     @Shadow
-    protected abstract void slotClicked(Slot slot, int id, int button, ClickType actionType);
+    protected abstract void slotClicked(Slot slot, int id, int button, ContainerInput actionType);
 
     @Shadow
     private boolean skipNextRelease;
@@ -75,8 +75,8 @@ public abstract class MixinAbstractContainerScreen<T extends AbstractContainerMe
     @Shadow
     protected int topPos;
 
-    @Inject(method = "slotClicked(Lnet/minecraft/world/inventory/Slot;IILnet/minecraft/world/inventory/ClickType;)V", at = @At("HEAD"), cancellable = true)
-    private void cancelMouseClick(Slot slot, int slotId, int button, ClickType actionType, CallbackInfo ci) {
+    @Inject(method = "slotClicked(Lnet/minecraft/world/inventory/Slot;IILnet/minecraft/world/inventory/ContainerInput;)V", at = @At("HEAD"), cancellable = true)
+    private void cancelMouseClick(Slot slot, int slotId, int button, ContainerInput actionType, CallbackInfo ci) {
         var inventoryMove = ModuleInventoryMove.INSTANCE;
         if ((AbstractContainerScreen<?>) (Object) this instanceof InventoryScreen && inventoryMove.getRunning() && inventoryMove.getDoNotAllowClicking()) {
             ci.cancel();

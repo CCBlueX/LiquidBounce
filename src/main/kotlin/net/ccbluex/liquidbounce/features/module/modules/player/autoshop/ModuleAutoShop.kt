@@ -47,7 +47,7 @@ import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
-import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.ContainerInput
 import kotlin.math.ceil
 import kotlin.math.min
 
@@ -163,11 +163,11 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
         }
 
         val prevShopStacks = (mc.screen as ContainerScreen).stacks()
-        interaction.handleInventoryMouseClick(
+        interaction.handleContainerInput(
             (mc.screen as ContainerScreen).menu.containerId,
             nextCategorySlot,
             0,
-            ClickType.PICKUP,
+            ContainerInput.PICKUP,
             mc.player!!
         )
 
@@ -183,11 +183,11 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
     private suspend fun buyItem(itemSlot: Int, shopElement: ShopElement) {
         val currentInventory = AutoShopInventoryManager.getInventoryItems()
 
-        interaction.handleInventoryMouseClick(
+        interaction.handleContainerInput(
             (mc.screen as ContainerScreen).menu.containerId,
             itemSlot,
             0,
-            ClickType.PICKUP,
+            ContainerInput.PICKUP,
             mc.player!!
         )
 
@@ -230,11 +230,11 @@ object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
 
             delay(QuickPurchaseMode.delay.random().toLong())
 
-            interaction.handleInventoryMouseClick(
+            interaction.handleContainerInput(
                 (mc.screen as ContainerScreen).menu.containerId,
                 slot,
                 0,
-                ClickType.PICKUP,
+                ContainerInput.PICKUP,
                 mc.player!!
             )
 

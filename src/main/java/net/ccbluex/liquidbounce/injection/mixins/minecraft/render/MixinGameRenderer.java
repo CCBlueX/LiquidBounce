@@ -23,8 +23,6 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
@@ -32,7 +30,16 @@ import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
-import net.ccbluex.liquidbounce.features.module.modules.render.*;
+import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAspect;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTracers;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment;
 import net.ccbluex.liquidbounce.utils.collection.Pools;
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen;
@@ -44,12 +51,14 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.ItemInHandRenderer;
-import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.Lightmap;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.fog.FogRenderer;
-import net.minecraft.util.Mth;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.util.Mth;
+import com.mojang.math.Axis;
 import org.joml.Matrix4f;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -82,7 +91,7 @@ public abstract class MixinGameRenderer {
 
     @Shadow
     @Final
-    private LightTexture lightTexture;
+    private Lightmap lightmap;
 
     /**
      * Hook game render event
@@ -133,9 +142,9 @@ public abstract class MixinGameRenderer {
     public void drawItemCharms(ItemInHandRenderer instance, float tickProgress, PoseStack matrices,
         SubmitNodeCollector orderedRenderCommandQueue, LocalPlayer player, int light,
         Operation<Void> original) {
-        ModuleItemChams.INSTANCE.applyToTexture(this.lightTexture.getTextureView());
+        ModuleItemChams.INSTANCE.applyToTexture(this.lightmap.getTextureView());
         original.call(instance, tickProgress, matrices, orderedRenderCommandQueue, player, light);
-        ModuleItemChams.INSTANCE.resetTexture(this.lightTexture.getTextureView());
+        ModuleItemChams.INSTANCE.resetTexture(this.lightmap.getTextureView());
     }
 
     /**
@@ -234,7 +243,7 @@ public abstract class MixinGameRenderer {
         return original;
     }
 
-    @ModifyArgs(method = "getProjectionMatrix", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;perspective(FFFF)Lorg/joml/Matrix4f;", remap = false))
+    @ModifyArgs(method = "getProjectionMatrix", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;perspective(FFFFZ)Lorg/joml/Matrix4f;", remap = false))
     private void hookBasicProjectionMatrix(Args args) {
         if (ModuleAspect.INSTANCE.getRunning()) {
             args.set(1, (float) args.get(1) / ModuleAspect.getRatioMultiplier());

@@ -73,7 +73,7 @@ public enum VfpCompatibility {
                 currentScreen = new TitleScreen();
             }
 
-            ViaFabricPlus.getImpl().openProtocolSelectionScreen(currentScreen);
+//            ViaFabricPlus.getImpl().openProtocolSelectionScreen(currentScreen); FIXME(26.1)
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to open ViaFabricPlus screen", throwable);
         }

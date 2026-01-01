@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
@@ -45,7 +44,7 @@ class ScriptReflectionUtil {
 
     @JvmName("classByName")
     fun classByName(name: String): Class<*> = Class.forName(
-        EnvironmentRemapper.remapClassName(name).replace('/', '.')
+        name.replace('/', '.')
     )
 
     @JvmName("newInstance")
@@ -56,7 +55,7 @@ class ScriptReflectionUtil {
 
     @JvmName("newInstanceByName")
     fun newInstanceByName(name: String, vararg args: Any?): Any? =
-        Class.forName(EnvironmentRemapper.remapClassName(name).replace('/', '.'))
+        Class.forName(name.replace('/', '.'))
             .getDeclaredConstructor(*args.mapToArray { it!!::class.java }).apply {
                 isAccessible = true
             }.newInstance(*args)
@@ -80,7 +79,7 @@ class ScriptReflectionUtil {
         return fieldCache.computeIfAbsent(Pair(obj::class.java, name)) {
             obj::class.java.fields
                 .find { field ->
-                    name == EnvironmentRemapper.remapField(obj::class.java, field.name)
+                    name == field.name
                 }?.apply {
                     isAccessible = true
                 } ?: throw NoSuchFieldException("Field '$name' not found in ${obj::class.java.name}")
@@ -100,7 +99,7 @@ class ScriptReflectionUtil {
         return fieldCache.computeIfAbsent(Pair(clazz, name)) {
             clazz.declaredFields
                 .find { field ->
-                    name == EnvironmentRemapper.remapField(clazz, field.name)
+                    name == field.name
                 }?.apply {
                     isAccessible = true
                 } ?: throw NoSuchFieldException("Field '$name' not found in ${clazz.name}")
@@ -198,7 +197,7 @@ class ScriptReflectionUtil {
 
             // Find and return the matching method
             potentialMatches.find { method ->
-                EnvironmentRemapper.remapMethod(clazz, method.name) == name
+                method.name == name
             }?.apply {
                 isAccessible = true
             } ?: throw NoSuchMethodException("Could not find method $name with matching argument types")
