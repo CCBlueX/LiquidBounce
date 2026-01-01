@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Angles
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Radiuses
@@ -81,7 +82,7 @@ abstract class HatsMode(name: String) : Choice(name) {
             val inDistance = player.distanceTo(entity) <= FriendsOptions.distance
 
             val shouldRender = if (isMe) {
-                !mc.options.cameraType.isFirstPerson || showInFirstPerson
+                !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
             } else {
                 inDistance && (isFriend && FriendsOptions.friendView)
             }
