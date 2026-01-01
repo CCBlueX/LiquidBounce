@@ -103,11 +103,13 @@ fun raytraceBlock(
 fun raycast(
     rotation: Rotation = RotationManager.currentRotation ?: player.rotation,
     range: Double = max(player.blockInteractionRange(), player.entityInteractionRange()),
+    block: ClipContext.Block = ClipContext.Block.OUTLINE,
     includeFluids: Boolean = false,
     tickDelta: Float = 1f,
 ): BlockHitResult {
     return raycast(
         range = range,
+        block = block,
         includeFluids = includeFluids,
         start = player.getEyePosition(tickDelta),
         direction = rotation.directionVector
@@ -116,6 +118,7 @@ fun raycast(
 
 fun raycast(
     range: Double = max(player.blockInteractionRange(), player.entityInteractionRange()),
+    block: ClipContext.Block = ClipContext.Block.OUTLINE,
     includeFluids: Boolean = false,
     start: Vec3,
     direction: Vec3,
@@ -127,7 +130,7 @@ fun raycast(
         ClipContext(
             start,
             end,
-            ClipContext.Block.COLLIDER,
+            block,
             if (includeFluids) ClipContext.Fluid.ANY else ClipContext.Fluid.NONE,
             entity,
         ),

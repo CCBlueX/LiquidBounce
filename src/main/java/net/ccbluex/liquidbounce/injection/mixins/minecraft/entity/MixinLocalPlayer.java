@@ -66,6 +66,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec2;
@@ -279,7 +280,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements ClientPlay
             rotation = cameraRotation;
         }
 
-        return RaytracingKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange),
+        return RaytracingKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange), ClipContext.Block.OUTLINE,
             ModuleLiquidPlace.INSTANCE.getRunning(), tickDelta);
     }
 
