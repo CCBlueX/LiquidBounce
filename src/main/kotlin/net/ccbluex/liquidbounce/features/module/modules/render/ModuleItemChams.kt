@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.ccbluex.liquidbounce.utils.render.copyFrom
 import net.ccbluex.liquidbounce.utils.render.putVec4
 import net.ccbluex.liquidbounce.utils.render.writeStd140
-import net.minecraft.client.renderer.LightTexture
 
 /**
  * Module ItemChams
@@ -44,7 +43,7 @@ import net.minecraft.client.renderer.LightTexture
  * Applies visual effects to your held items.
  *
  * @see MixinGameRenderer
- * @see LightTexture
+ * @see net.minecraft.client.renderer.Lightmap
  *
  * @author ccetl
  */

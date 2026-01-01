@@ -1,4 +1,4 @@
-accessWidener	v1	named
+accessWidener	v1	official
 
 accessible field net/minecraft/world/entity/AreaEffectCloud potionContents Lnet/minecraft/world/item/alchemy/PotionContents;
 accessible field net/minecraft/client/Minecraft user Lnet/minecraft/client/User;

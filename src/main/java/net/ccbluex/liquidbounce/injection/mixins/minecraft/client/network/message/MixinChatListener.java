@@ -36,14 +36,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.time.Instant;
 
-@SuppressWarnings("CancellableInjectionUsage")
 @Mixin(ChatListener.class)
 public abstract class MixinChatListener {
 
     @Shadow
     private long previousMessageTime;
 
-    @Inject(method = "method_45745", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/chat/ChatType$Bound;decorate(Lnet/minecraft/network/chat/Component;)Lnet/minecraft/network/chat/Component;", shift = At.Shift.BEFORE), cancellable = true)
+    @Inject(method = "lambda$handleDisguisedChatMessage$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/chat/ChatType$Bound;decorate(Lnet/minecraft/network/chat/Component;)Lnet/minecraft/network/chat/Component;", shift = At.Shift.BEFORE), cancellable = true)
     private void injectDisguisedChatLambda(ChatType.Bound parameters, Component text, Instant instant, CallbackInfoReturnable<Boolean> cir) {
         var result = liquid_bounce$emitChatEvent(parameters, text, ChatReceiveEvent.ChatType.DISGUISED_CHAT_MESSAGE);
         if (result) {

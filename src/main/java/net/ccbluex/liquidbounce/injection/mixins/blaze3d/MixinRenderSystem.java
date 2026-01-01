@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.injection.mixins.blaze3d;
 
 import com.mojang.blaze3d.TracyFrameCapture;
-import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.render.ClientTesselator;
 import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer;
@@ -34,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MixinRenderSystem {
 
     @Inject(method = "flipFrame", at = @At("RETURN"))
-    private static void onFlipFrame(Window window, TracyFrameCapture tracyFrameCapture, CallbackInfo ci) {
+    private static void onFlipFrame(TracyFrameCapture tracyFrameCapture, CallbackInfo ci) {
         RenderingDebug.flipFrame();
         ClientTesselator.Shared.clear();
         GrowableMappableRingBuffer.cleanup();

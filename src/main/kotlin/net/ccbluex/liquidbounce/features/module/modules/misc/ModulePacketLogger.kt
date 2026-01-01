@@ -27,9 +27,10 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.bold
@@ -43,11 +44,9 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.isNotRoot
 import net.ccbluex.liquidbounce.utils.kotlin.toFullString
-import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
-import net.ccbluex.liquidbounce.utils.text.PlainText
-import net.minecraft.ChatFormatting
-import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.protocol.Packet
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.ChatFormatting
 import net.minecraft.resources.Identifier
 import okio.appendingSink
 import okio.buffer
@@ -65,7 +64,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * @author ccetl
  */
-object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) {
+object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val clientPackets by c2sPackets("C2SPackets", sortedSetOf())
@@ -133,8 +132,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
             override fun handle(origin: TransferOrigin, packet: Packet<*>, canceled: Boolean, packetId: Identifier) {
                 val clazz = packet.javaClass
 
-                val packetClassName = classNames.computeIfAbsent(clazz, EnvironmentRemapper::remapClass)
-                    .substringAfterLast('.')
+                val packetClassName = clazz.name.substringAfterLast('.')
 
                 val text = "".asText()
                 if (origin == TransferOrigin.INCOMING) {
@@ -175,8 +173,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
 
                 val clazz = packet.javaClass
 
-                val packetClassName = classNames.computeIfAbsent(clazz, EnvironmentRemapper::remapClass)
-                    .substringAfterLast('.')
+                val packetClassName = clazz.name.substringAfterLast('.')
 
                 file.appendingSink().buffer().use {
                     it.writeUtf8(System.currentTimeMillis().toString())
@@ -224,9 +221,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) 
 
                 field.isAccessible = true
 
-                val name = fieldNames.computeIfAbsent(field) {
-                    EnvironmentRemapper.remapField(currentClass!!.name, field.name)
-                }
+                val name = field.name
 
                 val value = try {
                     field.get(packet)?.toString()

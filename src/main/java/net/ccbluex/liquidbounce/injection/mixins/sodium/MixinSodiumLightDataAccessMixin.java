@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.sodium;
 
-import net.caffeinemc.mods.sodium.client.model.light.data.LightDataAccess;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -27,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Pseudo
-@Mixin(value = LightDataAccess.class, remap = false)
+@Mixin(targets = "net.caffeinemc.mods.sodium.client.model.light.data.LightDataAccess")
 public abstract class MixinSodiumLightDataAccessMixin {
 
     @Shadow

@@ -754,9 +754,7 @@ class SimulatedPlayer(
         val fluidState: FluidState = this.player.level().getFluidState(blockPos)
         val e = (blockPos.y.toFloat() + fluidState.getHeight(this.player.level(), blockPos)).toDouble()
         if (e > d) {
-            fluidState.tags.forEach {
-                fluidOnEyes.add(it)
-            }
+            fluidState.tags().forEach(fluidOnEyes::add)
         }
     }
 

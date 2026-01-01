@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "net.ccbluex.liquidbounce.injection.mixins",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "priority": 1337,
   "mixinPriority": 1337,
   "client": [
@@ -158,8 +158,6 @@
     "sodium.MixinSodiumLightDataAccessMixin",
     "truffle.MixinCommonJSRequireBuiltin",
     "truffle.MixinHostClassDesc",
-    "truffle.MixinHostClassLoader",
-    "truffle.MixinHostContext",
     "truffle.MixinNpmCompatibleESModuleLoader",
     "truffle.MixinTruffleLanguage"
   ],

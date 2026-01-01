@@ -1,19 +1,19 @@
 [versions]
 # Minecraft 1.21.1 upwards uses Java 21
 # 26.1 upwards uses Java 25
-jdk = "21"
+jdk = "25"
 
 # Fabric Properties
 # Check these on https://fabricmc.net/versions.html
 # https://mods.upcraft.dev/dev/versions
-minecraft = "1.21.11"
+minecraft = "26.1-snapshot-1"
 fabric-loom = "1.15-SNAPSHOT"
 fabric-loader = "0.18.4"
 fabric-loaderMin = "0.16.14"
-fabric-api = "0.140.0+1.21.11"
+fabric-api = "0.140.3+26.1"
 
 # mcef
-mcef = "3.3.0-1.21.11"
+mcef = "3.1.6-26.1-alpha.1" # TODO: mavenLocal
 # mc-authlib
 mc_authlib = "1.7.0"
 # Polyglot
@@ -30,7 +30,7 @@ ahocorasick = "0.6.3"
 fastutil4k = "0.2.7"
 
 # Recommended mods
-modmenu = "17.0.0-beta.2"
+modmenu = "18.0.0-alpha.3"
 exploit_preventer_api = "0.0.1"
 exploit_preventer_mod = "0.1.10"
 sodium = "mc1.21.11-0.8.2-fabric"
@@ -106,7 +106,7 @@ waygl = { group = "maven.modrinth", name = "waygl", version.ref = "waygl" }
 cloth-config = { group = "maven.modrinth", name = "cloth-config", version = "21.11.153+fabric" }
 
 [plugins]
-fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
+fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 gradleGitProperties = { id = "com.gorylenko.gradle-git-properties", version.ref = "gradleGitProperties" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
