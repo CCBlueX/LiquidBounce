@@ -253,7 +253,7 @@ inline fun NativeImage.asTexture(
 ) = DynamicTexture(Suppliers.ofInstance(name), this)
 
 @JvmOverloads
-inline fun NativeImage.asTexture(
+fun NativeImage.asTexture(
     nameSupplier: Supplier<String> = Supplier {
         "Texture NativeImage@${this.hashCode()} (${this.width}x${this.height})"
     },
