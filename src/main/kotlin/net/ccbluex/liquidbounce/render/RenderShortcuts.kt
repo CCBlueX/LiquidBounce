@@ -436,8 +436,8 @@ fun WorldRenderEnvironment.drawBoxSides(
     box,
     faceColor,
     outlineColor,
-    faceVertices = sides.fold(0) { acc, side -> acc or BoxVertexIterator.FACE.sideMask(side) },
-    outlineVertices = sides.fold(0) { acc, side -> acc or BoxVertexIterator.OUTLINE.sideMask(side) },
+    faceVertices = BoxVertexIterator.FACE.sideMask(sides),
+    outlineVertices = BoxVertexIterator.OUTLINE.sideMask(sides),
 )
 
 /**
