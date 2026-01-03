@@ -105,11 +105,11 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
         }
 
         // Vehicle control velocity
-        vehicle.setDeltaMovement(
-            vehicle.deltaMovement
-                .copy(y = verticalSpeed)
-                .withStrafe(yaw = player.yRot, speed = horizontalSpeed)
-        )
+        val input = DirectionalInput(player.input)
+        val movementYaw = getMovementDirectionOfInput(vehicle.yRot, input)
+        vehicle.deltaMovement = vehicle.deltaMovement
+            .copy(y = verticalSpeed)
+            .withStrafe(yaw = movementYaw, speed = horizontalSpeed)
     }
 
     @Suppress("unused")
