@@ -43,7 +43,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientLevel.class)
-public class MixinClientLevel {
+public abstract class MixinClientLevel {
 
     @ModifyReturnValue(method = "getMarkerParticleTarget", at = @At("RETURN"))
     private Block injectBlockParticle(Block original) {

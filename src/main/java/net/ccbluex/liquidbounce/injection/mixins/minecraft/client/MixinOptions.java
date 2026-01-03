@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Options.class)
-public class MixinOptions {
+public abstract class MixinOptions {
 
     /**
      * Hook GUI scale adjustment

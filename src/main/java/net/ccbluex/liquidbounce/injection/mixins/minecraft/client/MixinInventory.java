@@ -33,7 +33,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(Inventory.class)
-public class MixinInventory implements InventoryAddition {
+public abstract class MixinInventory implements InventoryAddition {
 
     @Shadow
     private int selected;

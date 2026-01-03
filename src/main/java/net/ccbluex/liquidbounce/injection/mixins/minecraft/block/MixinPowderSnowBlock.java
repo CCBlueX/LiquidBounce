@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PowderSnowBlock.class)
-public class MixinPowderSnowBlock {
+public abstract class MixinPowderSnowBlock {
 
     @Inject(method = "entityInside", at = @At("HEAD"), cancellable = true)
     private void hookEntityCollision(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier handler, boolean bl, CallbackInfo ci) {

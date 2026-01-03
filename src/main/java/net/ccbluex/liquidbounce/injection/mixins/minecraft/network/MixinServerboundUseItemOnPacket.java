@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ServerboundUseItemOnPacket.class)
-public class MixinServerboundUseItemOnPacket {
+public abstract class MixinServerboundUseItemOnPacket {
     @Redirect(method = "write", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/FriendlyByteBuf;writeBlockHitResult(Lnet/minecraft/world/phys/BlockHitResult;)V"))
     private void writeBlockHitResult(FriendlyByteBuf buf, BlockHitResult hitResult) {
         if (DisablerVerusScaffoldG.INSTANCE.getRunning()) {

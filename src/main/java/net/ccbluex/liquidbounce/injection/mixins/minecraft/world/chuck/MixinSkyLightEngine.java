@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SkyLightEngine.class)
-public class MixinSkyLightEngine {
+public abstract class MixinSkyLightEngine {
     @Inject(at = @At("HEAD"), method = "propagateIncrease", cancellable = true)
     private void hookNoBlindSkyLightUpdates(long blockPos, long l, int lightLevel, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.SKYLIGHT_UPDATES)) {

@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(ClientLevel.ClientLevelData.class)
-public class MixinClientWorldProperties {
+public abstract class MixinClientWorldProperties {
 
     @ModifyReturnValue(method = "getDayTime", at = @At("RETURN"))
     private long injectOverrideTime(long original) {

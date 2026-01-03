@@ -37,7 +37,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerboundUseItemPacket.class)
-public class MixinServerboundUseItemPacket {
+public abstract class MixinServerboundUseItemPacket {
 
     @Mutable
     @Shadow

@@ -43,7 +43,7 @@ import java.util.Map;
 
 @Pseudo
 @Mixin(value = Utils.class)
-public class MixinUtils {
+public abstract class MixinUtils {
 
     @Unique
     private static final ThreadLocal<String> CURRENT_URL = new ThreadLocal<>();

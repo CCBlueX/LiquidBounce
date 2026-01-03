@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(Deadmau5EarsLayer.class)
-public class MixinDeadmau5EarsLayer {
+public abstract class MixinDeadmau5EarsLayer {
 
     @ModifyExpressionValue(method = "submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;ILnet/minecraft/client/renderer/entity/state/AvatarRenderState;FF)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;showExtraEars:Z", remap = false))
     private boolean onRender(boolean original, @Local(argsOnly = true) AvatarRenderState playerEntityRenderState) {

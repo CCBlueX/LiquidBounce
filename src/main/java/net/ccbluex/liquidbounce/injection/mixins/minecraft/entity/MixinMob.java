@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(Mob.class)
-public class MixinMob {
+public abstract class MixinMob {
 
     @ModifyReturnValue(method = "isSaddled", at = @At("RETURN"))
     private boolean isSaddled(boolean original) {

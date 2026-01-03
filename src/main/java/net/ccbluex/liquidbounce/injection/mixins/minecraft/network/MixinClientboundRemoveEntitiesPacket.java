@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(ClientboundRemoveEntitiesPacket.class)
-public class MixinClientboundRemoveEntitiesPacket implements ClientboundRemoveEntitiesPacketAddition {
+public abstract class MixinClientboundRemoveEntitiesPacket implements ClientboundRemoveEntitiesPacketAddition {
 
     @Unique
     private boolean liquid_bounce$containsCrystal;

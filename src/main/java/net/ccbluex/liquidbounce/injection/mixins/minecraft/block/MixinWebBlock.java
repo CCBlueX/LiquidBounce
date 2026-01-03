@@ -33,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(WebBlock.class)
-public class MixinWebBlock {
+public abstract class MixinWebBlock {
 
     /**
      * Hook entity collision event

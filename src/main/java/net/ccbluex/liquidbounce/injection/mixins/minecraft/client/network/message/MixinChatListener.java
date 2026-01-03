@@ -39,7 +39,7 @@ import java.time.Instant;
 
 @SuppressWarnings("CancellableInjectionUsage")
 @Mixin(ChatListener.class)
-public class MixinChatListener {
+public abstract class MixinChatListener {
 
     @Shadow
     private long previousMessageTime;

@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Optional;
 
 @Mixin(StringSplitter.class)
-public class MixinStringSplitter {
+public abstract class MixinStringSplitter {
 
     @Shadow
     @Final

@@ -33,7 +33,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(BlockCollisions.class)
-public class MixinBlockCollisions {
+public abstract class MixinBlockCollisions {
 
     @Shadow
     @Final
