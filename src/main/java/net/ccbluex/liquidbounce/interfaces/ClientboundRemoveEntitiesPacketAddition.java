@@ -18,23 +18,25 @@
  */
 package net.ccbluex.liquidbounce.interfaces;
 
-import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer;
 
 /**
- * Additions to {@link net.minecraft.client.GuiMessage}.
+ * Addition to {@link net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket}
+ *
+ * Exclusively for {@link CrystalAuraTriggerer}.
  */
-public interface ChatHudLineAddition {
+public interface ClientboundRemoveEntitiesPacketAddition {
 
     /**
-     * Sets the count of the message.
-     * This indicates how many times this massage has already been sent in {@link ModuleBetterChat}.
-     */
-    void liquid_bounce$setCount(int count);
-
-    /**
-     * Gets the count stored in this line.
+     * Flags the packet as containing a crystal.
      */
     @SuppressWarnings("unused")
-    int liquid_bounce$getCount();
+    void liquid_bounce$setContainsCrystal();
+
+    /**
+     * Checks if the packet contains a crystal.
+     */
+    @SuppressWarnings("unused")
+    boolean liquid_bounce$containsCrystal();
 
 }

@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
-import net.ccbluex.liquidbounce.interfaces.EntitiesDestroyS2CPacketAddition;
+import net.ccbluex.liquidbounce.interfaces.ClientboundRemoveEntitiesPacketAddition;
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(ClientboundRemoveEntitiesPacket.class)
-public class MixinClientboundRemoveEntitiesPacket implements EntitiesDestroyS2CPacketAddition {
+public class MixinClientboundRemoveEntitiesPacket implements ClientboundRemoveEntitiesPacketAddition {
 
     @Unique
     private boolean liquid_bounce$containsCrystal;

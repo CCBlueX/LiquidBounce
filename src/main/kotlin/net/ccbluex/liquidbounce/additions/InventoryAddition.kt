@@ -16,27 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.interfaces;
 
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer;
+@file:Suppress("FunctionName", "NOTHING_TO_INLINE")
 
-/**
- * Addition to {@link net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket}
- *
- * Exclusively for {@link CrystalAuraTriggerer}.
- */
-public interface EntitiesDestroyS2CPacketAddition {
+package net.ccbluex.liquidbounce.additions
 
+import net.minecraft.world.entity.player.Inventory
+
+interface InventoryAddition {
     /**
-     * Flags the packet as containing a crystal.
+     * @return the actual selected slot without any modification by [net.ccbluex.liquidbounce.utils.client.SilentHotbar]
      */
-    @SuppressWarnings("unused")
-    void liquid_bounce$setContainsCrystal();
-
-    /**
-     * Checks if the packet contains a crystal.
-     */
-    @SuppressWarnings("unused")
-    boolean liquid_bounce$containsCrystal();
-
+    fun `liquid_bounce$getRealSelectedSlot`(): Int
 }
+
+inline val Inventory.realSelectedSlot: Int
+    get() = (this as InventoryAddition).`liquid_bounce$getRealSelectedSlot`()

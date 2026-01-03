@@ -20,7 +20,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.interfaces.OutlineVertexConsumerProviderSingleDrawAddition;
+import net.ccbluex.liquidbounce.interfaces.OutlineBufferSourceSingleDrawAddition;
 import net.minecraft.client.renderer.OutlineBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(OutlineBufferSource.class)
-public class MixinOutlineBufferSource implements OutlineVertexConsumerProviderSingleDrawAddition {
+public abstract class MixinOutlineBufferSource implements OutlineBufferSourceSingleDrawAddition {
     @Shadow
     @Final
     private MultiBufferSource.BufferSource outlineBufferSource;

@@ -15,20 +15,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
 
-@file:Suppress("FunctionName", "NOTHING_TO_INLINE")
+package net.ccbluex.liquidbounce.interfaces;
 
-package net.ccbluex.liquidbounce.additions
+import net.minecraft.client.renderer.rendertype.RenderType;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
-import net.minecraft.world.entity.player.Inventory
-
-interface PlayerInventoryAddition {
+@NullMarked
+public interface OutlineBufferSourceSingleDrawAddition {
     /**
-     * @return the actual selected slot without any modification by [net.ccbluex.liquidbounce.utils.client.SilentHotbar]
+     * {@link net.minecraft.client.renderer.OutlineBufferSource#getBuffer(RenderType)} creates a consumer which
+     * renders to the outline framebuffer but also to the original framebuffer.
+     * <p>
+     * If you only want to render to the outline framebuffer, use this method.
      */
-    fun `liquid_bounce$getRealSelectedSlot`(): Int
+    @Nullable
+    VertexConsumer liquid_bounce_getSingleDrawBuffers(RenderType layer);
 }
-
-inline val Inventory.realSelectedSlot: Int
-    get() = (this as PlayerInventoryAddition).`liquid_bounce$getRealSelectedSlot`()

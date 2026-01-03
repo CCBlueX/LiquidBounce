@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatScreenAccessor
-import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
+import net.ccbluex.liquidbounce.interfaces.TextColorAddition
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.Minecraft
@@ -150,7 +150,7 @@ fun MutableComponent.bypassNameProtection(): MutableComponent = withStyle {
     val color = it.color ?: TextColor.fromLegacyFormat(ChatFormatting.RESET)
 
     @Suppress("CAST_NEVER_SUCCEEDS")
-    val newColor = (color as ClientTextColorAdditions).`liquid_bounce$withNameProtectionBypass`()
+    val newColor = (color as TextColorAddition).`liquid_bounce$withNameProtectionBypass`()
 
     it.withColor(newColor)
 }
@@ -236,4 +236,4 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
 
 val TextColor.bypassesNameProtection: Boolean
     @Suppress("CAST_NEVER_SUCCEEDS")
-    get() = (this as ClientTextColorAdditions).`liquid_bounce$doesBypassingNameProtect`()
+    get() = (this as TextColorAddition).`liquid_bounce$doesBypassingNameProtect`()

@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
-import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition
+import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition
+import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
 import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.client.GuiMessage
 import net.minecraft.client.GuiMessageTag
@@ -32,8 +32,8 @@ import net.minecraft.network.chat.Component
 fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.execute {
     val indicator = if (mc.isSingleplayer) GuiMessageTag.systemSinglePlayer() else GuiMessageTag.system()
     val chatHudLine = GuiMessage(mc.gui.guiTicks, message, null, indicator)
-    (chatHudLine as ChatMessageAddition).`liquid_bounce$setId`(id)
-    (chatHudLine as ChatHudLineAddition).`liquid_bounce$setCount`(count)
+    (chatHudLine as GuiMessageLineAddition).`liquid_bounce$setId`(id)
+    (chatHudLine as GuiMessageAddition).`liquid_bounce$setCount`(count)
     this.logChatMessage(chatHudLine)
     this.addMessageToDisplayQueue(chatHudLine)
     this.addMessageToQueue(chatHudLine)
@@ -45,11 +45,11 @@ fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.e
 @Suppress("CAST_NEVER_SUCCEEDS")
 fun ChatComponent.removeMessage(id: String?) = mc.execute {
     allMessages.removeIf {
-        val removable = it as? ChatMessageAddition ?: return@removeIf false
+        val removable = it as? GuiMessageLineAddition ?: return@removeIf false
         id == removable.`liquid_bounce$getId`()
     }
     trimmedMessages.removeIf {
-        val removable = it as? ChatMessageAddition ?: return@removeIf false
+        val removable = it as? GuiMessageLineAddition ?: return@removeIf false
         id == removable.`liquid_bounce$getId`()
     }
 }

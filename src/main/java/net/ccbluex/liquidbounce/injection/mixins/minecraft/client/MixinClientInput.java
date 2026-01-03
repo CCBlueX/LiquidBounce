@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
-import net.ccbluex.liquidbounce.interfaces.InputAddition;
+import net.ccbluex.liquidbounce.interfaces.ClientInputAddition;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.phys.Vec2;
@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(ClientInput.class)
-public abstract class MixinClientInput implements InputAddition {
+public abstract class MixinClientInput implements ClientInputAddition {
 
     @Shadow
     protected Vec2 moveVector;

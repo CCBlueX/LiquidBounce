@@ -22,8 +22,8 @@
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.common.ShapeFlag
-import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition
-import net.ccbluex.liquidbounce.interfaces.InputAddition
+import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
+import net.ccbluex.liquidbounce.interfaces.ClientInputAddition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
@@ -94,13 +94,13 @@ val Entity.isInsideWaterOrBubbleColumn: Boolean
 inline var ClientInput.movementForward: Float
     get() = moveVector.y
     set(value) {
-        (this as InputAddition).`liquid_bounce$setMovementInput`(moveVector.copy(y = value))
+        (this as ClientInputAddition).`liquid_bounce$setMovementInput`(moveVector.copy(y = value))
     }
 
 inline var ClientInput.movementSideways: Float
     get() = moveVector.x
     set(value) {
-        (this as InputAddition).`liquid_bounce$setMovementInput`(moveVector.copy(x = value))
+        (this as ClientInputAddition).`liquid_bounce$setMovementInput`(moveVector.copy(x = value))
     }
 
 val LivingEntity.handItems: Array<ItemStack>
@@ -149,19 +149,19 @@ val LocalPlayer.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
 
 val ClientInput.untransformed: Input
-    get() = (this as InputAddition).`liquid_bounce$getUntransformed`()
+    get() = (this as ClientInputAddition).`liquid_bounce$getUntransformed`()
 
 val ClientInput.initial: Input
-    get() = (this as InputAddition).`liquid_bounce$getInitial`()
+    get() = (this as ClientInputAddition).`liquid_bounce$getInitial`()
 
 val Player.ping: Int
     get() = mc.connection?.getPlayerInfo(uuid)?.latency ?: 0
 
 val LocalPlayer.airTicks: Int
-    get() = (this as ClientPlayerEntityAddition).`liquid_bounce$getAirTicks`()
+    get() = (this as LocalPlayerAddition).`liquid_bounce$getAirTicks`()
 
 val LocalPlayer.onGroundTicks: Int
-    get() = (this as ClientPlayerEntityAddition).`liquid_bounce$getOnGroundTicks`()
+    get() = (this as LocalPlayerAddition).`liquid_bounce$getOnGroundTicks`()
 
 val LocalPlayer.direction: Float
     get() = getMovementDirectionOfInput(DirectionalInput(input))

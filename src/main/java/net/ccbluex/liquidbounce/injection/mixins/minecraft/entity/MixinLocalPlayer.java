@@ -52,7 +52,7 @@ import net.ccbluex.liquidbounce.integration.BrowserScreen;
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData;
-import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition;
+import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingKt;
@@ -82,7 +82,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LocalPlayer.class)
-public abstract class MixinLocalPlayer extends MixinPlayer implements ClientPlayerEntityAddition {
+public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlayerAddition {
 
     @Shadow
     public ClientInput input;
