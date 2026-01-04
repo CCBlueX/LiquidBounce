@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,12 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.movement.waterspeed.modes
+package net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.waterspeed
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.movement.waterspeed.WaterSpeedMode
+import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.entity.movementForward
@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 
-object WaterSpeedVanilla : WaterSpeedMode("Vanilla") {
+internal object WaterSpeedVanilla : ToggleableConfigurable(ModuleTerrainSpeed, "WaterSpeed", true) {
 
     val autoSwim by boolean("AutoSwimming", true)
     val speed by float("Speed", 0.1f, 0.01f..10f)
@@ -64,8 +64,10 @@ object WaterSpeedVanilla : WaterSpeedMode("Vanilla") {
                 speed
             }
 
-            player.deltaMovement = Vec3(-(finalYawRad).fastSin().toDouble() * speed.toDouble(),
-                player.deltaMovement.y, (finalYawRad).fastCos().toDouble() * speed.toDouble())
+            player.deltaMovement = Vec3(
+                -(finalYawRad).fastSin().toDouble() * speed.toDouble(),
+                player.deltaMovement.y, (finalYawRad).fastCos().toDouble() * speed.toDouble()
+            )
         }
         if(mc.options.keyJump.isDown && player.isInWater) {
             player.deltaMovement = Vec3(player.deltaMovement.x, 0.25, player.deltaMovement.z)
