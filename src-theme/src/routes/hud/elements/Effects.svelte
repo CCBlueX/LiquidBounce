@@ -53,7 +53,7 @@
     gap: 4px;
     background-color: $effects-background-color;
     border-radius: 5px;
-    padding: 4px;
+    padding: 4px 6px;
   }
 
   .effect {
