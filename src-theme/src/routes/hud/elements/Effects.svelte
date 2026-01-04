@@ -57,8 +57,7 @@
   }
 
   .effect {
-    display: grid;
-    grid-template-columns: max-content 1fr max-content max-content;
+    display: flex;
     align-items: center;
     gap: 8px;
     font-weight: 500;
@@ -81,6 +80,7 @@
     }
 
     .duration {
+      margin-left: auto;
       font-family: monospace;
       color: $effects-duration-color;
       font-size: 12px;
