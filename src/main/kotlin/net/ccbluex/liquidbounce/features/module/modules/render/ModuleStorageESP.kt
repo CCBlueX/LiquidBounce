@@ -44,8 +44,14 @@ import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.animal.equine.AbstractChestedHorse
+import net.minecraft.world.entity.vehicle.boat.ChestBoat
+import net.minecraft.world.entity.vehicle.boat.ChestRaft
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecartContainer
+import net.minecraft.world.entity.vehicle.minecart.MinecartHopper
 import net.minecraft.world.level.block.RenderShape
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity
 import net.minecraft.world.level.block.entity.BarrelBlockEntity
 import net.minecraft.world.level.block.entity.BlockEntity
@@ -57,13 +63,7 @@ import net.minecraft.world.level.block.entity.DispenserBlockEntity
 import net.minecraft.world.level.block.entity.EnderChestBlockEntity
 import net.minecraft.world.level.block.entity.HopperBlockEntity
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.animal.equine.AbstractChestedHorse
-import net.minecraft.world.entity.vehicle.boat.ChestBoat
-import net.minecraft.world.entity.vehicle.boat.ChestRaft
-import net.minecraft.world.entity.vehicle.minecart.MinecartHopper
-import net.minecraft.world.entity.vehicle.minecart.AbstractMinecartContainer
-import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import java.awt.Color
 
@@ -180,6 +180,9 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
+            if (mc.level == null) {
+                return@handler
+            }
             blockBoxes.clear()
 
             for ((pos, type) in StorageScanner.iterate()) {
@@ -189,7 +192,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     continue
                 }
 
-                val blockState = world.getBlockState(blockPos)
+                val blockState = world.getBlockState(pos)
 
                 if (blockState.isAir) continue
 
@@ -223,7 +226,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         @Suppress("unused")
         private val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
             if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
-                || StorageScanner.isEmpty()) {
+                || StorageScanner.isEmpty()
+            ) {
                 return@handler
             }
 
