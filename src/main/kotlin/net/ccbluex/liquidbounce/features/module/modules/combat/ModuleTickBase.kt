@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -89,6 +90,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
 
     @Suppress("unused")
     private val playerTickHandler = handler<PlayerTickEvent> { event ->
+        chat("some shit")
         // We do not want this module to conflict with blink
         if (player.vehicle != null || ModuleBlink.running) {
             return@handler
