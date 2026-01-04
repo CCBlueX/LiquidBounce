@@ -34,10 +34,12 @@ import kotlin.math.atan2
 internal object WaterSpeedVanilla : ToggleableConfigurable(ModuleTerrainSpeed, "WaterSpeed", true) {
 
     val autoSwim by boolean("AutoSwimming", true)
-    val speed by float("Speed", 0.1f, 0.01f..10f)
+    val horizontalSpeed by float("HorizontalSpeed", 0.1f, 0.01f..10f)
     object SwimmingBoost : ToggleableConfigurable(this@WaterSpeedVanilla, "SwimmingBoost", true) {
         val sprintBoost by float("Boost", 0.30f, 0.01f..10f)
     }
+    val verticalSpeed by float("VerticalSpeed", 0.25f, 0.01f..2f)
+
 
     init {
         tree(SwimmingBoost)
@@ -59,9 +61,9 @@ internal object WaterSpeedVanilla : ToggleableConfigurable(ModuleTerrainSpeed, "
             }
 
             val speed = if(player.isSprinting && SwimmingBoost.enabled) {
-                speed * (1.0 + SwimmingBoost.sprintBoost)
+                horizontalSpeed * (1.0 + SwimmingBoost.sprintBoost)
             } else {
-                speed
+                horizontalSpeed
             }
 
             player.deltaMovement = Vec3(
@@ -70,10 +72,10 @@ internal object WaterSpeedVanilla : ToggleableConfigurable(ModuleTerrainSpeed, "
             )
         }
         if(mc.options.keyJump.isDown && player.isInWater) {
-            player.deltaMovement = Vec3(player.deltaMovement.x, 0.25, player.deltaMovement.z)
+            player.deltaMovement = Vec3(player.deltaMovement.x, verticalSpeed.toDouble(), player.deltaMovement.z)
         }
         if(mc.options.keyShift.isDown && player.isInWater) {
-            player.deltaMovement = Vec3(player.deltaMovement.x, -0.25, player.deltaMovement.z)
+            player.deltaMovement = Vec3(player.deltaMovement.x, -verticalSpeed.toDouble(), player.deltaMovement.z)
         }
     }
 }
