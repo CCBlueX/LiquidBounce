@@ -85,6 +85,8 @@ jobs:
         run: sudo chmod -R 777 src-theme
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
       - name: Build
         env:
           CI: true
