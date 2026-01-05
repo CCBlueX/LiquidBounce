@@ -46,6 +46,7 @@ import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.render.drawBoxOutlined
 import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
 import java.util.concurrent.ConcurrentSkipListSet
 
 /**
@@ -101,7 +102,6 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
             renderEnvironmentForWorld(matrixStack, framebuffer) {
                 dirty = drawInternal(
-                    BlockTracker.allPositions(),
                     colorMode.activeChoice,
                     isOutlineShader,
                     drawOutline
@@ -112,7 +112,6 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         }
 
         private fun WorldRenderEnvironment.drawInternal(
-            blocks: Sequence<BlockPos>,
             colorMode: GenericColorMode<Pair<BlockPos, BlockState>>,
             isOutlineShader: Boolean,
             drawOutline: Boolean
@@ -121,14 +120,14 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
             startBatch()
             val maxDistanceSq = maximumDistance.sq()
-            for (blockPos in blocks) {
+            for ((blockPos, t) in BlockTracker.iterate()) {
                 if (blockPos.cameraDistanceSq() > maxDistanceSq) continue
 
-                val blockState = world.getBlockState(blockPos)
+                val blockState = t.state
 
                 if (blockState.isAir) continue
 
-                val boundingBox = blockState.outlineBox(blockPos)
+                val boundingBox = t.box
 
                 val color = colorMode.getColor(Pair(blockPos, blockState))
 
@@ -207,9 +206,16 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         ChunkScanner.unsubscribe(BlockTracker)
     }
 
-    private object BlockTracker : AbstractBlockLocationTracker.State2BlockPos<Block>() {
-        override fun getStateFor(pos: BlockPos, state: BlockState): Block? =
-            state.block?.takeIf { it in targets }
+    private class TrackedState(@JvmField val state: BlockState, @JvmField val box: AABB)
+
+    private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<TrackedState>() {
+        override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
+            return if (state.block in targets) {
+                TrackedState(state, state.outlineBox(pos))
+            } else {
+                null
+            }
+        }
     }
 
 }
