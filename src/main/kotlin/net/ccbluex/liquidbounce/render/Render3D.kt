@@ -117,7 +117,7 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
         pipeline,
         builtBuffer,
         this.framebuffer,
-        shaderColor = shaderColor.toVector4f(shaderColorVec),
+        colorModulator = shaderColor.toVector4f(shaderColorVec),
         shaderTextureProvider = shaderTextureProvider,
     )
 

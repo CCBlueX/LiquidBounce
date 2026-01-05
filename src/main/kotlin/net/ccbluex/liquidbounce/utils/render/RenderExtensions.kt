@@ -39,9 +39,14 @@ import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.gui.render.TextureSetup
 import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.vertex.VertexFormat
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.minecraft.client.renderer.MappableRingBuffer
 import net.minecraft.resources.Identifier
 import net.minecraft.util.Util
 import net.minecraft.util.ARGB
+import org.lwjgl.system.MemoryUtil
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
@@ -100,6 +105,9 @@ inline fun GpuBuffer.mapBuffer(read: Boolean, write: Boolean): GpuBuffer.MappedV
 
 inline fun GpuBufferSlice.mapBuffer(read: Boolean, write: Boolean): GpuBuffer.MappedView =
     gpuDevice.createCommandEncoder().mapBuffer(this, read, write)
+
+inline fun GpuBufferSlice.write(byteBuffer: ByteBuffer) =
+    gpuDevice.createCommandEncoder().writeToBuffer(this, byteBuffer)
 
 @JvmOverloads
 fun GpuTexture.copyFully(
@@ -256,15 +264,6 @@ inline fun NativeImage.asTexture(
 
 val AbstractTexture.textureSetup: TextureSetup
     get() = TextureSetup.singleTexture(textureView, sampler)
-
-@JvmOverloads
-fun MeshData.createGpuBuffer(labelGetter: Supplier<String>? = null): GpuBuffer = use {
-    gpuDevice.createBuffer(
-        labelGetter,
-        GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_COPY_DST,
-        it.vertexBuffer()
-    )
-}
 
 @JvmInline
 value class KStd140SizeCalculator(val j: Std140SizeCalculator) {

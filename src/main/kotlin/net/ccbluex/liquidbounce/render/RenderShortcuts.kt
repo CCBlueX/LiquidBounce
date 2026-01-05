@@ -37,6 +37,8 @@ import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.PoseStack
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps
+import net.ccbluex.liquidbounce.utils.render.MeshUtils
+import net.ccbluex.liquidbounce.utils.render.MeshUtils.uploadVertices
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
@@ -190,35 +192,35 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
 @Suppress("detekt:all")
 fun drawMesh(
     pipeline: RenderPipeline,
-    builtBuffer: MeshData,
-    framebuffer: RenderTarget = mc.mainRenderTarget,
-    shaderColor: Vector4f = Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
+    meshData: MeshData,
+    renderTarget: RenderTarget = mc.mainRenderTarget,
+    colorModulator: Vector4f = Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
     renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
     shaderTextureProvider: Map<String, AbstractTexture> = emptyMap(),
-) = builtBuffer.use { buffer ->
-    val gpuBufferSlice = RenderSystem.getDynamicUniforms()
+) = meshData.use { buffer ->
+    val dynamicTransforms = RenderSystem.getDynamicUniforms()
         .writeTransform(
             RenderSystem.getModelViewMatrix(),
-            shaderColor,
+            colorModulator,
             Vector3f(),
             Matrix4f(),
         )
-    val gpuBuffer = pipeline.vertexFormat.uploadImmediateVertexBuffer(buffer.vertexBuffer())
-    val gpuBuffer2: GpuBuffer
+    val vertexBuffer = buffer.uploadVertices(pipeline.vertexFormat)
+    val indexBuffer: GpuBuffer
     val indexType: VertexFormat.IndexType
     if (buffer.indexBuffer() == null) {
         val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawState().mode)
-        gpuBuffer2 = shapeIndexBuffer.getBuffer(buffer.drawState().indexCount)
+        indexBuffer = shapeIndexBuffer.getBuffer(buffer.drawState().indexCount)
         indexType = shapeIndexBuffer.type()
     } else {
-        gpuBuffer2 = pipeline.vertexFormat.uploadImmediateIndexBuffer(buffer.indexBuffer()!!)
+        indexBuffer = pipeline.vertexFormat.uploadImmediateIndexBuffer(buffer.indexBuffer()!!)
         indexType = buffer.drawState().indexType
     }
 
     val colorTexture = RenderSystem.outputColorTextureOverride
-        ?: framebuffer.colorTextureView!!
+        ?: renderTarget.colorTextureView!!
     val depthTexture = RenderSystem.outputDepthTextureOverride
-        ?: framebuffer.depthTextureView.takeIf { framebuffer.useDepth }
+        ?: renderTarget.depthTextureView.takeIf { renderTarget.useDepth }
 
     gpuDevice.createCommandEncoder().createRenderPass(
         renderPassLabelGetter,
@@ -239,16 +241,18 @@ fun drawMesh(
         }
 
         RenderSystem.bindDefaultUniforms(renderPass)
-        renderPass.setUniform("DynamicTransforms", gpuBufferSlice)
-        renderPass.setVertexBuffer(0, gpuBuffer)
+        renderPass.setUniform("DynamicTransforms", dynamicTransforms)
+        renderPass.setVertexBuffer(0, vertexBuffer.buffer)
 
         for ((key, texture) in shaderTextureProvider) {
             renderPass.bindTexture(key, texture.textureView, texture.sampler)
         }
 
-        renderPass.setIndexBuffer(gpuBuffer2, indexType)
+        renderPass.setIndexBuffer(indexBuffer, indexType)
         renderPass.drawIndexed(0, 0, buffer.drawState().indexCount, 1)
     }
+
+    MeshUtils.rotateVertexBuffer()
 }
 
 /**
