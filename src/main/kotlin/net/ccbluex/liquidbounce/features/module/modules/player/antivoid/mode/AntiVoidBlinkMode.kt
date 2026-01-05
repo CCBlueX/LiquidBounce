@@ -123,8 +123,9 @@ object AntiVoidBlinkMode : AntiVoidMode("Blink") {
             return@handler
         }
 
-        if (shouldStopBecauseOfCombat || safePosition == null)
+        if (shouldStopBecauseOfCombat || safePosition == null) {
             return@handler
+        }
 
         // we need to queue them, cause tickHandler updates canSaveYourself only every tick
         // but if we send movement packet before tickHandler is invoked, we can't revert it
