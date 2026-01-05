@@ -23,10 +23,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
-import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid.isLikelyFalling
-import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid.rescuePosition
+import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid.canSaveYourself
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidGhostBlockMode.handleBlockShape
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.world.phys.shapes.Shapes
 import kotlin.math.floor
 
@@ -35,24 +36,35 @@ object AntiVoidGhostBlockMode : AntiVoidMode("GhostBlock") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleAntiVoid.mode
 
+    private var shouldPerformSafe = false
+
     @Suppress("unused")
     private val handleBlockShape = handler<BlockShapeEvent> { event ->
-        if (!isLikelyFalling || isExempt) {
+        if (!shouldPerformSafe || isExempt) {
             return@handler
         }
 
         // We only want to place a fake-block collision below the player if the collision shape is empty.
-        var safePosition = rescuePosition
-        if (event.shape != Shapes.empty() || safePosition == null || event.pos.y >= floor(safePosition.y)) {
+        if (event.shape != Shapes.empty() || event.pos.y >= floor(player.position().y)) {
             return@handler
         }
 
         event.shape = Shapes.block()
     }
 
+    @Suppress("unused")
+    private val voidHandler = tickHandler(priority = EventPriorityConvention.READ_FINAL_STATE) {
+        if (canSaveYourself) {
+            shouldPerformSafe = false
+        }
+    }
+
     /**
      * We have [handleBlockShape] to fix our situation instead.
      */
-    override fun rescue() = false
+    override fun rescue(): Boolean {
+        shouldPerformSafe = true
+        return false
+    }
 
 }

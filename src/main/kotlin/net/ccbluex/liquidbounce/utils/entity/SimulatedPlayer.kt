@@ -31,39 +31,39 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.LadderBlock
-import net.minecraft.world.level.block.PowderSnowBlock
-import net.minecraft.world.level.block.TrapDoorBlock
 import net.minecraft.client.player.ClientInput
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.MoverType
-import net.minecraft.world.entity.ai.attributes.Attribute
-import net.minecraft.world.entity.ai.attributes.Attributes
-import net.minecraft.world.effect.MobEffect
-import net.minecraft.world.effect.MobEffectInstance
-import net.minecraft.world.effect.MobEffects
-import net.minecraft.world.entity.player.Player
-import net.minecraft.world.entity.vehicle.boat.Boat
-import net.minecraft.world.level.material.Fluid
-import net.minecraft.world.level.material.FluidState
+import net.minecraft.core.BlockPos
 import net.minecraft.core.Holder
 import net.minecraft.tags.BlockTags
 import net.minecraft.tags.FluidTags
 import net.minecraft.tags.TagKey
-import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
 import net.minecraft.util.Mth
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.MoverType
+import net.minecraft.world.entity.ai.attributes.Attribute
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.vehicle.boat.Boat
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.LadderBlock
+import net.minecraft.world.level.block.PowderSnowBlock
+import net.minecraft.world.level.block.TrapDoorBlock
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.material.Fluid
+import net.minecraft.world.level.material.FluidState
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.VoxelShape
-import net.minecraft.world.level.Level
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -98,23 +98,29 @@ class SimulatedPlayer(
         get() = player.level()
 
     companion object {
-        fun fromClientPlayer(input: SimulatedPlayerInput): SimulatedPlayer {
+        fun fromClientPlayer(
+            input: SimulatedPlayerInput,
+            pos: Vec3 = player.position(),
+            fallDistance: Double = player.fallDistance,
+            velocity: Vec3 = player.deltaMovement,
+            onGround: Boolean = player.onGround(),
+        ): SimulatedPlayer {
             return SimulatedPlayer(
                 player,
                 input,
-                player.position(),
-                player.deltaMovement,
+                pos,
+                velocity,
                 player.boundingBox,
                 player.yRot,
                 player.xRot,
 
                 player.isSprinting,
 
-                player.fallDistance,
+                fallDistance,
                 player.noJumpDelay,
                 player.jumping,
                 player.isFallFlying,
-                player.onGround(),
+                onGround,
                 player.horizontalCollision,
                 player.verticalCollision,
 
@@ -234,8 +240,8 @@ class SimulatedPlayer(
             val g = this.getRotationVector().y
             val h = if (g < -0.2) 0.085 else 0.06
             if (g <= 0.0 || this.input.keyPresses.jump || !this.player.level()
-                .getBlockState(BlockPos.containing(this.pos.x, this.pos.y + 1.0 - 0.1, this.pos.z))
-                .fluidState.isEmpty
+                    .getBlockState(BlockPos.containing(this.pos.x, this.pos.y + 1.0 - 0.1, this.pos.z))
+                    .fluidState.isEmpty
             ) {
                 velocity = velocity.add(0.0, (g - velocity.y) * h, 0.0)
             }
@@ -377,9 +383,9 @@ class SimulatedPlayer(
 
         var vec3d = this.velocity
         if ((horizontalCollision || this.isJumping) && (
-            this.isClimbing() || pos.toBlockPos().getState()
-                ?.`is`(Blocks.POWDER_SNOW) == true && PowderSnowBlock.canEntityWalkOnPowderSnow(player)
-            )
+                this.isClimbing() || pos.toBlockPos().getState()
+                    ?.`is`(Blocks.POWDER_SNOW) == true && PowderSnowBlock.canEntityWalkOnPowderSnow(player)
+                )
         ) {
             vec3d = Vec3(vec3d.x, 0.2, vec3d.z)
         }
@@ -500,7 +506,8 @@ class SimulatedPlayer(
             ).add(vec3d3)
 
             if (vec3d3.y < this.player.maxUpStep()
-                    .toDouble() && asdf.horizontalDistanceSqr() > vec3d2.horizontalDistanceSqr()) {
+                    .toDouble() && asdf.horizontalDistanceSqr() > vec3d2.horizontalDistanceSqr()
+            ) {
                 vec3d2 = asdf
             }
 
@@ -547,12 +554,15 @@ class SimulatedPlayer(
         val d = Mth.clamp(motion.x, -0.15000000596046448, 0.15000000596046448)
         val e = Mth.clamp(motion.z, -0.15000000596046448, 0.15000000596046448)
         var g = max(motion.y, -0.15000000596046448)
-        if (g < 0.0 && !pos.toBlockPos().getState()!!.`is`(Blocks.SCAFFOLDING) && player.isSuppressingSlidingDownLadder) {
+        if (g < 0.0 && !pos.toBlockPos().getState()!!
+                .`is`(Blocks.SCAFFOLDING) && player.isSuppressingSlidingDownLadder
+        ) {
             g = 0.0
         }
 
         return Vec3(d, g, e)
     }
+
     private fun applyWebSpeed(motion: Vec3): Vec3 {
         val blockState = world.getBlockState(pos.toBlockPos())
         if (blockState.block != Blocks.COBWEB) {
@@ -903,9 +913,9 @@ class SimulatedPlayer(
 
     class SimulatedPlayerInput(
         val directionalInput: DirectionalInput,
-        jumping: Boolean,
+        val jumping: Boolean,
         var sprinting: Boolean,
-        sneaking: Boolean,
+        val sneaking: Boolean,
         var ignoreClippingAtLedge: Boolean = false
     ) : ClientInput() {
         var forceSafeWalk: Boolean = false
@@ -950,13 +960,13 @@ class SimulatedPlayer(
             private const val MAX_WALKING_SPEED = 0.121
 
             fun fromClientPlayer(
-                directionalInput: DirectionalInput,
+                input: DirectionalInput,
                 jump: Boolean = player.input.keyPresses.jump,
                 sprinting: Boolean = player.isSprinting,
                 sneaking: Boolean = player.isShiftKeyDown
             ): SimulatedPlayerInput {
                 val input = SimulatedPlayerInput(
-                    directionalInput,
+                    input,
                     jump,
                     sprinting,
                     sneaking
@@ -999,7 +1009,7 @@ class SimulatedPlayer(
                     input,
                     jumping,
                     sprinting,
-                    sneaking=entity.isShiftKeyDown
+                    sneaking = entity.isShiftKeyDown
                 )
             }
         }

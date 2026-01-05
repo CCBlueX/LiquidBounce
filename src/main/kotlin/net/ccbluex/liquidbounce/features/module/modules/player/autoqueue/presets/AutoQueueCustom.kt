@@ -94,7 +94,7 @@ object AutoQueueCustom : Choice("Custom") {
     private var worldChangeOccurred = false
 
     @Suppress("unused")
-    private val tickHandler = tickHandler(Dispatchers.Minecraft) {
+    private val tickHandler = tickHandler(dispatcher = Dispatchers.Minecraft) {
         val trigger = triggers.activeChoice
 
         if (trigger.isTriggered) {

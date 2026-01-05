@@ -23,12 +23,12 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sent
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.lang.translation
@@ -83,9 +83,7 @@ internal object FlySentinel26thDec : Choice("Sentinel26thDec") {
 
         Timer.requestTimerSpeed(1.0f, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
 
-        PacketQueueManager.flush {
-            true
-        }
+        PacketQueueManager.flush { true }
     }
 
     val repeatable = tickHandler {
@@ -144,8 +142,12 @@ internal object FlySentinel26thDec : Choice("Sentinel26thDec") {
         var motionY = 0.0
 
         while (y > 0) {
-            network.send(ServerboundMovePlayerPacket.Pos(player.x, player.y + y, player.z,
-                y == 4.0, player.horizontalCollision))
+            network.send(
+                ServerboundMovePlayerPacket.Pos(
+                    player.x, player.y + y, player.z,
+                    y == 4.0, player.horizontalCollision
+                )
+            )
 
             y += motionY
 
@@ -153,8 +155,12 @@ internal object FlySentinel26thDec : Choice("Sentinel26thDec") {
             motionY *= 0.98
         }
 
-        network.send(ServerboundMovePlayerPacket.Pos(player.x, player.y, player.z, true,
-            player.horizontalCollision))
+        network.send(
+            ServerboundMovePlayerPacket.Pos(
+                player.x, player.y, player.z, true,
+                player.horizontalCollision
+            )
+        )
     }
 
     @Suppress("unused")

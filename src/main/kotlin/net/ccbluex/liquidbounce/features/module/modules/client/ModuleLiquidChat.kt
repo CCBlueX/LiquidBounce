@@ -143,7 +143,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     }
 
     @Suppress("unused")
-    private val repeatable = tickHandler(Dispatchers.IO) {
+    private val repeatable = tickHandler(dispatcher = Dispatchers.IO) {
         if (!chatClient.connected) {
             chatClient.connect()
         } else {

@@ -59,7 +59,7 @@ object ModuleFlagCheck : ClientModule("FlagCheck", Category.MISC, aliases = list
         private val afterSeconds by int("After", 30, 1..300, "s")
 
         @Suppress("unused")
-        private val repeatable = tickHandler(Dispatchers.Default) {
+        private val repeatable = tickHandler(dispatcher = Dispatchers.Default) {
             flagCount.getAndSet(0)
             delay(afterSeconds.seconds)
         }

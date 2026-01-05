@@ -38,15 +38,15 @@ import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
-import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
-import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
-import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import kotlin.jvm.optionals.getOrNull
 
 /**
@@ -69,11 +69,11 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
     ) : NamedChoice {
         ENTITY_INTERACT("EntityInteract", {
             it is ServerboundInteractPacket
-            || it is ServerboundSwingPacket
+                || it is ServerboundSwingPacket
         }),
         BLOCK_INTERACT("BlockInteract", {
             it is ServerboundUseItemOnPacket
-            || it is ServerboundSignUpdatePacket
+                || it is ServerboundSignUpdatePacket
         }),
         ACTION("Action", {
             it is ServerboundPlayerActionPacket

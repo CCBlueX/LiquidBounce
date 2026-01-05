@@ -88,7 +88,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
     }
 
     @Suppress("unused")
-    private val repeatable = tickHandler(Dispatchers.Minecraft) {
+    private val repeatable = tickHandler(dispatcher = Dispatchers.Minecraft) {
         if (!isShopOpen()) {
             return@tickHandler
         }

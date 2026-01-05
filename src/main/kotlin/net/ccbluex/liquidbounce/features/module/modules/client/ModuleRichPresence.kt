@@ -135,7 +135,7 @@ object ModuleRichPresence : ClientModule("RichPresence", Category.CLIENT, state 
     }
 
     @Suppress("unused")
-    val updateCycle = tickHandler(Dispatchers.IO) {
+    val updateCycle = tickHandler(dispatcher = Dispatchers.IO) {
         waitTicks(20)
 
         if (enabled) {

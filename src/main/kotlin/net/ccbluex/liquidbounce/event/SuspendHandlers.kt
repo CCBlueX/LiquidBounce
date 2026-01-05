@@ -53,11 +53,13 @@ inline fun <reified T : Event> EventListener.sequenceHandler(
  * Registers a repeatable sequence which repeats the execution of code on [GameTickEvent].
  */
 inline fun EventListener.tickHandler(
+    priority: Short = 0,
     dispatcher: CoroutineDispatcher? = null,
     onCancellation: Runnable? = null,
     crossinline eventHandler: suspend CoroutineScope.() -> Unit,
 ) = suspendHandler<GameTickEvent>(
     context = wrapContinuationInterceptor(dispatcher),
+    priority = priority,
     behavior = SuspendHandlerBehavior.DiscardLatest(onCancellation)
 ) {
     eventHandler()

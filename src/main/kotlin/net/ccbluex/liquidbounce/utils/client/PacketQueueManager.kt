@@ -40,17 +40,17 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FINAL_DECIS
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.client.CameraType
 import net.minecraft.network.protocol.Packet
-import net.minecraft.network.protocol.handshake.ClientIntentionPacket
-import net.minecraft.network.protocol.game.ServerboundChatPacket
-import net.minecraft.network.protocol.game.ServerboundChatCommandPacket
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
-import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket
-import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
-import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
+import net.minecraft.network.protocol.game.ServerboundChatCommandPacket
+import net.minecraft.network.protocol.game.ServerboundChatPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.handshake.ClientIntentionPacket
+import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket
+import net.minecraft.network.protocol.status.ServerboundStatusRequestPacket
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -146,7 +146,6 @@ object PacketQueueManager : EventListener {
                 flush(origin)
                 return@handler
             }
-
         }
 
         event.cancelEvent()
@@ -208,22 +207,20 @@ object PacketQueueManager : EventListener {
         // Take all packets until the counter of move packets reaches count and send them
         var counter = 0
 
-        with(packetQueue.iterator()) {
-            while (hasNext()) {
-                val snapshot = next()
-                val packet = snapshot.packet
+        var snapshot = packetQueue.poll()
+        while (snapshot != null) {
+            val packet = snapshot.packet
 
-                if (packet is ServerboundMovePlayerPacket && packet.hasPos) {
-                    counter += 1
-                }
-
-                flushSnapshot(snapshot)
-                remove()
-
-                if (counter >= count) {
-                    break
-                }
+            if (packet is ServerboundMovePlayerPacket && packet.hasPos) {
+                counter += 1
             }
+
+            flushSnapshot(snapshot)
+
+            if (counter >= count) {
+                break
+            }
+            snapshot = packetQueue.poll()
         }
     }
 
