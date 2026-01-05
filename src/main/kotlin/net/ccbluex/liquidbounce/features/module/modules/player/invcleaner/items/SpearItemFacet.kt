@@ -20,7 +20,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 
@@ -31,5 +30,5 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
  * TODO: Add enchantment-based comparator
  */
 class SpearItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
-    override val category: ItemCategory = ItemCategory(ItemType.SPEAR, 0)
+    override val category get() = ItemType.SPEAR.defaultCategory
 }

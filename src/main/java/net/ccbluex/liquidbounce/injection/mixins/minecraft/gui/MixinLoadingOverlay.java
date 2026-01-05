@@ -45,7 +45,7 @@ import java.util.function.IntSupplier;
  * LiquidBounce Splash Screen
  */
 @Mixin(LoadingOverlay.class)
-public class MixinLoadingOverlay {
+public abstract class MixinLoadingOverlay {
 
     @Unique
     private static final IntSupplier CLIENT_ARGB = () -> ARGB.color(255, 24, 26, 27);

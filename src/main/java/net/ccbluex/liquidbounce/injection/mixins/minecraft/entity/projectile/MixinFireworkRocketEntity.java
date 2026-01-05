@@ -56,7 +56,7 @@ public abstract class MixinFireworkRocketEntity implements FireworkRocketEntityA
             return original;
         }
 
-        return rotation.getDirectionVector();
+        return rotation.directionVector();
     }
 
     @ModifyArgs(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(DDD)Lnet/minecraft/world/phys/Vec3;", ordinal = 0))

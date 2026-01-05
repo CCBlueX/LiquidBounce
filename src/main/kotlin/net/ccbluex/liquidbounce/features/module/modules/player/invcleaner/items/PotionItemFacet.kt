@@ -39,7 +39,7 @@ import net.minecraft.core.Holder
 
 class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.POTION, 0)
+        get() = ItemType.POTION.defaultCategory
 
     companion object {
         /**

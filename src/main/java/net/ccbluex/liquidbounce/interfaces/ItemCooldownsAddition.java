@@ -17,17 +17,16 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-@file:Suppress("FunctionName", "NOTHING_TO_INLINE")
+package net.ccbluex.liquidbounce.interfaces;
 
-package net.ccbluex.liquidbounce.additions
+import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.client.MouseHandler
+public interface ItemCooldownsAddition {
 
-interface MouseAddition {
+    @Nullable Entry liquidBounce$getCooldown(@NotNull ItemStack stack);
 
-    fun `liquidbounce$setPosition`(x: Double, y: Double)
-
+    record Entry(int currentTick, int startTick, int endTick) {
+    }
 }
-
-inline fun MouseHandler.setPosition(x: Double = this.xpos(), y: Double = this.ypos()) =
-    (this as MouseAddition).`liquidbounce$setPosition`(x, y)

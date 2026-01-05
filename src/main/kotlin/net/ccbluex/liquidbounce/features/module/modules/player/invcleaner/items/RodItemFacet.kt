@@ -41,7 +41,7 @@ class RodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.ROD, 0)
+        get() = ItemType.ROD.defaultCategory
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as RodItemFacet)

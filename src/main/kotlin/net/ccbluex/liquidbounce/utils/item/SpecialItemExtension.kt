@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.interfaces.ItemCooldownManagerAdditions
+import net.ccbluex.liquidbounce.interfaces.ItemCooldownsAddition
 import net.minecraft.world.item.ItemCooldowns
 import net.minecraft.world.item.ItemStack
 
-fun ItemCooldowns.getCooldown(stack: ItemStack): ItemCooldownManagerAdditions.Entry? =
-    (this as ItemCooldownManagerAdditions).`liquidBounce$getCooldown`(stack)
+fun ItemCooldowns.getCooldown(stack: ItemStack): ItemCooldownsAddition.Entry? =
+    (this as ItemCooldownsAddition).`liquidBounce$getCooldown`(stack)

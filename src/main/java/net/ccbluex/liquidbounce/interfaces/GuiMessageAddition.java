@@ -16,17 +16,25 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 
-public interface ItemCooldownManagerAdditions {
+/**
+ * Additions to {@link net.minecraft.client.GuiMessage}.
+ */
+public interface GuiMessageAddition {
 
-    @Nullable Entry liquidBounce$getCooldown(@NotNull ItemStack stack);
+    /**
+     * Sets the count of the message.
+     * This indicates how many times this massage has already been sent in {@link ModuleBetterChat}.
+     */
+    void liquid_bounce$setCount(int count);
 
-    record Entry(int currentTick, int startTick, int endTick) {
-    }
+    /**
+     * Gets the count stored in this line.
+     */
+    @SuppressWarnings("unused")
+    int liquid_bounce$getCount();
+
 }

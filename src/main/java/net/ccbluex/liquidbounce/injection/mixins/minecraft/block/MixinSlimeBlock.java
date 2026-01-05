@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SlimeBlock.class)
-public class MixinSlimeBlock {
+public abstract class MixinSlimeBlock {
 
     @Inject(method = "bounceUp", at = @At("HEAD"), cancellable = true)
     private void hookBounce(Entity entity, CallbackInfo ci) {

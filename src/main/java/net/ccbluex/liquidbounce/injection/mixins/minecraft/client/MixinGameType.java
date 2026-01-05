@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(GameType.class)
-public class MixinGameType {
+public abstract class MixinGameType {
 
     /**
      * In 1.8.X, there was a gamemode type called "NOT_SET" which existed in case the game could not spawn a player/bot with an appropriate gamemode.

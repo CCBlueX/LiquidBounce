@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
-import net.ccbluex.liquidbounce.interfaces.ChatHudAddition;
-import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition;
+import net.ccbluex.liquidbounce.interfaces.ChatComponentAddition;
+import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.GuiMessage;
@@ -40,7 +40,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(ChatComponent.class)
-public abstract class MixinChatComponent implements ChatHudAddition {
+public abstract class MixinChatComponent implements ChatComponentAddition {
 
     @Mutable
     @Shadow
@@ -113,7 +113,7 @@ public abstract class MixinChatComponent implements ChatHudAddition {
     @Inject(method = "addMessageToDisplayQueue", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;isChatFocused()Z", shift = At.Shift.BEFORE), cancellable = true)
     public void hookAddVisibleMessage(GuiMessage message, CallbackInfo ci, @Local List<FormattedCharSequence> list) {
         var focused = isChatFocused();
-        var removable = ChatMessageAddition.class.cast(message);
+        var removable = GuiMessageLineAddition.class.cast(message);
         //noinspection DataFlowIssue
         var id = removable.liquid_bounce$getId();
 
@@ -127,7 +127,7 @@ public abstract class MixinChatComponent implements ChatHudAddition {
             boolean last = j == list.size() - 1;
             //noinspection DataFlowIssue
             var visible = new GuiMessage.Line(message.addedTime(), orderedText, message.tag(), last);
-            ((ChatMessageAddition) (Object) visible).liquid_bounce$setId(id);
+            ((GuiMessageLineAddition) (Object) visible).liquid_bounce$setId(id);
             trimmedMessages.addFirst(visible);
         }
 

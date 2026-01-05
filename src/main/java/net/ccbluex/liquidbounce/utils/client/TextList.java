@@ -25,8 +25,8 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.locale.Language;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,26 +34,27 @@ import java.util.List;
 /**
  * Text, but only siblings
  */
+@NullMarked
 public final class TextList implements Component {
 
     public static final TextList EMPTY = new TextList(Collections.emptyList());
 
-    private final @NotNull List<@NotNull Component> siblings;
+    private final List<Component> siblings;
 
     private FormattedCharSequence ordered = FormattedCharSequence.EMPTY;
     @Nullable
     private Language language;
 
-    private TextList(@NotNull List<@NotNull Component> siblings) {
-        this.siblings = siblings;
+    private TextList(@Nullable List<Component> siblings) {
+        this.siblings = siblings == null ? Collections.emptyList() : siblings;
     }
 
-    public static TextList of(@NotNull Component... texts) {
+    public static TextList of(Component... texts) {
         return of(ObjectList.of(texts));
     }
 
-    public static TextList of(@NotNull List<@NotNull Component> siblings) {
-        return siblings.isEmpty() ? EMPTY : new TextList(siblings);
+    public static TextList of(@Nullable List<Component> siblings) {
+        return siblings == null || siblings.isEmpty() ? EMPTY : new TextList(siblings);
     }
 
     @Override
@@ -67,7 +68,7 @@ public final class TextList implements Component {
     }
 
     @Override
-    public @NotNull List<Component> getSiblings() {
+    public List<Component> getSiblings() {
         return siblings;
     }
 

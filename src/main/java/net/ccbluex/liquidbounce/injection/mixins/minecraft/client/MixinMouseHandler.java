@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
-import net.ccbluex.liquidbounce.additions.MouseAddition;
+import net.ccbluex.liquidbounce.additions.MouseHandlerAddition;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent;
 import net.ccbluex.liquidbounce.event.events.MouseCursorEvent;
@@ -44,7 +44,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MouseHandler.class)
-public class MixinMouseHandler implements MouseAddition {
+public abstract class MixinMouseHandler implements MouseHandlerAddition {
 
     @Shadow
     @Final

@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Pseudo
 @Mixin(targets = "com/oracle/truffle/host/HostContext", remap = false)
-public class MixinHostContext {
+public abstract class MixinHostContext {
 
     @ModifyVariable(method = "findClassImpl", at = @At("HEAD"), argsOnly = true, remap = false)
     private String remapClassName(String value) {

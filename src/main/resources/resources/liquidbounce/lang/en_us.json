@@ -141,6 +141,7 @@
   "liquidbounce.command.invsee.result.playerNotFound": "Player named \"%s\" was not found.",
   "liquidbounce.command.localconfig.subcommand.save.parameter.name.description": "Name of the configuration file.",
   "liquidbounce.command.localconfig.subcommand.save.parameter.overwrite.description": "Overwrite existing configuration file.",
+  "liquidbounce.command.localconfig.subcommand.save.result.invalidFileName": "Configuration file name '%s' is unavailable.",
   "liquidbounce.command.localconfig.subcommand.save.result.alreadyExists": "Configuration file named %s already exists.",
   "liquidbounce.command.localconfig.subcommand.save.result.created": "Configuration file named %s has been created.",
   "liquidbounce.command.localconfig.subcommand.save.result.failedToCreate": "Failed to create configuration file named %s.",

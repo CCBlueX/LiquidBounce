@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BeaconRenderer.class)
-public class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwner> {
+public abstract class MixinBeaconRenderer<T extends BlockEntity & BeaconBeamOwner> {
     @Inject(
             method = "submit*",
             at = @At("HEAD"),

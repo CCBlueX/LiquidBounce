@@ -20,4 +20,5 @@ package net.ccbluex.liquidbounce.utils.aiming.data
 
 import net.minecraft.world.phys.Vec3
 
+@JvmRecord
 data class RotationWithVector(val rotation: Rotation, val vec: Vec3)

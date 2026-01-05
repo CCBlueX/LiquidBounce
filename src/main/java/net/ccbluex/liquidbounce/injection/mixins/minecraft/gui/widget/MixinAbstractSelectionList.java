@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(AbstractSelectionList.class)
-public class MixinAbstractSelectionList {
+public abstract class MixinAbstractSelectionList {
 
     @Shadow
     @Final

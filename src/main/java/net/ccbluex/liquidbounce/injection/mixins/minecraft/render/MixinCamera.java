@@ -128,8 +128,8 @@ public abstract class MixinCamera {
         }
 
         setRotation(
-            Mth.lerp(tickProgress, previousRotation.getYaw(), currentRotation.getYaw()),
-            Mth.lerp(tickProgress, previousRotation.getPitch(), currentRotation.getPitch())
+            Mth.lerp(tickProgress, previousRotation.yRot(), currentRotation.yRot()),
+            Mth.lerp(tickProgress, previousRotation.xRot(), currentRotation.xRot())
         );
     }
 

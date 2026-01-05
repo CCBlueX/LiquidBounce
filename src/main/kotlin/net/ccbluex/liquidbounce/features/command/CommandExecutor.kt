@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.bold
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.highlight
@@ -154,20 +154,21 @@ object CommandExecutor : EventListener {
                 val data = MessageMetadata(id = "CommandManager#error", remove = false)
                 chat(e.text.withStyle(ChatFormatting.RED), metadata = data)
 
-                if (!e.usageInfo.isNullOrEmpty()) {
+                if (e.usageInfo.isNotEmpty()) {
                     chat(highlight("Usage: ").bold(true), metadata = data)
 
                     // Zip the usage info together, e.g.
                     // ⬥ .friend add <name> [<alias>]
                     // ⬥ .friend remove <name>
                     for (usage in e.usageInfo) {
-                        chat(
-                            "\u2B25 ".asText()
-                                .withStyle(ChatFormatting.BLUE)
-                                .append(regular(CommandManager.Options.prefix + usage))
-                                .onClick(ClickEvent.SuggestCommand(CommandManager.Options.prefix + usage)),
-                            metadata = data
-                        )
+                        val prefix = CommandManager.Options.prefix
+                        val text = regular("")
+                            .append("\u2B25 ".asPlainText(ChatFormatting.BLUE))
+                            .append(regular(prefix))
+                            .append(usage)
+                            .onClick(ClickEvent.SuggestCommand(prefix + usage.string))
+
+                        chat(text, metadata = data)
                     }
                 }
             }

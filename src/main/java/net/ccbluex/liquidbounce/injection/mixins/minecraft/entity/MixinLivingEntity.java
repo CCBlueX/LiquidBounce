@@ -217,7 +217,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return original;
         }
 
-        float yaw = rotation.getYaw() * Mth.DEG_TO_RAD;
+        float yaw = rotation.yaw() * Mth.DEG_TO_RAD;
 
         return new Vec3(-Mth.sin(yaw) * 0.2F, 0.0, Mth.cos(yaw) * 0.2F);
     }
@@ -288,7 +288,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return original;
         }
 
-        return rotation.getPitch();
+        return rotation.pitch();
     }
 
     @Inject(method = "spawnItemParticles", at = @At("HEAD"), cancellable = true)
@@ -314,7 +314,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return original;
         }
 
-        return rotation.getDirectionVector();
+        return rotation.directionVector();
     }
 
     @Unique

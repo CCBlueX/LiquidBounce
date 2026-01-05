@@ -39,7 +39,7 @@ import java.util.function.Predicate;
  * @see AddressCheck
  */
 @Mixin(ServerNameResolver.class)
-public class MixinServerNameResolver {
+public abstract class MixinServerNameResolver {
 
     @WrapOperation(method = "resolveAddress", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/multiplayer/resolver/AddressCheck;isAllowed(Lnet/minecraft/client/multiplayer/resolver/ServerAddress;)Z"))

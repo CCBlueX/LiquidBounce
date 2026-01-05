@@ -152,16 +152,15 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
         val f = event.cursorDeltaY.toFloat() * 0.15f
         val g = event.cursorDeltaX.toFloat() * 0.15f
 
+        fun updateRotation(rotation: Rotation): Rotation =
+            Rotation(yaw = rotation.yaw + g, pitch = (rotation.pitch + f).coerceIn(-90f, 90f))
+
         playerRotation?.let { rotation ->
-            rotation.pitch += f
-            rotation.yaw += g
-            rotation.pitch = Math.clamp(rotation.pitch, -90.0f, 90.0f)
+            playerRotation = updateRotation(rotation)
         }
 
         targetRotation?.let { rotation ->
-            rotation.pitch += f
-            rotation.yaw += g
-            rotation.pitch = Math.clamp(rotation.pitch, -90.0f, 90.0f)
+            targetRotation = updateRotation(rotation)
         }
     }
 

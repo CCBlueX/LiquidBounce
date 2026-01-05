@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatScreenAccessor
-import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
+import net.ccbluex.liquidbounce.interfaces.TextColorAddition
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.Minecraft
@@ -150,7 +150,7 @@ fun MutableComponent.bypassNameProtection(): MutableComponent = withStyle {
     val color = it.color ?: TextColor.fromLegacyFormat(ChatFormatting.RESET)
 
     @Suppress("CAST_NEVER_SUCCEEDS")
-    val newColor = (color as ClientTextColorAdditions).`liquid_bounce$withNameProtectionBypass`()
+    val newColor = (color as TextColorAddition).`liquid_bounce$withNameProtectionBypass`()
 
     it.withColor(newColor)
 }
@@ -234,24 +234,6 @@ fun notification(title: String, message: Component, severity: NotificationEvent.
 fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message, severity))
 
-/**
- * Joins a list of [Text] into a single [Text] with the given [separator].
- */
-fun Collection<Component>.joinToText(separator: Component): Component {
-    if (isEmpty()) {
-        return PlainText.EMPTY
-    }
-
-    val iterator = iterator()
-    return Array(this.size * 2 - 1) { i ->
-        if (i % 2 == 0) {
-            iterator.next()
-        } else {
-            separator
-        }
-    }.asText()
-}
-
 val TextColor.bypassesNameProtection: Boolean
     @Suppress("CAST_NEVER_SUCCEEDS")
-    get() = (this as ClientTextColorAdditions).`liquid_bounce$doesBypassingNameProtect`()
+    get() = (this as TextColorAddition).`liquid_bounce$doesBypassingNameProtect`()

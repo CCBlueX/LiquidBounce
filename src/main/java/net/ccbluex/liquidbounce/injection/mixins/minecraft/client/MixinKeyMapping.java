@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(KeyMapping.class)
-public class MixinKeyMapping {
+public abstract class MixinKeyMapping {
 
     @Inject(method = "setKey", at = @At("RETURN"))
     private void hookSetBoundKey(InputConstants.Key boundKey, CallbackInfo ci) {

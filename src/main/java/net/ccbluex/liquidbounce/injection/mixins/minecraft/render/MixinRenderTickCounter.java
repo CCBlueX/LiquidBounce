@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(DeltaTracker.Timer.class)
-public class MixinRenderTickCounter {
+public abstract class MixinRenderTickCounter {
 
     @Shadow
     private float deltaTicks;

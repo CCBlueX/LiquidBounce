@@ -104,6 +104,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.po
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.putProtocol
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.deleteServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getCrosshairData
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getEffectTexture
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getInputInfo
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getIsTyping
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getItemTexture
@@ -267,6 +268,7 @@ internal fun Node.registerInteropFunctions() = withPath("/api/v1/client") {
     // Texture Functions
     get("/resource", ::getResource).apply {
         get("/itemTexture", ::getItemTexture)
+        get("/effectTexture", ::getEffectTexture)
         get("/skin", ::getSkin)
     }
 

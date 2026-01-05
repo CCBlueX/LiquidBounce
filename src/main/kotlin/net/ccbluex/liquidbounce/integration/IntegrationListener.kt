@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -217,6 +218,14 @@ object IntegrationListener : EventListener {
     private val screenRefresher = handler<GameTickEvent> {
         if (browserIsReady && mc.screen !is TaskProgressScreen) {
             handleCurrentScreen(mc.screen)
+        }
+    }
+
+    @Suppress("unused")
+    private val effectUpdateHandler = handler<GameTickEvent> {
+        val player = mc.player ?: return@handler
+        if (player.activeEffects.isNotEmpty()) {
+            EventManager.callEvent(ClientPlayerEffectEvent(player.activeEffects.toList()))
         }
     }
 

@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(targets = "net.minecraft.client.multiplayer.ServerStatusPinger$1")
-public class MixinMultiplayerServerListPinger {
+public abstract class MixinMultiplayerServerListPinger {
 
     @ModifyReceiver(method = "handlePongResponse",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/multiplayer/ServerData;ping:J", opcode = Opcodes.PUTFIELD))

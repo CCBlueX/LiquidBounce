@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(ClientHandshakePacketListenerImpl.class)
-public class MixinClientHandshakePacketListenerImplMixin {
+public abstract class MixinClientHandshakePacketListenerImplMixin {
 
     @ModifyExpressionValue(method = "handleLoginFinished", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/ClientBrandRetriever;getClientModName()Ljava/lang/String;", remap = false))
     private String getClientModName(String original) {

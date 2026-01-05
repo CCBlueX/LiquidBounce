@@ -102,7 +102,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
         var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.BODY);
         if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getA().getYaw(), overwriteRotation.getB().getYaw());
+            return Mth.rotLerp(tickDelta, overwriteRotation.getA().yRot(), overwriteRotation.getB().yRot());
         }
 
         return original;
@@ -116,7 +116,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
         var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.HEAD);
         if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getA().getYaw(), overwriteRotation.getB().getYaw());
+            return Mth.rotLerp(tickDelta, overwriteRotation.getA().yRot(), overwriteRotation.getB().yRot());
         }
 
         return original;
@@ -130,7 +130,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
         var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.HEAD);
         if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getA().getPitch(), overwriteRotation.getB().getPitch());
+            return Mth.rotLerp(tickDelta, overwriteRotation.getA().xRot(), overwriteRotation.getB().xRot());
         }
 
         return original;

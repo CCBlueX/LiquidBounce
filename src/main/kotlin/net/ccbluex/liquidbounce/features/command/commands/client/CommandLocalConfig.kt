@@ -24,8 +24,10 @@ import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.IncludeConfiguration
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.boolean
 import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -41,6 +43,8 @@ import net.ccbluex.liquidbounce.utils.client.plus
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.io.ILLEGAL_FILE_NAME_CHARS_WINDOWS
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Style
@@ -71,15 +75,21 @@ object CommandLocalConfig : Command.Factory {
         .begin("save")
         .alias("create")
         .parameter(
-            ParameterBuilder
-                .begin<String>("name")
+            ParameterBuilder.begin<String>("name")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                .autocompletedFrom {
+                    ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
+                }
                 .required()
                 .build()
         )
         .parameter(
-            ParameterBuilder
-                .begin<String>("include")
+            ParameterBuilder.boolean("overwrite")
+                .optional()
+                .build()
+        )
+        .parameter(
+            ParameterBuilder.begin<String>("include")
                 .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                 .autocompletedFrom { listOf("binds", "hidden") }
                 .vararg()
@@ -89,28 +99,38 @@ object CommandLocalConfig : Command.Factory {
         .handler {
             val name = args[0] as String
 
+            if (name.isBlank() || name.contains('/') ||
+                (Util.getPlatform() == Util.OS.WINDOWS && name.any { ILLEGAL_FILE_NAME_CHARS_WINDOWS.get(it.code) })
+            ) {
+                throw CommandException(command.result("invalidFileName", variable(name)))
+            }
+
+            val overwrite = args.getOrNull(1) as Boolean? ?: false
             @Suppress("UNCHECKED_CAST")
-            val include = args.getOrNull(1) as Array<*>? ?: emptyArray<String>()
+            val include = args.getOrNull(2) as Array<*>? ?: emptyArray<String>()
 
             val includeConfiguration = IncludeConfiguration(
                 includeBinds = include.contains("binds"),
-                includeHidden = include.contains("hidden")
+                includeHidden = include.contains("hidden"),
             )
 
-            ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
-                if (exists()) {
-                    delete()
+            val file = ConfigSystem.userConfigsFolder.resolve("$name.json")
+            try {
+                if (file.exists()) {
+                    if (overwrite) {
+                        file.delete()
+                    } else {
+                        chat(markAsError(command.result("alreadyExists", variable(name))))
+                        return@handler
+                    }
                 }
 
-                createNewFile()
-                bufferedWriter().use {
-                    serializeAutoConfig(it, includeConfiguration)
-                }
-            }.onFailure {
-                chat(regular(command.result("failedToCreate", variable(name))))
-                logger.error("Failed to create local config '$name'", it)
-            }.onSuccess {
+                file.createNewFile()
+                serializeAutoConfig(file.bufferedWriter(), includeConfiguration)
                 chat(regular(command.result("created", variable(name))))
+            } catch (e: Exception) {
+                chat(regular(command.result("failedToCreate", variable(name))))
+                logger.error("Failed to create local config '$name'", e)
             }
         }
         .build()
@@ -130,7 +150,7 @@ object CommandLocalConfig : Command.Factory {
             items = {
                 ConfigSystem.userConfigsFolder.listFiles { _, name ->
                     name.endsWith(".json", ignoreCase = true)
-                }.asList()
+                }.unmodifiable()
             },
             eachRow = { _, file ->
                 val fileNameWithoutSuffix = file.name.removeSuffix(".json")

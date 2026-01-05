@@ -70,7 +70,7 @@
                 return;
             }
 
-            return { key: e.key, keyCode: e.keyCode, modifier };
+            return {key: e.key, keyCode: e.keyCode, modifier};
         } else if (Object.hasOwn(event, "button")) {
             const e = event as MouseButtonEvent;
             handleActionChange(e.key);
@@ -106,7 +106,7 @@
             if (timeout !== undefined) {
                 clearTimeout(timeout);
             }
-            const { key, modifier } = result;
+            const {key, modifier} = result;
 
             addedModifiers.add(modifier);
             addedModifiers = addedModifiers; // Trigger reactive update
@@ -148,20 +148,17 @@
             on:mouseenter={() => isHovered = true}
             on:mouseleave={() => isHovered = false}
     >
-        <span class="bind-header">
-            <span class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</span>
-            <span class="action">
-                {#if cSetting.value.boundKey !== UNKNOWN_KEY}
-                    <SwitchBindAction
-                            choices={["Toggle", "Hold"]}
-                            bind:chosen={cSetting.value.action}
-                            onchange={handleChange}
-                    />
-                {:else}
-                    <span class="placeholder">&nbsp;</span>
-                {/if}
-            </span>
-        </span>
+        <span class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</span>
+
+        {#if cSetting.value.boundKey !== UNKNOWN_KEY}
+            <div class="action">
+                <SwitchBindAction
+                        choices={["Toggle", "Hold"]}
+                        bind:chosen={cSetting.value.action}
+                        onchange={handleChange}
+                />
+            </div>
+        {/if}
 
         <span class="bind">
             {#if !binding}
@@ -185,27 +182,15 @@
 <style lang="scss">
   @use "../../../../colors" as *;
 
-  .bind-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: relative;
+  .name {
+    text-align: center;
+    pointer-events: none;
+  }
 
-    .name {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      white-space: nowrap;
-      pointer-events: none;
-    }
-
-    .action {
-      margin-left: auto;
-
-      &.placeholder {
-        width: 0;
-      }
-    }
+  .action {
+    position: absolute;
+    top: 4px;
+    right: 4px;
   }
 
   .bind {
@@ -228,5 +213,6 @@
     font-size: 12px;
     font-family: "Inter", sans-serif;
     width: 100%;
+    position: relative;
   }
 </style>

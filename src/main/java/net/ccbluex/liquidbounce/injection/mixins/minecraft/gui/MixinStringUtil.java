@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(StringUtil.class)
-public class MixinStringUtil {
+public abstract class MixinStringUtil {
 
     /**
      * @author superblaubeere27

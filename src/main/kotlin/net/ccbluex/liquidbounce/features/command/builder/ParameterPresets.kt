@@ -189,6 +189,12 @@ fun ParameterBuilder.Companion.item(
         BuiltInRegistries.ITEM.keySet().map { it.toString() }
     }
 
+fun ParameterBuilder.Companion.boolean(
+    name: String,
+) = begin<Boolean>(name)
+    .verifiedBy(BOOLEAN_VALIDATOR)
+    .autocompletedFrom { listOf("true", "false") }
+
 fun ParameterBuilder.Companion.playerName(
     name: String = "playerName",
 ) = begin<String>(name)

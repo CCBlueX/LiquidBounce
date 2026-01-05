@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(TranslatableContents.class)
-public class MixinTranslatableContents {
+public abstract class MixinTranslatableContents {
 
     @ModifyExpressionValue(method = "decompose", at = @At(value = "INVOKE", target = "Lnet/minecraft/locale/Language;getInstance()Lnet/minecraft/locale/Language;"))
     private Language hookClientTranslations(Language original) {

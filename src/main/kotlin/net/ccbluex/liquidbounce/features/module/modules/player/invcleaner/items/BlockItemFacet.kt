@@ -36,7 +36,7 @@ class BlockItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.BLOCK, 0)
+        get() = ItemType.BLOCK.defaultCategory
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as BlockItemFacet)

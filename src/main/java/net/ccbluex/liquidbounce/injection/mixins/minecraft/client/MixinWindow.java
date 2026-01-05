@@ -41,7 +41,7 @@ import java.io.InputStream;
 import java.util.List;
 
 @Mixin(Window.class)
-public class MixinWindow {
+public abstract class MixinWindow {
 
     @Shadow
     @Final

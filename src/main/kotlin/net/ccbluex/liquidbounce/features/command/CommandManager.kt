@@ -70,9 +70,12 @@ import net.ccbluex.liquidbounce.features.command.commands.translate.CommandTrans
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.joinToText
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.math.levenshtein
+import net.minecraft.ChatFormatting
 import java.util.concurrent.CompletableFuture
 import kotlin.math.min
 
@@ -254,7 +257,7 @@ object CommandManager : Collection<Command> by commandSet {
                 args[0]
             ),
             usageInfo = if (rootCommandMap.isEmpty() || Options.hintCount == 0) {
-                null
+                emptyList()
             } else {
                 commandSet.sortedBy { command ->
                     var distance = levenshtein(args[0], command.name)
@@ -266,11 +269,17 @@ object CommandManager : Collection<Command> by commandSet {
                     }
                     distance
                 }.take(Options.hintCount).map { command ->
-                    Pools.buildStringPooled {
-                        append(command.name)
-                        if (command.aliases.isNotEmpty()) {
-                            command.aliases.joinTo(this, separator = "/", prefix = " (", postfix = ")")
-                        }
+                    if (command.aliases.isEmpty()) {
+                        command.nameAsText()
+                    } else {
+                        textOf(
+                            command.nameAsText(),
+                            command.aliases.joinToText(
+                                separator = ", ".asPlainText(ChatFormatting.DARK_GRAY),
+                                prefix = " (".asPlainText(ChatFormatting.DARK_GRAY),
+                                postfix = ")".asPlainText(ChatFormatting.DARK_GRAY),
+                            ) { it.asPlainText() },
+                        )
                     }
                 }
             }

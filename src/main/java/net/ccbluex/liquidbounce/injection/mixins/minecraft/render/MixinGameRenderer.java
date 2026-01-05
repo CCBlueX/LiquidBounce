@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAspect;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
@@ -133,7 +134,10 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "bobView", at = @At("HEAD"), cancellable = true)
     private void injectBobView(PoseStack matrixStack, float tickProgress, CallbackInfo callbackInfo) {
-        if (ModuleNoBob.INSTANCE.getRunning() || ModuleTracers.INSTANCE.getRunning()) {
+        if (ModuleNoBob.INSTANCE.getRunning() ||
+            ModuleTracers.INSTANCE.getRunning() ||
+            (ModuleItemESP.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.getShowTracers())) {
+
             callbackInfo.cancel();
             return;
         }

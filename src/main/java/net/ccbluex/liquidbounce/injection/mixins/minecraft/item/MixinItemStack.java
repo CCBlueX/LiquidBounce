@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(ItemStack.class)
-public class MixinItemStack {
+public abstract class MixinItemStack {
 
     @Inject(method = "getTooltipLines", at = @At("RETURN"), cancellable = true)
     void injectLoreQueryEvent(

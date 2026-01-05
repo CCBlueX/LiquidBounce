@@ -34,7 +34,7 @@ class ArrowItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.ARROW, 0)
+        get() = ItemType.ARROW.defaultCategory
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as ArrowItemFacet)
