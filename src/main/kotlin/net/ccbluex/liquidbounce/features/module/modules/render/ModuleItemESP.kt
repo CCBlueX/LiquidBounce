@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.drawLines
+import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.longLines
@@ -65,8 +65,8 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
     private val items by items("Items", itemSortedSetOf())
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
-    val showTracers by boolean("ShowTracers", false)
-    
+    val showTracers by boolean("Tracers", false)
+
     private object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {
         val regularArrows by boolean("RegularArrows", true)
         val spectralArrows by boolean("SpectralArrows", true)
@@ -99,10 +99,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         // Check if the tracer option is enabled
         if (!showTracers) return@handler
 
-        val matrixStack = event.matrixStack
-        val camera = mc.gameRenderer.mainCamera
-
-        renderEnvironmentForWorld(matrixStack) {
+        renderEnvironmentForWorld(event.matrixStack) {
             // We calculate the gaze vector (where the camera is looking)
             val eyeVector = Vec3f(0.0, 0.0, 1.0)
                 .rotatePitch(-camera.xRot().toRadians())
@@ -121,17 +118,17 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
                     // Interpolating the position (motion smoothing)
                     val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
 
-                    drawLines(
+                    drawLine(
                         argb = color.toARGB(),
-                        eyeVector, pos,
-                        pos, pos.add(0f, entity.bbHeight, 0f)
+                        p1 = eyeVector,
+                        p2 = pos,
                     )
                 }
                 commitBatch()
             }
         }
     }
-    
+
     private object BoxMode : Choice("Box") {
 
         override val parent: ChoiceConfigurable<Choice>
