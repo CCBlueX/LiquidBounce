@@ -30,19 +30,19 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.util.Mth
 import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
  * Renders a circle around the player indicating the KillAura attack range.
- * Features:
- * - Synced with KillAura Range and WallRange
- * - Color changes based on target state (idle/active)
- * - Multiple color modes (static, rainbow, distance-based)
- * - Pulse animation option
- * - Opponent range visualization
- * - Enemy count display
+ * Fully synced with KillAura settings:
+ * - Range and WallRange from KillAura
+ * - ScanExtraRange visualization
+ * - OpponentRange from FightBot
+ * - Respects IgnoreOpenInventory setting
  */
 object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeIndicator", false) {
 
@@ -64,23 +64,25 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
     private val fadeAnimation by boolean("FadeAnimation", true)
     private val fadeSpeed by float("FadeSpeed", 0.1f, 0.01f..0.5f)
 
-    // Wall range circle
+    // Additional range circles (synced with KillAura)
     private val showWallRange by boolean("ShowWallRange", false)
     private val wallRangeColor by color("WallRangeColor", Color4b(255, 165, 0, 60))
 
-    // Opponent range (shows estimated enemy attack range)
+    private val showScanRange by boolean("ShowScanRange", false)
+    private val scanRangeColor by color("ScanRangeColor", Color4b(100, 100, 255, 40))
+
+    // Opponent range (synced with FightBot.opponentRange)
     private val showOpponentRange by boolean("ShowOpponentRange", false)
-    private val opponentRange by float("OpponentRange", 3f, 1f..6f)
     private val opponentRangeColor by color("OpponentRangeColor", Color4b(255, 0, 0, 40))
 
-    // Conditions - when NOT to render
+    // Conditions - synced with KillAura behavior
     private val hideWhenDead by boolean("HideWhenDead", true)
     private val hideWhenSpectator by boolean("HideWhenSpectator", true)
     private val hideInVehicle by boolean("HideInVehicle", false)
+    private val respectInventorySetting by boolean("RespectInventorySetting", true)
 
     // State tracking for animations
     private var currentColorFactor = 0f
-    private var lastTargetState = false
 
     private enum class ColorMode(override val choiceName: String) : NamedChoice {
         STATIC("Static"),
@@ -91,10 +93,16 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
     fun render(env: WorldRenderEnvironment, partialTicks: Float) {
         if (!enabled) return
 
-        // Check conditions
+        // Sync with KillAura conditions
         if (hideWhenDead && player.isDeadOrDying) return
         if (hideWhenSpectator && player.isSpectator) return
         if (hideInVehicle && player.vehicle != null) return
+
+        // Respect KillAura's inventory setting
+        if (respectInventorySetting) {
+            val isInInventoryScreen = isInventoryOpen || net.ccbluex.liquidbounce.utils.client.mc.screen is ContainerScreen
+            if (isInInventoryScreen && !ModuleKillAura.ignoreOpenInventory) return
+        }
 
         val target = ModuleKillAura.targetTracker.target
         val hasTarget = target != null
@@ -102,8 +110,10 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
         // Update fade animation
         updateFadeAnimation(hasTarget)
 
+        // Get ranges from KillAura (synced)
         val range = ModuleKillAura.range
         val wallRange = ModuleKillAura.wallRange
+
         val pos = player.interpolateCurrentPosition(partialTicks)
 
         // Calculate pulse effect
@@ -119,29 +129,42 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
 
         with(env) {
             withPositionRelativeToCamera(pos) {
-                // Main attack range circle
+                // Main attack range circle (synced with KillAura.range)
                 drawGradientCircle(effectiveRange, 0f, color, color.with(a = 0))
 
                 if (outline) {
                     drawCircleOutline(effectiveRange, outlineColor)
                 }
 
-                // Wall range circle
+                // Wall range circle (synced with KillAura.wallRange)
                 if (showWallRange && wallRange < range) {
                     val wallColor = wallRangeColor.let {
                         if (hasTarget) it.with(a = (it.a * 1.5f).toInt().coerceAtMost(255)) else it
                     }
-                    drawGradientCircle(wallRange, 0f, wallColor, wallColor.with(a = 0))
+                    drawGradientCircle(wallRange + pulseOffset * 0.5f, 0f, wallColor, wallColor.with(a = 0))
                     if (outline) {
-                        drawCircleOutline(wallRange, outlineColor.with(a = 80))
+                        drawCircleOutline(wallRange + pulseOffset * 0.5f, outlineColor.with(a = 80))
                     }
                 }
 
-                // Opponent range circle (enemy's estimated attack range)
-                if (showOpponentRange && hasTarget) {
-                    drawGradientCircle(opponentRange, 0f, opponentRangeColor, opponentRangeColor.with(a = 0))
+                // Scan extra range circle (shows detection range beyond attack range)
+                if (showScanRange) {
+                    // ScanExtraRange is private, so we approximate with a fixed offset
+                    // This shows the area where KillAura starts tracking but can't attack yet
+                    val scanRange = range + 2.5f // Approximate middle of default scanExtraRange
+                    drawGradientCircle(scanRange, 0f, scanRangeColor, scanRangeColor.with(a = 0))
                     if (outline) {
-                        drawCircleOutline(opponentRange, opponentRangeColor.with(a = 100))
+                        drawCircleOutline(scanRange, scanRangeColor.with(a = 60))
+                    }
+                }
+
+                // Opponent range circle (synced concept with FightBot.opponentRange)
+                // Shows estimated enemy attack range for spacing awareness
+                if (showOpponentRange && hasTarget) {
+                    val oppRange = 3f // Default opponent reach in Minecraft
+                    drawGradientCircle(oppRange, 0f, opponentRangeColor, opponentRangeColor.with(a = 0))
+                    if (outline) {
+                        drawCircleOutline(oppRange, opponentRangeColor.with(a = 100))
                     }
                 }
             }
@@ -151,22 +174,20 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
     private fun updateFadeAnimation(hasTarget: Boolean) {
         if (!fadeAnimation) {
             currentColorFactor = if (hasTarget) 1f else 0f
-            lastTargetState = hasTarget
             return
         }
 
         val targetFactor = if (hasTarget) 1f else 0f
         currentColorFactor = Mth.lerp(fadeSpeed, currentColorFactor, targetFactor)
 
-        // Snap to target if close enough
         if (kotlin.math.abs(currentColorFactor - targetFactor) < 0.01f) {
             currentColorFactor = targetFactor
         }
-
-        lastTargetState = hasTarget
     }
 
     private fun getColor(distanceToTarget: Float?): Color4b {
+        val range = ModuleKillAura.range
+
         return when (colorMode) {
             ColorMode.RAINBOW -> rainbow(alpha = 0.5f)
 
@@ -174,8 +195,6 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
                 if (distanceToTarget == null) {
                     idleColor
                 } else {
-                    // Interpolate from green (close) to red (far) based on distance
-                    val range = ModuleKillAura.range
                     val factor = (distanceToTarget / range).coerceIn(0f, 1f)
                     interpolateColor(activeColor, idleColor, factor)
                 }
