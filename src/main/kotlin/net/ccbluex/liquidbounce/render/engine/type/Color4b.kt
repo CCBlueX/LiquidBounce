@@ -33,8 +33,6 @@ data class Color4b(val argb: Int) {
 
     constructor(color: Color) : this(color.rgb)
 
-//    constructor(hex: Int, hasAlpha: Boolean = false) : this(if (hasAlpha) hex else 0xFF000000.toInt() or hex)
-
     @get:JvmName("a")
     val a: Int get() = ARGB.alpha(argb)
 
