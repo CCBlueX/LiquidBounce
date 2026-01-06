@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.minecraft.world.entity.TraceableEntity
 import net.minecraft.world.entity.player.Player
@@ -118,7 +117,7 @@ object ModuleTrajectories : ClientModule("Trajectories", Category.RENDER) {
         event: WorldRenderEvent
     ) {
         val (trajectoryInfo, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
-            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack.item, this.alwaysShowBow)?.let {
+            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack, this.alwaysShowBow)?.let {
                 it to stack
             }
         } ?: return

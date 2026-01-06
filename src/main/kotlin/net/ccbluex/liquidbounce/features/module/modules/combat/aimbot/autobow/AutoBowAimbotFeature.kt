@@ -60,13 +60,14 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
     private val tickRepeatable = tickHandler {
         targetTracker.reset()
 
-        val activeItem = if (player.isUsingItem) {
-            player.useItem.item
+        val activeStack = if (player.isUsingItem) {
+            player.useItem
         } else {
             player.handItems.firstOrNull {
                 it.item is CrossbowItem && CrossbowItem.isCharged(it)
             }
         }
+        val activeItem = activeStack?.item
 
         if (activeItem !is BowItem && activeItem !is TridentItem && activeItem !is CrossbowItem) {
             return@tickHandler
@@ -74,7 +75,7 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
 
         val projectileInfo = TrajectoryData.getRenderedTrajectoryInfo(
             player,
-            activeItem,
+            activeStack,
             true
         ) ?: return@tickHandler
 

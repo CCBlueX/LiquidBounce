@@ -41,7 +41,6 @@ import net.minecraft.world.item.EnderpearlItem
 import net.minecraft.world.item.ExperienceBottleItem
 import net.minecraft.world.item.FireChargeItem
 import net.minecraft.world.item.FishingRodItem
-import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.ThrowablePotionItem
@@ -52,8 +51,8 @@ import net.minecraft.world.phys.Vec3
 
 object TrajectoryData {
     @JvmStatic
-    fun getRenderedTrajectoryInfo(player: Player, item: Item, alwaysShowBow: Boolean): TrajectoryInfo? {
-        return when (item) {
+    fun getRenderedTrajectoryInfo(player: Player, stack: ItemStack, alwaysShowBow: Boolean): TrajectoryInfo? {
+        return when (stack.item) {
             is BowItem -> {
                 val useTime = if (alwaysShowBow && player.ticksUsingItem < 1) {
                     40
