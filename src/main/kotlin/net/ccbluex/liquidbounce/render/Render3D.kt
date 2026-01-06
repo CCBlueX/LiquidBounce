@@ -40,6 +40,7 @@ import net.minecraft.core.Vec3i
 import org.joml.Vector3fc
 import org.joml.Vector4f
 import java.util.Collections.singletonMap
+import java.util.function.Function
 
 /**
  * Context representing the rendering environment.
@@ -75,7 +76,7 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
 
     fun getOrCreateBuffer(pipeline: RenderPipeline): BufferBuilder {
         return if (isBatchMode) {
-            batchBuffer.computeIfAbsent(pipeline, ClientTesselator::begin)
+            batchBuffer.computeIfAbsent(pipeline, Function(ClientTesselator::begin))
         } else {
             Tesselator.getInstance().begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
         }

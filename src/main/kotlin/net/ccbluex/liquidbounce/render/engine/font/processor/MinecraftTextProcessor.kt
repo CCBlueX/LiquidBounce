@@ -72,7 +72,7 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
             style.isItalic -> Font.ITALIC
             else -> Font.PLAIN
         }
-        val color = style.color?.let { Color4b(it.value) } ?: defaultColor
+        val color = style.color?.let { Color4b.fullAlpha(it.value) } ?: defaultColor
         val obfuscated = style.isObfuscated
 
         result.chars.ensureCapacity(textAsString.length)

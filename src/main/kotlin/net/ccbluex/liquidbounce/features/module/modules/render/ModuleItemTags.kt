@@ -68,7 +68,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val items by items("Items", itemSortedSetOf())
 
-    private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+    private val backgroundColor by color("BackgroundColor", Color4b.DEFAULT_BG_COLOR)
     private val scale by float("Scale", 1.5F, 0.25F..4F)
     private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
     private val rowLength by int("RowLength", 100, 1..100)

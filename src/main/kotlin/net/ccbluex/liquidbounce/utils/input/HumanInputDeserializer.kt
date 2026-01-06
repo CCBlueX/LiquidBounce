@@ -55,7 +55,7 @@ object HumanInputDeserializer {
         if (it.startsWith('#')) {
             Color4b.fromHex(it)
         } else {
-            Color4b(Color(it.toInt()))
+            Color4b(it.toInt())
         }
     }
 

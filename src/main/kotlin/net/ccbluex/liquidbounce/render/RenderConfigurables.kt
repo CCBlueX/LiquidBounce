@@ -37,11 +37,8 @@ class GenericStaticColorMode(
     override val parent: ChoiceConfigurable<*>,
     defaultColor: Color4b
 ) : GenericColorMode<Any?>("Static") {
-
-    private val staticColor by color("Color", defaultColor)
-
-    override fun getColor(param: Any?) = staticColor
-
+    private val staticColor = color("Color", defaultColor)
+    override fun getColor(param: Any?) = staticColor.get()
 }
 
 class GenericRainbowColorMode(
@@ -55,13 +52,12 @@ class MapColorMode(
     override val parent: ChoiceConfigurable<*>,
     private val alpha: Int = 100
 ) : GenericColorMode<Pair<BlockPos, BlockState>>("MapColor") {
-
     override fun getColor(param: Pair<BlockPos, BlockState>): Color4b {
         val (pos, state) = param
 
-        return Color4b(state.getMapColor(world, pos).col).with(a = alpha)
+        val mapColor = state.getMapColor(world, pos).col
+        return Color4b(mapColor).alpha(alpha)
     }
-
 }
 
 
