@@ -24,12 +24,20 @@ import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyAirWalk
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyCreative
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyEnderpearl
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyExplosion
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyJetpack
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrim2859V
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixel
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixelFlat
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar.FlyHycraftDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel10thMar
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel20thApr
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel26thDec
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel27thJan
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartan524
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
@@ -39,11 +47,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulca
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286MC18
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286Teleport
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixelFlat
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixel
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 /**
  * Fly module
@@ -80,6 +86,7 @@ object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = listOf("Glid
             FlySentinel20thApr,
             FlySentinel27thJan,
             FlySentinel10thMar,
+            FlySentinel26thDec,
 
             FlyVerusB3896Damage,
             FlyVerusB3869Flat,
@@ -99,7 +106,7 @@ object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = listOf("Glid
         @Suppress("unused")
         val strideHandler = handler<PlayerStrideEvent> { event ->
             if (stride) {
-                event.strideForce = 0.1.coerceAtMost(player.velocity.horizontalLength()).toFloat()
+                event.strideForce = 0.1.coerceAtMost(player.deltaMovement.horizontalDistance()).toFloat()
             }
 
         }
@@ -115,7 +122,7 @@ object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = listOf("Glid
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         // Setback detection
-        if (event.packet is PlayerPositionLookS2CPacket && disableOnSetback) {
+        if (event.packet is ClientboundPlayerPositionPacket && disableOnSetback) {
             chat(markAsError(message("setbackDetected")))
             enabled = false
         }

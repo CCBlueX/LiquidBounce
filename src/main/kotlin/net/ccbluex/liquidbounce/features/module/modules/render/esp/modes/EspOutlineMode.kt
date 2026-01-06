@@ -18,4 +18,5 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.esp.modes
 
+@Suppress("unused")
 object EspOutlineMode : EspMode("Outline", requiresTrueSight = true)

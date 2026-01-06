@@ -19,11 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandAutoDisable
 import net.ccbluex.liquidbounce.features.module.Category
@@ -33,7 +35,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import java.util.*
 
 /**
  * AutoDisable module
@@ -46,8 +49,8 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
     val modules: Set<ClientModule>
         field: MutableSet<ClientModule> = ReferenceOpenHashSet()
 
-    private val moduleNames by registryList("Modules", hashSetOf<String>(), ValueType.CLIENT_MODULE)
-    private val disableOn by multiEnumChoice<DisableOn>("On")
+    private val moduleNames by registryList("Modules", objectRBTreeSetOf<String>(), ValueType.CLIENT_MODULE)
+    private val disableOn by multiEnumChoice<DisableOn>("On", EnumSet.allOf(DisableOn::class.java), canBeNone = false)
 
     fun clear() {
         modules.clear()
@@ -80,15 +83,20 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
     }
 
     @Suppress("unused")
-    val worldChangesHandler = handler<PacketEvent> {
-        if (it.packet is PlayerPositionLookS2CPacket && DisableOn.FLAG in disableOn) {
+    private val worldChangesHandler = handler<PacketEvent> {
+        if (it.packet is ClientboundPlayerPositionPacket && DisableOn.FLAG in disableOn) {
             disableAndNotify("flag")
         }
     }
 
     @Suppress("unused")
-    val deathHandler = handler<DeathEvent> {
+    private val deathHandler = handler<DeathEvent> {
         if (DisableOn.DEATH in disableOn) disableAndNotify("your death")
+    }
+
+    @Suppress("unused")
+    private val worldChangeHandler = handler<WorldChangeEvent> {
+        if (DisableOn.WORLD_CHANGE in disableOn) disableAndNotify("world change")
     }
 
     private fun disableAndNotify(reason: String) {
@@ -108,6 +116,7 @@ object ModuleAutoDisable : ClientModule("AutoDisable", Category.WORLD) {
 
     private enum class DisableOn(override val choiceName: String) : NamedChoice {
         FLAG("Flag"),
-        DEATH("Death")
+        DEATH("Death"),
+        WORLD_CHANGE("WorldChange"),
     }
 }

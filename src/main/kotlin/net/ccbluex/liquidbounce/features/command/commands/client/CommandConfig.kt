@@ -32,10 +32,19 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.Text
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.browseUrl
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.Component
 import org.apache.commons.io.input.CharSequenceReader
 
 /**
@@ -82,12 +91,12 @@ object CommandConfig : Command.Factory {
         .handler {
             runCatching {
                 chat(regular(command.result("loading")))
-                val widthOfSpace = mc.textRenderer.getWidth(" ")
+                val widthOfSpace = mc.font.width(" ")
                 val configs = configs ?: run {
                     chat(markAsError("Failed to load settings list from API"))
                     return@handler
                 }
-                val width = configs.maxOf { mc.textRenderer.getWidth(it.settingId) }
+                val width = configs.maxOf { mc.font.width(it.settingId) }
 
                 // In the case of the chat, we want to show the newest config at the bottom for visibility
                 configs.sortedBy { it.date }.forEach {
@@ -96,34 +105,31 @@ object CommandConfig : Command.Factory {
                     // Append spaces to the setting name to align the date and status
                     // Compensate for the length of the setting name
                     val spaces = " ".repeat(
-                        (width - mc.textRenderer.getWidth(settingName))
+                        (width - mc.font.width(settingName))
                             / widthOfSpace
                     )
 
                     chat(
                         variable(settingName)
                             .onClick(
-                                ClickEvent(
-                                    ClickEvent.Action.SUGGEST_COMMAND,
+                                ClickEvent.SuggestCommand(
                                     ".config load $settingName"
                                 )
                             )
                             .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
-                                    Text.of("§7Click to load $settingName")
+                                HoverEvent.ShowText(
+                                    Component.nullToEmpty("§7Click to load $settingName")
                                 )
                             ),
                         regular(spaces),
                         regular(" | "),
                         variable(it.dateFormatted),
                         regular(" | "),
-                        Text.literal(it.statusType.displayName)
-                            .formatted(it.statusType.formatting)
+                        Component.literal(it.statusType.displayName)
+                            .withStyle(it.statusType.formatting)
                             .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
-                                    Text.of(it.statusDateFormatted)
+                                HoverEvent.ShowText(
+                                    Component.nullToEmpty(it.statusDateFormatted)
                                 )
                             )
                         ,

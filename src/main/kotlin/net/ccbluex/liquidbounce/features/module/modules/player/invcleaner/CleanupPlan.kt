@@ -22,10 +22,10 @@ import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.component.ComponentChanges
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
+import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.core.registries.BuiltInRegistries
 import kotlin.math.ceil
 
 @JvmRecord
@@ -36,11 +36,11 @@ data class InventorySwap(val from: ItemSlot, val to: ItemSlot, val priority: Pri
  * [ItemStack]s with same [Item] and [ComponentChanges] can be merged.
  */
 @JvmRecord
-data class ItemAndComponents(val item: Item, val componentChanges: ComponentChanges) {
-    constructor(itemStack: ItemStack) : this(itemStack.item, itemStack.componentChanges)
+data class ItemAndComponents(val item: Item, val componentChanges: DataComponentPatch) {
+    constructor(itemStack: ItemStack) : this(itemStack.item, itemStack.componentsPatch)
 
     fun toItemStack(count: Int): ItemStack {
-        val itemKey = Registries.ITEM.getEntry(item)
+        val itemKey = BuiltInRegistries.ITEM.wrapAsHolder(item)
         return ItemStack(itemKey, count, componentChanges)
     }
 }
@@ -145,7 +145,7 @@ class InventoryCleanupPlan(
         val itemsToMerge = mutableListOf<ItemSlot>()
 
         for (mergeableItem in mergeableItems) {
-            val maxStackSize = mergeableItem.key.item.maxCount
+            val maxStackSize = mergeableItem.key.item.defaultMaxStackSize
 
             if (!canMerge(mergeableItem.value, maxStackSize)) {
                 continue

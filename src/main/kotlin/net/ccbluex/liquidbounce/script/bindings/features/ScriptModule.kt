@@ -19,12 +19,23 @@
 package net.ccbluex.liquidbounce.script.bindings.features
 
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EVENT_NAME_TO_CLASS
+import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
+import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.script.PolyglotScript
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.highlight
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.warning
 import java.util.function.Supplier
 
 class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) : ClientModule(
@@ -132,12 +143,7 @@ class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) :
 
         EventManager.registerEventHook(
             clazz,
-            EventHook(
-                this,
-                {
-                    callEvent(eventName, it)
-                }
-            )
+            newEventHook { callEvent(eventName, it) }
         )
     }
 }

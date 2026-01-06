@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 internal object NoFallCancel : NoFallMode("Cancel") {
 
@@ -41,7 +41,7 @@ internal object NoFallCancel : NoFallMode("Cancel") {
         }
 
         when (val packet = event.packet) {
-            is PlayerPositionLookS2CPacket -> {
+            is ClientboundPlayerPositionPacket -> {
                 val change = packet.change
 
                 if (cancelSetback) {
@@ -49,13 +49,13 @@ internal object NoFallCancel : NoFallMode("Cancel") {
                 }
 
                 val pos = change.position()
-                network.sendPacket(
-                    PlayerMoveC2SPacket.Full(
+                network.send(
+                    ServerboundMovePlayerPacket.PosRot(
                         pos.x,
                         pos.y,
                         pos.z,
-                        change.yaw,
-                        change.pitch,
+                        change.yRot,
+                        change.xRot,
                         true,
                         player.horizontalCollision
                     )
@@ -63,13 +63,13 @@ internal object NoFallCancel : NoFallMode("Cancel") {
                 isFalling = false
             }
 
-            is PlayerMoveC2SPacket -> {
+            is ServerboundMovePlayerPacket -> {
                 if (player.fallDistance >= fallDistance.activeChoice.value) {
                     isFalling = true
 
                     event.cancelEvent()
                     if (resetFallDistance) {
-                        player.onLanding()
+                        player.resetFallDistance()
                     }
                 }
             }

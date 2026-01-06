@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.minecraft.client.option.KeyBinding
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.HitResult
+import net.minecraft.client.KeyMapping
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
 
 /**
  * AutoBreak module
@@ -36,8 +36,8 @@ object ModuleAutoBreak : ClientModule("AutoBreak", Category.PLAYER) {
 
     @Suppress("unused")
     private val keybindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
-        if (event.keyBinding == mc.options.attackKey && mc.attackCooldown <= 0) {
-            val crosshairTarget = mc.crosshairTarget
+        if (event.keyBinding == mc.options.keyAttack && mc.missTime <= 0) {
+            val crosshairTarget = mc.hitResult
 
             if (crosshairTarget is BlockHitResult && crosshairTarget.type == HitResult.Type.BLOCK) {
                 val blockState = crosshairTarget.blockPos.getState() ?: return@handler
@@ -45,9 +45,9 @@ object ModuleAutoBreak : ClientModule("AutoBreak", Category.PLAYER) {
                     return@handler
                 }
 
-                if (!interaction.isBreakingBlock) {
+                if (!interaction.isDestroying) {
                     // First click
-                    KeyBinding.onKeyPressed(mc.options.attackKey.boundKey)
+                    KeyMapping.click(mc.options.keyAttack.key)
                 }
                 event.isPressed = true
             }

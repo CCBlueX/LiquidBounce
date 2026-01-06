@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import kotlin.math.abs
 import kotlin.math.ceil
 
@@ -145,7 +145,7 @@ object ModuleTimer : ClientModule("Timer", Category.WORLD, disableOnQuit = true)
             }
 
             if (!player.moving) {
-                if (mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen) {
+                if (mc.screen is InventoryScreen || mc.screen is ContainerScreen) {
                     boostCapable = 0
                     return@tickHandler
                 }

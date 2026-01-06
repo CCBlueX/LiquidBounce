@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.client.fastCos
+import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -34,14 +36,12 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.entity.Entity
-import net.minecraft.item.BowItem
-import net.minecraft.item.CrossbowItem
-import net.minecraft.item.TridentItem
-import net.minecraft.util.Hand
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.world.item.BowItem
+import net.minecraft.world.item.CrossbowItem
+import net.minecraft.world.item.TridentItem
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoot", true) {
 
@@ -152,7 +152,7 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
 
     @Suppress("unused")
     private val keybindHandler = handler<KeybindIsPressedEvent> { event ->
-        if (event.keyBinding == mc.options.useKey && forceUncharged) {
+        if (event.keyBinding == mc.options.keyUse && forceUncharged) {
             event.isPressed = false
         }
     }
@@ -171,14 +171,14 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
 
         val velocity = trajectoryInfo.initialVelocity
 
-        val vX = -MathHelper.sin(yaw.toRadians()) * MathHelper.cos(pitch.toRadians()) * velocity
-        val vY = -MathHelper.sin(pitch.toRadians()) * velocity
-        val vZ = MathHelper.cos(yaw.toRadians()) * MathHelper.cos(pitch.toRadians()) * velocity
+        val vX = -yaw.toRadians().fastSin() * pitch.toRadians().fastCos() * velocity
+        val vY = -pitch.toRadians().fastSin() * velocity
+        val vZ = yaw.toRadians().fastCos() * pitch.toRadians().fastCos() * velocity
 
         val arrow = SimulatedArrow(
             world,
-            player.eyePos,
-            Vec3d(vX, vY, vZ),
+            player.eyePosition,
+            Vec3(vX, vY, vZ),
             collideEntities = false
         )
 

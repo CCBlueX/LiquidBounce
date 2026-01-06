@@ -20,6 +20,8 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.djl;
 
+import static ai.djl.util.Utils.isOfflineMode;
+
 import ai.djl.util.Utils;
 import net.ccbluex.liquidbounce.api.core.HttpClient;
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine;
@@ -39,11 +41,9 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Map;
 
-import static ai.djl.util.Utils.isOfflineMode;
-
 @Pseudo
 @Mixin(value = Utils.class)
-public class MixinUtils {
+public abstract class MixinUtils {
 
     @Unique
     private static final ThreadLocal<String> CURRENT_URL = new ThreadLocal<>();

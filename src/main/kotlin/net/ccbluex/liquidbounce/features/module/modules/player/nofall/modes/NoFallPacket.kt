@@ -29,12 +29,12 @@ internal object NoFallPacket : NoFallMode("Packet") {
 
     val repeatable = tickHandler {
         if (filter.activeChoice.isActive) {
-            network.sendPacket(packetType.generatePacket().apply {
+            network.send(packetType.generatePacket().apply {
                 onGround = true
             })
 
             if (filter.activeChoice is FallDistance && FallDistance.resetFallDistance) {
-                player.onLanding()
+                player.resetFallDistance()
             }
         }
     }
@@ -48,7 +48,7 @@ internal object NoFallPacket : NoFallMode("Packet") {
 
     private object FallDistance : Filter("FallDistance") {
         override val isActive: Boolean
-            get() = player.fallDistance - player.velocity.y > distance.activeChoice.value && player.age > 20
+            get() = player.fallDistance - player.deltaMovement.y > distance.activeChoice.value && player.tickCount > 20
 
         private val distance = choices("Distance", Smart, arrayOf(Smart, Constant))
         val resetFallDistance by boolean("ResetFallDistance", true)

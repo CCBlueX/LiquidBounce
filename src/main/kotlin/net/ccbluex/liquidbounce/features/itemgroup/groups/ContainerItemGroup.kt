@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.features.itemgroup.groups
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.minecraft.block.Blocks
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.item.ItemStack
+import net.minecraft.network.chat.Component
 
 class ContainerItemGroup : ClientItemGroup(
     "Containers",
@@ -32,11 +32,11 @@ class ContainerItemGroup : ClientItemGroup(
     items = {
         val stack = ItemStack(Blocks.CHEST)
 
-        stack.set<Text>(DataComponentTypes.CUSTOM_NAME, "Empty Chest".asPlainText())
+        stack.set<Component>(DataComponents.CUSTOM_NAME, "Empty Chest".asPlainText())
 
-        it.add(stack)
+        it.accept(stack)
 
         // Add all stored containers
-        it.addAll(ClientItemGroups.containersAsItemStacks())
+        it.acceptAll(ClientItemGroups.containersAsItemStacks())
     }
 )

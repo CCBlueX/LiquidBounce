@@ -19,11 +19,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.additions.screenInitialized
+import net.ccbluex.liquidbounce.additions.setPosition
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
+import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
+import net.ccbluex.liquidbounce.event.events.ClickGuiValueChangeEvent
+import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
+import net.ccbluex.liquidbounce.event.events.GameRenderEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.waitSeconds
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.integration.IntegrationListener
@@ -32,13 +39,11 @@ import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.additions.setPosition
-import net.ccbluex.liquidbounce.event.waitSeconds
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
-import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screens.Screen
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -69,7 +74,7 @@ object ModuleClickGui :
                 close()
             }
 
-            if (mc.currentScreen is VirtualDisplayScreen || mc.currentScreen is ClickScreen) {
+            if (mc.screen is VirtualDisplayScreen || mc.screen is ClickScreen) {
                 onEnabled()
             }
         }
@@ -83,7 +88,7 @@ object ModuleClickGui :
     }
 
     val isInSearchBar: Boolean
-        get() = (mc.currentScreen is VirtualDisplayScreen || mc.currentScreen is ClickScreen) && isTyping
+        get() = (mc.screen is VirtualDisplayScreen || mc.screen is ClickScreen) && isTyping
 
     object Snapping : ToggleableConfigurable(this, "Snapping", true) {
 
@@ -133,7 +138,7 @@ object ModuleClickGui :
             priority = 20,
             settings = IntegrationListener.browserSettings
         ) {
-            mc.currentScreen is ClickScreen
+            mc.screen is ClickScreen
         }
     }
 
@@ -156,7 +161,7 @@ object ModuleClickGui :
 
     @Suppress("unused")
     private val gameRenderHandler = handler<GameRenderEvent>(priority = OBJECTION_AGAINST_EVERYTHING) {
-        clickGuiBrowser?.visible = mc.currentScreen is ClickScreen
+        clickGuiBrowser?.visible = mc.screen is ClickScreen
     }
 
     @Suppress("unused")
@@ -174,14 +179,14 @@ object ModuleClickGui :
         }
 
         waitSeconds(WORLD_CHANGE_SECONDS_UNTIL_RELOAD)
-        if (mc.currentScreen !is ClickScreen) {
+        if (mc.screen !is ClickScreen) {
             reload()
         }
     }
 
     @Suppress("unused")
     private val clientLanguageChangedHandler = handler<ClientLanguageChangedEvent> {
-        if (mc.currentScreen !is ClickScreen) {
+        if (mc.screen !is ClickScreen) {
             reload()
         }
     }
@@ -192,23 +197,23 @@ object ModuleClickGui :
     /**
      * An empty screen that acts as a hint when to draw the clickgui
      */
-    class ClickScreen : Screen("ClickGUI".asText()) {
+    class ClickScreen : Screen("ClickGUI".asPlainText()) {
 
         override fun init() {
             if (trackMousePosition && !screenInitialized && !mouseX.isNaN() && !mouseY.isNaN()) {
-                mc.mouse.setPosition(mouseX, mouseY)
+                mc.mouseHandler.setPosition(mouseX, mouseY)
             }
             super.init()
         }
 
-        override fun close() {
-            mouseX = mc.mouse.x
-            mouseY = mc.mouse.y
-            mc.mouse.lockCursor()
-            super.close()
+        override fun onClose() {
+            mouseX = mc.mouseHandler.xpos()
+            mouseY = mc.mouseHandler.ypos()
+            mc.mouseHandler.grabMouse()
+            super.onClose()
         }
 
-        override fun shouldPause(): Boolean {
+        override fun isPauseScreen(): Boolean {
             // preventing game pause
             return false
         }

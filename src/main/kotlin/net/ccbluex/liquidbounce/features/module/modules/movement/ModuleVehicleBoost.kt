@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -43,16 +43,18 @@ object ModuleVehicleBoost : ClientModule("VehicleBoost", Category.MOVEMENT) {
     private var wasInVehicle = false
 
     val repeatable = tickHandler {
-        val isInVehicle = player.hasVehicle()
+        val isInVehicle = player.isPassenger
 
         if (wasInVehicle && !isInVehicle) {
-            val angle = Math.toRadians(player.yaw.toDouble())
+            val angle = Math.toRadians(player.yRot.toDouble())
 
             // Boost player
-            player.velocity = Vec3d(
-                -sin(angle) * horizontalSpeed.toDouble(),
-                verticalSpeed.toDouble(),
-                cos(angle) * horizontalSpeed.toDouble()
+            player.setDeltaMovement(
+                Vec3(
+                    -sin(angle) * horizontalSpeed.toDouble(),
+                    verticalSpeed.toDouble(),
+                    cos(angle) * horizontalSpeed.toDouble()
+                )
             )
         }
 

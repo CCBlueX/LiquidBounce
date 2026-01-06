@@ -20,9 +20,14 @@ package net.ccbluex.liquidbounce.render.engine.font
 
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.renderer.texture.DynamicTexture
 import org.lwjgl.opengl.GL11
-import java.awt.*
+import java.awt.AlphaComposite
+import java.awt.Color
+import java.awt.Dimension
+import java.awt.Graphics2D
+import java.awt.Point
+import java.awt.RenderingHints
 import java.awt.font.FontRenderContext
 import java.awt.font.GlyphMetrics
 import java.awt.font.LineMetrics
@@ -32,20 +37,27 @@ import java.awt.image.BufferedImage
 import kotlin.math.ceil
 import kotlin.math.max
 
+@JvmRecord
 data class BoundingBox2f(val xMin: Float, val yMin: Float, val xMax: Float, val yMax: Float) {
     constructor(rect: Rectangle2D) : this(
-        rect.x.toFloat(),
-        rect.y.toFloat(),
-        rect.width.toFloat(),
-        rect.height.toFloat()
+        rect.minX.toFloat(),
+        rect.minY.toFloat(),
+        rect.maxX.toFloat(),
+        rect.maxY.toFloat()
     )
 
     fun contains(x: Float, y: Float): Boolean {
         return x in xMin..xMax && y in yMin..yMax
     }
 
+    val width: Float
+        get() = xMax - xMin
+
+    val height: Float
+        get() = yMax - yMin
 }
 
+@JvmRecord
 data class BoundingBox2s(val min: UV2f, val max: UV2f) {
     constructor(rect: BoundingBox2f) : this(
         UV2f(
@@ -63,6 +75,7 @@ data class BoundingBox2s(val min: UV2f, val max: UV2f) {
  * Contains information about the placement of characters in a bitmap
  * and how they are rendered
  */
+@JvmRecord
 data class GlyphRenderInfo(
     /**
      * Which char does this glyph represent?
@@ -101,10 +114,12 @@ class GlyphAtlasLocation(val pixelBoundingBox: BoundingBox2f, atlasDimensions: D
         this.atlasHeight = pixelBoundingBox.yMax - pixelBoundingBox.yMin
     }
 }
+
+@JvmRecord
 data class GlyphLayoutInfo(val useHorizontalBaseline: Boolean, val advanceX: Float, val advanceY: Float)
 
 abstract class GlyphPage {
-    abstract val texture: NativeImageBackedTexture
+    abstract val texture: DynamicTexture
 
     companion object {
         /**
@@ -122,8 +137,7 @@ abstract class GlyphPage {
         @JvmStatic
         protected val fontRendererContext = FontRenderContext(AffineTransform(), true, true)
 
-        @JvmStatic
-        protected val DEFAULT_PADDING: Int = 1
+        protected const val DEFAULT_PADDING: Int = 1
 
         /**
          * Used for the Font Atlas generation
@@ -159,7 +173,7 @@ abstract class GlyphPage {
         @JvmStatic
         protected fun renderGlyphs(
             atlas: BufferedImage,
-            glyphsToRender: List<CharacterGenerationInfo>
+            glyphsToRender: Iterable<CharacterGenerationInfo>,
         ) {
             // Allocate the atlas texture
             val atlasGraphics = atlas.createGraphics()
@@ -260,5 +274,6 @@ abstract class GlyphPage {
     }
 }
 
+@JvmRecord
 data class FontGlyph(val codepoint: Char, val font: FontManager.FontId)
 

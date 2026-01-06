@@ -22,7 +22,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.Predi
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.CandidateCache
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementCondition
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementContext
-import net.minecraft.util.math.BlockPos
+import net.ccbluex.liquidbounce.utils.math.plus
+import net.minecraft.core.BlockPos
 
 /**
  * Uses the prediction to check if the future crystal will be blocked by players in the next ticks.
@@ -32,7 +33,7 @@ object PredictBlockageCondition : PlacementCondition {
     override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean {
         val up = cache.up
         return !PredictFeature.willBeBlocked(
-            context.expectedCrystal.offset(up.x.toDouble(), up.y.toDouble(), up.z.toDouble()),
+            context.expectedCrystal + up,
             context.target,
             !cache.canPlace
         )

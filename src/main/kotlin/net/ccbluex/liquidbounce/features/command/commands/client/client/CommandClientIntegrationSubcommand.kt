@@ -22,9 +22,18 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.italic
+import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.underline
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
+import java.net.URI
 
 object CommandClientIntegrationSubcommand {
     fun integrationCommand() = CommandBuilder.begin("integration")
@@ -50,10 +59,9 @@ object CommandClientIntegrationSubcommand {
                     .append(
                         variable(baseUrl)
                             .underline(true)
-                            .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, baseUrl))
+                            .onClick(ClickEvent.OpenUrl(URI(baseUrl)))
                             .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
+                                HoverEvent.ShowText(
                                     regular("Click to open the integration URL in your browser.")
                                 )
                             )
@@ -76,10 +84,9 @@ object CommandClientIntegrationSubcommand {
                         .append(
                             variable("Browser")
                                 .underline(true)
-                                .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, url))
+                                .onClick(ClickEvent.OpenUrl(URI(url)))
                                 .onHover(
-                                    HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
+                                    HoverEvent.ShowText(
                                         regular("Click to open the URL in your browser.")
                                     )
                                 )
@@ -88,8 +95,7 @@ object CommandClientIntegrationSubcommand {
                         .append(
                             variable("Clipboard")
                                 .copyable(
-                                    copyContent = url, hover = HoverEvent(
-                                        HoverEvent.Action.SHOW_TEXT,
+                                    copyContent = url, hover = HoverEvent.ShowText(
                                         regular("Click to copy the URL to your clipboard.")
                                     )
                                 )

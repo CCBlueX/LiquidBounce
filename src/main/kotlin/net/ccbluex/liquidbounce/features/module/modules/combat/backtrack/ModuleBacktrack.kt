@@ -23,7 +23,11 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -34,24 +38,31 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.PacketSnapshot
+import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squareBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.TrackedPosition
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket
-import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket
-import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
-import net.minecraft.network.packet.s2c.play.*
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.renderer.LightTexture
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.network.protocol.game.VecDeltaCodec
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ServerboundChatPacket
+import net.minecraft.network.protocol.game.ServerboundChatCommandPacket
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
+import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket
+import net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket
+import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
+import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
@@ -94,7 +105,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
     private var shouldPause = false
 
     var target: Entity? = null
-    private var position: TrackedPosition? = null
+    private var position: VecDeltaCodec? = null
 
     var currentDelay = delay.random()
 
@@ -115,25 +126,25 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
         when (packet) {
             // Ignore message-related packets
-            is ChatMessageC2SPacket, is GameMessageS2CPacket, is CommandExecutionC2SPacket -> {
+            is ServerboundChatPacket, is ClientboundSystemChatPacket, is ServerboundChatCommandPacket -> {
                 return@handler
             }
 
             // Flush on teleport or disconnect
-            is PlayerPositionLookS2CPacket, is DisconnectS2CPacket -> {
+            is ClientboundPlayerPositionPacket, is ClientboundDisconnectPacket -> {
                 clear(true)
                 return@handler
             }
 
             // Ignore own hurt sounds
-            is PlaySoundS2CPacket -> {
-                if (packet.sound.value() == SoundEvents.ENTITY_PLAYER_HURT) {
+            is ClientboundSoundPacket -> {
+                if (packet.sound.value() == SoundEvents.PLAYER_HURT) {
                     return@handler
                 }
             }
 
             // Flush on own death
-            is HealthUpdateS2CPacket -> {
+            is ClientboundSetHealthPacket -> {
                 if (packet.health <= 0) {
                     clear(true)
                     return@handler
@@ -142,22 +153,22 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         }
 
         // Update box position with these packets
-        val entityPacket = packet is EntityS2CPacket && packet.getEntity(world) == target
-        val positionPacket = packet is EntityPositionS2CPacket && packet.entityId == target?.id
-        val syncPacket = packet is EntityPositionSyncS2CPacket && packet.id == target?.id
+        val target = target ?: return@handler
+        val entityPacket = packet is ClientboundMoveEntityPacket && packet.getEntity(world) == target
+        val positionPacket = packet is ClientboundTeleportEntityPacket && packet.id == target.id
+        val syncPacket = packet is ClientboundEntityPositionSyncPacket && packet.id == target.id
         if (entityPacket || positionPacket || syncPacket) {
-            val pos = if (packet is EntityS2CPacket) {
-                position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
-            } else if (packet is EntityPositionS2CPacket) {
-                Vec3d(packet.change.position.x, packet.change.position.y, packet.change.position.z)
-            } else {
-                (packet as EntityPositionSyncS2CPacket).values.position()
-            }
-
-            position?.setPos(pos)
+            val pos = when (packet) {
+                is ClientboundMoveEntityPacket ->
+                    position?.decode(packet.xa.toLong(), packet.ya.toLong(), packet.za.toLong())
+                is ClientboundTeleportEntityPacket ->
+                    Vec3(packet.change.position.x, packet.change.position.y, packet.change.position.z)
+                else -> (packet as ClientboundEntityPositionSyncPacket).values.position()
+            } ?: return@handler
+            position?.setBase(pos)
 
             // Is the target's actual position closer than its tracked position?
-            if (target!!.squareBoxedDistanceTo(player, pos!!) < target!!.squaredBoxedDistanceTo(player)) {
+            if (target.squareBoxedDistanceTo(player, pos!!) < target.squaredBoxedDistanceTo(player)) {
                 // Process all packets. We want to be able to hit the enemy, not the opposite.
                 processPackets(true)
                 // And stop right here. No need to cancel further packets.
@@ -173,9 +184,9 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         final override val parent: ChoiceConfigurable<*>
             get() = espMode
 
-        protected fun getEntityPosition(): Pair<Entity, Vec3d>? {
+        protected fun getEntityPosition(): Pair<Entity, Vec3>? {
             val entity = target ?: return null
-            val pos = position?.pos ?: return null
+            val pos = position?.base ?: return null
             return entity to pos
         }
     }
@@ -190,7 +201,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
             val dimensions = entity.getDimensions(entity.pose)
             val d = dimensions.width.toDouble() / 2.0
 
-            val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
+            val box = AABB(-d, 0.0, -d, d, dimensions.height.toDouble(), d).inflate(0.05)
 
             renderEnvironmentForWorld(event.matrixStack) {
                 withPositionRelativeToCamera(pos) {
@@ -207,23 +218,32 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         private val renderHandler = handler<WorldRenderEvent> { event ->
             val (entity, pos) = getEntityPosition() ?: return@handler
 
-            val light = world.getLightLevel(BlockPos.ORIGIN)
-            val reducedLight = (light * lightAmount.toDouble()).toInt()
+            val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity)
 
-            renderEnvironmentForWorld(event.matrixStack) {
-                withPositionRelativeToCamera(pos) {
-                    mc.entityRenderDispatcher.render(
-                        entity,
-                        0.0,
-                        0.0,
-                        0.0,
-                        1f,
-                        event.matrixStack,
-                        mc.bufferBuilders.entityVertexConsumers,
-                        reducedLight
-                    )
-                }
-            }
+            val rs = entityRenderer.createRenderState(entity, event.partialTicks)
+
+            val originalBlockLight = LightTexture.block(rs.lightCoords)
+            val originalSkyLight = LightTexture.sky(rs.lightCoords)
+            rs.lightCoords = LightTexture.pack(
+                (originalBlockLight * lightAmount).floorToInt(),
+                (originalSkyLight * lightAmount).floorToInt(),
+            )
+            rs.x = pos.x
+            rs.y = pos.y
+            rs.z = pos.z
+            val cameraState = mc.gameRenderer.levelRenderState.cameraRenderState
+            rs.distanceToCameraSq = pos.distanceToSqr(cameraState.pos)
+
+            // TODO(1.21.10-port): position & light incorrect
+            mc.entityRenderDispatcher.submit(
+                rs,
+                cameraState,
+                rs.x - cameraState.pos.x,
+                rs.y - cameraState.pos.y,
+                rs.z - cameraState.pos.z,
+                event.matrixStack,
+                mc.gameRenderer.submitNodeStorage,
+            )
         }
     }
 
@@ -235,7 +255,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         private val renderHandler = handler<WorldRenderEvent> {
             val (entity, pos) = getEntityPosition() ?: return@handler
 
-            val wireframePlayer = WireframePlayer(pos, entity.yaw, entity.pitch)
+            val wireframePlayer = WireframePlayer(pos, entity.yRot, entity.xRot)
             wireframePlayer.render(it, color, outlineColor)
         }
     }
@@ -295,7 +315,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
             clear(resetChronometer = false)
 
             // Instantly set new position, so it does not look like the box was created with delay
-            position = TrackedPosition().apply { this.pos = enemy.trackedPosition.pos }
+            position = VecDeltaCodec().apply { this.base = enemy.positionCodec.base }
         }
 
         target = enemy
@@ -343,7 +363,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
         return (inRange || !trackingBufferChronometer.hasElapsed(trackingBuffer.toLong())) &&
             target.shouldBeAttacked() &&
-            player.age > 10 &&
+            player.tickCount > 10 &&
             currentChance < chance &&
             chronometer.hasElapsed() &&
             !shouldPause() &&

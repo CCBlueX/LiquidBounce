@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.entity.isInsideWaterOrBubbleColumn
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 /**
@@ -48,7 +49,7 @@ internal object LiquidWalkVulcan291 : Choice("Vulcan291") {
             Timer.requestTimerSpeed(1.125f, Priority.IMPORTANT_FOR_USAGE_1, ModuleLiquidWalk)
 
             // Acts as a high-jump
-            player.velocity.y = motion.toDouble()
+            player.deltaMovement.y = motion.toDouble()
         } else {
             Timer.requestTimerSpeed(1.0f, Priority.IMPORTANT_FOR_USAGE_1, ModuleLiquidWalk)
         }

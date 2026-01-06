@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.projectPointsOnBox
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.getBoundingBoxAt
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 import java.awt.Color
 
 class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventListener {
@@ -61,15 +61,14 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
      */
     private val delay = tree(PointProcessorDelay(this))
 
-    private val processors
-        get() = listOf(delay, lazy, gaussian).filter { processor -> processor.enabled }
+    private val processors = arrayOf(delay, lazy, gaussian)
 
     /**
      * The point tracker is being used to track a certain point of an entity.
      *
      * @param entity The entity we want to track.
      */
-    fun findPoint(eyes: Vec3d, entity: LivingEntity, ticks: Int = 0): PointInsideBox {
+    fun findPoint(eyes: Vec3, entity: Entity, ticks: Int = 0): PointInsideBox {
         // Predict target position
         val targetPos = PositionExtrapolation.getBestForEntity(entity)
             .getPositionInTicks(ticks.toDouble())
@@ -77,12 +76,12 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
         // Project points onto box
         val box = entity.getBoundingBoxAt(targetPos)
             // Support [ModuleHitbox]
-            .expand(entity.targetingMargin.toDouble())
+            .inflate(entity.pickRadius.toDouble())
         val points = box.getPoints(eyes)
 
-        val bestHitVector = points.minByOrNull { it.squaredDistanceTo(eyes) }
+        val bestHitVector = points.minByOrNull { it.distanceToSqr(eyes) }
             ?: box.getPseudoClosest(eyes)
-        val worstHitVector = points.maxByOrNull { it.squaredDistanceTo(eyes) }
+        val worstHitVector = points.maxByOrNull { it.distanceToSqr(eyes) }
             ?: box.getPseudoFurthest(eyes)
 
         // Filter exempts
@@ -104,32 +103,34 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
             })
         }
 
-        val pos = pointsWithExempts.minByOrNull { it.distanceTo(eyes) }
-            ?: bestHitVector
+        val pos = pointsWithExempts.minByOrNull { it.distanceToSqr(eyes) } ?: bestHitVector
         var point = PointInsideBox(pos, box)
         for (processor in processors) {
-            point = processor.process(point)
+            if (processor.enabled) {
+                point = processor.process(point)
+            }
         }
         return point
     }
 
-    private fun Box.getPoints(eyes: Vec3d) = mutableListOf<Vec3d>().apply {
+    private fun AABB.getPoints(eyes: Vec3) = buildList {
         projectPointsOnBox(eyes, this@getPoints) { point ->
             add(point)
         }
     }
 
-    private fun Box.getPseudoClosest(eyes: Vec3d) = getNearestPoint(eyes, this)
+    private fun AABB.getPseudoClosest(eyes: Vec3) = getNearestPoint(eyes)
 
-    private fun Box.getPseudoFurthest(eyes: Vec3d) = Vec3d(
+    private fun AABB.getPseudoFurthest(eyes: Vec3) = Vec3(
         eyes.x.coerceAtLeast(maxX).coerceAtMost(minX),
         eyes.y.coerceAtLeast(maxY).coerceAtMost(minY),
         eyes.z.coerceAtLeast(maxZ).coerceAtMost(minZ)
     )
 
     // For debug visuals
-    private fun calculateDistancePercentage(point: Vec3d, eyes: Vec3d, bestHitVector: Vec3d,
-                                            worstHitVector: Vec3d): Double {
+    private fun calculateDistancePercentage(point: Vec3, eyes: Vec3, bestHitVector: Vec3,
+                                            worstHitVector: Vec3
+    ): Double {
         val pointDistance = point.distanceTo(eyes)
         val bestDistance = bestHitVector.distanceTo(eyes)
         val worstDistance = worstHitVector.distanceTo(eyes)

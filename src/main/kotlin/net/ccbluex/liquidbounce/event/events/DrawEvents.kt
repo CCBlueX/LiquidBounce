@@ -20,20 +20,21 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.Camera
-import net.minecraft.client.util.math.MatrixStack
+import com.mojang.blaze3d.pipeline.RenderTarget
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.Camera
+import com.mojang.blaze3d.vertex.PoseStack
 
 @Nameable("gameRender")
 object GameRenderEvent : Event()
 
 @Nameable("screenRender")
-class ScreenRenderEvent(val context: DrawContext, val partialTicks: Float) : Event()
+class ScreenRenderEvent(val context: GuiGraphics, val partialTicks: Float) : Event()
 
 @Nameable("worldRender")
-class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val partialTicks: Float) : Event()
+class WorldRenderEvent(val matrixStack: PoseStack, val camera: Camera, val partialTicks: Float) : Event()
 
 /**
  * Sometimes, modules might want to contribute something to the glow framebuffer. They can hook this event
@@ -43,7 +44,8 @@ class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val par
  */
 @Nameable("drawOutlines")
 class DrawOutlinesEvent(
-    val matrixStack: MatrixStack,
+    val framebuffer: RenderTarget,
+    val matrixStack: PoseStack,
     val camera: Camera,
     val partialTicks: Float,
     val type: OutlineType,
@@ -65,4 +67,7 @@ class DrawOutlinesEvent(
 }
 
 @Nameable("overlayRender")
-class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
+class OverlayRenderEvent(
+    val context: GuiGraphics,
+    val tickDelta: Float,
+) : Event()

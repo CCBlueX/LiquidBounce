@@ -21,20 +21,21 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.ccbluex.liquidbounce.utils.network.isMovementYFallDamage
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * A highly adjustable speed mode
@@ -71,8 +72,8 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             }
 
             if (horizontalAcceleration != 0f) {
-                player.velocity.x *= 1f + horizontalAcceleration
-                player.velocity.z *= 1f + horizontalAcceleration
+                player.deltaMovement.x *= 1f + horizontalAcceleration
+                player.deltaMovement.z *= 1f + horizontalAcceleration
             }
         }
 
@@ -81,8 +82,8 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             if (horizontalJumpOffModifier != 0f) {
                 waitTicks(ticksToBoostOff)
 
-                player.velocity.x *= 1f + horizontalJumpOffModifier
-                player.velocity.z *= 1f + horizontalJumpOffModifier
+                player.deltaMovement.x *= 1f + horizontalJumpOffModifier
+                player.deltaMovement.z *= 1f + horizontalJumpOffModifier
             }
         }
 
@@ -102,8 +103,8 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
                 return@handler
             }
 
-            val pullDown = if (player.velocity.y <= 0.0) pullDownDuringFall else pullDown
-            player.velocity.y -= pullDown
+            val pullDown = if (player.deltaMovement.y <= 0.0) pullDownDuringFall else pullDown
+            player.deltaMovement.y -= pullDown
         }
 
         @Suppress("unused")
@@ -139,10 +140,14 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             }
 
             when {
-                customSpeed -> player.velocity =
-                        player.velocity.withStrafe(speed = speed.toDouble(), strength = strength.toDouble())
+                customSpeed -> player.setDeltaMovement(
+                    player.deltaMovement.withStrafe(
+                        speed = speed.toDouble(),
+                        strength = strength.toDouble()
+                    )
+                )
                 else ->
-                    player.velocity = player.velocity.withStrafe(strength = strength.toDouble())
+                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = strength.toDouble()))
             }
         }
 
@@ -150,10 +155,9 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
         private val packetHandler = sequenceHandler<PacketEvent> {
             val packet = it.packet
 
-            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-                val velocityX = packet.velocityX / 8000.0
-                val velocityY = packet.velocityY / 8000.0
-                val velocityZ = packet.velocityZ / 8000.0
+            if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+                val velocityX = packet.movement.x
+                val velocityZ = packet.movement.z
 
                 ticksTimeout = velocityTimeout
 
@@ -161,12 +165,12 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
                     waitTicks(1)
 
                     // Fall damage velocity
-                    val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
-                        player.sqrtSpeed.coerceAtLeast(0.2857671997172534)
+                    val speed = if (velocityX == 0.0 && velocityZ == 0.0 && packet.isMovementYFallDamage()) {
+                        player.horizontalSpeed.coerceAtLeast(0.2857671997172534)
                     } else {
-                        player.sqrtSpeed
+                        player.horizontalSpeed
                     }
-                    player.velocity = player.velocity.withStrafe(speed = speed)
+                    player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
                 }
             }
         }

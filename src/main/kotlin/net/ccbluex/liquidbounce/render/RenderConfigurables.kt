@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
-import net.minecraft.block.BlockState
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.BlockPos
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.core.BlockPos
 
 abstract class GenericColorMode<in T>(name: String): Choice(name) {
     abstract fun getColor(param: T): Color4b
@@ -48,7 +48,7 @@ class GenericRainbowColorMode(
     override val parent: ChoiceConfigurable<*>,
     private val alpha: Int = 50
 ) : GenericColorMode<Any?>("Rainbow") {
-    override fun getColor(param: Any?) = rainbow().with(a = alpha)
+    override fun getColor(param: Any?) = rainbow(alpha = alpha / 255f)
 }
 
 class MapColorMode(
@@ -59,7 +59,7 @@ class MapColorMode(
     override fun getColor(param: Pair<BlockPos, BlockState>): Color4b {
         val (pos, state) = param
 
-        return Color4b(state.getMapColor(world, pos).color).with(a = alpha)
+        return Color4b(state.getMapColor(world, pos).col).with(a = alpha)
     }
 
 }
@@ -68,6 +68,8 @@ class MapColorMode(
 class GenericEntityHealthColorMode(
     override val parent: ChoiceConfigurable<*>
 ) : GenericColorMode<LivingEntity>("Health") {
+    private val alpha by int("Alpha", 255, 0..255)
+
     override fun getColor(param: LivingEntity): Color4b {
         val maxHealth = param.maxHealth
         val health = param.getActualHealth().coerceAtMost(maxHealth)
@@ -77,6 +79,6 @@ class GenericEntityHealthColorMode(
         val red = (255 * (1 - healthPercentage)).toInt().coerceIn(0..255)
         val green = (255 * healthPercentage).toInt().coerceIn(0..255)
 
-        return Color4b(red, green, 0)
+        return Color4b(red, green, 0, alpha)
     }
 }

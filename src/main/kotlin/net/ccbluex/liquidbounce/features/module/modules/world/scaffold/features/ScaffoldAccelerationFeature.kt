@@ -28,11 +28,11 @@ object ScaffoldAccelerationFeature : ToggleableConfigurable(ModuleScaffold, "Acc
 
     @Suppress("unused")
     val stateUpdateHandler = tickHandler {
-        if (onlyOnGround && !player.isOnGround) {
+        if (onlyOnGround && !player.onGround()) {
             return@tickHandler
         }
 
-        player.velocity.x *= speedMultiplier
-        player.velocity.z *= speedMultiplier
+        player.deltaMovement.x *= speedMultiplier
+        player.deltaMovement.z *= speedMultiplier
     }
 }

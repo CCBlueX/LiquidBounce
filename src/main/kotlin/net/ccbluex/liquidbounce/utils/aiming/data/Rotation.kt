@@ -22,41 +22,49 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.toDegrees
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.roundToInt
 
-data class Rotation(
-    var yaw: Float,
-    var pitch: Float,
-    var isNormalized: Boolean = false
+@JvmRecord
+data class Rotation @JvmOverloads constructor(
+    val yaw: Float,
+    val pitch: Float,
+    val isNormalized: Boolean = false,
 ) {
 
     companion object {
+        @JvmField
         val ZERO = Rotation(0f, 0f)
 
-        fun lookingAt(point: Vec3d, from: Vec3d): Rotation {
+        @JvmStatic
+        fun lookingAt(point: Vec3, from: Vec3): Rotation {
             return fromRotationVec(point.subtract(from))
         }
 
-        fun fromRotationVec(lookVec: Vec3d): Rotation {
-            val diffX = lookVec.x
-            val diffY = lookVec.y
-            val diffZ = lookVec.z
+        @JvmStatic
+        fun fromRotationVec(lookVec: Vec3): Rotation =
+            fromRotationVec(lookVec.x, lookVec.y, lookVec.z)
 
+        @JvmStatic
+        fun fromRotationVec(diffX: Double, diffY: Double, diffZ: Double): Rotation {
             return Rotation(
-                MathHelper.wrapDegrees(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f),
-                MathHelper.wrapDegrees((-Math.toDegrees(atan2(diffY, hypot(diffX, diffZ)))).toFloat())
+                Mth.wrapDegrees(atan2(diffZ, diffX).toDegrees().toFloat() - 90f),
+                Mth.wrapDegrees(-atan2(diffY, hypot(diffX, diffZ)).toDegrees().toFloat())
             )
         }
     }
 
-    val directionVector: Vec3d
-        get() = Vec3d.fromPolar(pitch, yaw)
+    val directionVector: Vec3
+        get() = Vec3.directionFromRotation(pitch, yaw)
+
+    val xRot: Float get() = pitch
+    val yRot: Float get() = yaw
 
     /**
      * Fixes GCD and Modulo 360° at yaw
@@ -123,6 +131,7 @@ data class Rotation(
         )
     }
 
+    @JvmOverloads
     fun approximatelyEquals(other: Rotation, tolerance: Float = 2f): Boolean {
         return angleTo(other) <= tolerance
     }

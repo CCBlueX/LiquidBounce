@@ -21,23 +21,23 @@
 package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.screen.ScreenHandler
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.world.inventory.AbstractContainerMenu
 
-val ScreenHandler.isPlayerInventory: Boolean
-    get() = this.syncId == 0
+val AbstractContainerMenu.isPlayerInventory: Boolean
+    get() = this.containerId == 0
 
 val isInInventoryScreen
-    get() = mc.currentScreen is InventoryScreen
+    get() = mc.screen is InventoryScreen
 
 val isInContainerScreen
-    get() = mc.currentScreen is GenericContainerScreen
+    get() = mc.screen is ContainerScreen
 
 val canCloseMainInventory
-    get() = !isInInventoryScreen && mc.player?.currentScreenHandler?.isPlayerInventory == true
+    get() = !isInInventoryScreen && mc.player?.containerMenu?.isPlayerInventory == true
         && InventoryManager.isInventoryOpen
 
-val HandledScreen<*>?.syncId
-    get() = this?.screenHandler?.syncId ?: 0
+val AbstractContainerScreen<*>?.syncId
+    get() = this?.menu?.containerId ?: 0

@@ -47,16 +47,14 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.MathHelper
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.Entity
 
 /**
  * Aimbot module
  *
  * Automatically faces selected entities around you.
  */
-@Suppress("MagicNumber")
 object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("AimAssist", "AutoAim")) {
 
     private val range = float("Range", 4.2f, 1f..8f)
@@ -123,17 +121,17 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
         val partialTicks = event.partialTicks
         val target = targetTracker.target ?: return@handler
 
-        if (IgnoreOpened.SCREEN !in ignores && mc.currentScreen != null) {
+        if (IgnoreOpened.SCREEN !in ignores && mc.screen != null) {
             return@handler
         }
 
         if (IgnoreOpened.CONTAINER !in ignores && (InventoryManager.isInventoryOpen ||
-                mc.currentScreen is HandledScreen<*>)) {
+                mc.screen is AbstractContainerScreen<*>)) {
             return@handler
         }
 
         renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(this, target, partialTicks)
+            targetRenderer.render(target, partialTicks)
         }
 
         val currentRotation = playerRotation ?: return@handler
@@ -154,22 +152,21 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
         val f = event.cursorDeltaY.toFloat() * 0.15f
         val g = event.cursorDeltaX.toFloat() * 0.15f
 
+        fun updateRotation(rotation: Rotation): Rotation =
+            Rotation(yaw = rotation.yaw + g, pitch = (rotation.pitch + f).coerceIn(-90f, 90f))
+
         playerRotation?.let { rotation ->
-            rotation.pitch += f
-            rotation.yaw += g
-            rotation.pitch = MathHelper.clamp(rotation.pitch, -90.0f, 90.0f)
+            playerRotation = updateRotation(rotation)
         }
 
         targetRotation?.let { rotation ->
-            rotation.pitch += f
-            rotation.yaw += g
-            rotation.pitch = MathHelper.clamp(rotation.pitch, -90.0f, 90.0f)
+            targetRotation = updateRotation(rotation)
         }
     }
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
         for (entity in targetTracker.targets()) {
-            val eyes = player.eyePos
+            val eyes = player.eyePosition
             val point = pointTracker.findPoint(eyes, entity)
 
             debugGeometry("Box") { ModuleDebug.DebuggedBox(point.box, Color4b.ORANGE.with(a = 90)) }

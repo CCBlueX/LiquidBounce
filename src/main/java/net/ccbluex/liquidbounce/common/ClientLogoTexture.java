@@ -22,12 +22,13 @@ package net.ccbluex.liquidbounce.common;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.resource.metadata.TextureResourceMetadata;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.ReloadableTexture;
-import net.minecraft.client.texture.TextureContents;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.resources.metadata.texture.TextureMetadataSection;
+import net.minecraft.client.renderer.texture.MipmapStrategy;
+import com.mojang.blaze3d.platform.NativeImage;
+import net.minecraft.client.renderer.texture.ReloadableTexture;
+import net.minecraft.client.renderer.texture.TextureContents;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.resources.Identifier;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -38,9 +39,9 @@ import java.util.Objects;
  * Should be drawn using [CustomRenderPhase::getTextureBilinear] to make it look smoother.
  */
 @Environment(EnvType.CLIENT)
-public class ClientLogoTexture extends ReloadableTexture {
+public final class ClientLogoTexture extends ReloadableTexture {
 
-    public static final Identifier CLIENT_LOGO = Identifier.of("liquidbounce", "logo");
+    public static final Identifier CLIENT_LOGO = LiquidBounce.identifier("logo");
     public static final int WIDTH = 1920;
     public static final int HEIGHT = 721;
 
@@ -53,7 +54,7 @@ public class ClientLogoTexture extends ReloadableTexture {
         try (var stream = LiquidBounce.class.getResourceAsStream("/resources/liquidbounce/logo_banner.png")) {
             var nativeImage = NativeImage.read(Objects.requireNonNull(stream));
 
-            return new TextureContents(nativeImage, new TextureResourceMetadata(true, false));
+            return new TextureContents(nativeImage, new TextureMetadataSection(true, false, MipmapStrategy.AUTO, TextureMetadataSection.DEFAULT_ALPHA_CUTOFF_BIAS));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

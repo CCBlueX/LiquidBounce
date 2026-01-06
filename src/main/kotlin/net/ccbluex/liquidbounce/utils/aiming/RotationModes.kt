@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import java.util.function.BooleanSupplier
 
 sealed class RotationMode(
@@ -107,9 +107,9 @@ class NoRotationMode(configurable: ChoiceConfigurable<RotationMode>, module: Cli
         fun task() {
             if (send) {
                 val fixedRotation = rotation.normalize()
-                network.sendPacket(
-                    PlayerMoveC2SPacket.LookAndOnGround(
-                        fixedRotation.yaw, fixedRotation.pitch, player.isOnGround,
+                network.send(
+                    ServerboundMovePlayerPacket.Rot(
+                        fixedRotation.yaw, fixedRotation.pitch, player.onGround(),
                         player.horizontalCollision
                     )
                 )

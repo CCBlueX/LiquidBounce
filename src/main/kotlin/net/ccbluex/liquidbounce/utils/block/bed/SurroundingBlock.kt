@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block.bed
 
-import net.minecraft.block.Block
+import net.minecraft.world.level.block.Block
 
 @JvmRecord
 data class SurroundingBlock(
@@ -28,5 +28,5 @@ data class SurroundingBlock(
 ) : Comparable<SurroundingBlock> {
     override fun compareTo(other: SurroundingBlock): Int = compareValuesBy(
         this, other,
-        { it.layer }, { -it.count }, { -it.block.hardness }, { it.block.translationKey })
+        { it.layer }, { -it.count }, { -it.block.defaultDestroyTime() }, { it.block.descriptionId })
 }

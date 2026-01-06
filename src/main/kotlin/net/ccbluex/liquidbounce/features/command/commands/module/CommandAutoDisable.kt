@@ -26,8 +26,15 @@ import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoDisable
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.util.Formatting
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.withColor
+import net.minecraft.ChatFormatting
 
 /**
  * AutoDisable Command
@@ -66,14 +73,14 @@ object CommandAutoDisable : Command.Factory {
         .pagedQuery(
             pageSize = 8,
             header = {
-                result("modules").withColor(Formatting.RED).bold(true)
+                result("modules").withColor(ChatFormatting.RED).bold(true)
             },
             items = {
                 ModuleAutoDisable.modules
             },
             eachRow = { _, module ->
                 "\u2B25 ".asText()
-                    .formatted(Formatting.BLUE)
+                    .withStyle(ChatFormatting.BLUE)
                     .append(variable(module.name).copyable())
                     .append(regular(" ("))
                     .append(variable(module.bind.keyName).copyable())

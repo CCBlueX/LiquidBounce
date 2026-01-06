@@ -23,17 +23,17 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypi
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
 
 /**
  * @anticheat Watchdog (NCP)
@@ -62,11 +62,11 @@ object FlyHypixelFlat : Choice("HypixelFlat") {
     private val speedHandler = tickHandler {
         tickUntil { isFlying }
 
-        player.velocity = player.velocity.withStrafe(speed = 0.8)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.8))
         waitTicks(1)
-        player.velocity = player.velocity.withStrafe(speed = flySpeed.toDouble())
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = flySpeed.toDouble()))
 
-        tickUntil { player.isOnGround }
+        tickUntil { player.onGround() }
         ModuleFly.enabled = false
     }
 
@@ -82,13 +82,13 @@ object FlyHypixelFlat : Choice("HypixelFlat") {
         }
 
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
-        player.velocity.y = 0.0314 + (Math.random() / 1000f)
-        player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed)
+        player.deltaMovement.y = 0.0314 + (Math.random() / 1000f)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed))
     }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is ExplosionS2CPacket) {
+        if (event.packet is ClientboundExplodePacket) {
             isFlying = true
         }
     }

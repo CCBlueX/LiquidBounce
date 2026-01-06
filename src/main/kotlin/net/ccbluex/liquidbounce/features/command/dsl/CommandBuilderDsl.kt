@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.command.dsl
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.Parameter
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 
 @DslMarker
 annotation class CommandBuilderDsl
@@ -46,10 +47,17 @@ fun <T : Any> Parameter<T>.cast(): T {
 }
 
 context(context: Command.Handler.Context)
-fun <T : Any> Parameter<T>.castVararg(): Array<out T> {
+fun <T : Any> Parameter<T>.castVararg(): List<T> {
     requireOwner(context.command)
     @Suppress("UNCHECKED_CAST")
-    return context.args[index] as Array<T>
+    return (context.args[index] as Array<out Any?>).unmodifiable() as List<T>
+}
+
+context(context: Command.Handler.Context)
+fun <T : Any> Parameter<T>.castVarargNotRequired(): List<T>? {
+    requireOwner(context.command)
+    @Suppress("UNCHECKED_CAST")
+    return (context.args.getOrNull(index) as Array<out Any?>?)?.asList() as List<T>?
 }
 
 context(context: Command.Handler.Context)
@@ -57,13 +65,6 @@ fun <T : Any> Parameter<T>.castNotRequired(): T? {
     requireOwner(context.command)
     @Suppress("UNCHECKED_CAST")
     return context.args.getOrNull(index) as T?
-}
-
-context(context: Command.Handler.Context)
-fun <T : Any> Parameter<T>.castNotRequired(default: T): T {
-    requireOwner(context.command)
-    @Suppress("UNCHECKED_CAST")
-    return context.args.getOrNull(index) as T? ?: default
 }
 
 private fun Parameter<*>.requireOwner(command: Command) {

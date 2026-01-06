@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 
 /**
  * Hylex LowHop
@@ -38,41 +38,49 @@ class SpeedHylexLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (player.isOnGround) {
+        if (player.onGround()) {
             airTicks = 0
-            if (player.moving && player.sqrtSpeed < 0.32) {
+            if (player.moving && player.horizontalSpeed < 0.32) {
 
-                player.velocity = player.velocity.multiply(
-                    1.1,
-                    1.0,
-                    1.1
+                player.setDeltaMovement(
+                    player.deltaMovement.multiply(
+                        1.1,
+                        1.0,
+                        1.1
+                    )
                 )
             }
             return@tickHandler
         }
         airTicks++
 
-        if (airTicks == 9 && player.sqrtSpeed < 0.29) {
-            player.velocity = player.velocity.multiply(
-                1.007,
-                1.0,
-                1.007
+        if (airTicks == 9 && player.horizontalSpeed < 0.29) {
+            player.setDeltaMovement(
+                player.deltaMovement.multiply(
+                    1.007,
+                    1.0,
+                    1.007
+                )
             )
         }
 
-        if (airTicks == 1 && player.sqrtSpeed < 0.20) {
-            player.velocity = player.velocity.multiply(
-                1.01,
-                1.0,
-                1.01
+        if (airTicks == 1 && player.horizontalSpeed < 0.20) {
+            player.setDeltaMovement(
+                player.deltaMovement.multiply(
+                    1.01,
+                    1.0,
+                    1.01
+                )
             )
         }
 
-        if (player.velocity.y > 0 && airTicks <= 2 && player.sqrtSpeed < 0.2) {
-            player.velocity = player.velocity.multiply(
-                1.02,
-                1.0,
-                1.02
+        if (player.deltaMovement.y > 0 && airTicks <= 2 && player.horizontalSpeed < 0.2) {
+            player.setDeltaMovement(
+                player.deltaMovement.multiply(
+                    1.02,
+                    1.0,
+                    1.02
+                )
             )
         }
 

@@ -22,7 +22,11 @@ import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.config.gson.adapter.OptionalAdapter
 import java.util.*
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class OptionalAdapterTest {
 

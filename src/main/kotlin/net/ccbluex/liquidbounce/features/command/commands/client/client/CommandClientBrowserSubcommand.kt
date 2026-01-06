@@ -38,7 +38,7 @@ object CommandClientBrowserSubcommand {
                 .build()
         ).handler {
             chat(regular("Opening browser..."))
-            mc.send {
+            mc.schedule {
                 mc.setScreen(BrowserScreen(args[0] as String))
             }
         }.build()

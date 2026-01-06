@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 sealed class ScaffoldTower(name: String) : Choice(name) {
 
@@ -33,7 +33,7 @@ sealed class ScaffoldTower(name: String) : Choice(name) {
      * Overwrites the [ModuleScaffold.getTargetedPosition] with a tower-specific one.
      */
     open fun getTargetedPosition(blockPos: BlockPos): BlockPos {
-        return blockPos.down()
+        return blockPos.below()
     }
 
 }

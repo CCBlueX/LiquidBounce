@@ -20,7 +20,11 @@ package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
-import net.ccbluex.liquidbounce.integration.backend.browser.*
+import net.ccbluex.liquidbounce.integration.backend.browser.Browser
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserRenderer
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
+import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.backend.input.InputHandler
 import net.ccbluex.liquidbounce.integration.backend.input.InputListener
@@ -28,8 +32,6 @@ import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.client.texture.AbstractTexture
-import net.minecraft.util.Identifier
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
@@ -106,8 +108,6 @@ class CefBrowser(
         }
     }
 
-    private val textureId = Identifier.of("liquidbounce", "browser/tab/${mcefBrowser.hashCode()}")
-
     override var url: String
         get() = mcefBrowser.url
         set(value) {
@@ -116,24 +116,17 @@ class CefBrowser(
 
     override val texture: BrowserTexture?
         get() {
-            if (mcefBrowser.renderer.isUnpainted) {
+            if (!mcefBrowser.renderer.isTextureReady || mcefBrowser.renderer.isUnpainted) {
                 return null
             }
 
             return BrowserTexture(
-                mcefBrowser.renderer.textureID,
-                textureId,
+                mcefBrowser.renderer.textureSetup!!,
                 viewport.height,
                 viewport.width,
-                mcefBrowser.renderer.isBGRA
+                mcefBrowser.renderer.isBGRA,
             )
         }
-
-    init {
-        mc.textureManager.registerTexture(textureId, object : AbstractTexture() {
-            override fun getGlId() = mcefBrowser.renderer.textureID
-        })
-    }
 
     override fun forceReload() {
         mcefBrowser.reloadIgnoreCache()
@@ -156,7 +149,6 @@ class CefBrowser(
         inputListener?.close()
         backend.removeBrowser(this)
         mcefBrowser.close()
-        mc.textureManager.destroyTexture(textureId)
     }
 
     override fun update(width: Int, height: Int) {

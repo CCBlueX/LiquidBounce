@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.render.entity.state.LivingEntityRenderState
-import net.minecraft.entity.LivingEntity
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
+import net.minecraft.world.entity.LivingEntity
 
 /**
  * TrueSight module
@@ -45,16 +45,16 @@ object ModuleTrueSight : ClientModule("TrueSight", Category.RENDER) {
     @JvmStatic
     @Suppress("ComplexCondition")
     fun canRenderEntities(state: LivingEntityRenderState): Boolean {
-        val enabled = this.running && entities;
+        val enabled = this.running && entities
 
-        val entity = (state as EntityRenderStateAddition).`liquid_bounce$getEntity`()
+        val entity = (state as EntityRenderStateAddition).`liquid_bounce$getEntity`() ?: return false
         val livingEntity = entity as? LivingEntity
 
-        return ((enabled
+        return (enabled
                 || livingEntity != null
                 && ModuleESP.running
                 && ModuleESP.requiresTrueSight(livingEntity))
-                && entity.isInvisible)
+            && entity.isInvisible
     }
 
     private enum class Sight(

@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.Pseudo;
 
 @Pseudo
 @Mixin(targets = "com/oracle/truffle/api/TruffleLanguage", remap = false)
-public class MixinTruffleLanguage {
+public abstract class MixinTruffleLanguage {
 
     /**
      * @author Senk Ju

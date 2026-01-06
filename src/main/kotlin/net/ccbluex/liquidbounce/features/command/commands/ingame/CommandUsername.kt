@@ -21,7 +21,13 @@ package net.ccbluex.liquidbounce.features.command.commands.ingame
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.bypassNameProtection
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.italic
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.underline
+import net.ccbluex.liquidbounce.utils.client.variable
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -44,7 +50,7 @@ object CommandUsername : Command.Factory, MinecraftShortcuts {
                     .underline(true)
 
                 chat(regular(command.result("username", formattedUsernameWithEvents)), command)
-                GLFW.glfwSetClipboardString(mc.window.handle, username)
+                GLFW.glfwSetClipboardString(mc.window.handle(), username)
             }
             .build()
     }

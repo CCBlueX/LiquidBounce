@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trig
 
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.EventListener
-import net.minecraft.network.packet.Packet
+import net.minecraft.network.protocol.Packet
 
 /**
  * Options Define when the CA should run. Only tick is the most legit.

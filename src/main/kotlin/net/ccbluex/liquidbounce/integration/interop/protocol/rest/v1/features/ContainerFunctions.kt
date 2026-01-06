@@ -23,65 +23,65 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
 
 import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
-import net.ccbluex.liquidbounce.features.item.inventoryAsCompound
+import net.ccbluex.liquidbounce.features.item.inventoryAsComponents
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
-import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.netty.http.model.RequestObject
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.inventory.SimpleInventory
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
-import kotlin.jvm.optionals.getOrNull
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.world.SimpleContainer
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
+import net.minecraft.core.registries.BuiltInRegistries
 
 // GET /api/v1/container
-@Suppress("UNUSED_PARAMETER")
-fun getContainerInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    val screenHandler = mc.currentScreen
+fun getContainerInfo() = httpOk(JsonObject().apply {
+    val screenHandler = mc.screen
 
-    if (screenHandler is GenericContainerScreen) {
-        val inventory = screenHandler.screenHandler.inventory
+    if (screenHandler is ContainerScreen) {
+        val inventory = screenHandler.menu.container
 
-        if (inventory !is SimpleInventory) {
+        if (inventory !is SimpleContainer) {
             return httpForbidden("Not a simple inventory")
         }
 
-        addProperty("syncId", screenHandler.screenHandler.syncId)
+        addProperty("syncId", screenHandler.menu.containerId)
         addProperty("title", screenHandler.title.string)
-        addProperty("slots", screenHandler.screenHandler.rows * 9)
-        addProperty("emptySlots", inventory.heldStacks.count { it.isEmpty })
-        addProperty("rows", screenHandler.screenHandler.rows)
+        addProperty("slots", screenHandler.menu.rowCount * 9)
+        addProperty("emptySlots", inventory.items.count { it.isEmpty })
+        addProperty("rows", screenHandler.menu.rowCount)
     } else {
         return httpForbidden("Not a container")
     }
 })
 
 // POST /api/v1/container/give
-@Suppress("UNUSED_PARAMETER")
-fun postGiveItem(requestObject: RequestObject): FullHttpResponse {
-    if (!interaction.hasCreativeInventory()) {
+fun postGiveItem(): FullHttpResponse {
+    if (!player.isCreative) {
         return httpForbidden("Must be in creative mode")
     }
 
-    val screenHandler = mc.currentScreen
+    val screenHandler = mc.screen
 
-    if (screenHandler !is GenericContainerScreen) {
+    if (screenHandler !is ContainerScreen) {
         return httpForbidden("Not a container")
     }
 
-    val inventory = screenHandler.screenHandler.inventory
+    val inventory = screenHandler.menu.container
 
-    if (inventory !is SimpleInventory) {
+    if (inventory !is SimpleContainer) {
         return httpForbidden("Not a simple inventory")
     }
 
-    val compoundList = inventory.inventoryAsCompound(screenHandler.title)
+    val componentChangesList = inventory.inventoryAsComponents(screenHandler.title)
 
-    for (compound in compoundList) {
-        val errResponse = giveItem(compound)
+    for (components in componentChangesList) {
+        val errResponse = giveItem(components)
 
         if (errResponse != null) {
             return errResponse
@@ -91,44 +91,36 @@ fun postGiveItem(requestObject: RequestObject): FullHttpResponse {
     return httpNoContent()
 }
 
-private fun giveItem(compound: NbtCompound): FullHttpResponse? {
-    val chestItemNbt = NbtCompound().apply {
-        putString("id", "minecraft:chest")
-        putByte("Count", 1)
-        put("tag", compound)
-    }
+private fun giveItem(components: DataComponentPatch): FullHttpResponse? {
+    val itemStack = ItemStack(BuiltInRegistries.ITEM.wrapAsHolder(Items.CHEST), 1, components)
 
-    val itemStack = ItemStack.fromNbt(mc.world!!.registryManager, chestItemNbt).getOrNull()
-        ?: return httpForbidden("Invalid item")
-
-    val emptySlot = player.inventory.emptySlot
+    val emptySlot = player.inventory.freeSlot
 
     if (emptySlot == -1) {
         return httpForbidden("No empty slot")
     }
 
-    player.inventory.setStack(emptySlot, itemStack)
-    network.sendPacket(
-        CreativeInventoryActionC2SPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot, itemStack)
+    player.inventory.setItem(emptySlot, itemStack)
+    network.send(
+        ServerboundSetCreativeModeSlotPacket(if (emptySlot < 9) emptySlot + 36 else emptySlot, itemStack)
     )
 
     return null
 }
 
 // POST /api/v1/container/store
-@Suppress("UNUSED_PARAMETER")
-fun postStoreItem(requestObject: RequestObject): FullHttpResponse {
-    val screenHandler = mc.currentScreen
+fun postStoreItem(): FullHttpResponse {
+    val screenHandler = mc.screen
 
-    return if (screenHandler is GenericContainerScreen) {
-        val inventory = screenHandler.screenHandler.inventory
+    return if (screenHandler is ContainerScreen) {
+        val inventory = screenHandler.menu.container
 
-        if (inventory !is SimpleInventory) {
+        if (inventory !is SimpleContainer) {
             return httpForbidden("Not a simple inventory")
         }
 
-        val compoundList = inventory.inventoryAsCompound(screenHandler.title)
-        compoundList.forEach(ClientItemGroups::storeAsContainerItem)
+        val components = inventory.inventoryAsComponents(screenHandler.title)
+        components.forEach(ClientItemGroups::storeAsContainerItem)
 
         httpNoContent()
     } else {

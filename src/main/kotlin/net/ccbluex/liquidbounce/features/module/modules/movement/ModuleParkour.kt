@@ -36,10 +36,10 @@ object ModuleParkour : ClientModule("Parkour", Category.MOVEMENT) {
     private val simulatedTickHandler = handler<MovementInputEvent> { event ->
         val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer()
         val shouldJump = player.moving &&
-                player.isOnGround &&
-                !player.isSneaking &&
-                !mc.options.sneakKey.isPressed &&
-                !mc.options.jumpKey.isPressed &&
+                player.onGround() &&
+                !player.isShiftKeyDown &&
+                !mc.options.keyShift.isDown &&
+                !mc.options.keyJump.isDown &&
                 !simulatedPlayer.getSnapshotAt(1).onGround
 
         if (shouldJump) {

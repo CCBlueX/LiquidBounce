@@ -21,30 +21,31 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.world.autobuild.ModuleAutoBuild.placer
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
-import net.minecraft.block.Blocks
-import net.minecraft.util.math.BlockPos
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.core.BlockPos
 
 object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
 
     private val disableOnYChange by boolean("DisableOnYChange", true)
     private val filter by enumChoice("Filter", Filter.WHITELIST)
-    private val blocks by blocks("Blocks", hashSetOf(Blocks.OBSIDIAN))
+    private val blocks by blocks("Blocks", blockSortedSetOf(Blocks.OBSIDIAN))
     private val platformSize by int("Size", 3, 1..6)
 
     private var startY = 0.0
 
     override fun enabled() {
-        startY = player.pos.y
+        startY = player.position().y
     }
 
     @Suppress("unused")
     private val repeatable = tickHandler {
-        if (disableOnYChange && player.pos.y != startY) {
+        if (disableOnYChange && player.position().y != startY) {
             ModuleAutoBuild.enabled = false
         }
     }
@@ -52,14 +53,14 @@ object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
         val blocks1 = hashSetOf<BlockPos>()
-        val center = BlockPos.ofFloored(player.pos).down()
-        val pos = center.mutableCopy()
+        val center = BlockPos.containing(player.position()).below()
+        val pos = center.mutable()
         for (x in center.x - platformSize..center.x + platformSize) {
             for (z in center.z - platformSize..center.z + platformSize) {
                 pos.x = x
                 pos.z = z
-                if (pos.getState()!!.isReplaceable) {
-                    blocks1.add(pos.toImmutable())
+                if (pos.getState()!!.canBeReplaced()) {
+                    blocks1.add(pos.immutable())
                 }
             }
         }

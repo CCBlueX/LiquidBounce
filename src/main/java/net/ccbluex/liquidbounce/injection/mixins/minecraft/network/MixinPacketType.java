@@ -20,16 +20,16 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import net.ccbluex.liquidbounce.utils.network.PacketRegistryKt;
-import net.minecraft.network.NetworkSide;
-import net.minecraft.network.packet.PacketType;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.PacketType;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PacketType.class)
-public class MixinPacketType {
+public abstract class MixinPacketType {
 
     /**
      * Registers a packet type for the given [networkSide] with the specified [id].
@@ -38,7 +38,7 @@ public class MixinPacketType {
      * @param identifier The identifier of the packet type to register defined in {@link PacketType}
      */
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void hookPacketRegistry(NetworkSide networkSide, Identifier identifier, CallbackInfo ci) {
+    private void hookPacketRegistry(PacketFlow networkSide, Identifier identifier, CallbackInfo ci) {
         PacketRegistryKt.getPacketRegistry().get(networkSide).add(identifier);
     }
 }

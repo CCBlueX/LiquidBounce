@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
-import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -36,9 +35,9 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.OverlayTargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
-import net.minecraft.item.BowItem
-import net.minecraft.item.CrossbowItem
-import net.minecraft.item.TridentItem
+import net.minecraft.world.item.BowItem
+import net.minecraft.world.item.CrossBowItem
+import net.minecraft.world.item.TridentItem
 
 /**
  * Automatically shoots with your bow when you aim correctly at an enemy or when the bow is fully charged.
@@ -104,8 +103,8 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
     private val renderHandler = handler<OverlayRenderEvent> { event ->
         val target = targetTracker.target ?: return@handler
 
-        renderEnvironmentForGUI(event) {
-            targetRenderer.render(this, target, event.tickDelta)
+        with(event.context) {
+            targetRenderer.render(target, event.tickDelta)
         }
     }
 }

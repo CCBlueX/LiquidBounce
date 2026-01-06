@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -48,7 +48,7 @@ object ModuleDerp : ClientModule("Derp", Category.FUN) {
     private val rotationsConfigurable = RotationsConfigurable(this)
 
     val repeatable = tickHandler {
-        if (notDuringSprint && (mc.options.sprintKey.isPressed || player.isSprinting)) {
+        if (notDuringSprint && (mc.options.keySprint.isDown || player.isSprinting)) {
             return@tickHandler
         }
 
@@ -79,7 +79,7 @@ object ModuleDerp : ClientModule("Derp", Category.FUN) {
         val yawOffsetValue by float("Offset", 0f, -180f..180f, "°")
 
         override val yaw: Float
-            get() = player.yaw + yawOffsetValue
+            get() = player.yRot + yawOffsetValue
 
     }
 
@@ -99,12 +99,12 @@ object ModuleDerp : ClientModule("Derp", Category.FUN) {
         @Suppress("unused")
         val repeatable = tickHandler {
             repeat(yawForwardTicks) {
-                yaw = player.yaw
+                yaw = player.yRot
                 waitTicks(1)
             }
 
             repeat(yawBackwardTicks) {
-                yaw = player.yaw + 180
+                yaw = player.yRot + 180
                 waitTicks(1)
             }
         }
@@ -137,7 +137,7 @@ object ModuleDerp : ClientModule("Derp", Category.FUN) {
     private object PitchOffset : PitchChoice("Offset") {
 
         override val pitch: Float
-            get() = player.pitch + pitchOffsetValue
+            get() = player.xRot + pitchOffsetValue
 
         val pitchOffsetValue by float("Offset", 0f, -180f..180f, "°")
 

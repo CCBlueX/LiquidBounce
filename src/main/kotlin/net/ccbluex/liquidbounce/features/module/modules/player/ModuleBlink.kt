@@ -20,7 +20,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -32,9 +36,9 @@ import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.positions
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.minecraft.client.network.OtherClientPlayerEntity
-import net.minecraft.entity.Entity
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.client.player.RemotePlayer
+import net.minecraft.world.entity.Entity
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import java.util.*
 
 /**
@@ -54,7 +58,7 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
         val action by enumChoice("ResetAction", ResetAction.RESET)
     }
 
-    private var dummyPlayer: OtherClientPlayerEntity? = null
+    private var dummyPlayer: RemotePlayer? = null
 
     init {
         tree(AutoResetOption)
@@ -62,15 +66,15 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
 
     override fun onEnabled() {
         if (dummy) {
-            val clone = OtherClientPlayerEntity(world, player.gameProfile)
+            val clone = RemotePlayer(world, player.gameProfile)
 
-            clone.headYaw = player.headYaw
-            clone.copyPositionAndRotation(player)
+            clone.yHeadRot = player.yHeadRot
+            clone.copyPosition(player)
             /**
              * A different UUID has to be set, to avoid [dummyPlayer] from being invisible to [player]
              * @see net.minecraft.world.entity.EntityIndex.add
              */
-            clone.uuid = UUID.randomUUID()
+            clone.setUUID(UUID.randomUUID())
             world.addEntity(clone)
 
             dummyPlayer = clone
@@ -96,7 +100,7 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
             return@handler
         }
 
-        if (ambush && packet is PlayerInteractEntityC2SPacket) {
+        if (ambush && packet is ServerboundInteractPacket) {
             enabled = false
             return@handler
         }
@@ -138,7 +142,7 @@ object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
                 ResetAction.RESET -> PacketQueueManager.cancel()
                 ResetAction.BLINK -> {
                     PacketQueueManager.flush(TransferOrigin.OUTGOING)
-                    dummyPlayer?.copyPositionAndRotation(player)
+                    dummyPlayer?.copyPosition(player)
                 }
             }
 

@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.google.common.collect.Sets
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
@@ -26,18 +25,29 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.GenericColorMode
+import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
+import net.ccbluex.liquidbounce.render.GenericStaticColorMode
+import net.ccbluex.liquidbounce.render.MapColorMode
+import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
-import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.client.util.math.MatrixStack
-import net.minecraft.util.math.BlockPos
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.vertex.PoseStack
+import net.ccbluex.liquidbounce.render.drawBoxOutlined
+import net.ccbluex.liquidbounce.utils.block.outlineBox
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
+import java.util.concurrent.ConcurrentSkipListSet
 
 /**
  * BlockESP module
@@ -50,7 +60,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
     private val modes = choices("Mode", Glow, arrayOf(Box, Glow, Outline))
     private val targets by blocks(
         "Targets",
-        Sets.newConcurrentHashSet(findBlocksEndingWith("_BED", "DRAGON_EGG"))
+        ConcurrentSkipListSet(findBlocksEndingWith("_BED", "DRAGON_EGG"))
     ).onChange {
         if (running) {
             onDisabled()
@@ -67,6 +77,8 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         )
     }
 
+    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
     private object Box : Choice("Box") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
@@ -74,22 +86,24 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         private val outline by boolean("Outline", true)
 
         @Suppress("unused")
-        val renderHandler = handler<WorldRenderEvent> { event ->
+        private val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
-            drawBoxMode(matrixStack, this.outline, false)
+            drawBoxMode(mc.mainRenderTarget, matrixStack, this.outline, false)
         }
 
-        fun drawBoxMode(matrixStack: MatrixStack, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
-            val colorMode = colorMode.activeChoice
-
+        fun drawBoxMode(
+            framebuffer: RenderTarget,
+            matrixStack: PoseStack,
+            drawOutline: Boolean,
+            isOutlineShader: Boolean,
+        ): Boolean {
             var dirty = false
 
-            renderEnvironmentForWorld(matrixStack) {
+            renderEnvironmentForWorld(matrixStack, framebuffer) {
                 dirty = drawInternal(
-                    BlockTracker.allPositions(),
-                    colorMode,
-                    fullAlpha,
+                    colorMode.activeChoice,
+                    isOutlineShader,
                     drawOutline
                 )
             }
@@ -98,40 +112,35 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         }
 
         private fun WorldRenderEnvironment.drawInternal(
-            blocks: Sequence<BlockPos>,
             colorMode: GenericColorMode<Pair<BlockPos, BlockState>>,
-            fullAlpha: Boolean,
+            isOutlineShader: Boolean,
             drawOutline: Boolean
         ): Boolean {
             var dirty = false
 
             startBatch()
-            for (blockPos in blocks) {
-                val blockState = blockPos.getState() ?: continue
+            val maxDistanceSq = maximumDistance.sq()
+            for ((blockPos, t) in BlockTracker.iterate()) {
+                if (blockPos.cameraDistanceSq() > maxDistanceSq) continue
 
-                if (blockState.isAir) {
-                    continue
-                }
+                val blockState = t.state
 
-                val outlineShape = blockState.getOutlineShape(world, blockPos)
-                val boundingBox = if (outlineShape.isEmpty) {
-                    FULL_BOX
-                } else {
-                    outlineShape.boundingBox
-                }
+                if (blockState.isAir) continue
 
-                var color = colorMode.getColor(Pair(blockPos, blockState))
+                val boundingBox = t.box
 
-                if (fullAlpha) {
-                    color = color.with(a = 255)
-                }
+                val color = colorMode.getColor(Pair(blockPos, blockState))
 
-                withPositionRelativeToCamera(blockPos.toVec3d()) {
-                    drawBox(
-                        boundingBox,
-                        faceColor = color,
-                        outlineColor = if (drawOutline) color.with(a = 150) else null,
-                    )
+                withPositionRelativeToCamera(blockPos) {
+                    if (isOutlineShader) {
+                        drawBoxOutlined(boundingBox, color.alpha(255))
+                    } else {
+                        drawBox(
+                            boundingBox,
+                            faceColor = color,
+                            outlineColor = if (drawOutline) color.with(a = 150) else null,
+                        )
+                    }
                 }
 
                 dirty = true
@@ -152,7 +161,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 return@handler
             }
 
-            val dirty = Box.drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
+            val dirty = Box.drawBoxMode(
+                event.framebuffer,
+                event.matrixStack,
+                drawOutline = false,
+                isOutlineShader = true
+            )
 
             if (dirty) {
                 event.markDirty()
@@ -171,7 +185,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 return@handler
             }
 
-            val dirty = Box.drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
+            val dirty = Box.drawBoxMode(
+                event.framebuffer,
+                event.matrixStack,
+                drawOutline = false,
+                isOutlineShader = true
+            )
 
             if (dirty) {
                 event.markDirty()
@@ -187,9 +206,16 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         ChunkScanner.unsubscribe(BlockTracker)
     }
 
-    private object BlockTracker : AbstractBlockLocationTracker.State2BlockPos<Block>() {
-        override fun getStateFor(pos: BlockPos, state: BlockState): Block? =
-            state.block?.takeIf { it in targets }
+    private class TrackedState(@JvmField val state: BlockState, @JvmField val box: AABB)
+
+    private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<TrackedState>() {
+        override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
+            return if (state.block in targets) {
+                TrackedState(state, state.outlineBox(pos))
+            } else {
+                null
+            }
+        }
     }
 
 }
