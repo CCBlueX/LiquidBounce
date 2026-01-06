@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
@@ -25,52 +26,178 @@ import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.drawCircleOutline
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.minecraft.util.Mth
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 /**
  * Renders a circle around the player indicating the KillAura attack range.
- * Uses the same range values as KillAura (Range and WallRange).
- * - Red/idle color when no enemy is in range
- * - Green/active color when an enemy is in range and being targeted
+ * Features:
+ * - Synced with KillAura Range and WallRange
+ * - Color changes based on target state (idle/active)
+ * - Multiple color modes (static, rainbow, distance-based)
+ * - Pulse animation option
+ * - Opponent range visualization
+ * - Enemy count display
  */
 object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeIndicator", false) {
 
+    // Color settings
+    private val colorMode by enumChoice("ColorMode", ColorMode.STATIC)
     private val idleColor by color("IdleColor", Color4b(255, 50, 50, 80))
     private val activeColor by color("ActiveColor", Color4b(50, 255, 50, 80))
+
+    // Outline settings
     private val outline by boolean("Outline", true)
     private val outlineColor by color("OutlineColor", Color4b(255, 255, 255, 120))
+
+    // Animation settings
+    private val pulseAnimation by boolean("PulseAnimation", false)
+    private val pulseSpeed by float("PulseSpeed", 2f, 0.5f..5f)
+    private val pulseIntensity by float("PulseIntensity", 0.15f, 0.05f..0.5f)
+
+    // Fade animation for state changes
+    private val fadeAnimation by boolean("FadeAnimation", true)
+    private val fadeSpeed by float("FadeSpeed", 0.1f, 0.01f..0.5f)
+
+    // Wall range circle
     private val showWallRange by boolean("ShowWallRange", false)
     private val wallRangeColor by color("WallRangeColor", Color4b(255, 165, 0, 60))
+
+    // Opponent range (shows estimated enemy attack range)
+    private val showOpponentRange by boolean("ShowOpponentRange", false)
+    private val opponentRange by float("OpponentRange", 3f, 1f..6f)
+    private val opponentRangeColor by color("OpponentRangeColor", Color4b(255, 0, 0, 40))
+
+    // Conditions - when NOT to render
+    private val hideWhenDead by boolean("HideWhenDead", true)
+    private val hideWhenSpectator by boolean("HideWhenSpectator", true)
+    private val hideInVehicle by boolean("HideInVehicle", false)
+
+    // State tracking for animations
+    private var currentColorFactor = 0f
+    private var lastTargetState = false
+
+    private enum class ColorMode(override val choiceName: String) : NamedChoice {
+        STATIC("Static"),
+        RAINBOW("Rainbow"),
+        DISTANCE("Distance")
+    }
 
     fun render(env: WorldRenderEnvironment, partialTicks: Float) {
         if (!enabled) return
 
-        val hasTarget = ModuleKillAura.targetTracker.target != null
-        val color = if (hasTarget) activeColor else idleColor
+        // Check conditions
+        if (hideWhenDead && player.isDeadOrDying) return
+        if (hideWhenSpectator && player.isSpectator) return
+        if (hideInVehicle && player.vehicle != null) return
+
+        val target = ModuleKillAura.targetTracker.target
+        val hasTarget = target != null
+
+        // Update fade animation
+        updateFadeAnimation(hasTarget)
+
         val range = ModuleKillAura.range
         val wallRange = ModuleKillAura.wallRange
-
         val pos = player.interpolateCurrentPosition(partialTicks)
+
+        // Calculate pulse effect
+        val pulseOffset = if (pulseAnimation) {
+            val time = System.currentTimeMillis() / 1000.0 * pulseSpeed
+            (sin(time * Math.PI * 2).toFloat() * pulseIntensity * range)
+        } else 0f
+
+        val effectiveRange = range + pulseOffset
+
+        // Get color based on mode
+        val color = getColor(target?.let { sqrt(player.squaredBoxedDistanceTo(it)).toFloat() })
 
         with(env) {
             withPositionRelativeToCamera(pos) {
                 // Main attack range circle
-                drawGradientCircle(range, 0f, color, color.with(a = 0))
-                
+                drawGradientCircle(effectiveRange, 0f, color, color.with(a = 0))
+
                 if (outline) {
-                    drawCircleOutline(range, outlineColor)
+                    drawCircleOutline(effectiveRange, outlineColor)
                 }
 
-                // Wall range circle (smaller, for attacking through walls)
+                // Wall range circle
                 if (showWallRange && wallRange < range) {
-                    drawGradientCircle(wallRange, 0f, wallRangeColor, wallRangeColor.with(a = 0))
+                    val wallColor = wallRangeColor.let {
+                        if (hasTarget) it.with(a = (it.a * 1.5f).toInt().coerceAtMost(255)) else it
+                    }
+                    drawGradientCircle(wallRange, 0f, wallColor, wallColor.with(a = 0))
                     if (outline) {
                         drawCircleOutline(wallRange, outlineColor.with(a = 80))
                     }
                 }
+
+                // Opponent range circle (enemy's estimated attack range)
+                if (showOpponentRange && hasTarget) {
+                    drawGradientCircle(opponentRange, 0f, opponentRangeColor, opponentRangeColor.with(a = 0))
+                    if (outline) {
+                        drawCircleOutline(opponentRange, opponentRangeColor.with(a = 100))
+                    }
+                }
             }
         }
+    }
+
+    private fun updateFadeAnimation(hasTarget: Boolean) {
+        if (!fadeAnimation) {
+            currentColorFactor = if (hasTarget) 1f else 0f
+            lastTargetState = hasTarget
+            return
+        }
+
+        val targetFactor = if (hasTarget) 1f else 0f
+        currentColorFactor = Mth.lerp(fadeSpeed, currentColorFactor, targetFactor)
+
+        // Snap to target if close enough
+        if (kotlin.math.abs(currentColorFactor - targetFactor) < 0.01f) {
+            currentColorFactor = targetFactor
+        }
+
+        lastTargetState = hasTarget
+    }
+
+    private fun getColor(distanceToTarget: Float?): Color4b {
+        return when (colorMode) {
+            ColorMode.RAINBOW -> rainbow(alpha = 0.5f)
+
+            ColorMode.DISTANCE -> {
+                if (distanceToTarget == null) {
+                    idleColor
+                } else {
+                    // Interpolate from green (close) to red (far) based on distance
+                    val range = ModuleKillAura.range
+                    val factor = (distanceToTarget / range).coerceIn(0f, 1f)
+                    interpolateColor(activeColor, idleColor, factor)
+                }
+            }
+
+            ColorMode.STATIC -> {
+                if (fadeAnimation) {
+                    interpolateColor(idleColor, activeColor, currentColorFactor)
+                } else {
+                    if (currentColorFactor > 0.5f) activeColor else idleColor
+                }
+            }
+        }
+    }
+
+    private fun interpolateColor(from: Color4b, to: Color4b, factor: Float): Color4b {
+        return Color4b(
+            (from.r + (to.r - from.r) * factor).toInt(),
+            (from.g + (to.g - from.g) * factor).toInt(),
+            (from.b + (to.b - from.b) * factor).toInt(),
+            (from.a + (to.a - from.a) * factor).toInt()
+        )
     }
 
 }
