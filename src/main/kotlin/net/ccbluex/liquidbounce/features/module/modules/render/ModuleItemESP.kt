@@ -29,18 +29,23 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.item.ItemEntity
-import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow.Pickup
+import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.entity.projectile.arrow.SpectralArrow
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident
 import net.minecraft.world.phys.AABB
@@ -59,6 +64,8 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val items by items("Items", itemSortedSetOf())
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
+    val showTracers by boolean("Tracers", false)
 
     private object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {
         val regularArrows by boolean("RegularArrows", true)
@@ -84,6 +91,42 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
             GenericStaticColorMode(it, Color4b(255, 179, 72, 255)),
             GenericRainbowColorMode(it)
         )
+    }
+
+    // showTracers
+    @Suppress("unused")
+    private val tracerRenderHandler = handler<WorldRenderEvent> { event ->
+        // Check if the tracer option is enabled
+        if (!showTracers) return@handler
+
+        renderEnvironmentForWorld(event.matrixStack) {
+            // We calculate the gaze vector (where the camera is looking)
+            val eyeVector = Vec3f(0.0, 0.0, 1.0)
+                .rotatePitch(-camera.xRot().toRadians())
+                .rotateYaw(-camera.yRot().toRadians())
+
+            longLines {
+                startBatch()
+                // Using entitiesForRendering() to get a list of entities around
+                val entities = world.entitiesForRendering()
+                for (entity in entities) {
+                    // Using the existing filtering logic (distance, type, etc.)
+                    if (!shouldRender(entity)) continue
+
+                    val color = getColor()
+
+                    // Interpolating the position (motion smoothing)
+                    val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
+
+                    drawLine(
+                        argb = color.toARGB(),
+                        p1 = eyeVector,
+                        p2 = pos,
+                    )
+                }
+                commitBatch()
+            }
+        }
     }
 
     private object BoxMode : Choice("Box") {

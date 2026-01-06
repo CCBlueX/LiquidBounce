@@ -35,7 +35,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(HumanoidArmorLayer.class)
-public class MixinHumanoidArmorLayer<S extends HumanoidRenderState> {
+public abstract class MixinHumanoidArmorLayer<S extends HumanoidRenderState> {
     @Inject(
             method = "renderArmorPiece",
             at = @At("HEAD"),

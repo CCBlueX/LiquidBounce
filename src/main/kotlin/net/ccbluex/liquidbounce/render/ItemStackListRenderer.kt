@@ -64,7 +64,7 @@ class ItemStackListRenderer private constructor(
     private var centerY = 0F
     private var scale = 1.0F
     private var rowLength = 9
-    private var backgroundColor = DEFAULT_BG_COLOR
+    private var backgroundColor = Color4b.DEFAULT_BG_COLOR
     private var backgroundOutlineColor = Color4b.TRANSPARENT
     private var backgroundMargin = 2.0F
     private var useTexture = false
@@ -221,8 +221,6 @@ class ItemStackListRenderer private constructor(
     }
 
     companion object : EventListener {
-        private val DEFAULT_BG_COLOR = Color4b(Int.MIN_VALUE, true)
-
         private val planned = ArrayList<ItemStackListRenderer>()
 
         // y -> x
@@ -317,7 +315,7 @@ class ItemStackListRenderer private constructor(
 
     sealed class BackgroundChoice(name: String, override val parent: ChoiceConfigurable<*>) : Choice(name) {
         class Rect(parent: ChoiceConfigurable<*>) : BackgroundChoice("Rect", parent) {
-            val fillColor by color("Color", DEFAULT_BG_COLOR)
+            val fillColor by color("Color", Color4b.DEFAULT_BG_COLOR)
             val outlineColor by color("OutlineColor", Color4b.TRANSPARENT)
             val margin by float("Margin", 2.0F, 0.0F..100.0F)
         }

@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(GlDebug.class)
-public class MixinGlDebug {
+public abstract class MixinGlDebug {
 
     /**
      * Adds source information to GL errors.

@@ -32,11 +32,11 @@ import java.lang.reflect.Type
 object ColorAdapter : JsonSerializer<Color4b>, JsonDeserializer<Color4b> {
 
     override fun serialize(src: Color4b, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(src.toARGB())
+        return JsonPrimitive(src.argb)
     }
 
     override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): Color4b {
-        return Color4b(Color(json.asInt, true))
+        return Color4b(json.asInt)
     }
 
 }

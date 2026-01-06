@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(BlindnessFogEnvironment.class)
-public class MixinBlindnessFogEnvironment {
+public abstract class MixinBlindnessFogEnvironment {
     @Inject(method = "getMobEffect()Lnet/minecraft/core/Holder;", at = @At("HEAD"), cancellable = true)
     public void hookGetStatusEffect(CallbackInfoReturnable<Holder<MobEffect>> cir) {
         if (!ModuleAntiBlind.canRender(DoRender.BLINDING)) {

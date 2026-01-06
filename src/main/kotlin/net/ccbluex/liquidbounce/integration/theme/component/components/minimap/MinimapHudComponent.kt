@@ -193,7 +193,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                 element.render(this, boundingBox)
             }
 
-            val from = Color4b.BLACK.copy(a = 100)
+            val from = Color4b.DEFAULT_BG_COLOR
             val to = Color4b.TRANSPARENT
 
             drawShadowForBB(boundingBox, bounds, from, to)

@@ -31,10 +31,6 @@ import {isLoggingIn} from "../routes/menu/altmanager/altmanager_store";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
-export async function textureUrl(texture: string) {
-    return `${API_BASE}/client/resource/itemTexture?id=${texture}`
-}
-
 export async function getMetadata(): Promise<Metadata> {
     const response = await fetch(`metadata.json`);
     const data: Metadata = await response.json();
@@ -706,5 +702,9 @@ export async function setTyping(typing: boolean) {
 }
 
 export function itemTextureUrl(identifier: string) {
-    return `${REST_BASE}/api/v1/client/resource/itemTexture?id=${identifier}`
+    return `${API_BASE}/client/resource/itemTexture?id=${identifier}`
+}
+
+export function effectTextureUrl(effectId: string) {
+    return `${API_BASE}/client/resource/effectTexture?id=${effectId}`
 }

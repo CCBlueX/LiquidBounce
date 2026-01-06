@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(ClientIntentionPacket.class)
-public class MixinClientIntentionPacket {
+public abstract class MixinClientIntentionPacket {
 
     @ModifyExpressionValue(method = "write", at = @At(value = "FIELD", target = "Lnet/minecraft/network/protocol/handshake/ClientIntentionPacket;hostName:Ljava/lang/String;"))
     private String modifyAddress(String original) {

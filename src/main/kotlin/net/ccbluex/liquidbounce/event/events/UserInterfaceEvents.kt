@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEven
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
 import net.minecraft.network.chat.Component
+import net.minecraft.world.effect.MobEffectInstance
 
 @Nameable("fps")
 @Suppress("unused")
@@ -39,6 +40,10 @@ class FpsLimitEvent(var fps: Int) : Event()
 @Nameable("clientPlayerData")
 @Suppress("unused")
 class ClientPlayerDataEvent(val playerData: PlayerData) : Event(), WebSocketEvent
+
+@Nameable("clientPlayerEffect")
+@Suppress("unused")
+class ClientPlayerEffectEvent(val effects: List<MobEffectInstance>) : Event(), WebSocketEvent
 
 @Nameable("clientPlayerInventory")
 @Suppress("unused")

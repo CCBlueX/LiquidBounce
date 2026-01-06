@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(FlowingFluid.class)
-public class MixinFlowingFluid {
+public abstract class MixinFlowingFluid {
 
     @ModifyExpressionValue(method = "getFlow", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;hasNext()Z", ordinal = 0))
     private boolean hookLiquidPush(boolean original) {

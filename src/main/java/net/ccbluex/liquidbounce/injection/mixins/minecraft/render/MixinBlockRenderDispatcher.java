@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BlockRenderDispatcher.class)
-public class MixinBlockRenderDispatcher {
+public abstract class MixinBlockRenderDispatcher {
     @Inject(method = "renderBreakingTexture", at = @At("HEAD"), cancellable = true)
     private void hookRenderDamage(CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.BLOCK_BREAK_OVERLAY)) {

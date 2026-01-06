@@ -79,7 +79,7 @@ object ModuleTeams : ClientModule("Teams", Category.MISC) {
      * Returns the team color of the [entity] or null if the entity is not in a team.
      */
     private fun getTeamColor(entity: Entity) =
-        entity.displayName?.style?.color?.value?.let { Color4b(it, hasAlpha = true) }
+        entity.displayName?.style?.color?.value?.let { Color4b(it) }
 
     @Suppress("unused")
     private enum class Matches(

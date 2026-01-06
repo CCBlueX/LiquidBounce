@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import net.ccbluex.liquidbounce.interfaces.ItemCooldownManagerAdditions;
+import net.ccbluex.liquidbounce.interfaces.ItemCooldownsAddition;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.Identifier;
@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.Map;
 
 @Mixin(ItemCooldowns.class)
-public abstract class MixinItemCooldowns implements ItemCooldownManagerAdditions {
+public abstract class MixinItemCooldowns implements ItemCooldownsAddition {
 
     @Shadow
     @Final

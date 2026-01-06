@@ -34,7 +34,7 @@ import java.util.Arrays;
 import java.util.function.Function;
 
 @Mixin(SignText.class)
-public class MixinSignText {
+public abstract class MixinSignText {
 
     @Unique
     private static final FormattedCharSequence[] LIQUIDBOUNCE$EMPTY = new FormattedCharSequence[SignText.LINES];

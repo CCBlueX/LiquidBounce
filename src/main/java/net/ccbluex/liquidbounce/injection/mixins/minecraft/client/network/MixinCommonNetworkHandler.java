@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientCommonPacketListenerImpl.class)
-public class MixinCommonNetworkHandler {
+public abstract class MixinCommonNetworkHandler {
 
     @Inject(method = "onPacketError", at = @At(value = "HEAD"), cancellable = true)
     private void packetExceptionCancel(Packet packet, Exception exception, CallbackInfo ci) {

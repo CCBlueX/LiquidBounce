@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Pseudo
 @Mixin(value = BlockOcclusionCache.class, remap = false)
-public class MixinSodiumBlockOcclusionCache {
+public abstract class MixinSodiumBlockOcclusionCache {
 
     @Inject(method = "shouldDrawSide", at = @At("RETURN"), cancellable = true)
     private void injectXRay(BlockState selfState, BlockGetter view, BlockPos pos, Direction facing, CallbackInfoReturnable<Boolean> cir) {

@@ -201,7 +201,7 @@ class TargetRenderer(
 
                 private val height by float("Height", 0.1f, 0.02f..2f)
 
-                private val color by color("Color", Color4b(0x64007CFF, true))
+                private val color by color("Color", defaultColor)
 
                 private val extraYOffset by float("ExtraYOffset", 0.1f, 0f..1f)
 
@@ -238,8 +238,8 @@ class TargetRenderer(
                     )
                 }
 
-                private val outerColor by color("OuterColor", Color4b(0x64007CFF, true))
-                private val innerColor by color("InnerColor", Color4b(0x64007CFF, true))
+                private val outerColor by color("OuterColor", defaultColor)
+                private val innerColor by color("InnerColor", defaultColor)
 
                 private val outline = tree(Outline(owner))
 
@@ -275,8 +275,8 @@ class TargetRenderer(
                     )
                 }
 
-                private val color by color("OuterColor", Color4b(0x64007CFF, true))
-                private val glowColor by color("GlowColor", Color4b(0x00007CFF, true))
+                private val color by color("OuterColor", defaultColor)
+                private val glowColor by color("GlowColor", Color4b.LIQUID_BOUNCE.alpha(0))
 
                 private val glowHeightSetting by float("GlowHeight", 0.3f, -1f..1f)
 
@@ -322,7 +322,7 @@ class TargetRenderer(
             }
 
             private class Outline(parent: EventListener) : ToggleableConfigurable(parent, "Outline", true) {
-                val color by color("Color", Color4b(0x00007CFF, false))
+                val color by color("Color", Color4b.fullAlpha(0x007CFF))
             }
         }
 
@@ -432,6 +432,8 @@ class TargetRenderer(
     }
 
 }
+
+private val defaultColor = Color4b.LIQUID_BOUNCE.alpha(100)
 
 private val ghostModeTexture = LiquidBounce.resource("particles/glow.png")
     .toNativeImage().asTexture { "TargetRenderer Ghost" }

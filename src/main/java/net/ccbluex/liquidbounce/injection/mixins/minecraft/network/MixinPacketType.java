@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PacketType.class)
-public class MixinPacketType {
+public abstract class MixinPacketType {
 
     /**
      * Registers a packet type for the given [networkSide] with the specified [id].

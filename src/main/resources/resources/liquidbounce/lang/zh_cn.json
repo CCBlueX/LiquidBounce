@@ -141,6 +141,7 @@
   "liquidbounce.command.invsee.result.playerNotFound": "玩家名 \"%s\" 未找到.",
   "liquidbounce.command.localconfig.subcommand.save.parameter.name.description": "配置文件的名称。",
   "liquidbounce.command.localconfig.subcommand.save.parameter.overwrite.description": "覆盖现有的配置文件。",
+  "liquidbounce.command.localconfig.subcommand.save.result.invalidFileName": "配置文件名称 '%s' 不可用。",
   "liquidbounce.command.localconfig.subcommand.save.result.alreadyExists": "名为 %s 的配置文件已存在。",
   "liquidbounce.command.localconfig.subcommand.save.result.created": "已创建名为 %s 的配置文件。",
   "liquidbounce.command.localconfig.subcommand.save.result.failedToCreate": "创建名为 %s 的配置文件失败。",

@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Pseudo
 @Mixin(value = LightDataAccess.class, remap = false)
-public class MixinSodiumLightDataAccessMixin {
+public abstract class MixinSodiumLightDataAccessMixin {
 
     @Shadow
     @Final

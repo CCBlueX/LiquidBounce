@@ -15,24 +15,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
  */
+
 package net.ccbluex.liquidbounce.interfaces;
 
-/**
- * Additions to {@link net.minecraft.client.GuiMessage} and
- * {@link net.minecraft.client.GuiMessage.Line}.
- */
-public interface ChatMessageAddition {
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.phys.Vec2;
 
+public interface ClientInputAddition {
     /**
-     * Sets the ID for the chat message.
-     * The ID will be used for removing chat messages.
+     * @param movementVector x -> movementSideways; y -> movementForward
      */
-    void liquid_bounce$setId(String id);
+    void liquid_bounce$setMovementInput(Vec2 movementVector);
 
-    /**
-     * Gets the ID of the chat message.
-     */
-    String liquid_bounce$getId();
-
+    Input liquid_bounce$getInitial();
+    Input liquid_bounce$getUntransformed();
 }

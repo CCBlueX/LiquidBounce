@@ -79,7 +79,7 @@ internal fun GuiGraphics.drawNametag(nametag: Nametag, posX: Float, posY: Float)
     // Background
     drawQuad(
         x1, y1, x2, y2,
-        fillColor = Color4b(Int.MIN_VALUE, hasAlpha = true),
+        fillColor = Color4b.DEFAULT_BG_COLOR,
         outlineColor = Color4b.BLACK.takeIf { ModuleNametags.border },
     )
 

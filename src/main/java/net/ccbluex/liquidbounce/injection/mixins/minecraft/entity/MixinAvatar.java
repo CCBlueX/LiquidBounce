@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Avatar.class)
-public class MixinAvatar {
+public abstract class MixinAvatar {
     /**
      * Sneak height fix
      * @see net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPose

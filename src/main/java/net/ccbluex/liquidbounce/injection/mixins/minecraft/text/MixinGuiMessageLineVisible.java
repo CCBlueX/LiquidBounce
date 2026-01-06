@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.text;
 
-import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition;
+import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition;
 import net.minecraft.client.GuiMessage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(GuiMessage.Line.class)
-public abstract class MixinChatHudLineVisible implements ChatMessageAddition {
+public abstract class MixinGuiMessageLineVisible implements GuiMessageLineAddition {
 
     @Unique
     private String liquid_bounce$id = null;

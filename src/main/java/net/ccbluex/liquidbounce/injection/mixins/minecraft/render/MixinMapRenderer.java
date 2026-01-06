@@ -36,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(MapRenderer.class)
-public class MixinMapRenderer {
+public abstract class MixinMapRenderer {
     @ModifyExpressionValue(
             method = "render",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/MapRenderState;decorations:Ljava/util/List;")

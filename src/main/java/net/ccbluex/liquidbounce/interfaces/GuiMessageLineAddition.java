@@ -15,11 +15,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package net.ccbluex.liquidbounce.interfaces;
 
-public interface ChatHudAddition {
-    int liquidbounce_getChatY();
+/**
+ * Additions to {@link net.minecraft.client.GuiMessage} and
+ * {@link net.minecraft.client.GuiMessage.Line}.
+ */
+public interface GuiMessageLineAddition {
+
+    /**
+     * Sets the ID for the chat message.
+     * The ID will be used for removing chat messages.
+     */
+    void liquid_bounce$setId(String id);
+
+    /**
+     * Gets the ID of the chat message.
+     */
+    String liquid_bounce$getId();
+
 }

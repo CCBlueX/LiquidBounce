@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.runPlace
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.world
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.PostPacketTrigger
-import net.ccbluex.liquidbounce.interfaces.EntitiesDestroyS2CPacketAddition
+import net.ccbluex.liquidbounce.interfaces.ClientboundRemoveEntitiesPacketAddition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
@@ -52,12 +52,12 @@ object CrystalDestroyTrigger : PostPacketTrigger<ClientboundRemoveEntitiesPacket
 
         // mark the packet
         if (containsRelevantCrystal) {
-            (packet as EntitiesDestroyS2CPacketAddition).`liquid_bounce$setContainsCrystal`()
+            (packet as ClientboundRemoveEntitiesPacketAddition).`liquid_bounce$setContainsCrystal`()
         }
     }
 
     override fun postPacketHandler(packet: ClientboundRemoveEntitiesPacket) {
-        val packetNotRelevant = !(packet as EntitiesDestroyS2CPacketAddition).`liquid_bounce$containsCrystal`()
+        val packetNotRelevant = !(packet as ClientboundRemoveEntitiesPacketAddition).`liquid_bounce$containsCrystal`()
         if (packetNotRelevant) {
             return
         }

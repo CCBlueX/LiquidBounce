@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import java.awt.Color
 
 class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventListener {
 
@@ -95,9 +94,9 @@ class PointTracker(val parent: EventListener) : Configurable("AimPoint"), EventL
             ModuleDebug.DebugCollection(points.map { point ->
                 val percentage = calculateDistancePercentage(point, eyes, bestHitVector, worstHitVector)
                 val color = if (point !in pointsWithExempts) {
-                    Color4b(Color.MAGENTA)
+                    Color4b.MAGENTA
                 } else {
-                    Color4b(Color.GREEN).interpolateTo(Color4b.RED, percentage)
+                    Color4b.GREEN.interpolateTo(Color4b.RED, percentage)
                 }.fade(1.0f - percentage.toFloat())
                 ModuleDebug.DebuggedPoint(point, color, 0.05)
             })

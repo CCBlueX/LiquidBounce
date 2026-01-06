@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Pseudo
 @Mixin(value = ChunkAwareBlockCollisionSweeper.class)
-public class MixinChunkAwareBlockCollisionSweeper {
+public abstract class MixinChunkAwareBlockCollisionSweeper {
 
     @Shadow
     @Final

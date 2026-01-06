@@ -41,7 +41,7 @@ fun interface AutoCompletionProvider {
      *
      * @return suggestions for the full parameter name
      */
-    fun autocomplete(begin: String, args: List<String>): List<String>
+    fun autocomplete(begin: String, args: List<String>): Iterable<String>
 }
 
 class Parameter<T : Any>(

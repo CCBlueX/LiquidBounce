@@ -20,7 +20,15 @@
 
 package net.ccbluex.liquidbounce.interfaces;
 
-public interface ClientPlayerEntityAddition {
-    int liquid_bounce$getAirTicks();
-    int liquid_bounce$getOnGroundTicks();
+import net.minecraft.network.chat.TextColor;
+
+public interface TextColorAddition {
+    boolean liquid_bounce$doesBypassingNameProtect();
+    TextColor liquid_bounce$withNameProtectionBypass();
+
+    @Deprecated
+    /**
+     * Please don't use this method, it is only for internal use.
+     */
+    void liquid_bounce$setBypassingNameProtection(boolean bypassesNameProtect);
 }

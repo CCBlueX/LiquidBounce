@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(WorldBorderRenderer.class)
-public class MixinWorldBorderRenderer {
+public abstract class MixinWorldBorderRenderer {
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void render(WorldBorderRenderState state, Vec3 cameraPos, double viewDistanceBlocks, double farPlaneDistance, CallbackInfo ci) {

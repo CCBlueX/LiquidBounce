@@ -37,7 +37,7 @@ import java.util.Map;
 
 @Mixin(YggdrasilMinecraftSessionService.class)
 
-public class MixinYggdrasilMinecraftSessionService {
+public abstract class MixinYggdrasilMinecraftSessionService {
     @Inject(
             method = "getPropertySignatureState",
             at = @At("HEAD"),

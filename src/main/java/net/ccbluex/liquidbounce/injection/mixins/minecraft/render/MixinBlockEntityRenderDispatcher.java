@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 @Mixin(BlockEntityRenderDispatcher.class)
-public class MixinBlockEntityRenderDispatcher {
+public abstract class MixinBlockEntityRenderDispatcher {
 
     /**
      * Inject StorageESP glow effect

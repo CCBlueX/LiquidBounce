@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client.client
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
@@ -125,7 +126,7 @@ object CommandClientThemeSubcommand {
                     .append(variable(theme.origin.choiceName))
                 ).onClick(
                     ClickEvent.SuggestCommand(
-                        ".client theme set ${theme.metadata.id}"
+                        "${CommandManager.Options.prefix}client theme set ${theme.metadata.id}"
                     )
                 ).onHover(
                     HoverEvent.ShowText(

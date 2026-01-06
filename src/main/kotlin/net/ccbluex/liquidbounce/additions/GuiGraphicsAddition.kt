@@ -26,9 +26,9 @@ import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.world.item.ItemStack
 
 /**
- * Addition to [net.minecraft.client.gui.DrawContext].
+ * Addition to [net.minecraft.client.gui.GuiGraphics].
  */
-interface DrawContextAddition {
+interface GuiGraphicsAddition {
 
     fun `liquidbounce$drawItemBar`(stack: ItemStack, x: Int, y: Int)
 
@@ -45,7 +45,7 @@ interface DrawContextAddition {
 }
 
 internal inline fun GuiGraphics.drawItemBar(stack: ItemStack, x: Int, y: Int) =
-    (this as DrawContextAddition).`liquidbounce$drawItemBar`(stack, x, y)
+    (this as GuiGraphicsAddition).`liquidbounce$drawItemBar`(stack, x, y)
 
 internal inline fun GuiGraphics.drawStackCount(
     textRenderer: Font,
@@ -54,10 +54,10 @@ internal inline fun GuiGraphics.drawStackCount(
     y: Int,
     stackCountText: String?,
 ) =
-    (this as DrawContextAddition).`liquidbounce$drawStackCount`(textRenderer, stack, x, y, stackCountText)
+    (this as GuiGraphicsAddition).`liquidbounce$drawStackCount`(textRenderer, stack, x, y, stackCountText)
 
 internal inline fun GuiGraphics.drawCooldownProgress(stack: ItemStack, x: Int, y: Int) =
-    (this as DrawContextAddition).`liquidbounce$drawCooldownProgress`(stack, x, y)
+    (this as GuiGraphicsAddition).`liquidbounce$drawCooldownProgress`(stack, x, y)
 
 // Removed in 1.21.9, copied from 1.21.8
 fun GuiGraphics.drawBorder(x: Int, y: Int, width: Int, height: Int, color: Int) {

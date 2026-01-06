@@ -23,8 +23,8 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
-import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition
+import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition
+import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.network.chat.Component
@@ -69,12 +69,12 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
             literalText.append(text)
 
             val other = mc.gui.chat.allMessages.find {
-                (it as ChatMessageAddition).`liquid_bounce$getId`() == id
+                (it as GuiMessageLineAddition).`liquid_bounce$getId`() == id
             }
 
             var count = 1
             other?.let {
-                count += (other as ChatHudLineAddition).`liquid_bounce$getCount`()
+                count += (other as GuiMessageAddition).`liquid_bounce$getCount`()
                 literalText.append(" ${ChatFormatting.GRAY}[$count]")
             }
 

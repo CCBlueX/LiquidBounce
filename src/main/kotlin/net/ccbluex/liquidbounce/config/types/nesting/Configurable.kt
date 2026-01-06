@@ -556,7 +556,7 @@ open class Configurable(
 
             ValueType.COLOR -> {
                 val value = valueObject["value"].asInt
-                color(name, Color4b(value, hasAlpha = true))
+                color(name, Color4b(value))
             }
 
             ValueType.CONFIGURABLE -> {

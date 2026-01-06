@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * The minecraft narrator is so annoying and always gets enabled it accidentally by pressing the keys.
  */
 @Mixin(GameNarrator.class)
-public class MixinGameNarrator {
+public abstract class MixinGameNarrator {
 
     /**
      * This turns off the narrator

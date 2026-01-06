@@ -15,20 +15,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
-package net.ccbluex.liquidbounce.interfaces;
+@file:Suppress("FunctionName", "NOTHING_TO_INLINE")
 
-import net.minecraft.world.entity.player.Input;
-import net.minecraft.world.phys.Vec2;
+package net.ccbluex.liquidbounce.additions
 
-public interface InputAddition {
-    /**
-     * @param movementVector x -> movementSideways; y -> movementForward
-     */
-    void liquid_bounce$setMovementInput(Vec2 movementVector);
+import net.minecraft.client.MouseHandler
 
-    Input liquid_bounce$getInitial();
-    Input liquid_bounce$getUntransformed();
+interface MouseHandlerAddition {
+
+    fun `liquidbounce$setPosition`(x: Double, y: Double)
+
 }
+
+inline fun MouseHandler.setPosition(x: Double = this.xpos(), y: Double = this.ypos()) =
+    (this as MouseHandlerAddition).`liquidbounce$setPosition`(x, y)
