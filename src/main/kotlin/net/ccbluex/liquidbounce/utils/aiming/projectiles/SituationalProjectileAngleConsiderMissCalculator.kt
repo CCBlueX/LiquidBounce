@@ -6,17 +6,17 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.World
+import net.minecraft.world.entity.EntityDimensions
+import net.minecraft.world.level.Level
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.EntityHitResult
+import net.minecraft.world.phys.Vec3
 
 object SituationalProjectileAngleConsiderMissCalculator : ProjectileAngleCalculator() {
 
     override fun calculateAngleFor(
         projectileInfo: TrajectoryInfo,
-        sourcePos: Vec3d,
+        sourcePos: Vec3,
         targetPosFunction: PositionExtrapolation,
         targetShape: EntityDimensions
     ): Rotation? {
@@ -27,9 +27,7 @@ object SituationalProjectileAngleConsiderMissCalculator : ProjectileAngleCalcula
             CydhranianProjectileAngleCalculator.calculateAngleFor(projectileInfo, sourcePos, targetPosFunction, targetShape)
         } ?: return null
 
-        val world = player.world
-
-        return if (isTrajectoryClear(world,
+        return if (isTrajectoryClear(player.level(),
                 sourcePos,
                 candidate.pitch,
                 candidate.yaw, projectileInfo, targetPosFunction, targetShape)) {
@@ -40,8 +38,8 @@ object SituationalProjectileAngleConsiderMissCalculator : ProjectileAngleCalcula
     }
 
     private fun isTrajectoryClear(
-        world: World,
-        startPos: Vec3d,
+        world: Level,
+        startPos: Vec3,
         pitch: Float,
         yaw: Float,
         projectileInfo: TrajectoryInfo,
@@ -50,7 +48,7 @@ object SituationalProjectileAngleConsiderMissCalculator : ProjectileAngleCalcula
     ): Boolean {
         val rotation = Rotation(yaw, pitch)
         val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
-            entity = player,
+            owner = player,
             trajectoryInfo = projectileInfo,
             rotation = rotation
         )
@@ -59,7 +57,7 @@ object SituationalProjectileAngleConsiderMissCalculator : ProjectileAngleCalcula
         val hit = result.hitResult ?: return false
 
         val baseTargetPos = targetPosFunction.getPositionInTicks(0.0)
-        val targetBox = targetShape.getBoxAt(baseTargetPos)
+        val targetBox = targetShape.makeBoundingBox(baseTargetPos)
 
         return when (hit) {
             is EntityHitResult -> hit.entity.boundingBox.intersects(targetBox)
