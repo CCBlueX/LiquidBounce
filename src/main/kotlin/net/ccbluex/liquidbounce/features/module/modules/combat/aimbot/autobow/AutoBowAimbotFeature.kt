@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleConsiderMissCalculator
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.OverlayTargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
@@ -43,28 +44,28 @@ import net.minecraft.world.item.TridentItem
  * Automatically shoots with your bow when you aim correctly at an enemy or when the bow is fully charged.
  */
 object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot", true) {
-    private val rotationConfigurable = RotationsConfigurable(this)
-    private val throughWall by boolean("ThroughWall", true)
+
     val targetTracker = TargetTracker(TargetPriority.DISTANCE)
+    private val rotationConfigurable = RotationsConfigurable(this)
+    private val throughWalls by boolean("ThroughWalls", true)
 
     init {
         tree(targetTracker)
         tree(rotationConfigurable)
     }
 
-    val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow))
+    private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow))
 
     @Suppress("unused")
     private val tickRepeatable = tickHandler {
         targetTracker.reset()
 
-        val stack = player.mainHandItem
         val activeItem = if (player.isUsingItem) {
-            player.activeItem.item
-        } else if (stack.item is CrossbowItem && CrossbowItem.isCharged(stack)) {
-            stack.item
+            player.useItem.item
         } else {
-            null
+            player.handItems.firstOrNull {
+                it.item is CrossbowItem && CrossbowItem.isCharged(it)
+            }
         }
 
         if (activeItem !is BowItem && activeItem !is TridentItem && activeItem !is CrossbowItem) {
@@ -79,11 +80,10 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
 
         var rotation: Rotation? = null
         targetTracker.selectFirst { enemy ->
-
-            rotation = if (throughWall) {
+            rotation = if (throughWalls) {
                 SituationalProjectileAngleCalculator
                     .calculateAngleForEntity(projectileInfo, enemy)
-            }else{
+            } else {
                 SituationalProjectileAngleConsiderMissCalculator
                     .calculateAngleForEntity(projectileInfo, enemy)
             }

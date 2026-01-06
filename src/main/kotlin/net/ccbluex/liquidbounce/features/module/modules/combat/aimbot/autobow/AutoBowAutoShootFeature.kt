@@ -47,19 +47,19 @@ import net.minecraft.world.phys.Vec3
 
 object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoot", true) {
 
-    val charged by int("Charged", 15, 3..20, suffix = "ticks")
+    private val charged by int("Charged", 15, 3..20, suffix = "ticks")
 
-    val chargedRandom by floatRange(
+    private val chargedRandom by floatRange(
         "ChargedRandom",
         0.0F..0.0F,
         -10.0F..10.0F,
         suffix = "ticks"
     )
-    val delayBetweenShots by float("DelayBetweenShots", 0.0F, 0.0F..5.0F, suffix = "s")
-    val aimThreshold by float("AimThreshold", 1.5F, 1.0F..4.0F, suffix = "°")
-    val requiresHypotheticalHit by boolean("RequiresHypotheticalHit", true)
+    private val delayBetweenShots by float("DelayBetweenShots", 0.0F, 0.0F..5.0F, suffix = "s")
+    private val aimThreshold by float("AimThreshold", 1.5F, 1.0F..4.0F, suffix = "°")
+    private val requiresHypotheticalHit by boolean("RequiresHypotheticalHit", true)
 
-    var currentChargeRandom: Int? = null
+    private var currentChargeRandom: Int? = null
 
     fun updateChargeRandom() {
         val lenHalf = (chargedRandom.endInclusive - chargedRandom.start) / 2.0F
@@ -191,7 +191,7 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
             arrow.tick()
 
             entities.forEach { (entity, simulatedPos) ->
-                val predictedPos = if (entity is AbstractClientPlayer && simulatedPos is SimulatedPlayerCache) {
+                val predictedPos = if (entity is AbstractClientPlayer && simulatedPos != null) {
                     simulatedPos.getSnapshotAt(i).pos
                 } else {
                     entity.position().add(entity.deltaMovement.scale(i.toDouble()))
@@ -210,7 +210,7 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
         return null
     }
 
-    private fun findAndBuildSimulatedEntities(): List<Pair<Entity, Any?>> {
+    private fun findAndBuildSimulatedEntities(): List<Pair<Entity, SimulatedPlayerCache?>> {
         return world.entitiesForRendering().filter { entity ->
             entity != player &&
                 entity.shouldBeAttacked() &&
