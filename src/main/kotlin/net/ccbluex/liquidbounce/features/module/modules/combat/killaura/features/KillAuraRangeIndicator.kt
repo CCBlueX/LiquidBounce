@@ -119,7 +119,7 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
         // Calculate pulse effect
         val pulseOffset = if (pulseAnimation) {
             val time = System.currentTimeMillis() / 1000.0 * pulseSpeed
-            (sin(time * Math.PI * 2).toFloat() * pulseIntensity * range)
+            (sin(time * Mth.TWO_PI).toFloat() * pulseIntensity * range)
         } else 0f
 
         val effectiveRange = range + pulseOffset
@@ -196,27 +196,18 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
                     idleColor
                 } else {
                     val factor = (distanceToTarget / range).coerceIn(0f, 1f)
-                    interpolateColor(activeColor, idleColor, factor)
+                    activeColor.interpolateTo(idleColor, factor.toDouble())
                 }
             }
 
             ColorMode.STATIC -> {
                 if (fadeAnimation) {
-                    interpolateColor(idleColor, activeColor, currentColorFactor)
+                    idleColor.interpolateTo(activeColor, currentColorFactor.toDouble())
                 } else {
                     if (currentColorFactor > 0.5f) activeColor else idleColor
                 }
             }
         }
-    }
-
-    private fun interpolateColor(from: Color4b, to: Color4b, factor: Float): Color4b {
-        return Color4b(
-            (from.r + (to.r - from.r) * factor).toInt(),
-            (from.g + (to.g - from.g) * factor).toInt(),
-            (from.b + (to.b - from.b) * factor).toInt(),
-            (from.a + (to.a - from.a) * factor).toInt()
-        )
     }
 
 }
