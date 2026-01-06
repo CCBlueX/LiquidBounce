@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.failedHits
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.renderFailedHits
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraRangeIndicator
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
@@ -128,6 +129,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
     init {
         tree(KillAuraFailSwing)
         tree(KillAuraFightBot)
+        tree(KillAuraRangeIndicator)
     }
 
     override fun onDisabled() {
@@ -143,6 +145,13 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
         renderTarget(matrixStack, event.partialTicks)
         renderFailedHits(matrixStack)
+        renderRangeIndicator(matrixStack, event.partialTicks)
+    }
+
+    private fun renderRangeIndicator(matrixStack: PoseStack, partialTicks: Float) {
+        renderEnvironmentForWorld(matrixStack) {
+            KillAuraRangeIndicator.render(this, partialTicks)
+        }
     }
 
     private fun renderTarget(matrixStack: PoseStack, partialTicks: Float) {
