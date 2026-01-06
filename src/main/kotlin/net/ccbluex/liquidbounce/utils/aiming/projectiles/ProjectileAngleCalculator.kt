@@ -42,7 +42,7 @@ fun interface ProjectileAngleCalculator {
     fun calculateAngleForStaticTarget(
         projectileInfo: TrajectoryInfo,
         target: Vec3,
-        shape: EntityDimensions
+        shape: EntityDimensions,
     ): Rotation? {
         return this.calculateAngleFor(
             projectileInfo,
@@ -60,4 +60,5 @@ fun interface ProjectileAngleCalculator {
             targetShape = entity.dimensions
         )
     }
+
 }

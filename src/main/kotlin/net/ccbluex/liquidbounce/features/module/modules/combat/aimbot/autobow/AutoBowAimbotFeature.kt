@@ -21,9 +21,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -57,7 +57,7 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
     private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow))
 
     @Suppress("unused")
-    private val tickRepeatable = tickHandler {
+    private val tickRepeatable = handler<GameTickEvent> {
         targetTracker.reset()
 
         val activeStack = if (player.isUsingItem) {
@@ -70,27 +70,22 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
         val activeItem = activeStack?.item
 
         if (activeItem !is BowItem && activeItem !is TridentItem && activeItem !is CrossbowItem) {
-            return@tickHandler
+            return@handler
         }
 
         val projectileInfo = TrajectoryData.getRenderedTrajectoryInfo(
             player,
             activeStack,
             true
-        ) ?: return@tickHandler
+        ) ?: return@handler
 
+        val calculator =
+            if (throughWalls) SituationalProjectileAngleCalculator else SituationalProjectileAngleConsiderMissCalculator
         var rotation: Rotation? = null
         targetTracker.selectFirst { enemy ->
-            rotation = if (throughWalls) {
-                SituationalProjectileAngleCalculator
-                    .calculateAngleForEntity(projectileInfo, enemy)
-            } else {
-                SituationalProjectileAngleConsiderMissCalculator
-                    .calculateAngleForEntity(projectileInfo, enemy)
-            }
-
+            rotation = calculator.calculateAngleForEntity(projectileInfo, enemy)
             rotation != null
-        } ?: return@tickHandler
+        } ?: return@handler
 
         RotationManager.setRotationTarget(
             rotation!!,

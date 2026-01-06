@@ -23,10 +23,10 @@ package net.ccbluex.liquidbounce.utils.aiming.projectiles
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
 import net.minecraft.world.entity.EntityDimensions
-import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.Vec3
 
@@ -44,11 +44,11 @@ object SituationalProjectileAngleConsiderMissCalculator : ProjectileAngleCalcula
             targetPosFunction,
             targetShape
         )?.takeIf {
-            isTrajectoryClear(it, projectileInfo, targetPosFunction, targetShape)
+            isTrajectorySimulatedHitEntity(it, projectileInfo, targetPosFunction, targetShape)
         }
     }
 
-    private fun isTrajectoryClear(
+    private fun isTrajectorySimulatedHitEntity(
         rotation: Rotation,
         projectileInfo: TrajectoryInfo,
         targetPosFunction: PositionExtrapolation,
@@ -66,10 +66,6 @@ object SituationalProjectileAngleConsiderMissCalculator : ProjectileAngleCalcula
         val baseTargetPos = targetPosFunction.getPositionInTicks(0.0)
         val targetBox = targetShape.makeBoundingBox(baseTargetPos)
 
-        return when (hit) {
-            is EntityHitResult -> hit.entity.boundingBox.intersects(targetBox)
-            is BlockHitResult -> false
-            else -> false
-        }
+        return hit is EntityHitResult && hit.entity.box.intersects(targetBox)
     }
 }

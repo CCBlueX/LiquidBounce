@@ -191,14 +191,13 @@ data class TrajectoryInfo(
         @JvmOverloads
         fun bowWithUsageDuration(usageDurationTicks: Int = player.ticksUsingItem): TrajectoryInfo? {
             // Calculate the power of bow
-            var power = usageDurationTicks / 20f
-            power = (power * power + power * 2F) / 3F
+            val power = BowItem.getPowerForTime(usageDurationTicks)
 
             if (power < 0.1F) {
                 return null
             }
 
-            val v0 = power.coerceAtMost(1.0F) * BOW_FULL_PULL.initialVelocity
+            val v0 = power * BOW_FULL_PULL.initialVelocity
 
             return BOW_FULL_PULL.copy(initialVelocity = v0)
         }
