@@ -90,9 +90,16 @@ enum class VirtualScreenType(
     CREATE_WORLD(
         "create_world",
         recognizer = { it is CreateWorldScreen },
-        open = { CreateWorldScreen.openFresh(mc) {
-            mc.setScreen(IntegrationListener.parent)
-        } }
+        open = {
+            // Store parent before opening CreateWorldScreen, since IntegrationListener.parent
+            // will change to CreateWorldScreen once it's opened
+            val parentScreen = IntegrationListener.parent
+            CreateWorldScreen.openFresh(mc) {
+                // Return to SelectWorldScreen instead of the stored parent,
+                // as this is the expected navigation flow from Create World
+                mc.setScreen(SelectWorldScreen(parentScreen))
+            }
+        }
     ),
 
     OPTIONS(
