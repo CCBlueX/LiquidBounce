@@ -198,7 +198,7 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
                 }
 
                 val entityBox = entity.boundingBox
-                    .deflate(0.3)
+                    .inflate(0.3)
                     .move(predictedPos.subtract(entity.position()))
 
                 if (entityBox.clip(lastPos, arrow.pos).isPresent) {

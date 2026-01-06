@@ -29,7 +29,7 @@ import net.minecraft.world.phys.Vec3
 /**
  * Uses the best available implementation of [ProjectileAngleCalculator]
  */
-object SituationalProjectileAngleCalculator: ProjectileAngleCalculator() {
+object SituationalProjectileAngleCalculator: ProjectileAngleCalculator {
     override fun calculateAngleFor(
         projectileInfo: TrajectoryInfo,
         sourcePos: Vec3,
@@ -40,7 +40,7 @@ object SituationalProjectileAngleCalculator: ProjectileAngleCalculator() {
 
         val actualImplementation = when {
             // Our flagship implementation is unstable at low distances...
-            basePos.distanceTo(sourcePos) < 5.0 -> PolynomialProjectileAngleCalculator
+            basePos.distanceToSqr(sourcePos) < 5.0 * 5.0 -> PolynomialProjectileAngleCalculator
             else -> CydhranianProjectileAngleCalculator
         }
 

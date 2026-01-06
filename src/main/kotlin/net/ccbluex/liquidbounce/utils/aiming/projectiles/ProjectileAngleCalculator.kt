@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.aiming.projectiles
 
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.entity.ConstantPositionExtrapolation
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.world.entity.EntityDimensions
@@ -32,8 +31,8 @@ import net.minecraft.world.phys.Vec3
 /**
  * Calculates the shooting angle which hits the supplied target
  */
-abstract class ProjectileAngleCalculator {
-    abstract fun calculateAngleFor(
+fun interface ProjectileAngleCalculator {
+    fun calculateAngleFor(
         projectileInfo: TrajectoryInfo,
         sourcePos: Vec3,
         targetPosFunction: PositionExtrapolation,
@@ -48,7 +47,7 @@ abstract class ProjectileAngleCalculator {
         return this.calculateAngleFor(
             projectileInfo,
             sourcePos = player.eyePosition,
-            targetPosFunction = ConstantPositionExtrapolation(target),
+            targetPosFunction = PositionExtrapolation.constant(target),
             targetShape = shape
         )
     }
