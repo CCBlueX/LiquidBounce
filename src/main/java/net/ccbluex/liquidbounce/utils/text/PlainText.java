@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.text;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import kotlin.jvm.functions.Function0;
 import net.minecraft.util.FormattedCharSink;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
@@ -54,10 +53,6 @@ public record PlainText(
 
     public PlainText(PlainTextContents content) {
         this(content, Style.EMPTY);
-    }
-
-    public static PlainText ofLazy(Style style, Function0<String> contentInitializer) {
-        return new PlainText(LazyTextContent.of(contentInitializer), style);
     }
 
     public static PlainText of(PlainTextContents content, Style style) {

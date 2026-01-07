@@ -54,7 +54,7 @@ data class AutoSettingsMetadata(
             key.asPlainText(ChatFormatting.GRAY),
                 colon,
                 SPACE,
-                value.asPlainText(ChatFormatting.AQUA),
+                value.asPlainText(ChatFormatting.GRAY),
             )
         }
 
@@ -68,7 +68,7 @@ data class AutoSettingsMetadata(
         addEntry("Protocol Version", protocolVersion?.toString())
         addEntry("Type", type?.name)
         addEntry("Status", status?.name)
-        addEntry("Chat", chat?.joinToString("\n\t"))
+        addEntry("Chat", chat?.joinToString("\n    "))
     }.joinToText(NEW_LINE)
 
 }

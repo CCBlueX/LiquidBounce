@@ -49,6 +49,7 @@ import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.io.ILLEGAL_FILE_NAME_CHARS_WINDOWS
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.ccbluex.liquidbounce.utils.text.LazyText
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Style
@@ -178,10 +179,10 @@ object CommandLocalConfig : Command.Factory {
                                     "Click to load ".asPlainText(ChatFormatting.GRAY),
                                     fileNameWithoutSuffix.asPlainText(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.BOLD),
                                     PlainText.NEW_LINE,
-                                    PlainText.ofLazy(Style.EMPTY) {
+                                    LazyText.of {
                                         file.bufferedReader().use { r ->
                                             publicGson.fromJson(r, AutoSettingsMetadata::class.java)
-                                        }.asText().string
+                                        }.asText()
                                     }
                                 )
                             )
