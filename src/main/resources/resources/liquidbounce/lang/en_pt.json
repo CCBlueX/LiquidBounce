@@ -389,5 +389,9 @@
   "liquidbounce.module.autoBalls.description": "Automatically throws snowballs at your enemies.",
   "liquidbounce.module.betterTab.description": "Multiple enhancements to the tab list.",
   "liquidbounce.module.logoffSpot.description": "Allows you to see players who have left the server or are out of render distance.",
-  "liquidbounce.module.autoPearl.description": "Mira e lança uma pérola na trajetória da pérola inimiga."
+  "liquidbounce.module.localConfig.description": "Allows you to manage local configuration files.",
+  "liquidbounce.module.localConfig.messages.refreshed": "Config list refreshed.",
+  "liquidbounce.module.localConfig.messages.notFound": "Config file '%s' not found!",
+  "liquidbounce.module.localConfig.messages.loaded": "Successfully loaded config: %s",
+  "liquidbounce.module.localConfig.messages.failed": "Failed to load config!"
 }

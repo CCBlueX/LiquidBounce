@@ -449,5 +449,9 @@
 	"modmenu.descriptionTranslation.liquidbounce": "無料でオープンソースのハッククライアント",
     "liquidbounce.module.betterTab.description": "タブリストに複数の改良を加えました。",
     "liquidbounce.module.logoffSpot.description": "サーバーから退出したプレイヤーや、描画範囲外のプレイヤーを表示できるようにします。",
-    "liquidbounce.module.autoPearl.description": "敵の真珠の軌道に向けて真珠を狙い投げる."
+  "liquidbounce.module.localConfig.description": "ローカル設定ファイルを管理できます。",
+  "liquidbounce.module.localConfig.messages.refreshed": "設定リストを更新しました。",
+  "liquidbounce.module.localConfig.messages.notFound": "設定ファイル '%s' が見つかりません！",
+  "liquidbounce.module.localConfig.messages.loaded": "設定を正常に読み込みました: %s",
+  "liquidbounce.module.localConfig.messages.failed": "設定の読み込みに失敗しました！"
 }

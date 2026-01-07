@@ -457,5 +457,9 @@
   "liquidbounce.module.bookBot.description": "Escreve automaticamente em livros.",
   "liquidbounce.module.betterTab.description": "Diversas melhorias na lista de abas.",
   "liquidbounce.module.logoffSpot.description": "Permite ver jogadores que saíram do servidor ou estão fora do alcance de exibição.",
-  "liquidbounce.module.autoPearl.description": "Mira e lança uma pérola na trajetória da pérola inimiga."
+  "liquidbounce.module.localConfig.description": "Permite gerenciar arquivos de configuração locais.",
+  "liquidbounce.module.localConfig.messages.refreshed": "Lista de configurações atualizada.",
+  "liquidbounce.module.localConfig.messages.notFound": "Arquivo de configuração '%s' não encontrado!",
+  "liquidbounce.module.localConfig.messages.loaded": "Configuração carregada com sucesso: %s",
+  "liquidbounce.module.localConfig.messages.failed": "Falha ao carregar a configuração!"
 }

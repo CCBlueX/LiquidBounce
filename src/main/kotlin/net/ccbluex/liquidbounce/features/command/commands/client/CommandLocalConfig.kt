@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.IncludeConfiguration
+import net.ccbluex.liquidbounce.features.module.modules.client.LocalConfig
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -127,6 +128,7 @@ object CommandLocalConfig : Command.Factory {
 
                 file.createNewFile()
                 serializeAutoConfig(file.bufferedWriter(), includeConfiguration)
+                LocalConfig.refreshConfigList()
                 chat(regular(command.result("created", variable(name))))
             } catch (e: Exception) {
                 chat(regular(command.result("failedToCreate", variable(name))))

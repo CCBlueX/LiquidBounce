@@ -777,6 +777,10 @@
   "liquidbounce.module.yggdrasilSignatureFix.description": "Disables Authlib Yggdrasil signature check, may fix missing skins on some servers.",
   "liquidbounce.module.reportHelper.description": "Automatically starts a report and confirms it for you.",
   "liquidbounce.module.protectionZones.description": "Allows you to see areas protected by protection blocks and suggests optimal placement spots.",
-  "liquidbounce.module.newChunks.description": "Highlights chunks that are likely newly generated."
-
+  "liquidbounce.module.newChunks.description": "Highlights chunks that are likely newly generated.",
+  "liquidbounce.module.localConfig.description": "Allows you to manage local configuration files.",
+  "liquidbounce.module.localConfig.messages.refreshed": "Config list refreshed.",
+  "liquidbounce.module.localConfig.messages.notFound": "Config file '%s' not found!",
+  "liquidbounce.module.localConfig.messages.loaded": "Successfully loaded config: %s",
+  "liquidbounce.module.localConfig.messages.failed": "Failed to load config!"
 }

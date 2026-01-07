@@ -651,6 +651,10 @@
   "liquidbounce.module.translation.description": "Einrichten eines automatischen Übersetzers für den Client.",
   "liquidbounce.module.betterTitle.description": "Verbesserungen am Titel und Untertitel.",
   "liquidbounce.module.potionSpoof.description": "Erlaubt dem Spieler, Effekte zu erhalten, ohne einen Trank zu benutzen.",
-  "liquidbounce.module.newChunks.description": "Hebt Chunks hervor, die wahrscheinlich neu generiert wurden."
-
+  "liquidbounce.module.newChunks.description": "Hebt Chunks hervor, die wahrscheinlich neu generiert wurden.",
+  "liquidbounce.module.localConfig.description": "Erlaubt das Verwalten lokaler Konfigurationsdateien.",
+  "liquidbounce.module.localConfig.messages.refreshed": "Konfigurationsliste aktualisiert.",
+  "liquidbounce.module.localConfig.messages.notFound": "Konfigurationsdatei '%s' nicht gefunden!",
+  "liquidbounce.module.localConfig.messages.loaded": "Konfiguration erfolgreich geladen: %s",
+  "liquidbounce.module.localConfig.messages.failed": "Fehler beim Laden der Konfiguration!"
 }

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.features.module.modules.client.LocalConfig
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
@@ -608,6 +609,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
 
             // Client
             ModuleAutoConfig,
+            LocalConfig,
             ModuleRichPresence,
             ModuleTargets,
             ModuleTranslation,
