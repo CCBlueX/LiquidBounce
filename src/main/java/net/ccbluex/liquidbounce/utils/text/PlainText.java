@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.client;
+package net.ccbluex.liquidbounce.utils.text;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import kotlin.jvm.functions.Function0;
 import net.minecraft.util.FormattedCharSink;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.FormattedCharSequence;
@@ -48,11 +49,15 @@ public record PlainText(
 ) implements Component, FormattedCharSequence, CharSequence {
 
     public static final PlainText EMPTY = new PlainText(PlainTextContents.EMPTY, Style.EMPTY);
-    public static final PlainText SPACE = new PlainText(PlainTextContents.create(" "), Style.EMPTY);
-    public static final PlainText NEW_LINE = new PlainText(PlainTextContents.create("\n"), Style.EMPTY);
+    public static final PlainText SPACE = new PlainText(new PlainTextContents.LiteralContents(" "), Style.EMPTY);
+    public static final PlainText NEW_LINE = new PlainText(new PlainTextContents.LiteralContents("\n"), Style.EMPTY);
 
     public PlainText(PlainTextContents content) {
         this(content, Style.EMPTY);
+    }
+
+    public static PlainText ofLazy(Style style, Function0<String> contentInitializer) {
+        return new PlainText(LazyTextContent.of(contentInitializer), style);
     }
 
     public static PlainText of(PlainTextContents content, Style style) {

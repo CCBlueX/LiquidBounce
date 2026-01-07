@@ -57,16 +57,6 @@ import java.io.Writer
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class IncludeConfiguration(
-    val includeBinds: Boolean = false,
-    val includeAction: Boolean = false,
-    val includeHidden: Boolean = false
-) {
-    companion object {
-        val DEFAULT = IncludeConfiguration()
-    }
-}
-
 object AutoConfig {
 
     @Volatile

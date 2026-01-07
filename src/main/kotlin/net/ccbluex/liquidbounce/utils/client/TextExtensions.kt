@@ -26,6 +26,8 @@ import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.ccbluex.liquidbounce.utils.text.TextList
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.network.chat.contents.PlainTextContents

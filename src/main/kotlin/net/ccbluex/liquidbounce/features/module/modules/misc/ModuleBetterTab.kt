@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.client.PlainText
+import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.client.multiplayer.PlayerInfo
 
 /**

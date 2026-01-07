@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.client.PlainText
+import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.gui.GuiGraphics
