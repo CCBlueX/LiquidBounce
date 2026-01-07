@@ -31,7 +31,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.util.StringDecomposer;
 import net.minecraft.ChatFormatting;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -41,7 +40,6 @@ import java.util.stream.IntStream;
 /**
  * A plain and immutable {@link Component}, {@link FormattedCharSequence} and {@link CharSequence}.
  */
-@NullMarked
 public record PlainText(
     PlainTextContents content,
     Style style
@@ -50,6 +48,10 @@ public record PlainText(
     public static final PlainText EMPTY = new PlainText(PlainTextContents.EMPTY, Style.EMPTY);
     public static final PlainText SPACE = new PlainText(new PlainTextContents.LiteralContents(" "), Style.EMPTY);
     public static final PlainText NEW_LINE = new PlainText(new PlainTextContents.LiteralContents("\n"), Style.EMPTY);
+
+    public static PlainText empty() {
+        return EMPTY;
+    }
 
     public PlainText(PlainTextContents content) {
         this(content, Style.EMPTY);
