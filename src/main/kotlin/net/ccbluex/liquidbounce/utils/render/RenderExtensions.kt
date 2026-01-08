@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.utils.render
 
+import com.google.common.base.Suppliers
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.buffers.Std140Builder
@@ -255,8 +256,12 @@ fun NativeImage.registerTexture(identifier: Identifier) {
 
 inline fun InputStream.toNativeImage(): NativeImage = NativeImage.read(this)
 
-@JvmOverloads
 inline fun NativeImage.asTexture(
+    name: String = "Texture NativeImage@${this.hashCode()} (${this.width}x${this.height})",
+) = DynamicTexture(Suppliers.ofInstance(name), this)
+
+@JvmOverloads
+fun NativeImage.asTexture(
     nameSupplier: Supplier<String> = Supplier {
         "Texture NativeImage@${this.hashCode()} (${this.width}x${this.height})"
     },

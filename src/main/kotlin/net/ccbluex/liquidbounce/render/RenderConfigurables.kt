@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.render
@@ -37,11 +36,8 @@ class GenericStaticColorMode(
     override val parent: ChoiceConfigurable<*>,
     defaultColor: Color4b
 ) : GenericColorMode<Any?>("Static") {
-
-    private val staticColor by color("Color", defaultColor)
-
-    override fun getColor(param: Any?) = staticColor
-
+    private val staticColor = color("Color", defaultColor)
+    override fun getColor(param: Any?) = staticColor.get()
 }
 
 class GenericRainbowColorMode(
@@ -55,13 +51,12 @@ class MapColorMode(
     override val parent: ChoiceConfigurable<*>,
     private val alpha: Int = 100
 ) : GenericColorMode<Pair<BlockPos, BlockState>>("MapColor") {
-
     override fun getColor(param: Pair<BlockPos, BlockState>): Color4b {
         val (pos, state) = param
 
-        return Color4b(state.getMapColor(world, pos).col).with(a = alpha)
+        val mapColor = state.getMapColor(world, pos).col
+        return Color4b(mapColor).alpha(alpha)
     }
-
 }
 
 

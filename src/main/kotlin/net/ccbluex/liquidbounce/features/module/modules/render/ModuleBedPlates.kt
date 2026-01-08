@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ import java.util.function.Predicate
 object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTracker.Subscriber {
     private val ROMAN_NUMERALS = arrayOf("", "I", "II", "III", "IV", "V", "VI", "VII", "VIII")
 
-    private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
+    private val backgroundColor by color("BackgroundColor", Color4b.DEFAULT_BG_COLOR)
     private val outline by boolean("Outline", false)
 
     override val maxLayers by int("MaxLayers", 5, 1..5).onChanged {
@@ -200,7 +200,11 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
             val screenPos = WorldToScreen.calculateScreenPos(bedState.pos.add(renderOffset)) ?: continue
 
-            val outlineColor = if (outline) Color4b(bedState.block.color.mapColor.col) else Color4b.TRANSPARENT
+            val outlineColor = if (outline) {
+                Color4b.fullAlpha(bedState.block.color.mapColor.col)
+            } else {
+                Color4b.TRANSPARENT
+            }
 
             event.context.drawItemStackList(itemStacksForRender)
                 .rowLength(Int.MAX_VALUE)
@@ -223,7 +227,7 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
                                 Color4b.RED
                             } else {
                                 Color4b.WHITE
-                            }.toARGB()
+                            }.argb
 
                         renderItem(stack, x, y)
                         val countString = stack.count.toString()
