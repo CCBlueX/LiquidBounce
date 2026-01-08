@@ -42,6 +42,15 @@ import org.joml.Vector4f
 import java.util.Collections.singletonMap
 import java.util.function.Function
 
+inline fun PoseStack.withPush(block: PoseStack.() -> Unit) {
+    pushPose()
+    try {
+        block()
+    } finally {
+        popPose()
+    }
+}
+
 /**
  * Context representing the rendering environment.
  *
@@ -112,11 +121,11 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
     @JvmOverloads
     fun draw(
         pipeline: RenderPipeline,
-        builtBuffer: MeshData,
+        meshData: MeshData,
         shaderTextureProvider: Map<String, AbstractTexture> = this.shaderTextures,
     ) = drawMesh(
         pipeline,
-        builtBuffer,
+        meshData,
         this.framebuffer,
         colorModulator = shaderColor.toVector4f(shaderColorVec),
         shaderTextureProvider = shaderTextureProvider,

@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
+import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.PoseStack
@@ -102,15 +104,6 @@ inline fun renderEnvironmentForWorld(
     if (environment.isBatchMode) environment.commitBatch()
 
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
-}
-
-inline fun PoseStack.withPush(block: PoseStack.() -> Unit) {
-    pushPose()
-    try {
-        block()
-    } finally {
-        popPose()
-    }
 }
 
 /**
@@ -347,50 +340,15 @@ fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: I
 inline fun VertexConsumer.color(color: Color4b): VertexConsumer = setColor(color.toARGB())
 
 /**
- * Helper unction to draw a solid box using the specified [box].
- *
- * @param box The bounding box of the box.
- */
-@Suppress("CognitiveComplexMethod")
-private fun WorldRenderEnvironment.drawBox(
-    box: AABB,
-    pipeline: RenderPipeline,
-    useOutlineVertices: Boolean = false,
-    color: Color4b,
-    verticesToUse: Int = -1,
-) = drawCustomMesh(pipeline) { matrix ->
-    val check = verticesToUse and 0xFFFFFF != 0xFFFFFF
-
-    // Draw the vertices of the box
-    if (useOutlineVertices) {
-        box.forEachOutlineVertex { i, x, y, z ->
-            if (check && (verticesToUse and (1 shl i)) == 0) {
-                return@forEachOutlineVertex
-            }
-
-            addVertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-                .setColor(color.toARGB())
-        }
-    } else {
-        box.forEachFaceVertex { i, x, y, z ->
-            if (check && (verticesToUse and (1 shl i)) == 0) {
-                return@forEachFaceVertex
-            }
-
-            addVertex(matrix, x.toFloat(), y.toFloat(), z.toFloat())
-                .setColor(color.toARGB())
-        }
-    }
-}
-
-/**
  * Draw box for outline/glow shader.
  */
 fun WorldRenderEnvironment.drawBoxOutlined(
     box: AABB,
     color: Color4b,
 ) {
-    drawBox(box, ClientRenderPipelines.OutlineQuads, color = color, verticesToUse = -1)
+    drawCustomMesh(ClientRenderPipelines.OutlineQuads) { pose ->
+        addBoxFaces(pose, box, color)
+    }
 }
 
 /**
@@ -404,11 +362,15 @@ fun WorldRenderEnvironment.drawBox(
     outlineVertices: Int = -1,
 ) {
     if (faceColor != null && !faceColor.isTransparent) {
-        drawBox(box, ClientRenderPipelines.Quads, color = faceColor, verticesToUse = faceVertices)
+        drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
+            addBoxFaces(matrix, box, color = faceColor, verticesToUse = faceVertices)
+        }
     }
 
     if (outlineColor != null && !outlineColor.isTransparent) {
-        drawBox(box, ClientRenderPipelines.Lines, useOutlineVertices = true, outlineColor, outlineVertices)
+        drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
+            addBoxOutlines(matrix, box, outlineColor, outlineVertices)
+        }
     }
 }
 
