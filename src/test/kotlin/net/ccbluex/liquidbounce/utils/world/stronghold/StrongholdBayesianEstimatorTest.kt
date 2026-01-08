@@ -76,7 +76,7 @@ class StrongholdBayesianEstimatorTest {
 
         assertNotNull(posterior)
         val best = posterior!!.candidates.first()
-        assertEquals(trueHypothesis.chunks[targetIndex], best.chunkPos.toLong())
+        assertEquals(trueHypothesis.chunks[targetIndex], best.chunkPos.pack())
     }
 
     @Test
@@ -143,10 +143,10 @@ class StrongholdBayesianEstimatorTest {
     @Test
     fun `nearest stronghold consistency gate can reject inconsistent throws`() {
         val hypothesis = StrongholdHypothesis(
-            LongArray(128) { ChunkPos.asLong(100000, 100000) },
+            LongArray(128) { ChunkPos.pack(100000, 100000) },
         ).also {
-            it.chunks[0] = ChunkPos.ZERO.toLong()
-            it.chunks[1] = ChunkPos.asLong(200, 0)
+            it.chunks[0] = ChunkPos.ZERO.pack()
+            it.chunks[1] = ChunkPos.pack(200, 0)
         }
 
         val measurementA = EyeMeasurement(

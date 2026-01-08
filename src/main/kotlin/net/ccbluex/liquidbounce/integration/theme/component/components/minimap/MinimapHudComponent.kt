@@ -326,7 +326,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                         continue
                     }
 
-                    val chunkPos = ChunkPos.asLong(baseX + x, baseZ + z)
+                    val chunkPos = ChunkPos.pack(baseX + x, baseZ + z)
 
                     val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                     val fromX = x.toFloat()
