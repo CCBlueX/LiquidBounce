@@ -55,6 +55,7 @@ import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Style
 import net.minecraft.ChatFormatting
 import net.minecraft.util.Util
+import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 
@@ -75,6 +76,18 @@ object CommandLocalConfig : Command.Factory {
             .subcommand(saveSubcommand())
             .build()
     }
+
+    private fun hoverText(file: File, settingName: String) =
+        textOf(
+            "Click to load ".asPlainText(ChatFormatting.GRAY),
+            settingName.asPlainText(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.BOLD),
+            PlainText.NEW_LINE,
+            DelegatedComponent.lazy {
+                file.bufferedReader().use { r ->
+                    publicGson.fromJson(r, AutoSettingsMetadata::class.java)
+                }.asText()
+            }
+        )
 
     private fun saveSubcommand() = CommandBuilder
         .begin("save")
@@ -158,7 +171,7 @@ object CommandLocalConfig : Command.Factory {
                 }.unmodifiable()
             },
             eachRow = { _, file ->
-                val fileNameWithoutSuffix = file.name.removeSuffix(".json")
+                val settingName = file.name.removeSuffix(".json")
 
                 val lastModified = Instant.ofEpochMilli(file.lastModified())
                     .atZone(ZoneId.systemDefault())
@@ -170,23 +183,10 @@ object CommandLocalConfig : Command.Factory {
                     variable(file.name)
                         .onClick(
                             ClickEvent.SuggestCommand(
-                                CommandManager.Options.prefix + "localconfig load $fileNameWithoutSuffix"
+                                CommandManager.Options.prefix + "localconfig load $settingName"
                             )
                         )
-                        .onHover(
-                            HoverEvent.ShowText(
-                                textOf(
-                                    "Click to load ".asPlainText(ChatFormatting.GRAY),
-                                    fileNameWithoutSuffix.asPlainText(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.BOLD),
-                                    PlainText.NEW_LINE,
-                                    DelegatedComponent.lazy {
-                                        file.bufferedReader().use { r ->
-                                            publicGson.fromJson(r, AutoSettingsMetadata::class.java)
-                                        }.asText()
-                                    }
-                                )
-                            )
-                        ),
+                        .onHover(HoverEvent.ShowText(hoverText(file, settingName))),
                     regular(" ($lastModified)"),
                 )
             }

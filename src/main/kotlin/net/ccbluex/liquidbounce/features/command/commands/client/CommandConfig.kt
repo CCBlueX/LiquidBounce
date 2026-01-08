@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
@@ -52,7 +51,6 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.text.AsyncLoadingText
-import net.ccbluex.liquidbounce.utils.text.DelegatedComponent
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
@@ -82,6 +80,20 @@ object CommandConfig : Command.Factory {
             .subcommand(reloadSubcommand())
             .build()
     }
+
+    private fun hoverText(settingName: String) =
+        textOf(
+            "Click to load ".asPlainText(ChatFormatting.GRAY),
+            settingName.asPlainText(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.BOLD),
+            PlainText.NEW_LINE,
+            AsyncLoadingText(
+                ioScope.async {
+                    ClientApi.requestSettingsScript(settingName).use { r ->
+                        publicGson.fromJson(r, AutoSettingsMetadata::class.java)
+                    }.asText()
+                }
+            )
+        )
 
     private fun browseSubcommand() = CommandBuilder
         .begin("browse")
@@ -130,22 +142,7 @@ object CommandConfig : Command.Factory {
                                     CommandManager.Options.prefix + "config load $settingName"
                                 )
                             )
-                            .onHover(
-                                HoverEvent.ShowText(
-                                    textOf(
-                                        "Click to load ".asPlainText(ChatFormatting.GRAY),
-                                        settingName.asPlainText(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.BOLD),
-                                        PlainText.NEW_LINE,
-                                        AsyncLoadingText(
-                                            ioScope.async {
-                                                ClientApi.requestSettingsScript(settingName).use { r ->
-                                                    publicGson.fromJson(r, AutoSettingsMetadata::class.java)
-                                                }.asText()
-                                            }
-                                        )
-                                    )
-                                )
-                            ),
+                            .onHover(HoverEvent.ShowText(hoverText(settingName))),
                         regular(spaces),
                         regular(" | "),
                         variable(it.dateFormatted),
