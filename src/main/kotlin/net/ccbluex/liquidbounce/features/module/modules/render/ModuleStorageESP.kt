@@ -132,7 +132,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         private val blockBoxes = mutableListOf<BlockBox>()
         private val entityBoxes = mutableListOf<EntityBox>()
-        private val blockPos = BlockPos.MutableBlockPos()
+        private val mutableBlockPos = BlockPos.MutableBlockPos()
 
         override fun disable() {
             blockBoxes.clear()
@@ -153,7 +153,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     val baseColor = color.with(a = 50)
                     val outlineColor = if (outline) color.with(a = 100) else null
 
-                    withPositionRelativeToCamera(blockPos.set(pos)) {
+                    withPositionRelativeToCamera(mutableBlockPos.set(pos)) {
                         drawBox(box, baseColor, outlineColor)
                     }
                 }
@@ -180,9 +180,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
-            if (mc.level == null) {
-                return@handler
-            }
+            val level = mc.level ?: return@handler
+
             blockBoxes.clear()
 
             for ((pos, type) in StorageScanner.iterate()) {
@@ -192,18 +191,18 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     continue
                 }
 
-                val blockState = world.getBlockState(pos)
+                val blockState = level.getBlockState(pos)
 
                 if (blockState.isAir) continue
 
-                val boundingBox = blockState.outlineBox(blockPos)
+                val boundingBox = blockState.outlineBox(pos)
 
                 blockBoxes.add(BlockBox(pos.asLong(), boundingBox, color))
             }
 
             entityBoxes.clear()
 
-            for (entity in world.entitiesForRendering()) {
+            for (entity in level.entitiesForRendering()) {
                 val type = entity.categorize()?.takeIf {
                     !it.color.isTransparent && it.shouldRender(entity)
                 } ?: continue
