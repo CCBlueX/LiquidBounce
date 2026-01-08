@@ -68,7 +68,7 @@ object ClientRenderPipelines {
     @Suppress("NOTHING_TO_INLINE")
     private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() {
         withVertexShader("core/position_tex_color")
-        withFragmentShader(ClientShaders.BGRA_FSH_ID)
+        withFragmentShader(ClientShaders.Fragment.BgraPosTex)
         withSampler("Sampler0")
         withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
         withSnippet(RenderPipelines.MATRICES_PROJECTION_SNIPPET)
@@ -223,7 +223,7 @@ object ClientRenderPipelines {
     @JvmField
     val Outline = newPipeline("outline") {
         screenQuad()
-        withFragmentShader(ClientShaders.OUTLINE_FSH_ID)
+        withFragmentShader(ClientShaders.Fragment.EntityOutline)
         withSampler("InSampler")
         withBlend(BlendFunction.ENTITY_OUTLINE_BLIT)
         withDepthWrite(false)
@@ -233,7 +233,7 @@ object ClientRenderPipelines {
     @JvmField
     val ItemChams = newPipeline("item_chams") {
         screenQuad()
-        withFragmentShader(ClientShaders.GLOW_FSH_ID)
+        withFragmentShader(ClientShaders.Fragment.Glow)
         withSampler("texture0")
         withSampler("image")
         withUniform("ItemChamsData", UniformType.UNIFORM_BUFFER)
@@ -245,7 +245,7 @@ object ClientRenderPipelines {
     @JvmField
     val GuiBlur = newPipeline("blur") {
         screenQuad()
-        withFragmentShader(ClientShaders.BLUR_FSH_ID)
+        withFragmentShader(ClientShaders.Fragment.GuiBlur)
         withSampler("texture0")
         withSampler("overlay")
         withUniform("BlurData", UniformType.UNIFORM_BUFFER)
@@ -255,8 +255,8 @@ object ClientRenderPipelines {
 
     @JvmField
     val Blend = newPipeline("blend") {
-        withVertexShader(ClientShaders.PLAIN_POSITION_TEX_VSH_ID)
-        withFragmentShader(ClientShaders.BLEND_FSH_ID)
+        withVertexShader(ClientShaders.Vertex.PlainPosTex)
+        withFragmentShader(ClientShaders.Fragment.Blend)
         withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.TRIANGLES)
         withSampler("texture0")
         withUniform("BlendData", UniformType.UNIFORM_BUFFER)
