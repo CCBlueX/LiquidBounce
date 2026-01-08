@@ -18,24 +18,24 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
+import com.mojang.blaze3d.platform.NativeImage
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.interceptors.CacheBlacklistInterceptor
 import net.ccbluex.liquidbounce.authlib.Authlib
 import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import com.mojang.blaze3d.platform.NativeImage
-import net.minecraft.util.Util
 import net.minecraft.ReportedException
+import net.minecraft.util.Util
 import okhttp3.Cache
 import okhttp3.Call
 import okhttp3.Callback
@@ -55,6 +55,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
+import java.util.Locale
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -112,8 +113,19 @@ object HttpClient {
         .readTimeout(20, TimeUnit.SECONDS)
         .writeTimeout(20, TimeUnit.SECONDS)
         .followRedirects(true)
-        .followSslRedirects(true)
-        .cache(Cache(ConfigSystem.rootFolder.resolve("http-cache"), 128L shl 20))
+        .followSslRedirects(true).apply {
+            try {
+                val file = File(
+                    System.getProperty("java.io.tmpdir"),
+                    "${LiquidBounce.CLIENT_NAME.lowercase(Locale.ROOT)}_http_cache",
+                )
+                file.mkdirs()
+                cache(Cache(file, 128L shl 20))
+            } catch (e: IOException) {
+                logger.error("Failed to initialize cache directory for HTTP client", e)
+            }
+        }
+        .addInterceptor(CacheBlacklistInterceptor(setOf("localhost", "127.0.0.1")))
         .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
         .build().also {
             McefFileUtils.setOkHttpClient(it)
