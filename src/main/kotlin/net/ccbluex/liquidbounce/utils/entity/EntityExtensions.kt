@@ -64,7 +64,6 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket
 import net.minecraft.tags.DamageTypeTags
 import net.minecraft.world.scores.DisplaySlot
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.player.Input
 import net.minecraft.world.phys.HitResult
 import net.minecraft.core.BlockPos
@@ -187,12 +186,6 @@ val Player.isSlowDueToUsingItem: Boolean
 
 fun Entity.lastRenderPos() = Vec3(this.xOld, this.yOld, this.zOld)
 
-val InteractionHand.equipmentSlot: EquipmentSlot
-    get() = when (this) {
-        InteractionHand.MAIN_HAND -> EquipmentSlot.MAINHAND
-        InteractionHand.OFF_HAND -> EquipmentSlot.OFFHAND
-    }
-
 fun LocalPlayer.wouldBeCloseToFallOff(position: Vec3): Boolean {
     val hitbox =
         this.dimensions
@@ -294,7 +287,7 @@ fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Floa
     return actualYaw
 }
 
-val Player.horizontalSpeed: Double
+inline val Entity.horizontalSpeed: Double
     get() = deltaMovement.horizontalDistance()
 
 fun Vec3.withStrafe(

@@ -73,7 +73,7 @@ object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
 
             val blockOffset = blocks.minByOrNull { blockPos ->
                 blockPos.getCenterDistanceSquared()
-            }?.offset(0, -1, 0) ?: blockPos
+            }?.below() ?: blockPos
 
             // Check if block next to the player is solid
             if (!blockOffset.getState()!!.isRedstoneConductor(world, blockOffset)) {
