@@ -150,11 +150,13 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
         }
     }
 
-    private fun calculatePulse(range: Float): Float = 
+    private fun calculatePulse(range: Float): Float =
         if (pulseAnimation) {
             val time = System.currentTimeMillis() / 1000.0 * pulseSpeed
             sin(time * Mth.TWO_PI).toFloat() * pulseIntensity * range
-        } else 0f
+        } else {
+            0f
+        }
 
     private fun updateColorFactor(hasTarget: Boolean) {
         val target = if (hasTarget) 1f else 0f
