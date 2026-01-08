@@ -48,6 +48,10 @@ inline operator fun Vec3i.component3() = this.z
 
 inline fun BlockPos.copy(x: Int = this.x, y: Int = this.y, z: Int = this.z) = BlockPos(x, y, z)
 
+inline val BlockPos.chunkPosAsLong get() = ChunkPos.pack(this)
+
+inline val BlockPos.chunkPos get() = ChunkPos.containing(this)
+
 inline operator fun Vec3i.plus(other: Vec3i): Vec3i = offset(other)
 
 inline operator fun Vec3i.minus(other: Vec3i): Vec3i = subtract(other)

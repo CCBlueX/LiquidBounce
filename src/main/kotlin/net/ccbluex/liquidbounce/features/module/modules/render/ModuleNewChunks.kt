@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.drawPlane
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.math.chunkPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket
@@ -88,7 +89,7 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
                 packet.runUpdates { bp, state ->
                     val fluid = state.fluidState
                     if (!fluid.isEmpty && !fluid.isSource) {
-                        chunks[ChunkPos(bp)] = true
+                        chunks[bp.chunkPos] = true
                     }
                 }
             }
@@ -96,7 +97,7 @@ object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
             is ClientboundBlockUpdatePacket -> {
                 val fluid = packet.blockState.fluidState
                 if (!fluid.isEmpty && !fluid.isSource) {
-                    chunks[ChunkPos(packet.pos)] = true
+                    chunks[packet.pos.chunkPos] = true
                 }
             }
         }

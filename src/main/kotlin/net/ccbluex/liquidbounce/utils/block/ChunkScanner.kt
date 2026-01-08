@@ -90,7 +90,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     private val chunkLoadHandler = handler<ChunkLoadEvent>(READ_FINAL_STATE) { event ->
         val chunk = world.getChunk(event.x, event.z).takeUnless { it.isEmpty } ?: return@handler
 
-        loadedChunks.add(ChunkPos.asLong(event.x, event.z))
+        loadedChunks.add(ChunkPos.pack(event.x, event.z))
 
         if (subscribers.isEmpty()) return@handler
 
@@ -110,7 +110,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
                 UpdateRequest.ChunkSectionUpdate(packet).runAsync()
 
             is ClientboundForgetLevelChunkPacket -> mc.execute {
-                loadedChunks.remove(packet.pos.toLong())
+                loadedChunks.remove(packet.pos.pack())
                 UpdateRequest.ChunkUnload(packet.pos).runAsync()
             }
         }

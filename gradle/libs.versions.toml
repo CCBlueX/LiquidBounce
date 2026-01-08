@@ -6,14 +6,14 @@ jdk = "25"
 # Fabric Properties
 # Check these on https://fabricmc.net/versions.html
 # https://mods.upcraft.dev/dev/versions
-minecraft = "26.1-snapshot-1"
+minecraft = "26.1-snapshot-2"
 fabric-loom = "1.15-SNAPSHOT"
 fabric-loader = "0.18.4"
 fabric-loaderMin = "0.16.14"
-fabric-api = "0.140.3+26.1"
+fabric-api = "0.141.2+26.1"
 
 # mcef
-mcef = "3.1.6-26.1-alpha.1" # TODO: mavenLocal
+mcef = "dev~26.1-SNAPSHOT"
 # mc-authlib
 mc_authlib = "1.7.0"
 # Polyglot
