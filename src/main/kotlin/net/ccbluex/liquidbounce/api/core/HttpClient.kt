@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
+import com.mojang.blaze3d.platform.NativeImage
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.interceptors.CacheBlacklistInterceptor
 import net.ccbluex.liquidbounce.authlib.Authlib
 import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -33,9 +35,8 @@ import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import com.mojang.blaze3d.platform.NativeImage
-import net.minecraft.util.Util
 import net.minecraft.ReportedException
+import net.minecraft.util.Util
 import okhttp3.Cache
 import okhttp3.Call
 import okhttp3.Callback
@@ -114,6 +115,7 @@ object HttpClient {
         .followRedirects(true)
         .followSslRedirects(true)
         .cache(Cache(ConfigSystem.rootFolder.resolve("http-cache"), 128L shl 20))
+        .addInterceptor(CacheBlacklistInterceptor(setOf("localhost", "127.0.0.1")))
         .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
         .build().also {
             McefFileUtils.setOkHttpClient(it)
