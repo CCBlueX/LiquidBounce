@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
+import net.minecraft.world.phys.Vec3
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -42,9 +43,11 @@ internal object FlySpartan524 : Choice("Spartan524") {
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
         val yaw = Math.toRadians(player.yRot.toDouble())
-        event.movement.x = -sin(yaw) * 0.28
-        event.movement.y = 0.0
-        event.movement.z = cos(yaw) * 0.28
+        event.movement = Vec3(
+            -sin(yaw) * 0.28,
+            0.0,
+            cos(yaw) * 0.28
+        )
     }
 
 }

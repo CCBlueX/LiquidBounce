@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import kotlin.math.abs
@@ -62,8 +63,7 @@ class SpeedVulcan288(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase
         val hasSpeed = (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) != 0
         if (!player.onGround()) {
             if (abs(player.fallDistance) > 0 && hasSpeed) {
-                player.deltaMovement.x *= 1.055
-                player.deltaMovement.z *= 1.055
+                player.deltaMovement = player.deltaMovement.multiply(factorX = 1.055, factorZ = 1.055)
             }
         }
     }

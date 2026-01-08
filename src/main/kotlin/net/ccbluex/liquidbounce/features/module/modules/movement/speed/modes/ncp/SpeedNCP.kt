@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.minecraft.world.effect.MobEffects
 
 /**
@@ -80,8 +81,10 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         @Suppress("unused")
         private val tickHandler = tickHandler {
             if (player.moving) {
-                player.deltaMovement.x *= 1f + (BOOST_CONSTANT * initialBoostMultiplier.toDouble())
-                player.deltaMovement.z *= 1f + (BOOST_CONSTANT * initialBoostMultiplier.toDouble())
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = 1f + (BOOST_CONSTANT * initialBoostMultiplier),
+                    factorZ = 1f + (BOOST_CONSTANT * initialBoostMultiplier),
+                )
             }
         }
     }

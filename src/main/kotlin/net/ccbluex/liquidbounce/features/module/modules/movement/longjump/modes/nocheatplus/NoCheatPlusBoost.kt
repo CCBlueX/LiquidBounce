@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
 
 /**
@@ -43,8 +44,8 @@ internal object NoCheatPlusBoost : Choice("NoCheatPlusBoost") {
 
     val repeatable = tickHandler {
         if (ModuleLongJump.canBoost) {
-            player.deltaMovement.x *= ncpBoost.toDouble()
-            player.deltaMovement.z *= ncpBoost.toDouble()
+            player.deltaMovement =
+                player.deltaMovement.multiply(factorX = ncpBoost, factorZ = ncpBoost)
             ModuleLongJump.boosted = true
         }
         ModuleLongJump.canBoost = false

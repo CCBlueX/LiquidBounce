@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.multiply
 
 /**
  * Intave 14 speed
@@ -43,7 +44,7 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
         @Suppress("unused")
         private val tickHandler = tickHandler {
             if (player.isSprinting && (player.onGround() || player.airTicks == 11)) {
-                player.setDeltaMovement(player.deltaMovement.withStrafe(strength = strength.toDouble()))
+                player.deltaMovement = player.deltaMovement.withStrafe(strength = strength.toDouble())
             }
         }
     }
@@ -53,8 +54,10 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
         @Suppress("unused")
         private val tickHandler = tickHandler {
             if (player.deltaMovement.y > 0.003 && player.isSprinting) {
-                player.deltaMovement.x *= 1f + (BOOST_CONSTANT * 0.25)
-                player.deltaMovement.z *= 1f + (BOOST_CONSTANT * 0.25)
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = 1f + (BOOST_CONSTANT * 0.25),
+                    factorZ = 1f + (BOOST_CONSTANT * 0.25),
+                )
             }
         }
     }

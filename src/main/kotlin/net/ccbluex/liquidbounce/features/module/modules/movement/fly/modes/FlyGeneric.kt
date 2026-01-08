@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -42,6 +43,7 @@ import net.minecraft.world.level.block.LiquidBlock
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 import kotlin.jvm.optionals.getOrNull
 
@@ -249,11 +251,14 @@ internal object FlyJetpack : Choice("Jetpack") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (player.input.keyPresses.jump) {
-            player.deltaMovement.x *= 1.1
-            player.deltaMovement.y += 0.15
-            player.deltaMovement.z *= 1.1
+            val deltaMovement = player.deltaMovement
+            player.deltaMovement = Vec3(
+                deltaMovement.x * 1.1,
+                deltaMovement.y + 0.15,
+                deltaMovement.z * 1.1,
+            )
         }
     }
 

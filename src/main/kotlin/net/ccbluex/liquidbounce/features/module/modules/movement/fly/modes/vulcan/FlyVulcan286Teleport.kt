@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Pos
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -117,8 +118,7 @@ internal object FlyVulcan286Teleport : Choice("Vulcan286-Teleport-18") {
     // Let's not move around while jumping, that would make it harder.
     val moveHandler = handler<PlayerMoveEvent> { event ->
         if (jumping) {
-            event.movement.x = 0.0
-            event.movement.z = 0.0
+            event.movement = event.movement.copy(x = 0.0, z = 0.0)
         }
     }
 
