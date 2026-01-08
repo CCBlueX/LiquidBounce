@@ -27,19 +27,25 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.renderer.MappableRingBuffer
 import org.lwjgl.system.MemoryUtil
+import java.util.function.Supplier
 
-object MeshUtils {
-
-    private const val MIN_BUFFER_SIZE = 1 shl 20 // 1 MB
+class DynamicVertexStorage(
+    private val label: Supplier<String>,
+    private val minBufferSize: Int = 1 shl 10,
+) {
 
     private var sharedVertexBuffer: MappableRingBuffer? = null
+    var currentVertexCount: Int = -1
+        private set
+    var currentSlice: GpuBufferSlice? = null
+        private set
 
     private fun ensureVertexBufferCapacity(byteCount: Int): MappableRingBuffer {
         if (sharedVertexBuffer == null || sharedVertexBuffer!!.size() < byteCount) {
-            val size = maxOf(MIN_BUFFER_SIZE, byteCount)
-            sharedVertexBuffer?.close()
+            val size = maxOf(minBufferSize, byteCount)
+            clear()
             sharedVertexBuffer = MappableRingBuffer(
-                { "${LiquidBounce.CLIENT_NAME} Shared VBO" },
+                label,
                 GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_MAP_WRITE,
                 size
             )
@@ -50,26 +56,40 @@ object MeshUtils {
     }
 
     /**
-     * Upload the vertices of this [MeshData] to a shared [MappableRingBuffer].
+     * Upload the vertices of the [MeshData] to a shared [MappableRingBuffer].
      *
      * @returns VBO
      */
-    @JvmStatic
-    fun MeshData.uploadVertices(format: VertexFormat): GpuBufferSlice {
-        val byteCount = this.drawState().vertexCount() * format.vertexSize
+    fun upload(meshData: MeshData, format: VertexFormat): GpuBufferSlice {
+        val vertexCount = meshData.drawState().vertexCount()
+        val byteCount = vertexCount * format.vertexSize
         val buffer = ensureVertexBufferCapacity(byteCount).currentBuffer()
 
-        val slice = buffer.slice(0, this.vertexBuffer().remaining().toLong())
+        val slice = buffer.slice(0, meshData.vertexBuffer().remaining().toLong())
         buffer.mapBuffer(read = false, write = true).use {
-            MemoryUtil.memCopy(this.vertexBuffer(), it.data())
+            MemoryUtil.memCopy(meshData.vertexBuffer(), it.data())
         }
+        currentSlice = slice
+        currentVertexCount = vertexCount
 
         return slice
     }
 
-    @JvmStatic
-    fun rotateVertexBuffer() {
+    fun rotate() {
         sharedVertexBuffer?.rotate()
+        currentSlice = null
+        currentVertexCount = -1
+    }
+
+    fun clear() {
+        sharedVertexBuffer?.close()
+        currentSlice = null
+        currentVertexCount = -1
+    }
+
+    companion object {
+        @JvmField
+        internal val SHARED = DynamicVertexStorage({ "${LiquidBounce.CLIENT_NAME} Shared VBO" }, 1 shl 20)
     }
 
 }

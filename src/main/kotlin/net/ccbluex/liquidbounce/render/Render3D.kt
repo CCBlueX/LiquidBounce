@@ -33,6 +33,7 @@ import net.minecraft.client.Camera
 import com.mojang.blaze3d.vertex.Tesselator
 import com.mojang.blaze3d.vertex.PoseStack
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Position
 import net.minecraft.world.phys.Vec3
@@ -41,6 +42,15 @@ import org.joml.Vector3fc
 import org.joml.Vector4f
 import java.util.Collections.singletonMap
 import java.util.function.Function
+
+inline fun withPoseStack(block: PoseStack.() -> Unit) {
+    val matrices = Pools.MatStack.borrow()
+    try {
+        block(matrices)
+    } finally {
+        Pools.MatStack.recycle(matrices)
+    }
+}
 
 inline fun PoseStack.withPush(block: PoseStack.() -> Unit) {
     pushPose()
@@ -53,6 +63,9 @@ inline fun PoseStack.withPush(block: PoseStack.() -> Unit) {
 
 inline fun PoseStack.translate(vec3i: Vec3i) =
     translate(vec3i.x.toFloat(), vec3i.y.toFloat(), vec3i.z.toFloat())
+
+inline fun Tesselator.begin(pipeline: RenderPipeline): BufferBuilder =
+    begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
 
 /**
  * Context representing the rendering environment.

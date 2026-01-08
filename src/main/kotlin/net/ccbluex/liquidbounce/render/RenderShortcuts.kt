@@ -22,7 +22,6 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
-import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.VertexFormat
@@ -34,13 +33,11 @@ import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.PoseStack
 import it.unimi.dsi.fastutil.objects.Object2ObjectMaps
-import net.ccbluex.liquidbounce.utils.render.MeshUtils
-import net.ccbluex.liquidbounce.utils.render.MeshUtils.uploadVertices
+import net.ccbluex.liquidbounce.utils.render.DynamicVertexStorage
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
@@ -198,7 +195,7 @@ fun drawMesh(
             Vector3f(),
             Matrix4f(),
         )
-    val vertexBuffer = buffer.uploadVertices(pipeline.vertexFormat)
+    val vertexBuffer = DynamicVertexStorage.SHARED.upload(buffer, pipeline.vertexFormat)
     val indexBuffer: GpuBuffer
     val indexType: VertexFormat.IndexType
     if (buffer.indexBuffer() == null) {
@@ -233,7 +230,7 @@ fun drawMesh(
             )
         }
 
-        RenderSystem.bindDefaultUniforms(renderPass)
+        renderPass.bindDefaultUniforms()
         renderPass.setUniform("DynamicTransforms", dynamicTransforms)
         renderPass.setVertexBuffer(0, vertexBuffer.buffer)
 
@@ -245,7 +242,7 @@ fun drawMesh(
         renderPass.drawIndexed(0, 0, buffer.drawState().indexCount, 1)
     }
 
-    MeshUtils.rotateVertexBuffer()
+    DynamicVertexStorage.SHARED.rotate()
 }
 
 /**

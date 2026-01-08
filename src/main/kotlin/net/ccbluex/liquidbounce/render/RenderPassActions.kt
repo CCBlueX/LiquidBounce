@@ -17,6 +17,8 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("NOTHING_TO_INLINE")
+
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.systems.RenderPass
@@ -30,11 +32,22 @@ import java.util.OptionalDouble
 import java.util.OptionalInt
 import java.util.function.Supplier
 
-/**
- * 1.21.5-10
- */
-inline fun RenderPass.bindSampler(name: String, gpuTextureView: GpuTextureView) {
-    bindTexture(name, gpuTextureView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST))
+inline fun RenderPass.bindDefaultUniforms() = RenderSystem.bindDefaultUniforms(this)
+
+inline fun RenderPass.setUniformProjection() {
+    RenderSystem.getProjectionMatrixBuffer()?.let { setUniform("Projection", it) }
+}
+
+inline fun RenderPass.setUniformFog() {
+    RenderSystem.getShaderFog()?.let { setUniform("Fog", it) }
+}
+
+inline fun RenderPass.setUniformGlobals() {
+    RenderSystem.getGlobalSettingsUniform()?.let { setUniform("Globals", it) }
+}
+
+inline fun RenderPass.setUniformLighting() {
+    RenderSystem.getShaderLights()?.let { setUniform("Projection", it) }
 }
 
 private val RENDER_PASS_DEFAULT_LABEL = Supplier { LiquidBounce.CLIENT_NAME + " RenderPass" }

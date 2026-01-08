@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.Tesselator
+import kotlinx.atomicfu.atomic
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
@@ -29,14 +32,20 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.addBoxFaces
+import net.ccbluex.liquidbounce.render.begin
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.drawBoxOutlined
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.setUniformGlobals
+import net.ccbluex.liquidbounce.render.setUniformProjection
 import net.ccbluex.liquidbounce.render.translate
+import net.ccbluex.liquidbounce.render.withPoseStack
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
@@ -46,6 +55,7 @@ import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.ccbluex.liquidbounce.utils.render.DynamicVertexStorage
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.animal.equine.AbstractChestedHorse
@@ -67,6 +77,9 @@ import net.minecraft.world.level.block.entity.HopperBlockEntity
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
+import org.joml.Matrix4f
+import org.joml.Vector3f
+import org.joml.Vector4f
 import java.awt.Color
 
 /**
@@ -220,43 +233,78 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     }
 
     object Glow : Choice("Glow") {
+        internal val dirtyFlag = atomic(true)
+
+        private val vertexBufferStorage = DynamicVertexStorage({ "${ModuleStorageESP.name} $name VBO" })
+
+        override fun disable() {
+            vertexBufferStorage.clear()
+            super.disable()
+        }
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         @Suppress("unused")
         private val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
-            if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
-                || StorageScanner.isEmpty()
-            ) {
+            if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
                 return@handler
             }
 
-            renderEnvironmentForWorld(event.matrixStack, event.framebuffer) {
-                // non-model blocks are already processed by WorldRenderer where we injected code which renders
-                // their outline
-                startBatch()
-                for ((blockPos, type) in StorageScanner.iterate()) {
-                    if (type.color.isTransparent || !type.shouldRender(blockPos)) continue
+            vertexBufferStorage.currentSlice?.buffer?.let { currentVertexBuffer ->
+                val dynamicTransforms = RenderSystem.getDynamicUniforms()
+                    .writeTransform(
+                        RenderSystem.getModelViewMatrix(),
+                        Vector4f(1f),
+                        Vector3f(),
+                        Matrix4f(),
+                    )
+                // FIXME
+                event.framebuffer.createRenderPass({ "${ModuleStorageESP.name} $name Pass" }).use { pass ->
+                    pass.setPipeline(ClientRenderPipelines.OutlineQuads)
 
-                    val blockState = world.getBlockState(blockPos)
-
-                    // non-model blocks are already processed by WorldRenderer where we injected code which renders
-                    // their outline
-                    if (blockState.renderShape != RenderShape.MODEL || blockState.isAir) {
-                        continue
-                    }
-
-                    val boundingBox = blockState.outlineBox(blockPos)
-
-                    matrixStack.withPush {
-                        translate(blockPos)
-                        drawBoxOutlined(boundingBox, type.color)
-                    }
+                    pass.setUniformProjection()
+                    pass.setUniformGlobals()
+                    pass.setUniform("DynamicTransforms", dynamicTransforms)
+                    pass.setVertexBuffer(0, currentVertexBuffer)
+                    pass.draw(0, vertexBufferStorage.currentVertexCount)
 
                     event.markDirty()
                 }
-                commitBatch()
+            }
+
+            if (StorageScanner.isEmpty() || !dirtyFlag.compareAndSet(expect = true, update = false)) {
+                return@handler
+            }
+
+            // Update VBO
+            val meshData = Tesselator.getInstance().begin(ClientRenderPipelines.OutlineQuads).apply {
+                // non-model blocks are already processed by WorldRenderer where we injected code which renders
+                // their outline
+                withPoseStack {
+                    for ((blockPos, type) in StorageScanner.iterate()) {
+                        if (type.color.isTransparent || !type.shouldRender(blockPos)) continue
+
+                        val blockState = world.getBlockState(blockPos)
+
+                        // non-model blocks are already processed by WorldRenderer where we injected code which renders
+                        // their outline
+                        if (blockState.renderShape != RenderShape.MODEL || blockState.isAir) {
+                            continue
+                        }
+
+                        val boundingBox = blockState.outlineBox(blockPos)
+
+                        withPush {
+                            translate(blockPos)
+                            addBoxFaces(last().pose(), boundingBox, type.color)
+                        }
+                    }
+                }
+            }.build() ?: return@handler
+            vertexBufferStorage.rotate()
+            meshData.use {
+                vertexBufferStorage.upload(it, ClientRenderPipelines.OutlineQuads.vertexFormat)
             }
         }
     }
@@ -318,6 +366,10 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         override fun getStateFor(pos: BlockPos, state: BlockState): ChestType? {
             val chunk = mc.level?.getChunk(pos) ?: return null
             return chunk.getBlockEntity(pos)?.categorize()
+        }
+
+        override fun onUpdated() {
+            Glow.dirtyFlag.value = true
         }
     }
 
