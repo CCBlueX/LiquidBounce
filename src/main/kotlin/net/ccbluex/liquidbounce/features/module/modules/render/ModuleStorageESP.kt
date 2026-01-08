@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,8 +44,14 @@ import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.animal.equine.AbstractChestedHorse
+import net.minecraft.world.entity.vehicle.boat.ChestBoat
+import net.minecraft.world.entity.vehicle.boat.ChestRaft
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecartContainer
+import net.minecraft.world.entity.vehicle.minecart.MinecartHopper
 import net.minecraft.world.level.block.RenderShape
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity
 import net.minecraft.world.level.block.entity.BarrelBlockEntity
 import net.minecraft.world.level.block.entity.BlockEntity
@@ -57,13 +63,7 @@ import net.minecraft.world.level.block.entity.DispenserBlockEntity
 import net.minecraft.world.level.block.entity.EnderChestBlockEntity
 import net.minecraft.world.level.block.entity.HopperBlockEntity
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.animal.equine.AbstractChestedHorse
-import net.minecraft.world.entity.vehicle.boat.ChestBoat
-import net.minecraft.world.entity.vehicle.boat.ChestRaft
-import net.minecraft.world.entity.vehicle.minecart.MinecartHopper
-import net.minecraft.world.entity.vehicle.minecart.AbstractMinecartContainer
-import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import java.awt.Color
 
@@ -132,7 +132,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         private val blockBoxes = mutableListOf<BlockBox>()
         private val entityBoxes = mutableListOf<EntityBox>()
-        private val blockPos = BlockPos.MutableBlockPos()
+        private val mutableBlockPos = BlockPos.MutableBlockPos()
 
         override fun disable() {
             blockBoxes.clear()
@@ -153,7 +153,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     val baseColor = color.with(a = 50)
                     val outlineColor = if (outline) color.with(a = 100) else null
 
-                    withPositionRelativeToCamera(blockPos.set(pos)) {
+                    withPositionRelativeToCamera(mutableBlockPos.set(pos)) {
                         drawBox(box, baseColor, outlineColor)
                     }
                 }
@@ -180,6 +180,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
+            val level = mc.level ?: return@handler
+
             blockBoxes.clear()
 
             for ((pos, type) in StorageScanner.iterate()) {
@@ -189,18 +191,18 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     continue
                 }
 
-                val blockState = world.getBlockState(blockPos)
+                val blockState = level.getBlockState(pos)
 
                 if (blockState.isAir) continue
 
-                val boundingBox = blockState.outlineBox(blockPos)
+                val boundingBox = blockState.outlineBox(pos)
 
                 blockBoxes.add(BlockBox(pos.asLong(), boundingBox, color))
             }
 
             entityBoxes.clear()
 
-            for (entity in world.entitiesForRendering()) {
+            for (entity in level.entitiesForRendering()) {
                 val type = entity.categorize()?.takeIf {
                     !it.color.isTransparent && it.shouldRender(entity)
                 } ?: continue
@@ -223,7 +225,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         @Suppress("unused")
         private val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
             if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW
-                || StorageScanner.isEmpty()) {
+                || StorageScanner.isEmpty()
+            ) {
                 return@handler
             }
 
