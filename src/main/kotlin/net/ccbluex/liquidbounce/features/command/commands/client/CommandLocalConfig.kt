@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import kotlinx.coroutines.async
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
@@ -49,7 +51,7 @@ import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.io.ILLEGAL_FILE_NAME_CHARS_WINDOWS
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.ccbluex.liquidbounce.utils.text.DelegatedComponent
+import net.ccbluex.liquidbounce.utils.text.AsyncLoadingText
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Style
@@ -82,11 +84,13 @@ object CommandLocalConfig : Command.Factory {
             "Click to load ".asPlainText(ChatFormatting.GRAY),
             settingName.asPlainText(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.BOLD),
             PlainText.NEW_LINE,
-            DelegatedComponent.lazy {
-                file.bufferedReader().use { r ->
-                    publicGson.fromJson(r, AutoSettingsMetadata::class.java)
-                }.asText()
-            }
+            AsyncLoadingText(
+                ioScope.async {
+                    file.bufferedReader().use { r ->
+                        publicGson.fromJson(r, AutoSettingsMetadata::class.java)
+                    }.asText()
+                }
+            )
         )
 
     private fun saveSubcommand() = CommandBuilder

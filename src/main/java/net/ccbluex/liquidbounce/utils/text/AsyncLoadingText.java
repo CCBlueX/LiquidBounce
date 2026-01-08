@@ -43,7 +43,13 @@ public record AsyncLoadingText(
     public static final Supplier<Component> DEFAULT_ON_LOADING =
         Suppliers.ofInstance(PlainText.of("Loading...", ChatFormatting.GRAY));
     public static final Function<Throwable, Component> DEFAULT_ON_EXCEPTION =
-        throwable -> PlainText.of(throwable.getMessage(), ChatFormatting.RED);
+        throwable -> {
+            String message = throwable.getMessage();
+
+            return PlainText.of(message == null ?
+                "Unknown error (" + throwable.getClass().getName() + ")" :
+                message, ChatFormatting.RED);
+        };
 
     public AsyncLoadingText(Deferred<Component> delegate) {
         this(delegate, DEFAULT_ON_LOADING, DEFAULT_ON_EXCEPTION);
