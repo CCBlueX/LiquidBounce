@@ -42,7 +42,7 @@ object ClientRenderPipelines {
     /**
      * Blend mode for JCEF compatible blending.
      */
-    private val JCEF_COMPATIBLE_BLEND = BlendFunction(SourceFactor.ONE, DestFactor.ONE_MINUS_SRC_ALPHA)
+    private val JCEF_COMPATIBLE_BLEND = BlendFunction.TRANSLUCENT_PREMULTIPLIED_ALPHA
 
     private val COVERING_BLEND = BlendFunction(SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA)
 

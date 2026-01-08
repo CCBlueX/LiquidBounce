@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -35,7 +34,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -56,7 +54,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.entity.LivingEntity
@@ -96,7 +94,9 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
     private val hitTimeout by int("HitTimeout", 30, 5..200, "ticks")
     private val pullOnOutOfRange by boolean("PullOnOutOfRange", true)
@@ -203,15 +203,6 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         useHotbarSlotOrOffhand(slot, slotResetDelay.random(), swingMode = swingMode)
 
         waitTicks(cooldown.random())
-    }
-
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> { event ->
-        val target = targetTracker.target ?: return@handler
-
-        renderEnvironmentForWorld(event.matrixStack) {
-            targetRenderer.render(target, event.partialTicks)
-        }
     }
 
     override fun onDisabled() {

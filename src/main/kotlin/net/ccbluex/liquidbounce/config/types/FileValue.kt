@@ -22,9 +22,6 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.types.FileDialogMode.OPEN_DIRECTORY
-import net.ccbluex.liquidbounce.config.types.FileDialogMode.OPEN_FILE
-import net.ccbluex.liquidbounce.config.types.FileDialogMode.SAVE_FILE
 import org.lwjgl.PointerBuffer
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.util.tinyfd.TinyFileDialogs

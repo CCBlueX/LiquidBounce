@@ -20,8 +20,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -31,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.render.OverlayTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.TridentItem
@@ -50,9 +48,8 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
     init {
         tree(targetTracker)
         tree(rotationConfigurable)
+        tree(TargetRenderer(AutoBowAimbotFeature, targetTracker))
     }
-
-    private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow))
 
     @Suppress("unused")
     private val tickRepeatable = tickHandler {
@@ -82,15 +79,6 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
             provider = ModuleAutoBow,
             configurable = rotationConfigurable
         )
-    }
-
-    @Suppress("unused")
-    private val renderHandler = handler<OverlayRenderEvent> { event ->
-        val target = targetTracker.target ?: return@handler
-
-        with(event.context) {
-            targetRenderer.render(target, event.tickDelta)
-        }
     }
 
 }

@@ -39,7 +39,7 @@ class ChoiceConfigurable<T : Choice>(
     choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
 ) : Configurable(name, valueType = ValueType.CHOICE) {
 
-    var choices: MutableList<T> = ObjectArrayList(choicesCallback(this))
+    var choices: MutableList<T> = ObjectArrayList.wrap(choicesCallback(this))
         internal set
     private var defaultChoice: T = choices[activeChoiceIndexCallback.applyAsInt(choices)]
     var activeChoice: T = defaultChoice

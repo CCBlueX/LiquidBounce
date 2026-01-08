@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -29,14 +28,13 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalPostAttackTracker
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.SubmoduleSetDead
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
 import net.ccbluex.liquidbounce.utils.client.FloatValueProvider
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 
 /**
  * Module CrystalAura
@@ -75,7 +73,9 @@ object ModuleCrystalAura : ClientModule(
         )
     }
 
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
     val rotationMode = choices(this, "RotationMode") {
         arrayOf(
@@ -104,15 +104,6 @@ object ModuleCrystalAura : ClientModule(
         }
 
         targetTracker.selectFirst()
-    }
-
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> {
-        val target = targetTracker.target ?: return@handler
-
-        renderEnvironmentForWorld(it.matrixStack) {
-            targetRenderer.render(target, it.partialTicks)
-        }
     }
 
 }
