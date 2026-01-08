@@ -45,16 +45,16 @@ data class AutoSettingsMetadata(
     val chat: List<String>?,
 ) {
 
-    fun asText(): Component = buildList {
+    private fun asTexts(): List<Component> = buildList {
         val colon = ":".asPlainText(ChatFormatting.DARK_GRAY)
         fun addEntry(key: String, value: String?) {
             if (value.isNullOrBlank()) return
 
             this += textOf(
-            key.asPlainText(ChatFormatting.GRAY),
+                key.asPlainText(ChatFormatting.GRAY),
                 colon,
                 SPACE,
-                value.asPlainText(ChatFormatting.GRAY),
+                value.asPlainText(ChatFormatting.WHITE),
             )
         }
 
@@ -66,9 +66,11 @@ data class AutoSettingsMetadata(
         addEntry("Client Commit", clientCommit)
         addEntry("Protocol Name", protocolName)
         addEntry("Protocol Version", protocolVersion?.toString())
-        addEntry("Type", type?.name)
-        addEntry("Status", status?.name)
+        addEntry("Type", type?.displayName)
+        addEntry("Status", status?.displayName)
         addEntry("Chat", chat?.joinToString("\n    "))
-    }.joinToText(NEW_LINE)
+    }
+
+    fun asText(): Component = asTexts().joinToText(NEW_LINE)
 
 }
