@@ -36,7 +36,9 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.translate
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.outlineBox
@@ -247,7 +249,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
                     val boundingBox = blockState.outlineBox(blockPos)
 
-                    withPositionRelativeToCamera(blockPos) {
+                    matrixStack.withPush {
+                        translate(blockPos)
                         drawBoxOutlined(boundingBox, type.color)
                     }
 

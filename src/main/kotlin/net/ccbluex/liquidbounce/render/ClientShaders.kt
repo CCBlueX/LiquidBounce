@@ -35,6 +35,9 @@ object ClientShaders : ShaderSource {
         val PlainPosTex = "plain_pos_tex"("shaders/position_tex.vert")
 
         @JvmField
+        val PosColorRelativeToCamera = "pos_color_relative_to_camera"("shaders/position_color_relative_to_camera.vsh")
+
+        @JvmField
         val Sobel = "sobel"("shaders/sobel.vert")
 
         @JvmField

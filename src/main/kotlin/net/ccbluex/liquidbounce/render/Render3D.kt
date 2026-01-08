@@ -51,6 +51,9 @@ inline fun PoseStack.withPush(block: PoseStack.() -> Unit) {
     }
 }
 
+inline fun PoseStack.translate(vec3i: Vec3i) =
+    translate(vec3i.x.toFloat(), vec3i.y.toFloat(), vec3i.z.toFloat())
+
 /**
  * Context representing the rendering environment.
  *

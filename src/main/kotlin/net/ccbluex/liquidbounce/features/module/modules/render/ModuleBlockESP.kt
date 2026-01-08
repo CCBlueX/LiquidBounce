@@ -39,11 +39,12 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.render.drawBoxOutlined
+import net.ccbluex.liquidbounce.render.translate
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
@@ -131,10 +132,13 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
                 val color = colorMode.getColor(Pair(blockPos, blockState))
 
-                withPositionRelativeToCamera(blockPos) {
-                    if (isOutlineShader) {
+                if (isOutlineShader) {
+                    matrixStack.withPush {
+                        translate(blockPos)
                         drawBoxOutlined(boundingBox, color.alpha(255))
-                    } else {
+                    }
+                } else {
+                    withPositionRelativeToCamera(blockPos) {
                         drawBox(
                             boundingBox,
                             faceColor = color,

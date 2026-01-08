@@ -203,6 +203,9 @@ object ClientRenderPipelines {
     @JvmField
     val OutlineQuads = newPipeline("outline_quads") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        withSnippet(RenderPipelines.GLOBALS_SNIPPET)
+        forWorldRender()
+        withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
         withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
         withBlend(COVERING_BLEND)
     }
