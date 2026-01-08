@@ -555,6 +555,7 @@
   "liquidbounce.module.betterTab.description": "Sekme listesine çeşitli iyileştirmeler yapar.",
   "liquidbounce.module.autoPearl.description": "Bir düşmanın inci yoluna nişan alır ve inci atar.",
   "liquidbounce.module.replenish.description": "Hızlı erişim çubuğunuzdaki eşya sayısı belirli bir seviyenin altına düştüğünde envanterinizden otomatik olarak doldurur.",
+  "liquidbounce.module.anchor.description": "Sizi kristal PvP için güvenli deliklere çeker.",
   "liquidbounce.module.localConfig.description": "Yerel yapılandırma dosyalarını yönetmenizi sağlar.",
   "liquidbounce.module.localConfig.messages.refreshed": "Yapılandırma listesi yenilendi.",
   "liquidbounce.module.localConfig.messages.notFound": "'%s' yapılandırma dosyası bulunamadı!",

@@ -576,9 +576,10 @@
     "liquidbounce.module.betterTab.description": "Diverse verbeteringen aan de tablijst.",
     "liquidbounce.module.autoPearl.description": "Richt en werpt een enderparel in de baan van de enderparel van de vijand.",
     "liquidbounce.module.replenish.description": "Vult automatisch je hotbar bij vanuit je inventaris als het aantal te laag wordt.",
-  "liquidbounce.module.localConfig.description": "Hiermee kunt u lokale configuratiebestanden beheren.",
-  "liquidbounce.module.localConfig.messages.refreshed": "Configuratielijst ververst.",
-  "liquidbounce.module.localConfig.messages.notFound": "Configuratiebestand '%s' niet gevonden!",
-  "liquidbounce.module.localConfig.messages.loaded": "Configuratie succesvol geladen: %s",
-  "liquidbounce.module.localConfig.messages.failed": "Kon configuratie niet laden!"
+    "liquidbounce.module.anchor.description": "Trek jezelf in een veilig gat voor crystal-PvP.",
+    "liquidbounce.module.localConfig.description": "Hiermee kunt u lokale configuratiebestanden beheren.",
+    "liquidbounce.module.localConfig.messages.refreshed": "Configuratielijst ververst.",
+    "liquidbounce.module.localConfig.messages.notFound": "Configuratiebestand '%s' niet gevonden!",
+    "liquidbounce.module.localConfig.messages.loaded": "Configuratie succesvol geladen: %s",
+    "liquidbounce.module.localConfig.messages.failed": "Kon configuratie niet laden!"
 }

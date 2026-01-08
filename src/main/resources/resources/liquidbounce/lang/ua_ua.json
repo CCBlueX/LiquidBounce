@@ -461,6 +461,7 @@
   "liquidbounce.module.bookBot.description": "Автоматично пише в книгах.",
   "liquidbounce.module.logoffSpot.description": "Дозволяє бачити гравців, які вийшли з сервера або знаходяться поза межами відображення.",
   "liquidbounce.module.betterTab.description": "Різноманітні покращення списку вкладок.",
+  "liquidbounce.module.autoPearl.description": "Прицілюється та кидає перлину по траєкторії ворожої перлини.",
   "liquidbounce.module.localConfig.description": "Дозволяє керувати локальними файлами конфігурації.",
   "liquidbounce.module.localConfig.messages.refreshed": "Список конфігурацій оновлено.",
   "liquidbounce.module.localConfig.messages.notFound": "Файл конфігурації '%s' не знайдено!",

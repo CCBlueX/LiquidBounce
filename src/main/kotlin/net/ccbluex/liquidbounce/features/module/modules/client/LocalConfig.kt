@@ -41,7 +41,11 @@ object LocalConfig : ClientModule("LocalConfig", Category.CLIENT) {
         refreshConfigList()
     }
 
-    private val configName = enumChoice("Config", configChoices.firstOrNull() ?: ConfigChoice("None"), configChoices).onChanged { selectedChoice ->
+    private val configName = enumChoice(
+        "Config",
+        configChoices.firstOrNull() ?: ConfigChoice("None"),
+        configChoices
+    ).onChanged { selectedChoice ->
         if (enabled) {
             loadConfig(selectedChoice.choiceName)
         }
