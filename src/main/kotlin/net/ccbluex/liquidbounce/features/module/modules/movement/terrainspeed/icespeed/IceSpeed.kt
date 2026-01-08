@@ -21,12 +21,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.icespeed
 
+import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockSlipperinessMultiplierEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.icespeed.IceSpeed.Motion.horizontalMotion
-import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 
 /**
@@ -34,9 +34,9 @@ import net.minecraft.world.level.block.Blocks
  */
 internal object IceSpeed : ToggleableConfigurable(ModuleTerrainSpeed, "IceSpeed", true) {
 
-    val slipperiness by float("Slipperiness", 0.6f, 0.3f..1f)
+    private val slipperiness by float("Slipperiness", 0.6f, 0.3f..1f)
 
-    object Motion : ToggleableConfigurable(ModuleTerrainSpeed, "Motion", false) {
+    private object Motion : ToggleableConfigurable(ModuleTerrainSpeed, "Motion", false) {
         val horizontalMotion by float("Motion", 0.5f, 0.2f..1.5f)
     }
 
@@ -44,14 +44,14 @@ internal object IceSpeed : ToggleableConfigurable(ModuleTerrainSpeed, "IceSpeed"
         tree(Motion)
     }
 
-    val iceBlocks = hashSetOf<Block>(Blocks.ICE, Blocks.BLUE_ICE, Blocks.FROSTED_ICE, Blocks.PACKED_ICE)
+    private val iceBlocks = referenceHashSetOf(Blocks.ICE, Blocks.BLUE_ICE, Blocks.FROSTED_ICE, Blocks.PACKED_ICE)
 
     @Suppress("unused")
     val blockSlipperinessMultiplierHandler = handler<BlockSlipperinessMultiplierEvent> { event ->
         if (event.block in iceBlocks) {
             if (Motion.enabled) {
-                player.deltaMovement.x *= horizontalMotion
-                player.deltaMovement.z *= horizontalMotion
+                player.deltaMovement =
+                    player.deltaMovement.multiply(horizontalMotion.toDouble(), 1.0, horizontalMotion.toDouble())
             }
 
             event.slipperiness = slipperiness

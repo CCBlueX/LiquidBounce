@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
@@ -42,8 +43,10 @@ object VelocityIntave : VelocityMode("Intave") {
         @Suppress("unused")
         private val attackHandler = handler<AttackEntityEvent> { event ->
             if (player.hurtTime in hurtTime && System.currentTimeMillis() - lastAttackTime <= lastAttackTimeToReduce) {
-                player.deltaMovement.x *= reduceFactor
-                player.deltaMovement.z *= reduceFactor
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = reduceFactor,
+                    factorZ = reduceFactor,
+                )
             }
             lastAttackTime = System.currentTimeMillis()
         }

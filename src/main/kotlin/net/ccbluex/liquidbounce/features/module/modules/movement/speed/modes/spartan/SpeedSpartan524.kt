@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.Items
@@ -52,8 +53,10 @@ class SpeedSpartanV4043(override val parent: ChoiceConfigurable<*>) : Choice("Sp
         val horizontalMove = if (wearingLeatherBoots) 1.8 else 1.3
 
         if (player.onGround()) {
-            event.movement.x = player.deltaMovement.x * horizontalMove
-            event.movement.z = player.deltaMovement.z * horizontalMove
+            event.movement = event.movement.copy(
+                x = player.deltaMovement.x * horizontalMove,
+                z = player.deltaMovement.z * horizontalMove,
+            )
 
             repeat(4) {
                 player.jumpFromGround()
@@ -86,8 +89,10 @@ class SpeedSpartanV4043FastFall(override val parent: ChoiceConfigurable<*>) : Ch
         val jumps = if (wearingLeatherBoots) 7 else 3
 
         if (player.onGround()) {
-            event.movement.x = player.deltaMovement.x * horizontalMove
-            event.movement.z = player.deltaMovement.z * horizontalMove
+            event.movement = event.movement.copy(
+                x = player.deltaMovement.x * horizontalMove,
+                z = player.deltaMovement.z * horizontalMove,
+            )
 
             repeat(jumps) {
                 player.jumpFromGround()

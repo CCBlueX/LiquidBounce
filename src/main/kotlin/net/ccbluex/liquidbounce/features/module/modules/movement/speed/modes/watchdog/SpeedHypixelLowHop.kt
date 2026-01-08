@@ -49,19 +49,18 @@ class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHop
         shouldStrafe = false
 
         if (player.onGround()) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe())
+            player.deltaMovement = player.deltaMovement.withStrafe()
             shouldStrafe = true
         } else {
             when (player.airTicks) {
                 1 -> {
-                    player.setDeltaMovement(player.deltaMovement.withStrafe())
+                    player.deltaMovement = player.deltaMovement.withStrafe()
                     shouldStrafe = true
                     player.deltaMovement.y += 0.0568
                 }
                 3 -> {
-                    player.deltaMovement.x *= 0.95
+                    player.deltaMovement = player.deltaMovement.multiply(0.95, 1.0, 0.95)
                     player.deltaMovement.y -= 0.13
-                    player.deltaMovement.z *= 0.95
                 }
                 4 -> player.deltaMovement.y -= 0.2
                 7 -> {
@@ -72,17 +71,17 @@ class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHop
             }
 
             if (isGroundExempt()) {
-                player.setDeltaMovement(player.deltaMovement.withStrafe())
+                player.deltaMovement = player.deltaMovement.withStrafe()
             }
 
             if (player.hurtTime == 9) {
-                player.setDeltaMovement(
-                    player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(0.281)))
+                player.deltaMovement =
+                    player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(0.281))
             }
 
             if ((player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) == 2) {
                 when (player.airTicks) {
-                    1, 2, 5, 6, 8 -> player.setDeltaMovement(player.deltaMovement.multiply(1.2, 1.0, 1.2))
+                    1, 2, 5, 6, 8 -> player.deltaMovement = player.deltaMovement.multiply(1.2, 1.0, 1.2)
                 }
             }
         }
@@ -92,7 +91,8 @@ class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHop
     private val jumpHandler = handler<PlayerJumpEvent> {
         val atLeast = 0.247 + 0.15 * (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(atLeast)))
+        player.deltaMovement =
+            player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(atLeast))
         shouldStrafe = true
     }
 

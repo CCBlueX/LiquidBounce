@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
@@ -70,8 +71,10 @@ internal object VelocityReversal : VelocityMode("Reversal") {
         when {
             player.deltaMovement.lengthSqr() == 0.0 -> reset()
             velocityTicks++ >= delay -> {
-                player.deltaMovement.x *= -xModifier
-                player.deltaMovement.z *= -zModifier
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = -xModifier,
+                    factorZ = -zModifier,
+                )
                 reset()
             }
         }

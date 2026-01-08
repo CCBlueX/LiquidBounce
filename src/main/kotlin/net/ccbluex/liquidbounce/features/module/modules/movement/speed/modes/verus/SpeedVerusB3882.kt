@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.minecraft.world.entity.MoverType
 
 /**
@@ -43,8 +44,7 @@ class SpeedVerusB3882(override val parent: ChoiceConfigurable<*>) : SpeedBHopBas
 
     @Suppress("unused")
     private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
-        player.deltaMovement.x *= 1.1
-        player.deltaMovement.z *= 1.1
+        player.deltaMovement = player.deltaMovement.multiply(factorX = 1.1F, factorZ = 1.1F)
     }
 
     @Suppress("unused")

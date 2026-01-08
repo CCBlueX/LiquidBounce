@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.math.multiply
 
 internal object VelocityDexland : VelocityMode("Dexland") {
 
@@ -32,8 +33,10 @@ internal object VelocityDexland : VelocityMode("Dexland") {
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         if (player.hurtTime > 0 && ++count % times == 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
-            player.deltaMovement.x *= hReduce
-            player.deltaMovement.z *= hReduce
+            player.deltaMovement = player.deltaMovement.multiply(
+                factorX = hReduce,
+                factorZ = hReduce,
+            )
         }
 
         lastAttackTime = System.currentTimeMillis()

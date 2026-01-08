@@ -23,7 +23,6 @@ package net.ccbluex.liquidbounce.utils.math
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.util.Mth
 import net.minecraft.core.Position
@@ -103,6 +102,12 @@ inline fun Vector3f.add(vec3d: Vec3): Vector3f =
 
 inline fun Vector3f.sub(vec3d: Vec3): Vector3f =
     sub(vec3d.x.toFloat(), vec3d.y.toFloat(), vec3d.z.toFloat())
+
+inline fun Vec3.multiply(factorX: Float = 1.0f, factorY: Float = 1.0f, factorZ: Float = 1.0f): Vec3 =
+    multiply(factorX.toDouble(), factorY.toDouble(), factorZ.toDouble())
+
+inline fun Vec3.multiply(factorX: Double = 1.0, factorY: Double = 1.0, factorZ: Double = 1.0): Vec3 =
+    multiply(factorX, factorY, factorZ)
 
 inline operator fun Vec3.component1(): Double = this.x
 inline operator fun Vec3.component2(): Double = this.y

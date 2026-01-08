@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.core.BlockPos
 import java.util.concurrent.ThreadLocalRandom
+import kotlin.math.round
 
 object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
 
@@ -38,25 +39,23 @@ object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
         }
 
         if (player.x % 1.0 != 0.0 && !player.moving) {
-            player.deltaMovement.x = (Math.round(player.x).toDouble() - player.x).coerceAtMost(0.281)
+            player.deltaMovement.x = (round(player.x) - player.x).coerceAtMost(0.281)
         }
 
         if (player.airTicks > 14) {
             player.deltaMovement.y -= 0.09
-            player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    0.6,
-                    1.0,
-                    0.6
-                )
+            player.deltaMovement = player.deltaMovement.multiply(
+                0.6,
+                1.0,
+                0.6
             )
             return@tickHandler
         }
         when (player.airTicks % 3) {
             0 -> {
                 player.deltaMovement.y = 0.42
-                player.setDeltaMovement(
-                    player.deltaMovement.withStrafe(speed = 0.247 - (ThreadLocalRandom.current().nextFloat() / 100f)))
+                player.deltaMovement =
+                    player.deltaMovement.withStrafe(speed = 0.247 - (ThreadLocalRandom.current().nextFloat() / 100f))
             }
             2 -> player.deltaMovement.y = 1 - (player.y % 1.0)
         }
@@ -74,7 +73,7 @@ object ScaffoldTowerHypixel : ScaffoldTower("Hypixel") {
 
             val blockOffset = blocks.minByOrNull { blockPos ->
                 blockPos.getCenterDistanceSquared()
-            }?.offset(0, -1, 0) ?: blockPos
+            }?.below() ?: blockPos
 
             // Check if block next to the player is solid
             if (!blockOffset.getState()!!.isRedstoneConductor(world, blockOffset)) {

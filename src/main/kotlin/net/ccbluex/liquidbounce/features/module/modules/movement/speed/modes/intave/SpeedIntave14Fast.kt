@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.multiply
 
 /**
  * Intave 14 speed (~8.7% faster than vanilla)
@@ -39,13 +40,11 @@ class SpeedIntave14Fast(override val parent: ChoiceConfigurable<*>) : SpeedBHopB
     private val tickHandler = tickHandler {
         when (player.airTicks) {
             1 -> {
-                player.deltaMovement.x *= 1.04
-                player.deltaMovement.z *= 1.04
+                player.deltaMovement = player.deltaMovement.multiply(factorX = 1.04F, factorZ = 1.04F)
             }
 
             2, 3, 4 -> {
-                player.deltaMovement.x *= 1.02
-                player.deltaMovement.z *= 1.02
+                player.deltaMovement = player.deltaMovement.multiply(factorX = 1.02F, factorZ = 1.02F)
             }
         }
 
