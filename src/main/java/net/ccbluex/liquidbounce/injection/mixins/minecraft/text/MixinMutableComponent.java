@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.text;
 
-import net.ccbluex.liquidbounce.utils.client.PlainText;
+import net.ccbluex.liquidbounce.utils.text.PlainText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.network.chat.Component;

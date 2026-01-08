@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.client;
+package net.ccbluex.liquidbounce.utils.text;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -31,7 +31,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.util.StringDecomposer;
 import net.minecraft.ChatFormatting;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -41,15 +40,18 @@ import java.util.stream.IntStream;
 /**
  * A plain and immutable {@link Component}, {@link FormattedCharSequence} and {@link CharSequence}.
  */
-@NullMarked
 public record PlainText(
     PlainTextContents content,
     Style style
 ) implements Component, FormattedCharSequence, CharSequence {
 
     public static final PlainText EMPTY = new PlainText(PlainTextContents.EMPTY, Style.EMPTY);
-    public static final PlainText SPACE = new PlainText(PlainTextContents.create(" "), Style.EMPTY);
-    public static final PlainText NEW_LINE = new PlainText(PlainTextContents.create("\n"), Style.EMPTY);
+    public static final PlainText SPACE = new PlainText(new PlainTextContents.LiteralContents(" "), Style.EMPTY);
+    public static final PlainText NEW_LINE = new PlainText(new PlainTextContents.LiteralContents("\n"), Style.EMPTY);
+
+    public static PlainText empty() {
+        return EMPTY;
+    }
 
     public PlainText(PlainTextContents content) {
         this(content, Style.EMPTY);

@@ -24,8 +24,6 @@ import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.api.services.client.ClientApi
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsType
-import net.ccbluex.liquidbounce.authlib.utils.array
-import net.ccbluex.liquidbounce.authlib.utils.int
 import net.ccbluex.liquidbounce.authlib.utils.obj
 import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeConfigurable
@@ -37,7 +35,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.dropPort
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -45,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.plus
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.rootDomain
@@ -52,20 +51,11 @@ import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Style
 import java.io.Reader
 import java.io.Writer
 import java.text.SimpleDateFormat
-import java.util.*
-
-data class IncludeConfiguration(
-    val includeBinds: Boolean = false,
-    val includeAction: Boolean = false,
-    val includeHidden: Boolean = false
-) {
-    companion object {
-        val DEFAULT = IncludeConfiguration()
-    }
-}
+import java.util.Date
 
 object AutoConfig {
 
@@ -136,7 +126,7 @@ object AutoConfig {
         modules: Collection<Configurable> = emptyList()
     ) {
         chat(metadata = MessageMetadata(prefix = false))
-        chat(regular("Auto Config").withStyle(ChatFormatting.LIGHT_PURPLE).bold(true))
+        chat("Auto Config".asPlainText(Style.EMPTY + ChatFormatting.LIGHT_PURPLE + ChatFormatting.BOLD))
 
         val name = jsonObject.string("name") ?: throw IllegalArgumentException("Auto Config has no name")
         when (name) {
@@ -156,14 +146,16 @@ object AutoConfig {
         }
 
         // Auto Config
-        printOutInformation(jsonObject)
+        printOutMetadata(jsonObject)
     }
 
     /**
      * Print out information from the auto config
      */
-    private fun printOutInformation(jsonObject: JsonObject) {
-        val serverAddress = jsonObject.string("serverAddress")
+    private fun printOutMetadata(jsonObject: JsonObject) {
+        val metadata = publicGson.fromJson(jsonObject, AutoSettingsMetadata::class.java)
+
+        val serverAddress = metadata.serverAddress
         if (serverAddress != null) {
             chat(
                 regular("for server "),
@@ -171,18 +163,18 @@ object AutoConfig {
             )
         }
 
-        val pName = jsonObject.string("protocolName")
-        val pVersion = jsonObject.int("protocolVersion")
+        val pName = metadata.protocolName
+        val pVersion = metadata.protocolVersion
 
         if (pName != null && pVersion != null) {
             formatAutoConfigProtocolInfo(pVersion, pName)
         }
 
-        val date = jsonObject.string("date")
-        val time = jsonObject.string("time")
-        val author = jsonObject.string("author")
-        val lbVersion = jsonObject.string("clientVersion")
-        val lbCommit = jsonObject.string("clientCommit")
+        val date = metadata.date
+        val time = metadata.time
+        val author = metadata.author
+        val lbVersion = metadata.clientVersion
+        val lbCommit = metadata.clientCommit
 
         if (date != null || time != null) {
             chat(
@@ -208,9 +200,9 @@ object AutoConfig {
             )
         }
 
-        jsonObject.array("chat")?.let { chatMessages ->
+        metadata.chat?.let { chatMessages ->
             for (messages in chatMessages) {
-                chat(messages.asString)
+                chat(messages)
             }
         }
     }

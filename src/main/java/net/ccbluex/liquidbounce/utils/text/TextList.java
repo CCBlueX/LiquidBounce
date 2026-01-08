@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.client;
+package net.ccbluex.liquidbounce.utils.text;
 
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import net.minecraft.util.FormattedCharSequence;
@@ -25,7 +25,6 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.locale.Language;
-import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
@@ -34,7 +33,6 @@ import java.util.List;
 /**
  * Text, but only siblings
  */
-@NullMarked
 public final class TextList implements Component {
 
     public static final TextList EMPTY = new TextList(Collections.emptyList());

@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
-import net.ccbluex.liquidbounce.utils.client.PlainText
+import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.joinToText
@@ -95,7 +95,7 @@ internal object NametagTextFormatter : Configurable("Text") {
 
         NAME("Name") {
             override fun apply(entity: Entity): Component = buildList(4) {
-                val name = entity.displayName!!
+                val name = entity.displayName
                 val nameColor = entity.nameColor
 
                 if (entity is LivingEntity && entity.isBaby) {
