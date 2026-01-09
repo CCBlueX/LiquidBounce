@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.render.DynamicVertexStorage
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
@@ -173,6 +172,11 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
     }
 }
 
+private val sharedVboStorage = GrowableMappableRingBuffer("${LiquidBounce.CLIENT_NAME} Shared VBO", GpuBuffer.USAGE_VERTEX) { requested, current ->
+    maxOf(1 shl 20, requested, current)
+}
+private val sharedIboStorage = GrowableMappableRingBuffer("${LiquidBounce.CLIENT_NAME} Shared IBO", GpuBuffer.USAGE_INDEX)
+
 /**
  * copied from RenderLayer.draw(BuiltBuffer) (1.21.5-10: RenderLayer.MultiPhase.draw)
  * @see net.minecraft.client.renderer.rendertype.RenderType.draw
@@ -188,7 +192,7 @@ fun drawMesh(
 ) = meshData.use { buffer ->
     val dynamicTransforms = getDynamicTransformsUniform(colorModulator)
 
-    val vertexBuffer = DynamicVertexStorage.SHARED.upload(buffer, pipeline.vertexFormat)
+    val vertexBuffer = sharedVboStorage.upload(buffer.vertexBuffer()).buffer
     val indexBuffer: GpuBuffer
     val indexType: VertexFormat.IndexType
     if (buffer.indexBuffer() == null) {
@@ -196,7 +200,7 @@ fun drawMesh(
         indexBuffer = shapeIndexBuffer.getBuffer(buffer.drawState().indexCount)
         indexType = shapeIndexBuffer.type()
     } else {
-        indexBuffer = pipeline.vertexFormat.uploadImmediateIndexBuffer(buffer.indexBuffer()!!)
+        indexBuffer = sharedIboStorage.upload(buffer.indexBuffer()!!).buffer
         indexType = buffer.drawState().indexType
     }
 
@@ -225,7 +229,7 @@ fun drawMesh(
 
         renderPass.bindDefaultUniforms()
         renderPass.bindDynamicTransformsUniform(dynamicTransforms)
-        renderPass.setVertexBuffer(0, vertexBuffer.buffer)
+        renderPass.setVertexBuffer(0, vertexBuffer)
 
         for ((key, texture) in shaderTextureProvider) {
             renderPass.bindTexture(key, texture.textureView, texture.sampler)
@@ -235,7 +239,8 @@ fun drawMesh(
         renderPass.drawIndexed(0, 0, buffer.drawState().indexCount, 1)
     }
 
-    DynamicVertexStorage.SHARED.rotate()
+    sharedVboStorage.rotate()
+    sharedIboStorage.rotate()
 }
 
 /**

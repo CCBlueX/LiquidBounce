@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.Modu
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.ClientTesselator
+import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer
 import net.ccbluex.liquidbounce.render.RenderPassRenderState
 import net.ccbluex.liquidbounce.render.addBoxFaces
 import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
@@ -54,13 +55,10 @@ import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.outlineBox
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3f
-import net.ccbluex.liquidbounce.utils.render.DynamicVertexStorage
-import net.ccbluex.liquidbounce.utils.render.toGpuBuffer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.animal.equine.AbstractChestedHorse
@@ -237,11 +235,19 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     object Glow : Choice("Glow") {
         internal val dirtyFlag = atomic(true)
 
-        private val vertexBufferStorage = DynamicVertexStorage("${ModuleStorageESP.name} $name VBO")
+        private val vboStorage = GrowableMappableRingBuffer(
+            "${ModuleStorageESP.name} $name VBO",
+            GpuBuffer.USAGE_VERTEX,
+        )
+        private val iboStorage = GrowableMappableRingBuffer(
+            "${ModuleStorageESP.name} $name IBO",
+            GpuBuffer.USAGE_INDEX,
+        )
         private val renderState = RenderPassRenderState()
 
         override fun disable() {
-            vertexBufferStorage.clear()
+            vboStorage.clear()
+            iboStorage.clear()
             renderState.ready = false
             super.disable()
         }
@@ -304,22 +310,16 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             val meshData = bufferBuilder.build() ?: return@handler
             val byteBufferBuilder = ClientTesselator.allocator(ClientRenderPipelines.OutlineQuads)
             meshData.sortQuads(byteBufferBuilder, RenderSystem.getProjectionType().vertexSorting())
-            renderState.indexBuffer = meshData.indexBuffer()!!.toGpuBuffer( // TODO: use shared buffer
-                labelGetter = { "${ModuleStorageESP.name} $name IBO" },
-                usage = GpuBuffer.USAGE_INDEX or GpuBuffer.USAGE_COPY_DST,
-            )
+            renderState.indexBuffer = iboStorage.upload(meshData.indexBuffer()!!).buffer
             renderState.indexType = meshData.drawState().indexType
             renderState.indexCount = meshData.drawState().indexCount
 
-            vertexBufferStorage.rotate()
+            vboStorage.rotate()
             meshData.use {
-                renderState.vertexBuffer =
-                    vertexBufferStorage.upload(it, ClientRenderPipelines.OutlineQuads.vertexFormat).buffer
+                renderState.vertexBuffer = vboStorage.upload(it.vertexBuffer()).buffer
             }
             byteBufferBuilder.clear()
             renderState.ready = true
-            // TODO: remove debug log
-            logger.info("${ModuleStorageESP.name} $name rewritten ${meshData.drawState().indexCount} indices and ${meshData.drawState().vertexCount} vertices")
         }
     }
 
