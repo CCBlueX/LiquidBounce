@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.translate
+import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformConfigurable
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
@@ -92,14 +93,16 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         val color by color("Color", defaultColor)
         val tracers by boolean("Tracers", false)
 
-        fun shouldRender(pos: BlockPos): Boolean =
+        @JvmOverloads
+        fun shouldRender(pos: BlockPos, ignoreDistance: Boolean = false): Boolean =
             this.running
                 && pos !in FeatureChestAura.interactedBlocksSet
-                && pos.cameraDistanceSq() < maximumDistance.sq()
+                && (ignoreDistance || pos.cameraDistanceSq() < distanceFade.farEnd.sq())
 
-        fun shouldRender(entity: Entity): Boolean =
+        @JvmOverloads
+        fun shouldRender(entity: Entity, ignoreDistance: Boolean = false): Boolean =
             this.running
-                && entity.position().cameraDistanceSq() < maximumDistance.sq()
+                && (ignoreDistance || entity.position().cameraDistanceSq() < distanceFade.farEnd.sq())
 
         object Chest : ChestType("Chest", Color4b(0, 100, 255))
         object EnderChest : ChestType("EnderChest", Color4b(Color.MAGENTA))
@@ -124,7 +127,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
     private val requiresChestStealer by boolean("RequiresChestStealer", false)
 
-    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+    private val distanceFade = tree(DistanceFadeUniformConfigurable())
 
     override fun onEnabled() {
         ChunkScanner.subscribe(StorageScanner)
@@ -249,6 +252,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             }
 
             if (renderState.ready) {
+                distanceFade.updateIfDirty()
                 val dynamicTransforms = getDynamicTransformsUniform()
                 event.framebuffer.createRenderPass({ "${ModuleStorageESP.name} $name Pass" }).use { pass ->
                     pass.setPipeline(ClientRenderPipelines.OutlineQuads)
@@ -256,6 +260,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     pass.bindProjectionUniform()
                     pass.bindGlobalsUniform()
                     pass.bindDynamicTransformsUniform(dynamicTransforms)
+                    distanceFade.bindUniform(pass)
                     renderState.bindAndDraw(pass)
 
                     event.markDirty()
@@ -276,7 +281,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 sortQuads = true,
             ) { pose ->
                 for ((blockPos, type) in StorageScanner.iterate()) {
-                    if (type.color.isTransparent || !type.shouldRender(blockPos)) continue // TODO: this affects render too
+                    if (type.color.isTransparent || !type.shouldRender(blockPos, ignoreDistance = true)) continue
 
                     val blockState = world.getBlockState(blockPos)
 
