@@ -53,15 +53,12 @@ public class RenderPassRenderState {
         pass.drawIndexed(0, 0, indexCount, 1);
     }
 
+    /**
+     * Clear the render state. This won't close the buffers.
+     */
     public void clear() {
-        if (vertexBuffer != null) {
-            vertexBuffer.close();
-            vertexBuffer = null;
-        }
-        if (indexBuffer != null) {
-            indexBuffer.close();
-            indexBuffer = null;
-        }
+        vertexBuffer = null;
+        indexBuffer = null;
         indexCount = 0;
         indexType = null;
         ready = false;

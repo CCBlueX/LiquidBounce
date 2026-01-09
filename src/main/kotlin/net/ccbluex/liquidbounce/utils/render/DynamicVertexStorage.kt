@@ -25,6 +25,7 @@ import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.renderer.MappableRingBuffer
 import org.lwjgl.system.MemoryUtil
@@ -34,33 +35,34 @@ class DynamicVertexStorage(
     private val minBufferSize: Int = 1 shl 10,
 ) {
 
-    private var sharedVertexBuffer: MappableRingBuffer? = null
-    private var size: Int = 0
+    private var mappableRingBuffer: MappableRingBuffer? = null
 
-    private fun ensureVertexBufferCapacity(byteCount: Int): MappableRingBuffer {
-        if (sharedVertexBuffer == null || sharedVertexBuffer!!.size() < byteCount) {
-            val size = maxOf(minBufferSize, byteCount)
+    private fun ensureBufferCapacity(current: MappableRingBuffer?, byteCount: Int): MappableRingBuffer {
+        return if (current == null || current.size() < byteCount) {
+            val newSize = maxOf(minBufferSize, byteCount)
             clear()
-            sharedVertexBuffer = MappableRingBuffer(
+            MappableRingBuffer(
                 Suppliers.ofInstance(label),
                 GpuBuffer.USAGE_VERTEX or GpuBuffer.USAGE_MAP_WRITE,
-                size
-            )
-            logger.info("$label buffer grown to $size bytes")
+                newSize
+            ).also {
+                logger.info("$label buffer grown to $newSize bytes (${newSize.toLong().formatAsCapacity()})")
+            }
+        } else {
+            current
         }
-
-        return sharedVertexBuffer!!
     }
 
     /**
      * Upload the vertices of the [MeshData] to a shared [MappableRingBuffer].
      *
-     * @returns VBO
+     * @returns VBO, should not be closed manually
      */
     fun upload(meshData: MeshData, format: VertexFormat): GpuBufferSlice {
         val vertexCount = meshData.drawState().vertexCount()
         val byteCount = vertexCount * format.vertexSize
-        val buffer = ensureVertexBufferCapacity(byteCount).currentBuffer()
+        mappableRingBuffer = ensureBufferCapacity(mappableRingBuffer, byteCount)
+        val buffer = mappableRingBuffer!!.currentBuffer()
 
         val slice = buffer.slice(0, meshData.vertexBuffer().remaining().toLong())
         buffer.mapBuffer(read = false, write = true).use {
@@ -71,13 +73,12 @@ class DynamicVertexStorage(
     }
 
     fun rotate() {
-        sharedVertexBuffer?.rotate()
+        mappableRingBuffer?.rotate()
     }
 
     fun clear() {
-        sharedVertexBuffer?.close()
-        sharedVertexBuffer = null
-        size = 0
+        mappableRingBuffer?.close()
+        mappableRingBuffer = null
     }
 
     companion object {
