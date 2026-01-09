@@ -18,8 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.vertex.PoseStack
 import kotlinx.atomicfu.atomic
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
@@ -28,12 +26,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.GenericColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.MapColorMode
 import net.ccbluex.liquidbounce.render.RenderPassRenderState
-import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.addBoxFaces
 import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.bindGlobalsUniform
@@ -41,7 +37,6 @@ import net.ccbluex.liquidbounce.render.bindProjectionUniform
 import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawBox
-import net.ccbluex.liquidbounce.render.drawBoxOutlined
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -113,66 +108,29 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         private val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
-            drawBoxMode(mc.mainRenderTarget, matrixStack, this.outline, false)
-        }
+            renderEnvironmentForWorld(matrixStack, mc.mainRenderTarget) {
+                startBatch()
+                for ((blockPos, t) in BlockTracker.iterate()) {
+                    val blockState = t.state
 
-        fun drawBoxMode(
-            framebuffer: RenderTarget,
-            matrixStack: PoseStack,
-            drawOutline: Boolean,
-            isOutlineShader: Boolean,
-        ): Boolean {
-            var dirty = false
+                    if (blockState.isAir) continue
 
-            renderEnvironmentForWorld(matrixStack, framebuffer) {
-                dirty = drawInternal(
-                    colorMode.activeChoice,
-                    isOutlineShader,
-                    drawOutline
-                )
-            }
+                    val boundingBox = t.box
 
-            return dirty
-        }
+                    val color = colorMode.activeChoice.getColor(blockPos to blockState)
 
-        private fun WorldRenderEnvironment.drawInternal(
-            colorMode: GenericColorMode<Pair<BlockPos, BlockState>>,
-            isOutlineShader: Boolean,
-            drawOutline: Boolean
-        ): Boolean {
-            var dirty = false
-
-            startBatch()
-            for ((blockPos, t) in BlockTracker.iterate()) {
-                val blockState = t.state
-
-                if (blockState.isAir) continue
-
-                val boundingBox = t.box
-
-                val color = colorMode.getColor(Pair(blockPos, blockState))
-
-                if (isOutlineShader) {
-                    matrixStack.withPush {
-                        translate(blockPos)
-                        drawBoxOutlined(boundingBox, color.alpha(255))
-                    }
-                } else {
                     withPositionRelativeToCamera(blockPos) {
                         drawBox(
                             boundingBox,
                             faceColor = color,
-                            outlineColor = if (drawOutline) color.with(a = 150) else null,
+                            outlineColor = if (outline) color.with(a = 150) else null,
                         )
                     }
                 }
-
-                dirty = true
+                commitBatch()
             }
-            commitBatch()
-
-            return dirty
         }
+
     }
 
     private class OutlineMode(name: String, type: DrawOutlinesEvent.OutlineType) : Mode(name) {
