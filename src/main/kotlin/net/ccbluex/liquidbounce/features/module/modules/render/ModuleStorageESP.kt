@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.buffers.GpuBuffer
 import kotlinx.atomicfu.atomic
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
@@ -32,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer
 import net.ccbluex.liquidbounce.render.RenderPassRenderState
 import net.ccbluex.liquidbounce.render.addBoxFaces
 import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
@@ -233,20 +231,11 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     object Glow : Choice("Glow") {
         internal val dirtyFlag = atomic(true)
 
-        private val vboStorage = GrowableMappableRingBuffer(
-            "${ModuleStorageESP.name} $name VBO",
-            GpuBuffer.USAGE_VERTEX,
-        )
-        private val iboStorage = GrowableMappableRingBuffer(
-            "${ModuleStorageESP.name} $name IBO",
-            GpuBuffer.USAGE_INDEX,
-        )
-        private val renderState = RenderPassRenderState()
+        private val renderState = RenderPassRenderState.WithBuffers("${ModuleStorageESP.name} $name")
 
         override fun disable() {
-            vboStorage.clear()
-            iboStorage.clear()
-            renderState.clear()
+            renderState.clearStates()
+            renderState.clearBuffers()
             super.disable()
         }
 
@@ -274,7 +263,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             }
 
             if (StorageScanner.isEmpty()) {
-                renderState.clear()
+                renderState.clearStates()
                 return@handler
             }
 
@@ -284,12 +273,10 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.OutlineQuads,
-                vboStorage = vboStorage,
-                iboStorage = iboStorage,
                 sortQuads = true,
             ) { pose ->
                 for ((blockPos, type) in StorageScanner.iterate()) {
-                    if (type.color.isTransparent || !type.shouldRender(blockPos)) continue
+                    if (type.color.isTransparent || !type.shouldRender(blockPos)) continue // TODO: this affects render too
 
                     val blockState = world.getBlockState(blockPos)
 

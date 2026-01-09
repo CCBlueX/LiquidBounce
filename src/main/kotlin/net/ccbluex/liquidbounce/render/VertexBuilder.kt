@@ -71,7 +71,7 @@ inline fun RenderPassRenderState.buildMesh(
     sortQuads: Boolean = false,
     block: VertexConsumer.(pose: PoseStack) -> Unit,
 ) {
-    clear()
+    clearStates()
 
     val byteBufferBuilder = ClientTesselator.allocator(pipeline)
     val bufferBuilder = BufferBuilder(
@@ -93,3 +93,15 @@ inline fun RenderPassRenderState.buildMesh(
         this.ready = true
     }
 }
+
+inline fun RenderPassRenderState.WithBuffers.buildMesh(
+    pipeline: RenderPipeline,
+    sortQuads: Boolean = false,
+    block: VertexConsumer.(pose: PoseStack) -> Unit,
+) = buildMesh(
+    pipeline,
+    vboStorage,
+    iboStorage,
+    sortQuads,
+    block
+)

@@ -87,12 +87,33 @@ public class RenderPassRenderState {
     /**
      * Clear the render state. This won't close the buffers.
      */
-    public void clear() {
+    public void clearStates() {
         vertexBuffer = null;
         indexBuffer = null;
         indexCount = 0;
         indexType = null;
         ready = false;
+    }
+
+    public static class WithBuffers extends RenderPassRenderState {
+        public final GrowableMappableRingBuffer vboStorage;
+        public final GrowableMappableRingBuffer iboStorage;
+
+        public WithBuffers(String label) {
+            vboStorage = new GrowableMappableRingBuffer(
+                label + " VBO",
+                GpuBuffer.USAGE_VERTEX
+            );
+            iboStorage = new GrowableMappableRingBuffer(
+                label + " IBO",
+                GpuBuffer.USAGE_INDEX
+            );
+        }
+
+        public void clearBuffers() {
+            vboStorage.clear();
+            iboStorage.clear();
+        }
     }
 
 }
