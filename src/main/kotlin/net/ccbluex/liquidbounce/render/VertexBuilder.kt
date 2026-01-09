@@ -89,9 +89,10 @@ inline fun RenderPassRenderState.buildMesh(
         }
         this.uploadAndSetIndices(meshData, iboStorage, pipeline.vertexFormatMode)
         this.uploadAndSetVertices(meshData, vboStorage)
-        byteBufferBuilder.clear()
-        this.ready = true
     }
+
+    byteBufferBuilder.clear()
+    this.ready = true
 }
 
 inline fun RenderPassRenderState.WithBuffers.buildMesh(

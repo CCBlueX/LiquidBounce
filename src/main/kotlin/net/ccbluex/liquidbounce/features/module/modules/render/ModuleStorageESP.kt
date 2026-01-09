@@ -236,6 +236,11 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         private val renderState = RenderPassRenderState.WithBuffers("${ModuleStorageESP.name} $name")
 
+        override fun enable() {
+            dirtyFlag.value = true
+            super.enable()
+        }
+
         override fun disable() {
             renderState.clearStates()
             renderState.clearBuffers()
@@ -255,16 +260,15 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 distanceFade.updateIfDirty()
                 val dynamicTransforms = getDynamicTransformsUniform()
                 event.framebuffer.createRenderPass({ "${ModuleStorageESP.name} $name Pass" }).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.OutlineQuads)
+                    pass.setPipeline(ClientRenderPipelines.outlineQuads(true))
 
                     pass.bindProjectionUniform()
                     pass.bindGlobalsUniform()
                     pass.bindDynamicTransformsUniform(dynamicTransforms)
                     distanceFade.bindUniform(pass)
                     renderState.bindAndDraw(pass)
-
-                    event.markDirty()
                 }
+                event.markDirty()
             }
 
             if (StorageScanner.isEmpty()) {
@@ -277,7 +281,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             }
 
             renderState.buildMesh(
-                pipeline = ClientRenderPipelines.OutlineQuads,
+                pipeline = ClientRenderPipelines.outlineQuads(true),
                 sortQuads = true,
             ) { pose ->
                 for ((blockPos, type) in StorageScanner.iterate()) {

@@ -338,7 +338,7 @@ fun WorldRenderEnvironment.drawBoxOutlined(
     box: AABB,
     color: Color4b,
 ) {
-    drawCustomMesh(ClientRenderPipelines.OutlineQuads) { pose ->
+    drawCustomMesh(ClientRenderPipelines.outlineQuads(true)) { pose ->
         addBoxFaces(pose, box, color)
     }
 }

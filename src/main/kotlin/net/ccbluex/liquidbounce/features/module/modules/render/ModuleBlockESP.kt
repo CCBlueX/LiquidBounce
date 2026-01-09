@@ -18,35 +18,44 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.vertex.PoseStack
+import kotlinx.atomicfu.atomic
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.MapColorMode
+import net.ccbluex.liquidbounce.render.RenderPassRenderState
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
+import net.ccbluex.liquidbounce.render.addBoxFaces
+import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
+import net.ccbluex.liquidbounce.render.bindGlobalsUniform
+import net.ccbluex.liquidbounce.render.bindProjectionUniform
+import net.ccbluex.liquidbounce.render.buildMesh
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawBoxOutlined
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.translate
+import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformConfigurable
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
-import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
-import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
-import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.world.level.block.state.BlockState
-import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.vertex.PoseStack
-import net.ccbluex.liquidbounce.render.drawBoxOutlined
-import net.ccbluex.liquidbounce.render.translate
-import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.outlineBox
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import java.util.concurrent.ConcurrentSkipListSet
 
@@ -58,7 +67,13 @@ import java.util.concurrent.ConcurrentSkipListSet
 
 object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
-    private val modes = choices("Mode", Glow, arrayOf(Box, Glow, Outline))
+    private val modes = choices("Mode", 0) {
+        arrayOf(
+            BoxMode,
+            OutlineMode("Glow", DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW),
+            OutlineMode("Outline", DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE),
+        )
+    }
     private val targets by blocks(
         "Targets",
         ConcurrentSkipListSet(findBlocksEndingWith("_BED", "DRAGON_EGG"))
@@ -78,12 +93,20 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         )
     }
 
-    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+    private val distanceFade = tree(DistanceFadeUniformConfigurable())
 
-    private object Box : Choice("Box") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = modes
+    private sealed class Mode(name: String) : Choice(name) {
+        final override val parent get() = modes
 
+        val dirtyFlag = atomic(true)
+
+        final override fun enable() {
+            dirtyFlag.value = true
+            super.enable()
+        }
+    }
+
+    private object BoxMode : Mode("Box") {
         private val outline by boolean("Outline", true)
 
         @Suppress("unused")
@@ -120,10 +143,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             var dirty = false
 
             startBatch()
-            val maxDistanceSq = maximumDistance.sq()
             for ((blockPos, t) in BlockTracker.iterate()) {
-                if (blockPos.cameraDistanceSq() > maxDistanceSq) continue
-
                 val blockState = t.state
 
                 if (blockState.isAir) continue
@@ -155,49 +175,73 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
         }
     }
 
-    private object Glow : Choice("Glow") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = modes
+    private class OutlineMode(name: String, type: DrawOutlinesEvent.OutlineType) : Mode(name) {
+        private val renderState = RenderPassRenderState.WithBuffers("${ModuleBlockESP.name} $name")
+        private var useColor = false
 
-        @Suppress("unused")
-        val renderHandler = handler<DrawOutlinesEvent> { event ->
-            if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
-                return@handler
-            }
-
-            val dirty = Box.drawBoxMode(
-                event.framebuffer,
-                event.matrixStack,
-                drawOutline = false,
-                isOutlineShader = true
-            )
-
-            if (dirty) {
-                event.markDirty()
-            }
+        override fun disable() {
+            renderState.clearStates()
+            renderState.clearBuffers()
+            super.disable()
         }
 
-    }
-
-    private object Outline : Choice("Outline") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = modes
-
         @Suppress("unused")
-        val renderHandler = handler<DrawOutlinesEvent> { event ->
-            if (event.type != DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE) {
+        private val renderHandler = handler<DrawOutlinesEvent> { event ->
+            if (event.type != type) {
                 return@handler
             }
 
-            val dirty = Box.drawBoxMode(
-                event.framebuffer,
-                event.matrixStack,
-                drawOutline = false,
-                isOutlineShader = true
-            )
+            if (renderState.ready) {
+                distanceFade.updateIfDirty()
+                val dynamicTransforms = getDynamicTransformsUniform(
+                    if (useColor) {
+                        Color4b.WHITE
+                    } else {
+                        colorMode.activeChoice.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
+                            .alpha(255)
+                    }
+                )
+                event.framebuffer.createRenderPass({ "${ModuleBlockESP.name} $name Pass" }).use { pass ->
+                    pass.setPipeline(ClientRenderPipelines.outlineQuads(useColor))
 
-            if (dirty) {
+                    pass.bindProjectionUniform()
+                    pass.bindGlobalsUniform()
+                    pass.bindDynamicTransformsUniform(dynamicTransforms)
+                    distanceFade.bindUniform(pass)
+                    renderState.bindAndDraw(pass)
+                }
                 event.markDirty()
+            }
+
+            if (BlockTracker.isEmpty()) {
+                renderState.clearStates()
+                return@handler
+            }
+
+            if (!dirtyFlag.compareAndSet(expect = true, update = false)) {
+                return@handler
+            }
+
+            val colorMode = colorMode.activeChoice
+            useColor = colorMode.isParamSensitive
+            renderState.buildMesh(
+                pipeline = ClientRenderPipelines.outlineQuads(useColor),
+                sortQuads = true,
+            ) { pose ->
+                for ((blockPos, t) in BlockTracker.iterate()) {
+                    val blockState = t.state
+
+                    if (blockState.isAir) continue
+
+                    val boundingBox = t.box
+
+                    val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
+
+                    pose.withPush {
+                        translate(blockPos)
+                        addBoxFaces(last().pose(), boundingBox, color?.alpha(255))
+                    }
+                }
             }
         }
     }
@@ -208,6 +252,11 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
     override fun onDisabled() {
         ChunkScanner.unsubscribe(BlockTracker)
+        markDirtyForModes()
+    }
+
+    private fun markDirtyForModes() {
+        modes.choices.forEach { it.dirtyFlag.value = true }
     }
 
     private class TrackedState(@JvmField val state: BlockState, @JvmField val box: AABB)
@@ -219,6 +268,10 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             } else {
                 null
             }
+        }
+
+        override fun onUpdated() {
+            markDirtyForModes()
         }
     }
 

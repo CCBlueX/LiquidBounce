@@ -201,16 +201,27 @@ object ClientRenderPipelines {
      * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP
      * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
      */
-    @JvmField
-    val OutlineQuads = newPipeline("outline_quads") {
+    private val OutlineQuads = newPipeline("outline_quads") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         withSnippet(RenderPipelines.GLOBALS_SNIPPET)
-        forWorldRender()
         withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
         withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
         withUniform(DistanceFadeUniformConfigurable.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
         withBlend(COVERING_BLEND)
     }
+
+    private val OutlineQuadsNoColor = newPipeline("outline_quads_no_color") {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        withSnippet(RenderPipelines.GLOBALS_SNIPPET)
+        withVertexShader(ClientShaders.Vertex.PosRelativeToCamera)
+        withFragmentShader(ClientShaders.Fragment.PosRelativeToCamera)
+        withVertexFormat(DefaultVertexFormat.POSITION, VertexFormat.Mode.QUADS)
+        withUniform(DistanceFadeUniformConfigurable.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
+        withBlend(COVERING_BLEND)
+    }
+
+    @JvmStatic
+    fun outlineQuads(useColor: Boolean) = if (useColor) OutlineQuads else OutlineQuadsNoColor
 
     @JvmField
     val TexQuads = newPipeline("tex_quads") {
