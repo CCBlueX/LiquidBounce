@@ -32,7 +32,7 @@ import java.nio.ByteBuffer
 class GrowableMappableRingBuffer @JvmOverloads constructor(
     val label: String,
     val usage: @GpuBuffer.Usage Int,
-    val growPolicy: GrowPolicy = GrowPolicy(Math::max),
+    val growPolicy: GrowPolicy = GrowPolicy.of(paddingScale = 7, min = 0), // 128 bytes padding
 ) {
 
     private var ring: MappableRingBuffer? = null
@@ -47,6 +47,7 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
                 usage or GpuBuffer.USAGE_MAP_WRITE,
                 newSize
             ).also {
+                // TODO: change this to debug log
                 logger.info("$label buffer grown to $newSize bytes (${newSize.toLong().formatAsCapacity()})")
             }
         }
@@ -59,6 +60,7 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
      * @param byteCount the number of bytes to upload. Default is the remaining bytes of [data].
      * @return the uploaded slice, whose lifecycle is bound to the ring buffer.
      */
+    @JvmOverloads
     fun upload(data: ByteBuffer, byteCount: Int = data.remaining()): GpuBufferSlice {
         ensureCapacity(byteCount)
 
@@ -100,6 +102,15 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
          * @return the new size, should be greater than or equal to [requested].
          */
         fun getNewSize(requested: Int, current: Int): Int
+
+        companion object {
+            @JvmStatic
+            fun of(paddingScale: Int, min: Int) = GrowPolicy { requested, current ->
+                val default = maxOf(min, requested, current)
+                val padding = 1 shl paddingScale
+                (default + padding - 1) and (padding - 1).inv()
+            }
+        }
     }
 
 }

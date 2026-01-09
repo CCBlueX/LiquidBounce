@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
-import com.mojang.blaze3d.systems.RenderSystem
 import kotlinx.atomicfu.atomic
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
@@ -33,13 +32,13 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.ClientTesselator
 import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer
 import net.ccbluex.liquidbounce.render.RenderPassRenderState
 import net.ccbluex.liquidbounce.render.addBoxFaces
 import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.bindGlobalsUniform
 import net.ccbluex.liquidbounce.render.bindProjectionUniform
+import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
@@ -49,7 +48,6 @@ import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.translate
-import net.ccbluex.liquidbounce.render.usePoseStack
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
@@ -248,7 +246,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         override fun disable() {
             vboStorage.clear()
             iboStorage.clear()
-            renderState.ready = false
+            renderState.clear()
             super.disable()
         }
 
@@ -284,10 +282,12 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 return@handler
             }
 
-            renderState.clear()
-            // Update mesh data
-            val bufferBuilder = ClientTesselator.begin(ClientRenderPipelines.OutlineQuads)
-            usePoseStack {
+            renderState.buildMesh(
+                pipeline = ClientRenderPipelines.OutlineQuads,
+                vboStorage = vboStorage,
+                iboStorage = iboStorage,
+                sortQuads = true,
+            ) { pose ->
                 for ((blockPos, type) in StorageScanner.iterate()) {
                     if (type.color.isTransparent || !type.shouldRender(blockPos)) continue
 
@@ -301,25 +301,12 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
                     val boundingBox = blockState.outlineBox(blockPos)
 
-                    withPush {
+                    pose.withPush {
                         translate(blockPos)
-                        bufferBuilder.addBoxFaces(last().pose(), boundingBox, type.color)
+                        addBoxFaces(last().pose(), boundingBox, type.color)
                     }
                 }
             }
-            val meshData = bufferBuilder.build() ?: return@handler
-            val byteBufferBuilder = ClientTesselator.allocator(ClientRenderPipelines.OutlineQuads)
-            meshData.sortQuads(byteBufferBuilder, RenderSystem.getProjectionType().vertexSorting())
-            renderState.indexBuffer = iboStorage.upload(meshData.indexBuffer()!!).buffer
-            renderState.indexType = meshData.drawState().indexType
-            renderState.indexCount = meshData.drawState().indexCount
-
-            vboStorage.rotate()
-            meshData.use {
-                renderState.vertexBuffer = vboStorage.upload(it.vertexBuffer()).buffer
-            }
-            byteBufferBuilder.clear()
-            renderState.ready = true
         }
     }
 

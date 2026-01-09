@@ -21,11 +21,15 @@ package net.ccbluex.liquidbounce.render;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderPass;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
+
+import java.nio.ByteBuffer;
 
 public class RenderPassRenderState {
 
@@ -39,6 +43,33 @@ public class RenderPassRenderState {
     public VertexFormat.@Nullable IndexType indexType;
 
     public boolean ready = false;
+
+    public void uploadAndSetVertices(
+        MeshData meshData,
+        GrowableMappableRingBuffer buffer
+    ) {
+        buffer.rotate();
+        ByteBuffer vertices = meshData.vertexBuffer();
+        vertexBuffer = buffer.upload(vertices).buffer();
+    }
+
+    public void uploadAndSetIndices(
+        MeshData meshData,
+        GrowableMappableRingBuffer buffer,
+        VertexFormat.Mode vertexFormatMode
+    ) {
+        buffer.rotate();
+        ByteBuffer indices = meshData.indexBuffer();
+        indexCount = meshData.drawState().indexCount();
+        if (indices == null) {
+            var shapeIndexBuffer = RenderSystem.getSequentialBuffer(vertexFormatMode);
+            indexBuffer = shapeIndexBuffer.getBuffer(indexCount);
+            indexType = shapeIndexBuffer.type();
+        } else {
+            indexBuffer = buffer.upload(indices).buffer();
+            indexType = meshData.drawState().indexType();
+        }
+    }
 
     public void bindAndDraw(RenderPass pass) {
         if (!ready) {

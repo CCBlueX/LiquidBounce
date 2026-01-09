@@ -172,10 +172,16 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
     }
 }
 
-private val sharedVboStorage = GrowableMappableRingBuffer("${LiquidBounce.CLIENT_NAME} Shared VBO", GpuBuffer.USAGE_VERTEX) { requested, current ->
-    maxOf(1 shl 20, requested, current)
-}
-private val sharedIboStorage = GrowableMappableRingBuffer("${LiquidBounce.CLIENT_NAME} Shared IBO", GpuBuffer.USAGE_INDEX)
+private val sharedVboStorage = GrowableMappableRingBuffer(
+    "${LiquidBounce.CLIENT_NAME} Shared VBO",
+    GpuBuffer.USAGE_VERTEX,
+    // 256 bytes padding, 128KB minimum size
+    GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 17),
+)
+private val sharedIboStorage = GrowableMappableRingBuffer(
+    "${LiquidBounce.CLIENT_NAME} Shared IBO",
+    GpuBuffer.USAGE_INDEX,
+)
 
 /**
  * copied from RenderLayer.draw(BuiltBuffer) (1.21.5-10: RenderLayer.MultiPhase.draw)
@@ -217,16 +223,7 @@ fun drawMesh(
         OptionalDouble.empty(),
     ).use { renderPass ->
         renderPass.setPipeline(pipeline)
-        val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
-        if (scissorState.enabled()) {
-            renderPass.enableScissor(
-                scissorState.x(),
-                scissorState.y(),
-                scissorState.width(),
-                scissorState.height()
-            )
-        }
-
+        renderPass.setupGlobalScissor()
         renderPass.bindDefaultUniforms()
         renderPass.bindDynamicTransformsUniform(dynamicTransforms)
         renderPass.setVertexBuffer(0, vertexBuffer)

@@ -55,6 +55,18 @@ inline fun RenderPass.bindDynamicTransformsUniform(gpuBufferSlice: GpuBufferSlic
     setUniform("DynamicTransforms", gpuBufferSlice)
 }
 
+inline fun RenderPass.setupGlobalScissor() {
+    val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
+    if (scissorState.enabled()) {
+        enableScissor(
+            scissorState.x(),
+            scissorState.y(),
+            scissorState.width(),
+            scissorState.height()
+        )
+    }
+}
+
 @JvmOverloads
 fun getDynamicTransformsUniform(colorModulator: Color4b = Color4b.WHITE): GpuBufferSlice {
     return RenderSystem.getDynamicUniforms()

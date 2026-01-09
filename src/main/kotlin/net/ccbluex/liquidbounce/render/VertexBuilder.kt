@@ -19,6 +19,10 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.BufferBuilder
+import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.world.phys.AABB
@@ -60,3 +64,32 @@ fun VertexConsumer.addBoxFaces(
     }
 }
 
+inline fun RenderPassRenderState.buildMesh(
+    pipeline: RenderPipeline,
+    vboStorage: GrowableMappableRingBuffer,
+    iboStorage: GrowableMappableRingBuffer,
+    sortQuads: Boolean = false,
+    block: VertexConsumer.(pose: PoseStack) -> Unit,
+) {
+    clear()
+
+    val byteBufferBuilder = ClientTesselator.allocator(pipeline)
+    val bufferBuilder = BufferBuilder(
+        byteBufferBuilder,
+        pipeline.vertexFormatMode,
+        pipeline.vertexFormat
+    )
+    usePoseStack {
+        bufferBuilder.block(this)
+    }
+
+    bufferBuilder.build()?.use { meshData ->
+        if (sortQuads) {
+            meshData.sortQuads(byteBufferBuilder, RenderSystem.getProjectionType().vertexSorting())
+        }
+        this.uploadAndSetIndices(meshData, iboStorage, pipeline.vertexFormatMode)
+        this.uploadAndSetVertices(meshData, vboStorage)
+        byteBufferBuilder.clear()
+        this.ready = true
+    }
+}
