@@ -35,6 +35,7 @@ class DynamicVertexStorage(
 ) {
 
     private var sharedVertexBuffer: MappableRingBuffer? = null
+    private var size: Int = 0
 
     private fun ensureVertexBufferCapacity(byteCount: Int): MappableRingBuffer {
         if (sharedVertexBuffer == null || sharedVertexBuffer!!.size() < byteCount) {
@@ -75,6 +76,8 @@ class DynamicVertexStorage(
 
     fun clear() {
         sharedVertexBuffer?.close()
+        sharedVertexBuffer = null
+        size = 0
     }
 
     companion object {

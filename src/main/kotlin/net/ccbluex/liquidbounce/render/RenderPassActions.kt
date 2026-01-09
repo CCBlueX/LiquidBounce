@@ -55,7 +55,8 @@ inline fun RenderPass.bindDynamicTransformsUniform(gpuBufferSlice: GpuBufferSlic
     setUniform("DynamicTransforms", gpuBufferSlice)
 }
 
-fun getDynamicTransformsUniform(colorModulator: Color4b): GpuBufferSlice {
+@JvmOverloads
+fun getDynamicTransformsUniform(colorModulator: Color4b = Color4b.WHITE): GpuBufferSlice {
     return RenderSystem.getDynamicUniforms()
         .writeTransform(
             RenderSystem.getModelViewMatrix(),

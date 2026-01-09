@@ -54,6 +54,7 @@ import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.outlineBox
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -255,8 +256,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             }
 
             if (renderState.ready) {
-                val dynamicTransforms = getDynamicTransformsUniform(Color4b.WHITE)
-                // FIXME
+                val dynamicTransforms = getDynamicTransformsUniform()
                 event.framebuffer.createRenderPass({ "${ModuleStorageESP.name} $name Pass" }).use { pass ->
                     pass.setPipeline(ClientRenderPipelines.OutlineQuads)
 
@@ -318,6 +318,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             }
             byteBufferBuilder.clear()
             renderState.ready = true
+            // TODO: remove debug log
+            logger.info("${ModuleStorageESP.name} $name rewritten ${meshData.drawState().indexCount} indices and ${meshData.drawState().vertexCount} vertices")
         }
     }
 
@@ -338,7 +340,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                     if (!type.tracers || type.color.isTransparent || !type.shouldRender(blockPos)) continue
                     val pos = relativeToCamera(blockPos.center).toVec3f()
 
-                    drawLine(eyeVector, pos, type.color.toARGB())
+                    drawLine(eyeVector, pos, type.color.argb)
                 }
             }
             commitBatch()
