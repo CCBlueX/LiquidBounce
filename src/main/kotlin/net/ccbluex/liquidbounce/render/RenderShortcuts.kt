@@ -23,8 +23,13 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.MeshData
+import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.VertexFormat
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
@@ -32,23 +37,16 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
-import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.vertex.MeshData
-import com.mojang.blaze3d.vertex.VertexConsumer
-import com.mojang.blaze3d.vertex.PoseStack
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps
 import net.ccbluex.liquidbounce.utils.render.DynamicVertexStorage
 import net.minecraft.client.renderer.texture.AbstractTexture
-import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
-import net.minecraft.util.Mth
-import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
-import org.joml.Matrix4f
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector3fc
-import org.joml.Vector4f
 import org.lwjgl.opengl.GL11C
 import java.util.OptionalDouble
 import java.util.OptionalInt
@@ -184,17 +182,12 @@ fun drawMesh(
     pipeline: RenderPipeline,
     meshData: MeshData,
     renderTarget: RenderTarget = mc.mainRenderTarget,
-    colorModulator: Vector4f = Vector4f(1.0F, 1.0F, 1.0F, 1.0F),
+    colorModulator: Color4b = Color4b.WHITE,
     renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
     shaderTextureProvider: Map<String, AbstractTexture> = emptyMap(),
 ) = meshData.use { buffer ->
-    val dynamicTransforms = RenderSystem.getDynamicUniforms()
-        .writeTransform(
-            RenderSystem.getModelViewMatrix(),
-            colorModulator,
-            Vector3f(),
-            Matrix4f(),
-        )
+    val dynamicTransforms = getDynamicTransformsUniform(colorModulator)
+
     val vertexBuffer = DynamicVertexStorage.SHARED.upload(buffer, pipeline.vertexFormat)
     val indexBuffer: GpuBuffer
     val indexType: VertexFormat.IndexType
@@ -231,7 +224,7 @@ fun drawMesh(
         }
 
         renderPass.bindDefaultUniforms()
-        renderPass.setUniform("DynamicTransforms", dynamicTransforms)
+        renderPass.bindDynamicTransformsUniform(dynamicTransforms)
         renderPass.setVertexBuffer(0, vertexBuffer.buffer)
 
         for ((key, texture) in shaderTextureProvider) {

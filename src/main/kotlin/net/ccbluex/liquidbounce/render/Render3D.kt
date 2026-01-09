@@ -22,31 +22,30 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.vertex.BufferBuilder
+import com.mojang.blaze3d.vertex.MeshData
+import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.vertex.Tesselator
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.vertex.BufferBuilder
-import com.mojang.blaze3d.vertex.MeshData
-import net.minecraft.client.Camera
-import com.mojang.blaze3d.vertex.Tesselator
-import com.mojang.blaze3d.vertex.PoseStack
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.minecraft.client.Camera
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Position
-import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import net.minecraft.world.phys.Vec3
 import org.joml.Vector3fc
-import org.joml.Vector4f
 import java.util.Collections.singletonMap
 import java.util.function.Function
 
-inline fun withPoseStack(block: PoseStack.() -> Unit) {
+inline fun <T> usePoseStack(block: PoseStack.() -> T): T {
     val matrices = Pools.MatStack.borrow()
     try {
-        block(matrices)
+        return block(matrices)
     } finally {
         Pools.MatStack.recycle(matrices)
     }
@@ -143,14 +142,11 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
         pipeline,
         meshData,
         this.framebuffer,
-        colorModulator = shaderColor.toVector4f(shaderColorVec),
+        colorModulator = shaderColor,
         shaderTextureProvider = shaderTextureProvider,
     )
 
     companion object {
-        @JvmStatic
-        private val shaderColorVec = Vector4f()
-
         @JvmStatic
         private val batchBuffer =
             Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()

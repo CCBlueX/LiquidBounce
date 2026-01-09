@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.Tesselator
 import kotlinx.atomicfu.atomic
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
@@ -33,19 +33,22 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.render.ClientTesselator
+import net.ccbluex.liquidbounce.render.RenderPassRenderState
 import net.ccbluex.liquidbounce.render.addBoxFaces
-import net.ccbluex.liquidbounce.render.begin
+import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
+import net.ccbluex.liquidbounce.render.bindGlobalsUniform
+import net.ccbluex.liquidbounce.render.bindProjectionUniform
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.longLines
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.setUniformGlobals
-import net.ccbluex.liquidbounce.render.setUniformProjection
 import net.ccbluex.liquidbounce.render.translate
-import net.ccbluex.liquidbounce.render.withPoseStack
+import net.ccbluex.liquidbounce.render.usePoseStack
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
@@ -56,6 +59,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.render.DynamicVertexStorage
+import net.ccbluex.liquidbounce.utils.render.toGpuBuffer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.animal.equine.AbstractChestedHorse
@@ -77,9 +81,6 @@ import net.minecraft.world.level.block.entity.HopperBlockEntity
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
-import org.joml.Matrix4f
-import org.joml.Vector3f
-import org.joml.Vector4f
 import java.awt.Color
 
 /**
@@ -235,10 +236,12 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     object Glow : Choice("Glow") {
         internal val dirtyFlag = atomic(true)
 
-        private val vertexBufferStorage = DynamicVertexStorage({ "${ModuleStorageESP.name} $name VBO" })
+        private val vertexBufferStorage = DynamicVertexStorage("${ModuleStorageESP.name} $name VBO")
+        private val renderState = RenderPassRenderState()
 
         override fun disable() {
             vertexBufferStorage.clear()
+            renderState.ready = false
             super.disable()
         }
 
@@ -251,61 +254,70 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 return@handler
             }
 
-            vertexBufferStorage.currentSlice?.buffer?.let { currentVertexBuffer ->
-                val dynamicTransforms = RenderSystem.getDynamicUniforms()
-                    .writeTransform(
-                        RenderSystem.getModelViewMatrix(),
-                        Vector4f(1f),
-                        Vector3f(),
-                        Matrix4f(),
-                    )
+            if (renderState.ready) {
+                val dynamicTransforms = getDynamicTransformsUniform(Color4b.WHITE)
                 // FIXME
                 event.framebuffer.createRenderPass({ "${ModuleStorageESP.name} $name Pass" }).use { pass ->
                     pass.setPipeline(ClientRenderPipelines.OutlineQuads)
 
-                    pass.setUniformProjection()
-                    pass.setUniformGlobals()
-                    pass.setUniform("DynamicTransforms", dynamicTransforms)
-                    pass.setVertexBuffer(0, currentVertexBuffer)
-                    pass.draw(0, vertexBufferStorage.currentVertexCount)
+                    pass.bindProjectionUniform()
+                    pass.bindGlobalsUniform()
+                    pass.bindDynamicTransformsUniform(dynamicTransforms)
+                    renderState.bindAndDraw(pass)
 
                     event.markDirty()
                 }
             }
 
-            if (StorageScanner.isEmpty() || !dirtyFlag.compareAndSet(expect = true, update = false)) {
+            if (StorageScanner.isEmpty()) {
+                renderState.clear()
                 return@handler
             }
 
-            // Update VBO
-            val meshData = Tesselator.getInstance().begin(ClientRenderPipelines.OutlineQuads).apply {
-                // non-model blocks are already processed by WorldRenderer where we injected code which renders
-                // their outline
-                withPoseStack {
-                    for ((blockPos, type) in StorageScanner.iterate()) {
-                        if (type.color.isTransparent || !type.shouldRender(blockPos)) continue
+            if (!dirtyFlag.compareAndSet(expect = true, update = false)) {
+                return@handler
+            }
 
-                        val blockState = world.getBlockState(blockPos)
+            renderState.clear()
+            // Update mesh data
+            val bufferBuilder = ClientTesselator.begin(ClientRenderPipelines.OutlineQuads)
+            usePoseStack {
+                for ((blockPos, type) in StorageScanner.iterate()) {
+                    if (type.color.isTransparent || !type.shouldRender(blockPos)) continue
 
-                        // non-model blocks are already processed by WorldRenderer where we injected code which renders
-                        // their outline
-                        if (blockState.renderShape != RenderShape.MODEL || blockState.isAir) {
-                            continue
-                        }
+                    val blockState = world.getBlockState(blockPos)
 
-                        val boundingBox = blockState.outlineBox(blockPos)
+                    // non-model blocks are already processed by WorldRenderer where we injected code which renders
+                    // their outline
+                    if (blockState.renderShape != RenderShape.MODEL || blockState.isAir) {
+                        continue
+                    }
 
-                        withPush {
-                            translate(blockPos)
-                            addBoxFaces(last().pose(), boundingBox, type.color)
-                        }
+                    val boundingBox = blockState.outlineBox(blockPos)
+
+                    withPush {
+                        translate(blockPos)
+                        bufferBuilder.addBoxFaces(last().pose(), boundingBox, type.color)
                     }
                 }
-            }.build() ?: return@handler
+            }
+            val meshData = bufferBuilder.build() ?: return@handler
+            val byteBufferBuilder = ClientTesselator.allocator(ClientRenderPipelines.OutlineQuads)
+            meshData.sortQuads(byteBufferBuilder, RenderSystem.getProjectionType().vertexSorting())
+            renderState.indexBuffer = meshData.indexBuffer()!!.toGpuBuffer( // TODO: use shared buffer
+                labelGetter = { "${ModuleStorageESP.name} $name IBO" },
+                usage = GpuBuffer.USAGE_INDEX or GpuBuffer.USAGE_COPY_DST,
+            )
+            renderState.indexType = meshData.drawState().indexType
+            renderState.indexCount = meshData.drawState().indexCount
+
             vertexBufferStorage.rotate()
             meshData.use {
-                vertexBufferStorage.upload(it, ClientRenderPipelines.OutlineQuads.vertexFormat)
+                renderState.vertexBuffer =
+                    vertexBufferStorage.upload(it, ClientRenderPipelines.OutlineQuads.vertexFormat).buffer
             }
+            byteBufferBuilder.clear()
+            renderState.ready = true
         }
     }
 

@@ -21,33 +21,48 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.buffers.GpuBufferSlice
+import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import com.mojang.blaze3d.pipeline.RenderTarget
 import java.util.OptionalDouble
 import java.util.OptionalInt
 import java.util.function.Supplier
 
 inline fun RenderPass.bindDefaultUniforms() = RenderSystem.bindDefaultUniforms(this)
 
-inline fun RenderPass.setUniformProjection() {
+inline fun RenderPass.bindProjectionUniform() {
     RenderSystem.getProjectionMatrixBuffer()?.let { setUniform("Projection", it) }
 }
 
-inline fun RenderPass.setUniformFog() {
+inline fun RenderPass.bindFogUniform() {
     RenderSystem.getShaderFog()?.let { setUniform("Fog", it) }
 }
 
-inline fun RenderPass.setUniformGlobals() {
+inline fun RenderPass.bindGlobalsUniform() {
     RenderSystem.getGlobalSettingsUniform()?.let { setUniform("Globals", it) }
 }
 
-inline fun RenderPass.setUniformLighting() {
-    RenderSystem.getShaderLights()?.let { setUniform("Projection", it) }
+inline fun RenderPass.bindLightingUniform() {
+    RenderSystem.getShaderLights()?.let { setUniform("Lighting", it) }
+}
+
+inline fun RenderPass.bindDynamicTransformsUniform(gpuBufferSlice: GpuBufferSlice) {
+    setUniform("DynamicTransforms", gpuBufferSlice)
+}
+
+fun getDynamicTransformsUniform(colorModulator: Color4b): GpuBufferSlice {
+    return RenderSystem.getDynamicUniforms()
+        .writeTransform(
+            RenderSystem.getModelViewMatrix(),
+            colorModulator.toVector4f(RenderPassRenderState.colorModulator),
+            RenderPassRenderState.modelOffset,
+            RenderPassRenderState.textureMatrix,
+        )
 }
 
 private val RENDER_PASS_DEFAULT_LABEL = Supplier { LiquidBounce.CLIENT_NAME + " RenderPass" }
