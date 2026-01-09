@@ -19,10 +19,10 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.shaders.ShaderSource
 import com.mojang.blaze3d.shaders.ShaderType
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.LiquidBounce
-import com.mojang.blaze3d.shaders.ShaderSource
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.resources.Identifier
 
@@ -35,7 +35,10 @@ object ClientShaders : ShaderSource {
         val PlainPosTex = "plain_pos_tex"("shaders/position_tex.vert")
 
         @JvmField
-        val PosColorRelativeToCamera = "pos_color_relative_to_camera"("shaders/position_color_relative_to_camera.vsh")
+        val PosRelativeToCamera = "pos_relative_to_camera"("shaders/relative_to_camera/position.vsh")
+
+        @JvmField
+        val PosColorRelativeToCamera = "pos_color_relative_to_camera"("shaders/relative_to_camera/position_color.vsh")
 
         @JvmField
         val Sobel = "sobel"("shaders/sobel.vert")
@@ -49,6 +52,9 @@ object ClientShaders : ShaderSource {
     object Fragment {
         @JvmField
         val BgraPosTex = "bgra_pos_tex_color"("shaders/bgra_position_tex_color.frag")
+
+        @JvmField
+        val PosRelativeToCamera = "pos_relative_to_camera"("shaders/relative_to_camera/position.fsh")
 
         @JvmField
         val Blit = "blit"("shaders/blit.frag")

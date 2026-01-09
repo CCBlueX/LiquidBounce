@@ -30,6 +30,7 @@ import com.mojang.blaze3d.vertex.VertexFormat
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformConfigurable
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.client.renderer.RenderPipelines
@@ -207,7 +208,7 @@ object ClientRenderPipelines {
         forWorldRender()
         withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
         withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
-        withUniform("u_DistanceFade", UniformType.UNIFORM_BUFFER)
+        withUniform(DistanceFadeUniformConfigurable.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
         withBlend(COVERING_BLEND)
     }
 
