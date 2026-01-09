@@ -170,6 +170,15 @@ object ClientRenderPipelines {
     }
 
     @JvmField
+    val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
+        withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.DEBUG_LINES)
+        withUniform(DistanceFadeUniformConfigurable.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
+        forWorldRender()
+    }
+
+    @JvmField
     val LineStrip = newPipeline("line_strip") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.DEBUG_LINE_STRIP)
@@ -194,6 +203,15 @@ object ClientRenderPipelines {
     val Quads = newPipeline("quads") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
         withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+        forWorldRender()
+    }
+
+    @JvmField
+    val QuadsRelativeToCamera = newPipeline("quads_relative_to_camera") {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
+        withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+        withUniform(DistanceFadeUniformConfigurable.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
         forWorldRender()
     }
 

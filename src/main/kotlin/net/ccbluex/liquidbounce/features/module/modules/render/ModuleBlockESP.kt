@@ -31,18 +31,16 @@ import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.MapColorMode
 import net.ccbluex.liquidbounce.render.RenderPassRenderState
 import net.ccbluex.liquidbounce.render.addBoxFaces
+import net.ccbluex.liquidbounce.render.addBoxOutlines
 import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.bindGlobalsUniform
 import net.ccbluex.liquidbounce.render.bindProjectionUniform
 import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.createRenderPass
-import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.getDynamicTransformsUniform
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.translate
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformConfigurable
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -93,6 +91,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
     private sealed class Mode(name: String) : Choice(name) {
         final override val parent get() = modes
 
+        protected var useColor = false
         val dirtyFlag = atomic(true)
 
         final override fun enable() {
@@ -102,14 +101,81 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
     }
 
     private object BoxMode : Mode("Box") {
-        private val outline by boolean("Outline", true)
+        private val outline by boolean("Outline", true).onChanged {
+            if (!it && running) {
+                outlinesRenderState.clearStates()
+            }
+        }
+        private val facesRenderState = RenderPassRenderState.WithBuffers("${ModuleBlockESP.name} $name Faces")
+        private val outlinesRenderState = RenderPassRenderState.WithBuffers("${ModuleBlockESP.name} $name Outlines")
+
+        override fun disable() {
+            facesRenderState.clearStates()
+            facesRenderState.clearBuffers()
+            outlinesRenderState.clearStates()
+            outlinesRenderState.clearBuffers()
+            super.disable()
+        }
 
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
-            val matrixStack = event.matrixStack
+            if (facesRenderState.ready) {
+                distanceFade.updateIfDirty()
+                val dynamicTransforms = getDynamicTransformsUniform(
+                    if (useColor) {
+                        Color4b.WHITE
+                    } else {
+                        colorMode.activeChoice.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
+                    }
+                )
+                mc.mainRenderTarget.createRenderPass({ "${ModuleBlockESP.name} $name Faces Pass" }).use { pass ->
+                    pass.setPipeline(ClientRenderPipelines.QuadsRelativeToCamera)
 
-            renderEnvironmentForWorld(matrixStack, mc.mainRenderTarget) {
-                startBatch()
+                    pass.bindProjectionUniform()
+                    pass.bindGlobalsUniform()
+                    pass.bindDynamicTransformsUniform(dynamicTransforms)
+                    distanceFade.bindUniform(pass)
+                    facesRenderState.bindAndDraw(pass)
+                }
+            }
+
+            if (outline && outlinesRenderState.ready) {
+                distanceFade.updateIfDirty()
+                val dynamicTransforms = getDynamicTransformsUniform(
+                    if (useColor) {
+                        Color4b.WHITE
+                    } else {
+                        colorMode.activeChoice.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
+                            .alpha(150)
+                    }
+                )
+                mc.mainRenderTarget.createRenderPass({ "${ModuleBlockESP.name} $name Outlines Pass" }).use { pass ->
+                    pass.setPipeline(ClientRenderPipelines.LinesRelativeToCamera)
+
+                    pass.bindProjectionUniform()
+                    pass.bindGlobalsUniform()
+                    pass.bindDynamicTransformsUniform(dynamicTransforms)
+                    distanceFade.bindUniform(pass)
+                    outlinesRenderState.bindAndDraw(pass)
+                }
+            }
+
+            if (BlockTracker.isEmpty()) {
+                facesRenderState.clearStates()
+                outlinesRenderState.clearStates()
+                return@handler
+            }
+
+            if (!dirtyFlag.compareAndSet(expect = true, update = false)) {
+                return@handler
+            }
+
+            val colorMode = colorMode.activeChoice
+            useColor = colorMode.isParamSensitive
+            facesRenderState.buildMesh(
+                pipeline = ClientRenderPipelines.QuadsRelativeToCamera,
+                sortQuads = true,
+            ) { pose ->
                 for ((blockPos, t) in BlockTracker.iterate()) {
                     val blockState = t.state
 
@@ -117,17 +183,34 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
                     val boundingBox = t.box
 
-                    val color = colorMode.activeChoice.getColor(blockPos to blockState)
+                    val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
-                    withPositionRelativeToCamera(blockPos) {
-                        drawBox(
-                            boundingBox,
-                            faceColor = color,
-                            outlineColor = if (outline) color.with(a = 150) else null,
-                        )
+                    pose.withPush {
+                        translate(blockPos)
+                        addBoxFaces(last().pose(), boundingBox, color)
                     }
                 }
-                commitBatch()
+            }
+
+            if (outline) {
+                outlinesRenderState.buildMesh(
+                    pipeline = ClientRenderPipelines.LinesRelativeToCamera,
+                ) { pose ->
+                    for ((blockPos, t) in BlockTracker.iterate()) {
+                        val blockState = t.state
+
+                        if (blockState.isAir) continue
+
+                        val boundingBox = t.box
+
+                        val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
+
+                        pose.withPush {
+                            translate(blockPos)
+                            addBoxOutlines(last().pose(), boundingBox, color)
+                        }
+                    }
+                }
             }
         }
 
@@ -135,7 +218,6 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
     private class OutlineMode(name: String, type: DrawOutlinesEvent.OutlineType) : Mode(name) {
         private val renderState = RenderPassRenderState.WithBuffers("${ModuleBlockESP.name} $name")
-        private var useColor = false
 
         override fun disable() {
             renderState.clearStates()

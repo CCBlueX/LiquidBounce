@@ -332,18 +332,6 @@ fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: I
 inline fun VertexConsumer.color(color: Color4b): VertexConsumer = setColor(color.toARGB())
 
 /**
- * Draw box for outline/glow shader.
- */
-fun WorldRenderEnvironment.drawBoxOutlined(
-    box: AABB,
-    color: Color4b,
-) {
-    drawCustomMesh(ClientRenderPipelines.outlineQuads(true)) { pose ->
-        addBoxFaces(pose, box, color)
-    }
-}
-
-/**
  * Function to draw a colored [box].
  */
 fun WorldRenderEnvironment.drawBox(
