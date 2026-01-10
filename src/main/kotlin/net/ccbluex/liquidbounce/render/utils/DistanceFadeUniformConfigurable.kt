@@ -38,7 +38,7 @@ class DistanceFadeUniformConfigurable : Configurable("DistanceFade") {
         it.coerceIn(nearEnd, farEnd)
     }.markDirtyOnChanged()
     val farEnd: Float by float("FarEnd", 512F, 0F..512F).onChange {
-        minOf(farStart, it)
+        maxOf(farStart, it)
     }.markDirtyOnChanged()
 
     private val ubo = gpuDevice.createUbo({ "DistanceFade Uniform" }) { vec4 }.slice()
