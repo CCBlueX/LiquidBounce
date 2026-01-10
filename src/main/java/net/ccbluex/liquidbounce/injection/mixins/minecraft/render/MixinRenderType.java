@@ -23,6 +23,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.vertex.MeshData;
 import net.ccbluex.liquidbounce.utils.client.GenericPools;
 import net.minecraft.client.renderer.rendertype.RenderType;
+import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -31,6 +32,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.HashMap;
 import java.util.Map;
 
+@NullMarked
 @Mixin(RenderType.class)
 public abstract class MixinRenderType {
 

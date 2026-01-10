@@ -23,11 +23,13 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.ccbluex.liquidbounce.utils.client.GenericPools;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
+import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.HashMap;
 
+@NullMarked
 @Mixin(RenderSetup.class)
 public abstract class MixinRenderSetup {
 
