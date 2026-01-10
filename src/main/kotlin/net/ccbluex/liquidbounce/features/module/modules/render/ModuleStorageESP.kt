@@ -30,16 +30,11 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP.GlowMode.renderState
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.RenderPassRenderState
 import net.ccbluex.liquidbounce.render.addBoxFaces
 import net.ccbluex.liquidbounce.render.addBoxOutlines
-import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
-import net.ccbluex.liquidbounce.render.bindGlobalsUniform
-import net.ccbluex.liquidbounce.render.bindProjectionUniform
 import net.ccbluex.liquidbounce.render.buildMesh
-import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawGenericBlockESP
 import net.ccbluex.liquidbounce.render.drawLine
@@ -55,6 +50,7 @@ import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.outlineBox
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
@@ -243,22 +239,10 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             blockFacesRenderState.buildMesh(
                 pipeline = ClientRenderPipelines.relativeQuads(useColor = true),
             ) { pose ->
-                for ((blockPos, type) in StorageScanner.iterate()) {
-                    val color = type.color
-
-                    if (color.isTransparent || !type.shouldRender(blockPos, ignoreDistance = true)) {
-                        continue
-                    }
-
-                    val blockState = level.getBlockState(blockPos)
-
-                    if (blockState.isAir) continue
-
-                    val boundingBox = blockState.outlineBox(blockPos)
-
+                forEachTrackedBlockBoxes { blockPos, type, outlineBox ->
                     pose.withPush {
                         translate(blockPos)
-                        addBoxFaces(last().pose(), boundingBox, color.alpha(50))
+                        addBoxFaces(last().pose(), outlineBox, type.color.alpha(50))
                     }
                 }
             }
@@ -267,22 +251,10 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 blockOutlinesRenderState.buildMesh(
                     pipeline = ClientRenderPipelines.relativeLines(useColor = true),
                 ) { pose ->
-                    for ((blockPos, type) in StorageScanner.iterate()) {
-                        val color = type.color
-
-                        if (color.isTransparent || !type.shouldRender(blockPos, ignoreDistance = true)) {
-                            continue
-                        }
-
-                        val blockState = level.getBlockState(blockPos)
-
-                        if (blockState.isAir) continue
-
-                        val boundingBox = blockState.outlineBox(blockPos)
-
+                    forEachTrackedBlockBoxes { blockPos, type, outlineBox ->
                         pose.withPush {
                             translate(blockPos)
-                            addBoxOutlines(last().pose(), boundingBox, color.alpha(100))
+                            addBoxOutlines(last().pose(), outlineBox, type.color.alpha(100))
                         }
                     }
                 }
@@ -341,22 +313,12 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.outlineQuads(useColor = true),
             ) { pose ->
-                for ((blockPos, type) in StorageScanner.iterate()) {
-                    if (type.color.isTransparent || !type.shouldRender(blockPos, ignoreDistance = true)) continue
-
-                    val blockState = world.getBlockState(blockPos)
-
-                    // non-model blocks are already processed by WorldRenderer where we injected code which renders
-                    // their outline
-                    if (blockState.renderShape != RenderShape.MODEL || blockState.isAir) {
-                        continue
-                    }
-
-                    val boundingBox = blockState.outlineBox(blockPos)
-
+                // non-model blocks are already processed by WorldRenderer where we injected code which renders
+                // their outline
+                forEachTrackedBlockBoxes({ it.renderShape != RenderShape.MODEL }) { blockPos, type, outlineBox ->
                     pose.withPush {
                         translate(blockPos)
-                        addBoxFaces(last().pose(), boundingBox, type.color)
+                        addBoxFaces(last().pose(), outlineBox, type.color)
                     }
                 }
             }
@@ -371,8 +333,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         renderEnvironmentForWorld(event.matrixStack) {
             val eyeVector = Vec3f(0.0, 0.0, 1.0)
-                .rotatePitch((-Math.toRadians(camera.xRot().toDouble())).toFloat())
-                .rotateYaw((-Math.toRadians(camera.yRot().toDouble())).toFloat())
+                .rotatePitch(-camera.xRot().toRadians())
+                .rotateYaw(-camera.yRot().toRadians())
 
             startBatch()
             longLines {
@@ -413,6 +375,23 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             is ShulkerBoxBlockEntity -> ChestType.ShulkerBox
             is DecoratedPotBlockEntity -> ChestType.Pot
             else -> null
+        }
+    }
+
+    private inline fun forEachTrackedBlockBoxes(
+        skipWhen: (BlockState) -> Boolean = { false },
+        block: (blockPos: BlockPos, type: ChestType, outlineBox: AABB) -> Unit,
+    ) {
+        for ((blockPos, type) in StorageScanner.iterate()) {
+            if (type.color.isTransparent || !type.shouldRender(blockPos, ignoreDistance = true)) continue
+
+            val blockState = world.getBlockState(blockPos)
+
+            if (blockState.isAir || skipWhen(blockState)) continue
+
+            val boundingBox = blockState.outlineBox(blockPos)
+
+            block(blockPos, type, boundingBox)
         }
     }
 
