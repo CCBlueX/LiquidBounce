@@ -77,10 +77,11 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
         if (!enabled || !canRender()) return
 
         val target = ModuleKillAura.targetTracker.target
-        val hasTarget = target != null
+        updateColorFactor(target != null)
+        renderIndicator(env, partialTicks, target)
+    }
 
-        updateColorFactor(hasTarget)
-
+    private fun renderIndicator(env: WorldRenderEnvironment, partialTicks: Float, target: net.minecraft.world.entity.LivingEntity?) {
         val range = ModuleKillAura.range
         val pos = player.interpolateCurrentPosition(partialTicks.coerceIn(0f, 1f))
         val pulseOffset = calculatePulse(range)
@@ -89,7 +90,7 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
         with(env) {
             startBatch()
             withPositionRelativeToCamera(pos) {
-                renderCircles(range, pulseOffset, distance, hasTarget)
+                renderCircles(range, pulseOffset, distance, target != null)
             }
             commitBatch()
         }
@@ -131,13 +132,11 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
     }
 
     private fun canRender(): Boolean {
-        if (hideWhenDead && player.isDeadOrDying) return false
-        if (hideWhenSpectator && player.isSpectator) return false
-        if (hideInVehicle && player.vehicle != null) return false
-        if (respectInventorySetting && !ModuleKillAura.ignoreOpenInventory) {
-            if (isInventoryOpen || mc.screen is ContainerScreen) return false
-        }
-        return true
+        return !((hideWhenDead && player.isDeadOrDying) ||
+            (hideWhenSpectator && player.isSpectator) ||
+            (hideInVehicle && player.vehicle != null) ||
+            (respectInventorySetting && !ModuleKillAura.ignoreOpenInventory &&
+                (isInventoryOpen || mc.screen is ContainerScreen)))
     }
 
     private fun WorldRenderEnvironment.drawRangeCircle(radius: Float, color: Color4b, outlineAlpha: Int = 255) {
