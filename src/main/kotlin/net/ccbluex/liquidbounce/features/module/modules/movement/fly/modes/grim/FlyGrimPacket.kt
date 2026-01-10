@@ -53,7 +53,7 @@ object FlyGrimPacket: Choice("GrimPacket") {
         delay = false
     }
 
-    fun sendGrimPacket() {
+    private fun sendGrimPacket() {
         network.send(
             ServerboundPlayerCommandPacket(
                 player,
@@ -62,7 +62,8 @@ object FlyGrimPacket: Choice("GrimPacket") {
         )
     }
 
-    val queuePacketHandler = handler<QueuePacketEvent> { event ->
+    @Suppress("unused")
+    private val queuePacketHandler = handler<QueuePacketEvent> { event ->
         val packet = event.packet
         if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
             delay = true
@@ -78,7 +79,7 @@ object FlyGrimPacket: Choice("GrimPacket") {
     }
 
     @Suppress("unused")
-    val motionHandler = handler<PlayerNetworkMovementTickEvent> { event ->
+    private val motionHandler = handler<PlayerNetworkMovementTickEvent> { event ->
         if (event.state == EventState.POST) {
             if (start) {
                 sendGrimPacket()
