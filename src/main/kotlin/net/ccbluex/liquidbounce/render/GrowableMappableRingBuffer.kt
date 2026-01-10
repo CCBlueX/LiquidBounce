@@ -42,6 +42,8 @@ import java.nio.ByteBuffer
  * 1) If there is enough space after the last write, append to the current buffer.
  * 2) If the buffer is large enough but the remaining space is not, rotate() and write from offset 0.
  * 3) If the entire ring buffer is too small, grow it and write from offset 0.
+ *
+ * @author MukjepScarlet
  */
 class GrowableMappableRingBuffer @JvmOverloads constructor(
     val label: String,
