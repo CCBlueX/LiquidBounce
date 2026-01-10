@@ -24,6 +24,7 @@ import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.mapBuffer
 import net.minecraft.client.renderer.MappableRingBuffer
 import org.lwjgl.system.MemoryUtil
@@ -41,7 +42,10 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
         val current = ring
         if (current == null || current.size() < byteCount) {
             val newSize = growPolicy.getNewSize(byteCount, current?.size() ?: 0)
-            current?.close()
+            current?.let {
+                // Close later
+                mc.schedule(it::close)
+            }
             ring = MappableRingBuffer(
                 Suppliers.ofInstance(label),
                 usage or GpuBuffer.USAGE_MAP_WRITE,
@@ -57,11 +61,10 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
      * Upload [data] to the ring buffer.
      *
      * @param data the data to upload.
-     * @param byteCount the number of bytes to upload. Default is the remaining bytes of [data].
      * @return the uploaded slice, whose lifecycle is bound to the ring buffer.
      */
-    @JvmOverloads
-    fun upload(data: ByteBuffer, byteCount: Int = data.remaining()): GpuBufferSlice {
+    fun upload(data: ByteBuffer): GpuBufferSlice {
+        val byteCount = data.remaining()
         ensureCapacity(byteCount)
 
         val ring = checkNotNull(this.ring) { "Ring buffer not initialized" }
@@ -79,7 +82,7 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
     /**
      * Rotate the ring buffer to the next buffer.
      *
-     * This method should be called at the end of each frame to ensure that the fence is processed.
+     * Rotate before writing new data, so the previous buffer can be fenced and reused safely later.
      */
     fun rotate() {
         ring?.rotate()

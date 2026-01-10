@@ -66,8 +66,6 @@ fun VertexConsumer.addBoxFaces(
 
 inline fun RenderPassRenderState.buildMesh(
     pipeline: RenderPipeline,
-    vboStorage: GrowableMappableRingBuffer,
-    iboStorage: GrowableMappableRingBuffer,
     sortQuads: Boolean = false,
     block: VertexConsumer.(pose: PoseStack) -> Unit,
 ) {
@@ -87,22 +85,10 @@ inline fun RenderPassRenderState.buildMesh(
         if (sortQuads) {
             meshData.sortQuads(byteBufferBuilder, RenderSystem.getProjectionType().vertexSorting())
         }
-        this.uploadAndSetIndices(meshData, iboStorage, pipeline.vertexFormatMode)
-        this.uploadAndSetVertices(meshData, vboStorage)
+        this.uploadAndSetIndices(meshData, pipeline.vertexFormatMode)
+        this.uploadAndSetVertices(meshData)
     }
 
     byteBufferBuilder.clear()
     this.ready = true
 }
-
-inline fun RenderPassRenderState.WithBuffers.buildMesh(
-    pipeline: RenderPipeline,
-    sortQuads: Boolean = false,
-    block: VertexConsumer.(pose: PoseStack) -> Unit,
-) = buildMesh(
-    pipeline,
-    vboStorage,
-    iboStorage,
-    sortQuads,
-    block
-)

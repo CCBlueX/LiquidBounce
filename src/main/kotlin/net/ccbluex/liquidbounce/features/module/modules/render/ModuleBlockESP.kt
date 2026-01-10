@@ -50,6 +50,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
+import org.joml.Matrix4fc
 import java.util.concurrent.ConcurrentSkipListSet
 
 /**
@@ -98,6 +99,19 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             dirtyFlag.value = true
             super.enable()
         }
+
+        protected fun getDynamicTransformsUniform(
+            modelView: Matrix4fc? = null,
+            colorModulatorAlpha: Int = -1,
+        ) = getDynamicTransformsUniform(
+            modelView = modelView,
+            colorModulator = if (useColor) {
+                Color4b.WHITE
+            } else {
+                val color = colorMode.activeChoice.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
+                if (colorModulatorAlpha == -1) color else color.alpha(colorModulatorAlpha)
+            }
+        )
     }
 
     private object BoxMode : Mode("Box") {
@@ -106,8 +120,8 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 outlinesRenderState.clearStates()
             }
         }
-        private val facesRenderState = RenderPassRenderState.WithBuffers("${ModuleBlockESP.name} $name Faces")
-        private val outlinesRenderState = RenderPassRenderState.WithBuffers("${ModuleBlockESP.name} $name Outlines")
+        private val facesRenderState = RenderPassRenderState("${ModuleBlockESP.name} $name Faces")
+        private val outlinesRenderState = RenderPassRenderState("${ModuleBlockESP.name} $name Outlines")
 
         override fun disable() {
             facesRenderState.clearStates()
@@ -119,17 +133,14 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
+            val colorMode = colorMode.activeChoice
+            useColor = colorMode.isParamSensitive
+
             if (facesRenderState.ready) {
                 distanceFade.updateIfDirty()
-                val dynamicTransforms = getDynamicTransformsUniform(
-                    if (useColor) {
-                        Color4b.WHITE
-                    } else {
-                        colorMode.activeChoice.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
-                    }
-                )
+                val dynamicTransforms = getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
                 mc.mainRenderTarget.createRenderPass({ "${ModuleBlockESP.name} $name Faces Pass" }).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.QuadsRelativeToCamera)
+                    pass.setPipeline(ClientRenderPipelines.relativeQuads(useColor))
 
                     pass.bindProjectionUniform()
                     pass.bindGlobalsUniform()
@@ -142,15 +153,10 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             if (outline && outlinesRenderState.ready) {
                 distanceFade.updateIfDirty()
                 val dynamicTransforms = getDynamicTransformsUniform(
-                    if (useColor) {
-                        Color4b.WHITE
-                    } else {
-                        colorMode.activeChoice.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
-                            .alpha(150)
-                    }
+                    modelView = event.matrixStack.last().pose(), colorModulatorAlpha = 150
                 )
                 mc.mainRenderTarget.createRenderPass({ "${ModuleBlockESP.name} $name Outlines Pass" }).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.LinesRelativeToCamera)
+                    pass.setPipeline(ClientRenderPipelines.relativeLines(useColor))
 
                     pass.bindProjectionUniform()
                     pass.bindGlobalsUniform()
@@ -170,10 +176,8 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 return@handler
             }
 
-            val colorMode = colorMode.activeChoice
-            useColor = colorMode.isParamSensitive
             facesRenderState.buildMesh(
-                pipeline = ClientRenderPipelines.QuadsRelativeToCamera,
+                pipeline = ClientRenderPipelines.relativeQuads(useColor),
                 sortQuads = true,
             ) { pose ->
                 for ((blockPos, t) in BlockTracker.iterate()) {
@@ -191,7 +195,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
             if (outline) {
                 outlinesRenderState.buildMesh(
-                    pipeline = ClientRenderPipelines.LinesRelativeToCamera,
+                    pipeline = ClientRenderPipelines.relativeLines(useColor),
                 ) { pose ->
                     for ((blockPos, t) in BlockTracker.iterate()) {
                         val blockState = t.state
@@ -211,7 +215,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
     }
 
     private class OutlineMode(name: String, type: DrawOutlinesEvent.OutlineType) : Mode(name) {
-        private val renderState = RenderPassRenderState.WithBuffers("${ModuleBlockESP.name} $name")
+        private val renderState = RenderPassRenderState("${ModuleBlockESP.name} $name")
 
         override fun disable() {
             renderState.clearStates()
@@ -225,16 +229,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 return@handler
             }
 
+            val colorMode = colorMode.activeChoice
+            useColor = colorMode.isParamSensitive
+
             if (renderState.ready) {
                 distanceFade.updateIfDirty()
-                val dynamicTransforms = getDynamicTransformsUniform(
-                    if (useColor) {
-                        Color4b.WHITE
-                    } else {
-                        colorMode.activeChoice.getColor(BlockPos.ZERO to Blocks.AIR.defaultBlockState())
-                            .alpha(255)
-                    }
-                )
+                val dynamicTransforms = getDynamicTransformsUniform(colorModulatorAlpha = 255)
                 event.framebuffer.createRenderPass({ "${ModuleBlockESP.name} $name Pass" }).use { pass ->
                     pass.setPipeline(ClientRenderPipelines.outlineQuads(useColor))
 
@@ -256,8 +256,6 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 return@handler
             }
 
-            val colorMode = colorMode.activeChoice
-            useColor = colorMode.isParamSensitive
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.outlineQuads(useColor),
                 sortQuads = true,

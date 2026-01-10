@@ -29,6 +29,7 @@ import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
+import org.joml.Matrix4fc
 import java.util.OptionalDouble
 import java.util.OptionalInt
 import java.util.function.Supplier
@@ -68,14 +69,19 @@ inline fun RenderPass.setupGlobalScissor() {
 }
 
 @JvmOverloads
-fun getDynamicTransformsUniform(colorModulator: Color4b = Color4b.WHITE): GpuBufferSlice {
-    return RenderSystem.getDynamicUniforms()
+fun getDynamicTransformsUniform(
+    modelView: Matrix4fc? = null,
+    colorModulator: Color4b = Color4b.WHITE,
+): GpuBufferSlice {
+    val slice = RenderSystem.getDynamicUniforms()
         .writeTransform(
-            RenderSystem.getModelViewMatrix(),
+            modelView ?: RenderSystem.getModelViewMatrix(),
             colorModulator.toVector4f(RenderPassRenderState.colorModulator),
             RenderPassRenderState.modelOffset,
             RenderPassRenderState.textureMatrix,
         )
+
+    return slice
 }
 
 private val RENDER_PASS_DEFAULT_LABEL = Supplier { LiquidBounce.CLIENT_NAME + " RenderPass" }

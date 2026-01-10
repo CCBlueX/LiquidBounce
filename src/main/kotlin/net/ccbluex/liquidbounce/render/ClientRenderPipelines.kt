@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("NOTHING_TO_INLINE")
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.BlendFunction
@@ -66,7 +67,6 @@ object ClientRenderPipelines {
             }
     }
 
-    @Suppress("NOTHING_TO_INLINE")
     private inline fun RenderPipeline.Builder.bgraPosTexColorQuads() {
         withVertexShader("core/position_tex_color")
         withFragmentShader(ClientShaders.Fragment.BgraPosTex)
@@ -75,17 +75,27 @@ object ClientRenderPipelines {
         withSnippet(RenderPipelines.MATRICES_PROJECTION_SNIPPET)
     }
 
-    @Suppress("NOTHING_TO_INLINE")
     inline fun RenderPipeline.Builder.screenQuad() = apply {
         withVertexShader("core/screenquad")
         withVertexFormat(DefaultVertexFormat.EMPTY, VertexFormat.Mode.TRIANGLES)
     }
 
-    @Suppress("NOTHING_TO_INLINE")
     private inline fun RenderPipeline.Builder.forWorldRender() {
         withCull(false)
         withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
         withBlend(COVERING_BLEND)
+    }
+
+    private inline fun RenderPipeline.Builder.relativePos(mode: VertexFormat.Mode) {
+        withVertexShader(ClientShaders.Vertex.PosRelativeToCamera)
+        withFragmentShader(ClientShaders.Fragment.PosRelativeToCamera)
+        withVertexFormat(DefaultVertexFormat.POSITION, mode)
+    }
+
+    private inline fun RenderPipeline.Builder.relativePosColor(mode: VertexFormat.Mode) {
+        withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
+        withFragmentShader("core/position_color")
+        withVertexFormat(DefaultVertexFormat.POSITION_COLOR, mode)
     }
 
     object JCEF {
@@ -169,14 +179,22 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
-    @JvmField
-    val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
+    private val LinesRelativeToCamera = newPipeline("lines_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
-        withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.DEBUG_LINES)
+        relativePosColor(VertexFormat.Mode.DEBUG_LINES)
         withUniform(DistanceFadeUniformConfigurable.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
         forWorldRender()
     }
+
+    private val LinesRelativeToCameraNoColor = newPipeline("lines_relative_to_camera_no_color") {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        relativePosColor(VertexFormat.Mode.DEBUG_LINES)
+        withUniform(DistanceFadeUniformConfigurable.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
+        forWorldRender()
+    }
+
+    @JvmStatic
+    fun relativeLines(useColor: Boolean) = if (useColor) LinesRelativeToCamera else LinesRelativeToCameraNoColor
 
     @JvmField
     val LineStrip = newPipeline("line_strip") {
@@ -206,14 +224,22 @@ object ClientRenderPipelines {
         forWorldRender()
     }
 
-    @JvmField
-    val QuadsRelativeToCamera = newPipeline("quads_relative_to_camera") {
+    private val QuadsRelativeToCamera = newPipeline("quads_relative_to_camera") {
         withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
-        withVertexShader(ClientShaders.Vertex.PosColorRelativeToCamera)
-        withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+        relativePosColor(VertexFormat.Mode.QUADS)
         withUniform(DistanceFadeUniformConfigurable.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
         forWorldRender()
     }
+
+    private val QuadsRelativeToCameraNoColor = newPipeline("quads_relative_to_camera_no_color") {
+        withSnippet(RenderPipelines.DEBUG_FILLED_SNIPPET)
+        relativePos(VertexFormat.Mode.QUADS)
+        withUniform(DistanceFadeUniformConfigurable.UNIFORM_NAME, UniformType.UNIFORM_BUFFER)
+        forWorldRender()
+    }
+
+    @JvmStatic
+    fun relativeQuads(useColor: Boolean) = if (useColor) QuadsRelativeToCamera else QuadsRelativeToCameraNoColor
 
     /**
      * @see net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP

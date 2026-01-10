@@ -196,7 +196,7 @@ fun drawMesh(
     renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
     shaderTextureProvider: Map<String, AbstractTexture> = emptyMap(),
 ) = meshData.use { buffer ->
-    val dynamicTransforms = getDynamicTransformsUniform(colorModulator)
+    val dynamicTransforms = getDynamicTransformsUniform(colorModulator = colorModulator)
 
     val vertexBuffer = sharedVboStorage.upload(buffer.vertexBuffer()).buffer
     val indexBuffer: GpuBuffer

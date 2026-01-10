@@ -37,6 +37,9 @@ public class RenderPassRenderState {
     static final Vector3f modelOffset = new Vector3f();
     static final Matrix4f textureMatrix = new Matrix4f();
 
+    private final GrowableMappableRingBuffer vboStorage;
+    private final GrowableMappableRingBuffer iboStorage;
+
     public @Nullable GpuBuffer vertexBuffer;
     public @Nullable GpuBuffer indexBuffer;
     public int indexCount;
@@ -44,21 +47,30 @@ public class RenderPassRenderState {
 
     public boolean ready = false;
 
+    public RenderPassRenderState(String label) {
+        vboStorage = new GrowableMappableRingBuffer(
+            label + " VBO",
+            GpuBuffer.USAGE_VERTEX
+        );
+        iboStorage = new GrowableMappableRingBuffer(
+            label + " IBO",
+            GpuBuffer.USAGE_INDEX
+        );
+    }
+
     public void uploadAndSetVertices(
-        MeshData meshData,
-        GrowableMappableRingBuffer buffer
+        MeshData meshData
     ) {
-        buffer.rotate();
+        this.vboStorage.rotate();
         ByteBuffer vertices = meshData.vertexBuffer();
-        vertexBuffer = buffer.upload(vertices).buffer();
+        vertexBuffer = this.vboStorage.upload(vertices).buffer();
     }
 
     public void uploadAndSetIndices(
         MeshData meshData,
-        GrowableMappableRingBuffer buffer,
         VertexFormat.Mode vertexFormatMode
     ) {
-        buffer.rotate();
+        this.iboStorage.rotate();
         ByteBuffer indices = meshData.indexBuffer();
         indexCount = meshData.drawState().indexCount();
         if (indices == null) {
@@ -66,7 +78,7 @@ public class RenderPassRenderState {
             indexBuffer = shapeIndexBuffer.getBuffer(indexCount);
             indexType = shapeIndexBuffer.type();
         } else {
-            indexBuffer = buffer.upload(indices).buffer();
+            indexBuffer = this.iboStorage.upload(indices).buffer();
             indexType = meshData.drawState().indexType();
         }
     }
@@ -95,25 +107,8 @@ public class RenderPassRenderState {
         ready = false;
     }
 
-    public static class WithBuffers extends RenderPassRenderState {
-        public final GrowableMappableRingBuffer vboStorage;
-        public final GrowableMappableRingBuffer iboStorage;
-
-        public WithBuffers(String label) {
-            vboStorage = new GrowableMappableRingBuffer(
-                label + " VBO",
-                GpuBuffer.USAGE_VERTEX
-            );
-            iboStorage = new GrowableMappableRingBuffer(
-                label + " IBO",
-                GpuBuffer.USAGE_INDEX
-            );
-        }
-
-        public void clearBuffers() {
-            vboStorage.clear();
-            iboStorage.clear();
-        }
+    public void clearBuffers() {
+        vboStorage.clear();
+        iboStorage.clear();
     }
-
 }
