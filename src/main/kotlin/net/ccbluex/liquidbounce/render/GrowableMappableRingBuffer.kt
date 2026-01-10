@@ -50,10 +50,9 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
                 Suppliers.ofInstance(label),
                 usage or GpuBuffer.USAGE_MAP_WRITE,
                 newSize
-            ).also {
-                // TODO: change this to debug log
-                logger.info("$label buffer grown to $newSize bytes (${newSize.toLong().formatAsCapacity()})")
-            }
+            )
+
+            logger.debug("$label buffer grown to $newSize bytes (${newSize.toLong().formatAsCapacity()})")
         }
     }
 
