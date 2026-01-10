@@ -26,28 +26,22 @@ import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.buffers.Std140Builder
 import com.mojang.blaze3d.buffers.Std140SizeCalculator
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.platform.NativeImage
 import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
-import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.vertex.MeshData
-import net.minecraft.client.renderer.texture.AbstractTexture
-import com.mojang.blaze3d.platform.NativeImage
-import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.gui.render.TextureSetup
-import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.blaze3d.vertex.VertexFormat
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.client.renderer.MappableRingBuffer
+import net.minecraft.client.renderer.texture.AbstractTexture
+import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.resources.Identifier
-import net.minecraft.util.Util
 import net.minecraft.util.ARGB
-import org.lwjgl.system.MemoryUtil
+import net.minecraft.util.Util
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
@@ -269,6 +263,11 @@ fun NativeImage.asTexture(
 
 val AbstractTexture.textureSetup: TextureSetup
     get() = TextureSetup.singleTexture(textureView, sampler)
+
+inline fun ByteBuffer.toGpuBuffer(
+    labelGetter: Supplier<String>? = null,
+    usage: @GpuBuffer.Usage Int,
+) = gpuDevice.createBuffer(labelGetter, usage, this)
 
 @JvmInline
 value class KStd140SizeCalculator(val j: Std140SizeCalculator) {

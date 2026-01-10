@@ -78,6 +78,10 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
      */
     abstract fun isEmpty(): Boolean
 
+    open fun onUpdated() {
+        // NOP
+    }
+
     final override fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean) {
         val newState = this.getStateFor(pos, state)
 
@@ -146,29 +150,44 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
         }
 
         final override fun track(pos: BlockPos, state: T) {
-            lock.write {
+            val added = lock.write {
                 stateAndPositions.computeIfAbsent(state) { LongOpenHashSet() }.add(pos.asLong())
+            }
+            if (added) {
+                onUpdated()
             }
         }
 
         final override fun untrack(pos: BlockPos): Boolean {
-            lock.write {
+            val removed = lock.write {
                 val longValue = pos.asLong()
-                return stateAndPositions.values.any { it.remove(longValue) }
+                stateAndPositions.values.any { it.remove(longValue) }
+            }
+            return if (removed) {
+                onUpdated()
+                true
+            } else {
+                false
             }
         }
 
         final override fun clearAllChunks() {
             lock.write {
                 stateAndPositions.clear()
+                onUpdated()
             }
         }
 
         final override fun clearChunk(pos: ChunkPos) {
+            var removed = false
             lock.write {
+                val predicate = LongPredicate(pos::contains)
                 stateAndPositions.values.forEach { set ->
-                    set.removeIf(LongPredicate(pos::contains))
+                    removed = removed || set.removeIf(predicate)
                 }
+            }
+            if (removed) {
+                onUpdated()
             }
         }
 
@@ -212,10 +231,6 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
             if (positionAndState.keys.removeIf(Predicate(pos::contains))) {
                 onUpdated()
             }
-        }
-
-        open fun onUpdated() {
-            // NOP
         }
     }
 }

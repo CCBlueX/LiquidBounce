@@ -66,11 +66,8 @@ public abstract class MixinLevelRenderer {
     @Shadow
     protected abstract boolean shouldShowEntityOutlines();
 
-    @Shadow
-    @Final
-    private LevelRenderState levelRenderState;
-
-    @Inject(method = "renderLevel", at = @At("HEAD"))
+    // After ModelViewMatrix setup
+    @Inject(method = "renderLevel", at = @At(value = "NEW", target = "()Lcom/mojang/blaze3d/framegraph/FrameGraphBuilder;"))
     private void onRender(GraphicsResourceAllocator allocator, DeltaTracker tickCounter, boolean renderBlockOutline, Camera camera, Matrix4f positionMatrix, Matrix4f matrix4f, Matrix4f projectionMatrix, GpuBufferSlice fogBuffer, Vector4f fogColor, boolean renderSky, CallbackInfo ci) {
         OutlineShaderRenderer renderer = OutlineShaderRenderer.INSTANCE;
         if (!renderer.shouldRender()) {
@@ -78,8 +75,6 @@ public abstract class MixinLevelRenderer {
         }
 
         var matrixStack = Pools.MatStack.borrow();
-        // Apply camera transformation to fix outline positioning
-        matrixStack.last().pose().mul(positionMatrix);
         var event = new DrawOutlinesEvent(
             renderer.prepareRenderTarget(),
             matrixStack,

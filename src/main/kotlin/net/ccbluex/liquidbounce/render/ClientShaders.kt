@@ -19,69 +19,67 @@
 
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.shaders.ShaderSource
 import com.mojang.blaze3d.shaders.ShaderType
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.LiquidBounce
-import com.mojang.blaze3d.shaders.ShaderSource
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.resources.Identifier
 
 object ClientShaders : ShaderSource {
 
     private val shaders = Object2ObjectOpenHashMap<Identifier, String>()
 
-    @JvmField
-    val BGRA_FSH_ID = newShader(
-        "fsh/bgra_pos_tex_color",
-        path = "shaders/bgra_position_tex_color.frag",
-    )
+    object Vertex {
+        @JvmField
+        val PlainPosTex = "plain_pos_tex"("shaders/position_tex.vert")
 
-    @JvmField
-    val PLAIN_POSITION_TEX_VSH_ID = newShader(
-        "vsh/plain_pos_tex",
-        path = "shaders/position_tex.vert",
-    )
+        @JvmField
+        val PosRelativeToCamera = "pos_relative_to_camera"("shaders/relative_to_camera/position.vsh")
 
-    @JvmField
-    val BLIT_FSH_ID = newShader(
-        "fsh/blit",
-        path = "shaders/blit.frag",
-    )
+        @JvmField
+        val PosColorRelativeToCamera = "pos_color_relative_to_camera"("shaders/relative_to_camera/position_color.vsh")
 
-    @JvmField
-    val BLEND_FSH_ID = newShader(
-        "fsh/blend",
-        path = "shaders/blend.frag",
-    )
+        @JvmField
+        val Sobel = "sobel"("shaders/sobel.vert")
 
-    @JvmField
-    val SOBEL_VSH_ID = newShader(
-        "vsh/sobel",
-        path = "shaders/sobel.vert",
-    )
+        @JvmField
+        val PlainProjection = "plane_projection"("shaders/plane_projection.vert")
 
-    @JvmField
-    val BLUR_FSH_ID = newShader(
-        "fsh/blur",
-        path = "shaders/blur/ui_blur.frag",
-    )
+        private operator fun String.invoke(path: String): Identifier = newShader("vsh/${this}", path = path)
+    }
 
-    @JvmField
-    val PLANE_PROJECTION_VSH_ID = newShader(
-        "vsh/plane_projection",
-        path = "shaders/plane_projection.vert",
-    )
+    object Fragment {
+        @JvmField
+        val BgraPosTex = "bgra_pos_tex_color"("shaders/bgra_position_tex_color.frag")
 
-    @JvmField
-    val GLOW_FSH_ID = newShader(
-        "fsh/glow",
-        path = "shaders/glow/glow.frag",
-    )
+        @JvmField
+        val PosRelativeToCamera = "pos_relative_to_camera"("shaders/relative_to_camera/position.fsh")
 
-    @JvmField
-    val OUTLINE_FSH_ID = newShader(
-        "fsh/outline",
-        path = "shaders/outline/entity_outline.frag",
-    )
+        @JvmField
+        val Blit = "blit"("shaders/blit.frag")
+
+        @JvmField
+        val Blend = "blend"("shaders/blend.frag")
+
+        @JvmField
+        val GuiBlur = "blur"("shaders/blur/ui_blur.frag")
+
+        @JvmField
+        val Glow = "glow"("shaders/glow/glow.frag")
+
+        @JvmField
+        val EntityOutline = "outline"("shaders/outline/entity_outline.frag")
+
+        private operator fun String.invoke(path: String): Identifier = newShader("fsh/${this}", path = path)
+    }
+
+    init {
+        Vertex
+        Fragment
+
+        logger.info("Loaded ${shaders.size} client shaders.")
+    }
 
     private fun newShader(id: String, path: String): Identifier {
         val k = LiquidBounce.identifier("shader/$id")

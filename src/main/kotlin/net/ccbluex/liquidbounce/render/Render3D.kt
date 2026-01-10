@@ -22,32 +22,56 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.vertex.BufferBuilder
+import com.mojang.blaze3d.vertex.MeshData
+import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.blaze3d.vertex.Tesselator
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import com.mojang.blaze3d.pipeline.RenderTarget
-import com.mojang.blaze3d.vertex.BufferBuilder
-import com.mojang.blaze3d.vertex.MeshData
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.minecraft.client.Camera
-import com.mojang.blaze3d.vertex.Tesselator
-import com.mojang.blaze3d.vertex.PoseStack
-import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Position
-import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import net.minecraft.world.phys.Vec3
 import org.joml.Vector3fc
-import org.joml.Vector4f
 import java.util.Collections.singletonMap
 import java.util.function.Function
+
+inline fun <T> usePoseStack(block: PoseStack.() -> T): T {
+    val matrices = Pools.MatStack.borrow()
+    try {
+        return block(matrices)
+    } finally {
+        Pools.MatStack.recycle(matrices)
+    }
+}
+
+inline fun PoseStack.withPush(block: PoseStack.() -> Unit) {
+    pushPose()
+    try {
+        block()
+    } finally {
+        popPose()
+    }
+}
+
+inline fun PoseStack.translate(vec3i: Vec3i) =
+    translate(vec3i.x.toFloat(), vec3i.y.toFloat(), vec3i.z.toFloat())
+
+inline fun Tesselator.begin(pipeline: RenderPipeline): BufferBuilder =
+    begin(pipeline.vertexFormatMode, pipeline.vertexFormat)
 
 /**
  * Context representing the rendering environment.
  *
- * @param framebuffer The render target framebuffer.
+ * @param renderTarget The render target framebuffer.
  */
-sealed class RenderEnvironment(val framebuffer: RenderTarget) {
+sealed class RenderEnvironment(val renderTarget: RenderTarget) {
 
     val shaderTextures = Object2ObjectArrayMap<String, AbstractTexture>(1)
     var shaderColor = Color4b.WHITE
@@ -112,20 +136,17 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
     @JvmOverloads
     fun draw(
         pipeline: RenderPipeline,
-        builtBuffer: MeshData,
+        meshData: MeshData,
         shaderTextureProvider: Map<String, AbstractTexture> = this.shaderTextures,
     ) = drawMesh(
         pipeline,
-        builtBuffer,
-        this.framebuffer,
-        colorModulator = shaderColor.toVector4f(shaderColorVec),
+        meshData,
+        this.renderTarget,
+        colorModulator = shaderColor,
         shaderTextureProvider = shaderTextureProvider,
     )
 
     companion object {
-        @JvmStatic
-        private val shaderColorVec = Vector4f()
-
         @JvmStatic
         private val batchBuffer =
             Reference2ReferenceOpenHashMap<RenderPipeline, BufferBuilder>()
@@ -140,10 +161,10 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
 }
 
 class WorldRenderEnvironment(
-    framebuffer: RenderTarget,
+    renderTarget: RenderTarget,
     val matrixStack: PoseStack,
     val camera: Camera,
-) : RenderEnvironment(framebuffer) {
+) : RenderEnvironment(renderTarget) {
     fun relativeToCamera(pos: Vec3f): Vec3 = pos.relativeTo(camera)
 
     fun relativeToCamera(pos: Position): Vec3 = pos.relativeTo(camera)

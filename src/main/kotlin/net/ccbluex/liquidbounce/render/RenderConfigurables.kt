@@ -24,11 +24,17 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.level.block.state.BlockState
 
 abstract class GenericColorMode<in T>(name: String): Choice(name) {
+    /**
+     * @return Whether the color mode is sensitive to the parameter of [getColor].
+     * If false, it can be used as ColorModulator (shader color)
+     */
+    open val isParamSensitive: Boolean = true
+
     abstract fun getColor(param: T): Color4b
 }
 
@@ -37,6 +43,7 @@ class GenericStaticColorMode(
     defaultColor: Color4b
 ) : GenericColorMode<Any?>("Static") {
     private val staticColor = color("Color", defaultColor)
+    override val isParamSensitive: Boolean = false
     override fun getColor(param: Any?) = staticColor.get()
 }
 
@@ -44,6 +51,7 @@ class GenericRainbowColorMode(
     override val parent: ChoiceConfigurable<*>,
     private val alpha: Int = 50
 ) : GenericColorMode<Any?>("Rainbow") {
+    override val isParamSensitive: Boolean = false
     override fun getColor(param: Any?) = rainbow(alpha = alpha / 255f)
 }
 

@@ -1,14 +1,14 @@
 #version 330 core
 
-uniform sampler2D Sampler0;
-
-// see mc position_tex_color.fsh
+/* #moj_import <minecraft:dynamictransforms.glsl> */
 layout(std140) uniform DynamicTransforms {
     mat4 ModelViewMat;
     vec4 ColorModulator;
     vec3 ModelOffset;
     mat4 TextureMat;
 };
+
+uniform sampler2D Sampler0;
 
 in vec2 texCoord0;
 in vec4 vertexColor;

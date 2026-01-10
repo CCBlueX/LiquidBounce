@@ -17,24 +17,71 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
+
 package net.ccbluex.liquidbounce.render
 
+import com.mojang.blaze3d.buffers.GpuBufferSlice
+import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.textures.GpuTextureView
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
-import com.mojang.blaze3d.pipeline.RenderTarget
+import org.joml.Matrix4fc
 import java.util.OptionalDouble
 import java.util.OptionalInt
 import java.util.function.Supplier
 
-/**
- * 1.21.5-10
- */
-inline fun RenderPass.bindSampler(name: String, gpuTextureView: GpuTextureView) {
-    bindTexture(name, gpuTextureView, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST))
+inline fun RenderPass.bindDefaultUniforms() = RenderSystem.bindDefaultUniforms(this)
+
+inline fun RenderPass.bindProjectionUniform() {
+    RenderSystem.getProjectionMatrixBuffer()?.let { setUniform("Projection", it) }
+}
+
+inline fun RenderPass.bindFogUniform() {
+    RenderSystem.getShaderFog()?.let { setUniform("Fog", it) }
+}
+
+inline fun RenderPass.bindGlobalsUniform() {
+    RenderSystem.getGlobalSettingsUniform()?.let { setUniform("Globals", it) }
+}
+
+inline fun RenderPass.bindLightingUniform() {
+    RenderSystem.getShaderLights()?.let { setUniform("Lighting", it) }
+}
+
+inline fun RenderPass.bindDynamicTransformsUniform(gpuBufferSlice: GpuBufferSlice) {
+    setUniform("DynamicTransforms", gpuBufferSlice)
+}
+
+inline fun RenderPass.setupGlobalScissor() {
+    val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
+    if (scissorState.enabled()) {
+        enableScissor(
+            scissorState.x(),
+            scissorState.y(),
+            scissorState.width(),
+            scissorState.height()
+        )
+    }
+}
+
+@JvmOverloads
+fun getDynamicTransformsUniform(
+    modelView: Matrix4fc? = null,
+    colorModulator: Color4b = Color4b.WHITE,
+): GpuBufferSlice {
+    val slice = RenderSystem.getDynamicUniforms()
+        .writeTransform(
+            modelView ?: RenderSystem.getModelViewMatrix(),
+            colorModulator.toVector4f(RenderPassRenderState.colorModulator),
+            RenderPassRenderState.modelOffset,
+            RenderPassRenderState.textureMatrix,
+        )
+
+    return slice
 }
 
 private val RENDER_PASS_DEFAULT_LABEL = Supplier { LiquidBounce.CLIENT_NAME + " RenderPass" }
