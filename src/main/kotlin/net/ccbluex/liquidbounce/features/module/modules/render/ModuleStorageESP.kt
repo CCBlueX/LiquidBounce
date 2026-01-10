@@ -30,9 +30,11 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP.GlowMode.renderState
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.RenderPassRenderState
 import net.ccbluex.liquidbounce.render.addBoxFaces
+import net.ccbluex.liquidbounce.render.addBoxOutlines
 import net.ccbluex.liquidbounce.render.bindDynamicTransformsUniform
 import net.ccbluex.liquidbounce.render.bindGlobalsUniform
 import net.ccbluex.liquidbounce.render.bindProjectionUniform
@@ -87,7 +89,7 @@ import java.awt.Color
 
 object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = listOf("ChestESP")) {
 
-    private val modes = choices("Mode", Glow, arrayOf(BoxMode, Glow))
+    private val modes = choices("Mode", GlowMode, arrayOf(BoxMode, GlowMode))
 
     sealed class ChestType(name: String, defaultColor: Color4b) : ToggleableConfigurable(this, name, enabled = true) {
         val color by color("Color", defaultColor)
@@ -138,39 +140,68 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
     }
 
     private object BoxMode : Choice("Box") {
-
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        val dirtyFlag = atomic(true)
+
+        private val blockFacesRenderState = RenderPassRenderState("${ModuleStorageESP.name} $name BlockFaces")
+        private val blockOutlinesRenderState = RenderPassRenderState("${ModuleStorageESP.name} $name BlockOutlines")
+
+        override fun enable() {
+            dirtyFlag.value = true
+            super.enable()
+        }
+
         private val outline by boolean("Outline", true)
 
-        private val blockBoxes = mutableListOf<BlockBox>()
         private val entityBoxes = mutableListOf<EntityBox>()
-        private val mutableBlockPos = BlockPos.MutableBlockPos()
 
         override fun disable() {
-            blockBoxes.clear()
+            blockFacesRenderState.clearStates()
+            blockFacesRenderState.clearBuffers()
+            blockOutlinesRenderState.clearStates()
+            blockOutlinesRenderState.clearBuffers()
             entityBoxes.clear()
             super.disable()
         }
 
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
-            if (blockBoxes.isEmpty() && entityBoxes.isEmpty()) return@handler
+            if (blockFacesRenderState.ready) {
+                distanceFade.updateIfDirty()
+                val dynamicTransforms = getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
+                mc.mainRenderTarget.createRenderPass({ blockFacesRenderState.label + " Pass" }).use { pass ->
+                    pass.setPipeline(ClientRenderPipelines.relativeQuads(useColor = true))
+
+                    pass.bindProjectionUniform()
+                    pass.bindGlobalsUniform()
+                    pass.bindDynamicTransformsUniform(dynamicTransforms)
+                    distanceFade.bindUniform(pass)
+                    blockFacesRenderState.bindAndDraw(pass)
+                }
+            }
+
+            if (outline && blockOutlinesRenderState.ready) {
+                distanceFade.updateIfDirty()
+                val dynamicTransforms = getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
+                mc.mainRenderTarget.createRenderPass({ blockOutlinesRenderState.label + " Pass" }).use { pass ->
+                    pass.setPipeline(ClientRenderPipelines.relativeLines(useColor = true))
+
+                    pass.bindProjectionUniform()
+                    pass.bindGlobalsUniform()
+                    pass.bindDynamicTransformsUniform(dynamicTransforms)
+                    distanceFade.bindUniform(pass)
+                    blockOutlinesRenderState.bindAndDraw(pass)
+                }
+            }
+
+            if (entityBoxes.isEmpty()) return@handler
 
             val matrixStack = event.matrixStack
 
             renderEnvironmentForWorld(matrixStack) {
                 startBatch()
-
-                for ((pos, box, color) in blockBoxes) {
-                    val baseColor = color.with(a = 50)
-                    val outlineColor = if (outline) color.with(a = 100) else null
-
-                    withPositionRelativeToCamera(mutableBlockPos.set(pos)) {
-                        drawBox(box, baseColor, outlineColor)
-                    }
-                }
 
                 for ((entity, box, color) in entityBoxes) {
                     val baseColor = color.with(a = 50)
@@ -187,32 +218,11 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         }
 
         @JvmRecord
-        private data class BlockBox(val pos: Long, val box: AABB, val color: Color4b)
-
-        @JvmRecord
         private data class EntityBox(val entity: Entity, val box: AABB, val color: Color4b)
 
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
             val level = mc.level ?: return@handler
-
-            blockBoxes.clear()
-
-            for ((pos, type) in StorageScanner.iterate()) {
-                val color = type.color
-
-                if (color.isTransparent || !type.shouldRender(pos)) {
-                    continue
-                }
-
-                val blockState = level.getBlockState(pos)
-
-                if (blockState.isAir) continue
-
-                val boundingBox = blockState.outlineBox(pos)
-
-                blockBoxes.add(BlockBox(pos.asLong(), boundingBox, color))
-            }
 
             entityBoxes.clear()
 
@@ -227,11 +237,70 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
                 entityBoxes.add(EntityBox(entity, box, type.color))
             }
+
+
+            if (StorageScanner.isEmpty()) {
+                blockFacesRenderState.clearStates()
+                blockOutlinesRenderState.clearStates()
+                return@handler
+            }
+
+            if (!dirtyFlag.compareAndSet(expect = true, update = false)) {
+                return@handler
+            }
+
+            blockFacesRenderState.buildMesh(
+                pipeline = ClientRenderPipelines.relativeQuads(useColor = true),
+            ) { pose ->
+                for ((blockPos, type) in StorageScanner.iterate()) {
+                    val color = type.color
+
+                    if (color.isTransparent || !type.shouldRender(blockPos, ignoreDistance = true)) {
+                        continue
+                    }
+
+                    val blockState = level.getBlockState(blockPos)
+
+                    if (blockState.isAir) continue
+
+                    val boundingBox = blockState.outlineBox(blockPos)
+
+                    pose.withPush {
+                        translate(blockPos)
+                        addBoxFaces(last().pose(), boundingBox, color.alpha(50))
+                    }
+                }
+            }
+
+            if (outline) {
+                blockOutlinesRenderState.buildMesh(
+                    pipeline = ClientRenderPipelines.relativeLines(useColor = true),
+                ) { pose ->
+                    for ((blockPos, type) in StorageScanner.iterate()) {
+                        val color = type.color
+
+                        if (color.isTransparent || !type.shouldRender(blockPos, ignoreDistance = true)) {
+                            continue
+                        }
+
+                        val blockState = level.getBlockState(blockPos)
+
+                        if (blockState.isAir) continue
+
+                        val boundingBox = blockState.outlineBox(blockPos)
+
+                        pose.withPush {
+                            translate(blockPos)
+                            addBoxOutlines(last().pose(), boundingBox, color.alpha(100))
+                        }
+                    }
+                }
+            }
         }
 
     }
 
-    object Glow : Choice("Glow") {
+    object GlowMode : Choice("Glow") {
         internal val dirtyFlag = atomic(true)
 
         private val renderState = RenderPassRenderState("${ModuleStorageESP.name} $name")
@@ -365,7 +434,8 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         }
 
         override fun onUpdated() {
-            Glow.dirtyFlag.value = true
+            GlowMode.dirtyFlag.value = true
+            BoxMode.dirtyFlag.value = true
         }
     }
 

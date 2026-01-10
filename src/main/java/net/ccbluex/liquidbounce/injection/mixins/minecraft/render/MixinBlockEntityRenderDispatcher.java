@@ -44,7 +44,7 @@ public abstract class MixinBlockEntityRenderDispatcher {
         S state, @Local(argsOnly = true) S blockEntityRenderState
     ) {
         var client = Minecraft.getInstance();
-        if (ModuleStorageESP.Glow.INSTANCE.getRunning() && client.level != null) {
+        if (ModuleStorageESP.GlowMode.INSTANCE.getRunning() && client.level != null) {
             var type = ModuleStorageESP.categorize(client.level.getBlockEntity(blockEntityRenderState.blockPos));
 
             if (type != null && type.shouldRender(blockEntityRenderState.blockPos)) {
