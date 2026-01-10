@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.LivingEntity
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -81,7 +82,7 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
         renderIndicator(env, partialTicks, target)
     }
 
-    private fun renderIndicator(env: WorldRenderEnvironment, partialTicks: Float, target: net.minecraft.world.entity.LivingEntity?) {
+    private fun renderIndicator(env: WorldRenderEnvironment, partialTicks: Float, target: LivingEntity?) {
         val range = ModuleKillAura.range
         val pos = player.interpolateCurrentPosition(partialTicks.coerceIn(0f, 1f))
         val pulseOffset = calculatePulse(range)
