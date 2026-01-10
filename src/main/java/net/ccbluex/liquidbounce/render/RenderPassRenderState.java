@@ -47,6 +47,8 @@ public class RenderPassRenderState {
 
     public boolean ready = false;
 
+    public final String label;
+
     public RenderPassRenderState(String label) {
         vboStorage = new GrowableMappableRingBuffer(
             label + " VBO",
@@ -56,6 +58,7 @@ public class RenderPassRenderState {
             label + " IBO",
             GpuBuffer.USAGE_INDEX
         );
+        this.label = label;
     }
 
     public void uploadAndSetVertices(

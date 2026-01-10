@@ -259,7 +259,7 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
             if (renderState.ready) {
                 distanceFade.updateIfDirty()
                 val dynamicTransforms = getDynamicTransformsUniform()
-                event.framebuffer.createRenderPass({ "${ModuleStorageESP.name} $name Pass" }).use { pass ->
+                event.renderTarget.createRenderPass({ "${renderState.label} Pass" }).use { pass ->
                     pass.setPipeline(ClientRenderPipelines.outlineQuads(useColor = true))
 
                     pass.bindProjectionUniform()

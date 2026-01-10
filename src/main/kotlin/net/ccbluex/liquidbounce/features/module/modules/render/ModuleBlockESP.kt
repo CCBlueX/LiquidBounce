@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.buffers.GpuBufferSlice
+import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.pipeline.RenderTarget
 import kotlinx.atomicfu.atomic
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
@@ -112,6 +115,23 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 if (colorModulatorAlpha == -1) color else color.alpha(colorModulatorAlpha)
             }
         )
+
+        protected fun draw(
+            state: RenderPassRenderState,
+            pipeline: RenderPipeline,
+            target: RenderTarget,
+            dynamicTransforms: GpuBufferSlice,
+        ) {
+            target.createRenderPass({ state.label + " Pass" }).use { pass ->
+                pass.setPipeline(pipeline)
+
+                pass.bindProjectionUniform()
+                pass.bindGlobalsUniform()
+                pass.bindDynamicTransformsUniform(dynamicTransforms)
+                distanceFade.bindUniform(pass)
+                state.bindAndDraw(pass)
+            }
+        }
     }
 
     private object BoxMode : Mode("Box") {
@@ -139,15 +159,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             if (facesRenderState.ready) {
                 distanceFade.updateIfDirty()
                 val dynamicTransforms = getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
-                mc.mainRenderTarget.createRenderPass({ "${ModuleBlockESP.name} $name Faces Pass" }).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.relativeQuads(useColor))
-
-                    pass.bindProjectionUniform()
-                    pass.bindGlobalsUniform()
-                    pass.bindDynamicTransformsUniform(dynamicTransforms)
-                    distanceFade.bindUniform(pass)
-                    facesRenderState.bindAndDraw(pass)
-                }
+                draw(
+                    facesRenderState,
+                    ClientRenderPipelines.relativeQuads(useColor),
+                    mc.mainRenderTarget,
+                    dynamicTransforms,
+                )
             }
 
             if (outline && outlinesRenderState.ready) {
@@ -155,15 +172,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 val dynamicTransforms = getDynamicTransformsUniform(
                     modelView = event.matrixStack.last().pose(), colorModulatorAlpha = 150
                 )
-                mc.mainRenderTarget.createRenderPass({ "${ModuleBlockESP.name} $name Outlines Pass" }).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.relativeLines(useColor))
-
-                    pass.bindProjectionUniform()
-                    pass.bindGlobalsUniform()
-                    pass.bindDynamicTransformsUniform(dynamicTransforms)
-                    distanceFade.bindUniform(pass)
-                    outlinesRenderState.bindAndDraw(pass)
-                }
+                draw(
+                    outlinesRenderState,
+                    ClientRenderPipelines.relativeLines(useColor),
+                    mc.mainRenderTarget,
+                    dynamicTransforms,
+                )
             }
 
             if (BlockTracker.isEmpty()) {
@@ -180,15 +194,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 pipeline = ClientRenderPipelines.relativeQuads(useColor),
                 sortQuads = true,
             ) { pose ->
-                for ((blockPos, t) in BlockTracker.iterate()) {
-                    val blockState = t.state
-                    val boundingBox = t.box
-
+                forEachTrackedBlocks { blockPos, blockState, outlineBox ->
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
                     pose.withPush {
                         translate(blockPos)
-                        addBoxFaces(last().pose(), boundingBox, color)
+                        addBoxFaces(last().pose(), outlineBox, color)
                     }
                 }
             }
@@ -197,15 +208,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 outlinesRenderState.buildMesh(
                     pipeline = ClientRenderPipelines.relativeLines(useColor),
                 ) { pose ->
-                    for ((blockPos, t) in BlockTracker.iterate()) {
-                        val blockState = t.state
-                        val boundingBox = t.box
-
+                    forEachTrackedBlocks { blockPos, blockState, outlineBox ->
                         val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
                         pose.withPush {
                             translate(blockPos)
-                            addBoxOutlines(last().pose(), boundingBox, color)
+                            addBoxOutlines(last().pose(), outlineBox, color)
                         }
                     }
                 }
@@ -235,15 +243,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             if (renderState.ready) {
                 distanceFade.updateIfDirty()
                 val dynamicTransforms = getDynamicTransformsUniform(colorModulatorAlpha = 255)
-                event.framebuffer.createRenderPass({ "${ModuleBlockESP.name} $name Pass" }).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.outlineQuads(useColor))
-
-                    pass.bindProjectionUniform()
-                    pass.bindGlobalsUniform()
-                    pass.bindDynamicTransformsUniform(dynamicTransforms)
-                    distanceFade.bindUniform(pass)
-                    renderState.bindAndDraw(pass)
-                }
+                draw(
+                    renderState,
+                    ClientRenderPipelines.outlineQuads(useColor),
+                    event.renderTarget,
+                    dynamicTransforms,
+                )
                 event.markDirty()
             }
 
@@ -260,15 +265,12 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 pipeline = ClientRenderPipelines.outlineQuads(useColor),
                 sortQuads = true,
             ) { pose ->
-                for ((blockPos, t) in BlockTracker.iterate()) {
-                    val blockState = t.state
-                    val boundingBox = t.box
-
+                forEachTrackedBlocks { blockPos, blockState, outlineBox ->
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
 
                     pose.withPush {
                         translate(blockPos)
-                        addBoxFaces(last().pose(), boundingBox, color?.alpha(255))
+                        addBoxFaces(last().pose(), outlineBox, color?.alpha(255))
                     }
                 }
             }
@@ -286,6 +288,16 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
     private fun markDirtyForModes() {
         modes.choices.forEach { it.dirtyFlag.value = true }
+    }
+
+    private inline fun forEachTrackedBlocks(
+        block: (blockPos: BlockPos, blockState: BlockState, outlineBox: AABB) -> Unit,
+    ) {
+        for ((blockPos, t) in BlockTracker.iterate()) {
+            val blockState = t.state
+            val outlineBox = t.box
+            block(blockPos, blockState, outlineBox)
+        }
     }
 
     private class TrackedState(@JvmField val state: BlockState, @JvmField val box: AABB)

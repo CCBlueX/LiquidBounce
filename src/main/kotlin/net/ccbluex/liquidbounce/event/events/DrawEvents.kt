@@ -43,7 +43,7 @@ class WorldRenderEvent(val matrixStack: PoseStack, val camera: Camera, val parti
  */
 @Nameable("drawOutlines")
 class DrawOutlinesEvent(
-    val framebuffer: RenderTarget,
+    val renderTarget: RenderTarget,
     val matrixStack: PoseStack,
     val camera: Camera,
     val partialTicks: Float,
