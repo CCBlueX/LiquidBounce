@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.render.bindProjectionUniform
 import net.ccbluex.liquidbounce.render.buildMesh
 import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawGenericBlockESP
 import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
@@ -168,32 +169,22 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
-            if (blockFacesRenderState.ready) {
-                distanceFade.updateIfDirty()
-                val dynamicTransforms = getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
-                mc.mainRenderTarget.createRenderPass({ blockFacesRenderState.label + " Pass" }).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.relativeQuads(useColor = true))
-
-                    pass.bindProjectionUniform()
-                    pass.bindGlobalsUniform()
-                    pass.bindDynamicTransformsUniform(dynamicTransforms)
-                    distanceFade.bindUniform(pass)
-                    blockFacesRenderState.bindAndDraw(pass)
+            if (outline) {
+                mc.mainRenderTarget.drawGenericBlockESP(
+                    renderState = blockOutlinesRenderState,
+                    pipeline = ClientRenderPipelines.relativeLines(useColor = true),
+                    distanceFade = distanceFade,
+                ) {
+                    getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
                 }
             }
 
-            if (outline && blockOutlinesRenderState.ready) {
-                distanceFade.updateIfDirty()
-                val dynamicTransforms = getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
-                mc.mainRenderTarget.createRenderPass({ blockOutlinesRenderState.label + " Pass" }).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.relativeLines(useColor = true))
-
-                    pass.bindProjectionUniform()
-                    pass.bindGlobalsUniform()
-                    pass.bindDynamicTransformsUniform(dynamicTransforms)
-                    distanceFade.bindUniform(pass)
-                    blockOutlinesRenderState.bindAndDraw(pass)
-                }
+            mc.mainRenderTarget.drawGenericBlockESP(
+                renderState = blockFacesRenderState,
+                pipeline = ClientRenderPipelines.relativeQuads(useColor = true),
+                distanceFade = distanceFade,
+            ) {
+                getDynamicTransformsUniform(modelView = event.matrixStack.last().pose())
             }
 
             if (entityBoxes.isEmpty()) return@handler
@@ -325,21 +316,19 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
                 return@handler
             }
 
-            if (renderState.ready) {
-                distanceFade.updateIfDirty()
-                val dynamicTransforms = getDynamicTransformsUniform()
-                event.renderTarget.createRenderPass({ "${renderState.label} Pass" }).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.outlineQuads(useColor = true))
+            val dirty = event.renderTarget.drawGenericBlockESP(
+                renderState = renderState,
+                pipeline = ClientRenderPipelines.outlineQuads(useColor = true),
+                distanceFade = distanceFade,
+            )
 
-                    pass.bindProjectionUniform()
-                    pass.bindGlobalsUniform()
-                    pass.bindDynamicTransformsUniform(dynamicTransforms)
-                    distanceFade.bindUniform(pass)
-                    renderState.bindAndDraw(pass)
-                }
+            if (dirty) {
                 event.markDirty()
             }
+        }
 
+        @Suppress("unused")
+        private val tickHandler = handler<GameTickEvent> {
             if (StorageScanner.isEmpty()) {
                 renderState.clearStates()
                 return@handler

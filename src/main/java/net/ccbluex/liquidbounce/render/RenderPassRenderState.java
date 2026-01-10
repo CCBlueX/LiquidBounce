@@ -86,8 +86,6 @@ public class RenderPassRenderState {
         );
         indexSlice = pair.getFirst();
         indexType = pair.getSecond();
-
-        ready = true;
     }
 
     public void bindAndDraw(RenderPass pass) {

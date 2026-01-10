@@ -91,6 +91,7 @@ inline fun RenderPassRenderState.buildMesh(
             meshData.sortQuads(byteBufferBuilder, RenderSystem.getProjectionType().vertexSorting())
         }
         this.uploadAndSet(meshData, pipeline, rotate)
+        this.ready = true
     }
 
     byteBufferBuilder.clear()

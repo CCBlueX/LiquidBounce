@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
+import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
@@ -33,6 +34,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMaps
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformConfigurable
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
@@ -51,6 +53,7 @@ import java.util.*
 import java.util.function.Supplier
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
+import kotlin.use
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -134,6 +137,28 @@ inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) 
     } finally {
         GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
     }
+}
+
+internal inline fun RenderTarget.drawGenericBlockESP(
+    renderState: RenderPassRenderState,
+    pipeline: RenderPipeline,
+    distanceFade: DistanceFadeUniformConfigurable,
+    dynamicTransforms: () -> GpuBufferSlice = ::getDynamicTransformsUniform,
+): Boolean {
+    if (!renderState.ready) return false
+
+    distanceFade.updateIfDirty()
+    val dynamicTransforms = dynamicTransforms()
+    this.createRenderPass({ renderState.label + " Pass" }).use { pass ->
+        pass.setPipeline(pipeline)
+
+        pass.bindProjectionUniform()
+        pass.bindGlobalsUniform()
+        pass.bindDynamicTransformsUniform(dynamicTransforms)
+        distanceFade.bindUniform(pass)
+        renderState.bindAndDraw(pass)
+    }
+    return true
 }
 
 inline fun WorldRenderEnvironment.drawCustomMeshTextured(
