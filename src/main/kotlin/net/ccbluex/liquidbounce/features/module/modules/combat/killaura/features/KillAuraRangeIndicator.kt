@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.util.Mth
-import kotlin.math.abs
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -57,14 +56,9 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
     private val fadeAnimation by boolean("FadeAnimation", true)
     private val fadeSpeed by float("FadeSpeed", 0.1f, 0.01f..0.5f)
 
-    private val showWallRange by boolean("ShowWallRange", false)
-    private val wallRangeColor by color("WallRangeColor", Color4b(255, 165, 0, 60))
-
-    private val showScanRange by boolean("ShowScanRange", false)
-    private val scanRangeColor by color("ScanRangeColor", Color4b(100, 100, 255, 40))
-
-    private val showOpponentRange by boolean("ShowOpponentRange", false)
-    private val opponentRangeColor by color("OpponentRangeColor", Color4b(255, 0, 0, 40))
+    private val wallRangeColor by color("WallRangeColor", Color4b(255, 165, 0, 0))
+    private val scanRangeColor by color("ScanRangeColor", Color4b(100, 100, 255, 0))
+    private val opponentRangeColor by color("OpponentRangeColor", Color4b(255, 0, 0, 0))
 
     private val hideWhenDead by boolean("HideWhenDead", true)
     private val hideWhenSpectator by boolean("HideWhenSpectator", true)
@@ -80,92 +74,69 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
     }
 
     fun render(env: WorldRenderEnvironment, partialTicks: Float) {
-        if (!enabled) return
-
-        val safePlayer = getPlayerIfVisible() ?: return
-        if (shouldHideForInventory()) return
+        if (!enabled || !canRender()) return
 
         val target = ModuleKillAura.targetTracker.target
-        updateColorFactor(target != null)
+        val hasTarget = target != null
+
+        updateColorFactor(hasTarget)
 
         val range = ModuleKillAura.range
-        val pos = safePlayer.interpolateCurrentPosition(partialTicks.coerceIn(0f, 1f))
-        val pulseOffset = calculatePulse(range)
-        val distance = target?.let { sqrt(safePlayer.squaredBoxedDistanceTo(it)).toFloat() }
+        val pos = player.interpolateCurrentPosition(partialTicks.coerceIn(0f, 1f))
+        val pulseOffset = if (pulseAnimation) {
+            val time = System.currentTimeMillis() / 1000.0 * pulseSpeed
+            sin(time * Mth.TWO_PI).toFloat() * pulseIntensity * range
+        } else 0f
+
+        val distance = target?.let { sqrt(player.squaredBoxedDistanceTo(it)).toFloat() }
 
         with(env) {
             startBatch()
             withPositionRelativeToCamera(pos) {
-                renderAllCircles(range, pulseOffset, distance, target != null)
+                // Main range circle
+                drawRangeCircle(range + pulseOffset, getColor(distance, range))
+
+                // Wall range circle
+                if (wallRangeColor.a > 0 && ModuleKillAura.wallRange < range) {
+                    val color = if (hasTarget) wallRangeColor.fade(1.5f) else wallRangeColor
+                    drawRangeCircle(ModuleKillAura.wallRange + pulseOffset * 0.5f, color, 80)
+                }
+
+                // Scan range circle
+                if (scanRangeColor.a > 0) {
+                    drawRangeCircle(range + 2.5f, scanRangeColor, 60)
+                }
+
+                // Opponent range circle
+                if (opponentRangeColor.a > 0 && hasTarget) {
+                    drawRangeCircle(3f, opponentRangeColor, 100)
+                }
             }
             commitBatch()
         }
     }
 
-    private fun getPlayerIfVisible() = player.takeUnless {
-        (hideWhenDead && it.isDeadOrDying) ||
-        (hideWhenSpectator && it.isSpectator) ||
-        (hideInVehicle && it.vehicle != null)
+    private fun canRender(): Boolean {
+        if (hideWhenDead && player.isDeadOrDying) return false
+        if (hideWhenSpectator && player.isSpectator) return false
+        if (hideInVehicle && player.vehicle != null) return false
+        if (respectInventorySetting && !ModuleKillAura.ignoreOpenInventory) {
+            if (isInventoryOpen || mc.screen is ContainerScreen) return false
+        }
+        return true
     }
 
-    private fun shouldHideForInventory(): Boolean {
-        if (!respectInventorySetting || ModuleKillAura.ignoreOpenInventory) return false
-        return isInventoryOpen || net.ccbluex.liquidbounce.utils.client.mc.screen is ContainerScreen
-    }
-
-    private fun WorldRenderEnvironment.renderAllCircles(
-        range: Float,
-        pulseOffset: Float,
-        distance: Float?,
-        hasTarget: Boolean
-    ) {
-        drawRangeCircle(range + pulseOffset, getColor(distance, range))
-
-        if (showWallRange && ModuleKillAura.wallRange < range) {
-            val color = if (hasTarget) {
-                wallRangeColor.with(a = (wallRangeColor.a * 1.5f).toInt().coerceAtMost(255))
-            } else {
-                wallRangeColor
-            }
-            drawRangeCircle(ModuleKillAura.wallRange + pulseOffset * 0.5f, color, outlineAlpha = 80)
-        }
-
-        if (showScanRange) {
-            drawRangeCircle(range + 2.5f, scanRangeColor, outlineAlpha = 60)
-        }
-
-        if (showOpponentRange && hasTarget) {
-            drawRangeCircle(3f, opponentRangeColor, outlineAlpha = 100)
-        }
-    }
-
-    private fun WorldRenderEnvironment.drawRangeCircle(
-        radius: Float, 
-        color: Color4b, 
-        outlineAlpha: Int = 255
-    ) {
+    private fun WorldRenderEnvironment.drawRangeCircle(radius: Float, color: Color4b, outlineAlpha: Int = 255) {
         drawGradientCircle(radius, 0f, color, color.with(a = 0))
         if (outline) {
             drawCircleOutline(radius, outlineColor.with(a = outlineAlpha))
         }
     }
 
-    private fun calculatePulse(range: Float): Float =
-        if (pulseAnimation) {
-            val time = System.currentTimeMillis() / 1000.0 * pulseSpeed
-            sin(time * Mth.TWO_PI).toFloat() * pulseIntensity * range
-        } else {
-            0f
-        }
-
     private fun updateColorFactor(hasTarget: Boolean) {
         val target = if (hasTarget) 1f else 0f
         colorFactor = if (fadeAnimation) {
-            Mth.lerp(fadeSpeed, colorFactor, target).also {
-                if (abs(it - target) < 0.01f) {
-                    colorFactor = target
-                }
-            }
+            Mth.lerp(fadeSpeed, colorFactor, target)
         } else {
             target
         }
@@ -173,17 +144,11 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
 
     private fun getColor(distance: Float?, range: Float): Color4b = when (colorMode) {
         ColorMode.RAINBOW -> rainbow(alpha = 0.5f)
-        ColorMode.DISTANCE -> distance?.let { d ->
-            activeColor.interpolateTo(idleColor, (d / range).coerceIn(0f, 1f).toDouble())
+        ColorMode.DISTANCE -> distance?.let {
+            activeColor.interpolateTo(idleColor, (it / range).coerceIn(0f, 1f).toDouble())
         } ?: idleColor
-        ColorMode.STATIC -> if (fadeAnimation) {
-            idleColor.interpolateTo(activeColor, colorFactor.toDouble())
-        } else {
-            if (colorFactor > 0.5f) {
-                activeColor
-            } else {
-                idleColor
-            }
-        }
+        ColorMode.STATIC -> idleColor.interpolateTo(activeColor, colorFactor.toDouble())
     }
+
+    private fun Color4b.fade(factor: Float) = with(a = (a * factor).toInt().coerceAtMost(255))
 }
