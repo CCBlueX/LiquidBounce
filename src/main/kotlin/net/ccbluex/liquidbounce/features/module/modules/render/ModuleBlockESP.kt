@@ -178,9 +178,6 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             ) { pose ->
                 for ((blockPos, t) in BlockTracker.iterate()) {
                     val blockState = t.state
-
-                    if (blockState.isAir) continue
-
                     val boundingBox = t.box
 
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
@@ -198,9 +195,6 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
                 ) { pose ->
                     for ((blockPos, t) in BlockTracker.iterate()) {
                         val blockState = t.state
-
-                        if (blockState.isAir) continue
-
                         val boundingBox = t.box
 
                         val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
@@ -270,9 +264,6 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
             ) { pose ->
                 for ((blockPos, t) in BlockTracker.iterate()) {
                     val blockState = t.state
-
-                    if (blockState.isAir) continue
-
                     val boundingBox = t.box
 
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
@@ -303,7 +294,7 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
     private object BlockTracker : AbstractBlockLocationTracker.BlockPos2State<TrackedState>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
-            return if (state.block in targets) {
+            return if (!state.isAir && state.block in targets) {
                 TrackedState(state, state.outlineBox(pos))
             } else {
                 null
