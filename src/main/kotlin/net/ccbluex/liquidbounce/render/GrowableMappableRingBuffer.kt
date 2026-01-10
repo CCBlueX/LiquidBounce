@@ -30,6 +30,22 @@ import net.minecraft.client.renderer.MappableRingBuffer
 import org.lwjgl.system.MemoryUtil
 import java.nio.ByteBuffer
 
+/**
+ * An ArrayList-like growable [GpuBuffer] wrapper for streaming GPU data
+ * (e.g. dynamic VBO/IBO uploads).
+ *
+ * This class provides a single upload region per frame. The buffer automatically
+ * grows to fit the current upload size and rotates between multiple GPU buffers
+ * (via [MappableRingBuffer]) to avoid overwriting data still in use by the GPU.
+ *
+ * IMPORTANT:
+ * - Only ONE upload() call should be made between two rotate() calls.
+ *   Each upload overwrites the beginning of the current buffer.
+ * - Call rotate() before writing new data, so previously submitted commands
+ *   complete on the GPU before the buffer is reused.
+ * - Capacity grows automatically but old ring buffers are not immediately freed;
+ *   they must be closed when safe (typically after a frame flip or via delayed cleanup).
+ */
 class GrowableMappableRingBuffer @JvmOverloads constructor(
     val label: String,
     val usage: @GpuBuffer.Usage Int,
