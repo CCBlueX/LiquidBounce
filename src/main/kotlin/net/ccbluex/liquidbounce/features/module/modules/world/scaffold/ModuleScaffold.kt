@@ -67,6 +67,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
@@ -121,10 +122,59 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val timer by float("Timer", 1f, 0.01f..10f)
 
+    /**
+     * Wait Time Feature - When rotation changes, sneak and pause placement like legit behavior
+     */
+    internal object WaitTimeFeature : ToggleableConfigurable(this, "WaitTime", false) {
+        val waitDuration by float("WaitDuration", 2.0f, 0.5f..10.0f, "s")
+        val rotationThreshold by float("RotationThreshold", 1.0f, 0.1f..10.0f)
+
+        // State tracking
+        var lastRotation: Rotation? = null
+        var rotationChangedTime: Long = 0L
+        var isWaiting: Boolean = false
+
+        fun reset() {
+            lastRotation = null
+            rotationChangedTime = 0L
+            isWaiting = false
+        }
+
+        fun checkRotationChange(currentRotation: Rotation?): Boolean {
+            if (!enabled || currentRotation == null) {
+                return false
+            }
+
+            val last = lastRotation
+            val currentTime = System.currentTimeMillis()
+
+            if (last != null) {
+                val yawDiff = kotlin.math.abs(currentRotation.yaw - last.yaw)
+                val pitchDiff = kotlin.math.abs(currentRotation.pitch - last.pitch)
+
+                if (yawDiff > rotationThreshold || pitchDiff > rotationThreshold) {
+                    // Rotation changed significantly
+                    rotationChangedTime = currentTime
+                    isWaiting = true
+                }
+            }
+
+            lastRotation = currentRotation
+
+            // Check if wait duration has passed
+            if (isWaiting && (currentTime - rotationChangedTime) >= (waitDuration * 1000L).toLong()) {
+                isWaiting = false
+            }
+
+            return isWaiting
+        }
+    }
+
     init {
         tree(ScaffoldBlockItemSelection)
         tree(ScaffoldAutoBlockFeature)
         tree(ScaffoldMovementPrediction)
+        tree(WaitTimeFeature)
     }
 
     internal val technique = choices(
@@ -261,6 +311,9 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     private var forceSneak = 0
     private var startY = 0
     private var jumps = 0
+    
+    // Wait time feature - tracks if we should force sneak due to rotation change
+    internal var waitTimeForceSneak = false
 
     private var nextBlock: Block? = null
 
@@ -323,6 +376,8 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
         ScaffoldMovementPlanner.reset()
         ScaffoldMovementPrediction.reset()
+        WaitTimeFeature.reset()
+        waitTimeForceSneak = false
 
         super.onEnabled()
     }
@@ -334,6 +389,8 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         nextBlock = null
         updateRenderCount(null)
         forceSneak = 0
+        waitTimeForceSneak = false
+        WaitTimeFeature.reset()
         renderer.clearSilently()
     }
 
@@ -438,6 +495,11 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
             forceSneak--
         }
 
+        // Wait Time feature - force sneak when rotation changed
+        if (waitTimeForceSneak) {
+            event.sneak = true
+        }
+
         // Ledge feature - AutoJump and AutoSneak
         if (ledge) {
             val technique = if (isTowering) {
@@ -452,7 +514,8 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
                 technique as? ScaffoldLedgeExtension
             )
 
-            if (ledgeAction.jump) {
+            if (ledgeAction.jump && !waitTimeForceSneak) {
+                // Don't jump if WaitTime is active - only sneak until rotation settles
                 event.jump = true
             }
 
@@ -484,6 +547,10 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
     @Suppress("unused")
     private val tickHandler = tickHandler {
         updateRenderCount(blockCount)
+
+        // Check Wait Time feature - detect rotation changes
+        val waitTimeRotation = RotationManager.currentRotation
+        waitTimeForceSneak = WaitTimeFeature.checkRotationChange(waitTimeRotation)
 
         if (player.onGround()) {
             // Placement Y is the Y coordinate of the block below the player
@@ -549,6 +616,11 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
         }
 
         if (target == null || currentCrosshairTarget == null) {
+            return@tickHandler
+        }
+
+        // Wait Time feature - don't place blocks while waiting for rotation to settle
+        if (waitTimeForceSneak) {
             return@tickHandler
         }
 
