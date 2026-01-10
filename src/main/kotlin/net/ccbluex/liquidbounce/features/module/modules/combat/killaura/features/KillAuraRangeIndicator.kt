@@ -83,36 +83,50 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
 
         val range = ModuleKillAura.range
         val pos = player.interpolateCurrentPosition(partialTicks.coerceIn(0f, 1f))
-        val pulseOffset = if (pulseAnimation) {
-            val time = System.currentTimeMillis() / 1000.0 * pulseSpeed
-            sin(time * Mth.TWO_PI).toFloat() * pulseIntensity * range
-        } else 0f
-
+        val pulseOffset = calculatePulse(range)
         val distance = target?.let { sqrt(player.squaredBoxedDistanceTo(it)).toFloat() }
 
         with(env) {
             startBatch()
             withPositionRelativeToCamera(pos) {
-                // Main range circle
-                drawRangeCircle(range + pulseOffset, getColor(distance, range))
-
-                // Wall range circle
-                if (wallRangeColor.a > 0 && ModuleKillAura.wallRange < range) {
-                    val color = if (hasTarget) wallRangeColor.fade(1.5f) else wallRangeColor
-                    drawRangeCircle(ModuleKillAura.wallRange + pulseOffset * 0.5f, color, 80)
-                }
-
-                // Scan range circle
-                if (scanRangeColor.a > 0) {
-                    drawRangeCircle(range + 2.5f, scanRangeColor, 60)
-                }
-
-                // Opponent range circle
-                if (opponentRangeColor.a > 0 && hasTarget) {
-                    drawRangeCircle(3f, opponentRangeColor, 100)
-                }
+                renderCircles(range, pulseOffset, distance, hasTarget)
             }
             commitBatch()
+        }
+    }
+
+    private fun calculatePulse(range: Float): Float {
+        return if (pulseAnimation) {
+            val time = System.currentTimeMillis() / 1000.0 * pulseSpeed
+            sin(time * Mth.TWO_PI).toFloat() * pulseIntensity * range
+        } else {
+            0f
+        }
+    }
+
+    private fun WorldRenderEnvironment.renderCircles(
+        range: Float,
+        pulseOffset: Float,
+        distance: Float?,
+        hasTarget: Boolean
+    ) {
+        drawRangeCircle(range + pulseOffset, getColor(distance, range))
+
+        if (wallRangeColor.a > 0 && ModuleKillAura.wallRange < range) {
+            val color = if (hasTarget) {
+                wallRangeColor.fade(1.5f)
+            } else {
+                wallRangeColor
+            }
+            drawRangeCircle(ModuleKillAura.wallRange + pulseOffset * 0.5f, color, 80)
+        }
+
+        if (scanRangeColor.a > 0) {
+            drawRangeCircle(range + 2.5f, scanRangeColor, 60)
+        }
+
+        if (opponentRangeColor.a > 0 && hasTarget) {
+            drawRangeCircle(3f, opponentRangeColor, 100)
         }
     }
 
