@@ -123,7 +123,7 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
         val sliceOffset = currentOffset.toLong()
         val slice = buffer.slice(sliceOffset, byteCount.toLong())
 
-        // Map the whole buffer and write at [currentOffset].
+        // Map the buffer slice and copy data into it.
         slice.mapBuffer(read = false, write = true).use { mappedView ->
             MemoryUtil.memCopy(data, mappedView.data())
         }
