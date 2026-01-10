@@ -605,6 +605,7 @@ object ModuleScaffold : ClientModule("Scaffold", Category.WORLD) {
 
         if (simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving
             && SimulatePlacementAttempts.clicker.isClickTick
+            && !waitTimeForceSneak  // Don't simulate placement during WaitTime
         ) {
             SimulatePlacementAttempts.clicker.click {
                 doPlacement(currentCrosshairTarget!!, suitableHand!!, {
