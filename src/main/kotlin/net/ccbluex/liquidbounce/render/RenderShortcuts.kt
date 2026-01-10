@@ -22,7 +22,6 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
-import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
@@ -182,6 +181,8 @@ private val sharedVboStorage = GrowableMappableRingBuffer(
 private val sharedIboStorage = GrowableMappableRingBuffer(
     "${LiquidBounce.CLIENT_NAME} Shared IBO",
     GpuBuffer.USAGE_INDEX,
+    // 128 bytes padding, 4KB minimum size
+    GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 7, min = 1 shl 12),
 )
 
 /**
@@ -196,31 +197,23 @@ internal fun drawMesh(
     colorModulator: Color4b = Color4b.WHITE,
     renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
     shaderTextureProvider: Map<String, AbstractTexture> = emptyMap(),
-) = meshData.use { buffer ->
+) = meshData.use { meshData ->
     val dynamicTransforms = getDynamicTransformsUniform(colorModulator = colorModulator)
 
     if (pipeline.vertexFormatMode == VertexFormat.Mode.QUADS) {
-        buffer.sortQuads(
+        meshData.sortQuads(
             ClientTesselator.Shared,
             RenderSystem.getProjectionType().vertexSorting(),
         )
     }
 
-    sharedVboStorage.rotate()
-    val vertexSlice = sharedVboStorage.upload(buffer.vertexBuffer())
-    val indexCount = buffer.drawState().indexCount
-    val indexSlice: GpuBufferSlice
-    val indexType: VertexFormat.IndexType
-    if (buffer.indexBuffer() == null) {
-        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawState().mode)
-        indexType = shapeIndexBuffer.type()
-        indexSlice = shapeIndexBuffer.getBuffer(indexCount)
-            .slice(0L, indexCount.toLong() * indexType.bytes)
-    } else {
-        sharedIboStorage.rotate()
-        indexSlice = sharedIboStorage.upload(buffer.indexBuffer()!!)
-        indexType = buffer.drawState().indexType
-    }
+    val vertexSlice = sharedVboStorage.upload(meshData.vertexBuffer())
+    val indexCount = meshData.drawState().indexCount
+    val (indexSlice, indexType) = RenderPassRenderState.uploadIndicesOrUseSharedSequential(
+        meshData,
+        sharedIboStorage,
+        pipeline.vertexFormatMode,
+    )
 
     val colorTexture = RenderSystem.outputColorTextureOverride
         ?: renderTarget.colorTextureView!!
@@ -244,13 +237,10 @@ internal fun drawMesh(
             renderPass.bindTexture(key, texture.textureView, texture.sampler)
         }
 
-        val baseVertex = (vertexSlice.offset / pipeline.vertexFormat.vertexSize).toInt()
-        val firstIndexInBuffer = (indexSlice.offset / indexType.bytes).toInt()
-
         renderPass.setIndexBuffer(indexSlice.buffer, indexType)
         renderPass.drawIndexed(
-            baseVertex,
-            firstIndexInBuffer,
+            (vertexSlice.offset / pipeline.vertexFormat.vertexSize).toInt(),
+            (indexSlice.offset / indexType.bytes).toInt(),
             indexCount,
             1,
         )

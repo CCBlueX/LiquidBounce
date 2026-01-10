@@ -65,8 +65,13 @@ fun VertexConsumer.addBoxFaces(
     }
 }
 
+/**
+ * Build new mesh data and upload it.
+ * This method is designed for lazy building so [rotate] defaults to true.
+ */
 inline fun RenderPassRenderState.buildMesh(
     pipeline: RenderPipeline,
+    rotate: Boolean = true,
     block: VertexConsumer.(pose: PoseStack) -> Unit,
 ) {
     clearStates()
@@ -85,9 +90,8 @@ inline fun RenderPassRenderState.buildMesh(
         if (pipeline.vertexFormatMode == VertexFormat.Mode.QUADS) {
             meshData.sortQuads(byteBufferBuilder, RenderSystem.getProjectionType().vertexSorting())
         }
-        this.uploadAndSet(meshData, pipeline)
+        this.uploadAndSet(meshData, pipeline, rotate)
     }
 
     byteBufferBuilder.clear()
-    this.ready = true
 }

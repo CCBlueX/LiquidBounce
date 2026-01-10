@@ -26,6 +26,7 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import kotlin.Pair;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -66,27 +67,27 @@ public class RenderPassRenderState {
 
     public void uploadAndSet(
         MeshData meshData,
-        RenderPipeline pipeline
+        RenderPipeline pipeline,
+        boolean rotate
     ) {
         // Vertices
-        this.vboStorage.rotate();
+        if (rotate) this.vboStorage.rotate();
         ByteBuffer vertices = meshData.vertexBuffer();
         vertexSlice = this.vboStorage.upload(vertices);
         vertexFormat = pipeline.getVertexFormat();
 
         // Indices
-        this.iboStorage.rotate();
-        ByteBuffer indices = meshData.indexBuffer();
+        if (rotate) this.iboStorage.rotate();
         indexCount = meshData.drawState().indexCount();
-        if (indices == null) {
-            var shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.getVertexFormatMode());
-            indexType = shapeIndexBuffer.type();
-            indexSlice = shapeIndexBuffer.getBuffer(indexCount)
-                .slice(0, (long) indexCount * indexType.bytes);
-        } else {
-            indexType = meshData.drawState().indexType();
-            indexSlice = this.iboStorage.upload(indices);
-        }
+        var pair = uploadIndicesOrUseSharedSequential(
+            meshData,
+            this.iboStorage,
+            pipeline.getVertexFormatMode()
+        );
+        indexSlice = pair.getFirst();
+        indexType = pair.getSecond();
+
+        ready = true;
     }
 
     public void bindAndDraw(RenderPass pass) {
@@ -123,5 +124,26 @@ public class RenderPassRenderState {
     public void clearBuffers() {
         vboStorage.clear();
         iboStorage.clear();
+    }
+
+    public static Pair<GpuBufferSlice, VertexFormat.IndexType> uploadIndicesOrUseSharedSequential(
+        MeshData meshData,
+        GrowableMappableRingBuffer bufferStorage,
+        VertexFormat.Mode vertexFormatMode
+    ) {
+        ByteBuffer indices = meshData.indexBuffer();
+        GpuBufferSlice indexSlice;
+        VertexFormat.IndexType indexType;
+        if (indices == null) {
+            int indexCount = meshData.drawState().indexCount();
+            var shapeIndexBuffer = RenderSystem.getSequentialBuffer(vertexFormatMode);
+            indexType = shapeIndexBuffer.type();
+            indexSlice = shapeIndexBuffer.getBuffer(indexCount)
+                .slice(0, (long) indexCount * indexType.bytes);
+        } else {
+            indexType = meshData.drawState().indexType();
+            indexSlice = bufferStorage.upload(indices);
+        }
+        return new Pair<>(indexSlice, indexType);
     }
 }
