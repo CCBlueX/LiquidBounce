@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.buffers.GpuBuffer
+import com.mojang.blaze3d.buffers.GpuBufferSlice
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderSystem
@@ -47,8 +48,7 @@ import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import org.lwjgl.opengl.GL11C
-import java.util.OptionalDouble
-import java.util.OptionalInt
+import java.util.*
 import java.util.function.Supplier
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -178,6 +178,7 @@ private val sharedVboStorage = GrowableMappableRingBuffer(
     // 256 bytes padding, 128KB minimum size
     GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 17),
 )
+
 private val sharedIboStorage = GrowableMappableRingBuffer(
     "${LiquidBounce.CLIENT_NAME} Shared IBO",
     GpuBuffer.USAGE_INDEX,
@@ -188,7 +189,7 @@ private val sharedIboStorage = GrowableMappableRingBuffer(
  * @see net.minecraft.client.renderer.rendertype.RenderType.draw
  */
 @Suppress("detekt:all")
-fun drawMesh(
+internal fun drawMesh(
     pipeline: RenderPipeline,
     meshData: MeshData,
     renderTarget: RenderTarget = mc.mainRenderTarget,
@@ -198,15 +199,26 @@ fun drawMesh(
 ) = meshData.use { buffer ->
     val dynamicTransforms = getDynamicTransformsUniform(colorModulator = colorModulator)
 
-    val vertexBuffer = sharedVboStorage.upload(buffer.vertexBuffer()).buffer
-    val indexBuffer: GpuBuffer
+    if (pipeline.vertexFormatMode == VertexFormat.Mode.QUADS) {
+        buffer.sortQuads(
+            ClientTesselator.Shared,
+            RenderSystem.getProjectionType().vertexSorting(),
+        )
+    }
+
+    sharedVboStorage.rotate()
+    val vertexSlice = sharedVboStorage.upload(buffer.vertexBuffer())
+    val indexCount = buffer.drawState().indexCount
+    val indexSlice: GpuBufferSlice
     val indexType: VertexFormat.IndexType
     if (buffer.indexBuffer() == null) {
         val shapeIndexBuffer = RenderSystem.getSequentialBuffer(buffer.drawState().mode)
-        indexBuffer = shapeIndexBuffer.getBuffer(buffer.drawState().indexCount)
         indexType = shapeIndexBuffer.type()
+        indexSlice = shapeIndexBuffer.getBuffer(indexCount)
+            .slice(0L, indexCount.toLong() * indexType.bytes)
     } else {
-        indexBuffer = sharedIboStorage.upload(buffer.indexBuffer()!!).buffer
+        sharedIboStorage.rotate()
+        indexSlice = sharedIboStorage.upload(buffer.indexBuffer()!!)
         indexType = buffer.drawState().indexType
     }
 
@@ -226,18 +238,23 @@ fun drawMesh(
         renderPass.setupGlobalScissor()
         renderPass.bindDefaultUniforms()
         renderPass.bindDynamicTransformsUniform(dynamicTransforms)
-        renderPass.setVertexBuffer(0, vertexBuffer)
+        renderPass.setVertexBuffer(0, vertexSlice.buffer)
 
         for ((key, texture) in shaderTextureProvider) {
             renderPass.bindTexture(key, texture.textureView, texture.sampler)
         }
 
-        renderPass.setIndexBuffer(indexBuffer, indexType)
-        renderPass.drawIndexed(0, 0, buffer.drawState().indexCount, 1)
-    }
+        val baseVertex = (vertexSlice.offset / pipeline.vertexFormat.vertexSize).toInt()
+        val firstIndexInBuffer = (indexSlice.offset / indexType.bytes).toInt()
 
-    sharedVboStorage.rotate()
-    sharedIboStorage.rotate()
+        renderPass.setIndexBuffer(indexSlice.buffer, indexType)
+        renderPass.drawIndexed(
+            baseVertex,
+            firstIndexInBuffer,
+            indexCount,
+            1,
+        )
+    }
 }
 
 /**

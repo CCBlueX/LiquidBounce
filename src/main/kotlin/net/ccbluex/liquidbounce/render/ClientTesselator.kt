@@ -29,6 +29,9 @@ object ClientTesselator {
 
     private const val BUFFER_SIZE = 0xC0000
 
+    @JvmField
+    val Shared = ByteBufferBuilder(BUFFER_SIZE)
+
     private val bufferAllocators = Reference2ReferenceOpenHashMap<RenderPipeline, ByteBufferBuilder>()
 
     @JvmStatic

@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.render;
 
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.MeshData;
@@ -40,9 +42,10 @@ public class RenderPassRenderState {
     private final GrowableMappableRingBuffer vboStorage;
     private final GrowableMappableRingBuffer iboStorage;
 
-    public @Nullable GpuBuffer vertexBuffer;
-    public @Nullable GpuBuffer indexBuffer;
+    public @Nullable GpuBufferSlice vertexSlice;
+    public @Nullable GpuBufferSlice indexSlice;
     public int indexCount;
+    public @Nullable VertexFormat vertexFormat;
     public VertexFormat.@Nullable IndexType indexType;
 
     public boolean ready = false;
@@ -61,28 +64,28 @@ public class RenderPassRenderState {
         this.label = label;
     }
 
-    public void uploadAndSetVertices(
-        MeshData meshData
+    public void uploadAndSet(
+        MeshData meshData,
+        RenderPipeline pipeline
     ) {
+        // Vertices
         this.vboStorage.rotate();
         ByteBuffer vertices = meshData.vertexBuffer();
-        vertexBuffer = this.vboStorage.upload(vertices).buffer();
-    }
+        vertexSlice = this.vboStorage.upload(vertices);
+        vertexFormat = pipeline.getVertexFormat();
 
-    public void uploadAndSetIndices(
-        MeshData meshData,
-        VertexFormat.Mode vertexFormatMode
-    ) {
+        // Indices
         this.iboStorage.rotate();
         ByteBuffer indices = meshData.indexBuffer();
         indexCount = meshData.drawState().indexCount();
         if (indices == null) {
-            var shapeIndexBuffer = RenderSystem.getSequentialBuffer(vertexFormatMode);
-            indexBuffer = shapeIndexBuffer.getBuffer(indexCount);
+            var shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.getVertexFormatMode());
             indexType = shapeIndexBuffer.type();
+            indexSlice = shapeIndexBuffer.getBuffer(indexCount)
+                .slice(0, (long) indexCount * indexType.bytes);
         } else {
-            indexBuffer = this.iboStorage.upload(indices).buffer();
             indexType = meshData.drawState().indexType();
+            indexSlice = this.iboStorage.upload(indices);
         }
     }
 
@@ -91,20 +94,27 @@ public class RenderPassRenderState {
             return;
         }
 
-        assert vertexBuffer != null;
-        assert indexBuffer != null;
+        assert vertexSlice != null;
+        assert vertexFormat != null;
+        assert indexSlice != null;
         assert indexType != null;
-        pass.setVertexBuffer(0, vertexBuffer);
-        pass.setIndexBuffer(indexBuffer, indexType);
-        pass.drawIndexed(0, 0, indexCount, 1);
+        pass.setVertexBuffer(0, vertexSlice.buffer());
+        pass.setIndexBuffer(indexSlice.buffer(), indexType);
+        pass.drawIndexed(
+            (int) (vertexSlice.offset() / vertexFormat.getVertexSize()),
+            (int) (indexSlice.offset() / indexType.bytes),
+            indexCount,
+            1
+        );
     }
 
     /**
      * Clear the render state. This won't close the buffers.
      */
     public void clearStates() {
-        vertexBuffer = null;
-        indexBuffer = null;
+        vertexSlice = null;
+        vertexFormat = null;
+        indexSlice = null;
         indexCount = 0;
         indexType = null;
         ready = false;

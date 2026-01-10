@@ -69,9 +69,9 @@ inline fun Tesselator.begin(pipeline: RenderPipeline): BufferBuilder =
 /**
  * Context representing the rendering environment.
  *
- * @param framebuffer The render target framebuffer.
+ * @param renderTarget The render target framebuffer.
  */
-sealed class RenderEnvironment(val framebuffer: RenderTarget) {
+sealed class RenderEnvironment(val renderTarget: RenderTarget) {
 
     val shaderTextures = Object2ObjectArrayMap<String, AbstractTexture>(1)
     var shaderColor = Color4b.WHITE
@@ -141,7 +141,7 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
     ) = drawMesh(
         pipeline,
         meshData,
-        this.framebuffer,
+        this.renderTarget,
         colorModulator = shaderColor,
         shaderTextureProvider = shaderTextureProvider,
     )
@@ -161,10 +161,10 @@ sealed class RenderEnvironment(val framebuffer: RenderTarget) {
 }
 
 class WorldRenderEnvironment(
-    framebuffer: RenderTarget,
+    renderTarget: RenderTarget,
     val matrixStack: PoseStack,
     val camera: Camera,
-) : RenderEnvironment(framebuffer) {
+) : RenderEnvironment(renderTarget) {
     fun relativeToCamera(pos: Vec3f): Vec3 = pos.relativeTo(camera)
 
     fun relativeToCamera(pos: Position): Vec3 = pos.relativeTo(camera)

@@ -282,7 +282,6 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.outlineQuads(useColor = true),
-                sortQuads = true,
             ) { pose ->
                 for ((blockPos, type) in StorageScanner.iterate()) {
                     if (type.color.isTransparent || !type.shouldRender(blockPos, ignoreDistance = true)) continue

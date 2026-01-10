@@ -192,7 +192,6 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
             facesRenderState.buildMesh(
                 pipeline = ClientRenderPipelines.relativeQuads(useColor),
-                sortQuads = true,
             ) { pose ->
                 forEachTrackedBlocks { blockPos, blockState, outlineBox ->
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null
@@ -263,7 +262,6 @@ object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
 
             renderState.buildMesh(
                 pipeline = ClientRenderPipelines.outlineQuads(useColor),
-                sortQuads = true,
             ) { pose ->
                 forEachTrackedBlocks { blockPos, blockState, outlineBox ->
                     val color = if (useColor) colorMode.getColor(blockPos to blockState) else null

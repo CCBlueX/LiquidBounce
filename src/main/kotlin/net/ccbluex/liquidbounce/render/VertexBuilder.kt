@@ -24,6 +24,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
+import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.world.phys.AABB
 import org.joml.Matrix4fc
@@ -66,7 +67,6 @@ fun VertexConsumer.addBoxFaces(
 
 inline fun RenderPassRenderState.buildMesh(
     pipeline: RenderPipeline,
-    sortQuads: Boolean = false,
     block: VertexConsumer.(pose: PoseStack) -> Unit,
 ) {
     clearStates()
@@ -82,11 +82,10 @@ inline fun RenderPassRenderState.buildMesh(
     }
 
     bufferBuilder.build()?.use { meshData ->
-        if (sortQuads) {
+        if (pipeline.vertexFormatMode == VertexFormat.Mode.QUADS) {
             meshData.sortQuads(byteBufferBuilder, RenderSystem.getProjectionType().vertexSorting())
         }
-        this.uploadAndSetIndices(meshData, pipeline.vertexFormatMode)
-        this.uploadAndSetVertices(meshData)
+        this.uploadAndSet(meshData, pipeline)
     }
 
     byteBufferBuilder.clear()
