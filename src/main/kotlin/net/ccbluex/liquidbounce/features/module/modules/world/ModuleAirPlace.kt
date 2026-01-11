@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
@@ -38,6 +39,7 @@ import net.minecraft.world.item.ArmorStandItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.FireworkRocketItem
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import net.minecraft.world.item.SpawnEggItem
 import net.minecraft.world.phys.BlockHitResult
 
@@ -85,7 +87,8 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
         if (isEmpty || isConsumable) return false
         return when (val i = item) {
             is BlockItem -> i.block.defaultBlockState().canSurvive(world, hit.blockPos)
-            is SpawnEggItem, is ArmorStandItem, is FireworkRocketItem -> true
+            is SpawnEggItem, is ArmorStandItem -> true
+            is FireworkRocketItem -> !player.armorItems[2].`is`(Items.ELYTRA)
             else -> false
         }
     }
