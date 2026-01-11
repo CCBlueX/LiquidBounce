@@ -38,22 +38,10 @@ base {
     group = project.property("maven_group") as String
 }
 
-/** Includes non-mod dependency recursively in the JAR file */
-val includeDependency: Configuration by configurations.creating
+/** Includes dependency recursively in the JAR file */
+val jij: Configuration by configurations.creating
 
-/** Includes native-only dependency in the JAR file */
-val includeNative: Configuration by configurations.creating
-
-includeDependency.excludeProvidedLibs()
-
-configurations {
-    include.configure {
-        extendsFrom(includeNative)
-    }
-    runtimeOnly.configure {
-        extendsFrom(includeNative)
-    }
-}
+jij.excludeProvidedLibs()
 
 allprojects {
     repositories {
@@ -137,58 +125,50 @@ dependencies {
     modRuntimeOnly(libs.exploitPreventer)
 
     // Minecraft Authlib
-    includeDependency(libs.mcAuthlib)
+    jij(libs.mcAuthlib)
 
     // JCEF Support
     modApi(libs.mcef)
     include(libs.mcef)
-    includeDependency(libs.httpServer)
+    jij(libs.httpServer)
 
     // Discord RPC Support
-    includeDependency(libs.discordIpc)
+    jij(libs.discordIpc)
 
     // ScriptAPI
-    includeDependency("net.fabricmc:tiny-mappings-parser:0.3.0+build.17")
-    includeDependency(libs.polyglot)
-    includeDependency(libs.polyglot.js)
-    includeDependency(libs.polyglot.tools)
+    jij("net.fabricmc:tiny-mappings-parser:0.3.0+build.17")
+    jij(libs.polyglot)
+    jij(libs.polyglot.js)
+    jij(libs.polyglot.tools)
 
     // Machine Learning
-    includeDependency(libs.djl.api)
-    includeDependency(libs.djl.pytorch)
+    jij(libs.djl.api)
+    jij(libs.djl.pytorch)
 
     // HTTP library
-    includeDependency(libs.bundles.okhttp)
+    jij(libs.bundles.okhttp)
 
     // SOCKS5 & HTTP Proxy Support
-    includeDependency(libs.netty.handler.proxy)
+    jij(libs.netty.handler.proxy)
 
     // Update Checker
-    includeDependency(libs.semver4j)
+    jij(libs.semver4j)
 
     // Name Protect
-    includeDependency(libs.ahocorasick)
+    jij(libs.ahocorasick)
 
     // External utils
     compileOnlyApi(libs.fastutil4k.extensionsOnly)
-    includeDependency(libs.fastutil4k.moreCollections)
+    jij(libs.fastutil4k.moreCollections)
 
     // Test libraries
     testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)
 //    testImplementation(libs.fabric.loader.junit)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-    afterEvaluate {
-        includeDependency.incoming.resolutionResult.allDependencies.forEach {
-            val apiDependency = dependencies.api(it.requested.toString()) {
-                isTransitive = false
-            }
-
-            dependencies.include(apiDependency)
-        }
-    }
 }
+
+addResolvedDependencies(jij, "compileOnly", "include", "api")
 
 tasks.processResources {
     dependsOn("bundleTheme")

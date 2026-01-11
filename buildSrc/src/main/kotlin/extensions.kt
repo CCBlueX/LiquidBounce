@@ -18,8 +18,11 @@
  */
 
 import groovy.json.JsonSlurper
+import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ModuleDependency
+import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.exclude
 import java.net.URI
 import java.net.http.HttpClient
@@ -112,6 +115,27 @@ fun Task.getContributors(repoOwner: String, repoName: String): List<String> = tr
 } catch (e: Exception) {
     logger.error("Failed to fetch contributors of $repoOwner:$repoName", e)
     emptyList()
+}
+
+fun Project.addResolvedDependencies(
+    from: Configuration,
+    vararg toConfigurations: String,
+) {
+    val resolvedDeps = from.incoming.resolutionResult.allDependencies
+        .map { dep ->
+            val requested = dep.requested.displayName
+            dependencies.create(requested) {
+                (this as? ModuleDependency)?.isTransitive = false
+            }
+        }
+
+    toConfigurations.forEach { configName ->
+        configurations.named(configName).configure {
+            withDependencies {
+                addAll(resolvedDeps)
+            }
+        }
+    }
 }
 
 /**
