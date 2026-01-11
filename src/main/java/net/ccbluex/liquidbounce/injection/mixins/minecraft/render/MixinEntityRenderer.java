@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -138,7 +138,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
             return true;
         } else if (ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp() && entity instanceof PrimedTnt) {
             return true;
-        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
+        } else if (ModuleStorageESP.GlowMode.INSTANCE.getRunning()) {
             var category = ModuleStorageESP.categorize(entity);
             return category != null && category.shouldRender(entity);
         } else {
@@ -159,7 +159,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
             return ModuleItemESP.INSTANCE.getColor().toARGB();
         } else if (entity instanceof PrimedTnt tntEntity && ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp()) {
             return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).toARGB();
-        } else if (ModuleStorageESP.Glow.INSTANCE.getRunning()) {
+        } else if (ModuleStorageESP.GlowMode.INSTANCE.getRunning()) {
             var category = ModuleStorageESP.categorize(entity);
             if (category != null && category.shouldRender(entity)) {
                 return category.getColor().toARGB();

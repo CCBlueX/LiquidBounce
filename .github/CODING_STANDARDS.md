@@ -7,12 +7,24 @@ maintain.
 We kindly ask you to use [Kotlin](https://kotlinlang.org/) instead of Java for new code, if possible. In the long term,
 it is our goal to largely migrate LiquidBounce to Kotlin.
 
+If you are adding Java code, make sure it uses the correct nullability marks
+and does not use legacy features from older versions of Java.
+The following are common reasons for using Java:
+
+- The framework is designed for Java (such as `mixin`)
+- In some cases, Java code can achieve better readability or performance than Kotlin (if necessary, please describe in the PR)
+
 Contributors: https://github.com/CCBlueX/LiquidBounce/graphs/contributors
 
 ## General
 
 This section lists the official conventions of the languages Kotlin and Java. This project tries to follow them as
 closely as possible, and we expect outside developers to do the same when working on the client.
+
+### Repository standard
+
+* Run Gradle task `detekt` to check for Kotlin code style violations.
+* All new Java code must use [JSpecify](https://jspecify.dev/) annotations to mark nullability, which can be detected by Kotlin compiler and your IDE.
 
 **Additional, non-standard conventions will be listed below and must also be followed.**
 
@@ -39,7 +51,7 @@ of the file:
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,6 +67,8 @@ of the file:
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 ```
+
+If you are using IntelliJ IDEA, this header will be automatically added when you create a new file ([Config](/.idea/copyright/LiquidBounce.xml)).
 
 ### Tags
 
