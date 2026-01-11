@@ -27,14 +27,11 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.modes
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Angles
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.Radiuses
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getAngle
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.utils.getNextAngle
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.minecraft.util.Mth
 import net.minecraft.world.entity.EquipmentSlot
 import org.joml.Vector2f
 import org.joml.Vector3f
@@ -55,7 +52,7 @@ abstract class HatsMode(name: String) : Choice(name) {
         val equipmentOffset by float("ArmorOffset", 0.1f, 0f..1f)
     }
 
-    val hurtMarked by boolean("ShowDamage", true)
+    private val hurtMarked by boolean("ShowDamage", true)
 
     protected object FriendsOptions : Configurable("FriendsOptions") {
         val friendView by boolean("ViewOnFriend", true)
@@ -188,6 +185,27 @@ abstract class HatsMode(name: String) : Choice(name) {
         val innerNextAngle: Float,
         val rotationAngle: Float,
     )
+
+    protected data class Angles(
+        val outerCurAngle: Float,
+        val outerNextAngle: Float,
+        val rotationAngle: Float,
+    )
+
+    protected data class Radiuses(
+        val outerCurRadius: Float,
+        val outerNextRadius: Float,
+        val innerRadius: Float,
+    )
+
+    // Math functions
+
+    protected fun getAngle(i: Int, segments: Int) = i * Mth.TWO_PI / segments
+    protected fun getNextAngle(i: Int, segments: Int) = (i + 1) * Mth.TWO_PI / segments
+
+    protected fun getRotationAngle(speed: Float): Float {
+        return (System.currentTimeMillis() % 360000) * 0.001F * speed
+    }
 
 
 }
