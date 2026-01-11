@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.integration
 
@@ -28,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -217,6 +217,14 @@ object IntegrationListener : EventListener {
     private val screenRefresher = handler<GameTickEvent> {
         if (browserIsReady && mc.screen !is TaskProgressScreen) {
             handleCurrentScreen(mc.screen)
+        }
+    }
+
+    @Suppress("unused")
+    private val effectUpdateHandler = handler<GameTickEvent> {
+        val player = mc.player ?: return@handler
+        if (player.activeEffects.isNotEmpty()) {
+            EventManager.callEvent(ClientPlayerEffectEvent(player.activeEffects.toList()))
         }
     }
 

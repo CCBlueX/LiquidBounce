@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -103,11 +103,13 @@ fun raytraceBlock(
 fun raycast(
     rotation: Rotation = RotationManager.currentRotation ?: player.rotation,
     range: Double = max(player.blockInteractionRange(), player.entityInteractionRange()),
+    block: ClipContext.Block = ClipContext.Block.OUTLINE,
     includeFluids: Boolean = false,
     tickDelta: Float = 1f,
 ): BlockHitResult {
     return raycast(
         range = range,
+        block = block,
         includeFluids = includeFluids,
         start = player.getEyePosition(tickDelta),
         direction = rotation.directionVector
@@ -116,6 +118,7 @@ fun raycast(
 
 fun raycast(
     range: Double = max(player.blockInteractionRange(), player.entityInteractionRange()),
+    block: ClipContext.Block = ClipContext.Block.OUTLINE,
     includeFluids: Boolean = false,
     start: Vec3,
     direction: Vec3,
@@ -127,7 +130,7 @@ fun raycast(
         ClipContext(
             start,
             end,
-            ClipContext.Block.OUTLINE,
+            block,
             if (includeFluids) ClipContext.Fluid.ANY else ClipContext.Fluid.NONE,
             entity,
         ),
@@ -137,16 +140,22 @@ fun raycast(
 /**
  * Allows you to check if a point is behind a wall
  *
- * @see player#canSee
+ * @see net.minecraft.world.entity.LivingEntity.hasLineOfSight
  */
 fun canSeePointFrom(
     eyes: Vec3,
     vec3: Vec3,
-) = world.clip(
-    ClipContext(
-        eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player,
-    ),
-).type == HitResult.Type.MISS
+): Boolean {
+    return world.clip(
+        ClipContext(
+            eyes,
+            vec3,
+            ClipContext.Block.COLLIDER,
+            ClipContext.Fluid.NONE,
+            player,
+        ),
+    ).type == HitResult.Type.MISS
+}
 
 /**
  * Allows you to check if your enemy is behind a wall
@@ -199,7 +208,7 @@ fun facingBlock(
     val searchedPos =
         mc.level?.clip(
             ClipContext(
-                eyes, vec3, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, mc.player!!,
+                eyes, vec3, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player!!,
             ),
         ) ?: return false
 

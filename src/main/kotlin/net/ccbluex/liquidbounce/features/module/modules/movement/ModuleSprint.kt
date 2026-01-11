@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
+import net.ccbluex.liquidbounce.utils.entity.isSlowDueToUsingItem
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
@@ -125,6 +126,10 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     }
 
     private fun shouldPreventSprint(): Boolean {
+        if (StopOn.USING_ITEM in stopOn && player.isSlowDueToUsingItem) {
+            return true
+        }
+
         val deltaYawRad = (player.yRot - (RotationManager.currentRotation ?: return false).yaw).toRadians()
         val forward = player.input.movementForward
         val sideways = player.input.movementSideways
@@ -140,11 +145,12 @@ object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
     private enum class Ignore(override val choiceName: String) : NamedChoice {
         BLINDNESS("Blindness"),
         HUNGER("Hunger"),
-        COLLISION("Collision")
+        COLLISION("Collision"),
     }
 
     private enum class StopOn(override val choiceName: String) : NamedChoice {
         GROUND("Ground"),
         AIR("Air"),
+        USING_ITEM("UsingItem"),
     }
 }

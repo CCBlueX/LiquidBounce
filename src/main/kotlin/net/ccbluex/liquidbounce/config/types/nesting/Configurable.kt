@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,11 +42,12 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
-import net.ccbluex.liquidbounce.utils.kotlin.toEnumSet
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.world.level.block.Block
 import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.fastutil.toEnumSet
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.item.Item
@@ -198,6 +199,10 @@ open class Configurable(
     // Common value types
 
     fun <T : Configurable> tree(configurable: T): T {
+        if (configurable.base != null) {
+            logger.warn("Configurable '${configurable.name}' is already added to a parent '${configurable.base?.name}'")
+        }
+
         inner.add(configurable)
         configurable.base = this
         return configurable
@@ -205,6 +210,16 @@ open class Configurable(
 
     fun <T : Configurable> treeAll(vararg configurable: T) {
         configurable.forEach(this::tree)
+    }
+
+    fun <T : Configurable> drop(configurable: T): T {
+        require(configurable.base === this) {
+            "Configurable '${configurable.name}' is not a child of '${this.name}'."
+        }
+
+        inner.remove(configurable)
+        configurable.base = null
+        return configurable
     }
 
     fun <T : Any> value(
@@ -350,16 +365,16 @@ open class Configurable(
         registryList(name, default, ValueType.ITEM)
 
     fun <C : SequencedSet<SoundEvent>> sounds(name: String, default: C) =
-        registryList(name, default, ValueType.SOUND)
+        registryList(name, default, ValueType.SOUND_EVENT)
 
-    fun <C : SequencedSet<MobEffect>> statusEffects(name: String, default: C) =
-        registryList(name, default, ValueType.STATUS_EFFECT)
+    fun <C : SequencedSet<MobEffect>> mobEffects(name: String, default: C) =
+        registryList(name, default, ValueType.MOB_EFFECT)
 
-    fun <C : SequencedSet<Identifier>> clientPackets(name: String, default: C) =
-        registryList(name, default, ValueType.CLIENT_PACKET)
+    fun <C : SequencedSet<Identifier>> c2sPackets(name: String, default: C) =
+        registryList(name, default, ValueType.C2S_PACKET)
 
-    fun <C : SequencedSet<Identifier>> serverPackets(name: String, default: C) =
-        registryList(name, default, ValueType.SERVER_PACKET)
+    fun <C : SequencedSet<Identifier>> s2cPackets(name: String, default: C) =
+        registryList(name, default, ValueType.S2C_PACKET)
 
     fun <C : SequencedSet<EntityType<*>>> entityTypes(name: String, default: C) =
         registryList(name, default, ValueType.ENTITY_TYPE)
@@ -389,7 +404,7 @@ open class Configurable(
         vararg default: T,
         canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
+        multiEnumChoice(name, enumSetOf(elements = default), canBeNone = canBeNone)
 
     inline fun <reified T> multiEnumChoice(
         name: String,
@@ -400,7 +415,7 @@ open class Configurable(
 
     inline fun <reified T> multiEnumChoice(
         name: String,
-        default: EnumSet<T> = emptyEnumSet(),
+        default: EnumSet<T> = enumSetOf(),
         choices: EnumSet<T> = EnumSet.allOf(T::class.java),
         canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
@@ -541,7 +556,7 @@ open class Configurable(
 
             ValueType.COLOR -> {
                 val value = valueObject["value"].asInt
-                color(name, Color4b(value, hasAlpha = true))
+                color(name, Color4b(value))
             }
 
             ValueType.CONFIGURABLE -> {

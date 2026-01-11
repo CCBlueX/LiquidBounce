@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,9 +75,9 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
         val packet = event.packet
 
         if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
-            val velocityX = packet.movement.x / 8000.0
-            val velocityY = packet.movement.y / 8000.0
-            val velocityZ = packet.movement.z / 8000.0
+            val velocityX = packet.movement.x
+            val velocityY = packet.movement.y
+            val velocityZ = packet.movement.z
 
             // Check if the player is taking fall damage
             // We set this on every packet, because if the player gets hit afterward,

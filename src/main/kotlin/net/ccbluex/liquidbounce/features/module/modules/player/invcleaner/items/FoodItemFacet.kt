@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         get() = listOf(ObjectIntPair.of(ItemFunction.FOOD, itemStack.count * itemStack.foodComponent!!.nutrition))
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.FOOD, 0)
+        get() = ItemType.FOOD.defaultCategory
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as FoodItemFacet)

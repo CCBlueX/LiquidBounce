@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -71,16 +71,10 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     }
 
     fun getColor(entity: LivingEntity): Color4b {
-        val baseColor = getBaseColor(entity)
-
         if (entity.hurtTime > 0) {
             return Color4b.RED
         }
 
-        return baseColor
-    }
-
-    private fun getBaseColor(entity: LivingEntity): Color4b {
         if (entity is Player) {
             if (FriendManager.isFriend(entity) && friendColor.a > 0) {
                 return friendColor

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -44,7 +45,6 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.MaceItem
 import net.minecraft.world.InteractionHand
-import java.util.*
 
 /**
  * AutoWeapon module
@@ -83,7 +83,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     private val changeOnActions by multiEnumChoice<ChangeOnAction>(
         "ChangeOn",
-        EnumSet.of(ChangeOnAction.ON_ATTACK)
+        enumSetOf(ChangeOnAction.ON_ATTACK)
     )
 
     @Suppress("unused")

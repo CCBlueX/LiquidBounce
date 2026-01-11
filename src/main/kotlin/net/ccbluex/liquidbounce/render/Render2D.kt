@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,12 +37,13 @@ import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.render.TextureSetup
+import net.minecraft.client.gui.render.state.BlitRenderState
 import net.minecraft.world.phys.Vec2
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
 
 /**
- * Primitive version of [ScreenRect.transformEachVertex]
+ * Primitive version of [ScreenRectangle.transformMaxBounds]
  */
 private fun Matrix3x2f.transformEachVertex(
     sameAxis: Int, otherAxis: Int, width: Int, height: Int,
@@ -68,7 +69,7 @@ private fun Matrix3x2f.transformEachVertex(
 }
 
 /**
- * @see net.minecraft.client.gui.render.state.ColoredQuadGuiElementRenderState.createBounds
+ * @see net.minecraft.client.gui.render.state.ColoredRectangleRenderState.getBounds
  */
 fun GuiGraphics.createBounds(x: Float, y: Float, w: Float, h: Float): ScreenRectangle {
 //    val rect = ScreenRect(x.floorToInt(), y.floorToInt(), w.ceilToInt(), h.ceilToInt())
@@ -123,11 +124,13 @@ fun GuiGraphics.drawLines(
     points: FloatArray,
     argb: Int,
     bounds: ScreenRectangle,
+    cull: Boolean = true,
 ) {
     this.guiRenderState.submitGuiElement(
         LineGuiElementRenderState(
             points,
             argb,
+            ClientRenderPipelines.GUI.lines(cull),
             copyPose(),
             this.scissorStack.peek(),
             bounds,
@@ -185,35 +188,38 @@ fun GuiGraphics.drawQuad(
 }
 
 /**
- * Float version of [DrawContext.drawHorizontalLine]
+ * Float version of [GuiGraphics.drawHorizontalLine]
  */
 fun GuiGraphics.drawHorizontalLine(x1: Float, x2: Float, y: Float, thickness: Float, color: Color4b) {
     this.drawQuad(x1, y, x2, y + thickness, color)
 }
 
 /**
- * Float version of [DrawContext.drawVerticalLine]
+ * Float version of [GuiGraphics.drawVerticalLine]
  */
 fun GuiGraphics.drawVerticalLine(x: Float, y1: Float, y2: Float, thickness: Float, color: Color4b) {
     this.drawQuad(x, y1, x + thickness, y2, color)
 }
 
+@Suppress("LongParameterList")
 fun GuiGraphics.drawTriangle(
-    p1: Vec2, p2: Vec2, p3: Vec2,
+    x0: Float, y0: Float, x1: Float, y1: Float, x2: Float, y2: Float,
     fillColor: Color4b? = Color4b.TRANSPARENT,
     outlineColor: Color4b? = Color4b.TRANSPARENT,
+    cull: Boolean = true,
 ) {
-    val minX = minOf(p1.x, p2.x, p3.x)
-    val minY = minOf(p1.y, p2.y, p3.y)
-    val maxX = maxOf(p1.x, p2.x, p3.x)
-    val maxY = maxOf(p1.y, p2.y, p3.y)
+    val minX = minOf(x0, x1, x2)
+    val minY = minOf(y0, y1, y2)
+    val maxX = maxOf(x0, x1, x2)
+    val maxY = maxOf(y0, y1, y2)
     val bounds = createBounds(minX, minY, maxX - minX, maxY - minY)
 
     if (fillColor != null && !fillColor.isTransparent) {
         this.guiRenderState.submitGuiElement(
             TriangleGuiElementRenderState(
-                p1.x, p1.y, p2.x, p2.y, p3.x, p3.y,
+                x0, y0, x1, y1, x2, y2,
                 fillColor.toARGB(),
+                ClientRenderPipelines.GUI.triangles(cull),
                 copyPose(),
                 this.scissorStack.peek(),
                 bounds,
@@ -224,17 +230,60 @@ fun GuiGraphics.drawTriangle(
     if (outlineColor != null && !outlineColor.isTransparent) {
         drawLines(
             floatArrayOf(
-                p1.x, p1.y,
-                p2.x, p2.y,
-                p2.x, p2.y,
-                p3.x, p3.y,
-                p1.x, p1.y,
-                p3.x, p3.y,
+                x0, y0,
+                x1, y1,
+                x1, y1,
+                x2, y2,
+                x2, y2,
+                x0, y0,
             ),
             outlineColor.toARGB(),
             bounds,
         )
     }
+}
+
+fun GuiGraphics.drawTriangle(
+    p1: Vec2, p2: Vec2, p3: Vec2,
+    fillColor: Color4b? = Color4b.TRANSPARENT,
+    outlineColor: Color4b? = Color4b.TRANSPARENT,
+) = drawTriangle(
+    p1.x, p1.y, p2.x, p2.y, p3.x, p3.y,
+    fillColor, outlineColor,
+)
+
+@Suppress("LongParameterList")
+inline fun GuiGraphics.drawGlyphOnCurrentLayer(
+    textureSetup: TextureSetup,
+    x0: Float,
+    y0: Float,
+    x1: Float,
+    y1: Float,
+    u1: Float = 0f,
+    v1: Float = 0f,
+    u2: Float = 1f,
+    v2: Float = 1f,
+    argb: Int = -1,
+    pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
+) {
+    this.guiRenderState.submitGlyphToCurrentLayer(
+        TexQuadGuiElementRenderState(
+            x0,
+            y0,
+            x1,
+            y1,
+            u1,
+            v1,
+            u2,
+            v2,
+            argb,
+            pipeline,
+            textureSetup,
+            copyPose(),
+            this.scissorStack.peek(),
+            createBounds(x0, y0, x1 - x0, y1 - y0),
+        )
+    )
 }
 
 @Suppress("LongParameterList")
@@ -267,6 +316,40 @@ inline fun GuiGraphics.drawTexQuad(
             copyPose(),
             this.scissorStack.peek(),
             createBounds(x0, y0, x1 - x0, y1 - y0),
+        )
+    )
+}
+
+@Suppress("LongParameterList")
+inline fun GuiGraphics.drawBlitOnCurrentLayer(
+    textureSetup: TextureSetup,
+    x0: Int,
+    y0: Int,
+    x1: Int,
+    y1: Int,
+    u1: Float = 0f,
+    v1: Float = 0f,
+    u2: Float = 1f,
+    v2: Float = 1f,
+    argb: Int = -1,
+    pipeline: RenderPipeline = RenderPipelines.GUI_TEXTURED,
+) {
+    this.guiRenderState.submitBlitToCurrentLayer(
+        BlitRenderState(
+            pipeline,
+            textureSetup,
+            copyPose(),
+            x0,
+            y0,
+            x1,
+            y1,
+            u1,
+            v1,
+            u2,
+            v2,
+            argb,
+            this.scissorStack.peek(),
+            createBounds(x0.toFloat(), y0.toFloat(), (x1 - x0).toFloat(), (y1 - y0).toFloat()),
         )
     )
 }

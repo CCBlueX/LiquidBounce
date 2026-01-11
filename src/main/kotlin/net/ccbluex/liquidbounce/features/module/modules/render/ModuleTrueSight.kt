@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,16 +45,16 @@ object ModuleTrueSight : ClientModule("TrueSight", Category.RENDER) {
     @JvmStatic
     @Suppress("ComplexCondition")
     fun canRenderEntities(state: LivingEntityRenderState): Boolean {
-        val enabled = this.running && entities;
+        val enabled = this.running && entities
 
-        val entity = (state as EntityRenderStateAddition).`liquid_bounce$getEntity`()
+        val entity = (state as EntityRenderStateAddition).`liquid_bounce$getEntity`() ?: return false
         val livingEntity = entity as? LivingEntity
 
-        return ((enabled
+        return (enabled
                 || livingEntity != null
                 && ModuleESP.running
                 && ModuleESP.requiresTrueSight(livingEntity))
-                && entity.isInvisible)
+            && entity.isInvisible
     }
 
     private enum class Sight(

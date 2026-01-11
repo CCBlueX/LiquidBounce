@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
@@ -121,7 +122,7 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
         val nearestPosToPlayer = optimalLine.getNearestPointTo(player.position())
 
         val fromLine = nearestPosToPlayer.add(0.0, -0.1, 0.0)
-        val toLine = fromLine + optimalLine.direction.normalize().scale(3.0)
+        val toLine = fromLine + optimalLine.direction.withLength(3.0)
 
         val edgeCollision = findEdgeCollision(fromLine, toLine) ?: return null
 

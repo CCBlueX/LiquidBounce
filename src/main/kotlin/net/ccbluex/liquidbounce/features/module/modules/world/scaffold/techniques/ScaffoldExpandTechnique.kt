@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,10 +55,7 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
             val position = getTargetedPosition(expandPos(predictedPos, i))
 
             val searchOptions = BlockPlacementTargetFindingOptions(
-                BlockOffsetOptions(
-                    listOf(Vec3i.ZERO),
-                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-                ),
+                BlockOffsetOptions.Default,
                 FaceHandlingOptions(
                     CenterTargetPositionFactory,
                     considerFacingAwayFaces = true
@@ -82,7 +79,7 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
     override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
         val crosshairTarget = super.getCrosshairTarget(target ?: return null, rotation)
 
-        if (crosshairTarget != null && target.doesCrosshairTargetFullFillRequirements(crosshairTarget)) {
+        if (crosshairTarget != null && target.doesCrosshairTargetMatchRequirements(crosshairTarget)) {
             return crosshairTarget
         }
 

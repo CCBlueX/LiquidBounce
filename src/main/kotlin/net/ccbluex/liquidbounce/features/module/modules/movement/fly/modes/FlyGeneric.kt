@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes
@@ -26,6 +24,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -37,10 +36,12 @@ import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.minecraft.world.level.block.LiquidBlock
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 import kotlin.jvm.optionals.getOrNull
 
@@ -137,7 +138,7 @@ internal object FlyCreative : Choice("Creative") {
         if (forceFlight) player.abilities.flying = true
 
         if (player.deltaMovement.lengthSqr() > maxVelocity.sq()) {
-            player.deltaMovement = player.deltaMovement.normalize().scale(maxVelocity.toDouble())
+            player.deltaMovement = player.deltaMovement.withLength(maxVelocity.toDouble())
         }
 
         if (shouldFlyDown()) {
@@ -248,11 +249,14 @@ internal object FlyJetpack : Choice("Jetpack") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
-    val repeatable = tickHandler {
+    val repeatable = handler<GameTickEvent> {
         if (player.input.keyPresses.jump) {
-            player.deltaMovement.x *= 1.1
-            player.deltaMovement.y += 0.15
-            player.deltaMovement.z *= 1.1
+            val deltaMovement = player.deltaMovement
+            player.deltaMovement = Vec3(
+                deltaMovement.x * 1.1,
+                deltaMovement.y + 0.15,
+                deltaMovement.z * 1.1,
+            )
         }
     }
 

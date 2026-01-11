@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,8 @@ import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.ccbluex.liquidbounce.utils.text.TextList
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.network.chat.contents.PlainTextContents
@@ -36,6 +38,7 @@ import net.minecraft.network.chat.ComponentContents
 import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.ChatFormatting
 import java.util.*
+import java.util.function.Function
 import java.util.regex.Pattern
 
 private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
@@ -47,23 +50,23 @@ fun String.stripMinecraftColorCodes(): String {
 inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(this)
 
 /**
- * Returns a [MutableText] from the receiver.
- * If you just need a [Text], use [asPlainText] instead.
+ * Returns a [MutableComponent] from the receiver.
+ * If you just need a [Component], use [asPlainText] instead.
  */
 inline fun String.asText(): MutableComponent = Component.literal(this)
 
 /**
- * Returns an immutable [Text] from the receiver.
+ * Returns an immutable [Component] from the receiver.
  */
 inline fun String.asPlainText(): Component = PlainText.of(this, Style.EMPTY)
 
 /**
- * Returns an immutable [Text] from the receiver with [style].
+ * Returns an immutable [Component] from the receiver with [style].
  */
 inline fun String.asPlainText(style: Style): Component = PlainText.of(this, style)
 
 /**
- * Returns an immutable [Text] from the receiver with [formatting].
+ * Returns an immutable [Component] from the receiver with [formatting].
  */
 inline fun String.asPlainText(formatting: ChatFormatting): Component = PlainText.of(this, formatting)
 
@@ -78,6 +81,38 @@ inline fun List<Component>.asText(): Component = TextList.of(this)
 inline fun Array<out Component>.asText(): Component = TextList.of(this.unmodifiable())
 
 inline fun textOf(vararg parts: Component): Component = parts.asText()
+
+fun <T> Collection<T>.joinToText(
+    separator: Component,
+    prefix: Component? = null,
+    postfix: Component? = null,
+    transform: Function<T, Component>,
+): Component {
+    if (isEmpty()) {
+        return PlainText.EMPTY
+    }
+
+    val iterator = iterator()
+    val offset = if (prefix == null) 0 else 1
+    var arraySize = this.size * 2 - 1
+    if (prefix != null) arraySize++
+    if (postfix != null) arraySize++
+
+    return Array(arraySize) { i ->
+        when {
+            i == 0 && prefix != null -> prefix
+            i == arraySize - 1 && postfix != null -> postfix
+            i % 2 == offset -> transform.apply(iterator.next())
+            else -> separator
+        }
+    }.asText()
+}
+
+/**
+ * Joins a list of [Component] into a single [Component] with the given [separator].
+ */
+fun Collection<Component>.joinToText(separator: Component): Component =
+    joinToText(separator, transform = Function.identity())
 
 fun FormattedCharSequence.toText(): Component {
     if (this is Component) return this
@@ -112,14 +147,11 @@ fun FormattedCharSequence.toText(): Component {
     return parts.asText()
 }
 
-fun Component.processContent(): Component {
-    fun translateOrSelf(content: ComponentContents): ComponentContents =
-        (content as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: content
-
+fun Component.translated(): Component {
     val content = this.contents
-    val processedContent = translateOrSelf(content)
+    val processedContent = content.translated()
 
-    val processedSiblings = siblings.map(Component::processContent)
+    val processedSiblings = siblings.map(Component::translated)
 
     return if (processedContent === content && processedSiblings == siblings) {
         this
@@ -129,6 +161,9 @@ fun Component.processContent(): Component {
         }
     }
 }
+
+fun ComponentContents.translated(): ComponentContents =
+    (this as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: this
 
 fun TranslatableContents.toTranslatedString(): String = buildString {
     visit {

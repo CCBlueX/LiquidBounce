@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -204,6 +204,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFullBright
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHoleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemTags
@@ -219,6 +220,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleParticles
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleProphuntESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleProtectionZones
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRadar
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSilentHotbar
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleSkinChanger
@@ -544,6 +546,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleFullBright,
             ModuleHoleESP,
             ModuleHud,
+            ModuleHats,
             ModuleItemESP,
             ModuleItemTags,
             ModuleJumpEffect,
@@ -554,7 +557,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleCombineMobs,
             ModuleAspect,
             ModuleAutoF5,
-            ModuleChams,
+//            ModuleChams,
             ModuleBedPlates,
             ModuleNoBob,
             ModuleNoFov,
@@ -563,6 +566,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleCustomAmbience,
             ModuleProphuntESP,
             ModuleQuickPerspectiveSwap,
+            ModuleRadar,
             ModuleRotations,
             ModuleSilentHotbar,
             ModuleStorageESP,

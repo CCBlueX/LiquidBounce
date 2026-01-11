@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove
 
-import it.unimi.dsi.fastutil.objects.Reference2BooleanArrayMap
 import net.ccbluex.fastutil.fastIterable
+import net.ccbluex.fastutil.referenceBooleanArrayMapOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -78,13 +78,15 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
     private val passthroughSneak by boolean("PassthroughSneak", false)
 
     // states of movement keys, using mc.options.<key>.isPressed doesn't work for some reason
-    private val movementKeys = Reference2BooleanArrayMap<KeyMapping>(
-        mc.options.run {
-            arrayOf(keyUp, keyLeft, keyDown, keyRight, keyJump, keyShift)
-        },
-        BooleanArray(6),
-        6
-    )
+    private val movementKeys =
+        referenceBooleanArrayMapOf(
+            mc.options.keyUp, false,
+            mc.options.keyLeft, false,
+            mc.options.keyDown, false,
+            mc.options.keyRight, false,
+            mc.options.keyJump, false,
+            mc.options.keyShift, false,
+        )
 
     /**
      * Restricts user from clicking while moving in inventory.

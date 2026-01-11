@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog
 
@@ -28,9 +26,10 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
+import net.ccbluex.liquidbounce.utils.network.isMovementYFallDamage
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
@@ -100,7 +99,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
             0.0
         }
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast)))
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(atLeast)))
     }
 
     /**
@@ -111,20 +110,19 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
         val packet = event.packet
 
         if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
-            val velocityX = packet.movement.x / 8000.0
-            val velocityY = packet.movement.y / 8000.0
-            val velocityZ = packet.movement.z / 8000.0
+            val velocityX = packet.movement.x
+            val velocityZ = packet.movement.z
 
             waitTicks(1)
 
             // Fall damage velocity
-            val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
-                player.sqrtSpeed.coerceAtLeast(
+            val speed = if (velocityX == 0.0 && velocityZ == 0.0 && packet.isMovementYFallDamage()) {
+                player.horizontalSpeed.coerceAtLeast(
                     BASH *
                         (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0)
                 )
             } else {
-                player.sqrtSpeed
+                player.horizontalSpeed
             }
             player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
         } else if (packet is ClientboundPlayerPositionPacket) {

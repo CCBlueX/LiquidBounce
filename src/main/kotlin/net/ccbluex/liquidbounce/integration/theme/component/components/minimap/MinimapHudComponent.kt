@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -48,8 +47,8 @@ import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.util.Mth
+import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec2
-import java.util.*
 import kotlin.math.ceil
 
 object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
@@ -69,17 +68,65 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
-    private val show by multiEnumChoice("Show", EnumSet.allOf(Show::class.java), canBeNone = false)
+    private val fixedDirection by boolean("FixedDirection", false)
 
-    private enum class Show(override val choiceName: String) : NamedChoice {
-        TEXTURE("Texture"),
-        ENTITY("Entity"),
+    private object TextureConfigurable : ToggleableConfigurable(this, "Texture", true) {
+        val vertexColor by color("VertexColor", Color4b.WHITE)
     }
 
-    private inline val showTexture get() = Show.TEXTURE in show
-    private inline val showEntity get() = Show.ENTITY in show
+    private object EntityConfigurable : ToggleableConfigurable(this, "Entity", true) {
+        val scale by float("Scale", 1f, 0.25F..4F)
+    }
+
+    private class ExtraElement(
+        name: String,
+        private val size: Float,
+        private val draw: Renderer,
+    ) : ToggleableConfigurable(this, name, false) {
+        val placement by enumChoice("Placement", Placement.TOP_LEFT)
+
+        fun render(ctx: GuiGraphics, boundingBox: BoundingBox2f) {
+            if (enabled) {
+                ctx.pose().withPush {
+                    when (placement) {
+                        Placement.TOP_LEFT -> translate(boundingBox.xMin, boundingBox.yMin)
+                        Placement.TOP_RIGHT -> translate(boundingBox.xMax - size, boundingBox.yMin)
+                        Placement.BOTTOM_LEFT -> translate(boundingBox.xMin, boundingBox.yMax - size)
+                        Placement.BOTTOM_RIGHT -> translate(boundingBox.xMax - size, boundingBox.yMax - size)
+                    }
+                    draw(ctx)
+                }
+            }
+        }
+
+        private enum class Placement(override val choiceName: String) : NamedChoice {
+            TOP_LEFT("TopLeft"),
+            TOP_RIGHT("TopRight"),
+            BOTTOM_LEFT("BottomLeft"),
+            BOTTOM_RIGHT("BottomRight"),
+        }
+
+        fun interface Renderer {
+            operator fun invoke(ctx: GuiGraphics)
+        }
+    }
+
+    private val extraElements = arrayOf(
+        ExtraElement("Compass", 16F) { ctx ->
+            ctx.renderItem(COMPASS, 0, 0)
+        },
+        ExtraElement("Clock", 16F) { ctx ->
+            ctx.renderItem(CLOCK, 0, 0)
+        },
+    )
+
+    private val COMPASS = Items.COMPASS.defaultInstance
+    private val CLOCK = Items.CLOCK.defaultInstance
 
     init {
+        tree(TextureConfigurable)
+        tree(EntityConfigurable)
+        extraElements.forEach(::tree)
         ChunkRenderer
         registerComponentListen(this)
     }
@@ -127,22 +174,24 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             scissorStack.withPush(bounds) {
                 pose().withPush {
                     pose().translate(boundingBox.xMin + minimapSize * 0.5F, boundingBox.yMin + minimapSize * 0.5F)
-                    pose().scale(scale, scale)
+                    pose().scale(scale)
 
-                    pose().rotate(-(playerRotation.yaw + 180.0F).toRadians())
+                    if (!fixedDirection) {
+                        pose().rotate(-(playerRotation.yaw + 180.0F).toRadians())
+                    }
                     pose().translate(-playerOffX.toFloat(), -playerOffZ.toFloat())
 
-                    if (showTexture) {
-                        drawMinimapTexture(bounds, ChunkPos(baseX, baseZ), chunksToRenderAround, viewDistance)
-                    }
+                    drawMinimapTexture(bounds, baseX, baseZ, chunksToRenderAround, viewDistance)
 
-                    if (showEntity) {
-                        drawEntities(event.tickDelta, baseX = baseX.toFloat(), baseZ = baseZ.toFloat())
-                    }
+                    drawEntities(event.tickDelta, baseX.toFloat(), baseZ.toFloat())
                 }
             }
 
-            val from = Color4b.BLACK.copy(a = 100)
+            for (element in extraElements) {
+                element.render(this, boundingBox)
+            }
+
+            val from = Color4b.DEFAULT_BG_COLOR
             val to = Color4b.TRANSPARENT
 
             drawShadowForBB(boundingBox, bounds, from, to)
@@ -213,38 +262,44 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
 
     private fun GuiGraphics.drawMinimapTexture(
         bounds: ScreenRectangle,
-        centerPos: ChunkPos,
+        baseX: Int,
+        baseZ: Int,
         chunksToRenderAround: Int,
         viewDistance: Float,
     ) {
+        if (!TextureConfigurable.enabled) {
+            return
+        }
+
         drawCustomElement(
             pipeline = RenderPipelines.GUI_TEXTURED,
             textureSetup = ChunkRenderer.prepareRendering(),
             bounds = bounds,
         ) { pose ->
             for (x in -chunksToRenderAround..chunksToRenderAround) {
-                for (y in -chunksToRenderAround..chunksToRenderAround) {
+                for (z in -chunksToRenderAround..chunksToRenderAround) {
                     // Don't render too much
-                    if (x * x + y * y > (viewDistance + 3).sq()) {
+                    if (x * x + z * z > (viewDistance + 3).sq()) {
                         continue
                     }
 
-                    val chunkPos = ChunkPos.asLong(centerPos.x + x, centerPos.z + y)
+                    val chunkPos = ChunkPos.asLong(baseX + x, baseZ + z)
 
                     val texPosition = ChunkRenderer.getAtlasPosition(chunkPos).uv
                     val fromX = x.toFloat()
-                    val fromY = y.toFloat()
+                    val fromY = z.toFloat()
                     val toX = fromX + 1F
                     val toY = fromY + 1F
+                    val color = TextureConfigurable.vertexColor.toARGB()
 
                     addVertexWith2DPose(pose, fromX, fromY).setUv(texPosition.xMin, texPosition.yMin)
-                        .setColor(-1)
+                        .setColor(color)
                     addVertexWith2DPose(pose, fromX, toY).setUv(texPosition.xMin, texPosition.yMax)
-                        .setColor(-1)
+                        .setColor(color)
                     addVertexWith2DPose(pose, toX, toY).setUv(texPosition.xMax, texPosition.yMax)
-                        .setColor(-1)
+                        .setColor(color)
                     addVertexWith2DPose(pose, toX, fromY).setUv(texPosition.xMax, texPosition.yMin)
-                        .setColor(-1)
+                        .setColor(color)
                 }
             }
         }
@@ -255,7 +310,13 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         baseX: Float,
         baseZ: Float,
     ) {
+        if (!EntityConfigurable.enabled) {
+            return
+        }
+
         for (entity in RenderedEntities.sortedWith(MINIMAP_ENTITY_ORDER)) {
+            if (entity === player) continue
+
             val color = ModuleESP.getColor(entity)
 
             val pos = entity.interpolateCurrentPosition(tickDelta)
@@ -264,6 +325,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
             pose().pushMatrix()
             pose().translate(pos.x.toFloat() / 16.0F - baseX, pos.z.toFloat() / 16.0F - baseZ)
             pose().rotate(rot.yaw.toRadians())
+            pose().scale(EntityConfigurable.scale)
 
             val w = 2.0f
             val h = w * 1.618f

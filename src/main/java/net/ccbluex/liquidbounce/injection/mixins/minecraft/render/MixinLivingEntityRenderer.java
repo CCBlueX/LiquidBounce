@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,7 +102,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
         var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.BODY);
         if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getA().getYaw(), overwriteRotation.getB().getYaw());
+            return Mth.rotLerp(tickDelta, overwriteRotation.getA().yRot(), overwriteRotation.getB().yRot());
         }
 
         return original;
@@ -116,7 +116,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
         var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.HEAD);
         if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getA().getYaw(), overwriteRotation.getB().getYaw());
+            return Mth.rotLerp(tickDelta, overwriteRotation.getA().yRot(), overwriteRotation.getB().yRot());
         }
 
         return original;
@@ -130,7 +130,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
 
         var overwriteRotation = getOverwriteRotation(ModuleRotations.BodyPart.HEAD);
         if (overwriteRotation != null) {
-            return Mth.rotLerp(tickDelta, overwriteRotation.getA().getPitch(), overwriteRotation.getB().getPitch());
+            return Mth.rotLerp(tickDelta, overwriteRotation.getA().xRot(), overwriteRotation.getB().xRot());
         }
 
         return original;

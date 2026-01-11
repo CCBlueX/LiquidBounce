@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,15 +45,15 @@ object ModuleMobOwners : ClientModule("MobOwners", Category.RENDER) {
 
     private val uuidNameCache = ConcurrentHashMap<UUID, FormattedCharSequence>()
 
-    fun getOwnerInfoText(entity: Entity): FormattedCharSequence? {
-        if (!this.running) {
+    fun getOwnerInfoText(entity: Entity?): FormattedCharSequence? {
+        if (entity == null || !this.running) {
             return null
         }
 
-        val ownerId = when {
-            entity is TamableAnimal -> entity.ownerReference?.uuid
-            entity is Horse -> entity.ownerReference?.uuid
-            entity is Projectile && projectiles -> entity.owner?.uuid
+        val ownerId = when (entity) {
+            is TamableAnimal -> entity.ownerReference?.uuid
+            is Horse -> entity.ownerReference?.uuid
+            is Projectile if projectiles -> entity.owner?.uuid
             else -> null
         } ?: return null
 

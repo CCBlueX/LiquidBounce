@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,9 +31,11 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.multiply
+import net.ccbluex.liquidbounce.utils.network.isMovementYFallDamage
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
@@ -71,8 +73,10 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             }
 
             if (horizontalAcceleration != 0f) {
-                player.deltaMovement.x *= 1f + horizontalAcceleration
-                player.deltaMovement.z *= 1f + horizontalAcceleration
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = 1.0F + horizontalAcceleration,
+                    factorZ = 1.0F + horizontalAcceleration,
+                )
             }
         }
 
@@ -81,8 +85,10 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             if (horizontalJumpOffModifier != 0f) {
                 waitTicks(ticksToBoostOff)
 
-                player.deltaMovement.x *= 1f + horizontalJumpOffModifier
-                player.deltaMovement.z *= 1f + horizontalJumpOffModifier
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = 1.0F + horizontalJumpOffModifier,
+                    factorZ = 1.0F + horizontalJumpOffModifier,
+                )
             }
         }
 
@@ -155,9 +161,8 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             val packet = it.packet
 
             if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
-                val velocityX = packet.movement.x / 8000.0
-                val velocityY = packet.movement.y / 8000.0
-                val velocityZ = packet.movement.z / 8000.0
+                val velocityX = packet.movement.x
+                val velocityZ = packet.movement.z
 
                 ticksTimeout = velocityTimeout
 
@@ -165,10 +170,10 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
                     waitTicks(1)
 
                     // Fall damage velocity
-                    val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
-                        player.sqrtSpeed.coerceAtLeast(0.2857671997172534)
+                    val speed = if (velocityX == 0.0 && velocityZ == 0.0 && packet.isMovementYFallDamage()) {
+                        player.horizontalSpeed.coerceAtLeast(0.2857671997172534)
                     } else {
-                        player.sqrtSpeed
+                        player.horizontalSpeed
                     }
                     player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
                 }

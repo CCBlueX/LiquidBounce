@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.ClickEvent;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -41,12 +42,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nullable;
-
 @Mixin(Screen.class)
 public abstract class MixinScreen implements ScreenAddition {
-    @Shadow
-    protected abstract void removeWidget(GuiEventListener child);
 
     @Final
     @Shadow
@@ -94,7 +91,7 @@ public abstract class MixinScreen implements ScreenAddition {
 
     @Inject(method = "renderWithTooltipAndSubtitles", at = @At("HEAD"), cancellable = true)
     private void cancelRenderByChestStealer(CallbackInfo ci) {
-        if (FeatureSilentScreen.getShouldHide()) {
+        if (LiquidBounce.INSTANCE.isInitialized() && FeatureSilentScreen.INSTANCE.getShouldHide()) {
             ci.cancel();
         }
     }

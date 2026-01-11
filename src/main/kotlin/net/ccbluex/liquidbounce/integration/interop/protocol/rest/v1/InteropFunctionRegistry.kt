@@ -1,12 +1,12 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at any later version.
+ * (at your option) any later version.
  *
  * LiquidBounce is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 @file:Suppress("LongMethod")
@@ -104,6 +103,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.po
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.putProtocol
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.deleteServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getCrosshairData
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getEffectTexture
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getInputInfo
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getIsTyping
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getItemTexture
@@ -267,6 +267,7 @@ internal fun Node.registerInteropFunctions() = withPath("/api/v1/client") {
     // Texture Functions
     get("/resource", ::getResource).apply {
         get("/itemTexture", ::getItemTexture)
+        get("/effectTexture", ::getEffectTexture)
         get("/skin", ::getSkin)
     }
 

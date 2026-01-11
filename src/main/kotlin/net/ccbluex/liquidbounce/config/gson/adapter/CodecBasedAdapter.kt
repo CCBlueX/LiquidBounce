@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.DataResult
 import com.mojang.serialization.JsonOps
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.processContent
+import net.ccbluex.liquidbounce.utils.client.translated
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.RegistryAccess
 import net.minecraft.network.chat.Component
@@ -79,7 +79,7 @@ class CodecBasedAdapter<T>(private val codec: Codec<T>) : JsonSerializer<T>, Jso
 
         @JvmField
         val PROCESSED_TEXT = JsonSerializer<Component> { src, t, ctx ->
-            src?.processContent()?.let { TEXT.serialize(it, t, ctx) } ?: JsonNull.INSTANCE
+            src?.translated()?.let { TEXT.serialize(it, t, ctx) } ?: JsonNull.INSTANCE
         }
     }
 

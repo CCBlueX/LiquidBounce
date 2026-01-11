@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,19 +39,14 @@ import net.minecraft.world.level.block.SoulSandBlock
 import net.minecraft.world.level.block.StemBlock
 import net.minecraft.world.level.block.SugarCaneBlock
 import net.minecraft.world.level.block.SweetBerryBushBlock
-import net.minecraft.world.item.Items
 import net.minecraft.core.BlockPos
-
-private const val NETHER_WART_MAX_AGE = 3
-private const val COCOA_MAX_AGE = 2
-//    private const val SWEET_BERRY_BUSH_MAX_AGE = 3 TODO: right click it
 
 private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
     return pos.below().getBlock() is T && pos.below(2).getBlock() !is T
 }
 
 /**
- * @see Fertilizable
+ * @see BonemealableBlock
  */
 internal fun BlockPos.canUseBoneMeal(state: BlockState): Boolean {
     return when (val block = state.block) {
@@ -61,16 +56,40 @@ internal fun BlockPos.canUseBoneMeal(state: BlockState): Boolean {
     }
 }
 
+enum class HarvestAction {
+    /**
+     * Break the block to harvest it. e.g. Melon, Pumpkin, Cactus
+     */
+    BREAK,
+    /**
+     * Use the item in hand to harvest the block. e.g. Sweet Berry Bush
+     */
+    USE,
+}
+
+/**
+ * Get the harvest action for the block. The block itself might be not ready for harvest!
+ * Call [BlockPos.readyForHarvest] before performing the harvest action.
+ */
+val Block.harvestAction: HarvestAction?
+    get() = when (this) {
+        is PumpkinBlock, is CropBlock, is NetherWartBlock, is CocoaBlock,
+        is SugarCaneBlock, is CactusBlock, is KelpPlantBlock, is BambooStalkBlock, Blocks.MELON -> HarvestAction.BREAK
+        is SweetBerryBushBlock -> HarvestAction.USE
+        else -> null
+    }
+
 /**
  * Check if [this@shouldBeDestroyed] with [state] is ready for harvest
  */
-internal fun BlockPos.readyForHarvest(state: BlockState): Boolean {
+fun BlockPos.readyForHarvest(state: BlockState): Boolean {
     return when (val block = state.block) {
         is PumpkinBlock -> true
         Blocks.MELON -> true
         is CropBlock -> block.isMaxAge(state)
-        is NetherWartBlock -> state.getValue(NetherWartBlock.AGE) >= NETHER_WART_MAX_AGE
-        is CocoaBlock -> state.getValue(CocoaBlock.AGE) >= COCOA_MAX_AGE
+        is NetherWartBlock -> state.getValue(NetherWartBlock.AGE) >= NetherWartBlock.MAX_AGE
+        is CocoaBlock -> state.getValue(CocoaBlock.AGE) >= CocoaBlock.MAX_AGE
+        is SweetBerryBushBlock -> state.getValue(SweetBerryBushBlock.AGE) >= SweetBerryBushBlock.MAX_AGE
         is SugarCaneBlock -> isAboveLast<SugarCaneBlock>(this)
         is CactusBlock -> isAboveLast<CactusBlock>(this)
         is KelpPlantBlock -> isAboveLast<KelpPlantBlock>(this)
@@ -78,13 +97,3 @@ internal fun BlockPos.readyForHarvest(state: BlockState): Boolean {
         else -> false
     }
 }
-
-internal val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
-internal val itemsForSoulSand = arrayOf(Items.NETHER_WART)
-
-internal fun getAvailableSlotForBlock(blockState: BlockState) =
-    when (blockState.block) {
-        is FarmBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForFarmland)
-        is SoulSandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForSoulSand)
-        else -> null
-    }

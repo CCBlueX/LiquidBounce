@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.integration.theme
 
@@ -41,6 +40,7 @@ import net.ccbluex.liquidbounce.utils.render.writeStd140
 import com.mojang.blaze3d.shaders.UniformType
 import net.minecraft.client.gui.GuiGraphics
 import com.mojang.blaze3d.platform.NativeImage
+import net.ccbluex.liquidbounce.render.drawBlitOnCurrentLayer
 import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.resources.Identifier
 import java.io.Closeable
@@ -147,10 +147,10 @@ sealed interface ThemeBackground : Closeable {
                 pass.draw(0, 3)
             }
 
-            context.drawTexQuad(
+            context.drawBlitOnCurrentLayer(
                 textureSetup!!,
-                x0 = 0f, y0 = 0f,
-                x1 = width.toFloat(), y1 = height.toFloat(),
+                x0 = 0, y0 = 0,
+                x1 = width, y1 = height,
                 u1 = 0f, v1 = 1f,
                 u2 = 1f, v2 = 0f,
             )

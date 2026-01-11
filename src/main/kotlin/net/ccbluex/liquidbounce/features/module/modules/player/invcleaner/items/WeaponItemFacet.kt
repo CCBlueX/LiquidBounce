@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.WEAPON, 0)
+        get() = ItemType.WEAPON.defaultCategory
 
     override val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
         get() = listOf(ObjectIntPair.of(ItemFunction.WEAPON_LIKE, 1))

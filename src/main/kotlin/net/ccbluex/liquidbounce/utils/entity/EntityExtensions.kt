@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,9 @@
 
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.common.ShapeFlag
-import net.ccbluex.liquidbounce.interfaces.ClientPlayerEntityAddition
-import net.ccbluex.liquidbounce.interfaces.InputAddition
+import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
+import net.ccbluex.liquidbounce.interfaces.ClientInputAddition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
@@ -43,7 +42,6 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.shapes.EntityCollisionContext
-import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.client.player.ClientInput
 import net.minecraft.client.player.LocalPlayer
 import net.minecraft.world.item.enchantment.Enchantments
@@ -66,7 +64,6 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket
 import net.minecraft.tags.DamageTypeTags
 import net.minecraft.world.scores.DisplaySlot
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.player.Input
 import net.minecraft.world.phys.HitResult
 import net.minecraft.core.BlockPos
@@ -76,15 +73,16 @@ import net.minecraft.util.Mth
 import net.minecraft.core.Position
 import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.Difficulty
+import net.minecraft.world.item.component.UseEffects
 import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.ExplosionDamageCalculator
 import net.minecraft.world.level.ServerExplosion
 import kotlin.math.cos
 import kotlin.math.floor
-import kotlin.math.hypot
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -95,13 +93,13 @@ val Entity.isInsideWaterOrBubbleColumn: Boolean
 inline var ClientInput.movementForward: Float
     get() = moveVector.y
     set(value) {
-        (this as InputAddition).`liquid_bounce$setMovementInput`(moveVector.copy(y = value))
+        (this as ClientInputAddition).`liquid_bounce$setMovementInput`(moveVector.copy(y = value))
     }
 
 inline var ClientInput.movementSideways: Float
     get() = moveVector.x
     set(value) {
-        (this as InputAddition).`liquid_bounce$setMovementInput`(moveVector.copy(x = value))
+        (this as ClientInputAddition).`liquid_bounce$setMovementInput`(moveVector.copy(x = value))
     }
 
 val LivingEntity.handItems: Array<ItemStack>
@@ -114,9 +112,6 @@ val LivingEntity.armorItems: Array<ItemStack>
         getItemBySlot(EquipmentSlot.CHEST),
         getItemBySlot(EquipmentSlot.HEAD),
     )
-
-val LivingEntity.equippedItems: Array<ItemStack>
-    get() = EquipmentSlot.entries.mapToArray { this.getItemBySlot(it) }
 
 fun LivingEntity.blockedByShield(source: DamageSource): Boolean {
     val entity = source.directEntity
@@ -153,19 +148,19 @@ val LocalPlayer.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
 
 val ClientInput.untransformed: Input
-    get() = (this as InputAddition).`liquid_bounce$getUntransformed`()
+    get() = (this as ClientInputAddition).`liquid_bounce$getUntransformed`()
 
 val ClientInput.initial: Input
-    get() = (this as InputAddition).`liquid_bounce$getInitial`()
+    get() = (this as ClientInputAddition).`liquid_bounce$getInitial`()
 
 val Player.ping: Int
     get() = mc.connection?.getPlayerInfo(uuid)?.latency ?: 0
 
 val LocalPlayer.airTicks: Int
-    get() = (this as ClientPlayerEntityAddition).`liquid_bounce$getAirTicks`()
+    get() = (this as LocalPlayerAddition).`liquid_bounce$getAirTicks`()
 
 val LocalPlayer.onGroundTicks: Int
-    get() = (this as ClientPlayerEntityAddition).`liquid_bounce$getOnGroundTicks`()
+    get() = (this as LocalPlayerAddition).`liquid_bounce$getOnGroundTicks`()
 
 val LocalPlayer.direction: Float
     get() = getMovementDirectionOfInput(DirectionalInput(input))
@@ -183,13 +178,13 @@ fun LocalPlayer.getMovementDirectionOfInput(input: DirectionalInput): Float {
 val LocalPlayer.isBlockAction: Boolean
     get() = isUsingItem && useItem.useAnimation == ItemUseAnimation.BLOCK
 
-fun Entity.lastRenderPos() = Vec3(this.xOld, this.yOld, this.zOld)
+/**
+ * @see LocalPlayer.isSlowDueToUsingItem
+ */
+val Player.isSlowDueToUsingItem: Boolean
+    get() = isUsingItem && !(useItem[DataComponents.USE_EFFECTS] ?: UseEffects.DEFAULT).canSprint
 
-val InteractionHand.equipmentSlot: EquipmentSlot
-    get() = when (this) {
-        InteractionHand.MAIN_HAND -> EquipmentSlot.MAINHAND
-        InteractionHand.OFF_HAND -> EquipmentSlot.OFFHAND
-    }
+fun Entity.lastRenderPos() = Vec3(this.xOld, this.yOld, this.zOld)
 
 fun LocalPlayer.wouldBeCloseToFallOff(position: Vec3): Boolean {
     val hitbox =
@@ -292,14 +287,11 @@ fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Floa
     return actualYaw
 }
 
-val Player.sqrtSpeed: Double
-    get() = deltaMovement.sqrtSpeed
-
-val Vec3.sqrtSpeed: Double
-    get() = hypot(x, z)
+inline val Entity.horizontalSpeed: Double
+    get() = deltaMovement.horizontalDistance()
 
 fun Vec3.withStrafe(
-    speed: Double = sqrtSpeed,
+    speed: Double = horizontalDistance(),
     strength: Double = 1.0,
     input: DirectionalInput? = DirectionalInput(player.input),
     yaw: Float = player.getMovementDirectionOfInput(input ?: DirectionalInput(player.input)),
@@ -356,7 +348,7 @@ fun Entity.squareBoxedDistanceTo(entity: Entity, offsetPos: Vec3): Double {
 }
 
 fun AABB.squaredBoxedDistanceTo(otherPos: Vec3): Double {
-    val pos = getNearestPoint(otherPos, this)
+    val pos = getNearestPoint(otherPos)
 
     return pos.distanceToSqr(otherPos)
 }
@@ -387,16 +379,16 @@ fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
 /**
  * Get the nearest point of a box. Very useful to calculate the distance of an enemy.
  */
-fun getNearestPoint(from: Vec3, box: AABB): Vec3 {
+fun AABB.getNearestPoint(from: Position): Vec3 {
     return Vec3(
-        from.x.coerceIn(box.minX, box.maxX),
-        from.y.coerceIn(box.minY, box.maxY),
-        from.z.coerceIn(box.minZ, box.maxZ),
+        from.x().coerceIn(minX, maxX),
+        from.y().coerceIn(minY, maxY),
+        from.z().coerceIn(minZ, maxZ),
     )
 }
 
 fun getNearestPointOnSide(from: Vec3, box: AABB, side: Direction): Vec3 {
-    val nearestPointInBlock = getNearestPoint(from, box)
+    val nearestPointInBlock = box.getNearestPoint(from)
 
     val x = nearestPointInBlock.x
     val y = nearestPointInBlock.y
@@ -491,7 +483,7 @@ fun LivingEntity.getExplosionDamageFromEntity(entity: Entity): Float {
 }
 
 /**
- * See [ExplosionBehavior.calculateDamage].
+ * See [ExplosionDamageCalculator.getEntityDamageAmount].
  */
 @Suppress("LongParameterList")
 fun LivingEntity.getDamageFromExplosion(
@@ -538,7 +530,7 @@ fun LivingEntity.getDamageFromExplosion(
 }
 
 /**
- * Basically [ExplosionImpl.calculateReceivedDamage] but this method allows us to exclude blocks using [exclude].
+ * Basically [ServerExplosion.getSeenPercent] but this method allows us to exclude blocks using [exclude].
  */
 @Suppress("NestedBlockDepth")
 fun LivingEntity.getExposureToExplosion(
@@ -637,7 +629,7 @@ fun LivingEntity.hasHealthScoreboard(): Boolean {
     if (this == player) return false
 
     val objective = world.scoreboard.getDisplayObjective(DisplaySlot.BELOW_NAME) ?: return false
-    val displayName = objective.displayName?.string ?: return false
+    val displayName = objective.displayName.string
 
     return HEALTH_KEYWORDS.any { displayName.contains(it) }
 }

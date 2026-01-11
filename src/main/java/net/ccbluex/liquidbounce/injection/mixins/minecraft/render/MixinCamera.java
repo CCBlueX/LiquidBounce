@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -128,8 +128,8 @@ public abstract class MixinCamera {
         }
 
         setRotation(
-            Mth.lerp(tickProgress, previousRotation.getYaw(), currentRotation.getYaw()),
-            Mth.lerp(tickProgress, previousRotation.getPitch(), currentRotation.getPitch())
+            Mth.lerp(tickProgress, previousRotation.yRot(), currentRotation.yRot()),
+            Mth.lerp(tickProgress, previousRotation.xRot(), currentRotation.xRot())
         );
     }
 

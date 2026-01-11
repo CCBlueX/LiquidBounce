@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
@@ -69,9 +68,8 @@ import net.ccbluex.liquidbounce.utils.inventory.isInContainerScreen
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
-import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 
@@ -120,12 +118,9 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
     init {
         tree(KillAuraAutoBlock)
-    }
-
-    // Target rendering
-    private val targetRenderer = tree(WorldTargetRenderer(this))
-
-    init {
+        tree(TargetRenderer(this) {
+            targetTracker.target?.takeUnless { ModuleElytraTarget.isSameTargetRendering(it) }
+        })
         tree(KillAuraFailSwing)
         tree(KillAuraFightBot)
     }
@@ -139,21 +134,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-
-        renderTarget(matrixStack, event.partialTicks)
-        renderFailedHits(matrixStack)
-    }
-
-    private fun renderTarget(matrixStack: PoseStack, partialTicks: Float) {
-        val target = targetTracker.target
-            ?.takeIf { targetRenderer.enabled }
-            ?.takeIf { !ModuleElytraTarget.isSameTargetRendering(it) }
-            ?: return
-
-        renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(target, partialTicks)
-        }
+        renderFailedHits(event.matrixStack)
     }
 
     @Suppress("unused")
@@ -399,7 +380,7 @@ object ModuleKillAura : ClientModule("KillAura", Category.COMBAT) {
      *
      *  @return The best spot to attack the entity
      */
-    private fun findRotation(entity: LivingEntity, range: Double): RotationWithVector? {
+    private fun findRotation(entity: Entity, range: Double): RotationWithVector? {
         val eyes = player.eyePosition
         val point = pointTracker.findPoint(eyes, entity)
 

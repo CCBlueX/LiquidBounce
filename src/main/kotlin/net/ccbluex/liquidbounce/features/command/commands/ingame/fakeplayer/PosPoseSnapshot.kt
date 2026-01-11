@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ fun fromPlayer(entity: AbstractClientPlayer): PosPoseSnapshot {
         entity.yHeadRot,
         entity.yHeadRotO,
         entity.pose,
-        entity.swingingArm,
+        entity.swingingArm ?: InteractionHand.MAIN_HAND,
         entity.inventory,
         entity.walkAnimation.position
     )

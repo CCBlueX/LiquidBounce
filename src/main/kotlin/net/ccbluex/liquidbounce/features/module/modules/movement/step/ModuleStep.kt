@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,11 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.AllowAutoJumpEvent
@@ -45,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.entity.canStep
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.stats.Stats
-import java.util.*
 
 /**
  * Step module
@@ -115,7 +113,7 @@ object ModuleStep : ClientModule("Step", Category.MOVEMENT) {
             jumpOrder.indices)
         private val wait by intRange("Wait", 0..0, 0..60, "ticks")
         private val packetType by enumChoice("PacketType", MovePacketType.FULL,
-            EnumSet.of(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND)
+            enumSetOf(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND)
         )
 
         private var ticksWait = 0

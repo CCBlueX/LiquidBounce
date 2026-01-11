@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +26,11 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.ccbluex.liquidbounce.utils.aiming.utils.toVec3d
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.set
+import net.ccbluex.liquidbounce.utils.math.sub
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
@@ -109,7 +111,3 @@ object WorldToScreen : MinecraftShortcuts, EventListener {
     }
 
 }
-
-private inline fun Vector3f.set(vec3d: Vec3) = set(vec3d.x, vec3d.y, vec3d.z)
-
-private inline fun Vector3f.sub(vec3d: Vec3) = sub(vec3d.x.toFloat(), vec3d.y.toFloat(), vec3d.z.toFloat())
