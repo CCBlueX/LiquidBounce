@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
@@ -44,25 +43,17 @@ internal object HatsFlower : HatsMode("Flower") {
         val innerRadius by float("Thickness", 0.05f, 0.01f..1f)
         val sharpness by float("Sharpness", 0.6f, 0.1f..0.9f)
         val petalCount by int("PetalCount", 5, 5..15)
-
-        object FlowerSpin : ToggleableConfigurable(this@HatsFlower, "Spin", true) {
-            val spinSpeed by float("Speed", 1f, 0.1f..10f)
-        }
+        val spinSpeed by float("SpinSpeed", 1f, 0f..10f)
     }
 
     init {
         tree(HatFlowerSettings)
-        tree(HatFlowerSettings.FlowerSpin)
         tree(colors)
     }
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-            val rotAngle = if (HatFlowerSettings.FlowerSpin.enabled) {
-                getRotationAngle(HatFlowerSettings.FlowerSpin.spinSpeed)
-            } else {
-                0.0F
-            }
+            val rotAngle = getRotationAngle(HatFlowerSettings.spinSpeed)
             val petals = HatFlowerSettings.petalCount
             val outerSegments = petals * 120
             val innerSegments = petals * 2

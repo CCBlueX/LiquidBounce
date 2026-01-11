@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.hats.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsColorSettings
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.HatsMode
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
@@ -45,25 +44,17 @@ internal object HatsStar : HatsMode("Star") {
         val innerRadius by float("Thickness", 0.05f, 0.01f..1f)
         val sharpness by float("Sharpness", 0.6f, 0.1f..0.7f)
         val pointsCount by int("PointsCount", 5, 5..15)
-
-        object StarSpin : ToggleableConfigurable(this@HatsStar, "Spin", true) {
-            val spinSpeed by float("Speed", 1f, 0.1f..10f)
-        }
+        val spinSpeed by float("SpinSpeed", 1f, 0f..10f)
     }
 
     init {
         tree(HatStarSettings)
-        tree(HatStarSettings.StarSpin)
         tree(colors)
     }
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
         drawCustomMesh(ClientRenderPipelines.Triangles) { matrix ->
-            val rotAngle = if (HatStarSettings.StarSpin.enabled) {
-                getRotationAngle(HatStarSettings.StarSpin.spinSpeed)
-            } else {
-                0.0F
-            }
+            val rotAngle = getRotationAngle(HatStarSettings.spinSpeed)
             val points = HatStarSettings.pointsCount
             val outerSegments = points * 120
             val innerSegments = points * 2

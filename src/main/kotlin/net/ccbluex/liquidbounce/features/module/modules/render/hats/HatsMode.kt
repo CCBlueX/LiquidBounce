@@ -204,7 +204,11 @@ abstract class HatsMode(name: String) : Choice(name) {
     protected fun getNextAngle(i: Int, segments: Int) = (i + 1) * Mth.TWO_PI / segments
 
     protected fun getRotationAngle(speed: Float): Float {
-        return (System.currentTimeMillis() % 360000) * 0.001F * speed
+        return if (Mth.equal(speed, 0f)) {
+            0f
+        } else {
+            (System.currentTimeMillis() % 360000) * 0.001F * speed
+        }
     }
 
 

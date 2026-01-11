@@ -50,15 +50,12 @@ internal object HatsOrbs : HatsMode("Orbs") {
             val waveSpeed by float("WaveSpeed", 2.0f, 0.1f..10f)
         }
 
-        object OrbRotation : ToggleableConfigurable(this@HatsOrbs, "Spin", true) {
-            val speedRot by float("SpinSpeed", 2.0f, 0.1f..10f)
-        }
+        val spinSpeed by float("SpinSpeed", 2f, 0f..10f)
     }
 
     init {
         tree(HatOrbsSettings)
         tree(HatOrbsSettings.WaveSettings)
-        tree(HatOrbsSettings.OrbRotation)
     }
 
     override fun WorldRenderEnvironment.drawHat(isHurt: Boolean) {
@@ -67,7 +64,6 @@ internal object HatsOrbs : HatsMode("Orbs") {
 
             // Loop for rendering each individual orb (orbit).
             for (i in 0 until HatOrbsSettings.count) {
-
                 val angle = (getAngle(i, HatOrbsSettings.count) + time)
 
                 val x = getPointX(angle, HatOrbsSettings.radius)
@@ -80,11 +76,7 @@ internal object HatsOrbs : HatsMode("Orbs") {
                     0f
                 }
 
-                val rotAngle = if (HatOrbsSettings.OrbRotation.enabled) {
-                    getRotationAngle(HatOrbsSettings.OrbRotation.speedRot)
-                } else {
-                    0.0F
-                }
+                val rotAngle = getRotationAngle(HatOrbsSettings.spinSpeed)
                 val sinA = rotAngle.fastSin() * HatOrbsSettings.size
                 val cosA = rotAngle.fastCos() * HatOrbsSettings.size
 
