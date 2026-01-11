@@ -35,14 +35,12 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformConfigurable
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
+import net.ccbluex.liquidbounce.render.utils.UnitCircle
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
 import net.minecraft.core.Vec3i
-import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4fc
@@ -53,7 +51,6 @@ import java.util.*
 import java.util.function.Supplier
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
-import kotlin.use
 
 /**
  * This variable should be used when rendering long lines, meaning longer than ~2 in 3d.
@@ -361,6 +358,10 @@ fun WorldRenderEnvironment.drawTriangle(p1: Vec3f, p2: Vec3f, p3: Vec3f, argb: I
 }
 
 @Suppress("NOTHING_TO_INLINE")
+inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vector3fc): VertexConsumer =
+    addVertex(pose, pos.x(), pos.y(), pos.z())
+
+@Suppress("NOTHING_TO_INLINE")
 inline fun VertexConsumer.color(color: Color4b): VertexConsumer = setColor(color.toARGB())
 
 /**
@@ -472,40 +473,32 @@ private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3f>, colo
     }
 }
 
-private const val CIRCLE_RES = 40
-
-// using a val instead of a function for better performance
-private val circlePoints: Array<Vector3fc> = Array(CIRCLE_RES + 1) {
-    val theta = Mth.PI * 2f * it / CIRCLE_RES
-    Vector3f(theta.fastCos(), 0f, theta.fastSin())
-}
-
 /**
  * Function to draw a circle of the size [outerRadius] with a cutout of size [innerRadius]
  *
  * @param outerRadius The radius of the circle
  * @param innerRadius The radius inside the circle (the cutout)
- * @param outerColor4b The color of the outer edges
- * @param innerColor4b The color of the inner edges
+ * @param outerColor The color of the outer edges
+ * @param innerColor The color of the inner edges
  */
 fun WorldRenderEnvironment.drawGradientCircle(
     outerRadius: Float,
     innerRadius: Float,
-    outerColor4b: Color4b,
-    innerColor4b: Color4b,
+    outerColor: Color4b,
+    innerColor: Color4b,
     innerOffset: Vector3fc = Vector3f(),
 ) {
     drawCustomMesh(ClientRenderPipelines.TriangleStrip) { matrix ->
         val innerP = Vector3f()
         val outerP = Vector3f()
-        for (p in circlePoints) {
-            outerP.set(p).mul(outerRadius)
-            innerP.set(p).mul(innerRadius).add(innerOffset)
+        UnitCircle.forEach { cosine, sine ->
+            outerP.set(cosine * outerRadius, 0f, sine * outerRadius)
+            innerP.set(cosine * innerRadius, 0f, sine * innerRadius).add(innerOffset)
 
             addVertex(matrix, outerP.x, outerP.y, outerP.z)
-                .setColor(outerColor4b.toARGB())
+                .setColor(outerColor.toARGB())
             addVertex(matrix, innerP.x, innerP.y, innerP.z)
-                .setColor(innerColor4b.toARGB())
+                .setColor(innerColor.toARGB())
         }
     }
 }
@@ -518,12 +511,8 @@ fun WorldRenderEnvironment.drawGradientCircle(
  */
 fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) =
     drawCustomMesh(ClientRenderPipelines.LineStrip) { matrix ->
-        val point = Vector3f()
-        for (p in circlePoints) {
-            point.set(p).mul(radius)
-
-            addVertex(matrix, point.x, point.y, point.z)
-                .setColor(color4b.toARGB())
+        UnitCircle.forEach(radius) { x, z ->
+            addVertex(matrix, x, 0f, z).setColor(color4b.toARGB())
         }
     }
 
