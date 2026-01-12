@@ -50,7 +50,7 @@ internal object HatsOrbs : HatsMode("Orbs") {
             val waveSpeed by float("WaveSpeed", 2.0f, 0.1f..10f)
         }
 
-        val spinSpeed by float("SpinSpeed", 2f, 0f..10f)
+        val spinSpeed by float("SpinSpeed", 2f, -10f..10f)
     }
 
     init {

@@ -22,6 +22,9 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.types.BindValue
 import net.ccbluex.liquidbounce.config.types.ChooseListValue
 import net.ccbluex.liquidbounce.config.types.CurveValue
@@ -40,25 +43,24 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.world.level.block.Block
-import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.fastutil.toEnumSet
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.world.entity.EntityType
-import net.minecraft.world.effect.MobEffect
-import net.minecraft.world.item.Item
-import net.minecraft.sounds.SoundEvent
-import net.minecraft.resources.Identifier
-import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import net.minecraft.resources.Identifier
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.item.Item
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.phys.Vec3
 import org.joml.Vector2f
+import org.joml.Vector2fc
 import org.lwjgl.glfw.GLFW
 import java.io.File
-import java.util.*
+import java.util.EnumSet
+import java.util.SequencedSet
 import java.util.function.ToIntFunction
 
 @Suppress("TooManyFunctions")
@@ -351,6 +353,8 @@ open class Configurable(
     fun color(name: String, default: Color4b) = value(name, default, ValueType.COLOR)
 
     fun block(name: String, default: Block) = value(name, default, ValueType.BLOCK)
+
+    fun vec2f(name: String, default: Vector2fc) = value(name, default, ValueType.VECTOR2_F)
 
     fun vec3i(name: String, default: Vec3i) = value(name, default, ValueType.VECTOR3_I)
 

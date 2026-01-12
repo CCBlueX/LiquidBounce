@@ -43,7 +43,7 @@ internal object HatsFlower : HatsMode("Flower") {
         val innerRadius by float("Thickness", 0.05f, 0.01f..1f)
         val sharpness by float("Sharpness", 0.6f, 0.1f..0.9f)
         val petalCount by int("PetalCount", 5, 5..15)
-        val spinSpeed by float("SpinSpeed", 1f, 0f..10f)
+        val spinSpeed by float("SpinSpeed", 1f, -10f..10f)
     }
 
     init {

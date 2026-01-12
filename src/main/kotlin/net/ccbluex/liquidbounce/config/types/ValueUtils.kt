@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.ioScope
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -47,10 +47,10 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Convert the [FileValue] to a [ReadOnlyProperty] of [DynamicTexture].
  */
-fun FileValue.toTextureProperty(
-    owner: ToggleableConfigurable,
+fun <V> FileValue.toTextureProperty(
+    owner: V,
     printErrorToChat: Boolean = true,
-): ReadOnlyProperty<Any?, DynamicTexture?> {
+): ReadOnlyProperty<Any?, DynamicTexture?> where V : EventListener, V : Value<*> {
     var texture: DynamicTexture? = null
     ioScope.launch {
         asStateFlow().filter { it.isFile }.collectLatest { file ->
