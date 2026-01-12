@@ -23,6 +23,8 @@ import com.mojang.blaze3d.TracyFrameCapture;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.render.ClientTesselator;
+import net.ccbluex.liquidbounce.render.GrowableMappableRingBuffer;
+import net.minecraft.client.renderer.MappableRingBuffer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -34,6 +36,12 @@ public abstract class MixinRenderSystem {
     @Inject(method = "flipFrame", at = @At("RETURN"))
     private static void onFlipFrame(Window window, TracyFrameCapture tracyFrameCapture, CallbackInfo ci) {
         ClientTesselator.Shared.clear();
+        if (!GrowableMappableRingBuffer.DISCARD_QUEUE.isEmpty()) {
+            for (MappableRingBuffer mappableRingBuffer : GrowableMappableRingBuffer.DISCARD_QUEUE) {
+                mappableRingBuffer.close();
+            }
+            GrowableMappableRingBuffer.DISCARD_QUEUE.clear();
+        }
     }
 
 }
