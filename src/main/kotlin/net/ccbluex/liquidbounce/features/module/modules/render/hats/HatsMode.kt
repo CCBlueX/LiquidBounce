@@ -30,13 +30,18 @@ import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats.m
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.EquipmentSlot
+import org.joml.Quaternionf
 import org.joml.Vector2f
 import org.joml.Vector3f
 import kotlin.math.cos
 import kotlin.math.sin
+
+private val ROTATION = Quaternionf()
 
 /**
  * @author minecrrrr
@@ -46,7 +51,9 @@ abstract class HatsMode(name: String) : Choice(name) {
         get() = modes
 
     // --- Settings ---
-    protected val height by float("HeightOffset", 0.1f, 0f..2f)
+    private val followRotation by boolean("FollowRotation", false)
+
+    protected val height by float("HeightOffset", 0.2f, 0f..2f)
 
     protected object EquipOffset : Configurable("EquipmentOffset") {
         val equipmentOffset by float("ArmorOffset", 0.1f, 0f..1f)
@@ -70,7 +77,6 @@ abstract class HatsMode(name: String) : Choice(name) {
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> {
-        val world = net.ccbluex.liquidbounce.utils.client.world
         val player = mc.player ?: return@handler
 
         for (entity in world.players()) {
@@ -85,19 +91,23 @@ abstract class HatsMode(name: String) : Choice(name) {
             }
 
             if (shouldRender) {
-
                 val hurtMarked = entity.hurtTime > 0 && hurtMarked
                 val pos = entity.interpolateCurrentPosition(it.partialTicks)
+                val rotation = entity.interpolateCurrentRotation(it.partialTicks)
 
                 val equipOffset = if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
-                    EquipOffset.equipmentOffset.toDouble()
+                    EquipOffset.equipmentOffset
                 } else {
-                    0.0
+                    0.0F
                 }
 
                 renderEnvironmentForWorld(it.matrixStack) {
-                    withPositionRelativeToCamera(pos.add(0.0, entity.bbHeight + height.toDouble() + equipOffset, 0.0)) {
-                        drawHat(hurtMarked)
+                    withPositionRelativeToCamera(pos.add(0.0, entity.eyeHeight.toDouble(), 0.0)) {
+                        matrixStack.withPush {
+                            if (followRotation) mulPose(rotation.toQuaternion(ROTATION))
+                            translate(0F, entity.bbHeight - entity.eyeHeight + height + equipOffset, 0F)
+                            drawHat(hurtMarked)
+                        }
                     }
                 }
             }
