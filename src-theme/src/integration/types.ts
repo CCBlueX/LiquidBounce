@@ -47,7 +47,8 @@ export type ModuleSetting =
     | ColorSetting
     | TextSetting
     | BindSetting
-    | VectorSetting
+    | Vec2Setting
+    | Vec3Setting
     | KeySetting
     | FileSetting
     | CurveSetting;
@@ -103,7 +104,10 @@ export interface BindSetting extends Setting<InputBind> {
 export interface TextSetting extends Setting<string> {
 }
 
-export interface VectorSetting extends Setting<Vec3> {
+export interface Vec2Setting extends Setting<Vector2f> {
+}
+
+export interface Vec3Setting extends Setting<Vec3> {
 }
 
 export interface ColorSetting extends Setting<number> {

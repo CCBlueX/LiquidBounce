@@ -1,31 +1,16 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import type {BlockHitResult, ModuleSetting, VectorSetting} from "../../../integration/types";
+    import type {ModuleSetting, Vec2Setting} from "../../../integration/types";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import {getCrosshairData, getPlayerData} from "../../../integration/rest";
 
     export let setting: ModuleSetting;
-    const cSetting = setting as VectorSetting;
+    const cSetting = setting as Vec2Setting;
 
     const dispatch = createEventDispatcher();
 
     function handleChange() {
         setting = {...cSetting};
         dispatch("change");
-    }
-
-    async function locate() {
-        const hitResult = await getCrosshairData();
-
-        if (hitResult.type === "block") {
-            const blockHitResult = hitResult as BlockHitResult;
-
-            cSetting.value = blockHitResult.blockPos;
-        } else {
-            const playerData = await getPlayerData();
-            cSetting.value = playerData.blockPosition;
-        }
-        handleChange();
     }
 </script>
 
@@ -36,9 +21,6 @@
                on:input={handleChange}/>
         <input type="number" class="value" spellcheck="false" placeholder="Y" bind:value={cSetting.value.y}
                on:input={handleChange}/>
-        <input type="number" class="value" spellcheck="false" placeholder="Z" bind:value={cSetting.value.z}
-               on:input={handleChange}/>
-        <button class="locate-btn" on:click={locate} title="Locate">&#x2299;</button>
     </div>
 </div>
 
@@ -58,7 +40,7 @@
 
   .input-group {
     display: grid;
-    grid-template-columns: repeat(3, 1fr) 20px;
+    grid-template-columns: repeat(2, 1fr);
     column-gap: 5px;
 
     input.value {
@@ -84,16 +66,6 @@
         -webkit-appearance: none;
         margin: 0;
       }
-    }
-
-    .locate-btn {
-      display: block;
-      background-color: transparent;
-      border: none;
-      cursor: pointer;
-      color: $clickgui-text-color;
-      font-size: 12px;
-      text-align: right;
     }
   }
 </style>

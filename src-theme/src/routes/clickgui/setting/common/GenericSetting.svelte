@@ -13,7 +13,8 @@
     import TextSetting from "../TextSetting.svelte";
     import {slide} from "svelte/transition";
     import BindSetting from "../bind/BindSetting.svelte";
-    import VectorSetting from "../VectorSetting.svelte";
+    import Vec2Setting from "../Vec2Setting.svelte";
+    import Vec3Setting from "../Vec3Setting.svelte";
     import KeySetting from "../KeySetting.svelte";
     import MultiChooseSetting from "../MultiChooseSetting.svelte";
     import FileSetting from "../FileSetting.svelte";
@@ -63,7 +64,9 @@
     {:else if setting.valueType === "BIND"}
         <BindSetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "VECTOR3_I" || setting.valueType === "VECTOR3_D" }
-        <VectorSetting bind:setting={setting} on:change/>
+        <Vec3Setting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "VECTOR2_F" }
+        <Vec2Setting bind:setting={setting} on:change/>
     {:else if setting.valueType === "KEY"}
         <KeySetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "CURVE"}
