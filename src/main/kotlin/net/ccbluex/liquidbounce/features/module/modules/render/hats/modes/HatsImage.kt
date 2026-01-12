@@ -34,7 +34,7 @@ internal object HatsImage : HatsMode("Image") {
     private val image by file("Image").toTextureProperty(this, printErrorToChat = true)
     private val colorModulator by color("ColorModulator", Color4b.WHITE)
     private val scale by vec2f("Scale", Vector2f(1f, 1f))
-    private val spinSpeed by float("SpinSpeed", 1f, 0f..10f)
+    private val spinSpeed by float("SpinSpeed", 1f, -10f..10f)
 
     private val ROTATION = Quaternionf()
 
