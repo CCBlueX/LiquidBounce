@@ -113,15 +113,19 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
         object Pot : ChestType("Pot", Color4b(209, 134, 0))
     }
 
+    private val allTypes = arrayOf(
+        ChestType.Chest,
+        ChestType.EnderChest,
+        ChestType.Furnace,
+        ChestType.BrewingStand,
+        ChestType.Dispenser,
+        ChestType.Hopper,
+        ChestType.ShulkerBox,
+        ChestType.Pot,
+    )
+
     init {
-        tree(ChestType.Chest)
-        tree(ChestType.EnderChest)
-        tree(ChestType.Furnace)
-        tree(ChestType.BrewingStand)
-        tree(ChestType.Dispenser)
-        tree(ChestType.Hopper)
-        tree(ChestType.ShulkerBox)
-        tree(ChestType.Pot)
+        allTypes.forEach { tree(it) }
     }
 
     private val requiresChestStealer by boolean("RequiresChestStealer", false)
@@ -327,9 +331,10 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
-        if (StorageScanner.isEmpty()) {
-            return@handler
-        }
+        if (StorageScanner.isEmpty()) return@handler
+
+        val types = allTypes.filter { it.tracers && !it.color.isTransparent }
+        if (types.isEmpty()) return@handler
 
         renderEnvironmentForWorld(event.matrixStack) {
             val eyeVector = Vec3f(0.0, 0.0, 1.0)
@@ -338,11 +343,13 @@ object ModuleStorageESP : ClientModule("StorageESP", Category.RENDER, aliases = 
 
             startBatch()
             longLines {
-                for ((blockPos, type) in StorageScanner.iterate()) {
-                    if (!type.tracers || type.color.isTransparent || !type.shouldRender(blockPos)) continue
-                    val pos = relativeToCamera(blockPos.center).toVec3f()
+                for (type in types) {
+                    for (blockPos in StorageScanner.iterate(type)) {
+                        if (!type.shouldRender(blockPos)) continue
+                        val pos = relativeToCamera(blockPos.center).toVec3f()
 
-                    drawLine(eyeVector, pos, type.color.argb)
+                        drawLine(eyeVector, pos, type.color.argb)
+                    }
                 }
             }
             commitBatch()

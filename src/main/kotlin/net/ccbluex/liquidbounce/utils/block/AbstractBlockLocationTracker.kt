@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.block
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
 import it.unimi.dsi.fastutil.longs.LongSet
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import net.ccbluex.fastutil.forEachLong
 import net.ccbluex.liquidbounce.utils.math.contains
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.core.BlockPos
@@ -131,15 +132,27 @@ sealed class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscribe
             var entry: FullMutableEntry<BlockPos, T>? = null
             lock.read {
                 for ((state, positions) in stateAndPositions) {
-                    val iterator = positions.longIterator()
-                    while (iterator.hasNext()) {
-                        mutable.set(iterator.nextLong())
+                    positions.forEachLong {
+                        mutable.set(it)
                         if (entry == null) {
                             entry = FullMutableEntry(mutable, state)
                         } else {
                             entry.value = state
                         }
                         yield(entry)
+                    }
+                }
+            }
+        }
+
+        fun iterate(type: T): Sequence<BlockPos> {
+            val positions = stateAndPositions[type] ?: return emptySequence()
+
+            return sequence {
+                val mutable = BlockPos.MutableBlockPos()
+                lock.read {
+                    positions.forEachLong {
+                        yield(mutable.set(it))
                     }
                 }
             }

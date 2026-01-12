@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -54,11 +55,12 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     val fontRenderer
         get() = FontManager.FONT_RENDERER
 
-    private val nametagsToRender = mutableListOf<Nametag>()
+    private val nametagsToRender = mutableListOf<NametagRenderState>()
+    private val nametagPool = Pool(::NametagRenderState, NametagRenderState::clear)
 
     override fun onDisabled() {
         RenderedEntities.unsubscribe(this)
-        nametagsToRender.clear()
+        nametagPool.recycleAll(nametagsToRender)
     }
 
     override fun onEnabled() {
@@ -87,9 +89,10 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
 
     /**
      * Collects all entities that should be rendered, gets the screen position, where the name tag should be displayed,
-     * add what should be rendered ([Nametag]). The nametags are sorted in order of rendering.
+     * add what should be rendered. The nametags are sorted in order of rendering.
      */
     private fun collectAndSortNametagsToRender() {
+        nametagPool.recycleAll(nametagsToRender)
         nametagsToRender.clear()
         val maximumDistanceSquared = maximumDistance.sq()
 
@@ -98,13 +101,13 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
                 continue
             }
 
-            nametagsToRender += Nametag(entity)
+            nametagsToRender += nametagPool.borrow().update(entity)
         }
         nametagsToRender.sortWith(NAMETAG_COMPARATOR)
     }
 
-    private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
-        nametag.entity.distanceToSqr(mc.cameraEntity!!)
+    private val NAMETAG_COMPARATOR = Comparator.comparingDouble<NametagRenderState> { nametag ->
+        nametag.entity!!.distanceToSqr(mc.cameraEntity!!)
     }
 
     fun shouldRenderVanillaNametag(state: EntityRenderState): Boolean {
