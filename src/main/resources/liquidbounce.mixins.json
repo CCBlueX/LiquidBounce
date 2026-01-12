@@ -86,6 +86,7 @@
     "minecraft.gui.custom.MixinLevelLoadingScreen",
     "minecraft.gui.widget.MixinAbstractSelectionList",
     "minecraft.gui.widget.MixinEditBox",
+    "minecraft.item.MixinAttackRange",
     "minecraft.item.MixinItem",
     "minecraft.item.MixinItemInHandRenderer",
     "minecraft.item.MixinItemStack",

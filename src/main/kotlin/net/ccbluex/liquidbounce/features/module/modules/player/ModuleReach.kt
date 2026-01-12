@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 
@@ -28,6 +30,26 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  */
 
 object ModuleReach : ClientModule("Reach", Category.PLAYER) {
-    val combatReach by float("CombatReach", 4.2f, 3f..8f).apply { tagBy(this) }
-    val blockReach by float("BlockReach", 5f, 4.5f..8f)
+
+    class InteractionRange(name: String, default: Float) : ToggleableConfigurable(this, name, true) {
+        private val mode by enumChoice("Mode", RangeMode.OVERRIDE)
+        private val reach by float("Range", default, 0f..16f)
+
+        fun modifyRange(original: Double): Double {
+            if (!running) return original
+
+            return when (mode) {
+                RangeMode.EXTEND -> original + reach.toDouble()
+                RangeMode.OVERRIDE -> reach.toDouble()
+            }
+        }
+    }
+
+    val entityInteractionRange = InteractionRange("EntityInteractionRange", 4.2f)
+    val blockInteractionRange = InteractionRange("BlockInteractionRange", 5f)
+
+    private enum class RangeMode(override val choiceName: String) : NamedChoice {
+        EXTEND("Extend"),
+        OVERRIDE("Override"),
+    }
 }
