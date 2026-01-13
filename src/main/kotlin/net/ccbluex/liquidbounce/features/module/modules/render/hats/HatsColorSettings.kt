@@ -27,9 +27,8 @@ class HatsColorSettings : Configurable("Colors") {
     val syncColors by boolean("SyncColors", true)
     val firstColor by color("FirstColor", Color4b(0, 0, 255, 125))
     val secondColor by color("SecondColor", Color4b(0, 0, 255, 125))
+    val hurtMarkedColor by color("DamageColor", Color4b(255, 0, 0, 125))
     val spinSpeed by float("SpinSpeed", 1f, 0f..10f)
-
-    object hurtMarked by boolean("ShowDamage", true)
 
     fun getCurrentStepColor(angle: Float): Color4b {
         val first = firstColor

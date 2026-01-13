@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color
 import net.ccbluex.liquidbounce.render.drawCustomMesh
-import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.util.Mth
 import kotlin.math.cos
 import kotlin.math.sin
@@ -60,7 +59,7 @@ internal object HatsCone : HatsMode("Cone") {
                 val cosine = cos(angle)
                 val sine = sin(angle)
 
-                val color = if (!isHurt) colors.getCurrentStepColor(angle) else Color4b(255, 0, 0, colors.firstColor.a)
+                val color = if (!isHurt) colors.getCurrentStepColor(angle) else colors.hurtMarkedColor
 
                 addVertex(
                     matrix,
