@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.joinToText
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.textOf
@@ -94,28 +93,24 @@ internal object NametagTextFormatter : Configurable("Text") {
         },
 
         NAME("Name") {
-            override fun apply(entity: Entity): Component = buildList(4) {
-                val name = entity.displayName
-                val nameColor = entity.nameColor
+            override fun apply(entity: Entity): Component {
+                val isBaby = entity is LivingEntity && entity.isBaby
 
-                if (entity is LivingEntity && entity.isBaby) {
-                    this += BABY_TEXT
-                }
+                // Optimized entity.getDisplayName()
+                val displayName = entity.team?.getFormattedName(entity.name) ?: entity.name
 
-                this += if (nameColor != null) {
-                    name.copy().withColor(nameColor)
-                } else {
-                    name
-                }
+                val coloredName = entity.nameColor?.let { nameColor ->
+                    displayName.copy().withColor(nameColor)
+                } ?: displayName
 
-                if (ModuleCombineMobs.running) {
-                    val count = ModuleCombineMobs.getCombinedCount(entity)
-                    if (count > 1) {
-                        this += PlainText.SPACE
-                        this += ("x $count").asPlainText(COUNT_STYLE)
-                    }
+                val count = ModuleCombineMobs.getCombinedCount(entity)
+                return when {
+                    isBaby && count > 1 -> textOf(BABY_TEXT, coloredName, " ($count)".asPlainText(COUNT_STYLE))
+                    isBaby -> textOf(BABY_TEXT, coloredName)
+                    count > 1 -> textOf(coloredName, " ($count)".asPlainText(COUNT_STYLE))
+                    else -> coloredName
                 }
-            }.asText()
+            }
         },
 
         HEALTH("Health") {
@@ -151,16 +146,11 @@ internal object NametagTextFormatter : Configurable("Text") {
 private val Entity.isBot get() = ModuleAntiBot.isBot(this)
 
 private val Entity.nameColor: TextColor?
-    get() {
-        val tagColor = EntityTaggingManager.getTag(this).color
-
-        return when {
-            isBot -> ChatFormatting.DARK_AQUA.toTextColor()
-            isInvisible -> ChatFormatting.GOLD.toTextColor()
-            isShiftKeyDown -> ChatFormatting.DARK_RED.toTextColor()
-            tagColor != null -> tagColor.toTextColor()
-            else -> null
-        }
+    get() = when {
+        isBot -> ChatFormatting.DARK_AQUA.toTextColor()
+        isInvisible -> ChatFormatting.GOLD.toTextColor()
+        isShiftKeyDown -> ChatFormatting.DARK_RED.toTextColor()
+        else -> EntityTaggingManager.getTag(this).color?.toTextColor()
     }
 
 private fun ChatFormatting.toTextColor(): TextColor {

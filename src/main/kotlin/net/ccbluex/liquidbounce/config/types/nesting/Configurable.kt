@@ -408,7 +408,7 @@ open class Configurable(
         vararg default: T,
         canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, enumSetOf(elements = default), canBeNone = canBeNone)
+        multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
 
     inline fun <reified T> multiEnumChoice(
         name: String,

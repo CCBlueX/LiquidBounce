@@ -91,6 +91,8 @@ object ModuleCombineMobs : ClientModule("CombineMobs", Category.RENDER) {
     }
 
     fun getCombinedCount(entity: Entity): Int {
+        if (!running) return 1
+
         val key = keyFor(entity)
         val pos = entity.blockPosition().asLong()
 
