@@ -52,8 +52,6 @@ abstract class HatsMode(name: String) : Choice(name) {
         val equipmentOffset by float("ArmorOffset", 0.1f, 0f..1f)
     }
 
-    private val hurtMarked by boolean("ShowDamage", true)
-
     protected object FriendsOptions : Configurable("FriendsOptions") {
         val friendView by boolean("ViewOnFriend", true)
         val distance by int("Distance", 64, 8..512, "blocks")
