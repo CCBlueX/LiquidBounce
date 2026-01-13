@@ -21,11 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
+import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 internal object VelocityLag : VelocityMode("Lag") {
@@ -46,14 +47,14 @@ internal object VelocityLag : VelocityMode("Lag") {
 
     @Suppress("unused")
     private val queuePacketHandler = handler<QueuePacketEvent>{ event ->
-        if (!isLagging || event.origin != TransferOrigin.INCOMING){
+        if (!isLagging || event.origin != TransferOrigin.INCOMING || event.packet is ClientboundKeepAlivePacket){
             return@handler
         }
         event.action = Action.QUEUE
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickPacketProcessHandler = handler<TickPacketProcessEvent> {
         if (isLagging){
             lagTicks--
             if (lagTicks == 0){
