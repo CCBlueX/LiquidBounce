@@ -164,15 +164,3 @@ class CleanupPlanPlacementTemplate(
     val forbiddenSlots: Set<ItemSlot>,
     val forbiddenSlotsToFill: Set<ItemSlot>
 )
-
-enum class ItemSlotType {
-    HOTBAR,
-    OFFHAND,
-    ARMOR,
-    INVENTORY,
-
-    /**
-     * e.g. chests
-     */
-    CONTAINER,
-}

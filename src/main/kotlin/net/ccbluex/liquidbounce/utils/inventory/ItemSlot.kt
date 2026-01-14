@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -36,7 +35,7 @@ import kotlin.math.abs
  */
 sealed interface ItemSlot {
     val itemStack: ItemStack
-    val slotType: ItemSlotType
+    val slotType: Type
 
     /**
      * Used for example for slot click packets
@@ -73,6 +72,18 @@ sealed interface ItemSlot {
         @JvmField
         val PREFER_MORE_ITEM: Comparator<ItemSlot> = PreferStackSize.PREFER_MORE.asItemSlotComparator()
     }
+
+    enum class Type {
+        HOTBAR,
+        OFFHAND,
+        ARMOR,
+        INVENTORY,
+
+        /**
+         * e.g. chests
+         */
+        CONTAINER,
+    }
 }
 
 /**
@@ -80,7 +91,7 @@ sealed interface ItemSlot {
  */
 class VirtualItemSlot(
     override val itemStack: ItemStack,
-    override val slotType: ItemSlotType,
+    override val slotType: ItemSlot.Type,
     val id: Int
 ) : ItemSlot {
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Nothing =
@@ -109,8 +120,8 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot {
     override val itemStack: ItemStack
         get() = this.screen.menu.slots[this.slotInContainer].item
 
-    override val slotType: ItemSlotType
-        get() = ItemSlotType.CONTAINER
+    override val slotType: ItemSlot.Type
+        get() = ItemSlot.Type.CONTAINER
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Int = this.slotInContainer
 
@@ -151,8 +162,8 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot {
     override val itemStack: ItemStack
         get() = player.inventory.getItem(this.hotbarSlot)
 
-    override val slotType: ItemSlotType
-        get() = ItemSlotType.HOTBAR
+    override val slotType: ItemSlot.Type
+        get() = ItemSlot.Type.HOTBAR
 
     open val hotbarSlotForServer: Int = hotbarSlot
 
@@ -207,8 +218,8 @@ class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot {
     override val itemStack: ItemStack
         get() = player.inventory.getItem(9 + this.inventorySlot)
 
-    override val slotType: ItemSlotType
-        get() = ItemSlotType.INVENTORY
+    override val slotType: ItemSlot.Type
+        get() = ItemSlot.Type.INVENTORY
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?): Int {
         return if (screen == null) 9 + inventorySlot else screen.itemCount() - 36 + this.inventorySlot
@@ -234,8 +245,8 @@ class ArmorItemSlot(private val equipmentSlot: EquipmentSlot) : ItemSlot {
     override val itemStack: ItemStack
         get() = player.getItemBySlot(equipmentSlot)
 
-    override val slotType: ItemSlotType
-        get() = ItemSlotType.ARMOR
+    override val slotType: ItemSlot.Type
+        get() = ItemSlot.Type.ARMOR
 
     override fun getIdForServer(screen: AbstractContainerScreen<*>?) =
         if (screen == null) 8 - this.equipmentSlot.index else null
@@ -258,8 +269,8 @@ data object OffHandSlot : HotbarItemSlot(-1) {
     override val itemStack: ItemStack
         get() = player.offhandItem
 
-    override val slotType: ItemSlotType
-        get() = ItemSlotType.OFFHAND
+    override val slotType: ItemSlot.Type
+        get() = ItemSlot.Type.OFFHAND
 
     override val hotbarSlotForServer: Int = 40
 
