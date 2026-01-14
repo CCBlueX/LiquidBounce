@@ -29,15 +29,17 @@ import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.text.TextList
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentContents
+import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.TextColor
 import net.minecraft.network.chat.contents.PlainTextContents
 import net.minecraft.network.chat.contents.TranslatableContents
 import net.minecraft.util.FormattedCharSequence
-import java.util.Optional
+import java.util.*
 import java.util.function.Function
 import java.util.regex.Pattern
 
@@ -75,6 +77,10 @@ inline operator fun Style.plus(formatting: ChatFormatting): Style = applyFormat(
 inline operator fun Style.plus(color: TextColor): Style = withColor(color)
 
 inline operator fun Style.plus(color: Color4b): Style = withColor(color.toTextColor())
+
+inline operator fun Style.plus(clickEvent: ClickEvent): Style = withClickEvent(clickEvent)
+
+inline operator fun Style.plus(hoverEvent: HoverEvent): Style = withHoverEvent(hoverEvent)
 
 inline fun List<Component>.asText(): Component = TextList.of(this)
 
