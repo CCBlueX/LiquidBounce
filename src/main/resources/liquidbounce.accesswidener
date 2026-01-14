@@ -123,11 +123,6 @@ mutable field net/minecraft/network/protocol/common/ClientboundPingPacket id I
 
 accessible field net/minecraft/world/entity/WalkAnimationState position F
 
-accessible field net/minecraft/network/protocol/game/ServerboundInteractPacket entityId I
-accessible method net/minecraft/network/protocol/game/ServerboundInteractPacket <init> (IZLnet/minecraft/network/protocol/game/ServerboundInteractPacket$Action;)V
-accessible class net/minecraft/network/protocol/game/ServerboundInteractPacket$Action
-accessible field net/minecraft/network/protocol/game/ServerboundInteractPacket ATTACK_ACTION Lnet/minecraft/network/protocol/game/ServerboundInteractPacket$Action;
-
 accessible field net/minecraft/network/protocol/game/ClientboundSectionBlocksUpdatePacket sectionPos Lnet/minecraft/core/SectionPos;
 
 accessible field net/minecraft/client/gui/components/ChatComponent allMessages Ljava/util/List;
