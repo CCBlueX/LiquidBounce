@@ -170,9 +170,9 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
         val containerComponent = stack[DataComponents.CONTAINER] ?: return false
 
         val stacks = if (ContainerItemView.skipEmptyStack) {
-            containerComponent.nonEmptyStream()
+            containerComponent.nonEmptyItemCopyStream()
         } else {
-            containerComponent.stream()
+            containerComponent.allItemsCopyStream()
         }.toList()
 
         if (stacks.isEmpty()) return false

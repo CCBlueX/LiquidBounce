@@ -67,12 +67,12 @@ object CommandItemRename : Command.Factory {
                     .joinToString(" ") { it as String }
                 when (name) {
                     "" -> {
-                        itemStack!!.remove(DataComponents.CUSTOM_NAME)
+                        itemStack.remove(DataComponents.CUSTOM_NAME)
                         chat(regular(command.result("nameReset")), command)
                     }
                     else -> {
-                        itemStack!!.set(DataComponents.CUSTOM_NAME, name.translateColorCodes().asPlainText())
-                        chat(regular(command.result("renamedItem", itemStack.item.name, variable(name))), command)
+                        itemStack.set(DataComponents.CUSTOM_NAME, name.translateColorCodes().asPlainText())
+                        chat(regular(command.result("renamedItem", itemStack.itemName, variable(name))), command)
                     }
                 }
                 network.send(ServerboundSetCreativeModeSlotPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))
