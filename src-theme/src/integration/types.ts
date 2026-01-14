@@ -15,6 +15,7 @@ export interface GroupedModules {
 
 export type ModuleSetting =
     BlocksSetting
+    | InventoryPresetValue
     | BooleanSetting
     | FloatSetting
     | FloatRangeSetting
@@ -33,6 +34,47 @@ export type ModuleSetting =
     | BindSetting
     | VectorSetting
     | KeySetting;
+
+export interface SingleItemPreference {
+    type: "SINGLE";
+    item: string;
+}
+export interface GroupItemPreference {
+    type: "GROUP";
+    group: "ARROWS" | "SWORD" | "WEAPON" | "AXE" | "HOE" | "SHOVEL" | "PICKAXE" | "FOOD" | "POTION" | "BLOCK" | "THROWABLE";
+}
+
+export interface IgnoreItemPreference {
+    type: "IGNORE";
+}
+
+export interface AnyPresetItem {
+    type: "ANY";
+}
+
+export type PresetItem =
+    SingleItemPreference
+    | GroupItemPreference
+    | IgnoreItemPreference
+    | AnyPresetItem;
+
+export interface MaxStacksGroup {
+    itemCount: number;
+    items: PresetItem[];
+}
+
+export type PresetItemGroup = PresetItem[];
+
+export interface InventoryPreset {
+    items: PresetItemGroup[];
+    maxStacks: MaxStacksGroup[];
+}
+
+export interface InventoryPresetValue {
+    name: string;
+    valueType: string;
+    value: InventoryPreset;
+}
 
 export interface BlocksSetting {
     valueType: string;

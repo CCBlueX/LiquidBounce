@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot.ItemSlotType
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ArmorItem
 

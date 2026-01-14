@@ -35,14 +35,10 @@ class ComparatorChain<T>(private vararg val comparisonFunctions: Comparator<in T
 }
 
 inline fun <T> compareValueByCondition(a: T, b: T, cond: (T) -> Boolean): Int {
-    val condA = cond(a)
-    val condB = cond(b)
+    val valA = if (cond(a)) 1 else 0
+    val valB = if (cond(b)) 1 else 0
 
-    return when {
-        condA == condB -> 0
-        condA -> 1
-        else -> -1
-    }
+    return valA.compareTo(valB)
 }
 
 inline fun <T> compareByCondition(crossinline cond: (T) -> Boolean): Comparator<T> {

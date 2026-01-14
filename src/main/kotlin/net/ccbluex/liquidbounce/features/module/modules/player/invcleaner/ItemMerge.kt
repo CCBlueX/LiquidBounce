@@ -23,7 +23,7 @@ import kotlin.math.ceil
 
 object ItemMerge {
     /**
-     * Find all item stack ids which should be double-clicked in order to merge them
+     * Find all item stack ids that should be double-clicked to merge them
      */
     internal fun findStacksToMerge(cleanupPlan: InventoryCleanupPlan): List<ItemSlot> {
         val itemsToMerge = mutableListOf<ItemSlot>()

@@ -19,6 +19,7 @@
     import MutableListSetting from "../list/MutableListSetting.svelte";
     import ItemListSetting from "../list/ItemListSetting.svelte";
     import RegistryListSetting from "../list/RegistryListSetting.svelte";
+    import InventoryPresetValue from "../inventoryPreset/InventoryPresetValue.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -28,6 +29,8 @@
 <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
     {#if setting.valueType === "BOOLEAN"}
         <BooleanSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "INVENTORY_PRESET"}
+        <InventoryPresetValue bind:setting={setting} on:change/>
     {:else if setting.valueType === "CHOICE"}
         <ChoiceSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "CHOOSE"}

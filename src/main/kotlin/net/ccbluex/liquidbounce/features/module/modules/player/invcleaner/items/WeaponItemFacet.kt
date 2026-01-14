@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
@@ -26,9 +25,10 @@ import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.enchantment.Enchantments
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.item.SwordItem
 import kotlin.math.ceil
 import kotlin.math.pow
@@ -54,21 +54,22 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING_EDGE, 0.2f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.25f),
             )
+
+        @Suppress("SpreadOperator")
         private val COMPARATOR =
             ComparatorChain<WeaponItemFacet>(
-                compareBy { estimateDamage(it) },
+                compareBy { estimateDamage(it.itemStack) },
                 compareBy { SECONDARY_VALUE_ESTIMATOR.estimateValue(it.itemStack) },
-                compareByCondition { it.itemStack.item is SwordItem },
+                compareBy { it.itemStack.item is SwordItem },
                 PREFER_BETTER_DURABILITY,
                 compareBy { it.itemStack.get(DataComponentTypes.ENCHANTABLE)?.value ?: 0 },
-                PREFER_ITEMS_IN_HOTBAR,
-                STABILIZE_COMPARISON,
+                *DEFAULT_TIE_BREAK
             )
 
-        private fun estimateDamage(o1: WeaponItemFacet): Double {
+        private fun estimateDamage(stack: ItemStack): Double {
             // Already contains damage enchantments like sharpness
-            val attackDamage = o1.itemStack.attackDamage
-            val attackSpeed = o1.itemStack.attackSpeed
+            val attackDamage = stack.attackDamage
+            val attackSpeed = stack.attackSpeed
 
             val p = 0.85.pow(1 / 20.0)
             val bigT = 20.0 / attackSpeed
@@ -77,20 +78,43 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
 
             val speedAdjustedDamage = attackDamage * attackSpeed * probabilityAdjustmentFactor.toFloat()
 
-            val damageFromFireAspect = (o1.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f - 1)
+            val damageFromFireAspect = (stack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f - 1)
                     .coerceAtLeast(0.0F) * 0.33F
 
-            val additionalFactor = DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)
+            val additionalFactor = DAMAGE_ESTIMATOR.estimateValue(stack)
 
             return speedAdjustedDamage * (1.0 + additionalFactor) + damageFromFireAspect
+        }
+
+        /**
+         * Only create a new instance if the item is useful.
+         *
+         * An item is useful as a weapon if it is better than fighting with nothing.
+         */
+        fun createIfUsefulAsWeapon(slot: ItemSlot): WeaponItemFacet? {
+            if (!isBetterThanNothing(slot.itemStack)) {
+                return null
+            }
+
+            return WeaponItemFacet(slot)
+        }
+
+        /**
+         * Decides if this item is better than fighting with nothing.
+         */
+        private fun isBetterThanNothing(stack: ItemStack): Boolean {
+            val baseDamage = estimateDamage(ItemStack(Items.STICK, 1))
+            val itemDamage = estimateDamage(stack)
+
+            return itemDamage > baseDamage || SECONDARY_VALUE_ESTIMATOR.estimateValue(stack) > 0.0F
         }
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.WEAPON, 0)
+        get() = ItemCategory(GenericItemType.WEAPON)
 
-    override val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
-        get() = listOf(ObjectIntPair.of(ItemFunction.WEAPON_LIKE, 1))
+    override val providedItemFunctions: List<ProvidedFunction>
+        get() = listOf(ProvidedFunction(ItemFunction.WEAPON_LIKE, 1))
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as WeaponItemFacet)

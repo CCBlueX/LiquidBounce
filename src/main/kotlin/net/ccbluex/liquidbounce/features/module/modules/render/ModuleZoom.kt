@@ -29,6 +29,8 @@ import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.util.math.MathHelper
 import kotlin.math.abs
+import kotlin.math.log
+import kotlin.math.pow
 import kotlin.math.round
 
 /**

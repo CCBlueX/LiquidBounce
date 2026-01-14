@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.*
 import net.ccbluex.liquidbounce.config.gson.stategies.ExcludeStrategy
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExcludeStrategy
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.features.inventoryPreset.InventoryPreset
+import net.ccbluex.liquidbounce.features.inventoryPreset.FrontendSlotPreference
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.integration.theme.component.Component
@@ -147,6 +149,8 @@ internal fun GsonBuilder.registerCommonTypeAdapters() =
         .registerTypeHierarchyAdapter(ClosedRange::class.javaObjectType, RangeAdapter)
         .registerTypeHierarchyAdapter(IntRange::class.javaObjectType, IntRangeAdapter)
         .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemAdapter)
+        .registerTypeHierarchyAdapter(InventoryPreset::class.java, InventoryPresetAdapter)
+        .registerTypeHierarchyAdapter(FrontendSlotPreference::class.java, FrontendSlotPreferenceAdapter)
         .registerTypeHierarchyAdapter(SoundEvent::class.javaObjectType, SoundEventAdapter)
         .registerTypeHierarchyAdapter(StatusEffect::class.javaObjectType, StatusEffectAdapter)
         .registerTypeHierarchyAdapter(Color4b::class.javaObjectType, ColorAdapter)

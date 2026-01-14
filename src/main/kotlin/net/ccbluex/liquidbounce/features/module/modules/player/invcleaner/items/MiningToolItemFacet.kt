@@ -22,10 +22,14 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.material
-import net.ccbluex.liquidbounce.utils.item.type
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.enchantment.Enchantments
+import net.minecraft.item.AxeItem
+import net.minecraft.item.HoeItem
+import net.minecraft.item.Item
 import net.minecraft.item.MiningToolItem
+import net.minecraft.item.PickaxeItem
+import net.minecraft.item.ShovelItem
 
 class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
@@ -45,10 +49,29 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
     }
 
+    private val subtype = ItemToolType.guessType(itemSlot.itemStack.item)
+
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.TOOL, (this.itemStack.item as MiningToolItem).type)
+        get() = ItemCategory(GenericItemType.TOOL, subtype)
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as MiningToolItemFacet)
+    }
+
+    enum class ItemToolType {
+        AXE,
+        PICKAXE,
+        SHOVEL,
+        HOE;
+
+        companion object {
+            fun guessType(item: Item) = when (item) {
+                is AxeItem -> AXE
+                is PickaxeItem -> PICKAXE
+                is ShovelItem -> SHOVEL
+                is HoeItem -> HOE
+                else -> error("Unknown tool item $item.")
+            }
+        }
     }
 }

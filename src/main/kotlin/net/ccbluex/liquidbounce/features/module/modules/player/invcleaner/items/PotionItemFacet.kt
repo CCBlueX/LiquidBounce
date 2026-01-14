@@ -16,7 +16,7 @@ import java.util.*
 
 class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.POTION, 0)
+        get() = ItemCategory(GenericItemType.POTION)
 
     companion object {
         private val COMPARATOR = ComparatorChain(
@@ -29,18 +29,20 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         )
 
         /**
-         * Prefers potions which have more status effects of higher Tier.
-         * For example:
+         * Prefers potions which have more status effects of higher Tier (S, A, B, C, etc.).
+         * For example,
          * - `S > A`
          * - `A + A > A + B`
          * - `A + A + F > A + A`
          * - etc.
          */
         private object PreferHigherTierPotions : Comparator<PotionItemFacet> {
-            override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int = compareValuesBy(o1, o2) { o ->
-                o.itemStack.getPotionEffects()
-                    .mapTo(ObjectArrayList(8)) { it.effectType.value().tier }
-                    .apply { sortDescending() }
+            override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int {
+                return compareValuesBy(o1, o2) { o ->
+                    o.itemStack.getPotionEffects()
+                        .mapTo(ObjectArrayList(8)) { it.effectType.value().tier }
+                        .apply { sortDescending() }
+                }
             }
         }
 
@@ -49,10 +51,12 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
          * - Anything (S-Tier) II + Anything (S-Tier) I > Anything (S-Tier) I + Anything (S-Tier) I
          */
         private object PreferAmplifier : Comparator<PotionItemFacet> {
-            override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int = compareValuesBy(o1, o2) { o ->
-                o.itemStack.getPotionEffects()
-                    .sortedByDescending { it.effectType.value().tier }
-                    .mapInt { it.amplifier }
+            override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int {
+                return compareValuesBy(o1, o2) { o ->
+                    o.itemStack.getPotionEffects()
+                        .sortedByDescending { it.effectType.value().tier }
+                        .mapInt { it.amplifier }
+                }
             }
         }
 
@@ -61,10 +65,9 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
          */
         private object PreferSplashPotions : Comparator<PotionItemFacet> {
             override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int {
-                val tier1 = tierOfPotionType(o1.itemStack.item as PotionItem)
-                val tier2 = tierOfPotionType(o2.itemStack.item as PotionItem)
-
-                return tier1.compareTo(tier2)
+                return compareValuesBy(o1, o2) {
+                    tierOfPotionType(it.itemStack.item as PotionItem)
+                }
             }
 
             fun tierOfPotionType(potionItem: PotionItem): Tier {
@@ -82,10 +85,12 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
          * - `S (0:30) + A (1:00) > S (1:00) + A (20:00)`
          */
         private object PreferHigherDurationPotions : Comparator<PotionItemFacet> {
-            override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int = compareValuesBy(o1, o2) { o ->
-                o.itemStack.getPotionEffects()
-                    .sortedByDescending { it.effectType.value().tier }
-                    .mapInt { it.duration }
+            override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int {
+                return compareValuesBy(o1, o2) { o ->
+                    o.itemStack.getPotionEffects()
+                        .sortedByDescending { it.effectType.value().tier }
+                        .mapInt { it.duration }
+                }
             }
         }
 

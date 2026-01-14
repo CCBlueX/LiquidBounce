@@ -67,7 +67,7 @@ object ScaffoldBlockItemSelection {
             block is BlockWithEntity -> true
             // We don't like slabs etc.
             !block.defaultState.isFullCube(ModuleScaffold.mc.world!!, BlockPos.ORIGIN) -> true
-            // Is there a hard coded answer?
+            // Is there a hard-coded answer?
             else -> block in UNFAVORABLE_BLOCKS_TO_PLACE
         }
     }

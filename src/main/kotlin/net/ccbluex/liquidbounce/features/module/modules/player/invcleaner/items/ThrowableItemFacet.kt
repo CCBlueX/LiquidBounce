@@ -36,7 +36,7 @@ class ThrowableItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.THROWABLE, 0)
+        get() = ItemCategory(GenericItemType.THROWABLE)
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as ThrowableItemFacet)

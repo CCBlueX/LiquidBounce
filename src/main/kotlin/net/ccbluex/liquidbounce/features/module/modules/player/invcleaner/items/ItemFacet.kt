@@ -22,17 +22,16 @@ import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.GenericItemType
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot.ItemSlotType
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.item.ItemStack
 
 open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
     open val category: ItemCategory
-        get() = ItemCategory(ItemType.NONE, 0)
+        get() = ItemCategory(GenericItemType.ANY_ITEM, itemSlot.itemStack.item)
 
-    open val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
+    open val providedItemFunctions: List<ProvidedFunction>
         get() = emptyList()
 
     val itemStack: ItemStack
@@ -41,14 +40,19 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
     val isInHotbar: Boolean
         get() = this.itemSlot.slotType == ItemSlotType.HOTBAR || this.itemSlot.slotType == ItemSlotType.OFFHAND
 
-    open fun isSignificantlyBetter(other: ItemFacet): Boolean {
-        return false
-    }
-
     /**
      * Should this item be kept, even if it is not allocated to any slot?
      */
     open fun shouldKeep(): Boolean = false
 
     override fun compareTo(other: ItemFacet): Int = compareValueByCondition(this, other, ItemFacet::isInHotbar)
+
+    /**
+     * Example:
+     * - Bow -> (BOW_LIKE, 1)
+     * - Porkchop -> (FOOD, <amount of hunger points it regenerates>)
+     *
+     * @param amount The amount of the function this item gives.
+     */
+    data class ProvidedFunction(val type: ItemFunction, val amount: Int)
 }

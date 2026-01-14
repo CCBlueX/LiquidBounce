@@ -28,6 +28,8 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot.ItemSlotType
+import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.text.Text
 import kotlin.math.ceil
@@ -212,7 +214,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         } else {
             val availableItems = findNonEmptySlotsInInventory() + findItemsInContainer(screen)
 
-            CleanupPlanGenerator(ModuleInventoryCleaner.cleanupTemplateFromSettings, availableItems).generatePlan()
+            CleanupPlanGenerator(ModuleInventoryCleaner.cleanupTemplateFromSettings, availableItems).plan
         }
 
         return cleanupPlan

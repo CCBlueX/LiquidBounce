@@ -29,6 +29,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.util.AutoCompletionProvider
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
+import net.ccbluex.liquidbounce.features.inventoryPreset.InventoryPreset
+import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.script.asArray
@@ -312,6 +314,11 @@ open class Value<T : Any>(
 
 }
 
+class InventoryPresetValue : Value<InventoryPreset>("InventoryPreset",
+    defaultValue = InventoryPreset(),
+    valueType = ValueType.INVENTORY_PRESET,
+)
+
 /**
  * Order by name of [Value] (ignoreCase)
  */
@@ -428,6 +435,7 @@ enum class ValueType(
     SERVER_PACKET,
     KEY(HumanInputDeserializer.keyDeserializer),
     BIND,
+    INVENTORY_PRESET,
     VECTOR_I,
     VECTOR_D,
 

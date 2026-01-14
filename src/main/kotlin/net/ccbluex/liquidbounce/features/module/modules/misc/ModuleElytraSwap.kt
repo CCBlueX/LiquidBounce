@@ -88,7 +88,7 @@ object ModuleElytraSwap : ClientModule(
         schedule(constraints, actions)
     }
 
-    private fun Item.isChestplate() = this is ArmorItem && type() == EquipmentType.CHESTPLATE
+    private fun Item.isChestplate() = this is ArmorItem && this.type() == EquipmentType.CHESTPLATE
 
     private fun ItemStack.isElytra() = this.item == Items.ELYTRA
 

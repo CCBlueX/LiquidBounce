@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.config.types.nesting
 
 import net.ccbluex.liquidbounce.config.types.*
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
@@ -304,6 +305,21 @@ open class Configurable(
 
     fun <C : MutableSet<Identifier>> serverPackets(name: String, default: C) =
         registryList(name, default, ValueType.SERVER_PACKET)
+
+    fun inventoryPreset() = InventoryPresetValue().apply {
+        require(this@Configurable is ClientModule) {
+            "Requires that it only be in a module, " +
+            "it can't be a child of anything else because the design might go " +
+            "wrong (maybe this will be resolved in a future implementation, " +
+            "but for now it is like this)"
+        }
+
+        require(this@Configurable.inner.find { it is InventoryPresetValue } == null) {
+            "It can only be one for, it is not possible to specify it twice yet."
+        }
+
+        this@Configurable.inner.add(this)
+    }
 
     inline fun <reified T> multiEnumChoice(
         name: String,

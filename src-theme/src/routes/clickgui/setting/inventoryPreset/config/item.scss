@@ -1,0 +1,11 @@
+@use "sass:color";
+@use "../../../../../colors.scss" as *;
+
+.item-background {
+  background-color: rgba($clickgui-base-color, 0.85);
+  outline: 1px solid color.adjust($clickgui-text-color, $lightness: -85%);
+
+  &:hover {
+    outline: 1px solid color.adjust($clickgui-text-color, $lightness: -70%);
+  }
+}
