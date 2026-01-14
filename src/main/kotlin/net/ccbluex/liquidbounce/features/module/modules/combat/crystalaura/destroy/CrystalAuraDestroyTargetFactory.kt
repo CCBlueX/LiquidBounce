@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,12 +26,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destr
 import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.entity.Entity
-import net.minecraft.entity.decoration.EndCrystalEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
 
-    var currentTarget: EndCrystalEntity? = null
+    var currentTarget: EndCrystal? = null
 
     /**
      * For the main loop. Finds the best target in range.
@@ -40,8 +40,8 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
      */
     fun updateTarget() {
         currentTarget =
-            world.getEntitiesBoxInRange(player.getCameraPosVec(1.0F), getMaxRange().toDouble()) {
-                it is EndCrystalEntity
+            world.getEntitiesBoxInRange(player.getEyePosition(1.0F), getMaxRange().toDouble()) {
+                it is EndCrystal
             }.mapNotNull {
                 if (cannotSeeEntity(it)) {
                     return@mapNotNull null
@@ -49,7 +49,7 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
 
                 val damage = dealsEnoughDamage(it) ?: return@mapNotNull null
 
-                ComparisonListEntry(it as EndCrystalEntity, damage.firstFloat(), damage.secondFloat())
+                ComparisonListEntry(it as EndCrystal, damage.firstFloat(), damage.secondFloat())
             }.maxOrNull()?.crystalEntity
     }
 
@@ -58,10 +58,10 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
      *
      * Updates the current target.
      */
-    fun validateAndUpdateTarget(crystal: EndCrystalEntity) {
+    fun validateAndUpdateTarget(crystal: EndCrystal) {
         val maxRange = getMaxRange().toDouble() + crystal.boundingBox.maxX - crystal.boundingBox.minX
         currentTarget = null
-        if (player.eyePos.squaredDistanceTo(crystal.pos) > maxRange.sq()) {
+        if (player.eyePosition.distanceToSqr(crystal.position()) > maxRange.sq()) {
             return
         }
 
@@ -76,19 +76,19 @@ object CrystalAuraDestroyTargetFactory : MinecraftShortcuts {
 
     private fun dealsEnoughDamage(entity: Entity) =
         CrystalAuraDamageOptions.approximateExplosionDamage(
-            entity.pos,
+            entity.position(),
             CrystalAuraDamageOptions.RequestingSubmodule.DESTROY
         )
 
     private fun cannotSeeEntity(entity: Entity) = !canSeeBox(
-        player.eyePos,
+        player.eyePosition,
         entity.boundingBox,
         range = range.toDouble(),
         wallsRange = wallsRange.toDouble()
     )
 
     private class ComparisonListEntry(
-        val crystalEntity: EndCrystalEntity,
+        val crystalEntity: EndCrystal,
         val selfDamage: Float,
         val enemyDamage: Float
     ) : Comparable<ComparisonListEntry> {

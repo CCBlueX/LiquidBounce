@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.utils.math.multiply
 
 /**
  *
@@ -31,9 +32,11 @@ internal object VelocityAAC442 : VelocityMode("AAC4.4.2") {
 
     @Suppress("unused")
     private val repeatable = tickHandler {
-        if (player.hurtTime > 0 && !player.isOnGround) {
-            player.velocity.x *= reduce
-            player.velocity.z *= reduce
+        if (player.hurtTime > 0 && !player.onGround()) {
+            player.deltaMovement = player.deltaMovement.multiply(
+                factorX = reduce,
+                factorZ = reduce,
+            )
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.autoShopItemTier
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.getAllTierItems
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.hasBetterTierItem
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.isItemWithTiers
 
 class ConditionCalculator(
     private val items: Object2IntMap<String>,

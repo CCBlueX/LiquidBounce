@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.aiming.projectiles
@@ -23,9 +22,9 @@ package net.ccbluex.liquidbounce.utils.aiming.projectiles
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.EntityDimensions
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.Vec3
 import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -40,14 +39,14 @@ import kotlin.math.sqrt
 object PolynomialProjectileAngleCalculator: ProjectileAngleCalculator() {
     override fun calculateAngleFor(
         projectileInfo: TrajectoryInfo,
-        sourcePos: Vec3d,
+        sourcePos: Vec3,
         targetPosFunction: PositionExtrapolation,
         targetShape: EntityDimensions
     ): Rotation? {
         val basePos = targetPosFunction.getPositionInTicks(0.0)
         val estimatedTicksUntilImpact = basePos.distanceTo(sourcePos) / projectileInfo.initialVelocity
 
-        val diff: Vec3d = targetPosFunction.getPositionInTicks(estimatedTicksUntilImpact).subtract(sourcePos)
+        val diff: Vec3 = targetPosFunction.getPositionInTicks(estimatedTicksUntilImpact).subtract(sourcePos)
 
         val horizontalDistance = hypot(diff.x, diff.z)
         val pearlInfo = TrajectoryInfo.GENERIC
@@ -69,8 +68,8 @@ object PolynomialProjectileAngleCalculator: ProjectileAngleCalculator() {
         val yawRad = atan2(diff.z, diff.x)
 
         return Rotation(
-            MathHelper.wrapDegrees(Math.toDegrees(yawRad).toFloat() - 90f),
-            MathHelper.wrapDegrees((-Math.toDegrees(pitchRad)).toFloat())
+            Mth.wrapDegrees(Math.toDegrees(yawRad).toFloat() - 90f),
+            Mth.wrapDegrees((-Math.toDegrees(pitchRad)).toFloat())
         )
     }
 }

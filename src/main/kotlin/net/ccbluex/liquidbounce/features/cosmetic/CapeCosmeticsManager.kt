@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,8 @@ import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.registerTexture
-import net.minecraft.util.Identifier
+import net.minecraft.resources.Identifier
+import java.util.function.Consumer
 
 /**
  * A cape cosmetic manager
@@ -48,21 +49,12 @@ object CapeCosmeticsManager : EventListener {
     private val cachedCapes = hashMapOf<String, Identifier>()
 
     /**
-     * Interface for returning a cape texture
-     */
-    interface ReturnCapeTexture {
-
-        /**
-         * Returns the cape texture when it is loaded
-         */
-        fun response(id: Identifier)
-
-    }
-
-    /**
      * Loads a player cape
+     *
+     * @param player The player to load the cape for
+     * @param callback The callback to call with the cape texture identifier
      */
-    fun loadPlayerCape(player: GameProfile, response: ReturnCapeTexture) {
+    fun loadPlayerCape(player: GameProfile, callback: Consumer<Identifier>) {
         withScope {
             runCatching {
                 val uuid = player.id
@@ -75,7 +67,7 @@ object CapeCosmeticsManager : EventListener {
                     val cachedCapeId = cachedCapes[name]
                     if (cachedCapeId != null) {
                         LiquidBounce.logger.info("Successfully loaded cached cape for ${player.name}")
-                        response.response(cachedCapeId)
+                        callback.accept(cachedCapeId)
                         return@fetchCosmetic
                     }
 
@@ -98,7 +90,7 @@ object CapeCosmeticsManager : EventListener {
                         cachedCapes[name] = id
 
                         // Return cape texture
-                        response.response(id)
+                        callback.accept(id)
                     }
                 }
             }
@@ -113,7 +105,7 @@ object CapeCosmeticsManager : EventListener {
 
     @Suppress("unused")
     private val disconnectHandler = handler<DisconnectEvent> {
-        cachedCapes.values.forEach { mc.textureManager.destroyTexture(it) }
+        cachedCapes.values.forEach { mc.textureManager.release(it) }
         cachedCapes.clear()
     }
 

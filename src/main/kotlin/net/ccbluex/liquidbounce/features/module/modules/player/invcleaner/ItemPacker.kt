@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
@@ -24,7 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemPa
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemPacker.ItemAmountContraintProvider.SatisfactionStatus.SATISFIED
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
-import net.minecraft.item.ItemStack
+import net.minecraft.world.item.ItemStack
 
 /**
  * After discovery phase (find all items, group them by their type, sort them by usefulness), this class tries to fit
@@ -124,7 +123,7 @@ class ItemPacker {
 
             // We don't need to move around equivalent items
             val areStacksSame =
-                ItemStack.areEqual(
+                ItemStack.matches(
                     filledInItemSlot.itemStack,
                     hotbarSlotToFill.itemStack,
                 )

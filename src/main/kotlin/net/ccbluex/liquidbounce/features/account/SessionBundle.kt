@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,11 @@
 package net.ccbluex.liquidbounce.features.account
 
 import com.mojang.authlib.minecraft.MinecraftSessionService
-import net.minecraft.client.session.ProfileKeys
-import net.minecraft.client.session.Session
+import net.minecraft.client.multiplayer.ProfileKeyPairManager
+import net.minecraft.client.User
 
 data class SessionBundle(
-    val session: Session,
+    val session: User,
     val sessionService: MinecraftSessionService?,
-    val profileKeys: ProfileKeys
+    val profileKeys: ProfileKeyPairManager
 )

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -154,9 +154,9 @@ class CefBrowserBackend : BrowserBackend, EventListener {
         }
 
         // Check if acceleration is supported
-        val system = Util.getOperatingSystem()
+        val system = Util.getPlatform()
         isAccelerationSupported = when (system) {
-            Util.OperatingSystem.WINDOWS -> {
+            Util.OS.WINDOWS -> {
                 // Check if required OpenGL extensions for D3D11 shared texture interop are supported
                 checkAccelerationSupport()
             }

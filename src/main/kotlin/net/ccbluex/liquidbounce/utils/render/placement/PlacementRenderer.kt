@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.render.EMPTY_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.AABB
 
 // TODO box interpolation (when the box was changed)
 /**
@@ -101,7 +101,7 @@ open class PlacementRenderer(
      * @param pos The position, can be [BlockPos.Mutable].
      * @param handlerId To which handler the block should be added.
      */
-    fun addBlock(pos: BlockPos, update: Boolean = true, box: Box = pos.outlineBox, handlerId: Int = 0) {
+    fun addBlock(pos: BlockPos, update: Boolean = true, box: AABB = pos.outlineBox, handlerId: Int = 0) {
         // return if the renderer is deactivated or the box is empty, as there wouldn't be anything to render
         if (!enabled || box == EMPTY_BOX) {
             return
@@ -150,7 +150,7 @@ open class PlacementRenderer(
      *
      * @param handlerId On which handler the update should be performed.
      */
-    fun updateBox(pos: BlockPos, box: Box, handlerId: Int = 0) {
+    fun updateBox(pos: BlockPos, box: AABB, handlerId: Int = 0) {
         if (!enabled) {
             return
         }

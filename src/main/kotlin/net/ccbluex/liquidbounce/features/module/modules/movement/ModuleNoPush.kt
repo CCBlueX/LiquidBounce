@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,12 +44,12 @@ object ModuleNoPush : ClientModule("NoPush", Category.MOVEMENT) {
             return@handler
         }
 
-        if (mc.options.jumpKey.isPressed || mc.options.sneakKey.isPressed) {
+        if (mc.options.keyJump.isDown || mc.options.keyShift.isDown) {
             return@handler
         }
 
-        if ((player.isTouchingWater || player.isInLava) && player.velocity.y < 0) {
-            player.velocity.y = 0.0
+        if ((player.isInWater || player.isInLava) && player.deltaMovement.y < 0) {
+            player.deltaMovement.y = 0.0
         }
     }
 }

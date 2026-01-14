@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
         // Auto GG
         if (message.contains("Show some love by typing")) {
             delay(delayResponse.random().milliseconds)
-            network.sendChatMessage("gg")
+            network.sendChat("gg")
             return@sequenceHandler
         }
 
@@ -182,9 +182,9 @@ object ModuleAutoChatGame : ClientModule("AutoChatGame", Category.MISC) {
         // Send answer
         val formattedAnswer = answerTemplate.format(answer)
         if (formattedAnswer.startsWith("/")) {
-            network.sendChatCommand(formattedAnswer.substring(1))
+            network.sendCommand(formattedAnswer.substring(1))
         } else {
-            network.sendChatMessage(formattedAnswer)
+            network.sendChat(formattedAnswer)
         }
     }
 }

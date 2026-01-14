@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.inputByName
-import net.minecraft.client.util.InputUtil
+import com.mojang.blaze3d.platform.InputConstants
 import java.util.function.Consumer
 import java.util.function.Function
 import java.util.function.Supplier
@@ -191,7 +191,7 @@ open class Value<T : Any>(
                     (a.first().toFloat()..a.last().toFloat()) as T
                 }
 
-                is InputUtil.Key -> {
+                is InputConstants.Key -> {
                     inputByName(t.asString()) as T
                 }
 

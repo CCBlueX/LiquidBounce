@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
@@ -29,9 +27,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.util.Hand
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.InteractionHand
 
 internal object Soup : HealthBasedBuff("Soup") {
 
@@ -45,7 +43,7 @@ internal object Soup : HealthBasedBuff("Soup") {
     }
 
     override fun isValidItem(stack: ItemStack, forUse: Boolean): Boolean {
-        return stack.isOf(Items.MUSHROOM_STEW)
+        return stack.`is`(Items.MUSHROOM_STEW)
     }
 
     override suspend fun execute(slot: HotbarItemSlot) {
@@ -55,9 +53,9 @@ internal object Soup : HealthBasedBuff("Soup") {
         if (DropAfterUse.enabled) {
             waitTicks(wait.random())
 
-            if (assumeEmptyBowl || slot.itemStack.isOf(Items.BOWL) && slot !is OffHandSlot) {
-                if (player.dropSelectedItem(true)) {
-                    player.swingHand(Hand.MAIN_HAND)
+            if (assumeEmptyBowl || slot.itemStack.`is`(Items.BOWL) && slot !is OffHandSlot) {
+                if (player.drop(true)) {
+                    player.swing(InteractionHand.MAIN_HAND)
                 }
             }
         }

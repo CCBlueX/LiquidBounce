@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
+import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
+
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.client.gui.render.state.GuiRenderState;
@@ -27,33 +29,31 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.ArrayList;
 
-import static net.ccbluex.liquidbounce.utils.client.GenericPools.ARRAY_LIST;
-
 @SuppressWarnings("rawtypes")
-@Mixin(GuiRenderState.Layer.class)
+@Mixin(GuiRenderState.Node.class)
 public abstract class MixinGuiRenderStateLayer {
 
-    @WrapOperation(method = "addItem", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "submitItem", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addItem(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "addText", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "submitText", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addText(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "addSpecialElement", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "submitPicturesInPictureState", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addSpecialElement(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "addSimpleElement", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "submitGuiElement", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addSimpleElement(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }
 
-    @WrapOperation(method = "addPreparedText", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
+    @WrapOperation(method = "submitGlyph", at = @At(value = "NEW", target = "()Ljava/util/ArrayList;"))
     private ArrayList reuseList$addPreparedText(Operation<ArrayList> original) {
         return ARRAY_LIST.borrow();
     }

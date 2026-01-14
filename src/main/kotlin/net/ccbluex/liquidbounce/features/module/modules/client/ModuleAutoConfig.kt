@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.client
@@ -31,8 +29,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
+import net.ccbluex.liquidbounce.utils.client.dropPort
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.rootDomain
+import net.minecraft.client.gui.screens.ConnectScreen
 
 object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = true, aliases = listOf("AutoSettings")) {
 
@@ -50,7 +53,7 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
     }
 
     override suspend fun enabledEffect() {
-        val currentServerEntry = mc.currentServerEntry
+        val currentServerEntry = mc.currentServer
 
         if (currentServerEntry == null) {
             notification(
@@ -60,7 +63,7 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
             return
         }
 
-        loadServerConfig(currentServerEntry.address.dropPort().rootDomain(), null)
+        loadServerConfig(currentServerEntry.ip.dropPort().rootDomain(), null)
     }
 
     @Suppress("unused")
@@ -75,7 +78,7 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
         eventListenerScope.launch {
             try {
                 isScheduled = true
-                val address = event.serverInfo.address.dropPort().rootDomain()
+                val address = event.serverInfo.ip.dropPort().rootDomain()
 
                 loadServerConfig(address, event.connectScreen)
             } finally {
@@ -118,16 +121,16 @@ object ModuleAutoConfig : ClientModule("AutoConfig", Category.CLIENT, state = tr
             return
         }
 
-        connectScreen?.setStatus(regular(message("loading", address)))
+        connectScreen?.updateStatus(regular(message("loading", address)))
         runCatching {
             AutoConfig.loadAutoConfig(autoConfig)
         }.onFailure { error ->
             logger.error("Failed to load config ${autoConfig.name} for $address.", error)
-            connectScreen?.setStatus(markAsError(message("failed", address)))
+            connectScreen?.updateStatus(markAsError(message("failed", address)))
             notification("Auto Config", "Failed to load config ${autoConfig.name}.",
                 NotificationEvent.Severity.ERROR)
         }.onSuccess {
-            connectScreen?.setStatus(regular(message("loaded", address)))
+            connectScreen?.updateStatus(regular(message("loaded", address)))
             notification("Auto Config", "Successfully loaded config ${autoConfig.name}.",
                 NotificationEvent.Severity.SUCCESS)
         }

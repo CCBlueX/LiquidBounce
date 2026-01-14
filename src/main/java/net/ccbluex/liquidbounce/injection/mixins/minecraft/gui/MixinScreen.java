@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,13 +26,15 @@ import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager;
 import net.ccbluex.liquidbounce.utils.client.RunnableClickEvent;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.ClickEvent;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.ClickEvent;
+import org.jspecify.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -40,31 +42,29 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import javax.annotation.Nullable;
-
 @Mixin(Screen.class)
 public abstract class MixinScreen implements ScreenAddition {
-    @Shadow
-    protected abstract void remove(Element child);
 
+    @Final
     @Shadow
-    protected TextRenderer textRenderer;
+    protected Font font;
     @Shadow
     public int height;
     @Shadow
     public int width;
 
     @Shadow
-    protected abstract <T extends Element & Drawable> T addDrawableChild(T drawableElement);
+    protected abstract <T extends GuiEventListener & Renderable> T addRenderableWidget(T drawableElement);
 
+    @Final
     @Shadow
     @Nullable
-    protected MinecraftClient client;
+    protected Minecraft minecraft;
 
     @Shadow
-    private boolean screenInitialized;
+    private boolean initialized;
 
-    @Inject(method = "init(Lnet/minecraft/client/MinecraftClient;II)V", at = @At("TAIL"))
+    @Inject(method = "init(II)V", at = @At("TAIL"))
     private void objInit(CallbackInfo ci) {
         if (!LiquidBounce.INSTANCE.isInitialized()) {
             return;
@@ -82,23 +82,23 @@ public abstract class MixinScreen implements ScreenAddition {
         ThemeManager.INSTANCE.loadBackground();
     }
 
-    @Inject(method = "renderInGameBackground", at = @At("HEAD"), cancellable = true)
-    private void hookRenderInGameBackground(DrawContext context, CallbackInfo ci) {
+    @Inject(method = "renderTransparentBackground", at = @At("HEAD"), cancellable = true)
+    private void hookRenderInGameBackground(GuiGraphics context, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.GUI_BACKGROUND)) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "renderWithTooltip", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "renderWithTooltipAndSubtitles", at = @At("HEAD"), cancellable = true)
     private void cancelRenderByChestStealer(CallbackInfo ci) {
-        if (FeatureSilentScreen.getShouldHide()) {
+        if (LiquidBounce.INSTANCE.isInitialized() && FeatureSilentScreen.INSTANCE.getShouldHide()) {
             ci.cancel();
         }
     }
 
     @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
-    private void renderBackgroundTexture(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (this.client != null && this.client.world == null && !HideAppearance.INSTANCE.isHidingNow()) {
+    private void renderBackgroundTexture(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        if (this.minecraft != null && this.minecraft.level == null && !HideAppearance.INSTANCE.isHidingNow()) {
             if (!LiquidBounce.INSTANCE.isInitialized()) {
                 return;
             }
@@ -113,8 +113,8 @@ public abstract class MixinScreen implements ScreenAddition {
      * Allows the execution of {@link RunnableClickEvent}.
      * (default branch in switch pattern matching)
      */
-    @Inject(method = "handleBasicClickEvent", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", ordinal = 0, shift = At.Shift.BEFORE, remap = false), cancellable = true)
-    private static void hookExecuteClickEvents(ClickEvent clickEvent, MinecraftClient client, Screen screenAfterRun, CallbackInfo ci) {
+    @Inject(method = "defaultHandleClickEvent", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", ordinal = 0, shift = At.Shift.BEFORE, remap = false), cancellable = true)
+    private static void hookExecuteClickEvents(ClickEvent clickEvent, Minecraft client, Screen screenAfterRun, CallbackInfo ci) {
         if (clickEvent instanceof RunnableClickEvent runnableClickEvent) {
             runnableClickEvent.run();
             ci.cancel();
@@ -124,6 +124,6 @@ public abstract class MixinScreen implements ScreenAddition {
     @Unique
     @Override
     public boolean liquidbounce$screenInitialized() {
-        return screenInitialized;
+        return initialized;
     }
 }

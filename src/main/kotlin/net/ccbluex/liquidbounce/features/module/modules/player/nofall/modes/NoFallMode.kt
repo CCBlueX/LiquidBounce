@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.world.entity.ai.attributes.Attributes
 
 sealed class NoFallMode(name: String) : Choice(name) {
     final override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
-    protected val playerSafeFallDistance get() = player.getAttributeValue(EntityAttributes.SAFE_FALL_DISTANCE)
+    protected val playerSafeFallDistance get() = player.getAttributeValue(Attributes.SAFE_FALL_DISTANCE)
 }

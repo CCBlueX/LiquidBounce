@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.item.createItem
-import net.minecraft.component.ComponentChanges
-import net.minecraft.item.ItemStack
-import net.minecraft.nbt.NbtCompound
+import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.world.item.ItemStack
+import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtOps
 
 /**
@@ -43,7 +43,7 @@ object ClientItemGroups : Configurable("tabs") {
     private var beenSetup = false
     val containers by textList("Containers", mutableListOf())
 
-    fun storeAsContainerItem(compound: NbtCompound) {
+    fun storeAsContainerItem(compound: CompoundTag) {
         val compoundString = compound.toString()
 
         if (compoundString in containers) {
@@ -58,12 +58,12 @@ object ClientItemGroups : Configurable("tabs") {
         }
     }
 
-    fun storeAsContainerItem(componentChanges: ComponentChanges) {
+    fun storeAsContainerItem(componentChanges: DataComponentPatch) {
         storeAsContainerItem(
-            ComponentChanges.CODEC.encodeStart(
+            DataComponentPatch.CODEC.encodeStart(
                 NbtOps.INSTANCE,
                 componentChanges
-            ).orThrow as NbtCompound
+            ).orThrow as CompoundTag
         )
     }
 

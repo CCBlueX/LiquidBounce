@@ -1,0 +1,38 @@
+/*!
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2025 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@mixin icon-settings-expand(
+  $size: 10px,
+  $right: 10px,
+  $rotate: -90deg,
+) {
+  content: "";
+  display: block;
+  position: absolute;
+  height: $size;
+  width: $size;
+  right: $right;
+  top: 50%;
+  background-image: url("/img/clickgui/icon-settings-expand.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  transform-origin: 50% 50%;
+  transform: translateY(-50%) rotate($rotate);
+  transition: ease opacity 0.2s, ease transform 0.4s;
+}

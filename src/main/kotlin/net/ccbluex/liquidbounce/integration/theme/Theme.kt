@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.integration.theme
 import io.netty.handler.codec.http.HttpHeaderNames
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
@@ -30,15 +29,15 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
-import net.ccbluex.liquidbounce.integration.theme.component.Component
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory.JsonComponentFactory
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponentFactory.JsonHudComponentFactory
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.resource.ResourceManager
-import net.minecraft.resource.SynchronousResourceReloader
+import com.mojang.blaze3d.platform.NativeImage
+import net.minecraft.server.packs.resources.ResourceManager
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
@@ -60,7 +59,7 @@ class Theme private constructor(val origin: Origin, url: String) :
                 "${AuthMiddleware.AUTH_COOKIE_NAME}=${AuthMiddleware.AUTH_CODE}"
             )
             .build()
-    ), Closeable, SynchronousResourceReloader {
+    ), Closeable, ResourceManagerReloadListener {
 
     enum class Origin(override val choiceName: String, val external: Boolean) : NamedChoice {
         RESOURCE("resource", false),
@@ -69,34 +68,31 @@ class Theme private constructor(val origin: Origin, url: String) :
         REMOTE("remote", true)
     }
 
-    var metadata: ThemeMetadata
-        field: ThemeMetadata? = null
-        private set
-        get() = requireNotNull(field) { "metadata not loaded" }
+    private var _metadata: ThemeMetadata? = null
+    val metadata: ThemeMetadata
+        get() = requireNotNull(_metadata) { "metadata not loaded" }
 
     private suspend fun loadMetadata() {
         try {
-            metadata = get<ThemeMetadata>("/metadata.json").apply { checkNotNull() }
+            _metadata = get<ThemeMetadata>("/metadata.json").apply { checkNotNull() }
         } catch (e: Exception) {
             logger.error("Failed to load theme metadata", e)
             throw IllegalStateException("Failed to load theme metadata", e)
         }
     }
 
-    private var _components: List<Component>? = null
-
-    val components: List<Component>
+    private var _components: List<HudComponent>? = null
+    val components: List<HudComponent>
         get() = requireNotNull(_components) { "components not loaded" }
 
-    var settings: Configurable
-        field: Configurable? = null
-        private set
-        get() = requireNotNull(field) { "settings not loaded" }
+    private var _settings: Configurable? = null
+    val settings: Configurable
+        get() = requireNotNull(_settings) { "settings not loaded" }
 
     private suspend fun loadComponents() {
         _components = metadata.components.mapNotNull { name ->
             val componentFactory = runCatching {
-                get<JsonComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
+                get<JsonHudComponentFactory>("/components/${name.lowercase(Locale.US)}.json")
             }.onFailure {
                 logger.warn("Failed to load component $name", it)
             }.getOrNull() ?: return@mapNotNull null
@@ -113,7 +109,7 @@ class Theme private constructor(val origin: Origin, url: String) :
             check(count == 1) { "Found duplicated component name '$name'" }
         }
 
-        settings = Configurable(metadata.id.capitalize()).apply {
+        _settings = Configurable(metadata.id.capitalize()).apply {
             metadata.values?.let { values ->
                 for (value in values) {
                     json(value)
@@ -163,7 +159,6 @@ class Theme private constructor(val origin: Origin, url: String) :
             return false
         }
 
-        val vertexShader = LiquidBounce.resourceToString("shaders/position_tex.vert")
         val fragmentShader = runCatching {
             get<String>("/backgrounds/${background.name.lowercase(Locale.US)}.frag")
         }.getOrNull() ?: return false
@@ -172,7 +167,6 @@ class Theme private constructor(val origin: Origin, url: String) :
             themeBackgroundShader = ThemeBackground.Shader.build(
                 metadata,
                 background,
-                vertexShader,
                 fragmentShader,
             ).also {
                 it.onResourceReload()
@@ -228,7 +222,7 @@ class Theme private constructor(val origin: Origin, url: String) :
 
     fun isOverlaySupported(name: String?) = name != null && metadata.overlays.contains(name)
 
-    override fun reload(manager: ResourceManager) {
+    override fun onResourceManagerReload(manager: ResourceManager) {
         themeBackgroundShader?.onResourceReload()
         themeBackgroundTexture?.onResourceReload()
         logger.info("Reloaded theme '${metadata.name}'.")

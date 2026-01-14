@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,22 +15,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * @anticheat Sentinel
@@ -54,8 +52,8 @@ internal object FlySentinel10thMar : Choice("Sentinel10thMar") {
         get() = ModuleFly.modes
 
     val repeatable = tickHandler {
-        player.velocity.y = jumpHeight.toDouble()
-        player.velocity = player.velocity.withStrafe(speed = jumpSpeed.toDouble())
+        player.deltaMovement.y = jumpHeight.toDouble()
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = jumpSpeed.toDouble()))
         spoofOnGround = true
         waitTicks(ticks)
     }
@@ -67,7 +65,7 @@ internal object FlySentinel10thMar : Choice("Sentinel10thMar") {
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is ServerboundMovePlayerPacket) {
             if (spoofOnGround) {
                 packet.onGround = true
                 spoofOnGround = false

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,36 @@
  */
 package net.ccbluex.liquidbounce.api.core
 
-import kotlinx.coroutines.*
+import com.mojang.blaze3d.platform.NativeImage
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.interceptors.CacheBlacklistInterceptor
 import net.ccbluex.liquidbounce.authlib.Authlib
 import net.ccbluex.liquidbounce.authlib.interceptor.DefaultHeaderInterceptor
-import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.util.readJson
 import net.ccbluex.liquidbounce.mcef.listeners.OkHttpProgressInterceptor
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.texture.NativeImage
+import net.minecraft.ReportedException
 import net.minecraft.util.Util
-import net.minecraft.util.crash.CrashException
-import okhttp3.*
+import okhttp3.Cache
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Dispatcher
+import okhttp3.Headers
+import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import okhttp3.coroutines.executeAsync
 import okio.BufferedSource
 import okio.sink
@@ -42,6 +55,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.Reader
+import java.util.Locale
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
@@ -49,7 +63,7 @@ import net.ccbluex.liquidbounce.mcef.utils.FileUtils as McefFileUtils
 
 val renderScope = CoroutineScope(
     Dispatchers.Minecraft + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
-        if (throwable is CrashException) {
+        if (throwable is ReportedException) {
             ErrorHandler.fatal(throwable, additionalMessage = "Render scope")
         }
     }
@@ -57,7 +71,7 @@ val renderScope = CoroutineScope(
 
 val ioScope = CoroutineScope(
     Dispatchers.IO + SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
-        if (throwable is CrashException) {
+        if (throwable is ReportedException) {
             ErrorHandler.fatal(throwable, additionalMessage = "IO scope")
         }
     }
@@ -94,13 +108,24 @@ object HttpClient {
     }
 
     private val defaultClient = OkHttpClient.Builder()
-        .dispatcher(Dispatcher(Util.getDownloadWorkerExecutor().service))
+        .dispatcher(Dispatcher(Util.nonCriticalIoPool().service))
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(20, TimeUnit.SECONDS)
         .writeTimeout(20, TimeUnit.SECONDS)
         .followRedirects(true)
-        .followSslRedirects(true)
-        .cache(Cache(ConfigSystem.rootFolder.resolve("http-cache"), 128L shl 20))
+        .followSslRedirects(true).apply {
+            try {
+                val file = File(
+                    System.getProperty("java.io.tmpdir"),
+                    "${LiquidBounce.CLIENT_NAME.lowercase(Locale.ROOT)}_http_cache",
+                )
+                file.mkdirs()
+                cache(Cache(file, 128L shl 20))
+            } catch (e: IOException) {
+                logger.error("Failed to initialize cache directory for HTTP client", e)
+            }
+        }
+        .addInterceptor(CacheBlacklistInterceptor(setOf("localhost", "127.0.0.1")))
         .addInterceptor(DefaultHeaderInterceptor("User-Agent", DEFAULT_AGENT, skipIfExists = true))
         .build().also {
             McefFileUtils.setOkHttpClient(it)

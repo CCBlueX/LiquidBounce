@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,10 +25,15 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.AutoArmorSaveArmor.durabilityThreshold
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.performMoveOrHotbarClick
-import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.item.Items
+import net.minecraft.world.item.Items
 
 /**
  * AutoArmor module
@@ -85,7 +90,7 @@ object ModuleAutoArmor : ClientModule("AutoArmor", Category.COMBAT) {
      * @return false if a move was not possible, true if a move occurred
      */
     private fun equipArmorPiece(armorPiece: ArmorPiece): InventoryAction? {
-        val stackInArmor = player.inventory.getStack(armorPiece.inventorySlot)
+        val stackInArmor = player.inventory.getItem(armorPiece.inventorySlot)
 
         if (stackInArmor.item == Items.ELYTRA) {
             return null

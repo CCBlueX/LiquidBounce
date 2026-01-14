@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -161,9 +161,9 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
         }
 
         if (text.startsWith('/')) {
-            network.sendChatCommand(text.substring(1))
+            network.sendCommand(text.substring(1))
         } else {
-            network.sendChatMessage(text)
+            network.sendChat(text)
         }
     }
 
@@ -177,7 +177,7 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
         }
 
         if (formattedText.contains("@a")) {
-            mc.networkHandler?.playerList?.mapNotNull {
+            mc.connection?.onlinePlayers?.mapNotNull {
                 it?.profile?.name.takeIf { n -> n != player.gameProfile?.name }
             }?.takeIf { it.isNotEmpty() }?.let { playerNameList ->
                 formattedText = formattedText.replace("@a") { playerNameList.random() }

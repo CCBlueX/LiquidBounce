@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ object ScaffoldSprintControlFeature : ToggleableConfigurable(ModuleScaffold, "Sp
                 }
 
                 SprintMode.NO_SPRINT_ON_GROUND -> {
-                    event.sprint = !player.isOnGround
+                    event.sprint = !player.onGround()
                 }
 
                 SprintMode.DO_NOT_CHANGE -> { }
@@ -133,7 +133,7 @@ object ScaffoldSprintControlFeature : ToggleableConfigurable(ModuleScaffold, "Sp
                 }
 
                 SprintMode.NO_SPRINT_ON_GROUND -> {
-                    event.sprint = !player.isOnGround
+                    event.sprint = !player.onGround()
                 }
 
                 SprintMode.DO_NOT_CHANGE -> { }

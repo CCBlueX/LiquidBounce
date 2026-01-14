@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,14 +32,24 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer.CommandFakePlayer.snapshots
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.removeMessage
+import net.ccbluex.liquidbounce.utils.client.roundToDecimalPlaces
+import net.ccbluex.liquidbounce.utils.client.warning
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.attribute.EntityAttributes
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import java.util.*
 
 /**
@@ -117,7 +127,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
                 }
 
                 if (playersToRemove.isEmpty()) {
-                    mc.inGameHud.chatHud.removeMessage("CFakePlayer#info")
+                    mc.gui.chat.removeMessage("CFakePlayer#info")
                     val data = MessageMetadata(id = "CFakePlayer#info", remove = false)
 
                     chat(warning((command.result("noFakePlayerNamed", name))), metadata = data)
@@ -280,7 +290,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
      * Verifies that the user is in a world and the player object exists.
      */
     private fun checkInGame() {
-        if (mc.world == null || mc.player == null) {
+        if (mc.level == null || mc.player == null) {
             throw CommandException(translation("liquidbounce.command.fakeplayer.mustBeInGame"))
         }
     }
@@ -297,7 +307,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
          * Explosions are not handled by [LivingEntity#damage]
          * so an ExplosionS2CPacket handler is required.
          */
-        if (packet is ExplosionS2CPacket) {
+        if (packet is ClientboundExplodePacket) {
             fakePlayers.forEach { fakePlayer ->
                 val damage = fakePlayer.getDamageFromExplosion(
                     pos = packet.center // will only work for crystals
@@ -313,7 +323,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
          * The server should not know that we tried to attack a fake player.
          */
         if (
-            packet is PlayerInteractEntityC2SPacket &&
+            packet is ServerboundInteractPacket &&
             fakePlayers.any { fakePlayer ->
                 packet.entityId == fakePlayer.id
             }
@@ -338,16 +348,16 @@ object CommandFakePlayer : Command.Factory, EventListener {
 
         val fakePlayer = event.entity as LivingEntity
 
-        val genericAttackDamage = if (player.isUsingRiptide) {
-                player.riptideAttackDamage
+        val genericAttackDamage = if (player.isAutoSpinAttack) {
+                player.autoSpinAttackDmg
             } else {
-                player.getAttributeValue(EntityAttributes.ATTACK_DAMAGE).toFloat()
+                player.getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
             }
-        val damageSource = player.damageSources.playerAttack(player)
-        var enchantAttackDamage = player.getDamageAgainst(fakePlayer, genericAttackDamage,
+        val damageSource = player.damageSources().playerAttack(player)
+        var enchantAttackDamage = player.getEnchantedDamage(fakePlayer, genericAttackDamage,
             damageSource) - genericAttackDamage
 
-        val attackCooldown = player.getAttackCooldownProgress(0.5f)
+        val attackCooldown = player.getAttackStrengthScale(0.5f)
         enchantAttackDamage *= attackCooldown
         val damage = fakePlayer.getEffectiveDamage(damageSource, enchantAttackDamage, false)
 
@@ -365,7 +375,7 @@ object CommandFakePlayer : Command.Factory, EventListener {
             return@handler
         }
 
-        if (mc.world == null || mc.player == null) {
+        if (mc.level == null || mc.player == null) {
             chat(markAsError(translation("liquidbounce.command.fakeplayer.mustBeInGame")))
             stopRecording()
             return@handler

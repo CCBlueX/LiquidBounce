@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.PlacementContext
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 /**
  * In 1.13+ crystals need one block air above to be placed.
@@ -42,7 +42,7 @@ object AirAboveCondition : PlacementCondition {
 object AirOldVersionCondition : PlacementCondition {
 
     override fun isValid(context: PlacementContext, cache: CandidateCache, candidate: BlockPos): Boolean {
-        return !SubmoduleCrystalPlacer.oldVersion || candidate.up(2).getState()!!.isAir
+        return !SubmoduleCrystalPlacer.oldVersion || candidate.above(2).getState()!!.isAir
     }
 
 }

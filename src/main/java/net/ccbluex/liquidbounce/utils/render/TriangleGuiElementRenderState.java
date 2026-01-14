@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.utils.render;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
-import net.minecraft.client.gui.ScreenRect;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.texture.TextureSetup;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.render.TextureSetup;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
@@ -35,25 +35,21 @@ public record TriangleGuiElementRenderState(
     float x2,
     float y2,
     int argb,
+    RenderPipeline pipeline,
     Matrix3x2f pose,
-    @Nullable ScreenRect scissorArea,
-    @Nullable ScreenRect bounds
+    @Nullable ScreenRectangle scissorArea,
+    @Nullable ScreenRectangle bounds
 ) implements LiquidBounceGuiElementRenderState {
 
     @Override
-    public void setupVertices(VertexConsumer vertices, float depth) {
-        vertices.vertex(pose, x0, y0, depth).color(argb);
-        vertices.vertex(pose, x1, y1, depth).color(argb);
-        vertices.vertex(pose, x2, y2, depth).color(argb);
-    }
-
-    @Override
-    public RenderPipeline pipeline() {
-        return ClientRenderPipelines.GUI.Triangles;
+    public void buildVertices(VertexConsumer vertices) {
+        vertices.addVertexWith2DPose(pose, x0, y0).setColor(argb);
+        vertices.addVertexWith2DPose(pose, x1, y1).setColor(argb);
+        vertices.addVertexWith2DPose(pose, x2, y2).setColor(argb);
     }
 
     @Override
     public TextureSetup textureSetup() {
-        return TextureSetup.empty();
+        return TextureSetup.noTexture();
     }
 }

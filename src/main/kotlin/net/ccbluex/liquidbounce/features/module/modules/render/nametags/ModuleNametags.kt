@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,14 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.renderer.entity.state.EntityRenderState
 import org.joml.Vector2fc
 
 /**
@@ -72,7 +75,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
         event.context.drawNametags(event.tickDelta)
     }
 
-    private fun DrawContext.drawNametags(tickDelta: Float) {
+    private fun GuiGraphics.drawNametags(tickDelta: Float) {
         drawnEnchantmentAreas.clear()
 
         for (nametagInfo in nametagsToRender) {
@@ -91,7 +94,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
         val maximumDistanceSquared = maximumDistance.sq()
 
         for (entity in RenderedEntities) {
-            if (entity.squaredDistanceTo(mc.cameraEntity) > maximumDistanceSquared) {
+            if (entity.distanceToSqr(mc.cameraEntity!!) > maximumDistanceSquared) {
                 continue
             }
 
@@ -101,7 +104,12 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     }
 
     private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
-        nametag.entity.squaredDistanceTo(mc.cameraEntity)
+        nametag.entity.distanceToSqr(mc.cameraEntity!!)
+    }
+
+    fun shouldRenderVanillaNametag(state: EntityRenderState): Boolean {
+        return !running || !((state as EntityRenderStateAddition).`liquid_bounce$getEntity`()
+            ?: return true).shouldBeShown()
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,9 +24,18 @@ import net.ccbluex.fastutil.unmodifiable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
-import net.minecraft.client.util.InputUtil
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetOf
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.Component
 import net.minecraft.util.Util
 import org.lwjgl.glfw.GLFW
 
@@ -39,7 +48,7 @@ import org.lwjgl.glfw.GLFW
  */
 @JvmRecord
 data class InputBind(
-    val boundKey: InputUtil.Key,
+    val boundKey: InputConstants.Key,
     val action: BindAction,
     val modifiers: Set<Modifier>,
 ) {
@@ -51,8 +60,8 @@ data class InputBind(
      * @param code The key or button code.
      * @param action The action to bind to this key.
      */
-    constructor(type: InputUtil.Type, code: Int, action: BindAction) :
-        this(type.createFromCode(code), action, emptySet())
+    constructor(type: InputConstants.Type, code: Int, action: BindAction) :
+        this(type.getOrCreate(code), action, emptySet())
 
     /**
      * Constructor to create a binding using a key name.
@@ -70,7 +79,7 @@ data class InputBind(
     val keyName: String
         get() = when {
             isUnbound -> "None"
-            else -> this.boundKey.translationKey
+            else -> this.boundKey.name
                 .split('.')
                 .drop(2) // Drops the "key.keyboard" or "key.mouse" part
                 .joinToString(separator = "_") // Joins the remaining parts with underscores
@@ -83,7 +92,7 @@ data class InputBind(
      * @return True if the key is unbound, false otherwise.
      */
     val isUnbound: Boolean
-        get() = this.boundKey == InputUtil.UNKNOWN_KEY
+        get() = this.boundKey == InputConstants.UNKNOWN
 
     /**
      * Determines if the specified key matches the bound key.
@@ -93,10 +102,10 @@ data class InputBind(
      * @return True if the key code or scan code matches the bound key, false otherwise.
      */
     fun matchesKey(keyCode: Int, scanCode: Int): Boolean {
-        return if (keyCode == InputUtil.UNKNOWN_KEY.code) {
-            this.boundKey.category == InputUtil.Type.SCANCODE && this.boundKey.code == scanCode
+        return if (keyCode == InputConstants.UNKNOWN.value) {
+            this.boundKey.type == InputConstants.Type.SCANCODE && this.boundKey.value == scanCode
         } else {
-            this.boundKey.category == InputUtil.Type.KEYSYM && this.boundKey.code == keyCode
+            this.boundKey.type == InputConstants.Type.KEYSYM && this.boundKey.value == keyCode
         }
     }
 
@@ -107,7 +116,7 @@ data class InputBind(
      * @return True if the mouse button matches the bound key, false otherwise.
      */
     fun matchesMouse(code: Int): Boolean {
-        return this.boundKey.category == InputUtil.Type.MOUSE && this.boundKey.code == code
+        return this.boundKey.type == InputConstants.Type.MOUSE && this.boundKey.value == code
     }
 
     /**
@@ -134,7 +143,7 @@ data class InputBind(
 
         val eventAction = event.action
         return when (eventAction) {
-            GLFW.GLFW_PRESS if mc.currentScreen == null -> !currentState || action == BindAction.HOLD
+            GLFW.GLFW_PRESS if mc.screen == null -> !currentState || action == BindAction.HOLD
             GLFW.GLFW_RELEASE -> false
             else -> currentState
         }
@@ -152,10 +161,10 @@ data class InputBind(
     }
 
     enum class Modifier(override val choiceName: String, val bitMask: Int, vararg val keyCodes: Int): NamedChoice {
-        SHIFT("Shift", GLFW.GLFW_MOD_SHIFT, InputUtil.GLFW_KEY_LEFT_SHIFT, InputUtil.GLFW_KEY_RIGHT_SHIFT),
-        CONTROL("Control", GLFW.GLFW_MOD_CONTROL, InputUtil.GLFW_KEY_LEFT_CONTROL, InputUtil.GLFW_KEY_RIGHT_CONTROL),
-        ALT("Alt", GLFW.GLFW_MOD_ALT, InputUtil.GLFW_KEY_LEFT_ALT, InputUtil.GLFW_KEY_RIGHT_ALT),
-        SUPER("Super", GLFW.GLFW_MOD_SUPER, InputUtil.GLFW_KEY_LEFT_SUPER, InputUtil.GLFW_KEY_RIGHT_SUPER);
+        SHIFT("Shift", GLFW.GLFW_MOD_SHIFT, InputConstants.KEY_LSHIFT, InputConstants.KEY_RSHIFT),
+        CONTROL("Control", GLFW.GLFW_MOD_CONTROL, InputConstants.KEY_LCONTROL, InputConstants.KEY_RCONTROL),
+        ALT("Alt", GLFW.GLFW_MOD_ALT, InputConstants.KEY_LALT, InputConstants.KEY_RALT),
+        SUPER("Super", GLFW.GLFW_MOD_SUPER, InputConstants.KEY_LSUPER, InputConstants.KEY_RSUPER);
 
         /**
          * Check if self is active in [modifiers] value.
@@ -165,18 +174,18 @@ data class InputBind(
         /**
          * Check if any one modifier key is pressed.
          */
-        val isAnyPressed: Boolean get() = this.keyCodes.any { InputUtil.isKeyPressed(mc.window.handle, it) }
+        val isAnyPressed: Boolean get() = this.keyCodes.any { InputConstants.isKeyDown(mc.window, it) }
 
         /**
          * Performs the platform (OS) specified render name of a modifier.
          */
-        val platformRenderName: String get() = when (Util.getOperatingSystem()) {
-            Util.OperatingSystem.OSX -> when (this) {
+        val platformRenderName: String get() = when (Util.getPlatform()) {
+            Util.OS.WINDOWS -> when (this) {
                 CONTROL -> "Ctrl"
                 SUPER -> "\u229e"
                 else -> choiceName
             }
-            Util.OperatingSystem.WINDOWS -> when (this) {
+            Util.OS.OSX -> when (this) {
                 SHIFT -> "\u21e7"
                 CONTROL -> "^"
                 ALT -> "\u2325"
@@ -190,8 +199,8 @@ data class InputBind(
             @JvmStatic
             private val LOOKUP_TABLE = NamedChoice.makeLookupTable<Modifier>()
 
-            @JvmField
-            internal val KEY_CODE_LOOKUP: Int2ReferenceMap<Modifier> = run {
+            @JvmStatic
+            private val KEY_CODE_LOOKUP: Int2ReferenceMap<Modifier> = run {
                 val map = Int2ReferenceOpenHashMap<Modifier>()
                 for (modifier in Modifier.entries) {
                     for (keyCode in modifier.keyCodes) {
@@ -205,7 +214,10 @@ data class InputBind(
             fun of(string: String?): Modifier? = LOOKUP_TABLE[string]
 
             @JvmStatic
-            fun fromRawValue(modifiers: Int) = entries.filterTo(emptyEnumSet()) {
+            fun of(keyCode: Int): Modifier? = KEY_CODE_LOOKUP[keyCode]
+
+            @JvmStatic
+            fun fromRawValue(modifiers: Int) = entries.filterTo(enumSetOf()) {
                 it.isActive(modifiers)
             }
         }
@@ -213,7 +225,7 @@ data class InputBind(
 
     companion object {
         @JvmField
-        val UNBOUND = InputBind(InputUtil.UNKNOWN_KEY, BindAction.TOGGLE, emptySet())
+        val UNBOUND = InputBind(InputConstants.UNKNOWN, BindAction.TOGGLE, emptySet())
     }
 
 }
@@ -227,10 +239,30 @@ fun Value<InputBind>.bind(name: String) = set(get().copy(boundKey = inputByName(
 /**
  * Binds to the given input type and code.
  */
-fun Value<InputBind>.bind(key: InputUtil.Key, action: InputBind.BindAction) =
-    set(get().copy(boundKey = key, action = action))
+fun Value<InputBind>.bind(key: InputConstants.Key, action: InputBind.BindAction, modifiers: Set<InputBind.Modifier>) =
+    set(get().copy(boundKey = key, action = action, modifiers = modifiers))
 
 /**
  * Unbinds the key by setting it to UNKNOWN_KEY.
  */
 fun Value<InputBind>.unbind() = set(InputBind.UNBOUND)
+
+fun InputBind.renderText(): Component = buildList {
+    add(
+        inputByName(keyName).let { key ->
+            variable(key.displayName.copy()).bold(true)
+                .copyable(copyContent = key.name)
+        }
+    )
+
+    val divider = regular(" + ")
+    if (modifiers.isNotEmpty()) {
+        modifiers.forEach {
+            add(divider)
+            add(variable(it.platformRenderName).onHover(HoverEvent.ShowText(it.choiceName.asPlainText())))
+        }
+    }
+    add(regular(" ("))
+    add(variable(action.choiceName))
+    add(regular(")"))
+}.asText()

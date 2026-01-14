@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
-import net.ccbluex.liquidbounce.integration.theme.component.ComponentManager
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 
@@ -30,7 +29,7 @@ import net.ccbluex.netty.http.util.httpOk
 fun getComponents(requestObject: RequestObject) =
     httpOk(
         accessibleInteropGson.toJsonTree(
-            ComponentManager.getComponents(requestObject.params["id"])
+            HudComponentManager.getComponents(requestObject.params["id"])
         ).asJsonArray
     )
 

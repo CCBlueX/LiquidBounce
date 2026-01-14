@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk
 
@@ -29,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.mode
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.minecraft.block.FluidBlock
+import net.minecraft.world.level.block.LiquidBlock
 
 /**
  * LiquidWalk module
@@ -54,16 +52,16 @@ object ModuleLiquidWalk : ClientModule("LiquidWalk", Category.MOVEMENT, aliases 
      */
     fun standingOnWater(): Boolean {
         val boundingBox = player.box
-        val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.01)
+        val detectionBox = boundingBox.setMinY(boundingBox.minY - 0.01)
 
-        return detectionBox.isBlockAtPosition { it is FluidBlock }
+        return detectionBox.isBlockAtPosition { it is LiquidBlock }
     }
 
     fun collidesWithAnythingElse(): Boolean {
         val boundingBox = player.box
-        val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.5)
+        val detectionBox = boundingBox.setMinY(boundingBox.minY - 0.5)
 
-        return detectionBox.collideBlockIntersects { it !is FluidBlock }
+        return detectionBox.collideBlockIntersects { it !is LiquidBlock }
     }
 
 }

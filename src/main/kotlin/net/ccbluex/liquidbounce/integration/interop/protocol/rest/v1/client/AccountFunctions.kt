@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 @file:Suppress("TooManyFunctions")
@@ -73,7 +72,7 @@ fun postNewMicrosoftAccount(requestObject: RequestObject): FullHttpResponse {
 fun postClipboardMicrosoftAccount(requestObject: RequestObject): FullHttpResponse {
     AccountManager.newMicrosoftAccount {
         mc.execute {
-            GLFW.glfwSetClipboardString(mc.window.handle, it)
+            GLFW.glfwSetClipboardString(mc.window.handle(), it)
             EventManager.callEvent(AccountManagerMessageEvent("Copied login url to clipboard"))
         }
     }
@@ -182,7 +181,7 @@ fun postLoginSessionAccount(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun postRestoreInitial(requestObject: RequestObject): FullHttpResponse {
     AccountManager.restoreInitial()
-    return httpOk(interopGson.toJsonTree(mc.session))
+    return httpOk(interopGson.toJsonTree(mc.user))
 }
 
 // PUT /api/v1/client/accounts/favorite

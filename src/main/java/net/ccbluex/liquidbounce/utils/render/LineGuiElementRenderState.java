@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,19 +21,20 @@ package net.ccbluex.liquidbounce.utils.render;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines;
-import net.minecraft.client.gui.ScreenRect;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.texture.TextureSetup;
-import net.minecraft.util.math.Vec2f;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.render.TextureSetup;
+import net.minecraft.world.phys.Vec2;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
 public record LineGuiElementRenderState(
     float[] points,
     int argb,
+    RenderPipeline pipeline,
     Matrix3x2f pose,
-    @Nullable ScreenRect scissorArea,
-    @Nullable ScreenRect bounds
+    @Nullable ScreenRectangle scissorArea,
+    @Nullable ScreenRectangle bounds
 ) implements LiquidBounceGuiElementRenderState {
 
     public LineGuiElementRenderState {
@@ -43,15 +44,17 @@ public record LineGuiElementRenderState(
     }
 
     public LineGuiElementRenderState(
-        Vec2f[] points,
+        Vec2[] points,
         int argb,
         Matrix3x2f pose,
-        @Nullable ScreenRect scissorArea,
-        @Nullable ScreenRect bounds
+        RenderPipeline pipeline,
+        @Nullable ScreenRectangle scissorArea,
+        @Nullable ScreenRectangle bounds
     ) {
         this(
             flat(points),
             argb,
+            pipeline,
             pose,
             scissorArea,
             bounds
@@ -59,28 +62,23 @@ public record LineGuiElementRenderState(
     }
 
     @Override
-    public void setupVertices(VertexConsumer vertices, float depth) {
+    public void buildVertices(VertexConsumer vertices) {
         for (int i = 0; i < points.length; i += 2) {
             float x = points[i];
             float y = points[i + 1];
-            vertices.vertex(pose, x, y, depth).color(argb);
+            vertices.addVertexWith2DPose(pose, x, y).setColor(argb);
         }
     }
 
     @Override
-    public RenderPipeline pipeline() {
-        return ClientRenderPipelines.GUI.Lines;
-    }
-
-    @Override
     public TextureSetup textureSetup() {
-        return TextureSetup.empty();
+        return TextureSetup.noTexture();
     }
 
-    private static float[] flat(Vec2f[] points) {
+    private static float[] flat(Vec2[] points) {
         float[] flatPoints = new float[points.length << 1];
         for (int i = 0; i < points.length; i++) {
-            Vec2f point = points[i];
+            Vec2 point = points[i];
             flatPoints[i << 1] = point.x;
             flatPoints[(i << 1) | 1] = point.y;
         }

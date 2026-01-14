@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
@@ -32,15 +30,15 @@ import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
-import net.minecraft.client.gui.screen.SplashOverlay
-import net.minecraft.client.gui.screen.TitleScreen
+import net.minecraft.client.gui.screens.LoadingOverlay
+import net.minecraft.client.gui.screens.TitleScreen
 
 // GET /api/v1/client/virtualScreen
 @Suppress("UNUSED_PARAMETER")
 fun getVirtualScreenInfo(requestObject: RequestObject): FullHttpResponse {
     return httpOk(JsonObject().apply {
         addProperty("name", IntegrationListener.momentaryVirtualScreen?.type?.routeName)
-        addProperty("showingSplash", mc.overlay is SplashOverlay)
+        addProperty("showingSplash", mc.overlay is LoadingOverlay)
     })
 }
 
@@ -61,7 +59,7 @@ fun postVirtualScreen(requestObject: RequestObject): FullHttpResponse {
 // GET /api/v1/client/screen
 @Suppress("UNUSED_PARAMETER")
 fun getScreenInfo(requestObject: RequestObject): FullHttpResponse {
-    val mcScreen = mc.currentScreen ?: return httpForbidden("No screen")
+    val mcScreen = mc.screen ?: return httpForbidden("No screen")
     val name = VirtualScreenType.recognize(mcScreen)?.routeName ?: mcScreen::class.qualifiedName
 
     return httpOk(JsonObject().apply {
@@ -73,8 +71,8 @@ fun getScreenInfo(requestObject: RequestObject): FullHttpResponse {
 @Suppress("UNUSED_PARAMETER")
 fun getScreenSize(requestObject: RequestObject): FullHttpResponse {
     return httpOk(JsonObject().apply {
-        addProperty("width", mc.window.scaledWidth)
-        addProperty("height", mc.window.scaledHeight)
+        addProperty("width", mc.window.guiScaledWidth)
+        addProperty("height", mc.window.guiScaledHeight)
     })
 }
 
@@ -91,7 +89,7 @@ fun putScreen(requestObject: RequestObject): FullHttpResponse {
 // DELETE /api/v1/client/screen
 @Suppress("UNUSED_PARAMETER")
 fun deleteScreen(requestObject: RequestObject): FullHttpResponse {
-    val screen = mc.currentScreen ?: return httpForbidden("No screen")
+    val screen = mc.screen ?: return httpForbidden("No screen")
 
     if (screen is VirtualDisplayScreen && screen.parentScreen != null) {
         mc.execute {

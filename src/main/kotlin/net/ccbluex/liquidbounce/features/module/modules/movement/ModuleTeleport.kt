@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
@@ -29,9 +28,14 @@ import net.ccbluex.liquidbounce.features.command.commands.module.teleport.Comman
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.warning
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.world.phys.Vec3
 import java.text.DecimalFormat
 import kotlin.math.abs
 import kotlin.math.floor
@@ -63,7 +67,7 @@ object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = lis
         CORRECT("Correct")
     }
 
-    private var indicatedTeleport: Vec3d? = null
+    private var indicatedTeleport: Vec3? = null
     private var teleportsToWait: Int = 0
 
     override fun onEnabled() {
@@ -88,7 +92,7 @@ object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = lis
             return
         }
 
-        this.indicatedTeleport = Vec3d(x, y, z)
+        this.indicatedTeleport = Vec3(x, y, z)
         this.teleportsToWait = functionAfterServerTeleport
         this.enabled = true
 
@@ -101,7 +105,7 @@ object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = lis
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> {
-        if (it.packet is PlayerPositionLookS2CPacket) {
+        if (it.packet is ClientboundPlayerPositionPacket) {
             val indicatedTeleport = indicatedTeleport ?: return@handler
 
             if (teleportsToWait > 1) {
@@ -115,8 +119,8 @@ object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = lis
                 this.x = change.position.x
                 this.y = change.position.y
                 this.z = change.position.z
-                this.yaw = change.yaw
-                this.pitch = change.pitch
+                this.yRot = change.yRot
+                this.xRot = change.xRot
                 this.onGround = false
             })
 
@@ -139,39 +143,39 @@ object ModuleTeleport : ClientModule("Teleport", Category.EXPLOIT, aliases = lis
             val times = (floor((abs(deltaX) + abs(deltaY) + abs(deltaZ)) / 10) - 1).toInt()
             val packetToSend = if (allFull) MovePacketType.FULL else MovePacketType.POSITION_AND_ON_GROUND
             repeat(times) {
-                network.sendPacket(packetToSend.generatePacket().apply {
+                network.send(packetToSend.generatePacket().apply {
                     this.x = player.x
                     this.y = player.y
                     this.z = player.z
-                    this.yaw = player.yaw
-                    this.pitch = player.pitch
+                    this.yRot = player.yRot
+                    this.xRot = player.xRot
                     this.onGround = when (groundMode) {
                         GroundMode.TRUE -> true
                         GroundMode.FALSE -> false
-                        GroundMode.CORRECT -> player.isOnGround
+                        GroundMode.CORRECT -> player.onGround()
                     }
                 })
             }
 
-            network.sendPacket(packetToSend.generatePacket().apply {
+            network.send(packetToSend.generatePacket().apply {
                 this.x = x
                 this.y = y
                 this.z = z
-                this.yaw = player.yaw
-                this.pitch = player.pitch
+                this.yRot = player.yRot
+                this.xRot = player.xRot
                 this.onGround = when (groundMode) {
                     GroundMode.TRUE -> true
                     GroundMode.FALSE -> false
-                    GroundMode.CORRECT -> player.isOnGround
+                    GroundMode.CORRECT -> player.onGround()
                 }
             })
         }
 
         val entity = player.vehicle ?: player
-        entity.updatePosition(x, y, z)
+        entity.absSnapTo(x, y, z)
 
         if (resetMotion) {
-            entity.velocity = entity.velocity.multiply(0.0, 0.0, 0.0)
+            entity.setDeltaMovement(entity.deltaMovement.multiply(0.0, 0.0, 0.0))
         }
 
         chat(regular(

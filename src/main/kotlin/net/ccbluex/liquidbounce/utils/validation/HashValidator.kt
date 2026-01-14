@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.validation
@@ -45,7 +44,7 @@ object HashValidator {
 
         file.walk().mapNotNull { it.resolve(HASH_FILE_NAME).takeIf(File::exists) }
             .mapTo(mutableListOf()) {
-                CompletableFuture.runAsync({ validateHashFile(it) }, Util.getMainWorkerExecutor())
+                CompletableFuture.runAsync({ validateHashFile(it) }, Util.backgroundExecutor())
             }.forEach {
                 it.join()
             }

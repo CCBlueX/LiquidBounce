@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,19 @@
 package net.ccbluex.liquidbounce.api.services.auth
 
 import io.netty.bootstrap.ServerBootstrap
-import io.netty.channel.ChannelFactory
 import io.netty.channel.ChannelFutureListener
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.SimpleChannelInboundHandler
-import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
-import io.netty.channel.socket.nio.NioServerSocketChannel
-import io.netty.handler.codec.http.*
+import io.netty.handler.codec.http.DefaultFullHttpResponse
+import io.netty.handler.codec.http.FullHttpRequest
+import io.netty.handler.codec.http.HttpHeaderNames
+import io.netty.handler.codec.http.HttpObjectAggregator
+import io.netty.handler.codec.http.HttpResponseStatus
+import io.netty.handler.codec.http.HttpServerCodec
+import io.netty.handler.codec.http.HttpVersion
+import io.netty.handler.codec.http.QueryStringDecoder
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_AUTHORIZE_URL
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AUTH_CLIENT_ID
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
@@ -35,6 +39,7 @@ import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.netty.http.coroutines.awaitSuspend
+import net.ccbluex.netty.http.util.setup
 import java.net.InetSocketAddress
 import java.util.*
 import kotlin.coroutines.Continuation
@@ -88,13 +93,9 @@ object OAuthClient : EventListener {
     }
 
     private suspend fun startNettyServer(): Int {
-        val bossGroup = NioEventLoopGroup(1)
-        val workerGroup = NioEventLoopGroup()
-
         val bootstrap = ServerBootstrap()
-            .group(bossGroup, workerGroup)
-            .channelFactory(ChannelFactory(::NioServerSocketChannel))
-            .childHandler(NettyChannelInitializer())
+        val (bossGroup, workerGroup) = bootstrap.setup(useNativeTransport = true)
+        bootstrap.childHandler(NettyChannelInitializer())
 
         val channel = bootstrap.bind(0).awaitSuspend().channel()
         val localPort = (channel.localAddress() as InetSocketAddress).port

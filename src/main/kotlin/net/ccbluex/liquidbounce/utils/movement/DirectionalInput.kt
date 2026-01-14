@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.movement
 
 import net.ccbluex.liquidbounce.utils.entity.untransformed
-import net.minecraft.client.input.Input
-import net.minecraft.util.PlayerInput
+import net.minecraft.client.player.ClientInput
+import net.minecraft.world.entity.player.Input
 
 data class DirectionalInput(
     val forwards: Boolean,
@@ -31,11 +30,11 @@ data class DirectionalInput(
     val right: Boolean,
 ) {
 
-    constructor(input: Input) : this(
+    constructor(input: ClientInput) : this(
         input.untransformed
     )
 
-    constructor(input: PlayerInput) : this(
+    constructor(input: Input) : this(
         input.forward,
         input.backward,
         input.left,

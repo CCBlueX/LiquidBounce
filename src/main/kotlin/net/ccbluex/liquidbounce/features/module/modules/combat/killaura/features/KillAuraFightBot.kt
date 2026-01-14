@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,11 +27,15 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.doesCollideAt
+import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
+import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.Vec3
 import kotlin.math.min
 import kotlin.math.pow
 
@@ -39,7 +43,7 @@ import kotlin.math.pow
  * Data class holding combat-related context
  */
 data class CombatContext(
-    val playerPosition: Vec3d,
+    val playerPosition: Vec3,
     val combatTarget: CombatTarget?
 )
 
@@ -87,7 +91,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
                 return@select null
             }
 
-            if (TargetFilter.visibleOnly && !player.canSee(entity)) {
+            if (TargetFilter.visibleOnly && !player.hasLineOfSight(entity)) {
                 return@select null
             }
 
@@ -103,15 +107,15 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
      * Creates combat context
      */
     override fun createNavigationContext(): CombatContext {
-        val playerPosition = player.pos
+        val playerPosition = player.position()
 
         val combatTarget = targetTracker.target?.let { entity ->
-            val distance = playerPosition.distanceTo(entity.pos)
+            val distance = playerPosition.distanceTo(entity.position())
             val range = min(ModuleKillAura.range, distance.toFloat())
             val outOfDistance = distance > opponentRange
 
             val targetRotation = entity.rotation.copy(pitch = 0.0f)
-            val requiredTargetRotation = Rotation.lookingAt(playerPosition, entity.eyePos).copy(pitch = 0.0f)
+            val requiredTargetRotation = Rotation.lookingAt(playerPosition, entity.eyePosition).copy(pitch = 0.0f)
             val outOfDanger = targetRotation.angleTo(requiredTargetRotation) > dangerousYawDiff
 
             CombatTarget(entity, distance, range, outOfDistance, targetRotation, requiredTargetRotation, outOfDanger)
@@ -128,12 +132,12 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
      *
      * @return Target position as Vec3d
      */
-    override fun calculateGoalPosition(context: CombatContext): Vec3d? {
+    override fun calculateGoalPosition(context: CombatContext): Vec3? {
         // Try to follow leader first
         if (LeaderFollower.running && LeaderFollower.username.isNotEmpty()) {
-            val leader = world.players.find { it.gameProfile.name == LeaderFollower.username }
+            val leader = world.players().find { it.gameProfile.name == LeaderFollower.username }
             if (leader != null) {
-                return calculateLeaderGoalPosition(leader.pos, context.playerPosition)
+                return calculateLeaderGoalPosition(leader.position(), context.playerPosition)
             }
         }
 
@@ -156,8 +160,8 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
 
         val contextAllowsJump = context.combatTarget != null && context.combatTarget.outOfDistance
             && !context.combatTarget.outOfDanger
-        val goal = calculateGoalPosition(context)
-        val leaderAllowsJump = LeaderFollower.running && player.pos.distanceTo(goal) > LeaderFollower.radius
+        val goal = calculateGoalPosition(context) ?: return
+        val leaderAllowsJump = LeaderFollower.running && player.position().distanceTo(goal) > LeaderFollower.radius
 
         if (contextAllowsJump || leaderAllowsJump) {
             event.jump = true
@@ -172,13 +176,13 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
     override fun getMovementRotation(): Rotation {
         val movementRotation = super.getMovementRotation()
         val movementPitch = targetTracker.target?.let { entity ->
-            Rotation.lookingAt(point = entity.box.center, from = player.eyePos).pitch
+            Rotation.lookingAt(point = entity.box.center, from = player.eyePosition).pitch
         } ?: return movementRotation
 
         return movementRotation.copy(pitch = movementPitch)
     }
 
-    private fun calculateLeaderGoalPosition(leaderPosition: Vec3d, playerPosition: Vec3d): Vec3d {
+    private fun calculateLeaderGoalPosition(leaderPosition: Vec3, playerPosition: Vec3): Vec3 {
         return (-180..180 step 45)
             .mapNotNull { yaw ->
                 val rotation = Rotation(yaw = yaw.toFloat(), pitch = 0.0F)
@@ -190,25 +194,25 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
                 )
                 position
             }
-            .minByOrNull { it.squaredDistanceTo(playerPosition) } ?: leaderPosition
+            .minByOrNull { it.distanceToSqr(playerPosition) } ?: leaderPosition
     }
 
-    private fun calculateRunawayPosition(context: CombatContext, combatTarget: CombatTarget): Vec3d {
+    private fun calculateRunawayPosition(context: CombatContext, combatTarget: CombatTarget): Vec3 {
         return context.playerPosition.add(
             combatTarget.requiredTargetRotation.directionVector * combatTarget.range.toDouble()
         )
     }
 
-    private fun calculateAttackPosition(context: CombatContext, combatTarget: CombatTarget): Vec3d {
+    private fun calculateAttackPosition(context: CombatContext, combatTarget: CombatTarget): Vec3 {
         val target = combatTarget.entity
-        val targetLookPosition = target.pos.add(
+        val targetLookPosition = target.position().add(
             combatTarget.targetRotation.directionVector * combatTarget.range.toDouble()
         )
 
         return (-180..180 step 10)
             .mapNotNull { yaw ->
                 val rotation = Rotation(yaw = yaw.toFloat(), pitch = 0.0F)
-                val position = target.pos.add(rotation.directionVector * combatTarget.range.toDouble())
+                val position = target.position().add(rotation.directionVector * combatTarget.range.toDouble())
 
                 // Check if this point collides with a block
                 if (player.doesCollideAt(position)) {
@@ -224,8 +228,8 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
 
                 if (isInAngle) null else position
             }
-            .sortedBy { pos -> pos.squaredDistanceTo(targetLookPosition) }
-            .minByOrNull { pos -> pos.squaredDistanceTo(context.playerPosition) }
+            .sortedBy { pos -> pos.distanceToSqr(targetLookPosition) }
+            .minByOrNull { pos -> pos.distanceToSqr(context.playerPosition) }
             ?: targetLookPosition
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -30,10 +29,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.bl
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.blockingHand
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.isBlocking
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 
 internal object NoSlowBlockingReuse : Choice("Reuse") {
 
@@ -44,16 +43,17 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
 
     @Suppress("unused")
     private val networkTickHandler = handler<PlayerNetworkMovementTickEvent> { event ->
-        if (isBlocking) {
+        blockingHand?.let { blockingHand ->
             when (timingMode) {
                 TimingMode.PRE_TICK -> {
                     if (event.state == EventState.PRE) {
                         untracked {
-                            network.sendPacket(PlayerActionC2SPacket(
-                                PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
+                            network.send(
+                                ServerboundPlayerActionPacket(
+                                ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, Direction.DOWN
                             ))
-                            interaction.sendSequencedPacket(world) { sequence ->
-                                PlayerInteractItemC2SPacket(blockingHand, sequence, player.yaw, player.pitch)
+                            interaction.startPrediction(world) { sequence ->
+                                ServerboundUseItemPacket(blockingHand, sequence, player.yRot, player.xRot)
                             }
                         }
                     }
@@ -62,11 +62,12 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
                 TimingMode.POST_TICK -> {
                     if (event.state == EventState.POST) {
                         untracked {
-                            network.sendPacket(PlayerActionC2SPacket(
-                                PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
+                            network.send(
+                                ServerboundPlayerActionPacket(
+                                ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, Direction.DOWN
                             ))
-                            interaction.sendSequencedPacket(world) { sequence ->
-                                PlayerInteractItemC2SPacket(blockingHand, sequence, player.yaw, player.pitch)
+                            interaction.startPrediction(world) { sequence ->
+                                ServerboundUseItemPacket(blockingHand, sequence, player.yRot, player.xRot)
                             }
                         }
                     }
@@ -76,16 +77,17 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
                     when (event.state) {
                         EventState.PRE -> {
                             untracked {
-                                network.sendPacket(PlayerActionC2SPacket(
-                                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
+                                network.send(
+                                    ServerboundPlayerActionPacket(
+                                    ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM, BlockPos.ZERO, Direction.DOWN
                                 ))
                             }
                         }
 
                         EventState.POST -> {
                             untracked {
-                                interaction.sendSequencedPacket(world) { sequence ->
-                                    PlayerInteractItemC2SPacket(blockingHand, sequence, player.yaw, player.pitch)
+                                interaction.startPrediction(world) { sequence ->
+                                    ServerboundUseItemPacket(blockingHand, sequence, player.yRot, player.xRot)
                                 }
                             }
                         }
@@ -95,7 +97,7 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
         }
 
 
-        if (isBlocking) {
+        blockingHand?.let { blockingHand ->
             when (event.state) {
                 EventState.PRE -> {
 
@@ -103,8 +105,8 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
 
                 EventState.POST -> {
                     untracked {
-                        interaction.sendSequencedPacket(world) { sequence ->
-                            PlayerInteractItemC2SPacket(blockingHand, sequence, player.yaw, player.pitch)
+                        interaction.startPrediction(world) { sequence ->
+                            ServerboundUseItemPacket(blockingHand, sequence, player.yRot, player.xRot)
                         }
                     }
                 }

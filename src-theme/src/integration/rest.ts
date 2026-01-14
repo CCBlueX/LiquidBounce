@@ -5,7 +5,7 @@ import type {
     ClientInfo,
     ClientUpdate,
     ClientUser,
-    Component,
+    HudComponent,
     ConfigurableSetting,
     FileSelectDialog,
     FileSelectResult,
@@ -605,7 +605,7 @@ export async function getTheme(id: string): Promise<Theme> {
 /**
  * @param id Use the ID from [getMetadata].
  */
-export async function getComponents(id: string): Promise<Component[]> {
+export async function getComponents(id: string): Promise<HudComponent[]> {
     const response = await fetch(`${API_BASE}/client/components/${id}`);
     return await response.json();
 }
@@ -732,4 +732,12 @@ export async function logoutClientUser() {
             "Content-Type": "application/json"
         }
     });
+}
+
+export function itemTextureUrl(identifier: string) {
+    return `${API_BASE}/client/resource/itemTexture?id=${identifier}`
+}
+
+export function effectTextureUrl(effectId: string) {
+    return `${API_BASE}/client/resource/effectTexture?id=${effectId}`
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@
 package net.ccbluex.liquidbounce.utils.render;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import net.minecraft.client.gui.ScreenRect;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.texture.TextureSetup;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.gui.render.TextureSetup;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3x2f;
 
@@ -30,12 +30,12 @@ public record LambdaSimpleGuiElementRenderState(
     RenderPipeline pipeline,
     TextureSetup textureSetup,
     Matrix3x2f pose,
-    @Nullable ScreenRect scissorArea,
-    @Nullable ScreenRect bounds,
+    @Nullable ScreenRectangle scissorArea,
+    @Nullable ScreenRectangle bounds,
     VerticesSetupHandler verticesSetupHandler
 ) implements LiquidBounceGuiElementRenderState {
     @Override
-    public void setupVertices(VertexConsumer vertices, float depth) {
-        verticesSetupHandler.setupVertices(vertices, this.pose(), depth);
+    public void buildVertices(VertexConsumer vertices) {
+        verticesSetupHandler.setupVertices(vertices, this.pose());
     }
 }

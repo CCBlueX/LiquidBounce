@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
@@ -35,8 +34,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -72,7 +71,7 @@ internal object ElytraRotationProcessor : Configurable("Rotations"), RotationPro
 
     private inline val randomDirectionVector
         get() = with (System.currentTimeMillis() / 1000.0) {
-            Vec3d(
+            Vec3(
                 sin(this * 1.8) * 0.04 + (Math.random() - 0.5) * 0.02,
                 sin(this * 2.2) * 0.03 + (Math.random() - 0.5) * 0.015,
                 cos(this * 1.8) * 0.04 + (Math.random() - 0.5) * 0.02,
@@ -176,14 +175,14 @@ internal object ElytraRotationProcessor : Configurable("Rotations"), RotationPro
         var targetPos = prediction.predictPosition(target, rotateAt.position(target)) + randomDirectionVector * 4.0
 
         if (autoDistance) {
-            val direction = (targetPos - player.pos).normalize()
-            val distance = player.pos.squaredDistanceTo(direction)
+            val direction = (targetPos - player.position()).normalize()
+            val distance = player.position().distanceToSqr(direction)
 
             if (distance < IDEAL_DISTANCE * IDEAL_DISTANCE) {
                 targetPos -= direction * (IDEAL_DISTANCE - distance)
             }
         }
 
-        return Rotation.lookingAt(targetPos, player.pos)
+        return Rotation.lookingAt(targetPos, player.position())
     }
 }

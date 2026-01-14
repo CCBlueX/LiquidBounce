@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.aiming.point.exempts
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
 internal class ExemptBestHitVector(parent: EventListener) :
     ToggleableConfigurable(parent, "ExemptBestHitVector", false), ExemptPoint {
@@ -29,7 +29,7 @@ internal class ExemptBestHitVector(parent: EventListener) :
     private val vertical by float("Vertical", 0.2f, 0.0f..1f)
     private val horizontal by float("Horizontal", 0.1f, 0.0f..1f)
 
-    override fun predicate(context: ExemptContext, point: Vec3d) = enabled &&
-        point.isWithinRangeOf(context.bestHitVector, horizontal.toDouble(), vertical.toDouble())
+    override fun predicate(context: ExemptContext, point: Vec3) = enabled &&
+        point.closerThan(context.bestHitVector, horizontal.toDouble(), vertical.toDouble())
 
 }

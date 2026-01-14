@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.api.core.HttpException
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount.Companion.EMPTY_ACCOUNT
 import net.ccbluex.liquidbounce.api.services.auth.OAuthClient.startAuth
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -29,7 +30,11 @@ import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.browseUrl
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 
 object CommandClientAccountSubcommand {
     fun accountCommand() = CommandBuilder.begin("account")
@@ -47,11 +52,9 @@ object CommandClientAccountSubcommand {
             }
 
             chat(regular("Getting user information..."))
-            runCatching {
+            try {
                 val account = ClientAccountManager.clientAccount
                 account.updateInfo()
-                account
-            }.onSuccess { account ->
                 account.userInformation?.let { info ->
                         chat(regular("Nickname: "), variable(info.nickname))
                         chat(regular("Email: "), variable(info.email))
@@ -59,8 +62,8 @@ object CommandClientAccountSubcommand {
                         chat(regular("Groups: "), info.groups.map(::variable).joinToText(", ".asText()))
                         chat(regular("Premium: "), variable(if (info.premium) "Yes" else "No"))
                 }
-            }.onFailure {
-                chat(markAsError("Failed to get user information: ${it.message}"))
+            } catch (e: HttpException) {
+                chat(markAsError("Failed to get user information: ${e.content}"))
             }
         }.build()
 

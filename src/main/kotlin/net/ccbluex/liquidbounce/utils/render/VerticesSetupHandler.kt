@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.utils.render
 
-import net.minecraft.client.render.VertexConsumer
+import com.mojang.blaze3d.vertex.VertexConsumer
 import org.joml.Matrix3x2f
 
 /**
  * @see LambdaSimpleGuiElementRenderState
  */
 fun interface VerticesSetupHandler {
-    fun VertexConsumer.setupVertices(pose: Matrix3x2f, depth: Float)
+    fun VertexConsumer.setupVertices(pose: Matrix3x2f)
 }

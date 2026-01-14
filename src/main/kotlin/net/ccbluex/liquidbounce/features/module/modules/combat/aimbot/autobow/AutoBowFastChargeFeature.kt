@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow
@@ -26,8 +25,8 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.item.BowItem
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.item.BowItem
 
 /**
  * @desc Fast charge options (like FastBow) can be used to charge the bow faster.
@@ -47,11 +46,11 @@ object AutoBowFastChargeFeature : ToggleableConfigurable(ModuleAutoBow, "FastCha
 
     @Suppress("unused")
     val tickRepeatable = tickHandler {
-        val currentItem = player.activeItem
+        val currentItem = player.useItem
 
         // Should speed up game ticks when using bow
         if (currentItem?.item is BowItem) {
-            if (notInTheAir && !player.isOnGround) {
+            if (notInTheAir && !player.onGround()) {
                 return@tickHandler
             }
 
@@ -59,7 +58,7 @@ object AutoBowFastChargeFeature : ToggleableConfigurable(ModuleAutoBow, "FastCha
                 return@tickHandler
             }
 
-            if (notDuringRegeneration && player.hasStatusEffect(StatusEffects.REGENERATION)) {
+            if (notDuringRegeneration && player.hasEffect(MobEffects.REGENERATION)) {
                 return@tickHandler
             }
 
@@ -69,10 +68,10 @@ object AutoBowFastChargeFeature : ToggleableConfigurable(ModuleAutoBow, "FastCha
                 }
 
                 // Speed up ticks (MC 1.8)
-                network.sendPacket(packetType.generatePacket())
+                network.send(packetType.generatePacket())
 
                 // Show visual effect (not required to work - but looks better)
-                player.tickActiveItemStack()
+                player.updatingUsingItem()
             }
         }
     }

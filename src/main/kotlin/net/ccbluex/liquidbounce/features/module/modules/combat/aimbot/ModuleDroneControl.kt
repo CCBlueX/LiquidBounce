@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
@@ -29,9 +28,9 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.entity.ConstantPositionExtrapolation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.entity.Entity
-import net.minecraft.util.Hand
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.Vec3
 
 object ModuleDroneControl : ClientModule("DroneControl", Category.COMBAT) {
 
@@ -46,21 +45,21 @@ object ModuleDroneControl : ClientModule("DroneControl", Category.COMBAT) {
     }
 
     override fun onDisabled() {
-        if (mc.currentScreen == screen) {
+        if (mc.screen == screen) {
             mc.setScreen(null)
         }
 
         screen = null
     }
 
-    var currentTarget: Pair<Entity, Vec3d>? = null
+    var currentTarget: Pair<Entity, Vec3>? = null
     var mayShoot = false
 
     private val repeatable = tickHandler {
         val currentRotation = currentTarget?.let { (entity, pos) ->
             SituationalProjectileAngleCalculator.calculateAngleFor(
                 TrajectoryInfo.BOW_FULL_PULL,
-                sourcePos = player.eyePos,
+                sourcePos = player.eyePosition,
                 targetPosFunction = ConstantPositionExtrapolation(pos),
                 targetShape = entity.dimensions
             )
@@ -76,11 +75,11 @@ object ModuleDroneControl : ClientModule("DroneControl", Category.COMBAT) {
         }
 
         if (mayShoot) {
-            interaction.stopUsingItem(player)
+            interaction.releaseUsingItem(player)
 
             mayShoot = false
         } else {
-            interaction.interactItem(player, Hand.MAIN_HAND)
+            interaction.useItem(player, InteractionHand.MAIN_HAND)
         }
     }
 

@@ -1,12 +1,12 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * (at any later version.
+ * (at your option) any later version.
  *
  * LiquidBounce is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,16 +15,116 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 @file:Suppress("LongMethod")
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1
 
-import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.*
-import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.*
-import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.*
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.deleteAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.deleteFavoriteAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.deleteFavoriteProxy
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.deleteLocalStorage
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.deleteProxy
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.deleteRemoveProxy
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.deleteScreen
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.generateName
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getAccounts
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getAllLocalStorage
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getClientInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getComponents
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getLocalStorage
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getLocationInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getMarketplaceItem
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getMarketplaceItemReviews
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getMarketplaceItemRevision
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getMarketplaceItemRevisions
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getMarketplaceItems
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getModule
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getModules
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getProxies
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getProxyInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getScreenInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getScreenSize
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getSessionInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getSettings
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getSpooferConfigurable
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getTheme
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getToggleShaderInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getUpdateInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getVirtualScreenInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getWindowInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postAddProxy
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postBrowse
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postBrowsePath
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postCheckProxy
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postClipboardMicrosoftAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postClipboardProxy
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postEditProxy
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postExit
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postFileDialog
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postGenerateAlteningAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postLoginAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postLoginCrackedAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postLoginSessionAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postMarketplaceItemReview
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postNewAlteningAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postNewCrackedAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postNewMicrosoftAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postNewSessionAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postOrderAccounts
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postPanic
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postProxy
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postRestoreInitial
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postSwapAccounts
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postToggleShader
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putAllLocalStorage
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putFavoriteAccount
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putFavoriteProxy
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putLocalStorage
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putScreen
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putSettings
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.putSpooferConfigurable
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.subscribeMarketplaceItem
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.toggleModule
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.unsubscribeMarketplaceItem
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.deleteProtocol
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.getBrowserInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.getProtocol
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.getProtocols
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.postBrowserBack
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.postBrowserClose
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.postBrowserCloseTab
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.postBrowserForceReload
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.postBrowserForward
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.postBrowserNavigate
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.postBrowserReload
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.postReconnect
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features.putProtocol
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.deleteServer
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getCrosshairData
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getEffectTexture
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getInputInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getIsTyping
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getItemTexture
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getKeybinds
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getPlayerData
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getPlayerInventory
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getRegistry
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getRegistryGroups
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getResource
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getServers
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getSkin
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.getWorlds
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.postConnect
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.postDeleteWorld
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.postEditWorld
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.postJoinWorld
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.postOrderServers
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.postSwapServers
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.putAddServer
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.putEditServer
 import net.ccbluex.netty.http.rest.Node
 
 internal fun Node.registerInteropFunctions() = withPath("/api/v1/client") {
@@ -173,6 +273,7 @@ internal fun Node.registerInteropFunctions() = withPath("/api/v1/client") {
     // Texture Functions
     get("/resource", ::getResource).apply {
         get("/itemTexture", ::getItemTexture)
+        get("/effectTexture", ::getEffectTexture)
         get("/skin", ::getSkin)
     }
 

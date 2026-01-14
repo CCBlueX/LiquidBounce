@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim
@@ -27,9 +26,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.direction
 import net.ccbluex.liquidbounce.utils.entity.movementForward
 import net.ccbluex.liquidbounce.utils.entity.movementSideways
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.decoration.ArmorStandEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.decoration.ArmorStand
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -53,9 +52,9 @@ class SpeedGrimCollide(override val parent: ChoiceConfigurable<*>) : Choice("Gri
         }
 
         var collisions = 0
-        val box = player.boundingBox.expand(1.0)
+        val box = player.boundingBox.inflate(1.0)
 
-        for (entity in world.entities) {
+        for (entity in world.entitiesForRendering()) {
             val entityBox = entity.boundingBox
 
             if (canCauseSpeed(entity) && box.intersects(entityBox)) {
@@ -64,12 +63,12 @@ class SpeedGrimCollide(override val parent: ChoiceConfigurable<*>) : Choice("Gri
         }
 
         // Grim gives 0.08 leniency per entity which is customizable by speed.
-        val yaw = Math.toRadians(player.direction.toDouble())
+        val yaw = Math.toRadians(player.yRot.toDouble())
         val boost = this.speed * collisions
-        player.addVelocity(-sin(yaw) * boost, 0.0, cos(yaw) * boost)
+        player.push(-sin(yaw) * boost, 0.0, cos(yaw) * boost)
     }
 
     private fun canCauseSpeed(entity: Entity) =
-        entity != player && entity is LivingEntity && entity !is ArmorStandEntity
+        entity != player && entity is LivingEntity && entity !is ArmorStand
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,9 +32,9 @@ object AutoQueueActionChat : AutoQueueAction("Chat") {
 
         messages.forEach { message ->
             if (message.startsWith("/")) {
-                network.sendChatCommand(message.substring(1))
+                network.sendCommand(message.substring(1))
             } else {
-                network.sendChatMessage(message)
+                network.sendChat(message)
             }
 
             delay(messageDelay.random().toLong())

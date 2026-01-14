@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,23 +15,22 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.integration.backend
 
-import com.mojang.blaze3d.textures.GpuTextureView
+import net.minecraft.client.gui.render.TextureSetup
 
 /**
  * Represents a texture used by the browser.
  *
- * @param view The texture view object.
+ * @param textureSetup The texture setup object.
  * @param width The width of the texture.
  * @param height The height of the texture.
  * @param bgra Whether the texture is in BGRA format (true) or RGBA format (false).
  */
 @JvmRecord
 data class BrowserTexture(
-    val view: GpuTextureView,
+    val textureSetup: TextureSetup,
     val width: Int,
     val height: Int,
     val bgra: Boolean
