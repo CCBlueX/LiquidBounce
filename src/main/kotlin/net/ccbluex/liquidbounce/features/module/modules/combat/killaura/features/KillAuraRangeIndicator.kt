@@ -141,7 +141,7 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
     }
 
     private fun WorldRenderEnvironment.drawRangeCircle(radius: Float, color: Color4b, outlineAlpha: Int = 255) {
-        drawGradientCircle(radius, 0f, color, color.with(a = 0))
+        drawGradientCircle(radius, 0f, color, Color4b.TRANSPARENT)
         if (outline) {
             drawCircleOutline(radius, outlineColor.with(a = outlineAlpha))
         }
