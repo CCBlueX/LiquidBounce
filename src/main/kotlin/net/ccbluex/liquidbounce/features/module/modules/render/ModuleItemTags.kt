@@ -47,7 +47,6 @@ import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.item.ItemEntity
@@ -211,7 +210,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
             if (Shulker.enabled) {
                 result.stacks.forEach { stack ->
                     val containerComponent = stack[DataComponents.CONTAINER] ?: return@forEach
-                    val stacks = containerComponent.nonEmptyStream().toTypedArray()
+                    val stacks = containerComponent.nonEmptyItemCopyStream().toTypedArray()
                     if (stacks.isEmpty()) {
                         return@forEach
                     }

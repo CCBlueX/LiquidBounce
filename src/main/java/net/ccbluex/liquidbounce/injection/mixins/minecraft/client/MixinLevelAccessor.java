@@ -21,18 +21,15 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
-import net.minecraft.client.multiplayer.ClientLevel;
-import org.jspecify.annotations.NullMarked;
+import net.minecraft.world.level.LevelAccessor;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@NullMarked
-@Mixin(ClientLevel.ClientLevelData.class)
-public abstract class MixinClientLevelData {
+@Mixin(LevelAccessor.class)
+public interface MixinLevelAccessor {
 
     @ModifyReturnValue(method = "getGameTime", at = @At("RETURN"))
     private long injectOverrideTime(long original) {
         return ModuleCustomAmbience.getTime(original);
     }
-
 }

@@ -20,12 +20,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.fastutil.objectRBTreeSetOf
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
-import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.item.Item
@@ -36,7 +35,7 @@ import java.util.SequencedSet
 /**
  * Skip crosshair entity targets.
  */
-object ModuleNoEntityInteract : ClientModule("NoEntityInteract", ModuleCategories.PLAYER) {
+object ModuleNoEntityInteract : ClientModule("NoEntityInteract", Category.PLAYER) {
 
     private fun defaultEntityTypes(): SequencedSet<EntityType<*>> {
         return objectRBTreeSetOf(
@@ -49,7 +48,8 @@ object ModuleNoEntityInteract : ClientModule("NoEntityInteract", ModuleCategorie
         val set = itemSortedSetOf(
             Items.AIR, Items.SHEARS, Items.TNT, Items.WATER_BUCKET, Items.LAVA_BUCKET, Items.COBWEB
         )
-        BuiltInRegistries.ITEM.filterTo(set) { it.defaultInstance.isMiningTool }
+        // FIXME: 26.1 can't use defaultInstance on init stage
+//        BuiltInRegistries.ITEM.filterTo(set) { it.defaultInstance.isMiningTool }
         return set
     }
 

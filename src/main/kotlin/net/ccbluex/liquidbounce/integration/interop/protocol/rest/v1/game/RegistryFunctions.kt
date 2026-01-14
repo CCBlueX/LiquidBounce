@@ -50,7 +50,7 @@ import net.minecraft.tags.ItemTags
 import net.minecraft.tags.TagKey
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Items
-import java.util.Locale
+import java.util.*
 import kotlin.jvm.optionals.getOrNull
 
 private val ACCEPTED_ITEM_TAGS =
