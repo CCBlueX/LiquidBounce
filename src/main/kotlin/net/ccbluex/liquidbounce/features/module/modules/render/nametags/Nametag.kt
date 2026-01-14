@@ -21,35 +21,33 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
-import net.minecraft.network.chat.Component
 
-class NametagRenderState {
-    @JvmField
-    var entity: Entity? = null
+class Nametag private constructor(
+    val entity: Entity,
+    /**
+     * The text to render as nametag
+     */
+    val text: Component,
+    /**
+     * The items that should be rendered above the name tag
+     */
+    val items: List<ItemStack>
+) {
 
-    @JvmField
-    var text: Component = PlainText.EMPTY
-
-    @JvmField
-    var items: List<ItemStack> = emptyList()
-
-    @JvmField
     var screenPos: Vec3f? = null
+        private set
 
-    fun update(entity: Entity) = apply {
-        this.entity = entity
-        this.text = NametagTextFormatter.format(entity)
-        if (entity is LivingEntity) {
-            this.items = NametagEquipment.createItemList(entity)
-        }
-    }
+    constructor(entity: LivingEntity) : this(
+        entity,
+        NametagTextFormatter.format(entity),
+        NametagEquipment.createItemList(entity),
+    )
 
     fun calculateScreenPos(tickDelta: Float): Vec3f? {
-        val entity = this.entity ?: return null
         val nametagPos = entity.interpolateCurrentPosition(tickDelta)
             .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
 
@@ -57,11 +55,5 @@ class NametagRenderState {
         return screenPos
     }
 
-    fun clear() {
-        this.entity = null
-        this.text = PlainText.EMPTY
-        this.items = emptyList()
-        this.screenPos = null
-    }
-
 }
+
