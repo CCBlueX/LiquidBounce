@@ -178,7 +178,7 @@ class ItemCategorization(
     companion object {
         @JvmStatic
         private fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
-            return ArmorPiece(VirtualItemSlot(item.defaultInstance, ItemSlotType.ARMOR, id))
+            return ArmorPiece(VirtualItemSlot(item.defaultInstance, ItemSlot.Type.ARMOR, id))
         }
 
         /**
@@ -196,7 +196,7 @@ class ItemCategorization(
     /**
      * Sometimes there are situations where armor pieces are not the best ones with the current armor, but become
      * the best ones as soon as we upgrade one of the other armor pieces.
-     * In those cases we don't want to miss out on this armor piece in the future thus we keep it.
+     * In those cases, we don't want to miss out on this armor piece in the future thus we keep it.
      */
     private val futureArmorToKeep: List<ItemSlot>
     private val armorComparator: ArmorComparator

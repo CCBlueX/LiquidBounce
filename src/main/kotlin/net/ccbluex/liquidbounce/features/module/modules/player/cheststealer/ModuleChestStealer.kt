@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.feat
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanGenerator
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.InventoryCleanupPlan
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeConfigurable
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleConfigurable
@@ -231,7 +230,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val freeSlotsInInv = mainInventory.count { it.itemStack.isEmpty }
 
         val spaceGainedThroughMerge = cleanupPlan.mergeableItems.entries.sumOf { (id, slots) ->
-            val slotsInChest = slots.count { it.slotType == ItemSlotType.CONTAINER }
+            val slotsInChest = slots.count { it.slotType == ItemSlot.Type.CONTAINER }
             val totalCount = slots.sumOf { it.itemStack.count }
 
             val mergedStackCount = ceil(totalCount.toDouble() / id.item.defaultMaxStackSize.toDouble()).toInt()
@@ -255,7 +254,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         for (i in cleanupPlan.swaps.indices) {
             val hotbarSwap = cleanupPlan.swaps[i]
             // We only care about swaps from the chest to the hotbar
-            if (hotbarSwap.from.slotType != ItemSlotType.CONTAINER) {
+            if (hotbarSwap.from.slotType != ItemSlot.Type.CONTAINER) {
                 continue
             }
 
