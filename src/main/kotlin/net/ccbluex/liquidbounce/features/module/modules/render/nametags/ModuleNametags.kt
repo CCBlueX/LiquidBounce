@@ -49,7 +49,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val border by boolean("Border", true)
     internal val scale = curve(
         "Scale",
-        mutableListOf(Vector2f(0f, 1.5f), Vector2f(128f, 1.5f)),
+        mutableListOf(Vector2f(0f, 1f), Vector2f(128f, 1f)),
         xAxis = "Distance" axis 0f..128f,
         yAxis = "Scale" axis 0.25f..4f,
     )
