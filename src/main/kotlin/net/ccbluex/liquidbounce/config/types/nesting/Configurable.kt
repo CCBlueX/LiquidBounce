@@ -389,7 +389,7 @@ open class Configurable(
         default: MutableList<Vector2f>,
         xAxis: Axis,
         yAxis: Axis,
-        tension: Float = 0.4f,
+        tension: Float = CurveValue.DEFAULT_TENSION,
     ) = CurveValue(name, default, xAxis, yAxis, tension).apply {
         this@Configurable.inner.add(this)
     }
