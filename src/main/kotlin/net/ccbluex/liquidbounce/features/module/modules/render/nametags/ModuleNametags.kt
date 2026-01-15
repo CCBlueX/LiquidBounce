@@ -49,8 +49,8 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     internal val border by boolean("Border", true)
     internal val scale = curve(
         "Scale",
-        mutableListOf(Vector2f(0f, 2f), Vector2f(256f, 2f)),
-        xAxis = "Distance" axis 0f..256f,
+        mutableListOf(Vector2f(0f, 2f), Vector2f(128f, 2f)),
+        xAxis = "Distance" axis 0f..128f,
         yAxis = "Scale" axis 0.25f..4f,
     )
     internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
@@ -95,9 +95,10 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
      */
     private fun collectAndSortNametagsToRender() {
         nametagsToRender.clear()
+        val cameraEntity = mc.cameraEntity!!
         for (entity in RenderedEntities) {
-            val distance = entity.distanceTo(mc.cameraEntity!!)
-            val scale = scale.transform(distance)
+            val distance = entity.distanceTo(cameraEntity)
+            val scale = scale.get(distance)
             if (scale > 0.01f) {
                 nametagsToRender += Nametag(entity, scale)
             }
