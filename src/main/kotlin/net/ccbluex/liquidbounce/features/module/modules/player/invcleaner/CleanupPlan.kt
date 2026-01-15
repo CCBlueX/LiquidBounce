@@ -23,9 +23,9 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
-import net.minecraft.core.registries.BuiltInRegistries
 import kotlin.math.ceil
 
 @JvmRecord
@@ -33,7 +33,7 @@ data class InventorySwap(val from: ItemSlot, val to: ItemSlot, val priority: Pri
 
 /**
  * Represents the "id" of [ItemStack].
- * [ItemStack]s with same [Item] and [ComponentChanges] can be merged.
+ * [ItemStack]s with same [Item] and [DataComponentPatch] can be merged.
  */
 @JvmRecord
 data class ItemAndComponents(val item: Item, val componentChanges: DataComponentPatch) {

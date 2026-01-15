@@ -22,8 +22,8 @@
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.common.ShapeFlag
-import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
 import net.ccbluex.liquidbounce.interfaces.ClientInputAddition
+import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
@@ -40,47 +40,47 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.phys.shapes.EntityCollisionContext
 import net.minecraft.client.player.ClientInput
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.core.Position
+import net.minecraft.core.Vec3i
+import net.minecraft.core.component.DataComponents
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket
+import net.minecraft.tags.DamageTypeTags
+import net.minecraft.util.Mth
+import net.minecraft.world.Difficulty
+import net.minecraft.world.damagesource.DamageSource
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.entity.item.PrimedTnt
 import net.minecraft.world.entity.ai.attributes.Attributes
-import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
-import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.item.PrimedTnt
 import net.minecraft.world.entity.monster.Creeper
+import net.minecraft.world.entity.player.Input
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.entity.vehicle.minecart.MinecartTNT
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.ItemUseAnimation
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
-import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket
-import net.minecraft.tags.DamageTypeTags
-import net.minecraft.world.scores.DisplaySlot
-import net.minecraft.world.entity.player.Input
-import net.minecraft.world.phys.HitResult
-import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
-import net.minecraft.core.Direction
-import net.minecraft.util.Mth
-import net.minecraft.core.Position
-import net.minecraft.world.phys.Vec3
-import net.minecraft.core.Vec3i
-import net.minecraft.core.component.DataComponents
-import net.minecraft.world.phys.shapes.Shapes
-import net.minecraft.world.Difficulty
+import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.component.UseEffects
+import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.ClipContext
-import net.minecraft.world.level.Level
 import net.minecraft.world.level.ExplosionDamageCalculator
+import net.minecraft.world.level.Level
 import net.minecraft.world.level.ServerExplosion
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.EntityCollisionContext
+import net.minecraft.world.phys.shapes.Shapes
+import net.minecraft.world.scores.DisplaySlot
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
@@ -325,6 +325,8 @@ val Entity.box: AABB
 val cameraEyePos: Vec3 get() = (mc.cameraEntity ?: player).eyePosition
 
 fun Position.cameraDistanceSq() = cameraEyePos.distanceToSqr(x(), y(), z())
+
+fun Position.cameraDistance() = sqrt(cameraDistanceSq())
 
 fun Vec3i.cameraDistanceSq() = cameraEyePos.distanceToSqr(x.toDouble(), y.toDouble(), z.toDouble())
 

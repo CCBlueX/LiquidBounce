@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import kotlinx.coroutines.Dispatchers
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.additions.drawStackCount
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.BedStateChangeEvent
@@ -44,11 +45,12 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.minecraft.core.BlockPos
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.item.ItemStack
-import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
+import org.joml.Vector2f
 import java.util.function.Predicate
 
 object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTracker.Subscriber {
@@ -62,9 +64,13 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
     }
     private val showBed by boolean("ShowBed", true)
     private val textShadow by boolean("TextShadow", true)
-    private val scale by float("Scale", 1.5f, 0.5f..3.0f)
     private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
-    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F, aliases = listOf("MaxDistance"))
+    private val scale = curve(
+        "Scale",
+        mutableListOf(Vector2f(0f, 1.5f), Vector2f(128f, 1.5f)),
+        xAxis = "Distance" axis 0f..128f,
+        yAxis = "Scale" axis 0.25f..4f,
+    )
     private val maxCount by int("MaxCount", 8, 1..64)
     private val highlightUnbreakable by boolean("HighlightUnbreakable", true)
     private val compact by boolean("Compact", true)
@@ -186,13 +192,15 @@ object ModuleBedPlates : ClientModule("BedPlates", Category.RENDER), BedBlockTra
 
         var i = 0
         for ((bedState, distance, surrounding, itemStacksForRender) in beds) {
-            val currPos = bedState.trackedBlockPos
-
-            if (distance > maximumDistance || i > maxCount) {
-                break // because list beds are sorted by distance (ASC), so we break at first item out of range
+            if (i > maxCount) {
+                break
             }
 
-            if (ignoreSelfBed.activeChoice.isSelfBed(bedState.block, currPos) ||
+            val currPos = bedState.trackedBlockPos
+            val scale = scale.transform(distance.toFloat())
+
+            if (scale < 0.01f ||
+                ignoreSelfBed.activeChoice.isSelfBed(bedState.block, currPos) ||
                 ignoreAdjacent && beds.any { isAdjacentAndNotEquals(it.bedState.trackedBlockPos, currPos) }
             ) {
                 continue

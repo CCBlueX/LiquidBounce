@@ -35,16 +35,18 @@ class Nametag private constructor(
     /**
      * The items that should be rendered above the name tag
      */
-    val items: List<ItemStack>
+    val items: List<ItemStack>,
+    val scale: Float,
 ) {
 
     var screenPos: Vec3f? = null
         private set
 
-    constructor(entity: LivingEntity) : this(
+    constructor(entity: LivingEntity, scale: Float) : this(
         entity,
         NametagTextFormatter.format(entity),
         NametagEquipment.createItemList(entity),
+        scale,
     )
 
     fun calculateScreenPos(tickDelta: Float): Vec3f? {
