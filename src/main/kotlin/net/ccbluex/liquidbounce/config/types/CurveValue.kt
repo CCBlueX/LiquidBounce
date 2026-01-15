@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.config.types
 
-import it.unimi.dsi.fastutil.floats.Float2FloatFunction
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.utils.math.CurveUtil
 import org.joml.Vector2f
@@ -35,7 +34,7 @@ class CurveValue(
     ValueType.CURVE,
     ValueType.VECTOR2_F,
     Vector2f::class.java
-), Float2FloatFunction {
+) {
 
     @JvmRecord
     data class Axis(val label: String, val range: ClosedFloatingPointRange<Float>) {
@@ -53,7 +52,7 @@ class CurveValue(
         }
     }
 
-    override fun get(x: Float): Float = CurveUtil.transform(get(), x, tension)
+    fun transform(x: Float): Float = CurveUtil.transform(get(), x, tension)
 
     companion object {
         const val DEFAULT_TENSION = 0.4f
