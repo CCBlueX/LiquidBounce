@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistance
-import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
@@ -67,17 +66,21 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     private val items by items("Items", itemSortedSetOf())
 
     private val backgroundColor by color("BackgroundColor", Color4b.DEFAULT_BG_COLOR)
-    private val scale by float("Scale", 1.5F, 0.25F..4F)
+    private val scale = curve(
+        "Scale",
+        mutableListOf(Vector2f(0f, 1.5f), Vector2f(128f, 1.5f)),
+        xAxis = "Distance" axis 0f..128f,
+        yAxis = "Scale" axis 0.25f..4f,
+    )
     private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
     private val rowLength by int("RowLength", 100, 1..100)
     private val preventOverlap by boolean("PreventOverlap", true)
     private val clusterEntities = curve(
         "ClusterEntities",
-        mutableListOf(Vector2f(0f, 1f), Vector2f(64f, 4f), Vector2f(128f, 16f)),
+        mutableListOf(Vector2f(0f, 2f), Vector2f(64f, 16f), Vector2f(128f, 16f)),
         xAxis = "Distance" axis 0f..128f,
         yAxis = "Size" axis 0.1F..32F,
     )
-    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
 
     private val mergeMode by enumChoice("MergeMode", MergeMode.BY_COMPONENTS)
 
@@ -146,23 +149,24 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }),
     }
 
-    private val itemEntities by computedOn<GameTickEvent, ObjectArrayList<ClusteredEntities>>(
+    private val itemEntities by computedOn<GameTickEvent, ObjectArrayList<ClusteredEntitiesRenderState>>(
         initialValue = ObjectArrayList()
-    ) { _, clusteredEntities ->
-        val maxDistSquared = maximumDistance.sq()
-
+    ) { _, groups ->
         @Suppress("UNCHECKED_CAST")
         val entities = world.entitiesForRendering().filter {
-            it is ItemEntity && it.eyePosition.cameraDistanceSq() < maxDistSquared && filter(it.item.item, items)
+            it is ItemEntity && filter(it.item.item, items)
         } as List<ItemEntity>
 
-        val groups = ObjectArrayList<List<ItemEntity>>()
+        groups.clear()
         val visited = ReferenceOpenHashSet<ItemEntity>()
         for (entity in entities) {
             if (entity in visited) continue
 
-            val distance = entity.position().cameraDistance()
-            val radiusSquared = clusterEntities.transform(distance.toFloat()).sq()
+            val distance = entity.position().cameraDistance().toFloat()
+            val scale = scale.transform(distance)
+            if (scale < 0.01f) continue
+
+            val radiusSquared = clusterEntities.transform(distance).sq()
 
             // `entity` will also be added
             val group = entities.filter { other ->
@@ -170,16 +174,14 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
             }
 
             visited.addAll(group)
-            groups.add(group)
-        }
-        // Output
-        clusteredEntities.clear()
-        clusteredEntities.ensureCapacity(groups.size)
-        groups.mapTo<List<ItemEntity>, ClusteredEntities, ObjectArrayList<ClusteredEntities>>(clusteredEntities) { entities ->
-            ClusteredEntities(entities, mergeMode.merge(entities.mapToArray<ItemEntity, ItemStack> { it.item }).asList())
+            groups += ClusteredEntitiesRenderState(
+                group,
+                mergeMode.merge(group.mapToArray { it.item }).asList(),
+                scale,
+            )
         }
 
-        clusteredEntities
+        groups
     }
 
     override fun onDisabled() {
@@ -201,7 +203,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                 .centerX(renderPos.x)
                 .centerY(renderPos.y)
                 .rectBackground(backgroundColor)
-                .scale(scale)
+                .scale(result.scale)
                 .rowLength(rowLength)
                 .draw(preventOverlap)
 
@@ -218,7 +220,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
                         .centerX(renderPos.x)
                         .centerY(renderPos.y)
                         .rectBackground(backgroundColor)
-                        .scale(scale)
+                        .scale(result.scale)
                         .rowLength(rowLength)
                         .draw(preventOverlap)
                 }
@@ -226,7 +228,11 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }
     }
 
-    private class ClusteredEntities(@JvmField val entities: List<Entity>, @JvmField val stacks: List<ItemStack>) {
+    private class ClusteredEntitiesRenderState(
+        @JvmField val entities: List<Entity>,
+        @JvmField val stacks: List<ItemStack>,
+        @JvmField val scale: Float,
+    ) {
         fun interpolateCurrentCenterPosition(tickDelta: Float): Vec3 {
             return entities.map { entity ->
                 entity.interpolateCurrentPosition(tickDelta)
