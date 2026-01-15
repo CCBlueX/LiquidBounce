@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
@@ -39,29 +40,33 @@ internal object VelocityLag : VelocityMode("Lag") {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id){
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
             isLagging = true
             lagTicks = lagtime.random()
         }
     }
 
     @Suppress("unused")
-    private val queuePacketHandler = handler<QueuePacketEvent>{ event ->
-        if (!isLagging || event.origin != TransferOrigin.INCOMING || event.packet is ClientboundKeepAlivePacket){
+    private val queuePacketHandler = handler<QueuePacketEvent> { event ->
+        if (!isLagging || event.origin != TransferOrigin.INCOMING || event.packet is ClientboundKeepAlivePacket) {
             return@handler
         }
         event.action = Action.QUEUE
     }
 
     @Suppress("unused")
-    private val tickPacketProcessHandler = handler<TickPacketProcessEvent> {
-        if (isLagging){
+    private val tickHandler = tickHandler{
+        if (isLagging) {
             lagTicks--
-            if (lagTicks == 0){
-                isLagging = false
-                lagTicks = 0
-                PacketQueueManager.flush(TransferOrigin.INCOMING)
-            }
+        }
+    }
+
+    @Suppress("unused")
+    private val tickPacketProcessHandler = handler<TickPacketProcessEvent> {
+        if (isLagging && lagTicks == 0) {
+            isLagging = false
+            lagTicks = 0
+            PacketQueueManager.flush(TransferOrigin.INCOMING)
         }
     }
 
