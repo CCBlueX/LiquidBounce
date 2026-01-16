@@ -30,10 +30,11 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
 import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.direction
+import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.world.InteractionHand
 
 /**
@@ -58,6 +59,9 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
     }
 
     private val glide by float("Glide", -0.15f, -0.3f..0.3f)
+
+    private val mouseControl by boolean("MouseControl", false)
+    private val noGlideOnSprint by boolean("NoGlideOnSpring", false)
 
     init {
         tree(BaseSpeed)
@@ -93,21 +97,29 @@ object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, 
 
         // Control vehicle
         val horizontalSpeed = if (player.moving) hSpeed.toDouble() else 0.0
+
+        if (mouseControl) {
+            vehicle.yRot = player.yRot
+            vehicle.yRotO = player.yRot
+        }
+
         val verticalSpeed = when {
             mc.options.keyJump.isDown -> vSpeed.toDouble()
             mc.options.keyShift.isDown -> -vSpeed.toDouble()
             // If we do not stop the vehicle from going down when touching water, it will
             // drown in water and cannot be controlled anymore
-            !vehicle.isInWater -> glide.toDouble()
+            !vehicle.isInWater &&
+                !(useSprintSpeed && noGlideOnSprint) // No glide option
+                     -> glide.toDouble()
             else -> 0.0
         }
 
         // Vehicle control velocity
-        vehicle.setDeltaMovement(
-            vehicle.deltaMovement
-                .copy(y = verticalSpeed)
-                .withStrafe(yaw = player.yRot, speed = horizontalSpeed)
-        )
+        val input = DirectionalInput(player.input)
+        val movementYaw = getMovementDirectionOfInput(vehicle.yRot, input)
+        vehicle.deltaMovement = vehicle.deltaMovement
+            .copy(y = verticalSpeed)
+            .withStrafe(yaw = movementYaw, speed = horizontalSpeed)
     }
 
     @Suppress("unused")
