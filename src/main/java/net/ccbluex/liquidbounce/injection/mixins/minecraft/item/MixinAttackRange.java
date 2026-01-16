@@ -19,13 +19,11 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.Holder;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.component.AttackRange;
 import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
@@ -35,15 +33,14 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(AttackRange.class)
 public abstract class MixinAttackRange {
 
-    @WrapOperation(
+    @ModifyExpressionValue(
         method = "defaultFor",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getAttributeValue(Lnet/minecraft/core/Holder;)D")
     )
-    private static double applyReach(LivingEntity instance, Holder<Attribute> attribute, Operation<Double> original) {
-        if (instance == Minecraft.getInstance().player) {
-            return ModuleReach.INSTANCE.getEntityInteractionRange()
-                .modifyRange(original.call(instance, attribute));
+    private static double applyReach(double original, @Local(argsOnly = true) LivingEntity entity) {
+        if (entity == Minecraft.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
+            return ModuleReach.INSTANCE.getEntityInteractionRange() + original;
         }
-        return original.call(instance, attribute);
+        return original;
     }
 }
