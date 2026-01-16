@@ -17,40 +17,27 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.projectile;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleHitbox;
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.component.AttackRange;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
 import org.jspecify.annotations.NullMarked;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @NullMarked
-@Mixin(AttackRange.class)
-public abstract class MixinAttackRange {
+@Mixin(ProjectileUtil.class)
+public abstract class MixinProjectileUtil {
 
     @ModifyExpressionValue(
-        method = "defaultFor",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getAttributeValue(Lnet/minecraft/core/Holder;)D")
+        method = "getHitEntitiesAlong(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/item/component/AttackRange;Ljava/util/function/Predicate;Lnet/minecraft/world/level/ClipContext$Block;)Lcom/mojang/datafixers/util/Either;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/AttackRange;hitboxMargin()F")
     )
-    private static double applyReach(double original, @Local(argsOnly = true) LivingEntity entity) {
-        if (entity == Minecraft.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
-            return ModuleReach.INSTANCE.getEntityInteractionRange() + original;
-        }
-        return original;
-    }
-
-    @ModifyExpressionValue(
-        method = "isInRange(Lnet/minecraft/world/entity/LivingEntity;Ljava/util/function/ToDoubleFunction;D)Z",
-        at = @At(value = "FIELD", target = "Lnet/minecraft/world/item/component/AttackRange;hitboxMargin:F", opcode = Opcodes.GETFIELD)
-    )
-    private static float applyHitboxMargin(float original, @Local(argsOnly = true) LivingEntity entity) {
+    private static float applyHitboxMargin(float original, @Local(argsOnly = true) Entity entity) {
         if (entity == Minecraft.getInstance().player && ModuleHitbox.INSTANCE.getRunning() && ModuleHitbox.INSTANCE.getApplyToComponent()) {
             return ModuleHitbox.INSTANCE.getSize() + original;
         }
