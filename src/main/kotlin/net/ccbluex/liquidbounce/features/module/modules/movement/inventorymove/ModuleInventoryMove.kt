@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveBlinkFeature
@@ -120,6 +119,26 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
             || behavior == Behaviour.STOP_ON_ACTION
     }
 
+    private val containerPacketQueue = ArrayDeque<Packet<*>>()
+
+    override fun onDisabled() {
+        containerPacketQueue.clear()
+        super.onDisabled()
+    }
+
+    @Suppress("unused")
+    private val movementInputHandler = handler<MovementInputEvent>(READ_FINAL_STATE) {
+        if (containerPacketQueue.isEmpty()) return@handler
+
+        val packetsSnapshot = containerPacketQueue.toTypedArray()
+        containerPacketQueue.clear()
+        it.sneak = false
+        it.jump = false
+        it.directionalInput = DirectionalInput.NONE
+        // `schedule` will force the Runnable to be run in next loop
+        mc.schedule { packetsSnapshot.forEach(::sendPacketSilently) }
+    }
+
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(FIRST_PRIORITY) { event ->
         if (behavior != Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
@@ -130,13 +149,8 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
 
         if (isContainerPacket(packet) && player.input.keyPresses.any) {
             event.cancelEvent()
-            once<MovementInputEvent>(READ_FINAL_STATE) {
-                it.sneak = false
-                it.jump = false
-                it.directionalInput = DirectionalInput.NONE
-                // `send` will force the Runnable to be run in next loop
-                mc.schedule { sendPacketSilently(packet) }
-            }
+            // Here only be called from render thread because [packet] is c2s
+            containerPacketQueue += packet
         }
     }
 
