@@ -25,9 +25,16 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * Reach module
  *
  * Increases your reach.
+ *
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinPlayer
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.item.MixinAttackRange
  */
 
 object ModuleReach : ClientModule("Reach", Category.PLAYER) {
-    val combatReach by float("CombatReach", 4.2f, 3f..8f).apply { tagBy(this) }
-    val blockReach by float("BlockReach", 5f, 4.5f..8f)
+    val entityInteractionReach by float("EntityInteractionReach", 1.2f, 0f..64f)
+    val blockInteractionReach by float("BlockInteractionReach", 0.5f, 0f..64f)
+
+    // For 1.21.11 Spear
+    val componentMinRangeReach by float("ComponentMinRangeReach", 0f, 0f..64f)
+    val componentMaxRangeReach by float("ComponentMaxRangeReach", 0f, 0f..64f)
 }
