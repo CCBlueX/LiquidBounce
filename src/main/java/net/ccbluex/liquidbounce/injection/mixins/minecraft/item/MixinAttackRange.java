@@ -20,10 +20,12 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleHitbox;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.component.AttackRange;
 import org.jspecify.annotations.NullMarked;
@@ -39,9 +41,9 @@ public abstract class MixinAttackRange {
         method = "defaultFor",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getAttributeValue(Lnet/minecraft/core/Holder;)D")
     )
-    private static double applyReach(double original, @Local(argsOnly = true) LivingEntity entity) {
+    private static double applyReachDefault(double original, @Local(argsOnly = true) LivingEntity entity) {
         if (entity == Minecraft.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
-            return ModuleReach.INSTANCE.getEntityInteractionRange() + original;
+            return ModuleReach.INSTANCE.getEntityInteractionReach() + original;
         }
         return original;
     }
@@ -53,6 +55,28 @@ public abstract class MixinAttackRange {
     private static float applyHitboxMargin(float original, @Local(argsOnly = true) LivingEntity entity) {
         if (entity == Minecraft.getInstance().player && ModuleHitbox.INSTANCE.getRunning() && ModuleHitbox.INSTANCE.getApplyToComponent()) {
             return ModuleHitbox.INSTANCE.getSize() + original;
+        }
+        return original;
+    }
+
+    @ModifyReturnValue(
+        method = "effectiveMinRange",
+        at = @At("RETURN")
+    )
+    private float applyReachMinRange(float original, @Local(argsOnly = true) Entity entity) {
+        if (entity == Minecraft.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
+            return Math.max(0F, original - ModuleReach.INSTANCE.getComponentMinRangeReach());
+        }
+        return original;
+    }
+
+    @ModifyReturnValue(
+        method = "effectiveMaxRange",
+        at = @At("RETURN")
+    )
+    private float applyReachMaxRange(float original, @Local(argsOnly = true) Entity entity) {
+        if (entity == Minecraft.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
+            return original + ModuleReach.INSTANCE.getComponentMaxRangeReach();
         }
         return original;
     }
