@@ -19,19 +19,19 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 internal object VelocityLag : VelocityMode("Lag") {
-    val lagtime by intRange("LagTime", 5..5, 1..20, "ticks")
+    private val lagTime by intRange("LagTime", 5..5, 1..20, "ticks")
 
     private var isLagging = false
     private var lagTicks = 0
@@ -42,7 +42,7 @@ internal object VelocityLag : VelocityMode("Lag") {
 
         if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
             isLagging = true
-            lagTicks = lagtime.random()
+            lagTicks = lagTime.random()
         }
     }
 
@@ -55,7 +55,7 @@ internal object VelocityLag : VelocityMode("Lag") {
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler{
+    private val tickHandler = handler<GameTickEvent> {
         if (isLagging) {
             lagTicks--
         }
@@ -68,12 +68,6 @@ internal object VelocityLag : VelocityMode("Lag") {
             lagTicks = 0
             PacketQueueManager.flush(TransferOrigin.INCOMING)
         }
-    }
-
-
-    override fun enable() {
-        isLagging = false
-        lagTicks = 0
     }
 
     override fun disable() {
