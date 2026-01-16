@@ -119,19 +119,22 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
             || behavior == Behaviour.STOP_ON_ACTION
     }
 
-    private val containerPacketQueue = ArrayDeque<Packet<*>>()
+    private val delayedContainerPackets = mutableListOf<Packet<*>>()
 
     override fun onDisabled() {
-        containerPacketQueue.clear()
+        delayedContainerPackets.clear()
         super.onDisabled()
     }
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent>(READ_FINAL_STATE) {
-        if (containerPacketQueue.isEmpty()) return@handler
+        if (delayedContainerPackets.isEmpty() ||
+            behavior != Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
+            return@handler
+        }
 
-        val packetsSnapshot = containerPacketQueue.toTypedArray()
-        containerPacketQueue.clear()
+        val packetsSnapshot = delayedContainerPackets.toTypedArray()
+        delayedContainerPackets.clear()
         it.sneak = false
         it.jump = false
         it.directionalInput = DirectionalInput.NONE
@@ -150,7 +153,7 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
         if (isContainerPacket(packet) && player.input.keyPresses.any) {
             event.cancelEvent()
             // Here only be called from render thread because [packet] is c2s
-            containerPacketQueue += packet
+            delayedContainerPackets += packet
         }
     }
 
