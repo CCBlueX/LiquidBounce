@@ -19,10 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.types.RangedValue.Companion.squared
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -38,20 +37,15 @@ import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.client.scaledDimension
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
-import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
 import net.ccbluex.liquidbounce.utils.kotlin.unaryMinus
-import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
-import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.client.CameraType
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.util.Mth
 import org.joml.Matrix3x2f
-import kotlin.collections.component1
-import kotlin.collections.component2
+import org.joml.Vector2f
 import kotlin.math.atan2
-import kotlin.math.sqrt
 
 /**
  * Radar module
@@ -157,27 +151,12 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
         )
     }
 
-    private val distanceRangeSq by floatRange("Distance", 0F..128F, 0F..512F).squared()
-
-    private object DistanceBasedAlpha : ToggleableConfigurable(this, "DistanceBasedAlpha", false) {
-        private val distanceRange by floatRange("Distance", 0F..128F, 0F..512F)
-        private val alphaRange by floatRange("Alpha", 1f..1f, 0f..1f)
-        private val curve by easing("Curve", Easing.LINEAR)
-
-        fun getAlpha(distanceSq: Double): Int {
-            return (alphaRange.valueAtProportion(
-                curve.transform(
-                    distanceRange.proportionOfValue(
-                        distanceRange.endInclusive - sqrt(distanceSq).toFloat()
-                    )
-                )
-            ) * 255f).floorToInt()
-        }
-    }
-
-    init {
-        tree(DistanceBasedAlpha)
-    }
+    private val alpha = curve(
+        "Alpha",
+        mutableListOf(Vector2f(0f, 1f), Vector2f(128f, 1f)),
+        xAxis = "Distance" axis 0f..128f,
+        yAxis = "Alpha" axis 0f..1f,
+    )
 
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
@@ -211,14 +190,11 @@ object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("Po
                     if (entity === player) continue
                     val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
 
-                    val cameraDistanceSq = entityPos.cameraDistanceSq()
-                    if (cameraDistanceSq !in distanceRangeSq) continue
+                    val cameraDistance = entityPos.cameraDistance().toFloat()
+                    val alpha = (alpha.transform(cameraDistance)* 255).floorToInt()
+                    if (alpha == 0) continue
 
-                    var color = colorModes.activeChoice.getColor(entity)
-                    if (DistanceBasedAlpha.enabled) {
-                        val alpha = DistanceBasedAlpha.getAlpha(cameraDistanceSq)
-                        color = color.alpha(alpha)
-                    }
+                    val color = colorModes.activeChoice.getColor(entity).alpha(alpha)
 
                     val diffX = entityPos.x - playerPos.x
                     val diffZ = entityPos.z - playerPos.z
