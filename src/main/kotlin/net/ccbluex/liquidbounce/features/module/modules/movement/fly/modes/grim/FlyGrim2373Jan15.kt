@@ -35,41 +35,36 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 
 /**
  * @anticheat Grim
- * @anticheatVersion 2.3.59 (works on latest)
- * @testedOn eu.loyisa.cn / mc.loyisa.cn
+ * @anticheatVersion 2.3.73-b7a719d
+ *   https://modrinth.com/plugin/grimac/version/Eq05CMZ9
+ *   January 15, 2026
+ * @testedOn test.ccbluex.net
  */
-object FlyGrimPacket: Choice("GrimPacket") {
+object FlyGrim2373Jan15 : Choice("Grim2373Jan15") {
+
     override val parent: ChoiceConfigurable<*>
         get() = modes
 
-    private val autoLag by boolean("AutoLagInAir", false)
+    private val autoLag by boolean("AutoLagInAir", true)
     private val airTick by int("AirTick", 3, 0..12, "ticks")
 
-    private var delay = false
-    private var start = false
+    private var isStarted = false
+    private var shouldDelay = false
 
-    override fun enable() {
-        start = false
-        delay = false
-    }
-
-    private fun sendGrimPacket() {
-        network.send(
-            ServerboundPlayerCommandPacket(
-                player,
-                ServerboundPlayerCommandPacket.Action.START_FALL_FLYING
-            )
-        )
+    override fun disable() {
+        isStarted = false
+        shouldDelay = false
+        super.disable()
     }
 
     @Suppress("unused")
     private val queuePacketHandler = handler<QueuePacketEvent> { event ->
         val packet = event.packet
         if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
-            delay = true
+            shouldDelay = true
         }
 
-        if (delay) {
+        if (shouldDelay) {
             event.action = when (packet) {
                 is ClientboundPingPacket -> Action.QUEUE
                 is ClientboundPlayerPositionPacket -> Action.FLUSH
@@ -81,20 +76,30 @@ object FlyGrimPacket: Choice("GrimPacket") {
     @Suppress("unused")
     private val motionHandler = handler<PlayerNetworkMovementTickEvent> { event ->
         if (event.state == EventState.POST) {
-            if (start) {
-                sendGrimPacket()
+            if (isStarted) {
+                sendFallFlying()
             }
             return@handler
         }
 
-        if (start) {
+        if (isStarted) {
             return@handler
         }
 
-        if (autoLag && player.airTicks >= airTick || delay) {
-            start = true
-            sendGrimPacket()
+        if (autoLag && player.airTicks >= airTick || shouldDelay) {
+            isStarted = true
+            sendFallFlying()
         }
     }
+
+    private fun sendFallFlying() {
+        val packet = ServerboundPlayerCommandPacket(
+            player,
+            ServerboundPlayerCommandPacket.Action.START_FALL_FLYING
+        )
+
+        network.send(packet)
+    }
+
 }
 

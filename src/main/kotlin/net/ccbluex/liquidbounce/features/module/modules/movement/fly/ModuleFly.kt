@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyEx
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyJetpack
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrim2373Jan15
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrim2859V
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrimPacket
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixel
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.hypixel.FlyHypixelFlat
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar.FlyHycraftDamage
@@ -81,7 +81,7 @@ object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = listOf("Glid
             FlyVulcan286MC18,
             FlyVulcan286Teleport,
             FlyGrim2859V,
-            FlyGrimPacket,
+            FlyGrim2373Jan15,
             FlySpartan524,
 
             // Server specific fly modes
