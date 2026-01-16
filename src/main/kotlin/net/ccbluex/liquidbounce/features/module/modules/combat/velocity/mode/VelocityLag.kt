@@ -78,6 +78,8 @@ internal object VelocityLag : VelocityMode("Lag") {
     }
 
     override fun disable() {
+        isLagging = false
+        lagTicks = 0
         PacketQueueManager.flush(TransferOrigin.INCOMING)
     }
 }
