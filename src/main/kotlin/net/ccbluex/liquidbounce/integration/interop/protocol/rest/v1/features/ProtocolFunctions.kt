@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.features
@@ -53,6 +51,7 @@ fun getProtocol(requestObject: RequestObject) = httpOk(JsonObject().apply {
 // PUT /api/v1/protocols/protocol
 fun putProtocol(requestObject: RequestObject): FullHttpResponse {
     data class ProtocolRequest(val version: Int)
+
     val protocolRequest = requestObject.asJson<ProtocolRequest>()
 
     selectProtocolVersion(protocolRequest.version)

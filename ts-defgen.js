@@ -29,7 +29,7 @@ const HashMap_1 = require("@ccbluex/liquidbounce-script-api/java/util/HashMap");
 const ArrayList_1 = require("@ccbluex/liquidbounce-script-api/java/util/ArrayList");
 const JvmClassMappingKt_1 = require("@ccbluex/liquidbounce-script-api/kotlin/jvm/JvmClassMappingKt");
 const Class_1 = require("@ccbluex/liquidbounce-script-api/java/lang/Class");
-const ScriptModule_1 = require("@ccbluex/liquidbounce-script-api/net/ccbluex/liquidbounce/script/bindings/features/ScriptModule");
+const EventKt_1 = require("@ccbluex/liquidbounce-script-api/net/ccbluex/liquidbounce/event/EventKt");
 const ClassPath_1 = require("@ccbluex/liquidbounce-script-api/com/google/common/reflect/ClassPath");
 const ScriptManager_1 = require("@ccbluex/liquidbounce-script-api/net/ccbluex/liquidbounce/script/ScriptManager");
 const LiquidBounce_1 = require("@ccbluex/liquidbounce-script-api/net/ccbluex/liquidbounce/LiquidBounce");
@@ -76,6 +76,14 @@ function getName(javaClass) {
     const fullName = javaClass.name;
     return fullName.substring(fullName.lastIndexOf(".") + 1);
 }
+const j2kSafe = it => {
+    try {
+        return JvmClassMappingKt_1.JvmClassMappingKt.getKotlinClass(it);
+    } catch (_) {
+        return undefined;
+    }
+}
+
 const script = registerScript.apply({
     name: "ts-defgen",
     version: "1.0.0",
@@ -92,7 +100,10 @@ function generate(path, packageName) {
             .filter((entry) => entry[1] != undefined)
             .map((entry) => (entry[1] instanceof Class_1.Class ? entry[1] : entry[1].class))
             .filter((entry) => entry != undefined);
-        const eventEntries = ReflectionUtil.getDeclaredField(ScriptModule_1.ScriptModule, "LOWERCASE_NAME_EVENT_MAP").entrySet().toArray();
+        const eventEntries = ReflectionUtil.getDeclaredField(EventKt_1.EventKt, "EVENT_NAME_TO_CLASS").entrySet().toArray()
+            .map(entry => [entry[0], j2kSafe(entry[1])])
+            .filter(entry => entry[1]);
+        Client.displayChatMessage(`found ${eventEntries.length} events`);
         Client.displayChatMessage("looking for all jvm classes");
         const allClassInfos = findAllClassInfos();
         Client.displayChatMessage(`found ${allClassInfos.length} classes, converting to kotlin classes`);
@@ -122,33 +133,19 @@ function generate(path, packageName) {
                     return null;
                 }
             })
-            .filter((entry) => entry != undefined);
+            .filter(it => it);
         const jvmClassesInKotlin = jvmClasses
-            .map((entry) => {
-                try {
-                    return JvmClassMappingKt_1.JvmClassMappingKt.getKotlinClass(entry);
-                }
-                catch (e) {
-                    return null;
-                }
-            })
-            .filter((entry) => entry != null);
+            .map(it => j2kSafe(it))
+            .filter(it => it);
         Client.displayChatMessage(`converted to ${jvmClassesInKotlin.length} kotlin classes`);
         const kotlinClasses = javaClasses
             .concat([
                 // Using the imported class from @embedded
                 ReflectionUtil.classByName("net.ccbluex.liquidbounce.script.bindings.features.ScriptModule")
             ])
-            .concat(eventEntries.map((entry) => entry[1]))
-            .map(entry => {
-                try {
-                    return JvmClassMappingKt_1.JvmClassMappingKt.getKotlinClass(entry);
-                }
-                catch (e) {
-                    return null;
-                }
-            })
-            .filter((entry) => entry != undefined)
+            .map(it => j2kSafe(it))
+            .concat(eventEntries.map(it => it[1]))
+            .filter(it => it)
             .concat(jvmClassesInKotlin);
         const classes = new ArrayList_1.ArrayList(kotlinClasses);
         Client.displayChatMessage(`generating types for ${classes.length} classes`);
@@ -269,7 +266,6 @@ declare module '../types/net/ccbluex/liquidbounce/script/bindings/features/Scrip
     catch (e) {
         console.error(e);
         Client.displayChatMessage(`Error generating TypeScript definitions: ${e.message}`);
-        e.printStackTrace();
         throw e;
     }
 }

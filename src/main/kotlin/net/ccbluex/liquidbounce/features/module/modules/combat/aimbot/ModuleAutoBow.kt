@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.Au
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowAutoShootFeature
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowFastChargeFeature
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.minecraft.item.BowItem
+import net.minecraft.world.item.BowItem
 import java.util.*
 
 /**
@@ -43,7 +43,7 @@ object ModuleAutoBow : ClientModule("AutoBow", Category.COMBAT, aliases = listOf
 
     @JvmStatic
     fun onStopUsingItem() {
-        if (player.activeItem.item is BowItem) {
+        if (player.useItem.item is BowItem) {
             lastShotTimer.reset()
         }
     }

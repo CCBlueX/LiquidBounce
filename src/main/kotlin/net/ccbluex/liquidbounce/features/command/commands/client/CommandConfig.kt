@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,23 +19,44 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.api.core.HttpMethod
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.api.services.client.ClientApi
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.configs
+import net.ccbluex.liquidbounce.config.AutoSettingsMetadata
+import net.ccbluex.liquidbounce.config.gson.publicGson
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
-import net.minecraft.text.Text
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.browseUrl
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.plus
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.textOf
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.text.AsyncLoadingText
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
 import org.apache.commons.io.input.CharSequenceReader
 
 /**
@@ -60,6 +81,20 @@ object CommandConfig : Command.Factory {
             .build()
     }
 
+    private fun hoverText(settingName: String) =
+        textOf(
+            "Click to load ".asPlainText(ChatFormatting.GRAY),
+            settingName.asPlainText(Style.EMPTY + ChatFormatting.AQUA + ChatFormatting.BOLD),
+            PlainText.NEW_LINE,
+            AsyncLoadingText(
+                ioScope.async {
+                    ClientApi.requestSettingsScript(settingName).use { r ->
+                        publicGson.fromJson(r, AutoSettingsMetadata::class.java)
+                    }.asText()
+                }
+            )
+        )
+
     private fun browseSubcommand() = CommandBuilder
         .begin("browse")
         .handler {
@@ -82,12 +117,12 @@ object CommandConfig : Command.Factory {
         .handler {
             runCatching {
                 chat(regular(command.result("loading")))
-                val widthOfSpace = mc.textRenderer.getWidth(" ")
+                val widthOfSpace = mc.font.width(" ")
                 val configs = configs ?: run {
                     chat(markAsError("Failed to load settings list from API"))
                     return@handler
                 }
-                val width = configs.maxOf { mc.textRenderer.getWidth(it.settingId) }
+                val width = configs.maxOf { mc.font.width(it.settingId) }
 
                 // In the case of the chat, we want to show the newest config at the bottom for visibility
                 configs.sortedBy { it.date }.forEach {
@@ -96,35 +131,26 @@ object CommandConfig : Command.Factory {
                     // Append spaces to the setting name to align the date and status
                     // Compensate for the length of the setting name
                     val spaces = " ".repeat(
-                        (width - mc.textRenderer.getWidth(settingName))
+                        (width - mc.font.width(settingName))
                             / widthOfSpace
                     )
 
                     chat(
                         variable(settingName)
                             .onClick(
-                                ClickEvent(
-                                    ClickEvent.Action.SUGGEST_COMMAND,
-                                    ".config load $settingName"
+                                ClickEvent.SuggestCommand(
+                                    CommandManager.Options.prefix + "config load $settingName"
                                 )
                             )
-                            .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
-                                    Text.of("§7Click to load $settingName")
-                                )
-                            ),
+                            .onHover(HoverEvent.ShowText(hoverText(settingName))),
                         regular(spaces),
                         regular(" | "),
                         variable(it.dateFormatted),
                         regular(" | "),
-                        Text.literal(it.statusType.displayName)
-                            .formatted(it.statusType.formatting)
+                        Component.literal(it.statusType.displayName)
+                            .withStyle(it.statusType.formatting)
                             .onHover(
-                                HoverEvent(
-                                    HoverEvent.Action.SHOW_TEXT,
-                                    Text.of(it.statusDateFormatted)
-                                )
+                                HoverEvent.ShowText(it.statusDateFormatted.asPlainText())
                             )
                         ,
                         regular(" | ${it.serverAddress ?: "Global"}"),

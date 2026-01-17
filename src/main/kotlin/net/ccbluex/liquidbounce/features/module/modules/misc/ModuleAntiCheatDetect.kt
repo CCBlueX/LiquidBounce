@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ object ModuleAntiCheatDetect : ClientModule("AntiCheatDetect", Category.MISC) {
     }
 
     private fun alertAboutAntiCheat() {
-        val antiCheat = ServerObserver.guessAntiCheat(mc.currentServerEntry?.address) ?: return
+        val antiCheat = ServerObserver.guessAntiCheat(mc.currentServer?.ip) ?: return
         chat(regular(message("detected", variable(antiCheat))))
     }
 

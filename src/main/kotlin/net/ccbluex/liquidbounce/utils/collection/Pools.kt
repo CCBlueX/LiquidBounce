@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,18 +20,29 @@
 package net.ccbluex.liquidbounce.utils.collection
 
 import net.ccbluex.fastutil.Pool
-import net.minecraft.util.math.BlockPos
+import net.ccbluex.liquidbounce.utils.render.reset
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.core.BlockPos
+import org.joml.Matrix3x2f
+import org.joml.Vector2f
 import org.joml.Vector3f
 
 object Pools {
     @JvmField
-    val Vec3f: Pool<Vector3f> = Pool(
-        initializer = ::Vector3f,
-    ) { it.set(0f, 0f, 0f) }
+    val MatStack = Pool(::PoseStack, PoseStack::reset)
 
     @JvmField
-    val MutableBlockPos: Pool<BlockPos.Mutable> = Pool(
-        initializer = BlockPos::Mutable,
+    val Mat3x2f = Pool(::Matrix3x2f, Matrix3x2f::identity)
+
+    @JvmField
+    val Vec3f = Pool(::Vector3f, Vector3f::zero)
+
+    @JvmField
+    val Vec2f = Pool(::Vector2f, Vector2f::zero)
+
+    @JvmField
+    val MutableBlockPos: Pool<BlockPos.MutableBlockPos> = Pool(
+        initializer = BlockPos::MutableBlockPos,
     ) { it.set(0, 0, 0) }.synchronized()
 
     @JvmField

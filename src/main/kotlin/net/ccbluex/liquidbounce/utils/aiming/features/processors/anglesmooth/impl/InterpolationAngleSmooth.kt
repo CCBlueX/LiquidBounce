@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl
 
@@ -79,13 +78,13 @@ class InterpolationAngleSmooth(
         val horizontalSpeed = if (rotationTarget != null) {
             horizontalSpeed.random()
         } else {
-            horizontalSpeed.start
+            horizontalSpeed.first
         }.toFloat() / 100.0f
 
         val verticalSpeed = if (rotationTarget != null) {
             verticalSpeed.random()
         } else {
-            verticalSpeed.start
+            verticalSpeed.first
         }.toFloat() / 100.0f
 
         ModuleDebug.debugParameter(this, "Horizontal Speed", horizontalSpeed)

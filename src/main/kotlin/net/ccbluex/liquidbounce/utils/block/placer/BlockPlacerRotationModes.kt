@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.phys.HitResult
+import net.minecraft.core.BlockPos
 import kotlin.math.max
 
 abstract class BlockPlacerRotationMode(
@@ -121,8 +121,8 @@ class NoRotationMode(configurable: ChoiceConfigurable<BlockPlacerRotationMode>, 
 
             if (send) {
                 val rotation = placementTarget.rotation.normalize()
-                network.sendPacket(
-                    PlayerMoveC2SPacket.LookAndOnGround(rotation.yaw, rotation.pitch, player.isOnGround,
+                network.send(
+                    ServerboundMovePlayerPacket.Rot(rotation.yaw, rotation.pitch, player.onGround(),
                         player.horizontalCollision)
                 )
             }

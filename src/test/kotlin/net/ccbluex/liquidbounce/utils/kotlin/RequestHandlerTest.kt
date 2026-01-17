@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.event.EventListener
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -27,24 +26,23 @@ import org.junit.jupiter.api.Test
 
 class RequestHandlerTest {
 
-    class TestClientModule(name: String) : ClientModule(name, Category.MISC, state = true) {
-        override val running: Boolean
-            get() = enabled
+    private class TestEventListener(val name: String) : EventListener {
+        override var running: Boolean = true
     }
 
     companion object {
-        private val MODULE_1 = TestClientModule("module1")
-        private val MODULE_2 = TestClientModule("module2")
-        private val MODULE_3 = TestClientModule("module3")
-        private val MODULE_4 = TestClientModule("module4")
+        private val MODULE_1 = TestEventListener("module1")
+        private val MODULE_2 = TestEventListener("module2")
+        private val MODULE_3 = TestEventListener("module3")
+        private val MODULE_4 = TestEventListener("module4")
     }
 
     @BeforeEach
     fun resetModules() {
-        MODULE_1.enabled = true
-        MODULE_2.enabled = true
-        MODULE_3.enabled = true
-        MODULE_4.enabled = true
+        MODULE_1.running = true
+        MODULE_2.running = true
+        MODULE_3.running = true
+        MODULE_4.running = true
     }
 
     @Test
@@ -70,7 +68,7 @@ class RequestHandlerTest {
         assertEquals("requestA", requestHandler.getActiveRequestValue())
         requestHandler.tick()
 
-        MODULE_1.enabled = false
+        MODULE_1.running = false
 
         requestHandler.tick()
 

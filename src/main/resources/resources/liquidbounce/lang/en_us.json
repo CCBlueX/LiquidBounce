@@ -141,6 +141,7 @@
   "liquidbounce.command.invsee.result.playerNotFound": "Player named \"%s\" was not found.",
   "liquidbounce.command.localconfig.subcommand.save.parameter.name.description": "Name of the configuration file.",
   "liquidbounce.command.localconfig.subcommand.save.parameter.overwrite.description": "Overwrite existing configuration file.",
+  "liquidbounce.command.localconfig.subcommand.save.result.invalidFileName": "Configuration file name '%s' is unavailable.",
   "liquidbounce.command.localconfig.subcommand.save.result.alreadyExists": "Configuration file named %s already exists.",
   "liquidbounce.command.localconfig.subcommand.save.result.created": "Configuration file named %s has been created.",
   "liquidbounce.command.localconfig.subcommand.save.result.failedToCreate": "Failed to create configuration file named %s.",
@@ -653,6 +654,7 @@
   "liquidbounce.module.prophuntESP.description": "Shows you props in Prophunt.",
   "liquidbounce.module.quickPerspectiveSwap.description": "Allows you to quickly change the game's perspective.",
   "liquidbounce.module.reach.description": "Allows you to reach further.",
+  "liquidbounce.module.textFieldProtect.description": "Hides rendered text of text field widget when it matches certain patterns.",
   "liquidbounce.module.timeShift.description": "Abuses Minecraft 1.8 mechanics to allow faster regeneration and removes negative status effects like fire and poison.",
   "liquidbounce.module.timeShift.messages.warningNot1_8": "WARNING: Time Shift (Regen, Zoot, etc.) is only supported on 1.8 Minecraft Server! However, your client version can be higher (1.17+) in order to bypass.",
   "liquidbounce.module.translationFix.description": "Prevents servers from knowing about your installed mods through the vanilla translation vulnerability.",
@@ -770,9 +772,11 @@
   "liquidbounce.module.notebot.messages.songInfoTicksPerGameTick": "Ticks per game tick: %s",
   "liquidbounce.module.notebot.messages.songInfoTickLength": "Tick length: %s",
   "liquidbounce.module.notebot.messages.songInfoTotalNotes": "Total notes: %s",
+  "liquidbounce.module.radar.description": "Shows the direction of rendered entities on GUI.",
   "liquidbounce.module.guiCloser.description": "Closes GUIs if their title matches specified patterns.",
   "liquidbounce.module.yggdrasilSignatureFix.description": "Disables Authlib Yggdrasil signature check, may fix missing skins on some servers.",
   "liquidbounce.module.reportHelper.description": "Automatically starts a report and confirms it for you.",
-  "liquidbounce.module.protectionZones.description": "Allows you to see areas protected by protection blocks and suggests optimal placement spots."
+  "liquidbounce.module.protectionZones.description": "Allows you to see areas protected by protection blocks and suggests optimal placement spots.",
+  "liquidbounce.module.newChunks.description": "Highlights chunks that are likely newly generated."
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,14 +35,14 @@ class SpeedSpeedYPort(override val parent: ChoiceConfigurable<*>) : SpeedBHopBas
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (!player.isOnGround && player.moving) {
-            player.velocity = player.velocity.copy(y = -1.0)
+        if (!player.onGround() && player.moving) {
+            player.setDeltaMovement(player.deltaMovement.copy(y = -1.0))
         }
     }
 
     @Suppress("unused")
     private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
-        player.velocity = player.velocity.withStrafe(speed = speed.toDouble())
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
     }
 
 }
@@ -53,7 +53,7 @@ open class SpeedBHopBase(name: String, override val parent: ChoiceConfigurable<*
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->
-        if (!player.isOnGround || !event.directionalInput.isMoving) {
+        if (!player.onGround() || !event.directionalInput.isMoving) {
             return@handler
         }
 

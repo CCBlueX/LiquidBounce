@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +15,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
 import net.ccbluex.liquidbounce.utils.client.asPlainText
-import net.minecraft.text.StringVisitable.StyledVisitor
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import org.junit.jupiter.api.Assertions.*
+import net.minecraft.network.chat.FormattedText.StyledContentConsumer
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.util.*
-import kotlin.collections.ArrayList
+import java.util.Optional
 
 class LegacyTextSanitizerTest {
 
@@ -36,7 +34,7 @@ class LegacyTextSanitizerTest {
         assertEquals(listOf("This is a Test!" to Style.EMPTY), getResults("This is a Test!".asPlainText()))
     }
 
-    private fun getResults(text: Text): ArrayList<Pair<String, Style>> {
+    private fun getResults(text: Component): ArrayList<Pair<String, Style>> {
         val visitor = TestVisitor()
 
         text.visit(visitor, Style.EMPTY)
@@ -44,7 +42,7 @@ class LegacyTextSanitizerTest {
         return visitor.contents
     }
 
-    private class TestVisitor : StyledVisitor<Unit> {
+    private class TestVisitor : StyledContentConsumer<Unit> {
         val contents = ArrayList<Pair<String, Style>>()
 
         override fun accept(style: Style, asString: String): Optional<Unit> {

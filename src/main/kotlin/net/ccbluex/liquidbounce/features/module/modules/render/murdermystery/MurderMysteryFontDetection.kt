@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.ccbluex.liquidbounce.config.gson.util.readJson
-import net.minecraft.block.MapColor
-import net.minecraft.item.map.MapState
+import net.minecraft.world.level.material.MapColor
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData
 import java.awt.Color
 
 object MurderMysteryFontDetection {
@@ -40,7 +39,7 @@ object MurderMysteryFontDetection {
     }
 
     @Suppress("all")
-    fun readContractLine(mapData: MapState): String {
+    fun readContractLine(mapData: MapItemSavedData): String {
         val rgb = extractBitmapFromMap(mapData)
         val contractLine = filterContractLine(rgb)
 
@@ -127,11 +126,11 @@ object MurderMysteryFontDetection {
         return contractLine
     }
 
-    private fun extractBitmapFromMap(mapData: MapState): IntArray {
+    private fun extractBitmapFromMap(mapData: MapItemSavedData): IntArray {
         val rgb = IntArray(128 * 128)
 
         for (i in rgb.indices) {
-            val color = MapColor.getRenderColor(mapData.colors[i].toInt())
+            val color = MapColor.getColorFromPackedId(mapData.colors[i].toInt())
 
             val r = color and 0xFF
             val g = (color ushr 8) and 0xFF

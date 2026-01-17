@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,9 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.ccbluex.liquidbounce.utils.math.multiply
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 object VelocityIntave : VelocityMode("Intave") {
 
@@ -42,8 +43,10 @@ object VelocityIntave : VelocityMode("Intave") {
         @Suppress("unused")
         private val attackHandler = handler<AttackEntityEvent> { event ->
             if (player.hurtTime in hurtTime && System.currentTimeMillis() - lastAttackTime <= lastAttackTimeToReduce) {
-                player.velocity.x *= reduceFactor
-                player.velocity.z *= reduceFactor
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = reduceFactor,
+                    factorZ = reduceFactor,
+                )
             }
             lastAttackTime = System.currentTimeMillis()
         }
@@ -72,7 +75,7 @@ object VelocityIntave : VelocityMode("Intave") {
         @Suppress("unused")
         private val tickJumpHandler = handler<MovementInputEvent> {
             val shouldJump = Math.random() * 100 < chance && player.hurtTime > 5 && !isFallDamage
-            val canJump = player.isOnGround && mc.currentScreen !is InventoryScreen
+            val canJump = player.onGround() && mc.screen !is InventoryScreen
             val shouldFinallyJump = shouldJump && canJump
 
             if (randomize.enabled) {
@@ -92,10 +95,10 @@ object VelocityIntave : VelocityMode("Intave") {
         private val packetHandler = handler<PacketEvent> { event ->
             val packet = event.packet
 
-            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-                val velocityX = packet.velocityX / 8000.0
-                val velocityY = packet.velocityY / 8000.0
-                val velocityZ = packet.velocityZ / 8000.0
+            if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+                val velocityX = packet.movement.x
+                val velocityY = packet.movement.y
+                val velocityZ = packet.movement.z
 
                 // Check if the player is taking fall damage
                 // We set this on every packet, because if the player gets hit afterward,

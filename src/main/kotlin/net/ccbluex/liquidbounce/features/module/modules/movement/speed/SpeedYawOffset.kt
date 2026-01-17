@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ object SpeedYawOffset : ToggleableConfigurable(ModuleSpeed, "YawOffset", false) 
             YawOffsetMode.CONSTANT -> constantYawOffset()
         }
 
-        val rotation = Rotation(player.yaw - yaw, player.pitch)
+        val rotation = Rotation(player.yRot - yaw, player.xRot)
 
         RotationManager.setRotationTarget(
             rotationsConfigurable.toRotationTarget(rotation),
@@ -55,15 +55,15 @@ object SpeedYawOffset : ToggleableConfigurable(ModuleSpeed, "YawOffset", false) 
     }
 
     private fun groundYawOffset(): Float {
-        yaw = if (player.isOnGround) {
+        yaw = if (player.onGround()) {
             when {
-                mc.options.forwardKey.isPressed && mc.options.leftKey.isPressed -> 45f
-                mc.options.forwardKey.isPressed && mc.options.rightKey.isPressed -> -45f
-                mc.options.backKey.isPressed && mc.options.leftKey.isPressed -> 135f
-                mc.options.backKey.isPressed && mc.options.rightKey.isPressed -> -135f
-                mc.options.backKey.isPressed -> 180f
-                mc.options.leftKey.isPressed -> 90f
-                mc.options.rightKey.isPressed -> -90f
+                mc.options.keyUp.isDown && mc.options.keyLeft.isDown -> 45f
+                mc.options.keyUp.isDown && mc.options.keyRight.isDown -> -45f
+                mc.options.keyDown.isDown && mc.options.keyLeft.isDown -> 135f
+                mc.options.keyDown.isDown && mc.options.keyRight.isDown -> -135f
+                mc.options.keyDown.isDown -> 180f
+                mc.options.keyLeft.isDown -> 90f
+                mc.options.keyRight.isDown -> -90f
                 else -> 0f
             }
         } else {
@@ -74,13 +74,13 @@ object SpeedYawOffset : ToggleableConfigurable(ModuleSpeed, "YawOffset", false) 
 
     private fun constantYawOffset(): Float {
         yaw = when {
-            mc.options.forwardKey.isPressed && mc.options.leftKey.isPressed -> 45f
-            mc.options.forwardKey.isPressed && mc.options.rightKey.isPressed -> -45f
-            mc.options.backKey.isPressed && mc.options.leftKey.isPressed -> 135f
-            mc.options.backKey.isPressed && mc.options.rightKey.isPressed -> -135f
-            mc.options.backKey.isPressed -> 180f
-            mc.options.leftKey.isPressed -> 90f
-            mc.options.rightKey.isPressed -> -90f
+            mc.options.keyUp.isDown && mc.options.keyLeft.isDown -> 45f
+            mc.options.keyUp.isDown && mc.options.keyRight.isDown -> -45f
+            mc.options.keyDown.isDown && mc.options.keyLeft.isDown -> 135f
+            mc.options.keyDown.isDown && mc.options.keyRight.isDown -> -135f
+            mc.options.keyDown.isDown -> 180f
+            mc.options.keyLeft.isDown -> 90f
+            mc.options.keyRight.isDown -> -90f
             else -> 0f
         }
 
@@ -89,10 +89,10 @@ object SpeedYawOffset : ToggleableConfigurable(ModuleSpeed, "YawOffset", false) 
 
     private fun airYawOffset(): Float {
         yaw = when {
-            !player.isOnGround &&
-                mc.options.forwardKey.isPressed &&
-                !mc.options.leftKey.isPressed &&
-                !mc.options.rightKey.isPressed
+            !player.onGround() &&
+                mc.options.keyUp.isDown &&
+                !mc.options.keyLeft.isDown &&
+                !mc.options.keyRight.isDown
                 -> -45f
 
             else -> 0f

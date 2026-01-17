@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,9 @@ import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.block.Blocks
-import net.minecraft.util.shape.VoxelShapes
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * BlockWalk module
@@ -33,12 +34,12 @@ import net.minecraft.util.shape.VoxelShapes
 
 object ModuleBlockWalk : ClientModule("BlockWalk", Category.MOVEMENT) {
 
-    private val blocks by blocks("Blocks", hashSetOf(Blocks.COBWEB, Blocks.SNOW))
+    private val blocks by blocks("Blocks", blockSortedSetOf(Blocks.COBWEB, Blocks.SNOW))
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (event.state.block in blocks) {
-            event.shape = VoxelShapes.fullCube()
+            event.shape = Shapes.block()
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
@@ -35,12 +36,12 @@ import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.minecraft.client.gui.screen.DisconnectedScreen
-import net.minecraft.client.gui.screen.DownloadingTerrainScreen
+import net.minecraft.client.gui.screens.DisconnectedScreen
+import net.minecraft.client.gui.screens.LevelLoadingScreen
 
 /**
  * Module HUD
@@ -60,7 +61,16 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         get() = "liquidbounce.module.hud"
     private var browserBrowser: Browser? = null
 
-    private val blur by boolean("Blur", true)
+    init {
+        tree(Blur)
+    }
+
+    object Blur : ToggleableConfigurable(ModuleHud, "Blur", enabled = true) {
+        /**
+         * The range in which the blending from not-blurred to blurred occurs.
+         */
+        val alphaBlendRange by floatRange("AlphaBlendRange", 0.0F..0.75F, 0.0F..1.0F)
+    }
 
     @Suppress("unused")
     private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange { state ->
@@ -68,24 +78,24 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         state
     }
 
-    val centeredCrosshair by boolean("CenteredCrosshair", false)
-
     val isBlurEffectActive
-        get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)
+        get() = Blur.enabled && !(mc.options.hideGui && mc.screen == null)
 
     private var browserSettings: BrowserSettings? = null
 
     val themes = tree(Configurable("Themes"))
 
     val components = tree(Configurable("AdditionalComponents")).apply {
-        tree(MinimapComponent)
+        tree(MinimapHudComponent)
     }
 
     /**
      * Updates [themes] content
      */
     fun updateThemes() {
-        themes.inner.clear()
+        themes.inner.filterIsInstance<Configurable>().forEach {
+            themes.drop(it)
+        }
         for (theme in ThemeManager.themes) {
             themes.tree(theme.settings)
         }
@@ -124,7 +134,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
         // Otherwise, open the tab and set its visibility
         val browserTab = open()
-        browserTab.visible = event.screen !is DisconnectedScreen && event.screen !is DownloadingTerrainScreen
+        browserTab.visible = event.screen !is DisconnectedScreen && event.screen !is LevelLoadingScreen
     }
 
     @Suppress("unused")
@@ -156,6 +166,10 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         if (enabled && visible) {
             open()
         }
+    }
+
+    fun disableBlur() {
+        Blur.enabled = false
     }
 
 }

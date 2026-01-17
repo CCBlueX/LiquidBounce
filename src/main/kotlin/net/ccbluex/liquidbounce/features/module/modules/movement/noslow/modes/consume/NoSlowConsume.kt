@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,16 +20,20 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.c
 
 import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.NoSlowUseActionHandler
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowNoBlockInteract
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2364MC18
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2371
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedInvalidHand
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.item.isConsumable
-import net.minecraft.item.consume.UseAction
+import net.minecraft.world.item.ItemUseAnimation
 
 object NoSlowConsume : NoSlowUseActionHandler("Consume") {
 
     @Suppress("unused")
     private val noBlockInteract = tree(NoSlowNoBlockInteract(this) { action ->
-        action == UseAction.EAT || action == UseAction.DRINK
+        action == ItemUseAnimation.EAT || action == ItemUseAnimation.DRINK
     })
 
     @Suppress("unused")
@@ -52,7 +56,7 @@ object NoSlowConsume : NoSlowUseActionHandler("Consume") {
             }
 
             // Check if we are using a consume item
-            return player.isUsingItem && player.activeItem.isConsumable
+            return player.isUsingItem && player.useItem.isConsumable
         }
 
 }

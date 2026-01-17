@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
@@ -29,16 +27,16 @@ import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpBadRequest
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
-import net.minecraft.client.util.InputUtil
+import com.mojang.blaze3d.platform.InputConstants
 
 // GET /api/v1/client/input
 @Suppress("UNUSED_PARAMETER")
 fun getInputInfo(requestObject: RequestObject) = requestObject.queryParams["key"]?.let { key ->
-    val input = InputUtil.fromTranslationKey(key)
+    val input = InputConstants.getKey(key)
 
     httpOk(JsonObject().apply {
-        addProperty("translationKey", input.translationKey)
-        addProperty("localized", input.localizedText.string)
+        addProperty("translationKey", input.name)
+        addProperty("localized", input.displayName.string)
     })
 } ?: httpBadRequest("Missing key parameter")
 
@@ -46,12 +44,12 @@ fun getInputInfo(requestObject: RequestObject) = requestObject.queryParams["key"
 @Suppress("UNUSED_PARAMETER")
 fun getKeybinds(requestObject: RequestObject) = httpOk(
     JsonArray().apply {
-        for (key in mc.options.allKeys) {
+        for (key in mc.options.keyMappings) {
             add(JsonObject().apply {
-                addProperty("bindName", key.translationKey)
+                addProperty("bindName", key.name)
                 add("key", JsonObject().apply {
-                    addProperty("translationKey", key.boundKeyTranslationKey)
-                    addProperty("localized", key.boundKeyLocalizedText?.string)
+                    addProperty("translationKey", key.saveString())
+                    addProperty("localized", key.translatedKeyMessage?.string)
                 })
             })
         }

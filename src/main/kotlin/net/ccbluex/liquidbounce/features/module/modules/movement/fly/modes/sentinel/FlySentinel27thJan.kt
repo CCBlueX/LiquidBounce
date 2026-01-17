@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.random
@@ -50,16 +48,16 @@ internal object FlySentinel27thJan : Choice("Sentinel27thJan") {
         get() = ModuleFly.modes
 
     val repeatable = tickHandler {
-        if (player.isOnGround) {
+        if (player.onGround()) {
             return@tickHandler
         }
 
-        player.velocity.y = when {
-            player.isSneaking -> -0.4
-            player.input.playerInput.jump -> 0.42
+        player.deltaMovement.y = when {
+            player.isShiftKeyDown -> -0.4
+            player.input.keyPresses.jump -> 0.42
             else -> 0.2
         }
-        player.velocity = player.velocity.withStrafe(speed = horizontalSpeed.random().toDouble())
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = horizontalSpeed.random().toDouble()))
 
         waitTicks(6)
     }

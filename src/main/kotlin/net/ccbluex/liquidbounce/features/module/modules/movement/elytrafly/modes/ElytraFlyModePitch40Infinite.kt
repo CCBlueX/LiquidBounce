@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.mode
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.minecraft.util.math.MathHelper
 
 internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") {
 
@@ -29,10 +28,10 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
     private val maxSpeed by float("MaxSpeed", 150f, 50f..170f)
     private val maxHeight by int("MaxHeight", 200, 50..360)
     private val pitchIncrement by float("PitchIncrement", 3f, 1f..10f)
-    
+
     private var infinitePitch = 0f
     private var infiniteFlag = false
-    
+
     // Speed conversion constant (m/s to km/h approximately)
     private const val SPEED_CONVERSION_FACTOR = 72f
     private const val MIN_PITCH = -40f
@@ -40,7 +39,7 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
 
     override fun enable() {
         resetState()
-        
+
         // Warning if player is too low
         if (player.y < maxHeight) {
             notification(
@@ -52,7 +51,7 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
     }
 
     override fun onTick() {
-        if (!player.isGliding) {
+        if (!player.isFallFlying) {
             return
         }
 
@@ -60,7 +59,7 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
         updateInfiniteFlag(currentSpeed)
         updatePitch()
     }
-    
+
     /**
      * Resets the mode state to initial values
      */
@@ -68,14 +67,14 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
         infinitePitch = 0f
         infiniteFlag = false
     }
-    
+
     /**
      * Calculates the current player speed in km/h
      */
     private fun calculateCurrentSpeed(): Float {
-        return (player.velocity.horizontalLength() * SPEED_CONVERSION_FACTOR).toFloat()
+        return (player.deltaMovement.horizontalDistance() * SPEED_CONVERSION_FACTOR).toFloat()
     }
-    
+
     /**
      * Updates the infinite flag based on speed and height
      */
@@ -87,18 +86,18 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
             else -> infiniteFlag
         }
     }
-    
+
     /**
      * Updates the pitch value with smooth changes
      */
     private fun updatePitch() {
         val pitchDelta = if (infiniteFlag) pitchIncrement else -pitchIncrement
-        infinitePitch = MathHelper.clamp(
+        infinitePitch = Math.clamp(
             infinitePitch + pitchDelta,
             MIN_PITCH,
             MAX_PITCH
         )
-        
-        player.pitch = infinitePitch
+
+        player.setXRot(infinitePitch)
     }
-} 
+}

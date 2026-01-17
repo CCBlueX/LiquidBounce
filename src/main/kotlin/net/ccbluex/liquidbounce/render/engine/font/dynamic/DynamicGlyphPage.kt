@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,23 +15,31 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
-import net.ccbluex.liquidbounce.render.engine.font.*
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.liquidbounce.render.engine.font.AtlasSliceHandle
+import net.ccbluex.liquidbounce.render.engine.font.DynamicAtlasAllocator
+import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
+import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion
+import net.ccbluex.liquidbounce.render.engine.font.GlyphRenderInfo
+import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
+import com.mojang.blaze3d.platform.NativeImage
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.image.BufferedImage
+import kotlin.math.min
 
-class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() {
+class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight: Int) : GlyphPage() {
     private val image = createBufferedImageWithDimensions(atlasSize)
-    override val texture = NativeImageBackedTexture(image.toNativeImage())
-    val glyphMap = HashMap<Pair<Int, Char>, Pair<GlyphRenderInfo, AtlasSliceHandle>>()
+    override val texture = image.toNativeImage().asTexture { "DynamicGlyphPage ${atlasSize.width}x${atlasSize.height}" }
+    private val glyphMap = Long2ObjectOpenHashMap<Pair<GlyphRenderInfo, AtlasSliceHandle>>()
     val dirty = ArrayList<GlyphRenderInfo>()
 
     private val allocator = DynamicAtlasAllocator(
@@ -41,7 +49,7 @@ class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() 
     )
 
     fun getGlyph(char: Char, style: Int): GlyphRenderInfo? {
-        return glyphMap[style to char]?.first
+        return glyphMap[GlyphIdentifier.asLong(char, style)]?.first
     }
 
     /**
@@ -49,11 +57,11 @@ class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() 
      *
      * @return A list of characters that could not be added
      */
-    fun tryAdd(c: List<FontGlyph>): List<FontGlyph> {
-        val failed = ArrayList<FontGlyph>()
+    fun tryAdd(c: Iterable<FontGlyph>): List<FontGlyph> {
+        val failed = ObjectArrayList<FontGlyph>()
 
         val changesToDo = c
-            .filter { glyphId -> !glyphMap.containsKey(glyphId.font.style to glyphId.codepoint) }
+            .filter { glyphId -> !glyphMap.containsKey(GlyphIdentifier.asLong(glyphId)) }
             .sortedByDescending { glyphId ->
                 val dims = glyphId.font.awtFont.createGlyphVector(fontRendererContext, glyphId.codepoint.toString())
 
@@ -79,7 +87,7 @@ class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() 
         changesToDo.forEach { (generationInfo, slice) ->
             val glyph = createGlyphFromGenerationInfo(generationInfo, atlasSize)
 
-            glyphMap[generationInfo.fontGlyph.font.style to generationInfo.fontGlyph.codepoint] = glyph to slice
+            glyphMap.put(GlyphIdentifier.asLong(generationInfo.fontGlyph), glyph to slice)
 
             updateNativeTexture(generationInfo, glyph)
         }
@@ -88,7 +96,7 @@ class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() 
     }
 
     fun free(ch: Char, style: Int): GlyphRenderInfo? {
-        val (renderInfo, sliceHandle) = this.glyphMap.remove(style to ch) ?: return null
+        val (renderInfo, sliceHandle) = this.glyphMap.remove(GlyphIdentifier.asLong(ch, style)) ?: return null
 
         this.allocator.free(sliceHandle)
 
@@ -101,7 +109,7 @@ class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() 
      *
      * @return Removed chars
      */
-    fun optimizeAtlas(): List<Triple<Int, Char, GlyphRenderInfo>> {
+    fun optimizeAtlas(): List<Pair<GlyphIdentifier, GlyphRenderInfo>> {
         // Free everything, create a new allocator and use max(largestFontGlyph.height, medianFontGlyphHeight) as
         // minimal vertical slice height and the dimensions of the smallest character is minDimension.
 
@@ -111,7 +119,7 @@ class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() 
     private fun updateNativeTexture(generationInfo: Companion.CharacterGenerationInfo, glyph: GlyphRenderInfo) {
         copyImageSection(
             fromImage = this.image,
-            toImage = texture.image!!,
+            toImage = texture.pixels!!,
             fromLocation = generationInfo.atlasLocation,
             toLocation = generationInfo.atlasLocation,
             patchSize = generationInfo.atlasDimension
@@ -131,7 +139,7 @@ class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() 
             for (j in 0 until patchSize.height) {
                 val color = fromImage.getRGB(fromLocation.x + i, fromLocation.y + j)
 
-                toImage.setColorArgb(toLocation.x + i, toLocation.y + j, color)
+                toImage.setPixel(toLocation.x + i, toLocation.y + j, color)
             }
         }
     }
@@ -146,4 +154,11 @@ class DynamicGlyphPage(val atlasSize: Dimension, fontHeight: Int) : GlyphPage() 
     }
 
 
+    companion object {
+        @JvmStatic
+        private val atlasSize = min(2048, maxTextureSize.value)
+
+        @JvmField
+        val DEFAULT_ATLAS_SIZE = Dimension(atlasSize, atlasSize)
+    }
 }

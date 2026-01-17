@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,32 +18,30 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable
 
-import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
-import com.google.gson.JsonElement
 import com.google.gson.JsonParseException
-import java.lang.reflect.Type
 
 data class ItemInfo(
     val id: String,
     val minAmount: Int = 1
-)
+) {
+    companion object {
+        @JvmField
+        val Deserializer = JsonDeserializer<ItemInfo> { json, _, _ ->
+            if (json == null || !json.isJsonObject) {
+                throw JsonParseException("Invalid JSON: Expected a JsonObject")
+            }
 
-class ItemInfoDeserializer : JsonDeserializer<ItemInfo> {
-    override fun deserialize(json: JsonElement?, typeOfT: Type, context: JsonDeserializationContext): ItemInfo {
-        if (json == null || !json.isJsonObject) {
-            throw JsonParseException("Invalid JSON: Expected a JsonObject")
+            val jsonObject = json.asJsonObject
+
+            if (!jsonObject.has("id")) {
+                throw JsonParseException("Invalid JSON: Missing 'id' property")
+            }
+
+            val id = jsonObject["id"].asString
+            val minAmount = jsonObject["minAmount"]?.asInt ?: 1
+
+            ItemInfo(id, minAmount)
         }
-
-        val jsonObject = json.asJsonObject
-
-        if (!jsonObject.has("id")) {
-            throw JsonParseException("Invalid JSON: Missing 'id' property")
-        }
-
-        val id = jsonObject["id"].asString
-        val minAmount = jsonObject["minAmount"]?.asInt ?: 1
-
-        return ItemInfo(id, minAmount)
     }
 }

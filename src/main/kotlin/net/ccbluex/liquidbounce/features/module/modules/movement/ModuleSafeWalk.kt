@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,12 +32,15 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
+import net.ccbluex.liquidbounce.utils.entity.wouldBeCloseToFallOff
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 import kotlin.math.min
 
 /**
@@ -77,7 +80,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
     class OnEdge(override val parent: ChoiceConfigurable<Choice>) : Choice("OnEdge") {
 
         private val edgeDistance by float("Distance", 0.1f, 0.1f..0.5f)
-        private var center: Vec3d? = null
+        private var center: Vec3? = null
 
         private enum class Mode(override val choiceName: String) : NamedChoice {
             STOP("Stop"),
@@ -104,13 +107,13 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
         val inputHandler = handler<MovementInputEvent>(
             priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
         ) { event ->
-            //Usually 2 ticks are enough,but we have to make sure players are 100% safe.
+            // Usually 2 ticks are enough,but we have to make sure players are 100% safe.
             val nextTick = PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(ticksToPredict)
-            val shouldBeActive = player.isOnGround && !event.sneak && isInVoid(nextTick.pos, false)
+            val shouldBeActive = player.onGround() && !event.sneak && isInVoid(nextTick.pos, false)
             if (shouldBeActive) {
                 val isOnEdge = player.isCloseToEdge(
                     event.directionalInput,
-                    min(player.sqrtSpeed, edgeDistance.toDouble())
+                    min(player.horizontalSpeed, edgeDistance.toDouble())
                 )
                 if (isOnEdge) {
                     debugParameter("InputOnEdge") { event.directionalInput }
@@ -122,8 +125,8 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
                             ModuleDebug.DebuggedPoint(center, Color4b.BLUE, 0.05)
                         }
 
-                        val currentDistance = center.subtract(player.pos).horizontalLengthSquared()
-                        val nextDistance = center.subtract(nextTick.pos).horizontalLengthSquared()
+                        val currentDistance = center.subtract(player.position()).horizontalDistanceSqr()
+                        val nextDistance = center.subtract(nextTick.pos).horizontalDistanceSqr()
 
                         debugParameter("CurrentDistance") { currentDistance }
                         debugParameter("NextDistance") { nextDistance }
@@ -153,11 +156,11 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
                         event.jump = false
                     }
 
-                    (mode == Mode.CENTER || player.sqrtSpeed > 0.05) -> {
-                        val center = center ?: player.blockPos.toBottomCenterPos()
+                    mode == Mode.CENTER || player.sqrtSpeed > 0.05 -> {
+                        val center = center ?: player.blockPosition().bottomCenter
                         val degrees = getDegreesRelativeToView(
-                            center.subtract(player.pos),
-                            player.yaw
+                            center.subtract(player.position()),
+                            player.yRot
                         )
                         event.directionalInput = getDirectionalInputForDegrees(
                             DirectionalInput.NONE,
@@ -184,7 +187,7 @@ object ModuleSafeWalk : ClientModule("SafeWalk", Category.MOVEMENT) {
             }
 
             // Find last good position to stand on
-            val blockPos = player.blockPos.toBottomCenterPos()
+            val blockPos = player.blockPosition().bottomCenter
             if (!player.wouldBeCloseToFallOff(blockPos)) {
                 center = blockPos
             }

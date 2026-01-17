@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +15,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
+import it.unimi.dsi.fastutil.ints.IntArrayList
 import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.text.Style
-import net.minecraft.text.Text
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
 import java.awt.Font
 import java.util.Optional
 import kotlin.random.Random
@@ -32,8 +32,9 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
 
     private val defaultRng = Random(Random.nextLong())
 
+    @JvmField
     val TEXT_POOL = Pool(
-        initializer = { RecyclingProcessedText(ArrayList(), ArrayList(), ArrayList()) }
+        initializer = { RecyclingProcessedText(ArrayList(), IntArrayList(), IntArrayList()) }
     ) {
         it.chars.clear()
         it.underlines.clear()
@@ -41,13 +42,13 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
     }
 
     class RecyclingProcessedText(
-        override var chars: ArrayList<ProcessedText.ProcessedChar>,
-        override var underlines: ArrayList<IntRange>,
-        override var strikeThroughs: ArrayList<IntRange>,
+        override val chars: ArrayList<ProcessedText.ProcessedChar>,
+        override val underlines: IntArrayList,
+        override val strikeThroughs: IntArrayList,
     ) : ProcessedText
 
     override fun process(
-        text: Text,
+        text: Component,
         defaultColor: Color4b,
     ): RecyclingProcessedText {
         val result = TEXT_POOL.borrow()
@@ -70,7 +71,7 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
             style.isItalic -> Font.ITALIC
             else -> Font.PLAIN
         }
-        val color = style.color?.let { Color4b(it.rgb) } ?: defaultColor
+        val color = style.color?.let { Color4b.fullAlpha(it.value) } ?: defaultColor
         val obfuscated = style.isObfuscated
 
         result.chars.ensureCapacity(textAsString.length)
@@ -89,14 +90,14 @@ object MinecraftTextProcessor : TextProcessor<MinecraftTextProcessor.RecyclingPr
         val start = result.chars.size - textAsString.length
         val end = result.chars.size
 
-        val textRange = start until end
-
         if (style.isUnderlined) {
-            result.underlines.add(textRange)
+            result.underlines.add(start)
+            result.underlines.add(end)
         }
 
         if (style.isStrikethrough) {
-            result.strikeThroughs.add(textRange)
+            result.strikeThroughs.add(start)
+            result.strikeThroughs.add(end)
         }
 
         return Optional.empty()

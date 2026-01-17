@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,13 +22,13 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.reporthelper
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
 import kotlinx.coroutines.Dispatchers
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import kotlin.random.Random
@@ -45,10 +45,11 @@ internal object ReportHelperAutoReport : ToggleableConfigurable(ModuleReportHelp
     private val chatHandler = sequenceHandler<ChatReceiveEvent> { event ->
         val message = event.message
 
-        if (message.contains(player.gameProfile.name)) {
-            val another = world.players.firstNotNullOfOrNull { entity ->
+        val selfName = player.gameProfile.name
+        if (message.contains(selfName)) {
+            val another = world.players().firstNotNullOfOrNull { entity ->
                 entity.gameProfile.name.takeIf { name ->
-                    entity !== player && message.contains(name) && !FriendManager.isFriend(name)
+                    entity !== player && name != selfName && message.contains(name) && !FriendManager.isFriend(name)
                 }
             } ?: return@sequenceHandler
 
@@ -57,7 +58,7 @@ internal object ReportHelperAutoReport : ToggleableConfigurable(ModuleReportHelp
             }
 
             waitTicks(delay.random())
-            player.networkHandler.sendCommand(pattern.format(another))
+            player.connection.sendCommand(pattern.format(another))
         }
     }
 

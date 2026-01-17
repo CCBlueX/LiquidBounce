@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,17 +38,24 @@ object ColorUtils {
     }
 }
 
-fun rainbow(): Color4b {
-    val currentColor = Color(Color.HSBtoRGB((System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F, 1F, 1F))
-
-    return Color4b(currentColor)
+@JvmOverloads
+fun rainbow(alpha: Float = 1f): Color4b {
+    return Color4b.ofHSB(
+        hue = (System.nanoTime().toDouble() / 10_000_000_000.0).toFloat() % 1.0F,
+        saturation = 1F,
+        brightness = 1F,
+        alpha = alpha,
+    )
 }
 
 fun shiftHue(color4b: Color4b, shift: Int): Color4b {
     val hsb = Color.RGBtoHSB(color4b.r, color4b.g, color4b.b, null)
-    val shiftedColor = Color(Color.HSBtoRGB((hsb[0] + shift.toFloat() / 360) % 1F, hsb[1], hsb[2]))
-
-    return Color4b(shiftedColor).with(a = color4b.a)
+    return Color4b.ofHSB(
+        hue = (hsb[0] + shift.toFloat() / 360) % 1F,
+        saturation = hsb[1],
+        brightness = hsb[2],
+        alpha = color4b.a / 255F,
+    )
 }
 
 fun interpolateHue(primaryColor: Color4b, otherColor: Color4b, percentageOther: Float): Color4b {

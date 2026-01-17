@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -40,11 +41,10 @@ import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.item.MaceItem
-import net.minecraft.util.Hand
-import java.util.*
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.MaceItem
+import net.minecraft.world.InteractionHand
 
 /**
  * AutoWeapon module
@@ -83,7 +83,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     private val changeOnActions by multiEnumChoice<ChangeOnAction>(
         "ChangeOn",
-        EnumSet.of(ChangeOnAction.ON_ATTACK)
+        enumSetOf(ChangeOnAction.ON_ATTACK)
     )
 
     @Suppress("unused")
@@ -98,8 +98,8 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
      * Prioritize Auto Buff or consuming an item over Auto Weapon
      */
     private val isBusy: Boolean
-        get() = SilentHotbar.isSlotModifiedBy(ModuleAutoBuff) || player.isUsingItem && player.activeHand ==
-            Hand.MAIN_HAND && player.activeItem.isConsumable
+        get() = SilentHotbar.isSlotModifiedBy(ModuleAutoBuff) || player.isUsingItem && player.usingItemHand ==
+            InteractionHand.MAIN_HAND && player.useItem.isConsumable
 
     /**
      * Check if the attack will break the shield
@@ -111,7 +111,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
             }
 
             // If we have an axe in our main hand, we will break the shield
-            if (player.mainHandStack.isAxe) {
+            if (player.mainHandItem.isAxe) {
                 return true
             }
 
@@ -128,7 +128,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
                 return false
             }
 
-            if (player.mainHandStack.item is MaceItem) {
+            if (player.mainHandItem.item is MaceItem) {
                 return true
             }
 
@@ -137,7 +137,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     // https://minecraft.wiki/w/Mace#Falling
     private val canMaceSmash
-        get() = !isOlderThanOrEqual1_8 && MaceItem.shouldDealAdditionalDamage(player)
+        get() = !isOlderThanOrEqual1_8 && MaceItem.canSmashAttack(player)
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
@@ -157,7 +157,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
         // [ClientPlayerInteractionManager.attackEntity] will sync the selected slot,
         // so we can do that here already. This is legitimate, but unfortunately, the server seems
         // to not care about the sync when it occurs in the same tick as the attack.
-        interaction.syncSelectedSlot()
+        interaction.ensureHasSentCarriedItem()
     }
 
     /**

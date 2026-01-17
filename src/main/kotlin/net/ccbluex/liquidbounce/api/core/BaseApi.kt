@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ fun formatAvatarUrl(uuid: UUID?, username: String): String {
  *
  * @param baseUrl The base URL of the API
  */
-abstract class BaseApi(protected val baseUrl: String, val defaultHeaders: Headers = Headers.EMPTY) {
+abstract class BaseApi(protected val baseUrl: String, val defaultHeaders: Headers = HttpClient.EMPTY_HEADERS) {
 
     /**
      * Makes a request and parses the response to the specified type

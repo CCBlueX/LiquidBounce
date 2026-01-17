@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,18 @@
 package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.utils.client.network
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 @Suppress("unused")
 object ScriptNetworkUtil {
 
     @JvmName("movePlayerGround")
     fun movePlayerGround(onGround: Boolean, horizontalCollision: Boolean) =
-        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(onGround, horizontalCollision))
+        network.send(ServerboundMovePlayerPacket.StatusOnly(onGround, horizontalCollision))
 
     @JvmName("movePlayerPosition")
     fun movePlayerPosition(x: Double, y: Double, z: Double, onGround: Boolean, horizontalCollision: Boolean) =
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, onGround, horizontalCollision))
+        network.send(ServerboundMovePlayerPacket.Pos(x, y, z, onGround, horizontalCollision))
 
     @Suppress("LongParameterList")
     @JvmName("movePlayerPositionAndLook")
@@ -43,14 +43,14 @@ object ScriptNetworkUtil {
         onGround: Boolean,
         horizontalCollision: Boolean
     ) =
-        network.sendPacket(PlayerMoveC2SPacket.Full(x, y, z, yaw, pitch, onGround, horizontalCollision))
+        network.send(ServerboundMovePlayerPacket.PosRot(x, y, z, yaw, pitch, onGround, horizontalCollision))
 
     @JvmName("movePlayerLook")
     fun movePlayerLook(yaw: Float, pitch: Float, onGround: Boolean, horizontalCollision: Boolean) =
-        network.sendPacket(PlayerMoveC2SPacket.LookAndOnGround(yaw, pitch, onGround, horizontalCollision))
+        network.send(ServerboundMovePlayerPacket.Rot(yaw, pitch, onGround, horizontalCollision))
 
     @JvmName("sendChatMessage")
-    fun sendChatMessage(message: String) = network.sendChatMessage(message)
+    fun sendChatMessage(message: String) = network.sendChat(message)
 
     @JvmName("sendCommand")
     fun sendCommand(command: String) = network.sendCommand(command)

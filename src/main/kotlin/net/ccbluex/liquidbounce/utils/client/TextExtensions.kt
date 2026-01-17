@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-@file:Suppress("TooManyFunctions")
+@file:Suppress("NOTHING_TO_INLINE", "TooManyFunctions")
 
 package net.ccbluex.liquidbounce.utils.client
 
 import com.google.common.base.CaseFormat
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet
 import net.ccbluex.fastutil.unmodifiable
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.minecraft.nbt.NbtString
-import net.minecraft.registry.DynamicRegistryManager
-import net.minecraft.text.*
-import net.minecraft.util.Formatting
-import net.minecraft.world.World
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.ccbluex.liquidbounce.utils.text.TextList
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.network.chat.contents.PlainTextContents
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.TextColor
+import net.minecraft.network.chat.ComponentContents
+import net.minecraft.network.chat.contents.TranslatableContents
+import net.minecraft.ChatFormatting
 import java.util.*
+import java.util.function.Function
 import java.util.regex.Pattern
 
 private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
@@ -38,37 +47,90 @@ fun String.stripMinecraftColorCodes(): String {
     return COLOR_PATTERN.matcher(this).replaceAll("")
 }
 
-/**
- * Returns a [MutableText] from the receiver.
- * If you just need a [Text], use [asPlainText] instead.
- */
-fun String.asText(): MutableText = Text.literal(this)
+inline fun String.asTextContent(): ComponentContents = PlainTextContents.create(this)
 
 /**
- * Returns an immutable [Text] from the receiver.
+ * Returns a [MutableComponent] from the receiver.
+ * If you just need a [Component], use [asPlainText] instead.
  */
-fun String.asPlainText(): Text = ImmutableText.of(this)
+inline fun String.asText(): MutableComponent = Component.literal(this)
 
-fun Text.asNbt(world: World? = null): NbtString =
-    NbtString.of(
-        Text.Serialization.toJsonString(this, world?.registryManager ?: DynamicRegistryManager.EMPTY)
-    )
+/**
+ * Returns an immutable [Component] from the receiver.
+ */
+inline fun String.asPlainText(): Component = PlainText.of(this, Style.EMPTY)
 
-fun OrderedText.toText(): Text {
-    val text = Text.empty()
+/**
+ * Returns an immutable [Component] from the receiver with [style].
+ */
+inline fun String.asPlainText(style: Style): Component = PlainText.of(this, style)
+
+/**
+ * Returns an immutable [Component] from the receiver with [formatting].
+ */
+inline fun String.asPlainText(formatting: ChatFormatting): Component = PlainText.of(this, formatting)
+
+inline operator fun Style.plus(formatting: ChatFormatting): Style = applyFormat(formatting)
+
+inline operator fun Style.plus(color: TextColor): Style = withColor(color)
+
+inline operator fun Style.plus(color: Color4b): Style = withColor(color.toTextColor())
+
+inline fun List<Component>.asText(): Component = TextList.of(this)
+
+inline fun Array<out Component>.asText(): Component = TextList.of(this.unmodifiable())
+
+inline fun textOf(vararg parts: Component): Component = parts.asText()
+
+fun <T> Collection<T>.joinToText(
+    separator: Component,
+    prefix: Component? = null,
+    postfix: Component? = null,
+    transform: Function<T, Component>,
+): Component {
+    if (isEmpty()) {
+        return PlainText.EMPTY
+    }
+
+    val iterator = iterator()
+    val offset = if (prefix == null) 0 else 1
+    var arraySize = this.size * 2 - 1
+    if (prefix != null) arraySize++
+    if (postfix != null) arraySize++
+
+    return Array(arraySize) { i ->
+        when {
+            i == 0 && prefix != null -> prefix
+            i == arraySize - 1 && postfix != null -> postfix
+            i % 2 == offset -> transform.apply(iterator.next())
+            else -> separator
+        }
+    }.asText()
+}
+
+/**
+ * Joins a list of [Component] into a single [Component] with the given [separator].
+ */
+fun Collection<Component>.joinToText(separator: Component): Component =
+    joinToText(separator, transform = Function.identity())
+
+fun FormattedCharSequence.toText(): Component {
+    if (this is Component) return this
+
+    val parts = mutableListOf<Component>()
 
     var currentStyle = Style.EMPTY
-    val currentText = if (mc.isOnThread) Pools.StringBuilder.borrow() else StringBuilder()
+    val currentText = Pools.StringBuilder.borrow()
 
-    this.accept { index, style, codePoint ->
+    this.accept { _, style, codePoint ->
         if (style != currentStyle) {
             if (currentText.isNotEmpty()) {
-                text.append(currentText.toString().asText().setStyle(currentStyle))
+                parts += currentText.toString().asPlainText(currentStyle)
             }
 
             currentStyle = style
 
-            currentText.clear()
+            currentText.setLength(0)
         }
 
         currentText.appendCodePoint(codePoint)
@@ -77,40 +139,38 @@ fun OrderedText.toText(): Text {
     }
 
     if (currentText.isNotEmpty()) {
-        text.append(currentText.toString().asText().setStyle(currentStyle))
+        parts += currentText.toString().asPlainText(currentStyle)
     }
 
-    if (mc.isOnThread) Pools.StringBuilder.recycle(currentText)
+    Pools.StringBuilder.recycle(currentText)
 
-    return text
+    return parts.asText()
 }
 
-fun Text.processContent(): Text {
-    val content = this.content
+fun Component.translated(): Component {
+    val content = this.contents
+    val processedContent = content.translated()
 
-    if (content is TranslatableTextContent) {
-        return MutableText.of(content.toPlainContent())
-            .setStyle(style)
-            .apply {
-                for (child in siblings) {
-                    append(child.processContent())
-                }
-            }
+    val processedSiblings = siblings.map(Component::translated)
+
+    return if (processedContent === content && processedSiblings == siblings) {
+        this
+    } else {
+        MutableComponent.create(processedContent).setStyle(style).apply {
+            siblings.addAll(processedSiblings)
+        }
     }
-
-    return this
 }
 
-fun TranslatableTextContent.toPlainContent(): TextContent {
-    val stringBuilder = StringBuilder()
+fun ComponentContents.translated(): ComponentContents =
+    (this as? TranslatableContents)?.toTranslatedString()?.asTextContent() ?: this
 
+fun TranslatableContents.toTranslatedString(): String = buildString {
     visit {
-        stringBuilder.append(it)
+        append(it)
 
-        Optional.empty<Any?>()
+        Optional.empty<Nothing>()
     }
-
-    return PlainTextContent.of(stringBuilder.toString())
 }
 
 private val COLOR_CODE_CHARS = CharOpenHashSet("0123456789AaBbCcDdEeFfKkLlMmNnOoRr".toCharArray()).unmodifiable()
@@ -216,30 +276,34 @@ fun String.hideSensitiveAddress(): String {
     }
 }
 
-data class ColoredChar(val char: Char, val color: Formatting) {
+@JvmRecord
+data class ColoredChar(val char: Char, val color: ChatFormatting) {
     init {
-        requireNotNull(color.colorValue) { "The formatting must be a color formatting!" }
+        requireNotNull(color.color) { "The formatting must be a color formatting!" }
     }
 }
 
-fun Char.colored(color: Formatting) = ColoredChar(this, color)
+inline fun Char.colored(color: ChatFormatting) = ColoredChar(this, color)
+
+fun Char.repeat(n: Int): String = CharArray(n) { this }.concatToString()
 
 /**
  * Generates a progress bar based on the [percent]age (range 0 to 100).
  */
 fun textLoadingBar(
     percent: Int,
-    progress: ColoredChar = '█'.colored(Formatting.WHITE),
-    remaining: ColoredChar = '░'.colored(Formatting.DARK_GRAY),
+    progress: ColoredChar = '█'.colored(ChatFormatting.WHITE),
+    remaining: ColoredChar = '░'.colored(ChatFormatting.DARK_GRAY),
     length: Int = 10
-): Text {
+): Component {
     val clampedPercent = percent.coerceIn(0, 100)
     val filledBars = clampedPercent * length / 100
 
-    val progressPart = progress.char.toString().repeat(filledBars)
-    val remainingPart = remaining.char.toString().repeat(length - filledBars)
+    val progressPart = progress.char.repeat(filledBars)
+    val remainingPart = remaining.char.repeat(length - filledBars)
 
-    return Text.empty()
-        .append(progressPart.asText().formatted(progress.color))
-        .append(remainingPart.asText().formatted(remaining.color))
+    return textOf(
+        progressPart.asPlainText(progress.color),
+        remainingPart.asPlainText(remaining.color),
+    )
 }
