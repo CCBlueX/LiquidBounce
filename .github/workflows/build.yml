@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       lb_version: ${{ steps.versions.outputs.lb_version }}
+      jdk_version: ${{ steps.versions.outputs.jdk_version }}
       minecraft_version: ${{ steps.versions.outputs.minecraft_version }}
       loader_version: ${{ steps.versions.outputs.loader_version }}
       fabricapi_version: ${{ steps.versions.outputs.fabricapi_version }}
@@ -97,6 +98,7 @@ jobs:
       - name: Upload artifact
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          JDK_VERSION: ${{ needs.extract-versions.outputs.jdk_version }}
           LB_VERSION: ${{ needs.extract-versions.outputs.lb_version }}
           MINECRAFT_VERSION: ${{ needs.extract-versions.outputs.minecraft_version }}
           LOADER_VERSION: ${{ needs.extract-versions.outputs.loader_version }}
@@ -127,7 +129,7 @@ jobs:
             -F "lb_version=$LB_VERSION" \
             -F "mc_version=$MINECRAFT_VERSION" \
             -F "subsystem=fabric" \
-            -F "jre_version=21" \
+            -F "jre_version=$JDK_VERSION" \
             -F "fabric_loader_version=$LOADER_VERSION" \
             -F "fabric_api_version=$FABRICAPI_VERSION" \
             -F "kotlin_version=$KOTLIN_VERSION" \
