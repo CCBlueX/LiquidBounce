@@ -89,10 +89,15 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
         val color by color("Color", Color4b.LIQUID_BOUNCE)
     }
 
+    object SkyColor : ToggleableConfigurable(this, "SkyColor", false) {
+        val color by color("Color", Color4b.BLUE)
+    }
+
     init {
         tree(Precipitation)
         tree(FogConfigurable)
         tree(CustomLightmap)
+        tree(SkyColor)
     }
 
     @JvmStatic
