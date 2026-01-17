@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
@@ -32,9 +33,11 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 internal object VelocityLag : VelocityMode("Lag") {
     private val lagTime by intRange("LagTime", 5..5, 1..20, "ticks")
+    private val jumpReset by boolean("JumpReset", false)
 
     private var isLagging = false
     private var lagTicks = 0
+    private var shouldJump = false
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
@@ -67,6 +70,16 @@ internal object VelocityLag : VelocityMode("Lag") {
             isLagging = false
             lagTicks = 0
             PacketQueueManager.flush(TransferOrigin.INCOMING)
+            shouldJump = true
+        }
+    }
+
+    @Suppress("unused")
+    private val movementInputHandler = handler<MovementInputEvent> { event ->
+        // To be able to alter velocity when receiving knockback, player must be sprinting.
+        if (jumpReset && shouldJump && player.onGround() && player.isSprinting) {
+            event.jump = true
+            shouldJump = false
         }
     }
 
