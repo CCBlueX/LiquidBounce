@@ -123,7 +123,8 @@ open class ClientModule(
     final override fun onEnabledValueRegistration(value: Value<Boolean>) =
         super.onEnabledValueRegistration(value).also { value ->
             // Might not include the enabled state of the module depending on the category
-            if (category == ModuleCategories.MISC || category == ModuleCategories.FUN || category == ModuleCategories.RENDER) {
+            if (category == ModuleCategories.MISC || category == ModuleCategories.FUN ||
+                category == ModuleCategories.RENDER) {
                 if (this is ModuleAntiBot) {
                     return@also
                 }

@@ -46,7 +46,11 @@ import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball
  *
  * Shoots back incoming projectiles around you.
  */
-object ModuleProjectilePuncher : ClientModule("ProjectilePuncher", ModuleCategories.WORLD, aliases = listOf("AntiFireball")) {
+object ModuleProjectilePuncher : ClientModule(
+    "ProjectilePuncher",
+    ModuleCategories.WORLD,
+    aliases = listOf("AntiFireball")
+) {
 
     private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.keyAttack, null))
 

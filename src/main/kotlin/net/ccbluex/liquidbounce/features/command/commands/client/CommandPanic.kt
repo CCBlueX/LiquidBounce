@@ -54,7 +54,9 @@ object CommandPanic : Command.Factory {
                 when (val type = args.getOrNull(0) as String? ?: "nonrender") {
                     "all" -> msg = command.result("disabledAllModules")
                     "nonrender" -> {
-                        modules = modules.filter { it.category != ModuleCategories.RENDER && it.category != ModuleCategories.CLIENT }
+                        modules = modules.filter {
+                            it.category != ModuleCategories.RENDER && it.category != ModuleCategories.CLIENT
+                        }
                         msg = command.result("disabledAllCategoryModules", command.result("nonRender"))
                     }
 

@@ -60,7 +60,11 @@ private const val MAX_SIMULATED_TICKS = 240
  *
  * @author sqlerrorthing
  */
-object ModuleAutoPearl : ClientModule("AutoPearl", ModuleCategories.COMBAT, aliases = listOf("PearlFollower", "PearlTarget")) {
+object ModuleAutoPearl : ClientModule(
+    "AutoPearl",
+    ModuleCategories.COMBAT,
+    aliases = listOf("PearlFollower", "PearlTarget")
+) {
 
     private val mode by enumChoice("Mode", Modes.TRIGGER)
 

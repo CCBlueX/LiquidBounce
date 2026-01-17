@@ -35,7 +35,12 @@ import java.util.function.BiPredicate
 /**
  * Closes HandledScreen with its title contains specified words
  */
-object ModuleGUICloser : ClientModule("GUICloser", ModuleCategories.MISC, aliases = listOf("AutoClose", "ContainerCloser")) {
+object ModuleGUICloser : ClientModule(
+    "GUICloser",
+    ModuleCategories.MISC,
+    aliases = listOf("AutoClose", "ContainerCloser")
+) {
+
     override val baseKey: String
         get() = "liquidbounce.module.guiCloser"
 
