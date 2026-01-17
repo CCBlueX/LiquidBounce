@@ -48,7 +48,6 @@ import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Vec3i
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 
@@ -88,6 +87,12 @@ internal object NoFallMLG : NoFallMode("MLG") {
         tree(PickupWater)
     }
 
+    /**
+     * We need to sneak for at least 3 ticks to eliminate
+     * the fall damage.
+     */
+    const val SCAFFOLDING_SNEAKING_TICKS = 3
+
     override val running: Boolean
         get() = super.running && !ModuleFreeze.running
 
@@ -126,8 +131,8 @@ internal object NoFallMLG : NoFallMode("MLG") {
             lastPlacements.add(target.targetPos to Chronometer(System.currentTimeMillis()))
 
             if (target.hotbarItemSlot.itemStack.item == Items.SCAFFOLDING) {
-                repeated<MovementInputEvent>(3) {
-                    it.sneak = true
+                repeated<MovementInputEvent>(SCAFFOLDING_SNEAKING_TICKS) { event ->
+                    event.sneak = true
                 }
             }
 
