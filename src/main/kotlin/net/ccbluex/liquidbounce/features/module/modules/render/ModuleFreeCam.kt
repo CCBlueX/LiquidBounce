@@ -96,7 +96,9 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
         /**
          * Creates context for navigation
          */
-        override fun createNavigationContext() { }
+        override fun createNavigationContext() {
+            // Nothing to do
+        }
 
         /**
          * Calculates the desired position to move towards
