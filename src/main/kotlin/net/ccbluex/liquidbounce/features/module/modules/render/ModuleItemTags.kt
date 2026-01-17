@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -60,7 +60,7 @@ import org.joml.Vector2f
  *
  * Show the names and quantities of items in several boxes.
  */
-object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
+object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val items by items("Items", itemSortedSetOf())

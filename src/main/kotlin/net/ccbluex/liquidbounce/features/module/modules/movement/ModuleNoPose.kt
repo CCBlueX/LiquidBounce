@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.world.entity.EntityAttachment
 import net.minecraft.world.entity.EntityAttachments
 import net.minecraft.world.entity.EntityDimensions
@@ -33,7 +33,7 @@ import net.minecraft.world.entity.player.Player
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntity
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinPlayerEntity
  */
-object ModuleNoPose : ClientModule("NoPose", Category.MOVEMENT, aliases = listOf("NoSwim", "NoCrawl")) {
+object ModuleNoPose : ClientModule("NoPose", ModuleCategories.MOVEMENT, aliases = listOf("NoSwim", "NoCrawl")) {
 
     val noSwim by boolean("NoSwim", false)
     val sneakHeightChoice by enumChoice("SneakHeight", SneakHeights.ONEFIFTEEN)

@@ -18,40 +18,35 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
+object ModuleCategories {
 
-enum class Category(override val choiceName: String) : NamedChoice {
+    private val registry = mutableListOf<ModuleCategory>()
 
-    COMBAT("Combat"),
-    PLAYER("Player"),
-    MOVEMENT("Movement"),
-    RENDER("Render"),
-    WORLD("World"),
-    MISC("Misc"),
-    EXPLOIT("Exploit"),
-    FUN("Fun"),
+    val COMBAT = register(ModuleCategory("Combat"))
+    val PLAYER = register(ModuleCategory("Player"))
+    val MOVEMENT = register(ModuleCategory("Movement"))
+    val RENDER = register(ModuleCategory("Render"))
+    val WORLD = register(ModuleCategory("World"))
+    val MISC = register(ModuleCategory("Misc"))
+    val EXPLOIT = register(ModuleCategory("Exploit"))
+    val FUN = register(ModuleCategory("Fun"))
 
     /**
      * A temporary category for client-related modules, since we don't have a client settings UI yet.
      */
-    CLIENT("Client");
+    val CLIENT = register(ModuleCategory("Client"))
 
-    @Deprecated(
-        message = "For script compatibility only. Use choiceName instead",
-        replaceWith = ReplaceWith("choiceName"),
-        level = DeprecationLevel.ERROR
-    )
-    val readableName: String
-        get() = choiceName
+    val entries: List<ModuleCategory> = registry
 
-    companion object {
-        /**
-         * Gets an enum by its readable name
-         */
-        @JvmStatic
-        fun fromReadableName(name: String): Category? {
-            return entries.find { name.equals(it.name, true) }
-        }
+    @JvmStatic
+    private fun register(category: ModuleCategory): ModuleCategory {
+        registry.add(category)
+        return category
+    }
+
+    @JvmStatic
+    fun byName(name: String): ModuleCategory? {
+        return registry.firstOrNull { it.choiceName.equals(name, ignoreCase = true) }
     }
 
 }

@@ -16,25 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 
-/**
- * Module CrystalView
- *
- * Tweaks how crystal models behave.
- *
- * Mixins: [MixinEndCrystalEntityModel], [MixinEndCrystalEntityRenderer]
- *
- * @author ccetl
- */
-object ModuleCrystalView : ClientModule("CrystalView", ModuleCategories.RENDER) {
+class ModuleCategory(override val choiceName: String) : NamedChoice {
 
-    val size by float("Size", 0.3f, 0.1f..1.5f)
-    val yTranslate by float("YTranslate", -0.5f, -2f..2f)
-    val spinSpeed by float("SpinSpeed", 0f, 0f..5f)
-    val bounce by float("Bounce", 0.25f, -1f..1f)
+    @Deprecated(
+        message = "For script compatibility only. Use choiceName instead",
+        replaceWith = ReplaceWith("choiceName"),
+        level = DeprecationLevel.ERROR
+    )
+    val readableName: String
+        get() = choiceName
 
 }

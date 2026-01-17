@@ -23,12 +23,12 @@ import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorApi
 import net.ccbluex.liquidbounce.api.thirdparty.translator.providers.GoogleTranslateApi
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 object ModuleTranslation : ClientModule(
     name = "Translation",
-    category = Category.CLIENT,
+    category = ModuleCategories.CLIENT,
     notActivatable = true,
     hide = true
 ), TranslatorApi {

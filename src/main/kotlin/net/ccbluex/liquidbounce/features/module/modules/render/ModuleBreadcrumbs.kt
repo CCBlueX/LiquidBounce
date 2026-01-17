@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.opengl.GlStateManager
+import com.mojang.blaze3d.vertex.VertexConsumer
 import it.unimi.dsi.fastutil.objects.ObjectFloatMutablePair
 import it.unimi.dsi.fastutil.objects.ObjectFloatPair
 import net.ccbluex.fastutil.component1
@@ -29,18 +30,16 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.minecraft.client.Camera
-import com.mojang.blaze3d.vertex.VertexConsumer
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
-import org.joml.Matrix4f
 import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector4f
@@ -51,7 +50,7 @@ import java.util.*
  *
  * Leaves traces behind players.
  */
-object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases = listOf("PlayerTrails")) {
+object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, aliases = listOf("PlayerTrails")) {
 
     private val onlyOwn by boolean("OnlyOwn", true)
     private val color by color("Color", Color4b(70, 119, 255, 120))

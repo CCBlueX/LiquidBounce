@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.fastclimb.FastClimb
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.icespeed.IceSpeed
 
@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ic
  *
  * Move faster on specific surfaces.
  */
-object ModuleTerrainSpeed : ClientModule("TerrainSpeed", Category.MOVEMENT, aliases = listOf("FastClimb")) {
+object ModuleTerrainSpeed : ClientModule("TerrainSpeed", ModuleCategories.MOVEMENT, aliases = listOf("FastClimb")) {
 
     init {
         enableLock()

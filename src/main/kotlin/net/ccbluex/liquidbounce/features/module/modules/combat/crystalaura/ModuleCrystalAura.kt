@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.destroy.SubmoduleCrystalDestroyer
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.post.CrystalPostAttackTracker
@@ -45,7 +45,7 @@ import net.ccbluex.liquidbounce.utils.render.TargetRenderer
  */
 object ModuleCrystalAura : ClientModule(
     "CrystalAura",
-    Category.COMBAT,
+    ModuleCategories.COMBAT,
     aliases = listOf("AutoCrystal"),
     disableOnQuit = true
 ) {

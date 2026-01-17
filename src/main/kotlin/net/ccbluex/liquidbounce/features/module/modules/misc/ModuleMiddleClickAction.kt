@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -44,7 +44,7 @@ import net.minecraft.world.item.Items
  */
 object ModuleMiddleClickAction : ClientModule(
     "MiddleClickAction",
-    Category.MISC,
+    ModuleCategories.MISC,
     aliases = listOf("FriendClicker", "MiddleClickPearl")
 ) {
 

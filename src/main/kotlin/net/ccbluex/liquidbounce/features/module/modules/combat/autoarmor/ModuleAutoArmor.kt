@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.AutoArmorSaveArmor.durabilityThreshold
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.performMoveOrHotbarClick
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -40,7 +40,7 @@ import net.minecraft.world.item.Items
  *
  * Automatically puts on the best armor.
  */
-object ModuleAutoArmor : ClientModule("AutoArmor", Category.COMBAT) {
+object ModuleAutoArmor : ClientModule("AutoArmor", ModuleCategories.COMBAT) {
 
     val inventoryConstraints = tree(PlayerInventoryConstraints())
 
