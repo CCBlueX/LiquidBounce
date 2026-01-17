@@ -32,6 +32,7 @@ object Sounds {
         "click",
         "uwu",
         "nya",
+        "tung",
     )
 
     val registeredSounds = mutableMapOf<String, SoundEvent>()
@@ -41,6 +42,7 @@ object Sounds {
     lateinit var CLICK: SoundEvent private set
     lateinit var UWU: SoundEvent private set
     lateinit var NYA: SoundEvent private set
+    lateinit var TUNG: SoundEvent private set
 
     fun registerAll() {
         for (id in soundIds) {
@@ -58,6 +60,7 @@ object Sounds {
                 "click" -> CLICK = sound
                 "uwu" -> UWU = sound
                 "nya" -> NYA = sound
+                "tung" -> TUNG = sound
             }
         }
     }

@@ -13,5 +13,8 @@
   },
   "nya": {
     "sounds": ["liquidbounce:nya"]
+  },
+  "tung": {
+    "sounds": ["liquidbounce:tung"]
   }
 }

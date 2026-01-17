@@ -37,8 +37,9 @@ object ModuleSoundFX : ClientModule("SoundFX", Category.MISC) {
         Bonk("Bonk"),
         Click("Click"),
         Pop("Pop"),
-        Uwu("UwU"),
+        Uwu("UWU"),
         Nya("NYA"),
+        Tung("Tung"),
     }
 
     private val HitSound: SoundEvent
@@ -48,6 +49,7 @@ object ModuleSoundFX : ClientModule("SoundFX", Category.MISC) {
             Hitsfx.Pop -> Sounds.POP
             Hitsfx.Uwu -> Sounds.UWU
             Hitsfx.Nya -> Sounds.NYA
+            Hitsfx.Tung -> Sounds.TUNG
         }
 
     // --- Play sound ---
