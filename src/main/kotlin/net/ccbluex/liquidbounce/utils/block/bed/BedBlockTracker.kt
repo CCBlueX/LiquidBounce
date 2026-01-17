@@ -31,11 +31,11 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBed
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
+import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.DoubleBlockCombiner
-import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.Vec3
 
 object BedBlockTracker : AbstractBlockLocationTracker.BlockPos2State<BedState>() {

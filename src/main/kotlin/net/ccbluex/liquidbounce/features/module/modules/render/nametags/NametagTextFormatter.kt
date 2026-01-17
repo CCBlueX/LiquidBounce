@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
-import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.joinToText
 import net.ccbluex.liquidbounce.utils.client.player
@@ -33,13 +32,14 @@ import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.ping
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.TextColor
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.TextColor
-import net.minecraft.ChatFormatting
 import java.util.function.Function
 import kotlin.math.roundToInt
 

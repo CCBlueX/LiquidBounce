@@ -31,7 +31,7 @@ import net.minecraft.world.entity.EntityType
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.EntityHitResult
-import java.util.*
+import java.util.SequencedSet
 
 /**
  * Skip crosshair entity targets.

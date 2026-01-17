@@ -31,8 +31,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.ExplodeSoundTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.SelfMoveTrigger
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.triggers.TickTrigger
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinClientPacketListener
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.network.MixinMultiPlayerGameMode
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import java.util.concurrent.Executors
 import java.util.concurrent.Future

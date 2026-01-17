@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.world.entity.Entity
-import java.util.*
+import java.util.UUID
 
 /**
  * Blink module

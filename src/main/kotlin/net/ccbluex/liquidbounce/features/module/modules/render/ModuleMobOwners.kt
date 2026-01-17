@@ -30,7 +30,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.TamableAnimal
 import net.minecraft.world.entity.animal.equine.Horse
 import net.minecraft.world.entity.projectile.Projectile
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 /**

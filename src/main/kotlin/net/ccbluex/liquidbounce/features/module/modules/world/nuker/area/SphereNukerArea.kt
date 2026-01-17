@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.features.module.modules.world.nuker.area
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 
 object SphereNukerArea : NukerArea("Sphere") {

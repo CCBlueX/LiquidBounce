@@ -23,11 +23,11 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.player
-import net.minecraft.world.item.ItemUseAnimation
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.item.ItemUseAnimation
 
 object InteractionTracker : EventListener {
 

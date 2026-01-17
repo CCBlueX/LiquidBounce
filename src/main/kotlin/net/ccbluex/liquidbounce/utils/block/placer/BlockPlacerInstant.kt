@@ -32,13 +32,12 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacem
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.item.Items
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Vec3i
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.state.BlockState
 
 fun BlockPlacer.placeInstantOnBlockUpdate(event: PacketEvent) {
     when (val packet = event.packet) {

@@ -25,9 +25,9 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
-import net.minecraft.core.Vec3i
 import org.joml.Vector2f
 import org.joml.Vector2fc
 import java.lang.reflect.Type

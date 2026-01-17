@@ -32,13 +32,13 @@ import net.ccbluex.liquidbounce.lang.LanguageManager.knownLanguages
 import net.ccbluex.liquidbounce.lang.LanguageManager.languageMap
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.network.chat.MutableComponent
-import net.minecraft.util.FormattedCharSequence
-import net.minecraft.network.chat.FormattedText
-import net.minecraft.network.chat.Style
-import net.minecraft.util.StringDecomposer
 import net.minecraft.locale.Language
-import java.util.*
+import net.minecraft.network.chat.FormattedText
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.chat.Style
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.util.StringDecomposer
+import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 
 fun translation(key: String, vararg args: Any): MutableComponent =

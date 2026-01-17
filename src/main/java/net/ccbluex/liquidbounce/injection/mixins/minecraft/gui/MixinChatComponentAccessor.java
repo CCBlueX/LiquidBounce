@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.GuiMessage;
+import net.minecraft.client.gui.components.ChatComponent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;

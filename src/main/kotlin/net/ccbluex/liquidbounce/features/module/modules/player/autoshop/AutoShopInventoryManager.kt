@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.armorItems
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.kotlin.sumValues
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.PotionItem
-import net.minecraft.core.registries.BuiltInRegistries
 
 object AutoShopInventoryManager : EventListener {
 

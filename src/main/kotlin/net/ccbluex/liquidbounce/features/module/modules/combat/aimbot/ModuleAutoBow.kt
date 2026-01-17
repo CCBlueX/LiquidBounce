@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.Au
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.autobow.AutoBowFastChargeFeature
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.world.item.BowItem
-import java.util.*
+import java.util.Random
 
 /**
  * AutoBow module

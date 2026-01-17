@@ -94,7 +94,7 @@ import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
 import java.io.InputStream
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import kotlin.time.measureTime

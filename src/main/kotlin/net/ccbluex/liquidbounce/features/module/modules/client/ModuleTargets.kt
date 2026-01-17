@@ -23,7 +23,7 @@ import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.combat.Targets
-import java.util.*
+import java.util.EnumSet
 
 object ModuleTargets : ClientModule(
     name = "Targets",

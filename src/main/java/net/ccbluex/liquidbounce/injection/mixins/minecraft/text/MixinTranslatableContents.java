@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.text;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.lang.LanguageManager;
 import net.ccbluex.liquidbounce.lang.LanguageText;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.locale.Language;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
