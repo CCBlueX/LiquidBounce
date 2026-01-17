@@ -18,35 +18,57 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import java.util.TreeMap
+
 object ModuleCategories {
 
-    private val registry = mutableListOf<ModuleCategory>()
+    private val registry = TreeMap<String, ModuleCategory>(String.CASE_INSENSITIVE_ORDER)
 
+    @JvmField
     val COMBAT = register(ModuleCategory("Combat"))
+
+    @JvmField
     val PLAYER = register(ModuleCategory("Player"))
+
+    @JvmField
     val MOVEMENT = register(ModuleCategory("Movement"))
+
+    @JvmField
     val RENDER = register(ModuleCategory("Render"))
+
+    @JvmField
     val WORLD = register(ModuleCategory("World"))
+
+    @JvmField
     val MISC = register(ModuleCategory("Misc"))
+
+    @JvmField
     val EXPLOIT = register(ModuleCategory("Exploit"))
+
+    @JvmField
     val FUN = register(ModuleCategory("Fun"))
 
     /**
      * A temporary category for client-related modules, since we don't have a client settings UI yet.
      */
+    @JvmField
     val CLIENT = register(ModuleCategory("Client"))
 
-    val entries: List<ModuleCategory> = registry
+    @get:JvmStatic
+    val entries: Collection<ModuleCategory> = registry.sequencedValues()
 
     @JvmStatic
     private fun register(category: ModuleCategory): ModuleCategory {
-        registry.add(category)
+        if (registry.put(category.choiceName, category) != null) {
+            error("A module category with the name '${category.choiceName}' is already registered!")
+        }
+
         return category
     }
 
     @JvmStatic
     fun byName(name: String): ModuleCategory? {
-        return registry.firstOrNull { it.choiceName.equals(name, ignoreCase = true) }
+        return registry[name]
     }
 
 }
