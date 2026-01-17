@@ -7,6 +7,7 @@
 
     export let setting: ModuleSetting;
     export let vecAxes: VecAxis[];
+    export let step: number;
 
     // If setting is Vec3Setting, enable locate button
     // TODO: determine by setting itself
@@ -43,6 +44,7 @@
         {#each vecAxes as axis (axis)}
             <input
                     type="number"
+                    {step}
                     class="value"
                     spellcheck="false"
                     placeholder={axis.toUpperCase()}
