@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.event.events
@@ -27,6 +26,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEven
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
 import net.minecraft.network.chat.Component
+import net.minecraft.world.effect.MobEffectInstance
 
 @Nameable("fps")
 @Suppress("unused")
@@ -39,6 +39,10 @@ class FpsLimitEvent(var fps: Int) : Event()
 @Nameable("clientPlayerData")
 @Suppress("unused")
 class ClientPlayerDataEvent(val playerData: PlayerData) : Event(), WebSocketEvent
+
+@Nameable("clientPlayerEffect")
+@Suppress("unused")
+class ClientPlayerEffectEvent(val effects: List<MobEffectInstance>) : Event(), WebSocketEvent
 
 @Nameable("clientPlayerInventory")
 @Suppress("unused")

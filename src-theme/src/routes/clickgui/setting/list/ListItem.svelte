@@ -1,6 +1,6 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import {textureUrl} from "../../../../integration/rest";
+    import {itemTextureUrl} from "../../../../integration/rest";
 
     const dispatch = createEventDispatcher<{
         toggle: { value: string, enabled: boolean }
@@ -13,11 +13,11 @@
 
     let showingFallbackImage = false;
 
-    async function showFallbackIcon(event: Event) {
+    function showFallbackIcon(event: Event) {
         const img = event.currentTarget as HTMLImageElement;
 
         showingFallbackImage = true;
-        img.src = await textureUrl("minecraft:grass_block");
+        img.src = itemTextureUrl("minecraft:grass_block");
     }
 </script>
 

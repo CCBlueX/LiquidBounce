@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,9 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.types.BindValue
 import net.ccbluex.liquidbounce.config.types.ChooseListValue
 import net.ccbluex.liquidbounce.config.types.CurveValue
@@ -40,25 +43,24 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.world.level.block.Block
-import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.fastutil.toEnumSet
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.minecraft.world.entity.EntityType
-import net.minecraft.world.effect.MobEffect
-import net.minecraft.world.item.Item
-import net.minecraft.sounds.SoundEvent
-import net.minecraft.resources.Identifier
-import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import net.minecraft.resources.Identifier
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.item.Item
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.phys.Vec3
 import org.joml.Vector2f
+import org.joml.Vector2fc
 import org.lwjgl.glfw.GLFW
 import java.io.File
-import java.util.*
+import java.util.EnumSet
+import java.util.SequencedSet
 import java.util.function.ToIntFunction
 
 @Suppress("TooManyFunctions")
@@ -352,6 +354,8 @@ open class Configurable(
 
     fun block(name: String, default: Block) = value(name, default, ValueType.BLOCK)
 
+    fun vec2f(name: String, default: Vector2fc) = value(name, default, ValueType.VECTOR2_F)
+
     fun vec3i(name: String, default: Vec3i) = value(name, default, ValueType.VECTOR3_I)
 
     fun vec3d(name: String, default: Vec3) = value(name, default, ValueType.VECTOR3_D)
@@ -385,7 +389,7 @@ open class Configurable(
         default: MutableList<Vector2f>,
         xAxis: Axis,
         yAxis: Axis,
-        tension: Float = 0.4f,
+        tension: Float = CurveValue.DEFAULT_TENSION,
     ) = CurveValue(name, default, xAxis, yAxis, tension).apply {
         this@Configurable.inner.add(this)
     }
@@ -404,7 +408,7 @@ open class Configurable(
         vararg default: T,
         canBeNone: Boolean = true,
     ) where T : Enum<T>, T : NamedChoice =
-        multiEnumChoice(name, enumSetOf(elements = default), canBeNone = canBeNone)
+        multiEnumChoice(name, default.toEnumSet(), canBeNone = canBeNone)
 
     inline fun <reified T> multiEnumChoice(
         name: String,
@@ -556,7 +560,7 @@ open class Configurable(
 
             ValueType.COLOR -> {
                 val value = valueObject["value"].asInt
-                color(name, Color4b(value, hasAlpha = true))
+                color(name, Color4b(value))
             }
 
             ValueType.CONFIGURABLE -> {

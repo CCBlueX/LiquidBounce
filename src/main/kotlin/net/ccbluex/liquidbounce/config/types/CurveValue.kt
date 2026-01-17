@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,12 @@ import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.utils.math.CurveUtil
 import org.joml.Vector2f
 
-open class CurveValue(
+class CurveValue(
     name: String,
     value: MutableList<Vector2f>,
-    @Exclude var xAxis: Axis,
-    @Exclude var yAxis: Axis,
-    @Exclude var tension: Float = 0.4f,
+    @Exclude val xAxis: Axis,
+    @Exclude val yAxis: Axis,
+    @Exclude val tension: Float = DEFAULT_TENSION,
 ) : ListValue<MutableList<Vector2f>, Vector2f>(
     name,
     value,
@@ -52,6 +52,10 @@ open class CurveValue(
         }
     }
 
-    fun transform(x: Float) = CurveUtil.transform(get(), x, tension)
+    fun transform(x: Float): Float = CurveUtil.transform(get(), x, tension)
+
+    companion object {
+        const val DEFAULT_TENSION = 0.4f
+    }
 
 }

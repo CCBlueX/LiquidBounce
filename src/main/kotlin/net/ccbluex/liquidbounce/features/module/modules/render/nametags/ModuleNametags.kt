@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.renderer.entity.state.EntityRenderState
+import org.joml.Vector2f
 import org.joml.Vector2fc
 
 /**
@@ -37,7 +38,7 @@ import org.joml.Vector2fc
  *
  * Makes player name tags more visible and adds useful information.
  */
-object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
+object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
 
     init {
         tree(NametagTextFormatter)
@@ -45,10 +46,13 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
         tree(NametagEnchantmentRenderer)
     }
 
-    internal val scale by float("Scale", 2F, 0.25F..4F)
     internal val border by boolean("Border", true)
-    private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
-
+    internal val scale = curve(
+        "Scale",
+        mutableListOf(Vector2f(0f, 1f), Vector2f(128f, 1f)),
+        xAxis = "Distance" axis 0f..128f,
+        yAxis = "Scale" axis 0.25f..4f,
+    )
     internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
 
     val fontRenderer
@@ -91,20 +95,19 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
      */
     private fun collectAndSortNametagsToRender() {
         nametagsToRender.clear()
-        val maximumDistanceSquared = maximumDistance.sq()
-
+        val cameraEntity = mc.cameraEntity ?: mc.player ?: return
         for (entity in RenderedEntities) {
-            if (entity.distanceToSqr(mc.cameraEntity!!) > maximumDistanceSquared) {
-                continue
+            val distance = entity.distanceTo(cameraEntity)
+            val scale = scale.transform(distance)
+            if (scale > 0.01f) {
+                nametagsToRender += Nametag(entity, scale)
             }
-
-            nametagsToRender += Nametag(entity)
         }
         nametagsToRender.sortWith(NAMETAG_COMPARATOR)
     }
 
     private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
-        nametag.entity.distanceToSqr(mc.cameraEntity!!)
+        nametag.entity.distanceToSqr(mc.cameraEntity ?: return@comparingDouble Double.MAX_VALUE)
     }
 
     fun shouldRenderVanillaNametag(state: EntityRenderState): Boolean {

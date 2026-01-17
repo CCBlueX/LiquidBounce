@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp
 
@@ -33,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.minecraft.world.effect.MobEffects
 
 /**
@@ -80,8 +79,10 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         @Suppress("unused")
         private val tickHandler = tickHandler {
             if (player.moving) {
-                player.deltaMovement.x *= 1f + (BOOST_CONSTANT * initialBoostMultiplier.toDouble())
-                player.deltaMovement.z *= 1f + (BOOST_CONSTANT * initialBoostMultiplier.toDouble())
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = 1f + (BOOST_CONSTANT * initialBoostMultiplier),
+                    factorZ = 1f + (BOOST_CONSTANT * initialBoostMultiplier),
+                )
             }
         }
     }

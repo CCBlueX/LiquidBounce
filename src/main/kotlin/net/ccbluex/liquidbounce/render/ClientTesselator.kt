@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@ import com.mojang.blaze3d.vertex.ByteBufferBuilder
 object ClientTesselator {
 
     private const val BUFFER_SIZE = 0xC0000
+
+    @JvmField
+    val Shared = ByteBufferBuilder(BUFFER_SIZE)
 
     private val bufferAllocators = Reference2ReferenceOpenHashMap<RenderPipeline, ByteBufferBuilder>()
 

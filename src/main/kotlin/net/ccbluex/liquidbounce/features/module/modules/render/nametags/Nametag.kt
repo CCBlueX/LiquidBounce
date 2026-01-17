@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
+import net.minecraft.network.chat.Component
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
-import net.minecraft.network.chat.Component
 
 class Nametag private constructor(
     val entity: Entity,
@@ -35,16 +35,18 @@ class Nametag private constructor(
     /**
      * The items that should be rendered above the name tag
      */
-    val items: List<ItemStack>
+    val items: List<ItemStack>,
+    val scale: Float,
 ) {
 
     var screenPos: Vec3f? = null
         private set
 
-    constructor(entity: LivingEntity) : this(
+    constructor(entity: LivingEntity, scale: Float) : this(
         entity,
         NametagTextFormatter.format(entity),
         NametagEquipment.createItemList(entity),
+        scale,
     )
 
     fun calculateScreenPos(tickDelta: Float): Vec3f? {

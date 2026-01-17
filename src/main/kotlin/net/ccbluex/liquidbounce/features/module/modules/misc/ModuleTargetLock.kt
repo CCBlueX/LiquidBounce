@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.client.player.AbstractClientPlayer
@@ -39,7 +39,7 @@ import net.minecraft.client.player.AbstractClientPlayer
  * Locks on to a target and prevents targeting other entities,
  * either [Temporary]ly on attack or by [Filter]ing by username.
  */
-object ModuleTargetLock : ClientModule("TargetLock", Category.MISC) {
+object ModuleTargetLock : ClientModule("TargetLock", ModuleCategories.MISC) {
 
     init {
         doNotIncludeAlways()

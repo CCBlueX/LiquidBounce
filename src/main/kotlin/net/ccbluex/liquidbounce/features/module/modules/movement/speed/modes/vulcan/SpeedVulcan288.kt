@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
 
@@ -30,6 +28,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import kotlin.math.abs
@@ -62,8 +61,7 @@ class SpeedVulcan288(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase
         val hasSpeed = (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) != 0
         if (!player.onGround()) {
             if (abs(player.fallDistance) > 0 && hasSpeed) {
-                player.deltaMovement.x *= 1.055
-                player.deltaMovement.z *= 1.055
+                player.deltaMovement = player.deltaMovement.multiply(factorX = 1.055, factorZ = 1.055)
             }
         }
     }

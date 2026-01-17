@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -33,7 +33,7 @@ import net.minecraft.world.entity.LivingEntity
  * Allows you to see invisible objects and entities.
  */
 @Suppress("MagicNumber")
-object ModuleTrueSight : ClientModule("TrueSight", Category.RENDER) {
+object ModuleTrueSight : ClientModule("TrueSight", ModuleCategories.RENDER) {
     private val sight by multiEnumChoice("Sight", Sight.entries)
 
     val barriers get() = Sight.BARRIERS in sight

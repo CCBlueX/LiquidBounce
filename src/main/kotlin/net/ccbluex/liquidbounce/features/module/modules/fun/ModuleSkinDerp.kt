@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.world.entity.player.PlayerModelPart
 import kotlin.random.Random
 
@@ -32,7 +32,7 @@ import kotlin.random.Random
  * Makes your skin blink (Requires multi-layer skin).
  */
 @Suppress("MagicNumber")
-object ModuleSkinDerp : ClientModule("SkinDerp", Category.FUN) {
+object ModuleSkinDerp : ClientModule("SkinDerp", ModuleCategories.FUN) {
     private val sync by boolean("Sync", false)
     private val delay by int("Delay", 0, 0..20, "ticks")
     private val parts by multiEnumChoice("Parts", DerpParts.entries)
