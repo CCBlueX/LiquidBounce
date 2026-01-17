@@ -5,9 +5,10 @@ jdk = "21"
 
 # Fabric Properties
 # Check these on https://fabricmc.net/versions.html
+# https://mods.upcraft.dev/dev/versions
 minecraft = "1.21.11"
 fabric-loom = "1.14-SNAPSHOT"
-fabric-loader = "0.18.3"
+fabric-loader = "0.18.4"
 fabric-loaderMin = "0.16.14"
 fabric-api = "0.140.0+1.21.11"
 
@@ -16,25 +17,28 @@ mcef = "3.1.6-1.21.11"
 # mc-authlib
 mc_authlib = "1.6.0"
 # Polyglot
-polyglot = "25.0.0"
+polyglot = "25.0.1"
 # djl
-djl = "0.34.0"
+djl = "0.36.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-okhttp = "5.1.0"
+okhttp = "5.3.2"
 
-httpServer = "2.5.0"
+httpServer = "2.5.2"
 discordIpc = "4.0.0"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
-fastutil4k = "0.2.2"
+fastutil4k = "0.2.5"
 
 # Recommended mods
-modmenu = "17.0.0-alpha.1"
+modmenu = "17.0.0-beta.1"
 exploit_preventer_api = "0.0.1"
-exploit_preventer_mod = "0.1.7"
-sodium = "mc1.21.11-0.8.1-fabric"
-lithium = "mc1.21.11-0.21.1-fabric"
-viafabricplus = "4.4.0"
+exploit_preventer_mod = "0.1.9"
+sodium = "mc1.21.11-0.8.2-fabric"
+lithium = "mc1.21.11-0.21.2-fabric"
+viafabricplus = "4.4.2"
+# Mods for compatibility test (runtime only)
+immediatelyFast = "1.14.1+1.21.11-fabric"
+iris = "1.10.3+1.21.11-fabric"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
@@ -91,6 +95,8 @@ vfp-api = { group = "com.viaversion", name = "viafabricplus-api", version.ref = 
 vfp = { group = "com.viaversion", name = "viafabricplus", version.ref = "viafabricplus" }
 exploitPreventer-api = { group = "com.nikoverflow", name = "ExploitPreventer-API", version.ref = "exploit_preventer_api" }
 exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", version.ref = "exploit_preventer_mod" }
+immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
+iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
 
 [plugins]
 fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }

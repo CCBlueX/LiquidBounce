@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 @file:Suppress("LongMethod")
@@ -180,7 +178,7 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
     val registryName = requestObject.params["name"]
         ?: return httpForbidden("Missing registry name parameter")
     when (registryName.lowercase(Locale.ENGLISH)) {
-        "blocks" -> {
+        "blocks", "block" -> {
             BuiltInRegistries.BLOCK.forEach { block ->
                 val id = BuiltInRegistries.BLOCK.getKey(block)
                 add(id.toString(), JsonObject().apply {
@@ -190,7 +188,7 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             }
         }
 
-        "items" -> {
+        "items", "item" -> {
             BuiltInRegistries.ITEM.forEach { item ->
                 val id = BuiltInRegistries.ITEM.getKey(item)
                 add(id.toString(), JsonObject().apply {
@@ -200,7 +198,7 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             }
         }
 
-        "sounds" -> {
+        "sounds", "sound_event" -> {
             val soundDiscId = BuiltInRegistries.ITEM.getKey(Items.MUSIC_DISC_13)
 
             BuiltInRegistries.SOUND_EVENT.forEach { soundEvent ->
@@ -212,7 +210,7 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             }
         }
 
-        "statuseffects" -> {
+        "statuseffects", "mob_effect" -> {
             val potionId = BuiltInRegistries.ITEM.getKey(Items.POTION)
 
             BuiltInRegistries.MOB_EFFECT.forEach { effect ->
@@ -224,7 +222,7 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             }
         }
 
-        "clientpackets" -> {
+        "clientpackets", "c2s_packet" -> {
             val iconId = BuiltInRegistries.ITEM.getKey(Items.PAPER)
 
             packetRegistry[PacketFlow.SERVERBOUND]?.forEach { packetId ->
@@ -235,7 +233,7 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             }
         }
 
-        "serverpackets" -> {
+        "serverpackets", "s2c_packet" -> {
             val iconId = BuiltInRegistries.ITEM.getKey(Items.PAPER)
 
             packetRegistry[PacketFlow.CLIENTBOUND]?.forEach { packetId ->
@@ -256,14 +254,12 @@ fun getRegistry(requestObject: RequestObject) = httpOk(JsonObject().apply {
             }
         }
 
-        "screen_handler" -> {
-            val iconId = BuiltInRegistries.ITEM.getKey(Items.CHEST)
+        "screen_handler", "menu" -> {
             val converter = CaseFormat.LOWER_UNDERSCORE.converterTo(CaseFormat.UPPER_CAMEL)
             BuiltInRegistries.MENU.forEach { screenHandlerType ->
                 val id = BuiltInRegistries.MENU.getKey(screenHandlerType) ?: return@forEach
                 add(id.toString(), JsonObject().apply {
                     addProperty("name", converter.convert(id.toName()))
-                    addProperty("icon", iconUrl(iconId)) // TODO: better icon?
                 })
             }
         }

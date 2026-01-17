@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.utils.client
 
@@ -25,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility1_8
 import net.minecraft.SharedConstants
 import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 
 // Only runs once
 val usesViaFabricPlus = runCatching {
@@ -107,6 +106,20 @@ val isNewerThanOrEquals1_16: Boolean
         logger.error("Failed to check if the server is using 1.16+", it)
     }.getOrDefault(false)
 
+/**
+ * Since 1.21.5 anything can be used to blocking
+ */
+val isNewerThanOrEquals1_21_5: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_5
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.21.5+", it)
+    }.getOrDefault(false)
+
+/**
+ * Since 1.21.6 the [ServerboundPlayerCommandPacket.Action] removed 2 entries for sneaking
+ */
 val isNewerThanOrEquals1_21_6: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions

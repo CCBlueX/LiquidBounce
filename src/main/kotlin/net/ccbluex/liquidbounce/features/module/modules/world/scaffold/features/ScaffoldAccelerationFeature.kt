@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.math.multiply
 
 object ScaffoldAccelerationFeature : ToggleableConfigurable(ModuleScaffold, "Acceleration", false) {
     private val speedMultiplier by float("SpeedMultiplier", 0.6f, 0.1f..3f)
@@ -32,7 +33,6 @@ object ScaffoldAccelerationFeature : ToggleableConfigurable(ModuleScaffold, "Acc
             return@tickHandler
         }
 
-        player.deltaMovement.x *= speedMultiplier
-        player.deltaMovement.z *= speedMultiplier
+        player.deltaMovement = player.deltaMovement.multiply(factorX = speedMultiplier, factorZ = speedMultiplier)
     }
 }

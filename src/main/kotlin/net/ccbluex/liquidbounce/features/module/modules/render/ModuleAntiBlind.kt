@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.world.item.Items
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.resources.Identifier
+import net.minecraft.world.item.Items
 
 /**
  * AntiBlind module
@@ -30,7 +30,7 @@ import net.minecraft.resources.Identifier
  * Protects you from potentially annoying screen effects that block your view.
  */
 @Suppress("MagicNumber")
-object ModuleAntiBlind : ClientModule("AntiBlind", Category.RENDER, aliases = listOf("NoRender")) {
+object ModuleAntiBlind : ClientModule("AntiBlind", ModuleCategories.RENDER, aliases = listOf("NoRender")) {
     /**
      * @see Items.CARVED_PUMPKIN
      * @see net.minecraft.client.gui.hud.InGameHud.renderMiscOverlays
@@ -58,7 +58,7 @@ object ModuleAntiBlind : ClientModule("AntiBlind", Category.RENDER, aliases = li
         DoRender.BOSS_BARS,
         DoRender.EXPLOSION_PARTICLES,
         DoRender.WORLD_BORDER,
-    ).also { tagBy(it) }
+    )
 
     private val fireOpacity by int("FireOpacity", 100, 0..100, suffix = "%")
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -121,7 +121,7 @@ public abstract class MixinKeyboardInput extends MixinClientInput {
             return input;
         }
 
-        float deltaYaw = player.getYRot() - rotation.getYaw();
+        float deltaYaw = player.getYRot() - rotation.yRot();
 
         float newX = x * Mth.cos(deltaYaw * DEG_TO_RAD) - z *
                 Mth.sin(deltaYaw * DEG_TO_RAD);

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.fastutil.Pool.Companion.use
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandXRay
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.Blocks.ANCIENT_DEBRIS
 import net.minecraft.world.level.block.Blocks.ANVIL
 import net.minecraft.world.level.block.Blocks.BARREL
@@ -122,8 +123,7 @@ import net.minecraft.world.level.block.Blocks.WATER
 import net.minecraft.world.level.block.Blocks.WATER_CAULDRON
 import net.minecraft.world.level.block.Blocks.WHITE_SHULKER_BOX
 import net.minecraft.world.level.block.Blocks.YELLOW_SHULKER_BOX
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
+import net.minecraft.world.level.block.state.BlockState
 
 /**
  * XRay module
@@ -132,7 +132,7 @@ import net.minecraft.core.Direction
  *
  * Command: [CommandXRay]
  */
-object ModuleXRay : ClientModule("XRay", Category.RENDER) {
+object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
     // Lighting of blocks through walls
     val fullBright by boolean("FullBright", true)

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.block.placer
@@ -59,10 +58,7 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
     }
 
     val searchOptions = BlockPlacementTargetFindingOptions(
-        BlockOffsetOptions(
-            listOf(Vec3i.ZERO),
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-        ),
+        BlockOffsetOptions.Default,
         FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
         stackToPlaceWith = Items.SANDSTONE.defaultInstance,
         PlayerLocationOnPlacement(position = player.position(), pose = player.pose),

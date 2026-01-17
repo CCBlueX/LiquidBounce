@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
+import net.ccbluex.fastutil.enumMapOf
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.forEachInt
 import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -31,7 +33,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -51,7 +52,7 @@ import java.util.function.Predicate
 import kotlin.math.abs
 
 @Suppress("MagicNumber")
-object CustomAntiBotMode : AntibotMode("Custom") {
+object CustomAntiBotMode : AntiBotMode("Custom") {
 
     private object InvalidGround : ToggleableConfigurable(ModuleAntiBot, "InvalidGround", true) {
         val vlToConsiderAsBot by int("VLToConsiderAsBot", 10, 1..50, "flags")
@@ -62,15 +63,16 @@ object CustomAntiBotMode : AntibotMode("Custom") {
         CustomConditions.NO_GAME_MODE,
         CustomConditions.ILLEGAL_PITCH,
         CustomConditions.FAKE_ENTITY_ID,
-        CustomConditions.ILLEGAL_NAME,
     )
 
     private object AlwaysInRadius : ToggleableConfigurable(ModuleAntiBot, "AlwaysInRadius", false) {
         val alwaysInRadiusRange by float("AlwaysInRadiusRange", 20f, 5f..30f)
     }
 
-    private object Age : ToggleableConfigurable(ModuleAntiBot, "Age", false) {
-        val minimum by int("Minimum", 20, 0..120, "ticks")
+    private object Age : ToggleableConfigurable(ModuleAntiBot, "Age", false), AntiBotPredicate {
+        private val minimum by int("Minimum", 20, 0..120, "ticks")
+
+        override fun isBot(entity: Player): Boolean = entity.tickCount < minimum
     }
 
     private object Armor : ToggleableConfigurable(ModuleAntiBot, "Armor", false) {
@@ -134,14 +136,14 @@ object CustomAntiBotMode : AntibotMode("Custom") {
             )
         }
 
-        private val BASE = EnumSet.of(
+        private val BASE = enumSetOf(
             ArmorPredicate.NOTHING, ArmorPredicate.LEATHER,
             ArmorPredicate.CHAIN, ArmorPredicate.IRON,
             ArmorPredicate.GOLD, ArmorPredicate.DIAMOND,
             ArmorPredicate.NETHERITE,
         )
 
-        private val HELMET = EnumSet.of(
+        private val HELMET = enumSetOf(
             ArmorPredicate.NOTHING, ArmorPredicate.LEATHER,
             ArmorPredicate.CHAIN, ArmorPredicate.IRON,
             ArmorPredicate.GOLD, ArmorPredicate.DIAMOND,
@@ -149,19 +151,19 @@ object CustomAntiBotMode : AntibotMode("Custom") {
             ArmorPredicate.PUMPKIN, ArmorPredicate.SKULL,
         )
 
-        private val CHESTPLATE = EnumSet.of(
+        private val CHESTPLATE = enumSetOf(
             ArmorPredicate.NOTHING, ArmorPredicate.LEATHER,
             ArmorPredicate.CHAIN, ArmorPredicate.IRON,
             ArmorPredicate.GOLD, ArmorPredicate.DIAMOND,
             ArmorPredicate.NETHERITE, ArmorPredicate.ELYTRA,
         )
 
-        private val values = enumMapOf<EquipmentSlot, MultiChooseListValue<ArmorPredicate>> {
-            this[EquipmentSlot.HEAD] = multiEnumChoice("Helmet", EnumSet.of(ArmorPredicate.NOTHING), HELMET)
-            this[EquipmentSlot.CHEST] = multiEnumChoice("Chestplate", EnumSet.of(ArmorPredicate.NOTHING), CHESTPLATE)
-            this[EquipmentSlot.LEGS] = multiEnumChoice("Leggings", EnumSet.of(ArmorPredicate.NOTHING), BASE)
-            this[EquipmentSlot.FEET] = multiEnumChoice("Boots", EnumSet.of(ArmorPredicate.NOTHING), BASE)
-        }
+        private val values = enumMapOf<EquipmentSlot, MultiChooseListValue<ArmorPredicate>>(
+            EquipmentSlot.HEAD, multiEnumChoice("Helmet", enumSetOf(ArmorPredicate.NOTHING), HELMET),
+            EquipmentSlot.CHEST, multiEnumChoice("Chestplate", enumSetOf(ArmorPredicate.NOTHING), CHESTPLATE),
+            EquipmentSlot.LEGS, multiEnumChoice("Leggings", enumSetOf(ArmorPredicate.NOTHING), BASE),
+            EquipmentSlot.FEET, multiEnumChoice("Boots", enumSetOf(ArmorPredicate.NOTHING), BASE),
+        )
 
         fun isValid(entity: Player): Boolean {
             return values.all { (slot, value) ->
@@ -175,11 +177,29 @@ object CustomAntiBotMode : AntibotMode("Custom") {
         }
     }
 
+    private object Name : ToggleableConfigurable(ModuleAntiBot, "Name", true), AntiBotPredicate {
+        private val lengthRange by intRange("Length", 3..16, 1..32)
+        private val validateChars by boolean("ValidateChars", true)
+
+        private val VALID_CHARS_OF_NAME = BitSet(128).apply {
+            set('0'.code, '9'.code + 1)
+            set('a'.code, 'z'.code + 1)
+            set('A'.code, 'Z'.code + 1)
+            set('_'.code)
+        }
+
+        override fun isBot(entity: Player): Boolean {
+            val name = entity.scoreboardName
+            return name.length !in lengthRange || (validateChars && name.any { !VALID_CHARS_OF_NAME[it.code] })
+        }
+    }
+
     init {
         tree(InvalidGround)
         tree(AlwaysInRadius)
         tree(Age)
         tree(Armor)
+        tree(Name)
     }
 
     private val flyingSet = Int2IntOpenHashMap()
@@ -280,9 +300,10 @@ object CustomAntiBotMode : AntibotMode("Custom") {
         return when {
             InvalidGround.enabled && hasInvalidGround(entity) -> true
             AlwaysInRadius.enabled && !notAlwaysInRadiusSet.contains(entityId) -> true
-            Age.enabled && entity.tickCount < Age.minimum -> true
+            Age.enabled && Age.isBot(entity) -> true
             Armor.enabled && armorSet.contains(entityId) -> true
-            else -> customConditions.any { it.isBot.test(entity) }
+            Name.enabled && Name.isBot(entity) -> true
+            else -> customConditions.any { it.isBot(entity) }
         }
     }
 
@@ -296,18 +317,11 @@ object CustomAntiBotMode : AntibotMode("Custom") {
         armorSet.clear()
     }
 
-    private val VALID_CHARS_OF_NAME = BitSet(128).apply {
-        set('0'.code, '9'.code + 1)
-        set('a'.code, 'z'.code + 1)
-        set('A'.code, 'Z'.code + 1)
-        set('_'.code)
-    }
-
     @Suppress("unused")
     private enum class CustomConditions(
         override val choiceName: String,
-        val isBot: Predicate<Player>
-    ) : NamedChoice {
+        private val isBot: AntiBotPredicate
+    ) : NamedChoice, AntiBotPredicate by isBot {
         DUPLICATE("Duplicate", { suspected ->
             isADuplicate(suspected.gameProfile)
         }),
@@ -319,10 +333,6 @@ object CustomAntiBotMode : AntibotMode("Custom") {
         }),
         FAKE_ENTITY_ID("FakeEntityID", { suspected ->
             suspected.id !in 0..1_000_000_000
-        }),
-        ILLEGAL_NAME("IllegalName", { suspected ->
-            val name = suspected.scoreboardName
-            name.length !in 3..16 || name.any { !VALID_CHARS_OF_NAME[it.code] }
         }),
         NEED_IT("NeedHit", { suspected ->
             !hitSet.contains(suspected.id)

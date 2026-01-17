@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ import java.util.function.IntSupplier;
  * LiquidBounce Splash Screen
  */
 @Mixin(LoadingOverlay.class)
-public class MixinLoadingOverlay {
+public abstract class MixinLoadingOverlay {
 
     @Unique
     private static final IntSupplier CLIENT_ARGB = () -> ARGB.color(255, 24, 26, 27);

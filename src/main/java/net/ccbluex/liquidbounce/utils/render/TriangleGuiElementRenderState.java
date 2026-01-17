@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ public record TriangleGuiElementRenderState(
     float x2,
     float y2,
     int argb,
+    RenderPipeline pipeline,
     Matrix3x2f pose,
     @Nullable ScreenRectangle scissorArea,
     @Nullable ScreenRectangle bounds
@@ -45,11 +46,6 @@ public record TriangleGuiElementRenderState(
         vertices.addVertexWith2DPose(pose, x0, y0).setColor(argb);
         vertices.addVertexWith2DPose(pose, x1, y1).setColor(argb);
         vertices.addVertexWith2DPose(pose, x2, y2).setColor(argb);
-    }
-
-    @Override
-    public RenderPipeline pipeline() {
-        return ClientRenderPipelines.GUI.Triangles;
     }
 
     @Override

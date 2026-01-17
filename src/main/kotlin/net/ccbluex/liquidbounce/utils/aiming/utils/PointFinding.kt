@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.aiming.utils
@@ -26,12 +25,16 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.math.add
+import net.ccbluex.liquidbounce.utils.math.firstHit
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.ccbluex.liquidbounce.utils.math.geometry.PlaneSection
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -58,12 +61,6 @@ val AABB.edgePoints: Array<Vec3>
         Vec3(maxX, maxY, minZ),
         Vec3(maxX, maxY, maxZ),
     )
-
-fun Vec3.moveTowards(otherPoint: Vec3, fraction: Double): Vec3 {
-    val direction = otherPoint - this
-
-    return this + direction.scale(fraction)
-}
 
 /**
  * Creates rotation matrices: The first allows to turn the vec (1.0, 0.0, 0.0) into the given [vec].
@@ -122,7 +119,7 @@ inline fun projectPointsOnBox(
     val targetFrameOrigin = targetBox.edgePoints
         .mapToArray { playerToBoxLine.getNearestPointTo(it) }
         .minBy { it.distanceToSqr(virtualEye) }
-        .moveTowards(virtualEye, 0.1)
+        .lerp(virtualEye, 0.1)
 
     val plane = NormalizedPlane(targetFrameOrigin, playerToBoxLine.direction)
     val (toMatrix, backMatrix) = getRotationMatricesForVec(plane.normalVec)
@@ -143,7 +140,7 @@ inline fun projectPointsOnBox(
         maxY = max(maxY, it.y)
     }
 
-    val posVec = Vector3f(0f, minY, minZ).mul(toMatrix).toVec3d().add(targetFrameOrigin)
+    val posVec = Vector3f(0f, minY, minZ).mul(toMatrix).add(targetFrameOrigin).toVec3d()
     val dirVecY = Vector3f(0f, maxY - minY, 0f).mul(toMatrix).toVec3d()
     val dirVecZ = Vector3f(0f, 0f, maxZ - minZ).mul(toMatrix).toVec3d()
 
@@ -151,7 +148,7 @@ inline fun projectPointsOnBox(
 
     planeSection.castPointsOnUniformly(maxPoints) { point ->
         // Extent the point from the face on.
-        val pointExtended = point.moveTowards(virtualEye, -100.0)
+        val pointExtended = point.lerp(virtualEye, -100.0)
 
         val pos = targetBox.clip(virtualEye, pointExtended).getOrNull() ?: return@castPointsOnUniformly
 
@@ -198,9 +195,9 @@ fun findVisiblePointFromVirtualEye(
     for (spot in points) {
         val vecFromEyes = spot - virtualEyes
         val raycastTarget = vecFromEyes * 2.0 + virtualEyes
-        val spotOnBox = box.clip(virtualEyes, raycastTarget).getOrNull() ?: continue
+        val spotOnBox = box.firstHit(virtualEyes, raycastTarget) ?: continue
 
-        val rayStart = spotOnBox.subtract(vecFromEyes.normalize().scale(rangeToTest))
+        val rayStart = spotOnBox - vecFromEyes.withLength(rangeToTest)
 
         val visible = visibilityPredicate.isVisible(rayStart, spotOnBox)
 
@@ -231,8 +228,6 @@ object ArrowVisibilityPredicate : VisibilityPredicate {
                 ClipContext.Fluid.NONE,
                 arrowEntity
             )
-        )?.let { it.type == HitResult.Type.MISS } ?: true
+        ).type == HitResult.Type.MISS
     }
 }
-
-fun Vector3f.toVec3d(): Vec3 = Vec3(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())

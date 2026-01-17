@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.common.ChunkUpdateFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent;
@@ -34,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Level.class)
-public class MixinLevel {
+public abstract class MixinLevel {
 
     @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z", at = @At("RETURN"))
     private void injectBlockStateChange(BlockPos pos, BlockState state, int flags, int maxUpdateDepth, CallbackInfoReturnable<Boolean> cir) {
@@ -44,11 +43,6 @@ public class MixinLevel {
 
         // IMPORTANT: BlockPos might be a BlockPos.Mutable, so we need to create a new BlockPos instance to issues
         EventManager.INSTANCE.callEvent(new BlockChangeEvent(BlockExtensionsKt.getImmutable(pos), state));
-    }
-
-    @ModifyReturnValue(method = "getDayTime", at = @At("RETURN"))
-    private long injectOverrideTime(long original) {
-        return ModuleCustomAmbience.getTime(original);
     }
 
     @Inject(method = "getRainLevel", cancellable = true, at = @At("HEAD"))

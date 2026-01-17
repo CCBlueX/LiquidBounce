@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,15 @@ class BlockPlacementTargetFindingOptions(
 class BlockOffsetOptions(
     val offsetsToInvestigate: List<Vec3i>,
     val priorityComparator: Comparator<Vec3i>,
-)
+) {
+    companion object {
+        @JvmField
+        val Default = BlockOffsetOptions(
+            listOf(Vec3i.ZERO),
+            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+        )
+    }
+}
 
 /**
  * Decides how scaffold processes the faces of the considered target blocks.
@@ -337,7 +345,7 @@ data class BlockPlacementTarget(
             false
         )
 
-    fun doesCrosshairTargetFullFillRequirements(crosshairTarget: BlockHitResult): Boolean {
+    fun doesCrosshairTargetMatchRequirements(crosshairTarget: BlockHitResult): Boolean {
         return when {
             crosshairTarget.type != HitResult.Type.BLOCK -> false
             crosshairTarget.blockPos != this.interactedBlockPos -> false

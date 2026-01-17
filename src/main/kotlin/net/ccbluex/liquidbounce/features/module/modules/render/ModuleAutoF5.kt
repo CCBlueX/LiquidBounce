@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,17 +20,17 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeConfigurable
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleConfigurable
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.client.CameraType
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 
 /**
  * Automatically goes into F5 mode when opening the inventory
  */
-object ModuleAutoF5 : ClientModule("AutoF5", Category.RENDER) {
+object ModuleAutoF5 : ClientModule("AutoF5", ModuleCategories.RENDER) {
 
     private val checkScreenHandlerType = tree(CheckScreenHandlerTypeConfigurable(this))
     private val checkScreenTitle = tree(CheckScreenTitleConfigurable(this))

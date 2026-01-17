@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ abstract class MineToolMode(
 /* tweaked minecraft code start */
 
 /**
- * See [BlockState.calcBlockBreakingDelta]
+ * @see net.minecraft.world.level.block.state.BlockBehaviour.getDestroyProgress
  */
 private fun calcBlockBreakingDelta(pos: BlockPos, state: BlockState, stack: ItemStack): Float {
     val hardness = state.getDestroySpeed(world, pos)

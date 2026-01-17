@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -155,6 +155,16 @@ val BlockPos.outlineBox: AABB
 
 val BlockPos.collisionShape: VoxelShape
     get() = this.getState()!!.getCollisionShape(world, this)
+
+fun BlockState.outlineBox(blockPos: BlockPos): AABB {
+    val outlineShape = this.getShape(world, blockPos)
+
+    return if (outlineShape.isEmpty) {
+        FULL_BOX
+    } else {
+        outlineShape.bounds()
+    }
+}
 
 fun VoxelShape.getClosestSquaredDistanceTo(position: Position): Double {
     var minDistanceSq = Double.MAX_VALUE
@@ -539,6 +549,8 @@ enum class SwingMode(
     }
 }
 
+val BlockHitResult.targetBlockPos: BlockPos get() = this.blockPos.relative(this.direction)
+
 fun doPlacement(
     rayTraceResult: BlockHitResult,
     hand: InteractionHand = InteractionHand.MAIN_HAND,
@@ -575,6 +587,7 @@ fun doPlacement(
  * Swings item, resets equip progress and hand swing progress
  *
  * @param wasStackUsed was an item consumed in order to place the block
+ * @param onPlacementSuccess if result of the lambda is true, swing hand with [swingMode]
  */
 private inline fun handleActionsOnAccept(
     hand: InteractionHand,

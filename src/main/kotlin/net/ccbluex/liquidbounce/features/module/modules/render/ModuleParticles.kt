@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.platform.NativeImage
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -26,8 +27,8 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawSquareTexture
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -46,7 +47,6 @@ import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 import org.joml.Quaternionf
@@ -59,7 +59,7 @@ import kotlin.math.max
  *
  * @author sqlerrorthing
  */
-object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
+object ModuleParticles : ClientModule("Particles", category = ModuleCategories.RENDER) {
 
     private val particleSize by float("Size", 1f, 0.5f..2f)
     private val count by intRange("Count", 2..10, 2..30, "particles")
@@ -128,11 +128,13 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
     @Suppress("unused")
     private val displayHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
+            startBatch()
             for (particle in particles) {
                 if (!particle.visible) continue
 
                 particle.render(event.partialTicks)
             }
+            commitBatch()
         }
     }
 
@@ -219,8 +221,6 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
         fun render(partialTicks: Float) {
             val interpPos = prevPos.lerp(pos, partialTicks.toDouble())
             env.withPositionRelativeToCamera(interpPos) {
-                env.sampler0(particleImage.texture)
-
                 val size = particleSize * 0.25f * (1 - (System.currentTimeMillis() - spawnTime) / 12000f)
                 val rotation = if (rotate) {
                     (rotation + 90f) % 360f
@@ -243,8 +243,7 @@ object ModuleParticles : ClientModule("Particles", category = Category.RENDER) {
                     )
                 )
 
-                drawSquareTexture(size, renderColor.toARGB())
-                env.sampler0(null)
+                drawSquareTexture(particleImage.texture, size, renderColor.toARGB())
             }
         }
     }

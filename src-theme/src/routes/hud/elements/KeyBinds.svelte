@@ -1,27 +1,16 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import {getModules, getPrintableKeyName} from "../../../integration/rest";
+    import {getModules} from "../../../integration/rest";
     import {listen} from "../../../integration/ws";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import type {Module, PrintableKey} from "../../../integration/types";
+    import type {Module} from "../../../integration/types";
     import {UNKNOWN_KEY} from "../../../util/keybind_utils";
+    import BindDisplay from "../../clickgui/setting/bind/BindDisplay.svelte";
 
-    interface ModuleWithKey {
-        module: Module,
-        key: PrintableKey
-    }
-
-    let modulesWithKey: ModuleWithKey[] = $state([]);
+    let modules: Module[] = $state([]);
 
     async function updateModulesWithBinds() {
-        const boundModules = (await getModules()).filter(m => m.keyBind.boundKey !== UNKNOWN_KEY);
-
-        modulesWithKey = await Promise.all(
-            boundModules.map(async m => ({
-                module: m,
-                key: await getPrintableKeyName(m.keyBind.boundKey)
-            }))
-        );
+        modules = (await getModules()).filter(m => m.keyBind.boundKey !== UNKNOWN_KEY);
     }
 
     listen("moduleToggle", updateModulesWithBinds);
@@ -42,10 +31,12 @@
         <img class="icon" src="img/hud/keybinds/icon-keybinds.svg" alt="keybinds">
     </div>
     <div class="entries">
-        {#each modulesWithKey as m (m.module.name)}
-            <div class="row" class:enabled={m.module.enabled}>
-                <span class="module-name">{$spaceSeperatedNames ? convertToSpacedString(m.module.name) : m.module.name}</span>
-                <span class="key-bind" class:muted={!m.module.enabled}>[{m.key.localized}]</span>
+        {#each modules as m (m.name)}
+            <div class="row" class:enabled={m.enabled}>
+                <span class="module-name">{$spaceSeperatedNames ? convertToSpacedString(m.name) : m.name}</span>
+                <span class="key-bind" class:muted={!m.enabled}>
+                    [<BindDisplay boundKey={m.keyBind.boundKey} modifiers={m.keyBind.modifiers}/>]
+                </span>
             </div>
         {:else}
             <div class="no-binds">No key bindings</div>
@@ -124,6 +115,8 @@
     }
 
     .key-bind {
+      display: inline-flex;
+      align-items: center;
       font-family: monospace;
       font-size: 11px;
       color: $accent-color;

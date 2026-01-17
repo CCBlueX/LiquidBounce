@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.aiming.projectiles
@@ -28,6 +27,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.math.findFunctionMinimumByBisect
+import net.ccbluex.liquidbounce.utils.math.withLength
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.phys.Vec3
@@ -172,7 +172,7 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
         ModuleDebug.debugGeometry(
             ModuleProjectileAimbot, "inboundDirection", ModuleDebug.DebuggedLineSegment(
                 entityPositionOnImpact,
-                entityPositionOnImpact.add(directionOnImpact.normalize().scale(2.0)),
+                entityPositionOnImpact.add(directionOnImpact.withLength(2.0)),
                 Color4b.BLUE
             )
         )

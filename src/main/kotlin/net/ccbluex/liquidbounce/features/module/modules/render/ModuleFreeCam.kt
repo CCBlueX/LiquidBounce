@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent
@@ -30,8 +32,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -40,17 +42,15 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.input.isPressed
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
-import net.ccbluex.liquidbounce.utils.math.interpolate
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
 import net.minecraft.client.CameraType
-import com.mojang.blaze3d.platform.InputConstants
+import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
 import org.lwjgl.glfw.GLFW
 
@@ -59,7 +59,7 @@ import org.lwjgl.glfw.GLFW
  *
  * Allows you to move out of your body.
  */
-object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = true) {
+object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableOnQuit = true) {
 
     private val speed by float("Speed", 1f, 0.1f..2f)
 
@@ -81,7 +81,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
         LIQUID("Liquid"),
     }
 
-    private val cancelOn by multiEnumChoice("CancelOn", emptyEnumSet<CancelOn>())
+    private val cancelOn by multiEnumChoice("CancelOn", enumSetOf<CancelOn>())
 
     /**
      * Navigation configuration for the FreeCam module
@@ -115,6 +115,8 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
 
     private val midClickCameraTeleport by boolean("MidClickCameraTeleport", false)
 
+    private val keepSneaking by boolean("KeepSneaking", false)
+
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
     init {
@@ -146,7 +148,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
 
         fun update(velocity: Vec3) = set(pos + velocity)
 
-        fun interpolate(tickDelta: Float) = pos.interpolate(lastPos, tickDelta.toDouble())
+        fun interpolate(tickDelta: Float) = lastPos.lerp(pos, tickDelta.toDouble())
     }
 
     override fun onEnabled() {
@@ -171,7 +173,7 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
             val target = getCameraLookingAt() ?: return@handler
 
             // interpolate to prevent tp into block
-            PositionState.set(target.interpolate(PositionState.pos, 0.9))
+            PositionState.set(PositionState.pos.lerp(target, 0.9))
         }
     }
 
@@ -188,12 +190,19 @@ object ModuleFreeCam : ClientModule("FreeCam", Category.RENDER, disableOnQuit = 
         val velocity = Vec3.ZERO
             .withStrafe(speed, input = event.directionalInput)
             .with(Direction.Axis.Y, yAxisMovement * speed)
-        ModuleDebug.debugParameter(this, "Velocity", velocity.toString())
+        ModuleDebug.debugParameter(this, "Velocity", velocity)
         PositionState.update(velocity)
 
         event.directionalInput = DirectionalInput.NONE
         event.jump = false
         event.sneak = false
+    }
+
+    @Suppress("unused")
+    private val forceSneakHandler = handler<MovementInputEvent>(priority = OBJECTION_AGAINST_EVERYTHING) { event ->
+        if (keepSneaking) {
+            event.sneak = true
+        }
     }
 
     @Suppress("unused")

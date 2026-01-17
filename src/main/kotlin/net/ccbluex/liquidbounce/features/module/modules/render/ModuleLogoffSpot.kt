@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldEntityRemoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import java.time.Instant
 import java.util.*
 
@@ -42,14 +43,15 @@ import java.util.*
  *
  * Creates a fake player entity when a player logs off.
  */
-object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
+object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
 
+    @JvmRecord
     private data class LoggedOffPlayer(
         val time: Instant,
-        val entity: Entity
+        val entity: Entity,
     )
 
-    private val lastSeenPlayers = hashMapOf<UUID, LoggedOffPlayer>()
+    private val lastSeenPlayers = Object2ObjectOpenHashMap<UUID, LoggedOffPlayer>()
 
     @Suppress("unused")
     private val entityRemoveHandler = handler<WorldEntityRemoveEvent> { event ->
@@ -121,8 +123,9 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", Category.RENDER) {
         super.onDisabled()
     }
 
-    fun isLogoffEntity(state: LivingEntityRenderState) =
-        isLogoffEntity((state as EntityRenderStateAddition).`liquid_bounce$getEntity`().id)
+    fun isLogoffEntity(state: LivingEntityRenderState): Boolean {
+        return isLogoffEntity((state as EntityRenderStateAddition).`liquid_bounce$getEntity`()?.id ?: return false)
+    }
 
     fun isLogoffEntity(entityId: Int) = this.running
         && lastSeenPlayers.any { (_, logOffPlayer) -> logOffPlayer.entity.id == entityId }

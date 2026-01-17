@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
 import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.item.BoneMealItem
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
 import java.util.*
@@ -37,7 +39,7 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3?>(ModuleAutoFarm, "Aut
     private val minimumDistance by float("MinimumDistance", 2f, 1f..4f)
 
     // Makes the player move to farmland blocks where there is a need for crop replacement
-    private val toPlace by boolean("ToPlace", true)
+    private val toPlant by boolean("ToPlant", true, aliases = listOf("ToPlace"))
 
     private val toItems = object : ToggleableConfigurable(this, "ToItems", true) {
         private val range by float("Range", 20f, 8f..64f).onChanged {
@@ -65,19 +67,19 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3?>(ModuleAutoFarm, "Aut
         private set
 
     private fun collectAllowedStates(): Set<AutoFarmTrackedState> {
-        // we should always walk to blocks we want to destroy because we can do so even without any items
-        val allowedStates = EnumSet.of(AutoFarmTrackedState.SHOULD_BE_DESTROYED)
-
         // we should only walk to farmland/soulsand blocks if we have plantable items
-        if (!toPlace) return allowedStates
+        if (!toPlant) return setOf(AutoFarmTrackedState.ReadyForHarvest)
+
+        // we should always walk to blocks we want to destroy because we can do so even without any items
+        val allowedStates = objectHashSetOf<AutoFarmTrackedState>()
+
+        allowedStates.add(AutoFarmTrackedState.ReadyForHarvest)
 
         for (item in Slots.OffhandWithHotbar.items) {
-            when (item) {
-                in itemsForFarmland -> allowedStates.add(AutoFarmTrackedState.FARMLAND)
-                in itemsForSoulSand -> allowedStates.add(AutoFarmTrackedState.SOUL_SAND)
-                Items.BONE_MEAL -> if (ModuleAutoFarm.AutoUseBoneMeal.enabled) {
-                    allowedStates.add(AutoFarmTrackedState.CAN_USE_BONE_MEAL)
-                }
+            AutoFarmTrackedState.Plantable.entries.filterTo(allowedStates) { it.items.contains(item) }
+
+            if (item is BoneMealItem && ModuleAutoFarm.AutoUseBoneMeal.enabled) {
+                allowedStates.add(AutoFarmTrackedState.Bonemealable)
             }
         }
         return allowedStates

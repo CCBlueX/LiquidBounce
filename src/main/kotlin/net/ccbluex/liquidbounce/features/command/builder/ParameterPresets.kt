@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 @file:Suppress("TooManyFunctions")
 package net.ccbluex.liquidbounce.features.command.builder
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.VALUE_NAME_ORDER
@@ -30,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.world.level.block.Block
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Registry
@@ -131,8 +131,8 @@ inline fun <reified T> ParameterBuilder.Companion.enumChoices(
     crossinline predicate: (T) -> Boolean = { true },
 ) where T : Enum<T>, T : NamedChoice = begin<Set<T>>(name)
     .verifiedBy { sourceText ->
-        val values = enumValues<T>().filterTo(emptyEnumSet(), predicate)
-        val choices = sourceText.split(',').mapNotNullTo(emptyEnumSet<T>()) {
+        val values = enumValues<T>().filterTo(enumSetOf(), predicate)
+        val choices = sourceText.split(',').mapNotNullTo(enumSetOf<T>()) {
             values.firstOrNull { v -> v.choiceName.equals(it, ignoreCase = true) }
         }
         if (choices.isEmpty()) {
@@ -188,6 +188,12 @@ fun ParameterBuilder.Companion.item(
     .autocompletedFrom(minecraftPlaceholders = true) {
         BuiltInRegistries.ITEM.keySet().map { it.toString() }
     }
+
+fun ParameterBuilder.Companion.boolean(
+    name: String,
+) = begin<Boolean>(name)
+    .verifiedBy(BOOLEAN_VALIDATOR)
+    .autocompletedFrom { listOf("true", "false") }
 
 fun ParameterBuilder.Companion.playerName(
     name: String = "playerName",

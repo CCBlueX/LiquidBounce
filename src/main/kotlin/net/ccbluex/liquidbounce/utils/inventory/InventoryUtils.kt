@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 @file:Suppress("TooManyFunctions", "WildcardImport")
 
 package net.ccbluex.liquidbounce.utils.inventory
 
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.ValueType
@@ -44,7 +43,6 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
@@ -77,12 +75,13 @@ open class InventoryConstraints : Configurable("Constraints") {
     internal val closeDelay by intRange("CloseDelay", 1..2, 0..20, "ticks")
     internal val missChance by intRange("MissChance", 0..0, 0..100, "%")
 
-    internal val requirements by multiEnumChoice<InventoryRequirements>("Requires",
-        default = emptyEnumSet(),
+    internal val requirements by multiEnumChoice<InventoryRequirements>(
+        "Requires",
+        default = enumSetOf(),
         choices = requirementChoices(),
     )
 
-    protected open fun requirementChoices(): EnumSet<InventoryRequirements> = EnumSet.of(
+    protected open fun requirementChoices(): EnumSet<InventoryRequirements> = enumSetOf(
         InventoryRequirements.NO_MOVEMENT,
         InventoryRequirements.NO_ROTATION
     )
@@ -146,7 +145,7 @@ class CheckScreenHandlerTypeConfigurable(
             BuiltInRegistries.MENU.asComparator(),
             MenuType.GENERIC_9x3, MenuType.GENERIC_9x6, MenuType.SHULKER_BOX,
         ),
-        ValueType.SCREEN_HANDLER
+        ValueType.MENU
     )
     private val filter by enumChoice("Filter", Filter.WHITELIST)
 
@@ -160,7 +159,7 @@ class CheckScreenTitleConfigurable(
 ) : ToggleableConfigurable(parent, "CheckScreenTitle", enabled = true, aliases = listOf("CheckTitle")) {
     private val titles by multiEnumChoice(
         "Titles",
-        EnumSet.of(
+        enumSetOf(
             ContainerTitle.CHEST, ContainerTitle.LARGE_CHEST,
             ContainerTitle.SHULKER_BOX, ContainerTitle.BARREL,
             ContainerTitle.CHEST_MINECART,

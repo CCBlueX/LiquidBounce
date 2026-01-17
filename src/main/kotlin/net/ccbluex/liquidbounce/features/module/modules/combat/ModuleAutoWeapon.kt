@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoMace
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.autoShieldBreak
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.onTarget
@@ -40,18 +41,17 @@ import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.item.isSword
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.MaceItem
-import net.minecraft.world.InteractionHand
-import java.util.*
 
 /**
  * AutoWeapon module
  *
  * Automatically selects the best weapon in your hotbar
  */
-object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
+object ModuleAutoWeapon : ClientModule("AutoWeapon", ModuleCategories.COMBAT) {
 
     /**
      * The weapon type to prefer, which on 1.8 and 1.9+ versions is usually a sword,
@@ -83,7 +83,7 @@ object ModuleAutoWeapon : ClientModule("AutoWeapon", Category.COMBAT) {
 
     private val changeOnActions by multiEnumChoice<ChangeOnAction>(
         "ChangeOn",
-        EnumSet.of(ChangeOnAction.ON_ATTACK)
+        enumSetOf(ChangeOnAction.ON_ATTACK)
     )
 
     @Suppress("unused")

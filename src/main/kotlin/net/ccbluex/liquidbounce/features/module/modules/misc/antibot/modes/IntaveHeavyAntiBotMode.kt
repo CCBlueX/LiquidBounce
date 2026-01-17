@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ import java.util.*
  *
  * Tested on: gamster.org and a private server with latest Intave as of 7/28/2022.
  */
-object IntaveHeavyAntiBotMode : AntibotMode("IntaveHeavy") {
+object IntaveHeavyAntiBotMode : AntiBotMode("IntaveHeavy") {
 
     private val suspectList = hashMapOf<UUID, SuspectInfo>()
     private val botList = objectHashSetOf<UUID>()

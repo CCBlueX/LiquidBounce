@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -283,8 +283,8 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
 
         // Increase yaw and pitch by a value so small that the difference cannot be seen,
         // just to update the rotation server-side.
-        playerEntity.setYRot(prevRotation.getYaw() + 0.000001f);
-        playerEntity.setXRot(prevRotation.getPitch() + 0.000001f);
+        playerEntity.setYRot(prevRotation.yRot() + 0.000001f);
+        playerEntity.setXRot(prevRotation.xRot() + 0.000001f);
     }
 
     @ModifyVariable(method = "sendChat", at = @At("HEAD"), ordinal = 0, argsOnly = true)

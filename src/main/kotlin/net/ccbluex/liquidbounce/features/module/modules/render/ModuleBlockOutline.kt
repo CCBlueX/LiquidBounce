@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,20 +22,21 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLevelRenderer
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.world.phys.HitResult
-import net.minecraft.world.phys.AABB
+import net.ccbluex.liquidbounce.utils.math.minus
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.VoxelShape
 
 /**
@@ -45,9 +46,9 @@ import net.minecraft.world.phys.shapes.VoxelShape
  *
  * TODO: Implement GUI Information Panel
  *
- * [MixinWorldRenderer.cancelBlockOutline]
+ * @see MixinLevelRenderer.cancelBlockOutline
  */
-object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliases = listOf("BlockOverlay")) {
+object ModuleBlockOutline : ClientModule("BlockOutline", ModuleCategories.RENDER, aliases = listOf("BlockOverlay")) {
 
     private val sideOnly by boolean("SideOnly", true)
     private val color by color("Color", Color4b(68, 117, 255, 70))
@@ -69,7 +70,7 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
     @Suppress("unused")
     private val renderHandler = handler<WorldRenderEvent> { event ->
         val target = mc.hitResult
-        if (target !is BlockHitResult || target.getType() == HitResult.Type.MISS) {
+        if (target !is BlockHitResult || target.type == HitResult.Type.MISS) {
             resetPositions()
             return@handler
         }
@@ -106,11 +107,9 @@ object ModuleBlockOutline : ClientModule("BlockOutline", Category.RENDER, aliase
             finalPosition
         }
 
-        val translatedPosition = renderPosition.move(
-            mc.entityRenderDispatcher
-                .camera?.position()
-                ?.reverse() ?: return@handler
-        )
+        val translatedPosition = renderPosition - (mc.entityRenderDispatcher
+            .camera?.position() ?: return@handler)
+
         renderEnvironmentForWorld(event.matrixStack) {
             if (sideOnly) {
                 drawBoxSide(

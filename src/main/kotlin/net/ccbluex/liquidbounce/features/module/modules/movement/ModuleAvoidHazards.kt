@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,19 +21,21 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.getBlock
+import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.BasePressurePlateBlock
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.CactusBlock
-import net.minecraft.world.level.block.WebBlock
 import net.minecraft.world.level.block.FireBlock
 import net.minecraft.world.level.block.MagmaBlock
+import net.minecraft.world.level.block.PowderSnowBlock
 import net.minecraft.world.level.block.SweetBerryBushBlock
+import net.minecraft.world.level.block.WebBlock
+import net.minecraft.world.level.block.WitherRoseBlock
 import net.minecraft.world.level.material.FluidState
 import net.minecraft.world.level.material.Fluids
-import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.shapes.Shapes
 
 /**
@@ -41,7 +43,7 @@ import net.minecraft.world.phys.shapes.Shapes
  *
  * Prevents you walking into blocks that might be malicious for you.
  */
-object ModuleAvoidHazards : ClientModule("AvoidHazards", Category.MOVEMENT) {
+object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEMENT) {
     private val avoid by multiEnumChoice("Avoid", Avoid.entries)
 
     // Conflicts with AvoidHazards
@@ -75,10 +77,10 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", Category.MOVEMENT) {
         BERRY_BUSH("BerryBush", test = { block, _, _ ->
             block is SweetBerryBushBlock
         }),
-        FIRE("Fire", test = { block, _, _, ->
+        FIRE("Fire", test = { block, _, _ ->
             block is FireBlock
         }),
-        COBWEB("Cobwebs", test = { block, _, _, ->
+        COBWEB("Cobwebs", test = { block, _, _ ->
             block is WebBlock
         }),
         PRESSURE_PLATES("PressurePlates", fullCube = false, test = { block, _, _ ->
@@ -89,6 +91,12 @@ object ModuleAvoidHazards : ClientModule("AvoidHazards", Category.MOVEMENT) {
         }),
         LAVA("Lava", test = { _, fluidState, _ ->
             fluidState.`is`(Fluids.LAVA) || fluidState.`is`(Fluids.FLOWING_LAVA)
+        }),
+        WITHER_ROSE("WitherRose", test = { block, _, _ ->
+            block is WitherRoseBlock
+        }),
+        POWDER_SNOW("PowderSnow", test = { block, _, _ ->
+            block is PowderSnowBlock
         })
     }
 }

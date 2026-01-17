@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
@@ -53,19 +53,19 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.phys.shapes.CollisionContext
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.InteractionResult
-import net.minecraft.world.InteractionHand
-import net.minecraft.world.phys.HitResult
-import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
-import net.minecraft.core.Direction
+import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.phys.shapes.Shapes
-import net.minecraft.world.level.ClipContext
 import java.util.function.ToDoubleFunction
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
@@ -75,7 +75,7 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
-object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("BedBreaker", "IdNuker")) {
+object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = listOf("BedBreaker", "IdNuker")) {
 
     private val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
@@ -124,15 +124,6 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
         get() = if (ModuleAutoTool.isInventoryConsidered) Slots.Hotbar + Slots.Inventory else Slots.Hotbar
 
     private var currentTarget: DestroyerTarget? = null
-    private fun clearCurrentTarget() {
-        currentTarget?.let {
-            interaction.stopDestroyBlock()
-            targetRenderer.removeBlock(it.pos)
-        }
-
-        currentTarget = null
-    }
-
     private var oldTarget: DestroyerTarget? = null
 
     override fun onDisabled() {
@@ -153,9 +144,6 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
         oldTarget = currentTarget
         updateCurrentTarget()
-        currentTarget?.let {
-            targetRenderer.addBlock(it.pos)
-        }
     }
 
     @Suppress("unused")
@@ -164,12 +152,12 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
             return@tickHandler
         }
 
-        // Delay if the target changed - this also includes when introducing a new target from null.
-        if (oldTarget != currentTarget) {
-            if (currentTarget == null || delay > 0) {
-                clearCurrentTarget()
-            }
-
+        // If we don't have any new target, and we had one before, stop breaking.
+        if (oldTarget != null && currentTarget == null) {
+            interaction.stopDestroyBlock()
+            return@tickHandler
+        } else if (oldTarget != currentTarget && delay > 0) {
+            interaction.stopDestroyBlock()
             waitTicks(delay)
         }
 
@@ -180,6 +168,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
         val destroyerTarget = currentTarget ?: return@tickHandler
         val currentRotation = RotationManager.serverRotation
+        targetRenderer.addBlock(destroyerTarget.pos)
 
         if (ModulePacketMine.running && destroyerTarget.action == DestroyAction.DESTROY) {
             ModulePacketMine.setTarget(destroyerTarget.pos)
@@ -252,6 +241,15 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
                 updateSurroundings(pos)
             }
         }
+    }
+
+    private fun clearCurrentTarget() {
+        interaction.stopDestroyBlock()
+
+        currentTarget?.let { target ->
+            targetRenderer.removeBlock(target.pos)
+        }
+        currentTarget = null
     }
 
     private fun searchPossibleTargetPositions(): List<BlockPos> {

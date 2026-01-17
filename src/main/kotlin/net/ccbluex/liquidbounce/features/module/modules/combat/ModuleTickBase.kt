@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.world.phys.Vec3
 import kotlin.math.min
@@ -48,7 +48,7 @@ import kotlin.math.min
  *
  * Calls tick function to speed up, when needed
  */
-internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
+internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBAT) {
 
     private val mode by enumChoice("Mode", TickBaseMode.PAST)
         .apply { tagBy(this) }
@@ -231,7 +231,7 @@ internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
             drawLineStrip(
                 argb = lineColor.toARGB(),
                 positions = tickBuffer.mapToArray { tick ->
-                    relativeToCamera(tick.position).toVec3()
+                    relativeToCamera(tick.position).toVec3f()
                 }
             )
         }

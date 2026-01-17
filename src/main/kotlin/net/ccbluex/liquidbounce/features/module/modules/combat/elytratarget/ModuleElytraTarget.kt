@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +15,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.world.entity.LivingEntity
 
 /**
@@ -39,7 +35,7 @@ import net.minecraft.world.entity.LivingEntity
  * @author sqlerrorthing
  */
 @Suppress("MagicNumber")
-object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
+object ModuleElytraTarget : ClientModule("ElytraTarget", ModuleCategories.COMBAT) {
     private val targetTracker = tree(TargetTracker())
 
     init {
@@ -47,7 +43,7 @@ object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
         tree(AutoFirework)
     }
 
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    private val targetRenderer = tree(TargetRenderer(this, targetTracker))
     private val safe by boolean("Safe", true)
     private val alwaysGlide by boolean("AlwaysGlide", false)
 
@@ -73,17 +69,6 @@ object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
         get() = super.running && player.isFallFlying
 
     internal val target get() = targetTracker.target
-
-    @Suppress("unused")
-    private val renderTargetHandler = handler<WorldRenderEvent> { event ->
-        val target = targetTracker.target
-            ?.takeIf { targetRenderer.enabled }
-            ?: return@handler
-
-        renderEnvironmentForWorld(event.matrixStack) {
-            targetRenderer.render(target, event.partialTicks)
-        }
-    }
 
     @Suppress("unused")
     private val targetUpdateHandler = tickHandler {

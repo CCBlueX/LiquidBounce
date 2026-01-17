@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * Prevents bouncing on blocks
  *
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntity
  */
-object ModuleAntiBounce : ClientModule("AntiBounce", Category.MOVEMENT)
+object ModuleAntiBounce : ClientModule("AntiBounce", ModuleCategories.MOVEMENT)

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
 import net.ccbluex.liquidbounce.render.drawGradientSides
@@ -47,7 +47,7 @@ import kotlin.math.max
  *
  * Detects and displays safe spots for Crystal PvP.
  */
-object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubscriber {
+object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleManagerSubscriber {
 
     private val modes = choices("Mode", GlowingPlane, arrayOf(BoxChoice, GlowingPlane))
 
@@ -56,10 +56,10 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
 
     private val distanceFade by float("DistanceFade", 0.3f, 0f..1f)
 
-    private val colorBedrock by color("1x1Bedrock", Color4b(0x19c15c))
-    private val color1by1 by color("1x1", Color4b(0xf7381b))
-    private val color1by2 by color("1x2", Color4b(0x35bacc))
-    private val color2by2 by color("2x2", Color4b(0xf7cf1b))
+    private val colorBedrock by color("1x1Bedrock", Color4b.fullAlpha(0x19c15c))
+    private val color1by1 by color("1x1", Color4b.fullAlpha(0xf7381b))
+    private val color1by2 by color("1x2", Color4b.fullAlpha(0x35bacc))
+    private val color2by2 by color("2x2", Color4b.fullAlpha(0xf7cf1b))
 
     override fun horizontalDistance(): Int = horizontalDistance
     override fun verticalDistance(): Int = verticalDistance
