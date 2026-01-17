@@ -20,62 +20,56 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.waterspeed
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
-import net.ccbluex.liquidbounce.utils.client.fastCos
-import net.ccbluex.liquidbounce.utils.client.fastSin
-import net.ccbluex.liquidbounce.utils.entity.movementForward
-import net.ccbluex.liquidbounce.utils.entity.movementSideways
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.minecraft.world.phys.Vec3
-import kotlin.math.atan2
+import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.copy
 
-internal object WaterSpeedVanilla : ToggleableConfigurable(ModuleTerrainSpeed, "WaterSpeed", true) {
+internal object WaterSpeed : ToggleableConfigurable(ModuleTerrainSpeed, "WaterSpeed", true) {
 
-    val autoSwim by boolean("AutoSwimming", true)
+    val autoSwim by boolean("AutoSwim", true)
     val horizontalSpeed by float("HorizontalSpeed", 0.1f, 0.01f..10f)
-    object SwimmingBoost : ToggleableConfigurable(this@WaterSpeedVanilla, "SwimmingBoost", true) {
+    object SwimmingBoost : ToggleableConfigurable(this@WaterSpeed, "SwimmingBoost", true) {
         val sprintBoost by float("Boost", 0.30f, 0.01f..10f)
     }
     val verticalSpeed by float("VerticalSpeed", 0.25f, 0.01f..2f)
-
 
     init {
         tree(SwimmingBoost)
     }
 
     @Suppress("unused")
+    private val inputHandler = handler<MovementInputEvent> { event ->
+        if (autoSwim && player.isInWater && !mc.options.keyShift.isDown) {
+            event.jump = true
+        }
+    }
+
+    @Suppress("unused")
     private val tickHandler = handler<PlayerTickEvent> {
-        val player = mc.player ?: return@handler
-        val forward = player.input.movementForward
-        val strafe = player.input.movementSideways
+        if (!player.isInWater) return@handler
 
-        if(player.moving && player.isInWater) {
-            val moveAngle = atan2(strafe.toDouble(), forward.toDouble())
-            val finalYawRad = Math.toRadians(player.yRot.toDouble()) - moveAngle
-
-            if (autoSwim) {
-                player.isSprinting = true
-                player.isSwimming = true
-            }
-
-            val speed = if(player.isSprinting && SwimmingBoost.enabled) {
+        if (player.moving) {
+            val speed = if (player.isSprinting && SwimmingBoost.enabled) {
                 horizontalSpeed * (1.0 + SwimmingBoost.sprintBoost)
             } else {
                 horizontalSpeed
             }
 
-            player.deltaMovement = Vec3(
-                -(finalYawRad).fastSin().toDouble() * speed.toDouble(),
-                player.deltaMovement.y, (finalYawRad).fastCos().toDouble() * speed.toDouble()
+            player.deltaMovement = player.deltaMovement.withStrafe(
+                speed = speed.toDouble()
             )
         }
-        if(mc.options.keyJump.isDown && player.isInWater) {
-            player.deltaMovement = Vec3(player.deltaMovement.x, verticalSpeed.toDouble(), player.deltaMovement.z)
-        }
-        if(mc.options.keyShift.isDown && player.isInWater) {
-            player.deltaMovement = Vec3(player.deltaMovement.x, -verticalSpeed.toDouble(), player.deltaMovement.z)
+
+        player.deltaMovement = if (mc.options.keyJump.isDown) {
+            player.deltaMovement.copy(y = verticalSpeed.toDouble())
+        } else if (mc.options.keyShift.isDown) {
+            player.deltaMovement.copy(y = -verticalSpeed.toDouble())
+        } else {
+            return@handler
         }
     }
 }
