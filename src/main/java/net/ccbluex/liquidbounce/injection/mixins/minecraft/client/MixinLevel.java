@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.common.ChunkUpdateFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent;
@@ -44,11 +43,6 @@ public abstract class MixinLevel {
 
         // IMPORTANT: BlockPos might be a BlockPos.Mutable, so we need to create a new BlockPos instance to issues
         EventManager.INSTANCE.callEvent(new BlockChangeEvent(BlockExtensionsKt.getImmutable(pos), state));
-    }
-
-    @ModifyReturnValue(method = "getDayTime", at = @At("RETURN"))
-    private long injectOverrideTime(long original) {
-        return ModuleCustomAmbience.getTime(original);
     }
 
     @Inject(method = "getRainLevel", cancellable = true, at = @At("HEAD"))
