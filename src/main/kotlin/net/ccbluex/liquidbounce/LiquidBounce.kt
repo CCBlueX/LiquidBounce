@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem.jsonFile
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
-import net.ccbluex.liquidbounce.deeplearn.ModelHolster
+import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
@@ -399,7 +399,7 @@ object LiquidBounce : EventListener {
             launch("Deep Learning") { task ->
                 runCatching {
                     DeepLearningEngine.init(task)
-                    ModelHolster.load()
+                    ModelManager.load()
                 }.onFailure { exception ->
                     task.subTasks.clear()
 
