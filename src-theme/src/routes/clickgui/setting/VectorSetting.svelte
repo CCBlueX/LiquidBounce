@@ -3,15 +3,12 @@
     import type {BlockHitResult, ModuleSetting, Setting, Vec, Vec3Setting, VecAxis} from "../../../integration/types";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import {getCrosshairData, getPlayerData} from "../../../integration/rest";
-    import {contentEquals} from "../../../integration/util";
 
     export let setting: ModuleSetting;
     export let vecAxes: VecAxis[];
     export let step: number;
 
-    // If setting is Vec3Setting, enable locate button
-    // TODO: determine by setting itself
-    $: useLocateButton = contentEquals(vecAxes, ["x", "y", "z"]);
+    $: useLocateButton = (setting as Vec3Setting)?.useLocateButton ?? false;
 
     const cSetting = setting as Setting<Vec<typeof vecAxes[number]>>;
 

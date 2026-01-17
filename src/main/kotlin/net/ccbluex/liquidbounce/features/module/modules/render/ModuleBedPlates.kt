@@ -49,7 +49,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.phys.Vec3
 import org.joml.Vector2f
 import java.util.function.Predicate
 
@@ -64,7 +63,7 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
     }
     private val showBed by boolean("ShowBed", true)
     private val textShadow by boolean("TextShadow", true)
-    private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
+    private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
     private val scale = curve(
         "Scale",
         mutableListOf(Vector2f(0f, 1f), Vector2f(128f, 1f)),

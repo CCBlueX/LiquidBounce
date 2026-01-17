@@ -108,6 +108,7 @@ export interface Vec2Setting extends Setting<Vec2> {
 }
 
 export interface Vec3Setting extends Setting<Vec3> {
+    useLocateButton: boolean;
 }
 
 export interface ColorSetting extends Setting<number> {
