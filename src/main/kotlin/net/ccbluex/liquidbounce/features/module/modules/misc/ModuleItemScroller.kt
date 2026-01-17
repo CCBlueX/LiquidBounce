@@ -25,11 +25,9 @@ import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import com.mojang.blaze3d.platform.InputConstants
-import com.mojang.blaze3d.platform.Window
 import net.minecraft.world.inventory.AbstractContainerMenu
-import net.minecraft.world.inventory.Slot
 import net.minecraft.world.inventory.ContainerInput
+import net.minecraft.world.inventory.Slot
 import org.lwjgl.glfw.GLFW
 
 fun interface MouseClick {

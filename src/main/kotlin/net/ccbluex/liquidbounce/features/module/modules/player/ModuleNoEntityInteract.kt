@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.fastutil.objectRBTreeSetOf
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
@@ -35,7 +35,7 @@ import java.util.SequencedSet
 /**
  * Skip crosshair entity targets.
  */
-object ModuleNoEntityInteract : ClientModule("NoEntityInteract", Category.PLAYER) {
+object ModuleNoEntityInteract : ClientModule("NoEntityInteract", ModuleCategories.PLAYER) {
 
     private fun defaultEntityTypes(): SequencedSet<EntityType<*>> {
         return objectRBTreeSetOf(
