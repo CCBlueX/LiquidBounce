@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
@@ -26,8 +25,8 @@ import io.netty.handler.codec.http.HttpMethod
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -90,7 +89,7 @@ fun postPanic(requestObject: RequestObject): FullHttpResponse {
         AutoConfig.withLoading {
             runCatching {
                 for (module in ModuleManager) {
-                    if (module.category == Category.RENDER || module.category == Category.CLIENT) {
+                    if (module.category == ModuleCategories.RENDER || module.category == ModuleCategories.CLIENT) {
                         continue
                     }
 

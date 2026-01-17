@@ -78,13 +78,14 @@ jobs:
       - name: Setting up JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'graalvm'
+          distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: Grant permissions to src-theme
         run: sudo chmod -R 777 src-theme
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
       - name: Build
         env:
           CI: true
@@ -142,13 +143,14 @@ jobs:
       - name: Setting up JDK 21
         uses: actions/setup-java@v4
         with:
-          distribution: 'graalvm'
+          distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: Grant permissions to src-theme
         run: sudo chmod -R 777 src-theme
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/nextgen' }}
       - name: Build
         env:
           CI: true

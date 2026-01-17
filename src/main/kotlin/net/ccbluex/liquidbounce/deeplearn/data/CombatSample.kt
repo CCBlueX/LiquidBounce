@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.deeplearn.data
@@ -28,7 +27,7 @@ import net.minecraft.world.phys.Vec3
 import java.io.File
 
 @JvmRecord
-data class TrainingData(
+data class CombatSample(
     @SerializedName(CURRENT_DIRECTION_VECTOR)
     val currentVector: Vec3,
     @SerializedName(PREVIOUS_DIRECTION_VECTOR)
@@ -111,13 +110,13 @@ data class TrainingData(
         const val T_DIFF = "h"
         const val DISTANCE = "i"
 
-        private fun parse(file: File): List<TrainingData> = when {
+        private fun parse(file: File): List<CombatSample> = when {
             file.isDirectory -> file.listFiles().flatMap(::parse)
-            file.extension == "json" -> file.readJson<List<TrainingData>>()
+            file.extension == "json" -> file.readJson<List<CombatSample>>()
             else -> emptyList()
         }
 
-        fun parse(vararg files: File): List<TrainingData> = files.flatMap(::parse)
+        fun parse(vararg files: File): List<CombatSample> = files.flatMap(::parse)
 
     }
 }

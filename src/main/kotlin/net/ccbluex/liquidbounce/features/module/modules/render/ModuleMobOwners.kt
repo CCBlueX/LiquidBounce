@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,15 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import kotlinx.coroutines.CancellationException
 import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.thirdparty.MojangApi
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.animal.equine.Horse
-import net.minecraft.world.entity.TamableAnimal
-import net.minecraft.world.entity.projectile.Projectile
-import net.minecraft.util.FormattedCharSequence
-import net.minecraft.network.chat.Style
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Style
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.TamableAnimal
+import net.minecraft.world.entity.animal.equine.Horse
+import net.minecraft.world.entity.projectile.Projectile
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Shows you from which player a tamable entity or projectile belongs to.
  */
 
-object ModuleMobOwners : ClientModule("MobOwners", Category.RENDER) {
+object ModuleMobOwners : ClientModule("MobOwners", ModuleCategories.RENDER) {
 
     private val projectiles by boolean("Projectiles", false)
 

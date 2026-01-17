@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,16 +25,16 @@ import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.world.entity.item.PrimedTnt
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.item.PrimedTnt
 import java.text.DecimalFormat
 import java.util.function.IntFunction
 import kotlin.math.sin
@@ -44,7 +44,7 @@ import kotlin.math.sin
  *
  * Highlight the active TNTs.
  */
-object ModuleTNTTimer : ClientModule("TNTTimer", Category.RENDER) {
+object ModuleTNTTimer : ClientModule("TNTTimer", ModuleCategories.RENDER) {
 
     override val baseKey: String
         get() = "liquidbounce.module.tntTimer"

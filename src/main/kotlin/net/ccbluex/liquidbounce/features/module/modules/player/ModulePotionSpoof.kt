@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,20 +21,20 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.minecraft.core.Holder
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.locale.Language
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffectInstance
-import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.core.Holder
-import net.minecraft.locale.Language
 
 /**
  * PotionSpoof
  *
  * Allows the player to have potion effects without actually having the potion.
  */
-object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
+object ModulePotionSpoof : ClientModule("PotionSpoof", ModuleCategories.PLAYER) {
 
     private class StatusEffectConfigurable(
         val registryEntry: Holder<MobEffect>,

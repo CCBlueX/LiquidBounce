@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.multiply
 import net.ccbluex.liquidbounce.utils.network.isMovementYFallDamage
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
@@ -72,8 +73,10 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             }
 
             if (horizontalAcceleration != 0f) {
-                player.deltaMovement.x *= 1f + horizontalAcceleration
-                player.deltaMovement.z *= 1f + horizontalAcceleration
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = 1.0F + horizontalAcceleration,
+                    factorZ = 1.0F + horizontalAcceleration,
+                )
             }
         }
 
@@ -82,8 +85,10 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             if (horizontalJumpOffModifier != 0f) {
                 waitTicks(ticksToBoostOff)
 
-                player.deltaMovement.x *= 1f + horizontalJumpOffModifier
-                player.deltaMovement.z *= 1f + horizontalJumpOffModifier
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = 1.0F + horizontalJumpOffModifier,
+                    factorZ = 1.0F + horizontalJumpOffModifier,
+                )
             }
         }
 

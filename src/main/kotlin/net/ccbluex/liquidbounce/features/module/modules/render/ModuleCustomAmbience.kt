@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.minecraft.client.renderer.fog.FogData
 
@@ -30,7 +30,7 @@ import net.minecraft.client.renderer.fog.FogData
  *
  * Override the ambience of the game
  */
-object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, aliases = listOf("FogChanger")) {
+object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RENDER, aliases = listOf("FogChanger")) {
 
     val weather = enumChoice("Weather", WeatherType.SNOWY)
     private val time = enumChoice("Time", TimeType.NIGHT)
@@ -89,10 +89,15 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
         val color by color("Color", Color4b.LIQUID_BOUNCE)
     }
 
+    object SkyColor : ToggleableConfigurable(this, "SkyColor", false) {
+        val color by color("Color", Color4b.BLUE)
+    }
+
     init {
         tree(Precipitation)
         tree(FogConfigurable)
         tree(CustomLightmap)
+        tree(SkyColor)
     }
 
     @JvmStatic

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,10 +32,10 @@ import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.rangeTo
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.world.entity.Pose
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import kotlin.math.atan2
 
@@ -182,5 +182,5 @@ private fun collectCollisionBoundingBoxes(
 }
 
 fun LocalPlayer.stopXZVelocity() {
-    this.setDeltaMovement(this.deltaMovement.copy(x = 0.0, z = 0.0))
+    this.deltaMovement = this.deltaMovement.copy(x = 0.0, z = 0.0)
 }

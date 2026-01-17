@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,14 +51,14 @@ internal fun GuiGraphics.drawNametag(nametag: Nametag, posX: Float, posY: Float)
 
         drawItemStackList(nametag.items)
             .centerX(posX)
-            .centerY(posY - NAMETAG_PADDING * ModuleNametags.scale)
-            .scale(ModuleNametags.scale)
+            .centerY(posY - NAMETAG_PADDING * nametag.scale)
+            .scale(nametag.scale)
             .itemStackRenderer(currentItemStackRenderer)
             .rectBackground(Color4b.TRANSPARENT)
             .draw()
     }
 
-    val scale = BASE_SCALE_FACTOR * ModuleNametags.scale
+    val scale = BASE_SCALE_FACTOR * nametag.scale
 
     pose().pushMatrix()
     pose().translate(posX, posY)
@@ -79,7 +79,7 @@ internal fun GuiGraphics.drawNametag(nametag: Nametag, posX: Float, posY: Float)
     // Background
     drawQuad(
         x1, y1, x2, y2,
-        fillColor = Color4b(Int.MIN_VALUE, hasAlpha = true),
+        fillColor = Color4b.DEFAULT_BG_COLOR,
         outlineColor = Color4b.BLACK.takeIf { ModuleNametags.border },
     )
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,13 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 
-import net.ccbluex.liquidbounce.deeplearn.data.TrainingData
+import net.ccbluex.liquidbounce.deeplearn.data.CombatSample
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -36,20 +34,20 @@ import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.times
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.monster.Slime
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
-import net.minecraft.sounds.SoundSource
-import net.minecraft.sounds.SoundEvents
 import java.util.*
 import kotlin.random.Random
 
 /**
  * Simulates scenarios where the player is training to hit a target.
  */
-object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("MinaraiTrainer") {
+object DebugCombatTrainerRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>("CombatTrainer") {
 
     private var isFirstRun = true
 
@@ -90,7 +88,7 @@ object MinaraiTrainer : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("Min
                 val distance = player.squaredBoxedDistanceTo(target).toFloat()
 
                 recordPacket(
-                    TrainingData(
+                    CombatSample(
                         currentVector = current.directionVector,
                         previousVector = previous.directionVector,
                         targetVector = Rotation.lookingAt(

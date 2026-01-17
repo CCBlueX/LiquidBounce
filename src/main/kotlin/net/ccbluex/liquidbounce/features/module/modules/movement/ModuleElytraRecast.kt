@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraRecast.shouldRecast
-import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.effect.MobEffects
-import net.minecraft.world.item.Items
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.item.Items
 
 /**
  * Elytra recast module
@@ -33,7 +33,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
  *
  * @author Pivo1lovv
  */
-object ModuleElytraRecast : ClientModule("ElytraRecast", Category.MOVEMENT) {
+object ModuleElytraRecast : ClientModule("ElytraRecast", ModuleCategories.MOVEMENT) {
 
     init {
         enableLock()

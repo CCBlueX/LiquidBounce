@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +25,8 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.once
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveBlinkFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSneakControlFeature
 import net.ccbluex.liquidbounce.features.module.modules.movement.inventorymove.features.InventoryMoveSprintControlFeature
@@ -41,20 +40,20 @@ import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.client.KeyMapping
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.client.gui.screens.Screen
-import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
 import net.minecraft.client.gui.screens.inventory.InventoryScreen
 import net.minecraft.client.input.KeyEvent
-import net.minecraft.client.KeyMapping
-import net.minecraft.world.item.CreativeModeTabs
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
-import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.network.protocol.game.ServerboundContainerSlotStateChangedPacket
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
+import net.minecraft.world.item.CreativeModeTabs
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -63,7 +62,7 @@ import org.lwjgl.glfw.GLFW
  * Allows you to walk while an inventory is opened.
  */
 
-object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
+object ModuleInventoryMove : ClientModule("InventoryMove", ModuleCategories.MOVEMENT) {
 
     private val behavior by enumChoice("Behavior", Behaviour.NORMAL).also(::tagBy)
 
@@ -120,6 +119,29 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
             || behavior == Behaviour.STOP_ON_ACTION
     }
 
+    private val delayedContainerPackets = mutableListOf<Packet<*>>()
+
+    override fun onDisabled() {
+        delayedContainerPackets.clear()
+        super.onDisabled()
+    }
+
+    @Suppress("unused")
+    private val movementInputHandler = handler<MovementInputEvent>(READ_FINAL_STATE) {
+        if (delayedContainerPackets.isEmpty() ||
+            behavior != Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
+            return@handler
+        }
+
+        val packetsSnapshot = delayedContainerPackets.toTypedArray()
+        delayedContainerPackets.clear()
+        it.sneak = false
+        it.jump = false
+        it.directionalInput = DirectionalInput.NONE
+        // `schedule` will force the Runnable to be run in next loop
+        mc.schedule { packetsSnapshot.forEach(::sendPacketSilently) }
+    }
+
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent>(FIRST_PRIORITY) { event ->
         if (behavior != Behaviour.STOP_ON_ACTION || !InventoryManager.isHandledScreenOpen) {
@@ -130,13 +152,8 @@ object ModuleInventoryMove : ClientModule("InventoryMove", Category.MOVEMENT) {
 
         if (isContainerPacket(packet) && player.input.keyPresses.any) {
             event.cancelEvent()
-            once<MovementInputEvent>(READ_FINAL_STATE) {
-                it.sneak = false
-                it.jump = false
-                it.directionalInput = DirectionalInput.NONE
-                // `send` will force the Runnable to be run in next loop
-                mc.schedule { sendPacketSilently(packet) }
-            }
+            // Here only be called from render thread because [packet] is c2s
+            delayedContainerPackets += packet
         }
     }
 

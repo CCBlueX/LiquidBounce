@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
@@ -24,7 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.mode
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.fastutil.mapToIntArray
-import net.ccbluex.liquidbounce.deeplearn.data.TrainingData
+import net.ccbluex.liquidbounce.deeplearn.data.CombatSample
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -52,14 +50,14 @@ import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
 
 /**
  * Records combat behavior
  */
-object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingData>("MinaraiCombat") {
+object DebugCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<CombatSample>("Combat") {
 
     private var targetTracker = tree(TargetTracker(
         // Start tracking target that we look at the closest
@@ -71,7 +69,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
     private var previous: Rotation = Rotation(0f, 0f)
 
     private val fightMap = Int2ObjectOpenHashMap<Fight>()
-    private val trainingCollection = Int2ObjectOpenHashMap<MutableList<TrainingData>>()
+    private val trainingCollection = Int2ObjectOpenHashMap<MutableList<CombatSample>>()
 
     private var targetEntityId: Int? = null
 
@@ -116,7 +114,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
             val fight = fightMap.computeIfAbsent(target.id) { Fight() }
             val buffer = trainingCollection.computeIfAbsent(target.id) { mutableListOf() }
 
-            buffer.add(TrainingData(
+            buffer.add(CombatSample(
                 currentVector = current.directionVector,
                 previousVector = previous.directionVector,
                 targetVector = targetRotation.directionVector,
@@ -151,7 +149,7 @@ object MinaraiCombatRecorder : ModuleDebugRecorder.DebugRecorderMode<TrainingDat
 
         // Wait until entity is not in combat
         var inactivity = 0
-        var buffer: MutableList<TrainingData>? = null
+        var buffer: MutableList<CombatSample>? = null
         tickUntil {
             if (entity.isDeadOrDying || entity.isRemoved || doNotTrack) {
                 return@tickUntil true

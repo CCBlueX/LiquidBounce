@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.minecraft.world.entity.EquipmentSlot
 
 /**
- * @see net.minecraft.item.equipment.ArmorMaterial.createAttributeModifiers
+ * @see net.minecraft.world.item.equipment.ArmorMaterial.createAttributes
  */
 @JvmInline
 value class ArmorPiece(val itemSlot: ItemSlot) {
@@ -34,9 +33,9 @@ value class ArmorPiece(val itemSlot: ItemSlot) {
     val inventorySlot: Int
         get() = 36 + entitySlotId
     val isAlreadyEquipped: Boolean
-        get() = itemSlot.slotType == ItemSlotType.ARMOR
+        get() = itemSlot.slotType == ItemSlot.Type.ARMOR
     val isReachableByHand: Boolean
-        get() = itemSlot.slotType == ItemSlotType.HOTBAR
+        get() = itemSlot.slotType == ItemSlot.Type.HOTBAR
 
     val toughness: Float
         get() = itemSlot.itemStack.armorToughness!!.toFloat()

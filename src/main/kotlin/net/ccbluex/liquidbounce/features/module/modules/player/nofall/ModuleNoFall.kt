@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlocksMC
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallCancel
@@ -48,7 +48,7 @@ import java.util.function.BooleanSupplier
  *
  * Protects you from taking fall damage.
  */
-object ModuleNoFall : ClientModule("NoFall", Category.PLAYER) {
+object ModuleNoFall : ClientModule("NoFall", ModuleCategories.PLAYER) {
     internal val modes = choices(
         "Mode", NoFallSpoofGround, arrayOf(
             NoFallSpoofGround,

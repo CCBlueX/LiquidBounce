@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,20 +17,27 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
+package net.ccbluex.liquidbounce.api.interceptors
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
-import net.minecraft.client.multiplayer.ClientLevel;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
+import okhttp3.CacheControl
+import okhttp3.Interceptor
+import okhttp3.Response
 
-@Mixin(ClientLevel.ClientLevelData.class)
-public abstract class MixinClientWorldProperties {
-
-    @ModifyReturnValue(method = "getDayTime", at = @At("RETURN"))
-    private long injectOverrideTime(long original) {
-        return ModuleCustomAmbience.getTime(original);
+class CacheBlacklistInterceptor(
+    val blacklistedHosts: Set<String>,
+) : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        if (request.url.host in blacklistedHosts) {
+            val newRequest = request.newBuilder()
+                .cacheControl(cacheControl)
+                .build()
+            return chain.proceed(newRequest)
+        }
+        return chain.proceed(request)
     }
 
+    companion object {
+        private val cacheControl = CacheControl.Builder().noCache().noStore().build()
+    }
 }

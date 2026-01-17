@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,22 +15,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanGenerator
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.InventoryCleanupPlan
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeConfigurable
 import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleConfigurable
@@ -55,7 +52,7 @@ import kotlin.math.ceil
  * Automatically steals all items from a chest.
  */
 
-object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
+object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER) {
 
     private val inventoryConstrains = tree(InventoryConstraints())
     private val autoClose by boolean("AutoClose", true)
@@ -233,7 +230,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val freeSlotsInInv = mainInventory.count { it.itemStack.isEmpty }
 
         val spaceGainedThroughMerge = cleanupPlan.mergeableItems.entries.sumOf { (id, slots) ->
-            val slotsInChest = slots.count { it.slotType == ItemSlotType.CONTAINER }
+            val slotsInChest = slots.count { it.slotType == ItemSlot.Type.CONTAINER }
             val totalCount = slots.sumOf { it.itemStack.count }
 
             val mergedStackCount = ceil(totalCount.toDouble() / id.item.defaultMaxStackSize.toDouble()).toInt()
@@ -257,7 +254,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         for (i in cleanupPlan.swaps.indices) {
             val hotbarSwap = cleanupPlan.swaps[i]
             // We only care about swaps from the chest to the hotbar
-            if (hotbarSwap.from.slotType != ItemSlotType.CONTAINER) {
+            if (hotbarSwap.from.slotType != ItemSlot.Type.CONTAINER) {
                 continue
             }
 
