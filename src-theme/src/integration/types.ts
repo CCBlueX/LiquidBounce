@@ -79,7 +79,7 @@ export interface FileSetting extends Setting<File> {
     supportedExtensions: string[] | undefined;
 }
 
-export interface CurveSetting extends Setting<Vector2f[]> {
+export interface CurveSetting extends Setting<Vec2[]> {
     xAxis: {
         label: string;
         range: Range;
@@ -104,7 +104,7 @@ export interface BindSetting extends Setting<InputBind> {
 export interface TextSetting extends Setting<string> {
 }
 
-export interface Vec2Setting extends Setting<Vector2f> {
+export interface Vec2Setting extends Setting<Vec2> {
 }
 
 export interface Vec3Setting extends Setting<Vec3> {
@@ -241,11 +241,15 @@ export interface StatusEffect {
     color: number;
 }
 
-export interface Vec3 {
-    x: number;
-    y: number;
-    z: number;
+export interface Vec2 extends Vec<"x" | "y"> {
 }
+
+export interface Vec3 extends Vec<"x" | "y" | "z"> {
+}
+
+export type VecAxis = "x" | "y" | "z" | "w";
+
+export type Vec<D extends VecAxis> = Record<D, number>;
 
 export interface ItemStack {
     identifier: string;
@@ -472,11 +476,6 @@ export interface RegistryItem {
 export interface Range {
     from: number;
     to: number;
-}
-
-export interface Vector2f {
-    x: number;
-    y: number;
 }
 
 export interface BedState {
