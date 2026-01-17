@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
-import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.client.GuiMessage
 import net.minecraft.client.GuiMessageTag
+import net.minecraft.client.gui.components.ChatComponent
 import net.minecraft.network.chat.Component
 
 /**

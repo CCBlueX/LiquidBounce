@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.runPlace
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.world
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.PostPacketTrigger
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 
 /**
  * Runs destroying when the information, that a crystal is spawned is received.

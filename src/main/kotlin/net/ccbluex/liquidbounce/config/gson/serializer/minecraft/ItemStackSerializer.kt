@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.item.ItemStack
 import java.lang.reflect.Type
 
 object ItemStackSerializer : JsonSerializer<ItemStack> {

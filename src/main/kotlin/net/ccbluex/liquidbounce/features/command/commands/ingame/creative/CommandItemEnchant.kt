@@ -29,13 +29,13 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.item.clearEnchantments
 import net.ccbluex.liquidbounce.utils.item.removeEnchantment
-import net.minecraft.world.item.enchantment.Enchantment
-import net.minecraft.world.item.ItemStack
-import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
-import net.minecraft.core.registries.Registries
 import net.minecraft.core.Holder
-import net.minecraft.world.InteractionHand
+import net.minecraft.core.registries.Registries
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 import net.minecraft.resources.Identifier
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantment
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.min
 

@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screens.Screen
-import com.mojang.blaze3d.platform.InputConstants
 
 @Nameable("windowResize")
 class WindowResizeEvent(val width: Int, val height: Int) : Event()

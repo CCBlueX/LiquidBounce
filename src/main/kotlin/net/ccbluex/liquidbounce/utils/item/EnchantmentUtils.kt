@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.minecraft.core.component.DataComponents
-import net.minecraft.world.item.enchantment.ItemEnchantments
-import net.minecraft.world.item.enchantment.Enchantment
-import net.minecraft.world.item.ItemStack
 import net.minecraft.core.Holder
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.ItemEnchantments
 
 fun ItemStack.removeEnchantment(enchantment: Holder<Enchantment>) {
     val enchantmentComponent = get(DataComponents.ENCHANTMENTS) ?: return

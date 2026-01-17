@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.vertex.PoseStack
 import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.event.Event
-import com.mojang.blaze3d.pipeline.RenderTarget
-import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.Camera
-import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.client.gui.GuiGraphics
 
 @Nameable("gameRender")
 object GameRenderEvent : Event()

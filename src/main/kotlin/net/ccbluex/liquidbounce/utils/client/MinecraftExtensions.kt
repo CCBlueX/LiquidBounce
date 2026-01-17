@@ -21,16 +21,16 @@ package net.ccbluex.liquidbounce.utils.client
 import com.mojang.authlib.GameProfileRepository
 import com.mojang.authlib.minecraft.MinecraftSessionService
 import com.mojang.authlib.yggdrasil.ServicesKeySet
+import com.mojang.blaze3d.platform.Window
 import com.mojang.blaze3d.systems.GpuDevice
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.Minecraft
-import net.minecraft.client.multiplayer.ClientPacketListener
-import net.minecraft.client.player.LocalPlayer
-import net.minecraft.client.multiplayer.MultiPlayerGameMode
-import com.mojang.blaze3d.platform.Window
 import net.minecraft.client.multiplayer.ClientLevel
-import net.minecraft.server.players.ProfileResolver
+import net.minecraft.client.multiplayer.ClientPacketListener
+import net.minecraft.client.multiplayer.MultiPlayerGameMode
+import net.minecraft.client.player.LocalPlayer
 import net.minecraft.server.Services
+import net.minecraft.server.players.ProfileResolver
 import net.minecraft.server.players.UserNameToIdResolver
 
 val Window.dimensions

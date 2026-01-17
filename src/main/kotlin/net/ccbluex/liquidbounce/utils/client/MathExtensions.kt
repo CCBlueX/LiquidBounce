@@ -21,9 +21,9 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
-import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
 import net.minecraft.util.Mth
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector2f
 import java.math.RoundingMode

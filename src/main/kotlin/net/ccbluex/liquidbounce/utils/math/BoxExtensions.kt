@@ -20,11 +20,11 @@
 
 package net.ccbluex.liquidbounce.utils.math
 
-import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
 import net.minecraft.core.Position
-import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 import kotlin.math.min

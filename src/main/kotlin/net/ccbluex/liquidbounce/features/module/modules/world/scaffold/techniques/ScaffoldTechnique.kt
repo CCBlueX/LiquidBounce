@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.core.Vec3i
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
-import net.minecraft.core.Vec3i
 
 sealed class ScaffoldTechnique(name: String) : Choice(name) {
     final override val parent: ChoiceConfigurable<ScaffoldTechnique>

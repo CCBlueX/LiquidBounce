@@ -36,7 +36,7 @@ import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 /**
  * Log off spot

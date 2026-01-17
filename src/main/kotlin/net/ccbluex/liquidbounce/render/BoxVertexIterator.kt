@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.render
 
-import net.minecraft.world.phys.AABB
 import net.minecraft.core.Direction
+import net.minecraft.world.phys.AABB
 
 enum class BoxVertexIterator {
     FACE {

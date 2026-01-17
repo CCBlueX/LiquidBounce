@@ -20,10 +20,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.world.level.block.Blocks
 
 /**
  * No collision with cobwebs and breaks them to bypass check

@@ -19,7 +19,10 @@
 
 package net.ccbluex.liquidbounce.utils.kotlin
 
-import java.util.*
+import java.util.Optional
+import java.util.OptionalDouble
+import java.util.OptionalInt
+import java.util.OptionalLong
 
 inline fun <T : Any> optional(value: T?) = Optional.ofNullable(value)
 

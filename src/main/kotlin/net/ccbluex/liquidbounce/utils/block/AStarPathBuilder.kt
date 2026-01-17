@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.world.phys.AABB
 import net.minecraft.core.Vec3i
+import net.minecraft.world.phys.AABB
 
 private class Node(val position: Vec3i, var parent: Node? = null) {
     var g = 0

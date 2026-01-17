@@ -22,11 +22,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autobuff
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
+import net.minecraft.core.Holder
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.ItemStack
-import net.minecraft.core.Holder
 
 abstract class StatusEffectBasedBuff(name: String) : Buff(name) {
 

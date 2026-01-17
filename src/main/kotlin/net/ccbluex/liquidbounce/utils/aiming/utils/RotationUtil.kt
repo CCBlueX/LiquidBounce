@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.world.entity.Entity
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
 
 fun LocalPlayer.setRotation(rotation: Rotation) {
     rotation.normalize().let { normalizedRotation ->

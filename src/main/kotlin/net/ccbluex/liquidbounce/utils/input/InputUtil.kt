@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.utils.input
 
-import net.ccbluex.liquidbounce.utils.client.mc
 import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.world.InteractionResult
 
 /**

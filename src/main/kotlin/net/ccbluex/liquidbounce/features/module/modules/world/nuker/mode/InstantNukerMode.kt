@@ -30,9 +30,9 @@ import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.swingMode
 import net.ccbluex.liquidbounce.features.module.modules.world.nuker.ModuleNuker.wasTarget
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.core.Direction
 
 object InstantNukerMode : Choice("Instant") {
 

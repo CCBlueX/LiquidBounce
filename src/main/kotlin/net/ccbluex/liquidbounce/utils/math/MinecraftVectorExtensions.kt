@@ -21,14 +21,14 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
-import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.core.BlockPos
-import net.minecraft.world.level.ChunkPos
-import net.minecraft.util.Mth
 import net.minecraft.core.Position
+import net.minecraft.core.Vec3i
+import net.minecraft.util.Mth
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.world.phys.Vec2
 import net.minecraft.world.phys.Vec3
-import net.minecraft.core.Vec3i
 import org.joml.Vector3f
 import org.joml.Vector3fc
 import kotlin.math.abs

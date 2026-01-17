@@ -36,7 +36,7 @@ import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.util.Util
 import java.io.File
 import java.net.URI
-import java.util.*
+import java.util.Properties
 
 // GET /api/v1/client/info
 @Suppress("UNUSED_PARAMETER")

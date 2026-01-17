@@ -30,10 +30,10 @@ import net.ccbluex.netty.http.util.httpInternalServerError
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.resources.DefaultPlayerSkin
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.resources.ResourceKey
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
-import java.util.*
+import net.minecraft.resources.ResourceKey
+import java.util.UUID
 import javax.imageio.ImageIO
 import kotlin.jvm.optionals.getOrNull
 

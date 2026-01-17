@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.minecraft.ChatFormatting
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
-import net.minecraft.ChatFormatting
 
 object NotebotScanner : MinecraftShortcuts {
     fun scanBlocksAndCheckRequirements(songData: SongData): BlocksAndRequirements {

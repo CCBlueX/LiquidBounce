@@ -19,9 +19,9 @@
 
 package net.ccbluex.liquidbounce.utils.world
 
-import net.minecraft.world.level.Level
 import net.minecraft.world.attribute.BedRule
 import net.minecraft.world.attribute.EnvironmentAttributes
+import net.minecraft.world.level.Level
 
 /**
  * @return if water and ice evaporates in this world (e.g. nether)

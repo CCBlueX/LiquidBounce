@@ -41,8 +41,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import java.util.Locale
 import java.util.UUID
-import kotlin.collections.ArrayDeque
-import kotlin.collections.getOrNull
 
 /**
  * Module InventoryTracker

@@ -20,18 +20,18 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import com.mojang.blaze3d.opengl.GlStateManager
 import net.ccbluex.liquidbounce.render.withPush
-import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.renderer.RenderPipelines
+import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.INVENTORY_LOCATION
 import net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse
 import net.minecraft.client.input.KeyEvent
+import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.InventoryMenu
 import net.minecraft.world.inventory.Slot
+import net.minecraft.world.item.ItemStack
 
 class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainText.EMPTY) {
 

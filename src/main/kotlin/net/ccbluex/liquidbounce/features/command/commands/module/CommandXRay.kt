@@ -32,9 +32,9 @@ import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.client.withColor
-import net.minecraft.world.level.block.Block
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.ChatFormatting
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.level.block.Block
 
 /**
  * XRay Command

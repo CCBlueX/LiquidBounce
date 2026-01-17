@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import java.util.*
+import java.util.EnumSet
 
 /**
  * AutoDisable module

@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
 import net.ccbluex.liquidbounce.utils.item.asItemSlotComparator
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.InteractionHand
-import java.util.*
+import java.util.Objects
 import kotlin.math.abs
 
 /**

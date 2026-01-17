@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.api.services.cosmetics
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
-import java.util.*
+import java.util.UUID
 
 object CosmeticApi : BaseApi(config.apiEndpointV3) {
 

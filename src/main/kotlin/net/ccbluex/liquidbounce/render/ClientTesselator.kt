@@ -21,9 +21,9 @@ package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.textures.GpuTextureView
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import com.mojang.blaze3d.vertex.BufferBuilder
 import com.mojang.blaze3d.vertex.ByteBufferBuilder
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 
 object ClientTesselator {
 

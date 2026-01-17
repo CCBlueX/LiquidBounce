@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.api.models.auth.addAuth
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.user.UserInformation
 import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
-import java.util.*
+import java.util.UUID
 
 /**
  * API for user-related endpoints that require authentication

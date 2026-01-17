@@ -34,7 +34,6 @@ import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
-import net.minecraft.core.Vec3i
 import kotlin.math.cos
 import kotlin.math.sin
 

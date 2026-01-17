@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.chat.packet
 
 import com.google.gson.annotations.SerializedName
-import java.util.*
+import java.util.UUID
 
 /**
  * AXOCHAT PROTOCOL

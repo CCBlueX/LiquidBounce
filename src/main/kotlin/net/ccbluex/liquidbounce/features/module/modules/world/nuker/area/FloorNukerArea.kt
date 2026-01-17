@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
 import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.rangeTo
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
 import net.minecraft.core.Vec3i
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.AABB
 
 object FloorNukerArea : NukerArea("Floor") {
 

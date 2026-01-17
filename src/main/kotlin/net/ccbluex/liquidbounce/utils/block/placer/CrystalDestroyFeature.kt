@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.getExplosionDamageFromEntity
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 class CrystalDestroyFeature(eventListener: EventListener, private val module: ClientModule) :
     ToggleableConfigurable(eventListener, "DestroyCrystals", true) {

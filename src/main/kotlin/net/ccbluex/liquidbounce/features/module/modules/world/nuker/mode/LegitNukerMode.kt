@@ -41,8 +41,8 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isNotBreakable
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.phys.HitResult
 import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
 object LegitNukerMode : Choice("Legit") {

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.inventory.ViewedInventoryScreen
-import java.util.*
+import java.util.UUID
 
 /**
  * Command Invsee

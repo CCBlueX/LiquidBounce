@@ -21,13 +21,13 @@ package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.mojang.blaze3d.platform.InputConstants
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpBadRequest
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
-import com.mojang.blaze3d.platform.InputConstants
 
 // GET /api/v1/client/input
 @Suppress("UNUSED_PARAMETER")

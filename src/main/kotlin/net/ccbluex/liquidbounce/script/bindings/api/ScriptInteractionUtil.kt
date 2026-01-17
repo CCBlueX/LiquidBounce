@@ -29,10 +29,10 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacement
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.attack
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.InteractionHand
-import net.minecraft.world.phys.HitResult
 import net.minecraft.core.BlockPos
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.HitResult
 
 @Suppress("unused")
 object ScriptInteractionUtil {

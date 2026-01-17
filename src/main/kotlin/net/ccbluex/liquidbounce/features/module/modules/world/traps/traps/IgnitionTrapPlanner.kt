@@ -36,15 +36,15 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacement
 import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.entity.Pose
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.Pose
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 class IgnitionTrapPlanner(parent: EventListener) : TrapPlanner<IgnitionTrapPlanner.IgnitionIntentData>(

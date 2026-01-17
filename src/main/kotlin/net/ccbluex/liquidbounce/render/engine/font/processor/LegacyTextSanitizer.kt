@@ -19,12 +19,12 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
-import net.minecraft.util.FormattedCharSink
-import net.minecraft.util.FormattedCharSequence
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.FormattedText.StyledContentConsumer
 import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.Component
-import net.minecraft.ChatFormatting
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.util.FormattedCharSink
 import java.util.Optional
 
 /**

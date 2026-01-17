@@ -43,7 +43,8 @@ import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector4f
-import java.util.*
+import java.util.ArrayDeque
+import java.util.IdentityHashMap
 
 /**
  * Breadcrumbs module

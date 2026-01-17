@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.minecraft.resources.Identifier
-import java.util.*
+import java.util.Locale
 
 /**
  * Converts an [Identifier] to a human-readable name without localization.

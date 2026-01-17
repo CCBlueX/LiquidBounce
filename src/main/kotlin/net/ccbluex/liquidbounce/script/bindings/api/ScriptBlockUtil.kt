@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.BlockState
 
 /**
  * Object used by the script API to provide an

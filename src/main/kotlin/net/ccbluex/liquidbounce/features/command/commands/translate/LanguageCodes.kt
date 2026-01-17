@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.translate
 
-import java.util.*
+import java.util.Locale
 
 /**
  * All language codes like `en`, `en-US`, `de`, `zh-CN`

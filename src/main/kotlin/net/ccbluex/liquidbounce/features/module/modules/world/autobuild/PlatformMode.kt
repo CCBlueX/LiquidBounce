@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.collection.getSlot
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.minecraft.world.level.block.Blocks
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.Blocks
 
 object PlatformMode : ModuleAutoBuild.AutoBuildMode("Platform") {
 

@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 
 class MineTarget(val targetPos: BlockPos) {
 

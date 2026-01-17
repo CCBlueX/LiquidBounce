@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.item.Items
 import net.minecraft.core.BlockPos
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.state.BlockState
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max

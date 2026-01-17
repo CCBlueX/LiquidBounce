@@ -45,7 +45,7 @@ import net.ccbluex.liquidbounce.deeplearn.listener.OverlayTrainingListener
 import java.io.Closeable
 import java.io.InputStream
 import java.nio.file.Path
-import java.util.*
+import java.util.Locale
 
 private const val NUM_EPOCH = 100
 private const val BATCH_SIZE = 32

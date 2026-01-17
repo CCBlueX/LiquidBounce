@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor
@@ -48,9 +49,8 @@ import net.ccbluex.liquidbounce.utils.input.bind
 import net.ccbluex.liquidbounce.utils.input.inputByName
 import net.ccbluex.liquidbounce.utils.input.renderText
 import net.ccbluex.liquidbounce.utils.input.unbind
-import com.mojang.blaze3d.platform.InputConstants
-import net.minecraft.network.chat.HoverEvent
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.HoverEvent
 
 /**
  * Binds Command

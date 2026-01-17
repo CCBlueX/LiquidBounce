@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.plac
 
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.player
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 

@@ -42,7 +42,9 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.component.WrittenBookContent
 import okio.buffer
 import okio.source
-import java.util.*
+import java.util.Optional
+import java.util.PrimitiveIterator
+import java.util.Random
 import java.util.stream.IntStream
 
 /**

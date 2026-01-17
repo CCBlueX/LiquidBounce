@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.utils.block.bed
 
 import it.unimi.dsi.fastutil.ints.IntIntMutablePair
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
+import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.Block
-import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 
 /**

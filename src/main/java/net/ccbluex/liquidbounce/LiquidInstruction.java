@@ -21,13 +21,12 @@ package net.ccbluex.liquidbounce;
 import net.ccbluex.liquidbounce.utils.client.GitInfo;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
 import java.awt.*;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
-
-import javax.swing.*;
 
 /**
  * This class is for manual open of the jar file.

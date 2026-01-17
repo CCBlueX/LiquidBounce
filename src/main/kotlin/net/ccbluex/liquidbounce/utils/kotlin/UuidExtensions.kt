@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.utils.kotlin
 
 import org.apache.commons.codec.digest.DigestUtils
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.UUID
 
 /**
  * Convert UUID to 16 bytes array

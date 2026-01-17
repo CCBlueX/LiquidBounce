@@ -49,8 +49,8 @@ import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
-import net.minecraft.network.chat.ClickEvent
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.ClickEvent
 import okio.appendingSink
 import okio.buffer
 import java.io.File

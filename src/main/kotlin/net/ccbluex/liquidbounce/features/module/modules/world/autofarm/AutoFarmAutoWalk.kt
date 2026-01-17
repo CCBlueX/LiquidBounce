@@ -30,9 +30,7 @@ import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.navigation.NavigationBaseConfigurable
 import net.minecraft.world.entity.item.ItemEntity
 import net.minecraft.world.item.BoneMealItem
-import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
-import java.util.*
 
 object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3?>(ModuleAutoFarm, "AutoWalk", false) {
 

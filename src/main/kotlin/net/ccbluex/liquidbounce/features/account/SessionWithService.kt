@@ -20,7 +20,8 @@
 package net.ccbluex.liquidbounce.features.account
 
 import net.minecraft.client.User
-import java.util.*
+import java.util.Optional
+import java.util.UUID
 
 @Suppress("LongParameterList")
 class SessionWithService(

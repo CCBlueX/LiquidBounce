@@ -19,16 +19,16 @@
 
 package net.ccbluex.liquidbounce.common;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.resources.metadata.texture.TextureMetadataSection;
 import net.minecraft.client.renderer.texture.MipmapStrategy;
-import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.ReloadableTexture;
 import net.minecraft.client.renderer.texture.TextureContents;
-import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.client.resources.metadata.texture.TextureMetadataSection;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.ResourceManager;
 
 import java.io.IOException;
 import java.util.Objects;

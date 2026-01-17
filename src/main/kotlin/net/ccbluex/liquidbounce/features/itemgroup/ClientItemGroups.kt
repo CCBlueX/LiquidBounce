@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.core.component.DataComponentPatch
-import net.minecraft.world.item.ItemStack
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.NbtOps
+import net.minecraft.world.item.ItemStack
 
 /**
  * LiquidBounce Creative Item Groups with useful items and blocks

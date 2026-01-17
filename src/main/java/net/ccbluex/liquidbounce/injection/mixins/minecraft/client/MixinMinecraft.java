@@ -18,26 +18,13 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import static net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt.getUsesViaFabricPlus;
-
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.platform.Window;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent;
-import net.ccbluex.liquidbounce.event.events.ClientStartEvent;
-import net.ccbluex.liquidbounce.event.events.DisconnectEvent;
-import net.ccbluex.liquidbounce.event.events.FpsChangeEvent;
-import net.ccbluex.liquidbounce.event.events.GameRenderTaskQueueEvent;
-import net.ccbluex.liquidbounce.event.events.GameTickEvent;
-import net.ccbluex.liquidbounce.event.events.InputHandleEvent;
-import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent;
-import net.ccbluex.liquidbounce.event.events.ScreenEvent;
-import net.ccbluex.liquidbounce.event.events.SessionEvent;
-import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent;
-import net.ccbluex.liquidbounce.event.events.UseCooldownEvent;
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent;
+import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleNoMissCooldown;
@@ -56,24 +43,23 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
+import net.minecraft.client.Options;
+import net.minecraft.client.User;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.multiplayer.ServerData;
-import net.minecraft.client.Options;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.client.User;
-import com.mojang.blaze3d.platform.Window;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.util.Util;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraft.util.profiling.ProfilerFiller;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -85,6 +71,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import static net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt.getUsesViaFabricPlus;
 
 @Mixin(Minecraft.class)
 public abstract class MixinMinecraft {

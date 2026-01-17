@@ -25,7 +25,7 @@ import com.google.gson.JsonSerializer
 import net.minecraft.SharedConstants
 import net.minecraft.client.multiplayer.ServerData
 import java.lang.reflect.Type
-import java.util.*
+import java.util.Base64
 
 object ServerInfoSerializer : JsonSerializer<ServerData> {
     override fun serialize(src: ServerData, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {

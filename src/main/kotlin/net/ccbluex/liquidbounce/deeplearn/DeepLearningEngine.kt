@@ -24,7 +24,7 @@ import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem.rootFolder
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.logger
-import java.util.*
+import java.util.Locale
 
 object DeepLearningEngine {
 

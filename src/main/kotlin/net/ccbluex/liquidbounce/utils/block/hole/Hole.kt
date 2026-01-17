@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.utils.block.hole
 
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.core.Vec3i
+import net.minecraft.world.level.levelgen.structure.BoundingBox
 
 @JvmRecord
 data class Hole(

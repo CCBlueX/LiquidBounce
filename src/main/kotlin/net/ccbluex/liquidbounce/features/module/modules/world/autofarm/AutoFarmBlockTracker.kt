@@ -20,12 +20,12 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.block.FarmBlock
-import net.minecraft.world.level.block.SoulSandBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.tags.BlockTags
+import net.minecraft.world.level.block.FarmBlock
+import net.minecraft.world.level.block.SoulSandBlock
+import net.minecraft.world.level.block.state.BlockState
 
 object AutoFarmBlockTracker : AbstractBlockLocationTracker.State2BlockPos<AutoFarmTrackedState>() {
     override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedState? {

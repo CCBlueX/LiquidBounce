@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.nbt.TagParser
 import net.minecraft.ChatFormatting
+import net.minecraft.nbt.TagParser
 
 object CommandContainers : Command.Factory {
 

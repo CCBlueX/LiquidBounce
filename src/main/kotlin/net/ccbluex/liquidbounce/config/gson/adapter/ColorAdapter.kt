@@ -26,7 +26,6 @@ import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import java.awt.Color
 import java.lang.reflect.Type
 
 object ColorAdapter : JsonSerializer<Color4b>, JsonDeserializer<Color4b> {
