@@ -203,7 +203,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFullBright
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHoleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
-import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemChams
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemESP
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleItemTags
