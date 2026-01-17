@@ -60,6 +60,4 @@ object ModuleSoundFX : ClientModule("SoundFX", Category.MISC) {
             player.playSound(HitSound, volume, 1f)
         }
     }
-    @Suppress("unused")
-    private val bowHandler = handler<Projectile> {  }
 }
