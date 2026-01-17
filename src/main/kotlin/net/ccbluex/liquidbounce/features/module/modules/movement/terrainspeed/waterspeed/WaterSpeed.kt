@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.waterspeed
 
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
@@ -31,14 +32,20 @@ import net.ccbluex.liquidbounce.utils.math.copy
 internal object WaterSpeed : ToggleableConfigurable(ModuleTerrainSpeed, "WaterSpeed", true) {
 
     val autoSwim by boolean("AutoSwim", true)
-    val horizontalSpeed by float("HorizontalSpeed", 0.1f, 0.01f..10f)
-    object SwimmingBoost : ToggleableConfigurable(this@WaterSpeed, "SwimmingBoost", true) {
-        val sprintBoost by float("Boost", 0.30f, 0.01f..10f)
+
+    object BaseSpeed : Configurable("BaseSpeed") {
+        val horizontalSpeed by float("Horizontal", 0.44f, 0.1f..10f)
+        val verticalSpeed by float("Vertical", 0.44f, 0.1f..10f)
     }
-    val verticalSpeed by float("VerticalSpeed", 0.25f, 0.01f..2f)
+
+    object SprintSpeed : ToggleableConfigurable(this, "SprintSpeed", true) {
+        val horizontalSpeed by float("Horizontal", 1f, 0.1f..10f)
+        val verticalSpeed by float("Vertical", 1f, 0.1f..10f)
+    }
 
     init {
-        tree(SwimmingBoost)
+        tree(BaseSpeed)
+        tree(SprintSpeed)
     }
 
     @Suppress("unused")
@@ -52,15 +59,13 @@ internal object WaterSpeed : ToggleableConfigurable(ModuleTerrainSpeed, "WaterSp
     private val tickHandler = handler<PlayerTickEvent> {
         if (!player.isInWater) return@handler
 
-        if (player.moving) {
-            val speed = if (player.isSprinting && SwimmingBoost.enabled) {
-                horizontalSpeed * (1.0 + SwimmingBoost.sprintBoost)
-            } else {
-                horizontalSpeed
-            }
+        val useSprintSpeed = mc.options.keySprint.isDown && SprintSpeed.enabled
+        val horizontalSpeed = if (useSprintSpeed) SprintSpeed.horizontalSpeed else BaseSpeed.horizontalSpeed
+        val verticalSpeed = if (useSprintSpeed) SprintSpeed.verticalSpeed else BaseSpeed.verticalSpeed
 
+        if (player.moving) {
             player.deltaMovement = player.deltaMovement.withStrafe(
-                speed = speed.toDouble()
+                speed = horizontalSpeed.toDouble()
             )
         }
 
