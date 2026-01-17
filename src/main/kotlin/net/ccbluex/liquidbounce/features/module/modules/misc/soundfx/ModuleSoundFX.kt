@@ -25,8 +25,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.minecraft.sounds.SoundEvent
-import net.minecraft.world.entity.projectile.Projectile
-import net.minecraft.world.item.BowItem
 
 object ModuleSoundFX : ClientModule("SoundFX", Category.MISC) {
 
