@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 // FIXME
-object ModuleChams: ClientModule("Chams", Category.RENDER)
+object ModuleChams: ClientModule("Chams", ModuleCategories.RENDER)

@@ -38,9 +38,9 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.world.level.block.Block
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.world.level.GameType
+import net.minecraft.world.level.block.Block
 
 @Deprecated(
     "The `clickGuiScaleChange` event has been deprecated.",

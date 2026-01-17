@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
-import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.network.chat.CommonComponents;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;

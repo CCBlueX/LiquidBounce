@@ -18,18 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.vertex.PoseStack
+import com.mojang.math.Axis
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import com.mojang.blaze3d.vertex.PoseStack
-import net.minecraft.world.entity.HumanoidArm
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.util.Mth
-import com.mojang.math.Axis
+import net.minecraft.world.entity.HumanoidArm
 
 /**
  * Animations module
@@ -41,7 +41,7 @@ import com.mojang.math.Axis
  * If they are not willing to contribute, please do not add the animation to this module.
  */
 @Suppress("MagicNumber")
-object ModuleAnimations : ClientModule("Animations", Category.RENDER, aliases = listOf("ViewModel")) {
+object ModuleAnimations : ClientModule("Animations", ModuleCategories.RENDER, aliases = listOf("ViewModel")) {
 
     init {
         tree(MainHand)

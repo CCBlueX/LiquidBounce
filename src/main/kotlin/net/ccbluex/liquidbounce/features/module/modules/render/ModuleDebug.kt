@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
@@ -58,8 +58,8 @@ import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3f
-import net.minecraft.network.chat.Component
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
@@ -69,7 +69,7 @@ import net.minecraft.world.phys.Vec3
  * Allows you to see server-sided rotations.
  */
 
-object ModuleDebug : ClientModule("Debug", Category.RENDER) {
+object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
     private val parameters by boolean("Parameters", true).onChanged { _ ->
         debugParameters.clear()

@@ -23,12 +23,12 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.dotProduct
 import net.ccbluex.liquidbounce.utils.math.similarity
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.material.MapColor.Brightness
 import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.LevelChunk
+import net.minecraft.world.level.material.MapColor.Brightness
 import org.joml.Vector2i
 import org.joml.Vector2ic
 import org.joml.component1

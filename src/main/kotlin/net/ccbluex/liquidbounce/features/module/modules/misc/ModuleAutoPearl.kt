@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -41,13 +41,13 @@ import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityDimensions
-import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl
 import net.minecraft.world.item.Items
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 
@@ -60,7 +60,11 @@ private const val MAX_SIMULATED_TICKS = 240
  *
  * @author sqlerrorthing
  */
-object ModuleAutoPearl : ClientModule("AutoPearl", Category.COMBAT, aliases = listOf("PearlFollower", "PearlTarget")) {
+object ModuleAutoPearl : ClientModule(
+    "AutoPearl",
+    ModuleCategories.COMBAT,
+    aliases = listOf("PearlFollower", "PearlTarget")
+) {
 
     private val mode by enumChoice("Mode", Modes.TRIGGER)
 

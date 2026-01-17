@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
@@ -48,7 +48,7 @@ import kotlin.math.min
  *
  * Calls tick function to speed up, when needed
  */
-internal object ModuleTickBase : ClientModule("TickBase", Category.COMBAT) {
+internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBAT) {
 
     private val mode by enumChoice("Mode", TickBaseMode.PAST)
         .apply { tagBy(this) }

@@ -19,27 +19,29 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render.hats
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsCone
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsFlower
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsHalo
+import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsImage
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsOrbs
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.modes.HatsStar
 
 /**
  * @author minecrrrr
  */
-object ModuleHats : ClientModule("Hats", Category.RENDER) {
+object ModuleHats : ClientModule("Hats", ModuleCategories.RENDER) {
 
-    val modes = choices(
-        "Mode", HatsCone, arrayOf(
+    val modes = choices("Mode", 0) {
+        arrayOf(
             HatsCone,
             HatsHalo,
             HatsOrbs,
             HatsFlower,
             HatsStar,
+            HatsImage,
         )
-    ).apply { tagBy(this) }
+    }.apply { tagBy(this) }
 
 }

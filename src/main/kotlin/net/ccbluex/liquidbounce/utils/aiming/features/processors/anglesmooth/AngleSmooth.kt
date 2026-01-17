@@ -26,8 +26,11 @@ import net.ccbluex.liquidbounce.utils.aiming.features.processors.RotationProcess
 /**
  * An [AngleSmooth]'er, but as choice
  */
-abstract class AngleSmooth(name: String, override val parent: ChoiceConfigurable<*>)
-    : Choice(name), RotationProcessor {
+abstract class AngleSmooth(
+    name: String,
+    override val parent: ChoiceConfigurable<*>,
+    aliases: List<String> = emptyList()
+) : Choice(name, aliases), RotationProcessor {
     abstract fun calculateTicks(
         currentRotation: Rotation,
         targetRotation: Rotation

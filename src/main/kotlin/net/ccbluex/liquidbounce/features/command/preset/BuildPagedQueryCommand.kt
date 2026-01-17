@@ -32,10 +32,10 @@ import net.ccbluex.liquidbounce.utils.client.onClickRun
 import net.ccbluex.liquidbounce.utils.client.onHover
 import net.ccbluex.liquidbounce.utils.client.removeMessage
 import net.ccbluex.liquidbounce.utils.client.withColor
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
-import net.minecraft.network.chat.Component
-import net.minecraft.ChatFormatting
 import java.util.function.IntConsumer
 import kotlin.math.ceil
 

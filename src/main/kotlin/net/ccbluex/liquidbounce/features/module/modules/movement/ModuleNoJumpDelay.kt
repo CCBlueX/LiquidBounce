@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * NoJumpDelay module
@@ -27,4 +27,4 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * Removes the delay between jumps.
  */
 
-object ModuleNoJumpDelay : ClientModule("NoJumpDelay", Category.MOVEMENT)
+object ModuleNoJumpDelay : ClientModule("NoJumpDelay", ModuleCategories.MOVEMENT)

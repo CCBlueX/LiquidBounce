@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpe
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.movement.stopXZVelocity
-import net.minecraft.world.entity.MoverType
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.entity.MoverType
 import kotlin.math.ceil
 import kotlin.math.floor
 

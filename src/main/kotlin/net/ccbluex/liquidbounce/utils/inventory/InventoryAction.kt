@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.item.ItemStack
 
 sealed interface InventoryAction {
 

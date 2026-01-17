@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

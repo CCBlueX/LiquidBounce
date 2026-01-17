@@ -22,15 +22,15 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.world.entity.item.FallingBlockEntity
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.world.entity.item.FallingBlockEntity
 
-object ModuleProphuntESP : ClientModule("ProphuntESP", Category.RENDER,
+object ModuleProphuntESP : ClientModule("ProphuntESP", ModuleCategories.RENDER,
     aliases = listOf("BlockUpdateDetector", "FallingBlockESP")
 ) {
 
