@@ -54,6 +54,7 @@ object ModuleCategories {
     @JvmField
     val CLIENT = register(ModuleCategory("Client"))
 
+    @get:JvmStatic
     val entries: Collection<ModuleCategory> = registry.sequencedValues()
 
     @JvmStatic
