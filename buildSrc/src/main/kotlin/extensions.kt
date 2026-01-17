@@ -51,8 +51,9 @@ fun Task.getContributors(repoOwner: String, repoName: String): List<String> = tr
         .header("X-GitHub-Api-Version", "2022-11-28")
         .header("Accept", "application/vnd.github+json")
         .apply {
-            if (!githubToken.isNullOrBlank())
+            if (!githubToken.isNullOrBlank()) {
                 header("Authorization", "Bearer $githubToken")
+            }
         }
 
     fun HttpClient.fetchLastPage(baseUrl: String, perPage: Int): Int {
@@ -103,7 +104,8 @@ fun Task.getContributors(repoOwner: String, repoName: String): List<String> = tr
                         emptyList()
                     }
                 } else {
-                    logger.error("Failed to get GitHub API response for $repoOwner:$repoName (HTTP ${response.statusCode()}): ${response.body().bufferedReader().readText()}")
+                    logger.error("Failed to get GitHub API response for $repoOwner:$repoName " +
+                        "(HTTP ${response.statusCode()}): ${response.body().bufferedReader().readText()}")
                     emptyList()
                 }
             }

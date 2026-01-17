@@ -1,27 +1,25 @@
-build:
-  excludeCorrectable: false
-
 config:
   validation: true
   warningsAsErrors: false
   checkExhaustiveness: false
   # when writing own rules with new properties, exclude the property path e.g.: 'my_rule_set,.*>.*>[my_property]'
-  excludes: ''
+#  excludes: ''
 
 complexity:
   active: true
   NamedArguments:
     active: true
-    threshold: 4
+    allowedArguments: 4
   ComplexCondition:
-    threshold: 5
+    allowedConditions: 5
   LongParameterList:
-    functionThreshold: 7
+    allowedFunctionParameters: 7
+    allowedConstructorParameters: 7
   CyclomaticComplexMethod:
     active: false
   CognitiveComplexMethod:
     active: true
-    threshold: 16
+    allowedComplexity: 16
   StringLiteralDuplication:
     active: false
 
@@ -65,18 +63,22 @@ style:
   ForbiddenMethodCall:
     active: true
     methods:
-      - 'kotlin.io.print'
-      - 'kotlin.io.println'
-      - 'java.math.BigDecimal.<init>(kotlin.Double)'
-      - 'java.math.BigDecimal.<init>(kotlin.String)'
-      - 'kotlin.system.measureTimeMillis'
-      # glBindTexture: replace with GlStateManager._bindTexture(), because everything else will mess up the internal state handling.
-      - 'org.lwjgl.opengl.GL11.glBindTexture'
+      - value: 'kotlin.io.print'
+      - value: 'kotlin.io.println'
+      - value: 'java.math.BigDecimal.<init>(kotlin.Double)'
+      - value: 'java.math.BigDecimal.<init>(kotlin.String)'
+      - value: 'kotlin.system.measureTimeMillis'
+      - value: 'org.lwjgl.opengl.GL11.glBindTexture'
+        reason: 'replace with GlStateManager._bindTexture(), because everything else will mess up the internal state handling.'
       # Java stuffs
-      - 'java.util.Vector.<init>()'
-      - 'java.util.Stack.<init>()'
-      - 'java.util.LinkedList.<init>()'
-      - 'java.util.Hashtable.<init>()'
+      - value: 'java.util.Vector.<init>'
+        reason: 'Replaced with CopyOnWriteArrayList and list.synchronized()'
+      - value: 'java.util.Stack.<init>'
+        reason: 'Replaced with CopyOnWriteArrayList and list.synchronized()'
+      - value: 'java.util.Hashtable.<init>'
+        reason: 'Replaced with ConcurrentHashMap'
+      - value: 'java.util.LinkedList.<init>'
+        reason: 'Use ArrayDeque for deque usage, ArrayList for list usage'
   BracesOnIfStatements:
     active: true
     singleLine: 'never'
