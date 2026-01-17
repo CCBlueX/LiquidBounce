@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.client.renderer.rendertype.RenderType;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 

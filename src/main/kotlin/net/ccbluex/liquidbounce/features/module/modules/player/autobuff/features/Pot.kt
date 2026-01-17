@@ -38,9 +38,9 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.AreaEffectCloud
 import net.minecraft.world.entity.LivingEntity
-import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.projectile.throwableitemprojectile.AbstractThrownPotion
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.LingeringPotionItem

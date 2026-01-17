@@ -20,11 +20,11 @@ package net.ccbluex.liquidbounce.integration.theme.component.components.minimap
 
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.material.MapColor
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.ChunkAccess
+import net.minecraft.world.level.material.MapColor
 import java.util.concurrent.ConcurrentHashMap
 
 class MinimapHeightmapManager {

@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
-import java.util.*
+import java.util.PriorityQueue
 
 // TODO multiple paths a tick if enough placements in none rotation mode
 // TODO support no wall range, proper reach calculations

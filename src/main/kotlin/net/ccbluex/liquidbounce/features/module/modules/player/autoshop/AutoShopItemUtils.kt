@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
 import it.unimi.dsi.fastutil.objects.ReferenceSet
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
-import net.minecraft.core.registries.BuiltInRegistries
 
 const val WOOL_ID           = "wool"
 const val TERRACOTTA_ID     = "terracotta"

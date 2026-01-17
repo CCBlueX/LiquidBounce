@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptRotationUtil.newRotationEntity
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -94,7 +94,7 @@ object ScriptRotationUtil {
             configurable = RotationsConfigurable(
                 object : EventListener { },
                 movementCorrection = if (fixVelocity) MovementCorrection.SILENT else MovementCorrection.OFF
-            ), priority = Priority.NORMAL, provider = ClientModule("ScriptAPI", Category.MISC)
+            ), priority = Priority.NORMAL, provider = ClientModule("ScriptAPI", ModuleCategories.MISC)
         )
     }
 

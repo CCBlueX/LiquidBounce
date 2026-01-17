@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
@@ -33,7 +33,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
  *
  * Allows you to fly through blocks.
  */
-object ModuleNoClip : ClientModule("NoClip", Category.MOVEMENT) {
+object ModuleNoClip : ClientModule("NoClip", ModuleCategories.MOVEMENT) {
 
     val speed by float("Speed", 0.32f, 0.1f..0.4f)
     private val onlyInVehicle by boolean("OnlyInVehicle", false)

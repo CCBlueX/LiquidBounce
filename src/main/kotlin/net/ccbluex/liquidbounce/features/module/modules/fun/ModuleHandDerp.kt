@@ -24,12 +24,12 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.network.protocol.common.ServerboundClientInformationPacket
-import net.minecraft.server.level.ClientInformation
-import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.server.level.ClientInformation
 
 
 /**
@@ -37,7 +37,7 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
  *
  * Switches your main hand.
  */
-object ModuleHandDerp : ClientModule("HandDerp", Category.FUN) {
+object ModuleHandDerp : ClientModule("HandDerp", ModuleCategories.FUN) {
 
 
     private val silent by boolean("Silent", false)

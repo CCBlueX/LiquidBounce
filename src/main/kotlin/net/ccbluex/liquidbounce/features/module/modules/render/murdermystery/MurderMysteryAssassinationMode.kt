@@ -24,16 +24,17 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.math.levenshtein
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.multiplayer.PlayerInfo
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.client.multiplayer.PlayerInfo
-import net.minecraft.client.multiplayer.ClientLevel
 import net.minecraft.core.component.DataComponents
-import net.minecraft.world.level.saveddata.maps.MapId
-import net.minecraft.world.item.MapItem
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.resources.Identifier
-import java.util.*
+import net.minecraft.world.item.MapItem
+import net.minecraft.world.level.saveddata.maps.MapId
+import java.util.Locale
+import java.util.UUID
 import kotlin.math.absoluteValue
 
 object MurderMysteryAssassinationMode : MurderMysteryMode("Assassination") {

@@ -20,11 +20,11 @@
 package net.ccbluex.liquidbounce.utils.text;
 
 import it.unimi.dsi.fastutil.objects.ObjectList;
-import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.network.chat.Style;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
-import net.minecraft.locale.Language;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;

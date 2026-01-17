@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.minDurabilityToStartRepair
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbAccessor
@@ -43,9 +43,9 @@ import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.Items
+import net.minecraft.world.item.enchantment.Enchantments
 
 /**
  * FastExp module
@@ -54,7 +54,7 @@ import net.minecraft.world.item.Items
  */
 object ModuleFastExp : ClientModule(
     "FastExp",
-    Category.PLAYER,
+    ModuleCategories.PLAYER,
     bindAction = InputBind.BindAction.HOLD,
     disableOnQuit = true
 ) {

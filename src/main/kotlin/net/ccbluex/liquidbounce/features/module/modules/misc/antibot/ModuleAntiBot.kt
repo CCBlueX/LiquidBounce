@@ -22,8 +22,8 @@ import com.mojang.authlib.GameProfile
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.CustomAntiBotMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.HorizonAntiBotMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.IntaveHeavyAntiBotMode
@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.Matri
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 
-object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
+object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
 
     val modes = choices("Mode", CustomAntiBotMode, arrayOf(
         CustomAntiBotMode,

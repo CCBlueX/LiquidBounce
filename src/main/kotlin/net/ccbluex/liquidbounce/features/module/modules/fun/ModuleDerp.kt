@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
  *
  * Makes it look as if you were derping around.
  */
-object ModuleDerp : ClientModule("Derp", Category.FUN) {
+object ModuleDerp : ClientModule("Derp", ModuleCategories.FUN) {
 
     private val yawMode = choices("Yaw", YawRandom,
         arrayOf(YawStatic, YawOffset, YawRandom, YawJitter, YawSpin))

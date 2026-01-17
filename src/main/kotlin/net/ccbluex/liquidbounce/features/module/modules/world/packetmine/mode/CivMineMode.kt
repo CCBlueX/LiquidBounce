@@ -24,13 +24,13 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool.fin
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.item.ItemStack
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.state.BlockState
 
 object CivMineMode : MineMode("Civ", stopOnStateChange = false) {
 

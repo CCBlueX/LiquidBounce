@@ -31,11 +31,11 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.world
-import net.minecraft.world.level.block.Block
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.Registry
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
+import net.minecraft.world.level.block.Block
 import kotlin.jvm.optionals.getOrNull
 
 private fun <V : Value<*>> ParameterBuilder.Companion.value(
