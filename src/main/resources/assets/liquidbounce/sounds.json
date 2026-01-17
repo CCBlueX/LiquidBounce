@@ -1,0 +1,11 @@
+{
+  "bonk": {
+    "sounds": ["liquidbounce:bonk"]
+  },
+  "click": {
+    "sounds": ["liquidbounce:click"]
+  },
+  "pop": {
+    "sounds": ["liquidbounce:pop"]
+  }
+}
