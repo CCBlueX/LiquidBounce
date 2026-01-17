@@ -39,7 +39,7 @@ object ModuleSoundFX : ClientModule("SoundFX", Category.MISC) {
         Pop("Pop"),
         Uwu("UWU"),
         Nya("NYA"),
-        Tung("Tung"),
+        Tung("Tung"), 
     }
 
     private val HitSound: SoundEvent
