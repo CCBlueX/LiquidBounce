@@ -627,10 +627,10 @@
   "liquidbounce.module.vomit.description": "Выбрасывает предметы из вашего инвентаря.",
   "liquidbounce.module.xRay.description": "Отрисовывает только выбранные блоки.",
   "liquidbounce.module.zoom.description": "Позволяет сделать всё в мире больше или меньше.",
-  "liquidbounce.rotationSystem.angleSmooth.minarai.fallback": "Minarai требует нейросеть, используется сглаживание углов: %s.",
+  "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "используется сглаживание углов: %s.",
   "liquidbounce.scripts.debug.dap": "с DAP на порту %s",
   "liquidbounce.scripts.debug.inspect.url": "Нажмите, чтобы скопировать URL отладчика и вставьте его в браузер (к сожалению, работают только браузеры на основе Chromium).",
   "liquidbounce.scripts.debug.support": "Скрипт %s настроен на запуск с поддержкой отладчика на: ",
   "liquidbounce.tooltip.clickToCopy": "Кликни для копирования",
-  "liquidbounce.unsupportedDeepLearning": "❌ Движок нейросети не инициализирован. Твоя система, возможно, не поддерживается."
+  "liquidbounce.unsupportedDeepLearning": "Движок нейросети не инициализирован. Твоя система, возможно, не поддерживается."
 }

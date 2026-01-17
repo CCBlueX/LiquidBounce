@@ -22,17 +22,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
-import net.ccbluex.liquidbounce.deeplearn.ModelHolster
-import net.ccbluex.liquidbounce.deeplearn.ModelHolster.models
-import net.ccbluex.liquidbounce.deeplearn.data.TrainingData
-import net.ccbluex.liquidbounce.deeplearn.models.MinaraiModel
+import net.ccbluex.liquidbounce.deeplearn.ModelManager
+import net.ccbluex.liquidbounce.deeplearn.ModelManager.models
+import net.ccbluex.liquidbounce.deeplearn.data.CombatSample
+import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.MinaraiCombatRecorder
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.MinaraiTrainer
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatRecorder
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatTrainerRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.clickablePath
@@ -139,7 +139,7 @@ object CommandModels : Command.Factory {
         return CommandBuilder
             .begin("reload")
             .handler {
-                ModelHolster.reload()
+                ModelManager.reload()
                 chat(command.result("modelsReloaded"))
             }
             .build()
@@ -155,13 +155,13 @@ object CommandModels : Command.Factory {
             .build()
     }
 
-    private fun trainModel(command: Command, name: String, model: MinaraiModel? = null) = runCatching {
+    private fun trainModel(command: Command, name: String, model: TwoDimensionalRegressionModel? = null) = runCatching {
         val (samples, sampleTime) = measureTimedValue {
-            TrainingData.parse(
+            CombatSample.parse(
                 // Combat data
-                MinaraiCombatRecorder.folder,
+                DebugCombatRecorder.folder,
                 // Trainer data
-                MinaraiTrainer.folder
+                DebugCombatTrainerRecorder.folder
             )
         }
 
@@ -184,7 +184,7 @@ object CommandModels : Command.Factory {
         chat(command.result("preparedData", datasetTime.toString(DurationUnit.SECONDS, decimals = 2)))
 
         val trainingTime = measureTime {
-            val model = model ?: MinaraiModel(name, models).also { model -> models.choices.add(model) }
+            val model = model ?: TwoDimensionalRegressionModel(name, models).also { model -> models.choices.add(model) }
             model.train(dataset.features, dataset.labels)
             model.save()
 

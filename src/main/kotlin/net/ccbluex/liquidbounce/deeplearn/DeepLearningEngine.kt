@@ -59,7 +59,7 @@ object DeepLearningEngine {
         // Enforce CPU pytorch flavor (CUDA often conflicts with NVIDIA CUDA and is too large for our use case)
         System.setProperty("PYTORCH_FLAVOR", "cpu")
 
-        ModelHolster
+        ModelManager
     }
 
     @JvmStatic
@@ -76,14 +76,14 @@ object DeepLearningEngine {
     suspend fun init(task: Task) {
         this.task = task
 
-        logger.info("[DeepLearning] Initializing engine...")
+        logger.info("[AI] Initializing engine...")
         val engine = withContext(Dispatchers.IO) {
             Engine.getInstance()
         }
         val name = engine.engineName
         val version = engine.version
         val deviceType = engine.defaultDevice().deviceType.uppercase(Locale.ENGLISH)
-        logger.info("[DeepLearning] Using engine $name $version on $deviceType.")
+        logger.info("[AI] Using deep learning engine $name $version on $deviceType.")
 
         isInitialized = true
         this.task = null

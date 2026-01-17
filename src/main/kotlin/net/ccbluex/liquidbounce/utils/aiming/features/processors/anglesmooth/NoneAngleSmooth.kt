@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 
 /**
- * This is used by [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.MinaraiAngleSmooth]
+ * This is used by [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.AiAngleSmooth]
  * to define an angle smooth mode that does not affect the current rotation.
  *
  * It essentially does nothing.

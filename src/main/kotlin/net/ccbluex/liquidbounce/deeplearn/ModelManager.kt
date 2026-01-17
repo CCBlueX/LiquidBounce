@@ -22,13 +22,13 @@ package net.ccbluex.liquidbounce.deeplearn
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine.modelsFolder
-import net.ccbluex.liquidbounce.deeplearn.models.MinaraiModel
+import net.ccbluex.liquidbounce.deeplearn.models.TwoDimensionalRegressionModel
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.logger
 import kotlin.time.measureTime
 
-object ModelHolster : EventListener, Configurable("DeepLearning") {
+object ModelManager : EventListener, Configurable("AI") {
 
     /**
      * Base models that are always available
@@ -37,7 +37,7 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
      * The name can contain uppercase characters,
      * but the file should always be lowercase.
      */
-    val baseModels = arrayOf(
+    val combatModels = arrayOf(
         "21KC11KP",
         "19KC8KP"
     )
@@ -45,19 +45,19 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
     /**
      * Available models from the models folder
      */
-    private val availableModels: List<String>
+    private val availableCombatModels: List<String>
         get() = modelsFolder
             .listFiles { file -> file.isDirectory }
             ?.map { file -> file.nameWithoutExtension } ?: emptyList()
 
-    private val allModels: Array<String>
-        get() = baseModels + availableModels
+    private val allCombatModels: Array<String>
+        get() = combatModels + availableCombatModels
 
     val models = choices(this, "Model", 0) { choiceConfigurable ->
         // Empty models for start-up initialization.
         // These will be replaced later on at [load].
-        allModels.mapToArray { name ->
-            MinaraiModel(name, choiceConfigurable)
+        allCombatModels.mapToArray { name ->
+            TwoDimensionalRegressionModel(name, choiceConfigurable)
         }
     }
 
@@ -67,9 +67,9 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
      * through the choice initialization.
      */
     fun load() {
-        logger.info("[DeepLearning] Loading models...")
-        val choices = allModels.mapToArray { name ->
-            MinaraiModel(name, models)
+        logger.info("[AI] Loading models...")
+        val choices = allCombatModels.mapToArray { name ->
+            TwoDimensionalRegressionModel(name, models)
         }
 
         for (model in choices) {
@@ -78,9 +78,9 @@ object ModelHolster : EventListener, Configurable("DeepLearning") {
                     model.load()
                 }
             }.onFailure { error ->
-                logger.error("[DeepLearning] Failed to load model '${model.name}'.", error)
+                logger.error("[AI] Failed to load model '${model.name}'.", error)
             }.onSuccess { time ->
-                logger.info("[DeepLearning] Loaded model '${model.name}' in ${time.inWholeMilliseconds}ms.")
+                logger.info("[AI] Loaded model '${model.name}' in ${time.inWholeMilliseconds}ms.")
             }
         }
 

@@ -580,8 +580,8 @@
   "liquidbounce.command.models.subcommand.delete.result.modelNotFound": "❌ Das Modell %s konnte nicht gefunden werden.",
   "liquidbounce.command.models.subcommand.delete.result.modelDeleted": "✔ Das Modell %s wurde gelöscht.",
 
-  "liquidbounce.unsupportedDeepLearning": "❌ Die Deep-Learning-Engine wurde nicht initialisiert. Dein System wird möglicherweise nicht unterstützt.",
-  "liquidbounce.rotationSystem.angleSmooth.minarai.fallback": "Die Deep-Learning-Engine wird von Minarai benötigt, daher wird auf %s angle smoothing zurückgegriffen.",
+  "liquidbounce.unsupportedDeepLearning": "❌ Die KI-Engine wurde nicht initialisiert. Dein System wird möglicherweise nicht unterstützt.",
+  "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "Daher wird auf %s angle smoothing zurückgegriffen.",
 
   "liquidbounce.module.particles.description": "Zeigt Partikel beim Angriff eines z.B. Spielers an.",
   "liquidbounce.module.elytraTarget.description": "Verfolgt dein Ziel mit einer Elytra.",

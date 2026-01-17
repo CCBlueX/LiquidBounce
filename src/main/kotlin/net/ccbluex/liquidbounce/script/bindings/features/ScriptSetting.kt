@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.features
 
+import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.config.types.ChooseListValue
 import net.ccbluex.liquidbounce.config.types.MultiChooseListValue
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -25,12 +26,11 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice.Companion.asNamedChoice
 import net.ccbluex.liquidbounce.config.types.RangedValue
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
-import net.ccbluex.liquidbounce.deeplearn.ModelHolster.list
+import net.ccbluex.liquidbounce.deeplearn.ModelManager.list
 import net.ccbluex.liquidbounce.script.asArray
 import net.ccbluex.liquidbounce.script.asDoubleArray
 import net.ccbluex.liquidbounce.script.asIntArray
 import net.ccbluex.liquidbounce.utils.input.inputByName
-import com.mojang.blaze3d.platform.InputConstants
 import org.graalvm.polyglot.Value as PolyglotValue
 
 /**
