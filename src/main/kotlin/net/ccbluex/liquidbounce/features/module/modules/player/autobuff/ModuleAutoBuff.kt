@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Drink
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Gapple
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Head
@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 
 object ModuleAutoBuff : ClientModule(
     name = "AutoBuff",
-    category = Category.PLAYER,
+    category = ModuleCategories.PLAYER,
     aliases = listOf("AutoPot", "AutoGapple", "AutoSoup")
 ) {
 

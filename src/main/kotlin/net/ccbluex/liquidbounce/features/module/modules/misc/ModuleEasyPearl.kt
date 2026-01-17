@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawBoxSide
@@ -46,11 +46,11 @@ import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.world.level.block.RenderShape
+import net.minecraft.core.Direction
 import net.minecraft.world.entity.EntityDimensions
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.phys.HitResult
-import net.minecraft.core.Direction
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -60,7 +60,7 @@ import net.minecraft.world.phys.Vec3
  **/
 @Suppress("MagicNumber")
 object ModuleEasyPearl :
-    ClientModule("EasyPearl", Category.MISC, aliases = listOf("PearlHelper", "PearlAssist", "PearlTP")) {
+    ClientModule("EasyPearl", ModuleCategories.MISC, aliases = listOf("PearlHelper", "PearlAssist", "PearlTP")) {
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
     private val reachableCheck by boolean("ReachableCheck", true)
     private val rotation = tree(RotationsConfigurable(this))

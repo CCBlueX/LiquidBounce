@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
@@ -32,7 +32,7 @@ import net.minecraft.world.entity.MoverType
  *
  * Strafe into different directions while you're midair.
  */
-object ModuleStrafe : ClientModule("Strafe", Category.MOVEMENT) {
+object ModuleStrafe : ClientModule("Strafe", ModuleCategories.MOVEMENT) {
 
     init {
         enableLock()

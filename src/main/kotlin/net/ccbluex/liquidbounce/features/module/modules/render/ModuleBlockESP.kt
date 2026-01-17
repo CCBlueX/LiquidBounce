@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
@@ -57,7 +57,7 @@ import java.util.concurrent.ConcurrentSkipListSet
  * Allows you to see selected blocks through walls.
  */
 
-object ModuleBlockESP : ClientModule("BlockESP", Category.RENDER) {
+object ModuleBlockESP : ClientModule("BlockESP", ModuleCategories.RENDER) {
 
     private val modes = choices("Mode", 0) {
         arrayOf(

@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
@@ -41,7 +41,7 @@ import net.minecraft.world.item.Items
  **/
 object ModuleElytraSwap : ClientModule(
     "ElytraSwap",
-    Category.PLAYER,
+    ModuleCategories.PLAYER,
     aliases = listOf("ChestSwap"),
     disableOnQuit = true
 ) {

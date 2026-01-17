@@ -21,13 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 
-object ModuleNoSlotSet : ClientModule("NoSlotSet", Category.PLAYER) {
+object ModuleNoSlotSet : ClientModule("NoSlotSet", ModuleCategories.PLAYER) {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         if (event.packet !is ClientboundSetHeldSlotPacket) {

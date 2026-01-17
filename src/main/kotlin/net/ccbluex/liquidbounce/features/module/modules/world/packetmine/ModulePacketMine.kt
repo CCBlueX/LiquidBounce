@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode.CivMineMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode.ImmediateMineMode
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.mode.NormalMineMode
@@ -47,15 +47,15 @@ import net.ccbluex.liquidbounce.utils.block.outlineBox
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.item.ItemStack
-import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
-import net.minecraft.core.BlockPos
 import kotlin.math.max
 
 /**
@@ -66,7 +66,7 @@ import kotlin.math.max
  * @author ccetl
  */
 @Suppress("TooManyFunctions")
-object ModulePacketMine : ClientModule("PacketMine", Category.WORLD) {
+object ModulePacketMine : ClientModule("PacketMine", ModuleCategories.WORLD) {
 
     val mode = choices(
         this,

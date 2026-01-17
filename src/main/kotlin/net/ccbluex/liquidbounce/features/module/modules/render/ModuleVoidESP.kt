@@ -23,13 +23,13 @@ import it.unimi.dsi.fastutil.longs.LongSet
 import it.unimi.dsi.fastutil.longs.LongSets
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.world.level.block.SupportType
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.world.level.block.SupportType
 import net.minecraft.world.level.chunk.ChunkAccess
 
 /**
@@ -38,7 +38,7 @@ import net.minecraft.world.level.chunk.ChunkAccess
  * Highlight all surrounding positions that may be void.
  */
 
-object ModuleVoidESP : ClientModule("VoidESP", Category.RENDER) {
+object ModuleVoidESP : ClientModule("VoidESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
         get() = "liquidbounce.module.voidEsp"

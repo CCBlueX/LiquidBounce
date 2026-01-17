@@ -23,15 +23,15 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.minecraft.client.CameraType
 import net.minecraft.client.CameraType.THIRD_PERSON_BACK
 import net.minecraft.client.CameraType.THIRD_PERSON_FRONT
 
 object ModuleFreeLook : ClientModule(
-    "FreeLook", Category.RENDER, disableOnQuit = true, bindAction = InputBind.BindAction.HOLD
+    "FreeLook", ModuleCategories.RENDER, disableOnQuit = true, bindAction = InputBind.BindAction.HOLD
 ) {
 
     private val perspective by enumChoice("Perspective", PerspectiveChoice.BACK)

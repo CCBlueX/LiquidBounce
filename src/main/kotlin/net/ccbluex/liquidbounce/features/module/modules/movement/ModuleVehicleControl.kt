@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
 import net.ccbluex.liquidbounce.utils.client.warning
@@ -42,7 +42,7 @@ import net.minecraft.world.InteractionHand
  *
  * Move with your vehicle however you want.
  */
-object ModuleVehicleControl : ClientModule("VehicleControl", Category.MOVEMENT, aliases = listOf("BoatFly")) {
+object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MOVEMENT, aliases = listOf("BoatFly")) {
 
     init {
         enableLock()

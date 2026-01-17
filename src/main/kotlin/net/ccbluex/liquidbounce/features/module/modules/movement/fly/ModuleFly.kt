@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyAirWalk
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyCreative
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyEnderpearl
@@ -58,7 +58,7 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
  * Allows you to fly.
  */
 
-object ModuleFly : ClientModule("Fly", Category.MOVEMENT, aliases = listOf("Glide", "Jetpack")) {
+object ModuleFly : ClientModule("Fly", ModuleCategories.MOVEMENT, aliases = listOf("Glide", "Jetpack")) {
 
     init {
         enableLock()

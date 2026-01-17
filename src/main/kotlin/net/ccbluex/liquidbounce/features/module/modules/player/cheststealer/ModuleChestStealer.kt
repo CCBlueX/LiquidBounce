@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanGenerator
@@ -52,7 +52,7 @@ import kotlin.math.ceil
  * Automatically steals all items from a chest.
  */
 
-object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
+object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER) {
 
     private val inventoryConstrains = tree(InventoryConstraints())
     private val autoClose by boolean("AutoClose", true)

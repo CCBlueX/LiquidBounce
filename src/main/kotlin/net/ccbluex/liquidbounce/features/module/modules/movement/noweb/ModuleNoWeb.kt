@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noweb
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAvoidHazards
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebAir
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebGrimBreak
@@ -36,7 +36,7 @@ import net.minecraft.core.BlockPos
  *
  * Disables web slowdown.
  */
-object ModuleNoWeb : ClientModule("NoWeb", Category.MOVEMENT) {
+object ModuleNoWeb : ClientModule("NoWeb", ModuleCategories.MOVEMENT) {
 
     init {
         enableLock()

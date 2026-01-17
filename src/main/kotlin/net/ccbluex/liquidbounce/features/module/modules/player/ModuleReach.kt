@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * Reach module
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.item.MixinAttackRange
  */
 
-object ModuleReach : ClientModule("Reach", Category.PLAYER) {
+object ModuleReach : ClientModule("Reach", ModuleCategories.PLAYER) {
     val entityInteractionReach by float("EntityInteractionReach", 1.2f, 0f..64f)
     val blockInteractionReach by float("BlockInteractionReach", 0.5f, 0f..64f)
 

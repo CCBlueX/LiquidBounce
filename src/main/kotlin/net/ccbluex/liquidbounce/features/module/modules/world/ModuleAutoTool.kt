@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.once
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.bed.BedBlockTracker
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquaredEyes
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -43,18 +43,18 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.item.enchantment.Enchantments
-import net.minecraft.world.item.ItemStack
 import net.minecraft.core.BlockPos
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.state.BlockState
 
 /**
  * AutoTool module
  *
  * Automatically chooses the best tool in your inventory to mine a block.
  */
-object ModuleAutoTool : ClientModule("AutoTool", Category.WORLD) {
+object ModuleAutoTool : ClientModule("AutoTool", ModuleCategories.WORLD) {
     val toolSelector =
         choices(
             "ToolSelector",

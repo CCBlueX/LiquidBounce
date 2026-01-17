@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.collisionShape
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
@@ -40,9 +40,9 @@ import net.ccbluex.liquidbounce.utils.entity.immuneToMagmaBlocks
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.world.level.block.MagmaBlock
-import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket
 import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket
+import net.minecraft.world.level.block.MagmaBlock
 import net.minecraft.world.phys.AABB
 
 /**
@@ -50,7 +50,7 @@ import net.minecraft.world.phys.AABB
  *
  * Automatically sneaks all the time.
  */
-object ModuleSneak : ClientModule("Sneak", Category.MOVEMENT) {
+object ModuleSneak : ClientModule("Sneak", ModuleCategories.MOVEMENT) {
 
     private val modes = choices("Mode", Vanilla, arrayOf(Legit, Vanilla, Switch)).apply { tagBy(this) }
     private val notDuringMove by boolean("NotDuringMove", false)

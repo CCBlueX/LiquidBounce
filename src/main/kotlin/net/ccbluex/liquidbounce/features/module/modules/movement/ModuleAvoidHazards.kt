@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.BasePressurePlateBlock
@@ -43,7 +43,7 @@ import net.minecraft.world.phys.shapes.Shapes
  *
  * Prevents you walking into blocks that might be malicious for you.
  */
-object ModuleAvoidHazards : ClientModule("AvoidHazards", Category.MOVEMENT) {
+object ModuleAvoidHazards : ClientModule("AvoidHazards", ModuleCategories.MOVEMENT) {
     private val avoid by multiEnumChoice("Avoid", Avoid.entries)
 
     // Conflicts with AvoidHazards

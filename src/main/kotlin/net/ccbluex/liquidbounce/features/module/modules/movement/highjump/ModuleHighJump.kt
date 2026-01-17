@@ -24,15 +24,15 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * HighJump module
  *
  * Allows you to jump higher.
  */
-object ModuleHighJump : ClientModule("HighJump", Category.MOVEMENT) {
+object ModuleHighJump : ClientModule("HighJump", ModuleCategories.MOVEMENT) {
 
     init {
         enableLock()

@@ -24,11 +24,12 @@ import net.ccbluex.liquidbounce.event.events.ItemLoreQueryEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.module.CommandInvsee
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.inventory.ViewedInventoryScreen
+import net.minecraft.ChatFormatting
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.EquipmentSlot.MAINHAND
@@ -38,7 +39,6 @@ import net.minecraft.world.entity.EquipmentSlot.Type.HAND
 import net.minecraft.world.entity.EquipmentSlot.Type.HUMANOID_ARMOR
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
-import net.minecraft.ChatFormatting
 import java.util.Locale
 import java.util.UUID
 import kotlin.collections.ArrayDeque
@@ -51,7 +51,7 @@ import kotlin.collections.getOrNull
  *
  * Command: [CommandInvsee]
  */
-object ModuleInventoryTracker : ClientModule("InventoryTracker", Category.WORLD) {
+object ModuleInventoryTracker : ClientModule("InventoryTracker", ModuleCategories.WORLD) {
 
     /** Saves the non-persistent player object associated with the uuid.
      * This makes it possible to look up inventories of players which aren't in

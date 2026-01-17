@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -54,12 +54,14 @@ object CommandPanic : Command.Factory {
                 when (val type = args.getOrNull(0) as String? ?: "nonrender") {
                     "all" -> msg = command.result("disabledAllModules")
                     "nonrender" -> {
-                        modules = modules.filter { it.category != Category.RENDER && it.category != Category.CLIENT }
+                        modules = modules.filter {
+                            it.category != ModuleCategories.RENDER && it.category != ModuleCategories.CLIENT
+                        }
                         msg = command.result("disabledAllCategoryModules", command.result("nonRender"))
                     }
 
                     else -> {
-                        val category = Category.fromReadableName(type)
+                        val category = ModuleCategories.byName(type)
                             ?: throw CommandException(command.result("categoryNotFound", type))
                         modules = modules.filter { it.category == category }
                         msg = command.result("disabledAllCategoryModules", category.choiceName)

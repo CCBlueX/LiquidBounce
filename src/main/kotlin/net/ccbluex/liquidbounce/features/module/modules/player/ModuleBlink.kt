@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.dummyPlayer
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
@@ -37,8 +37,8 @@ import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.positions
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.player.RemotePlayer
-import net.minecraft.world.entity.Entity
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.world.entity.Entity
 import java.util.*
 
 /**
@@ -47,7 +47,7 @@ import java.util.*
  * Makes it look as if you were teleporting to other players.
  */
 
-object ModuleBlink : ClientModule("Blink", Category.PLAYER) {
+object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
 
     private val dummy by boolean("Dummy", false)
     private val ambush by boolean("Ambush", false)

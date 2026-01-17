@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -35,18 +35,18 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.ChatFormatting
 import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
+import net.minecraft.network.protocol.game.ClientboundLoginPacket
+import net.minecraft.network.protocol.game.ClientboundRespawnPacket
+import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
+import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.ItemStack
-import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket
-import net.minecraft.network.protocol.game.ClientboundLoginPacket
-import net.minecraft.network.protocol.game.ClientboundRespawnPacket
-import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.phys.AABB
 
-object ModuleMurderMystery : ClientModule("MurderMystery", Category.RENDER) {
+object ModuleMurderMystery : ClientModule("MurderMystery", ModuleCategories.RENDER) {
     var playHurt = false
     var playBow = false
 

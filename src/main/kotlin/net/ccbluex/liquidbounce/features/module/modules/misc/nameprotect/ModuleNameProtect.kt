@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.GenericColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
@@ -36,10 +36,10 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
 import net.ccbluex.liquidbounce.utils.client.toText
 import net.ccbluex.liquidbounce.utils.collection.Pools
-import net.minecraft.util.FormattedCharSink
-import net.minecraft.util.FormattedCharSequence
-import net.minecraft.network.chat.Style
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.util.FormattedCharSink
 
 private const val DEFAULT_CACHE_SIZE = 512
 
@@ -49,7 +49,7 @@ private const val DEFAULT_CACHE_SIZE = 512
  * Changes players names clientside.
  */
 
-object ModuleNameProtect : ClientModule("NameProtect", Category.MISC) {
+object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
 
     private val replacement by text("Replacement", "You")
 

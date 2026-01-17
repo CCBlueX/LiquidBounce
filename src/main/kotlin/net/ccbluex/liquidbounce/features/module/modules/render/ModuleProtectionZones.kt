@@ -25,8 +25,8 @@ import net.ccbluex.fastutil.synchronized
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -35,13 +35,13 @@ import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.item.getBlock
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.block.Blocks
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.level.Level
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -51,7 +51,7 @@ import kotlin.math.roundToInt
  *
  * Allows you to see areas protected by protection blocks and suggests optimal placement spots.
  */
-object ModuleProtectionZones : ClientModule("ProtectionZones", Category.RENDER) {
+object ModuleProtectionZones : ClientModule("ProtectionZones", ModuleCategories.RENDER) {
 
     private val DEFAULT_ZONE_FILL = Color4b(0, 255, 0, 51)
     private val DEFAULT_ZONE_OUTLINE = Color4b(0, 255, 0, 255)

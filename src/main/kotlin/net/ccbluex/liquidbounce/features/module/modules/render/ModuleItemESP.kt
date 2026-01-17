@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawBox
@@ -56,7 +56,7 @@ import net.minecraft.world.phys.AABB
  * Allows you to see dropped items through walls.
  */
 
-object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
+object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
         get() = "liquidbounce.module.itemEsp"

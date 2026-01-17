@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 
@@ -34,7 +34,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
  *
  * Allows you to break blocks faster.
  */
-object ModuleFastBreak : ClientModule("FastBreak", Category.WORLD) {
+object ModuleFastBreak : ClientModule("FastBreak", ModuleCategories.WORLD) {
 
     private val breakDamage by float("BreakDamage", 0.8f, 0.1f..1f)
     private val onlyTool by boolean("OnlyTool", false)

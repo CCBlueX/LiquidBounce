@@ -24,8 +24,8 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.render.Alignment
 import java.lang.reflect.Type
@@ -123,8 +123,8 @@ class ConfigurableSerializer(
             /**
              * Do not include modules that are heavily user-personalised
              */
-            if (value.category == Category.RENDER || value.category == Category.CLIENT ||
-                value.category == Category.FUN) {
+            if (value.category == ModuleCategories.RENDER || value.category == ModuleCategories.CLIENT ||
+                value.category == ModuleCategories.FUN) {
                 return false
             }
         }

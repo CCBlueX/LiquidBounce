@@ -20,8 +20,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 
-object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", Category.COMBAT) {
+object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", ModuleCategories.COMBAT) {
 
     private val targetSelector = TargetSelector()
     private val rotations = RotationsConfigurable(this)

@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * Aspect ratio changer
@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * @author sqlerrorthing
  */
 @Suppress("MagicNumber")
-object ModuleAspect : ClientModule("Aspect", Category.RENDER) {
+object ModuleAspect : ClientModule("Aspect", ModuleCategories.RENDER) {
     private val ratioPercentage by int("Ratio", 100, 1..300, suffix = "%")
 
     @JvmStatic

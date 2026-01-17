@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.Expiring
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.minecraft.world.phys.Vec3
 
-object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
+object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
 
     private val endRadius by floatRange("EndRadius", 0.15F..0.8F, 0F..3F)
 

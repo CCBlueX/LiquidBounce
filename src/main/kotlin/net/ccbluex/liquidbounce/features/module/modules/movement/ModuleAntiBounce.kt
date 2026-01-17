@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * Prevents bouncing on blocks
  *
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntity
  */
-object ModuleAntiBounce : ClientModule("AntiBounce", Category.MOVEMENT)
+object ModuleAntiBounce : ClientModule("AntiBounce", ModuleCategories.MOVEMENT)

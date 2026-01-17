@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.world.phys.Vec3
 import kotlin.math.cos
 import kotlin.math.sin
@@ -30,7 +30,7 @@ import kotlin.math.sin
  *
  * Boosts you when leaving a vehicle.
  */
-object ModuleVehicleBoost : ClientModule("VehicleBoost", Category.MOVEMENT) {
+object ModuleVehicleBoost : ClientModule("VehicleBoost", ModuleCategories.MOVEMENT) {
 
     init {
         enableLock()

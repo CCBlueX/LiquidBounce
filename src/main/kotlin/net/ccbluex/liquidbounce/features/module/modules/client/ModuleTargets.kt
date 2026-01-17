@@ -20,14 +20,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.client
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.combat.Targets
 import java.util.*
 
 object ModuleTargets : ClientModule(
     name = "Targets",
-    category = Category.CLIENT,
+    category = ModuleCategories.CLIENT,
     notActivatable = true,
     hide = true,
     aliases = listOf("Enemies")

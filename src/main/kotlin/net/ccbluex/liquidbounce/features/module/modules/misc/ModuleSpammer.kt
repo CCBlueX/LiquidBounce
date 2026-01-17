@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.io.skipLine
@@ -47,7 +47,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Spams the chat with a given message.
  */
-object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = true) {
+object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQuit = true) {
 
     init {
         doNotIncludeAlways()

@@ -20,15 +20,15 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * NoFOV module
  *
  * Changes FOV value.
  */
-object ModuleNoFov : ClientModule("NoFOV", Category.RENDER) {
+object ModuleNoFov : ClientModule("NoFOV", ModuleCategories.RENDER) {
 
     val mode = choices("Mode", ConstantFov, arrayOf(ConstantFov, Custom))
 

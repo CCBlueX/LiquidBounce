@@ -18,9 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.item.MixinItemInHandRenderer
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 
 /**
@@ -30,6 +29,6 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
  *
  * Handled in [MixinHeldItemRenderer].
  */
-object ModuleSilentHotbar : ClientModule("SilentHotbar", Category.RENDER) {
+object ModuleSilentHotbar : ClientModule("SilentHotbar", ModuleCategories.RENDER) {
     val noCooldownProgress by boolean("NoCooldownProgress", true)
 }

@@ -23,11 +23,11 @@ import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.world.phys.shapes.Shapes
 
-object ModuleAirJump : ClientModule("AirJump", Category.MOVEMENT) {
+object ModuleAirJump : ClientModule("AirJump", ModuleCategories.MOVEMENT) {
 
     val mode by enumChoice("Mode", Mode.JUMP_FREELY)
 

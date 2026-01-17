@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -34,8 +34,8 @@ import net.minecraft.world.item.ArmorStandItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.SpawnEggItem
-import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -43,7 +43,7 @@ import net.minecraft.world.phys.Vec3
  *
  *  Allows you to place blocks in mid-air.
  */
-object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
+object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
 
     private object Preview : ToggleableConfigurable(this, "Preview", true) {
         val outlineOnly by boolean("OutlineOnly", false)

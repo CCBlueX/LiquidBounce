@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
 import net.ccbluex.liquidbounce.event.newEventHook
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.script.PolyglotScript
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -40,7 +40,7 @@ import java.util.function.Supplier
 
 class ScriptModule(val script: PolyglotScript, moduleObject: Map<String, Any>) : ClientModule(
     name = moduleObject["name"] as String,
-    category = Category.fromReadableName(moduleObject["category"] as String)!!
+    category = ModuleCategories.byName(moduleObject["category"] as String)!!
 ) {
 
     private val events = hashMapOf<String, org.graalvm.polyglot.Value>()

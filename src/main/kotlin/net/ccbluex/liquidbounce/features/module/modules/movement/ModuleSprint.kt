@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSprintControlFeature
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -47,7 +47,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
  * Sprints automatically.
  */
 
-object ModuleSprint : ClientModule("Sprint", Category.MOVEMENT) {
+object ModuleSprint : ClientModule("Sprint", ModuleCategories.MOVEMENT) {
 
     private enum class SprintMode(override val choiceName: String) : NamedChoice {
         LEGIT("Legit"),

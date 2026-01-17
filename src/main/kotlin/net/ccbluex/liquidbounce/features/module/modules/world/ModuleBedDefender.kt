@@ -23,8 +23,8 @@ import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -36,12 +36,12 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.world.level.block.BedBlock
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
-import net.minecraft.world.item.BlockItem
 import net.minecraft.core.BlockPos
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.level.block.BedBlock
 
-object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD) {
+object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategories.WORLD) {
 
     private val maxLayers by int("MaxLayers", 1, 1..5)
 

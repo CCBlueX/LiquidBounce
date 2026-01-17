@@ -25,21 +25,21 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.minecraft.core.component.DataComponents
-import net.minecraft.world.item.component.WrittenBookContent
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
 import net.minecraft.network.protocol.game.ServerboundEditBookPacket
 import net.minecraft.server.network.Filterable
-import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.Component
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.component.WrittenBookContent
 import okio.buffer
 import okio.source
 import java.util.*
@@ -74,7 +74,7 @@ private const val MAX_LINE_WIDTH: Float = 114f
  * @author sqlerrorthing
  * @since 12/28/2024
  **/
-object ModuleBookBot : ClientModule("BookBot", Category.EXPLOIT, disableOnQuit = true) {
+object ModuleBookBot : ClientModule("BookBot", ModuleCategories.EXPLOIT, disableOnQuit = true) {
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
     internal val generationMode = choices(

@@ -24,8 +24,8 @@ import com.mojang.blaze3d.textures.GpuTexture
 import com.mojang.blaze3d.textures.GpuTextureView
 import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinGameRenderer
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.createRenderPass
@@ -47,7 +47,7 @@ import net.ccbluex.liquidbounce.utils.render.writeStd140
  *
  * @author ccetl
  */
-object ModuleItemChams : ClientModule("ItemChams", Category.RENDER) {
+object ModuleItemChams : ClientModule("ItemChams", ModuleCategories.RENDER) {
 
     private val blendColor by color("BlendColor", Color4b(0, 64, 255, 186)).markDirtyOnChanged()
     private val alpha by int("Alpha", 95, 1..255).markDirtyOnChanged()

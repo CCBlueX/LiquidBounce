@@ -48,8 +48,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.injection.mixins.authlib.MixinYggdrasilMinecraftSessionServiceAccessor
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -58,14 +58,14 @@ import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.multiplayer.PlayerInfo
+import net.minecraft.core.ClientAsset
 import net.minecraft.world.entity.player.PlayerModelType
 import net.minecraft.world.entity.player.PlayerSkin
-import net.minecraft.core.ClientAsset
 import java.io.IOException
 import java.util.function.Supplier
 import kotlin.time.Duration.Companion.seconds
 
-object ModuleSkinChanger : ClientModule("SkinChanger", Category.RENDER) {
+object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) {
 
     /**
      * Changes the player model by forcefully modifying

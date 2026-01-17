@@ -23,14 +23,14 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.world.level.block.Blocks
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.shapes.Shapes
 
 /**
@@ -39,7 +39,7 @@ import net.minecraft.world.phys.shapes.Shapes
  * Allows you to step down blocks faster.
  */
 
-object ModuleReverseStep : ClientModule("ReverseStep", Category.MOVEMENT) {
+object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT) {
 
     private var modes = choices("Mode", Instant, arrayOf(Instant, Strict, Accelerator)).apply { tagBy(this) }
     private val maximumFallDistance by float("MaximumFallDistance", 1f, 1f..50f)

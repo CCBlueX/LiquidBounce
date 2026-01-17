@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -46,17 +46,16 @@ import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.world.waterEvaporates
+import net.minecraft.core.BlockPos
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.Items
-import net.minecraft.core.BlockPos
-import net.minecraft.core.Vec3i
 
 /**
  * Module Extinguish
  *
  * Automatically extinguishes yourself when you're burning.
  */
-object ModuleExtinguish: ClientModule("Extinguish", Category.WORLD) {
+object ModuleExtinguish: ClientModule("Extinguish", ModuleCategories.WORLD) {
 
     private val cooldown by float("Cooldown", 1.0F, 0.0F..20.0F, "s")
     private val notDuringCombat by boolean("NotDuringCombat", true)

@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.IgnitionTrapPlanner
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.TrapPlayerSimulation
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.WebTrapPlanner
@@ -42,7 +42,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  * Ignite: Automatically sets targets around you on fire.
  * AutoWeb: Automatically places cobwebs at targets around you.
  */
-object ModuleAutoTrap : ClientModule("AutoTrap", Category.WORLD, aliases = listOf("Ignite", "AutoWeb")) {
+object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases = listOf("Ignite", "AutoWeb")) {
 
     private val range = floatRange("Range", 3.0f..4.5f, 2f..6f)
     private val delay by int("Delay", 20, 0..400, "ticks")

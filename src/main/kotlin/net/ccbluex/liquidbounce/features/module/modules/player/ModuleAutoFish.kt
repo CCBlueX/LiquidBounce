@@ -24,17 +24,17 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.world.item.FishingRodItem
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket
-import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.item.FishingRodItem
 
 /**
  * AutoFish module
@@ -42,7 +42,7 @@ import net.minecraft.world.InteractionHand
  * Automatically catches fish when using a rod.
  */
 
-object ModuleAutoFish : ClientModule("AutoFish", Category.PLAYER) {
+object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
 
     private val reelDelay by intRange("ReelDelay", 5..8, 0..20, "ticks")
 

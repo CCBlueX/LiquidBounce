@@ -27,10 +27,9 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.bold
@@ -45,9 +44,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.isNotRoot
 import net.ccbluex.liquidbounce.utils.kotlin.toFullString
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
-import net.minecraft.network.protocol.Packet
-import net.minecraft.network.chat.MutableComponent
+import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.protocol.Packet
 import net.minecraft.resources.Identifier
 import okio.appendingSink
 import okio.buffer
@@ -65,7 +65,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * @author ccetl
  */
-object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
+object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) {
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val clientPackets by c2sPackets("C2SPackets", sortedSetOf())

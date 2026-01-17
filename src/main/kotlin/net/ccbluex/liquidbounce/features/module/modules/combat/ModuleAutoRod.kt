@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
@@ -67,7 +67,7 @@ import java.util.function.Function
 /**
  * Auto use fishing rod for combat.
  */
-object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
+object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
 
     private val gravityType by enumChoice("GravityType", GravityType.LINEAR)
     private val range by floatRange("Range", 3.5f..5f, 2f..10f)
