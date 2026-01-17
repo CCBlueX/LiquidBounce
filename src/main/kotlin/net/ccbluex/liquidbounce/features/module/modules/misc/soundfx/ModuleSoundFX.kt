@@ -25,8 +25,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.minecraft.sounds.SoundEvent
+import net.minecraft.world.entity.projectile.Projectile
+import net.minecraft.world.item.BowItem
 
 object ModuleSoundFX : ClientModule("SoundFX", Category.MISC) {
+
+    private val volume by float("volume", 1f, 0.1f..1f)
 
     // --- Hit FX ---
     private val HitSFX by enumChoice("Hit", Hitsfx.Bonk)
@@ -35,6 +39,8 @@ object ModuleSoundFX : ClientModule("SoundFX", Category.MISC) {
         Bonk("Bonk"),
         Click("Click"),
         Pop("Pop"),
+        Uwu("UwU"),
+        Nya("NYA"),
     }
 
     private val HitSound: SoundEvent
@@ -42,6 +48,8 @@ object ModuleSoundFX : ClientModule("SoundFX", Category.MISC) {
             Hitsfx.Bonk -> Sounds.BONK
             Hitsfx.Click -> Sounds.CLICK
             Hitsfx.Pop -> Sounds.POP
+            Hitsfx.Uwu -> Sounds.UWU
+            Hitsfx.Nya -> Sounds.NYA
         }
 
     // --- Play sound ---
@@ -49,7 +57,9 @@ object ModuleSoundFX : ClientModule("SoundFX", Category.MISC) {
     private val hitHandler = handler<AttackEntityEvent> { event ->
         val player = mc.player ?: return@handler
         if(event.entity.isAlive) {
-            player.playSound(HitSound)
+            player.playSound(HitSound, volume, 1f)
         }
     }
+    @Suppress("unused")
+    private val bowHandler = handler<Projectile> {  }
 }

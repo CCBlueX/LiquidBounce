@@ -7,5 +7,11 @@
   },
   "pop": {
     "sounds": ["liquidbounce:pop"]
+  },
+  "uwu": {
+    "sounds": ["liquidbounce:uwu"]
+  },
+  "nya": {
+    "sounds": ["liquidbounce:nya"]
   }
 }
