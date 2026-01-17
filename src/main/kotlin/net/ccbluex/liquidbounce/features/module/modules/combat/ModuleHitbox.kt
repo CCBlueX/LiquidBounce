@@ -31,12 +31,17 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
  */
 object ModuleHitbox : ClientModule("Hitbox", Category.COMBAT) {
 
-    val size by float("Size", 0.4f, 0f..1f).apply { tagBy(this) }
+    val size by float("Size", 0.1f, 0f..1f).apply { tagBy(this) }
 
     val applyToDebugHitbox by boolean("ApplyToDebugHitbox", true)
 
+    /**
+     * Apply to [net.minecraft.world.item.component.AttackRange.hitboxMargin]
+     */
+    val applyToComponent by boolean("ApplyToComponent", true)
+
     @Suppress("unused")
-    val marginHandler = handler<EntityMarginEvent> { event ->
+    private val marginHandler = handler<EntityMarginEvent> { event ->
         if (event.entity.shouldBeAttacked()) {
             event.margin = size
         }

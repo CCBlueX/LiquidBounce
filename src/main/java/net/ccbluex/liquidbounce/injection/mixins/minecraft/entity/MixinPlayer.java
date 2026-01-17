@@ -36,12 +36,12 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -188,7 +188,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @ModifyReturnValue(method = "entityInteractionRange", at = @At("RETURN"))
     private double hookEntityInteractionRange(double original) {
         if ((Object) this == Minecraft.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
-            return ModuleReach.INSTANCE.getCombatReach();
+            return ModuleReach.INSTANCE.getEntityInteractionReach() + original;
         }
 
         return original;
@@ -197,7 +197,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @ModifyReturnValue(method = "blockInteractionRange", at = @At("RETURN"))
     private double hookBlockInteractionRange(double original) {
         if ((Object) this == Minecraft.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
-            return ModuleReach.INSTANCE.getBlockReach();
+            return ModuleReach.INSTANCE.getBlockInteractionReach() + original;
         }
 
         return original;

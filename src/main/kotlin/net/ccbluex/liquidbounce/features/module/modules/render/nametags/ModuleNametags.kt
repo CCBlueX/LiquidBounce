@@ -95,7 +95,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
      */
     private fun collectAndSortNametagsToRender() {
         nametagsToRender.clear()
-        val cameraEntity = mc.cameraEntity!!
+        val cameraEntity = mc.cameraEntity ?: mc.player ?: return
         for (entity in RenderedEntities) {
             val distance = entity.distanceTo(cameraEntity)
             val scale = scale.transform(distance)
@@ -107,7 +107,7 @@ object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
     }
 
     private val NAMETAG_COMPARATOR = Comparator.comparingDouble<Nametag> { nametag ->
-        nametag.entity.distanceToSqr(mc.cameraEntity!!)
+        nametag.entity.distanceToSqr(mc.cameraEntity ?: return@comparingDouble Double.MAX_VALUE)
     }
 
     fun shouldRenderVanillaNametag(state: EntityRenderState): Boolean {
