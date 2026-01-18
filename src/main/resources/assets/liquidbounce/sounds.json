@@ -46,5 +46,17 @@
   },
   "click-3": {
     "sounds": ["liquidbounce:click/click-3"]
+  },
+  "moan-1": {
+    "sounds": ["liquidbounce:moan/moan-1"]
+  },
+  "moan-2": {
+    "sounds": ["liquidbounce:moan/moan-2"]
+  },
+  "moan-3": {
+    "sounds": ["liquidbounce:moan/moan-3"]
+  },
+  "moan-4": {
+    "sounds": ["liquidbounce:moan/moan-4"]
   }
 }

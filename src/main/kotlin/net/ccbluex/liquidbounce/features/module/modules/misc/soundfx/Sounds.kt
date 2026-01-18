@@ -33,6 +33,8 @@ object Sounds {
         "click-1", "click-2", "click-3",
         // --- boykisser ---
         "boykisser-1", "boykisser-2", "boykisser-3", "boykisser-4", "boykisser-5", "boykisser-6",
+        // --- moan ---
+        "moan-1", "moan-2", "moan-3", "moan-4",
     )
 
     val registeredSounds = mutableMapOf<String, SoundEvent>()
@@ -50,6 +52,10 @@ object Sounds {
     lateinit var BOYKISSER1: SoundEvent private set; lateinit var BOYKISSER2: SoundEvent private set
     lateinit var BOYKISSER3: SoundEvent private set; lateinit var BOYKISSER4: SoundEvent private set
     lateinit var BOYKISSER5: SoundEvent private set; lateinit var BOYKISSER6: SoundEvent private set
+
+    // --- moan ---
+    lateinit var MOAN1: SoundEvent private set; lateinit var MOAN2: SoundEvent private set;
+    lateinit var MOAN3: SoundEvent private set; lateinit var MOAN4: SoundEvent private set;
 
     fun registerAll() {
         for (id in soundIds) {
@@ -77,6 +83,10 @@ object Sounds {
                 "boykisser-1" -> BOYKISSER1 = sound; "boykisser-2" -> BOYKISSER2 = sound
                 "boykisser-3" -> BOYKISSER3 = sound; "boykisser-4" -> BOYKISSER4 = sound
                 "boykisser-5" -> BOYKISSER5 = sound; "boykisser-6" -> BOYKISSER6 = sound
+
+                // --- moan ---
+                "moan-1" -> MOAN1 = sound; "moan-2" -> MOAN2 = sound
+                "moan-3" -> MOAN3 = sound; "moan-4" -> MOAN4 = sound
             }
         }
     }

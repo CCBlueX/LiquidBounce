@@ -36,8 +36,9 @@ object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
     private enum class Hitsfx(override val choiceName: String) : NamedChoice {
         Bonk("Bonk"), Boykisser("Boykisser"),
         Click("Click"), Meow("Meow"),
-        Nya("NYA"), Pop("Pop"),
-        Tung("Tung"), Uwu("UWU"),
+        Moan("Moan"), Nya("NYA"),
+        Pop("Pop"), Tung("Tung"),
+        Uwu("UWU"),
     }
 
     private val BoykisserVariants = arrayOf(
@@ -47,6 +48,11 @@ object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
 
     private val ClickVariants = arrayOf(
         Sounds.CLICK1, Sounds.CLICK2, Sounds.CLICK3,
+    )
+
+    private val MoanVariants = arrayOf(
+        Sounds.MOAN1, Sounds.MOAN2, Sounds.MOAN3,
+        Sounds.MOAN4,
     )
 
     private val HitSound: SoundEvent
@@ -60,8 +66,9 @@ object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
             Hitsfx.Uwu -> Sounds.UWU
 
             // --- with variants ---
-            Hitsfx.Click -> ClickVariants.random()
             Hitsfx.Boykisser -> BoykisserVariants.random()
+            Hitsfx.Click -> ClickVariants.random()
+            Hitsfx.Moan -> MoanVariants.random()
         }
     // --- Play sound ---
     @Suppress("unused")
