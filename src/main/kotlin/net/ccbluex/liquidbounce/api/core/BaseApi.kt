@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.AVATAR_UUID_URL
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import okhttp3.Headers
 import okhttp3.RequestBody
-import java.util.*
+import java.util.UUID
 
 fun formatAvatarUrl(uuid: UUID?, username: String): String {
     return if (uuid != null) {

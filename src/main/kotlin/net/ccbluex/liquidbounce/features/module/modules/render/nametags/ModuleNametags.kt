@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
@@ -38,7 +38,7 @@ import org.joml.Vector2fc
  *
  * Makes player name tags more visible and adds useful information.
  */
-object ModuleNametags : ClientModule("Nametags", Category.RENDER) {
+object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
 
     init {
         tree(NametagTextFormatter)

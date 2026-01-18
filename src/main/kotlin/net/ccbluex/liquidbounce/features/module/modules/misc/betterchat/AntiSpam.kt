@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition
 import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.util.StringDecomposer
-import net.minecraft.ChatFormatting
 
 object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
 

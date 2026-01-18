@@ -29,24 +29,24 @@ import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.network.PlayerSneakPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
-import net.minecraft.client.player.LocalPlayer
 import net.minecraft.client.multiplayer.MultiPlayerGameMode
-import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.context.UseOnContext
-import net.minecraft.network.protocol.game.ClientGamePacketListener
+import net.minecraft.client.player.LocalPlayer
 import net.minecraft.network.protocol.Packet
-import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.network.protocol.game.ClientGamePacketListener
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
-import net.minecraft.world.InteractionResult
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
-import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.GameType
+import net.minecraft.world.phys.BlockHitResult
 import org.apache.commons.lang3.mutable.MutableObject
-import java.util.*
+import java.util.Objects
 
 internal fun sendStartSneaking() {
     if (!usesViaFabricPlus || isNewerThanOrEquals1_21_6) return

@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.render.engine.type
 import net.ccbluex.liquidbounce.utils.client.fastCos
 import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.minecraft.core.Position
-import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import net.minecraft.world.phys.Vec3
 
 @JvmRecord
 data class Vec3f(val x: Float, val y: Float, val z: Float) {

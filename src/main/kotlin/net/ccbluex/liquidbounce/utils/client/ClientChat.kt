@@ -29,15 +29,15 @@ import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinChatScreenAc
 import net.ccbluex.liquidbounce.interfaces.TextColorAddition
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.minecraft.ChatFormatting
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.network.chat.Style
-import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.TextColor
-import net.minecraft.ChatFormatting
 import java.io.File
 
 // Chat formatting

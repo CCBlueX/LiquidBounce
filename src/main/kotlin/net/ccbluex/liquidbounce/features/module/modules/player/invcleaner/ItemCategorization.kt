@@ -57,8 +57,6 @@ import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.level.material.LavaFluid
-import net.minecraft.world.level.material.WaterFluid
 import net.minecraft.world.item.ArrowItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.BowItem
@@ -75,6 +73,8 @@ import net.minecraft.world.item.PotionItem
 import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.WindChargeItem
+import net.minecraft.world.level.material.LavaFluid
+import net.minecraft.world.level.material.WaterFluid
 import java.util.function.Predicate
 
 @JvmRecord

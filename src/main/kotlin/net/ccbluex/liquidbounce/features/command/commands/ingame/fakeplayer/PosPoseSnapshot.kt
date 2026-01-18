@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 
 import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.EntityEquipment
 import net.minecraft.world.entity.Pose
 import net.minecraft.world.entity.player.Inventory
-import net.minecraft.world.InteractionHand
 
 @JvmRecord
 data class PosPoseSnapshot(

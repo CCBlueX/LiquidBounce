@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
@@ -52,7 +52,7 @@ import kotlin.math.atan2
  *
  * Shows the direction of rendered entities on GUI.
  */
-object ModuleRadar : ClientModule("Radar", Category.RENDER, aliases = listOf("PointerESP")) {
+object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = listOf("PointerESP")) {
 
     private val tiltModes = choices("Tilt", 0) {
         arrayOf(TiltMode.Static, TiltMode.ByPitch)

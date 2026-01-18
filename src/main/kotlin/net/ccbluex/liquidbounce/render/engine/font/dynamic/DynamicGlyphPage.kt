@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
+import com.mojang.blaze3d.platform.NativeImage
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.liquidbounce.render.engine.font.AtlasSliceHandle
@@ -30,7 +31,6 @@ import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion
 import net.ccbluex.liquidbounce.render.engine.font.GlyphRenderInfo
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import com.mojang.blaze3d.platform.NativeImage
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.image.BufferedImage

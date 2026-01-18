@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.utils.item.isPickaxe
 import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.toolComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantments
 
 class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {

@@ -25,7 +25,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
-import java.util.*
+import java.util.SortedMap
 
 class ChooseListValue<T : NamedChoice>(
     name: String,

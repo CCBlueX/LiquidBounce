@@ -45,15 +45,15 @@ import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.minecraft.world.entity.LivingEntity
+import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Pos
-import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
-import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.AABB
-import net.minecraft.core.Vec3i
 
 object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 

@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.utils.block.getBlock
+import net.minecraft.core.Direction
 import net.minecraft.world.level.block.LadderBlock
 import net.minecraft.world.level.block.VineBlock
-import net.minecraft.core.Direction
 
 /**
  * Fast Climb allows you to climb up ladder-related blocks faster

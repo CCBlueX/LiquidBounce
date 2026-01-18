@@ -16,21 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.deeplearn.models
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
+import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.deeplearn.translators.FloatArrayInAndOutTranslator
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
-import net.minecraft.client.multiplayer.ClientLevel;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-
-@Mixin(ClientLevel.ClientLevelData.class)
-public abstract class MixinClientWorldProperties {
-
-    @ModifyReturnValue(method = "getDayTime", at = @At("RETURN"))
-    private long injectOverrideTime(long original) {
-        return ModuleCustomAmbience.getTime(original);
-    }
-
-}
+class TwoDimensionalRegressionModel(
+    name: String,
+    parent: ChoiceConfigurable<*>
+) : ModelWrapper<FloatArray, FloatArray>(
+    name,
+    FloatArrayInAndOutTranslator(),
+    2, // X, Y
+    parent
+)

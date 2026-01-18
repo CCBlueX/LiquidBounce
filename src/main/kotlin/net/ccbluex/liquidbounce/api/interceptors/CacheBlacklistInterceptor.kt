@@ -30,10 +30,14 @@ class CacheBlacklistInterceptor(
         val request = chain.request()
         if (request.url.host in blacklistedHosts) {
             val newRequest = request.newBuilder()
-                .cacheControl(CacheControl.FORCE_NETWORK)
+                .cacheControl(cacheControl)
                 .build()
             return chain.proceed(newRequest)
         }
         return chain.proceed(request)
+    }
+
+    companion object {
+        private val cacheControl = CacheControl.Builder().noCache().noStore().build()
     }
 }

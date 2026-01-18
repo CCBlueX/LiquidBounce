@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * NoBob module
@@ -27,4 +27,4 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
  * Disables the view bobbing effect.
  */
 
-object ModuleNoBob : ClientModule("NoBob", Category.RENDER)
+object ModuleNoBob : ClientModule("NoBob", ModuleCategories.RENDER)

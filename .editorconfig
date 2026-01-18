@@ -16,3 +16,4 @@ indent_size = 4
 trim_trailing_whitespace = true
 ij_kotlin_name_count_to_use_star_import = 9999
 ij_kotlin_name_count_to_use_star_import_for_members = 9999
+ij_kotlin_packages_to_use_import_on_demand = unset

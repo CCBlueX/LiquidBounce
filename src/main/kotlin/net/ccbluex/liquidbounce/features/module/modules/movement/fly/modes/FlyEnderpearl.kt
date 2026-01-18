@@ -38,10 +38,10 @@ import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.item.Items
-import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Block
 
 internal object FlyEnderpearl : Choice("Enderpearl") {
 

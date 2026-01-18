@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
+import com.mojang.math.Axis
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptSetting
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.world.InteractionHand
 import net.minecraft.core.BlockPos
-import net.minecraft.util.Mth
-import com.mojang.math.Axis
-import net.minecraft.world.phys.Vec3
 import net.minecraft.core.Vec3i
+import net.minecraft.util.Mth
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.Vec3
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.Value
 import java.util.concurrent.ConcurrentHashMap

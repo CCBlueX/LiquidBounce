@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.entity.Pose
 import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 

@@ -24,11 +24,11 @@ import net.ccbluex.liquidbounce.utils.item.isHoe
 import net.ccbluex.liquidbounce.utils.item.isPickaxe
 import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.BoatItem
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Blocks
 
 object MurderMysterySwordDetection {
     private val KNOWN_SWORD_ITEMS =

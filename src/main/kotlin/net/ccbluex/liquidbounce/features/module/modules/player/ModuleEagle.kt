@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
@@ -37,7 +37,7 @@ import java.util.function.Predicate
  * Legit trick to build faster.
  */
 object ModuleEagle : ClientModule(
-    "Eagle", Category.PLAYER,
+    "Eagle", ModuleCategories.PLAYER,
     aliases = listOf("FastBridge", "BridgeAssistant", "LegitScaffold")
 ) {
 

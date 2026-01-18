@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeFirework
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModePitch40Infinite
@@ -30,17 +30,17 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeVanilla
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
-import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.effect.MobEffects
-import net.minecraft.world.item.Items
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.item.Items
 
 /**
  * ElytraFly module
  *
  * Makes elytra flying easier to control.
  */
-object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
+object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
 
     private val instant by multiEnumChoice("Instant", Instant.STOP)
 
