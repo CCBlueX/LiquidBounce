@@ -34,14 +34,10 @@ object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
     private val HitSFX by enumChoice("Hit", Hitsfx.Bonk)
 
     private enum class Hitsfx(override val choiceName: String) : NamedChoice {
-        Bonk("Bonk"),
-        Boykisser("Boykisser"),
-        Click("Click"),
-        Meow("Meow"),
-        Nya("NYA"),
-        Pop("Pop"),
-        Tung("Tung"),
-        Uwu("UWU"),
+        Bonk("Bonk"), Boykisser("Boykisser"),
+        Click("Click"), Meow("Meow"),
+        Nya("NYA"), Pop("Pop"),
+        Tung("Tung"), Uwu("UWU"),
     }
 
     private val BoykisserVariants = arrayOf(
@@ -62,6 +58,7 @@ object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
             Hitsfx.Pop -> Sounds.POP
             Hitsfx.Tung -> Sounds.TUNG
             Hitsfx.Uwu -> Sounds.UWU
+
             // --- with variants ---
             Hitsfx.Click -> ClickVariants.random()
             Hitsfx.Boykisser -> BoykisserVariants.random()
