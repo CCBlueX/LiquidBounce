@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.highlight
@@ -35,7 +35,12 @@ import java.util.function.BiPredicate
 /**
  * Closes HandledScreen with its title contains specified words
  */
-object ModuleGUICloser : ClientModule("GUICloser", Category.MISC, aliases = listOf("AutoClose", "ContainerCloser")) {
+object ModuleGUICloser : ClientModule(
+    "GUICloser",
+    ModuleCategories.MISC,
+    aliases = listOf("AutoClose", "ContainerCloser")
+) {
+
     override val baseKey: String
         get() = "liquidbounce.module.guiCloser"
 

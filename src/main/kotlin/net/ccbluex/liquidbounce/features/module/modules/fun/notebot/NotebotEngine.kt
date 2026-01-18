@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNote
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.ModuleNotebot.renderer
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.nbs.SongData
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.notebot.stages.NotebotTestStageHandler
+import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.sounds.SoundSource
-import net.minecraft.core.BlockPos
 import kotlin.math.log2
 import kotlin.math.roundToInt
 

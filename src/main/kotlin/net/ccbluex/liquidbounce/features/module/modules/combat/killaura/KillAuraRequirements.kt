@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.utils.input.InputTracker.wasPressedRecently
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isAxe
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.MaceItem
+import net.minecraft.world.item.enchantment.Enchantments
 import java.util.function.BooleanSupplier
 
 @Suppress("unused")

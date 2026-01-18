@@ -25,8 +25,8 @@ import io.netty.handler.codec.http.HttpMethod
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -89,7 +89,7 @@ fun postPanic(requestObject: RequestObject): FullHttpResponse {
         AutoConfig.withLoading {
             runCatching {
                 for (module in ModuleManager) {
-                    if (module.category == Category.RENDER || module.category == Category.CLIENT) {
+                    if (module.category == ModuleCategories.RENDER || module.category == ModuleCategories.CLIENT) {
                         continue
                     }
 

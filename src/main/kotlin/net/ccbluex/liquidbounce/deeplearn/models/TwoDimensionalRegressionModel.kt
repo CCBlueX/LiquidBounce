@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.deeplearn.models
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.deeplearn.translators.FloatArrayInAndOutTranslator
 
-class MinaraiModel(
+class TwoDimensionalRegressionModel(
     name: String,
     parent: ChoiceConfigurable<*>
 ) : ModelWrapper<FloatArray, FloatArray>(

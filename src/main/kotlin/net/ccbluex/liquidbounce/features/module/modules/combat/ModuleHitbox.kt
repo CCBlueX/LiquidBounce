@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.events.EntityMarginEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 
 /**
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
  *
  * Enlarges the hitbox of other entities.
  */
-object ModuleHitbox : ClientModule("Hitbox", Category.COMBAT) {
+object ModuleHitbox : ClientModule("Hitbox", ModuleCategories.COMBAT) {
 
     val size by float("Size", 0.1f, 0f..1f).apply { tagBy(this) }
 

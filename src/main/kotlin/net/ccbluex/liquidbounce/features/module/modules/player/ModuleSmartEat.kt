@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
@@ -36,12 +36,12 @@ import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isMiningTool
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.resources.Identifier
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.item.Items
 import net.minecraft.world.item.ItemUseAnimation
-import net.minecraft.world.InteractionResult
-import net.minecraft.resources.Identifier
+import net.minecraft.world.item.Items
 
 /**
  * SmartEat module
@@ -49,7 +49,7 @@ import net.minecraft.resources.Identifier
  * Makes it easier to eat
  */
 
-object ModuleSmartEat : ClientModule("SmartEat", Category.PLAYER) {
+object ModuleSmartEat : ClientModule("SmartEat", ModuleCategories.PLAYER) {
 
     private val HOTBAR_OFFHAND_LEFT_TEXTURE = Identifier.parse("hud/hotbar_offhand_left")
 

@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.theme
 
+import com.mojang.blaze3d.platform.NativeImage
 import io.netty.handler.codec.http.HttpHeaderNames
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,14 +36,13 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.server.packs.resources.ResourceManager
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
-import java.util.*
+import java.util.Locale
 
 /**
  * A web-based theme loaded from the provided URL.

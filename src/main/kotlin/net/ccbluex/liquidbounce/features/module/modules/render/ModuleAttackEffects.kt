@@ -21,17 +21,17 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.world.level.block.Blocks
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.level.block.Blocks
 
 @Suppress("MagicNumber")
-object ModuleAttackEffects : ClientModule("AttackEffects", Category.RENDER) {
+object ModuleAttackEffects : ClientModule("AttackEffects", ModuleCategories.RENDER) {
 
     enum class Particle(override val choiceName: String) : NamedChoice {
         BLOOD("Blood"),

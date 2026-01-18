@@ -25,8 +25,8 @@ import net.caffeinemc.mods.lithium.common.entity.movement.ChunkAwareBlockCollisi
 import net.ccbluex.liquidbounce.common.ShapeFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
