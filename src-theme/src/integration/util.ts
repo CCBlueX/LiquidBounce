@@ -1,5 +1,7 @@
 import type {GroupedModules, Module} from "./types"
 
+export const delay = (millis: number) => new Promise(resolve => setTimeout(resolve, millis));
+
 export function groupByCategory(modules: Module[]): GroupedModules {
     return modules.reduce((acc: GroupedModules, current: Module) => {
         const { category } = current;

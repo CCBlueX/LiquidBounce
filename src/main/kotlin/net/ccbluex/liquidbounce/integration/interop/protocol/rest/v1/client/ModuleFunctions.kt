@@ -22,6 +22,8 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpMethod
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.gson.interopGson
@@ -30,11 +32,13 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.netty.http.model.RequestObject
+import net.ccbluex.netty.http.util.httpBadRequest
 import net.ccbluex.netty.http.util.httpForbidden
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
+import org.apache.commons.io.input.CharSequenceReader
 
 private fun ClientModule.toJsonObject() = JsonObject().apply {
     addProperty("name", name)
@@ -50,7 +54,7 @@ private fun ClientModule.toJsonObject() = JsonObject().apply {
 // GET /api/v1/client/modules
 @Suppress("UNUSED_PARAMETER")
 fun getModules(requestObject: RequestObject): FullHttpResponse {
-    val mods = JsonArray()
+    val mods = JsonArray(ModuleManager.size)
     for (module in ModuleManager) {
         mods.add(module.toJsonObject())
     }
@@ -68,47 +72,56 @@ fun getModule(requestObject: RequestObject): FullHttpResponse {
 // PUT /api/v1/client/modules/toggle
 // DELETE /api/v1/client/modules/toggle
 // POST /api/v1/client/modules/toggle
-fun toggleModule(requestObject: RequestObject): FullHttpResponse {
+suspend fun toggleModule(requestObject: RequestObject): FullHttpResponse {
     return requestObject.asJson<ModuleRequest>().acceptToggle(requestObject.method)
 }
 
 // GET /api/v1/client/modules/settings
 fun getSettings(requestObject: RequestObject): FullHttpResponse {
-    return ModuleRequest(requestObject.queryParams["name"] ?: "").acceptGetSettingsRequest()
+    val name = requestObject.queryParams["name"] ?: return httpBadRequest("Missing parameter 'name'")
+    val module = ModuleManager[name] ?: return httpForbidden("Module '$name' not found")
+    return httpOk(ConfigSystem.serializeConfigurable(module, gson = interopGson))
 }
 
 // PUT /api/v1/client/modules/settings
-fun putSettings(requestObject: RequestObject): FullHttpResponse {
-    return ModuleRequest(requestObject.queryParams["name"] ?: "").acceptPutSettingsRequest(requestObject.body)
+suspend fun putSettings(requestObject: RequestObject): FullHttpResponse {
+    val name = requestObject.queryParams["name"] ?: return httpBadRequest("Missing parameter 'name'")
+    val module = ModuleManager[name] ?: return httpForbidden("Module '$name' not found")
+    return withContext(Dispatchers.Minecraft) {
+        ConfigSystem.deserializeConfigurable(module, CharSequenceReader(requestObject.body))
+        ConfigSystem.store(modulesConfigurable)
+
+        httpNoContent()
+    }
 }
 
 // POST /api/v1/client/modules/panic
 @Suppress("UNUSED_PARAMETER")
-fun postPanic(requestObject: RequestObject): FullHttpResponse {
-    mc.execute {
-        AutoConfig.withLoading {
-            runCatching {
-                for (module in ModuleManager) {
-                    if (module.category == ModuleCategories.RENDER || module.category == ModuleCategories.CLIENT) {
-                        continue
-                    }
-
-                    module.enabled = false
+suspend fun postPanic(requestObject: RequestObject): FullHttpResponse = withContext(Dispatchers.Minecraft) {
+    AutoConfig.withLoading {
+        runCatching {
+            for (module in ModuleManager) {
+                if (module.category == ModuleCategories.RENDER || module.category == ModuleCategories.CLIENT) {
+                    continue
                 }
 
-                ConfigSystem.store(modulesConfigurable)
-            }.onFailure {
-                logger.error("Failed to panic disable modules", it)
+                module.enabled = false
             }
+
+            ConfigSystem.store(modulesConfigurable)
+        }.onFailure {
+            logger.error("Failed to panic disable modules", it)
         }
     }
-    return httpNoContent()
+
+    httpNoContent()
 }
 
-data class ModuleRequest(val name: String) {
+@JvmRecord
+private data class ModuleRequest(val name: String) {
 
-    fun acceptToggle(method: HttpMethod): FullHttpResponse {
-        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
+    suspend fun acceptToggle(method: HttpMethod): FullHttpResponse {
+        val module = ModuleManager[name] ?: return httpForbidden("Module '$name' not found")
 
         val supposedNew = method == HttpMethod.PUT || (method == HttpMethod.POST && !module.enabled)
 
@@ -116,29 +129,16 @@ data class ModuleRequest(val name: String) {
             return httpForbidden("$name already ${if (supposedNew) "enabled" else "disabled"}")
         }
 
-        mc.execute {
-            runCatching {
+        withContext(Dispatchers.Minecraft) {
+            try {
                 module.enabled = supposedNew
 
                 ConfigSystem.store(modulesConfigurable)
-            }.onFailure {
-                logger.error("Failed to toggle module $name", it)
+            } catch (e: Exception) {
+                logger.error("Failed to toggle module $name", e)
             }
         }
-        return httpNoContent()
-    }
 
-    fun acceptGetSettingsRequest(): FullHttpResponse {
-        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
-        return httpOk(ConfigSystem.serializeConfigurable(module, gson = interopGson))
-    }
-
-    fun acceptPutSettingsRequest(content: String): FullHttpResponse {
-        val module = ModuleManager[name] ?: return httpForbidden("$name not found")
-        mc.execute {
-            ConfigSystem.deserializeConfigurable(module, content.reader())
-            ConfigSystem.store(modulesConfigurable)
-        }
         return httpNoContent()
     }
 
