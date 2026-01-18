@@ -33,9 +33,8 @@ import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.toMD5
-import java.util.*
+import java.util.UUID
 
 /**
  * A more reliable, safer and stress reduced cosmetics service
@@ -57,7 +56,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
      * function frequently based on the REFRESH_DELAY.
      */
     internal var carriers = emptySet<String>()
-    internal var carriersCosmetics = hashMapOf<UUID, Set<Cosmetic>>()
+    internal val carriersCosmetics = hashMapOf<UUID, Set<Cosmetic>>()
 
     private val lastUpdate = Chronometer()
     private var task: Job? = null
@@ -97,7 +96,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
         val clientAccount = ClientAccountManager.clientAccount
 
         // Check if the client account is available and the requested UUID is the same as the session UUID
-        if ((uuid == mc.user.profileId || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
+        if ((uuid == mc.user.profileId || uuid == mc.player?.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
             clientAccount.cosmetics?.let { cosmetics ->
                 done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return)
                 return
@@ -150,7 +149,7 @@ object CosmeticService : EventListener, Configurable("Cosmetics") {
         // Check if the client account is available and the requested UUID is the same as the session UUID
         val clientAccount = ClientAccountManager.clientAccount
 
-        if ((uuid == mc.user.profileId || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
+        if ((uuid == mc.user.profileId || uuid == mc.player?.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
             clientAccount.cosmetics?.let { cosmetics ->
                 return cosmetics.find { cosmetic -> cosmetic.category == category }
             }

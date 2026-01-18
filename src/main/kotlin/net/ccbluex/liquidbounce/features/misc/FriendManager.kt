@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
-import java.util.*
+import java.util.TreeSet
 
 object FriendManager : Configurable("Friends"), EventListener {
 

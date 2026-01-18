@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.Timer.timerSpeed
@@ -37,7 +37,7 @@ import kotlin.random.Random
  * Automatically speeds up when you are near an enemy.
  */
 
-object ModuleTimerRange : ClientModule("TimerRange", Category.COMBAT) {
+object ModuleTimerRange : ClientModule("TimerRange", ModuleCategories.COMBAT) {
 
     private val chance by int("Chance", 100, 0..100, "%")
     private val timerBalanceLimit by float("TimerBalanceLimit", 20f, 0f..50f)

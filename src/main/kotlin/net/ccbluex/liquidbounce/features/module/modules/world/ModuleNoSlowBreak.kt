@@ -19,15 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * NoSlowBreak module
  *
  * Automatically adjusts breaking speed when in negatively affecting situations.
  */
-object ModuleNoSlowBreak : ClientModule("NoSlowBreak", Category.WORLD) {
+object ModuleNoSlowBreak : ClientModule("NoSlowBreak", ModuleCategories.WORLD) {
     @Suppress("ObjectPropertyNaming")
     private val `when` by multiEnumChoice("When",
         When.MINING_FATIGUE,

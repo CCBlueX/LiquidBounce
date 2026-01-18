@@ -16,17 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.deeplearn.models
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.deeplearn.translators.FloatArrayInAndOutTranslator
+package net.ccbluex.liquidbounce.utils.io
 
-class MinaraiModel(
-    name: String,
-    parent: ChoiceConfigurable<*>
-) : ModelWrapper<FloatArray, FloatArray>(
-    name,
-    FloatArrayInAndOutTranslator(),
-    2, // X, Y
-    parent
-)
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.awt.Font
+import java.io.File
+import java.io.InputStream
+
+suspend fun File.createFont(fontFormat: Int = Font.TRUETYPE_FONT): Font =
+    withContext(Dispatchers.IO) {
+        Font.createFont(fontFormat, this@createFont)
+    }
+
+suspend fun InputStream.createFont(fontFormat: Int = Font.TRUETYPE_FONT): Font =
+    withContext(Dispatchers.IO) {
+        this@createFont.use {
+            Font.createFont(fontFormat, it)
+        }
+    }

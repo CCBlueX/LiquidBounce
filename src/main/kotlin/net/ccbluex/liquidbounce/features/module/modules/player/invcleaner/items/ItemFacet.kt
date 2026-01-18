@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.durability
@@ -40,7 +39,7 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
         get() = this.itemSlot.itemStack
 
     val isInHotbar: Boolean
-        get() = this.itemSlot.slotType == ItemSlotType.HOTBAR || this.itemSlot.slotType == ItemSlotType.OFFHAND
+        get() = this.itemSlot.slotType == ItemSlot.Type.HOTBAR || this.itemSlot.slotType == ItemSlot.Type.OFFHAND
 
     open fun isSignificantlyBetter(other: ItemFacet): Boolean {
         return false

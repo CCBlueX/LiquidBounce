@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.math.multiply
-import net.minecraft.world.effect.MobEffects
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.effect.MobEffects
 import kotlin.math.abs
 
 /**

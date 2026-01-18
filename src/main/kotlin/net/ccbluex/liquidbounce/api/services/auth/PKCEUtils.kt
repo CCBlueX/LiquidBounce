@@ -19,7 +19,8 @@
 package net.ccbluex.liquidbounce.api.services.auth
 
 import java.security.MessageDigest
-import java.util.*
+import java.util.Base64
+import java.util.UUID
 
 object PKCEUtils {
     fun generatePKCE(): Pair<String, String> {

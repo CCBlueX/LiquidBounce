@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
-import net.minecraft.world.level.block.Block
+import net.minecraft.core.BlockPos
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.ItemStack
-import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.Block
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 

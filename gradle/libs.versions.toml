@@ -27,7 +27,7 @@ httpServer = "2.5.2"
 discordIpc = "4.0.0"
 semver4j = "3.1.0"
 ahocorasick = "0.6.3"
-fastutil4k = "0.2.3"
+fastutil4k = "0.2.5"
 
 # Recommended mods
 modmenu = "17.0.0-beta.1"
@@ -35,7 +35,7 @@ exploit_preventer_api = "0.0.1"
 exploit_preventer_mod = "0.1.9"
 sodium = "mc1.21.11-0.8.2-fabric"
 lithium = "mc1.21.11-0.21.2-fabric"
-viafabricplus = "4.4.1"
+viafabricplus = "4.4.2"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.14.1+1.21.11-fabric"
 iris = "1.10.3+1.21.11-fabric"
@@ -53,7 +53,7 @@ fabric-kotlin = "1.13.5+kotlin.2.2.10"
 netty = "4.2.7.Final"
 
 # Other plugins
-detekt = "1.23.8"
+detekt = "2.0.0-alpha.1"
 gradleGitProperties = "2.5.4"
 dokka = "2.1.0"
 nodeGradle = "7.1.0"
@@ -102,7 +102,7 @@ iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
 fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 gradleGitProperties = { id = "com.gorylenko.gradle-git-properties", version.ref = "gradleGitProperties" }
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 nodeGradle = { id = "com.github.node-gradle.node", version.ref = "nodeGradle" }
 

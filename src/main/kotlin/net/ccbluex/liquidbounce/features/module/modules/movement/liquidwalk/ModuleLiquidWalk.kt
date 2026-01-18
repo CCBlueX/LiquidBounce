@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes.LiquidWalkNoCheatPlus
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes.LiquidWalkVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes.LiquidWalkVerusB3901
@@ -34,7 +34,11 @@ import net.minecraft.world.level.block.LiquidBlock
  *
  * Allows you to walk on water like jesus. Also known as Jesus module.
  */
-object ModuleLiquidWalk : ClientModule("LiquidWalk", Category.MOVEMENT, aliases = listOf("Jesus", "WaterWalk")) {
+object ModuleLiquidWalk : ClientModule(
+    "LiquidWalk",
+    ModuleCategories.MOVEMENT,
+    aliases = listOf("Jesus", "WaterWalk")
+) {
 
     init {
         enableLock()

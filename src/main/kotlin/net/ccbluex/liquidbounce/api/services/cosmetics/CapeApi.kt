@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.api.services.cosmetics
 
+import com.mojang.blaze3d.platform.NativeImage
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
-import com.mojang.blaze3d.platform.NativeImage
 
 object CapeApi : BaseApi(config.apiEndpointV1) {
     /**

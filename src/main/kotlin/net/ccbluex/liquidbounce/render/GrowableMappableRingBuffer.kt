@@ -24,7 +24,6 @@ import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
 import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.mapBuffer
 import net.minecraft.client.renderer.MappableRingBuffer
 import org.lwjgl.system.MemoryUtil
@@ -48,7 +47,7 @@ import java.nio.ByteBuffer
 class GrowableMappableRingBuffer @JvmOverloads constructor(
     val label: String,
     val usage: @GpuBuffer.Usage Int,
-    val growPolicy: GrowPolicy = GrowPolicy.of(paddingScale = 7, min = 0), // 128 bytes padding
+    val growPolicy: GrowPolicy = GrowPolicy.DEFAULT,
 ) {
 
     private var ring: MappableRingBuffer? = null
@@ -71,7 +70,7 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
             val newSize = growPolicy.getNewSize(minSize, current?.size() ?: 0)
             current?.let {
                 // Defer closing the old ring buffer to avoid races with GPU usage.
-                mc.schedule(it::close)
+                DISCARD_QUEUE.add(it)
             }
             ring = MappableRingBuffer(
                 Suppliers.ofInstance(label),
@@ -162,6 +161,12 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
         fun getNewSize(requested: Int, current: Int): Int
 
         companion object {
+            /**
+             * 128 bytes padding, minimum 0
+             */
+            @JvmField
+            val DEFAULT = of(paddingScale = 7, min = 0)
+
             @JvmStatic
             fun of(paddingScale: Int, min: Int) = GrowPolicy { requested, current ->
                 val base = maxOf(min, requested, current)
@@ -169,6 +174,16 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
                 (base + padding - 1) and (padding - 1).inv()
             }
         }
+    }
+
+    companion object {
+        /**
+         * [MappableRingBuffer] to be closed.
+         *
+         * @see net.ccbluex.liquidbounce.injection.mixins.blaze3d.MixinRenderSystem.onFlipFrame
+         */
+        @JvmField
+        val DISCARD_QUEUE = ArrayDeque<MappableRingBuffer>()
     }
 }
 

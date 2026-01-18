@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import com.mojang.blaze3d.platform.InputConstants
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
@@ -40,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import com.mojang.blaze3d.platform.InputConstants
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -48,7 +48,7 @@ import com.mojang.blaze3d.platform.InputConstants
 @Suppress("LongParameterList", "detekt:TooManyFunctions")
 open class ClientModule(
     name: String, // name parameter in configurable
-    @Exclude val category: Category, // module category
+    @Exclude val category: ModuleCategory, // module category
     bind: Int = InputConstants.UNKNOWN.value, // default bind
     bindAction: InputBind.BindAction = InputBind.BindAction.TOGGLE, // default action
     state: Boolean = false, // default state
@@ -123,7 +123,8 @@ open class ClientModule(
     final override fun onEnabledValueRegistration(value: Value<Boolean>) =
         super.onEnabledValueRegistration(value).also { value ->
             // Might not include the enabled state of the module depending on the category
-            if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
+            if (category == ModuleCategories.MISC || category == ModuleCategories.FUN ||
+                category == ModuleCategories.RENDER) {
                 if (this is ModuleAntiBot) {
                     return@also
                 }

@@ -19,15 +19,15 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.Chronometer
 import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.platform.Window
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.world.inventory.AbstractContainerMenu
-import net.minecraft.world.inventory.Slot
 import net.minecraft.world.inventory.ClickType
+import net.minecraft.world.inventory.Slot
 import org.lwjgl.glfw.GLFW
 
 fun interface MouseClick {
@@ -43,7 +43,7 @@ fun interface ClickAction {
  *
  * @author sqlerrorthing
  */
-object ModuleItemScroller : ClientModule("ItemScroller", Category.MISC) {
+object ModuleItemScroller : ClientModule("ItemScroller", ModuleCategories.MISC) {
     @JvmStatic
     val clickMode by enumChoice("ClickMode", ClickMode.QUICK_MOVE)
 

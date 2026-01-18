@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.placer.placeInstantOnBlockUpdate
 import net.ccbluex.liquidbounce.utils.client.FloatValueProvider
@@ -35,9 +35,9 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.range
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
-import net.minecraft.world.entity.Entity
 import net.minecraft.core.BlockPos
 import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
 import kotlin.math.max
 import kotlin.math.min
 
@@ -49,7 +49,7 @@ import kotlin.math.min
  * @author ccetl
  */
 @Suppress("MagicNumber")
-object ModuleBlockTrap : ClientModule("BlockTrap", Category.WORLD) {
+object ModuleBlockTrap : ClientModule("BlockTrap", ModuleCategories.WORLD) {
 
     private val doublePlace by multiEnumChoice<DoublePlace>("DoublePlace")
 

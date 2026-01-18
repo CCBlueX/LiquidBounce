@@ -21,15 +21,15 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import kotlin.random.Random
 
 /**
  * When hitting an entity, the player will keep sprinting
  */
-object ModuleKeepSprint : ClientModule("KeepSprint", Category.COMBAT) {
+object ModuleKeepSprint : ClientModule("KeepSprint", ModuleCategories.COMBAT) {
     private val motion by floatRange("Motion", 100f..100f, 0f..100f, "%")
     private val motionWhenHurt by floatRange("MotionWhenHurt", 100f..100f, 0f..100f, "%")
     private val hurtTime by intRange("HurtTime", 1..10, 1..10)

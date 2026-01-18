@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3
 import java.io.File
 
 @JvmRecord
-data class TrainingData(
+data class CombatSample(
     @SerializedName(CURRENT_DIRECTION_VECTOR)
     val currentVector: Vec3,
     @SerializedName(PREVIOUS_DIRECTION_VECTOR)
@@ -110,13 +110,13 @@ data class TrainingData(
         const val T_DIFF = "h"
         const val DISTANCE = "i"
 
-        private fun parse(file: File): List<TrainingData> = when {
+        private fun parse(file: File): List<CombatSample> = when {
             file.isDirectory -> file.listFiles().flatMap(::parse)
-            file.extension == "json" -> file.readJson<List<TrainingData>>()
+            file.extension == "json" -> file.readJson<List<CombatSample>>()
             else -> emptyList()
         }
 
-        fun parse(vararg files: File): List<TrainingData> = files.flatMap(::parse)
+        fun parse(vararg files: File): List<CombatSample> = files.flatMap(::parse)
 
     }
 }

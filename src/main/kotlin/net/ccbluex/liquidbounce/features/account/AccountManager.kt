@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.with
 import net.minecraft.client.multiplayer.ProfileKeyPairManager
 import java.net.Proxy
-import java.util.*
+import java.util.Optional
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("TooManyFunctions")
