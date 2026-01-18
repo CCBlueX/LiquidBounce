@@ -30,7 +30,7 @@ object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
 
     private val volume by float("volume", 1f, 0.1f..1f)
 
-    // --- Hit FX ---
+    // --- SFX ---
     private val HitSFX by enumChoice("Hit", Hitsfx.Bonk)
 
     private enum class Hitsfx(override val choiceName: String) : NamedChoice {
@@ -40,6 +40,7 @@ object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
         Uwu("UWU"),
         Nya("NYA"),
         Tung("Tung"),
+        Meow("Meow"),
     }
 
     private val HitSound: SoundEvent
@@ -50,6 +51,7 @@ object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
             Hitsfx.Uwu -> Sounds.UWU
             Hitsfx.Nya -> Sounds.NYA
             Hitsfx.Tung -> Sounds.TUNG
+            Hitsfx.Meow -> Sounds.MEOW
         }
 
     // --- Play sound ---

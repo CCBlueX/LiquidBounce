@@ -16,5 +16,8 @@
   },
   "tung": {
     "sounds": ["liquidbounce:tung"]
+  },
+  "meow": {
+    "sounds": ["liquidbounce:meow"]
   }
 }
