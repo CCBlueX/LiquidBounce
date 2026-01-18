@@ -35,25 +35,37 @@ object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
 
     private enum class Hitsfx(override val choiceName: String) : NamedChoice {
         Bonk("Bonk"),
+        Boykisser("Boykisser"),
         Click("Click"),
-        Pop("Pop"),
-        Uwu("UWU"),
-        Nya("NYA"),
-        Tung("Tung"),
         Meow("Meow"),
+        Nya("NYA"),
+        Pop("Pop"),
+        Tung("Tung"),
+        Uwu("UWU"),
     }
+
+    private val BoykisserVariants = arrayOf(
+        Sounds.BOYKISSER1, Sounds.BOYKISSER2, Sounds.BOYKISSER3,
+        Sounds.BOYKISSER4, Sounds.BOYKISSER5, Sounds.BOYKISSER6,
+        )
+
+    private val ClickVariants = arrayOf(
+        Sounds.CLICK1, Sounds.CLICK2, Sounds.CLICK3,
+    )
 
     private val HitSound: SoundEvent
         get() = when (HitSFX) {
+            // --- without variants ---
             Hitsfx.Bonk -> Sounds.BONK
-            Hitsfx.Click -> Sounds.CLICK
-            Hitsfx.Pop -> Sounds.POP
-            Hitsfx.Uwu -> Sounds.UWU
-            Hitsfx.Nya -> Sounds.NYA
-            Hitsfx.Tung -> Sounds.TUNG
             Hitsfx.Meow -> Sounds.MEOW
+            Hitsfx.Nya -> Sounds.NYA
+            Hitsfx.Pop -> Sounds.POP
+            Hitsfx.Tung -> Sounds.TUNG
+            Hitsfx.Uwu -> Sounds.UWU
+            // --- with variants ---
+            Hitsfx.Click -> ClickVariants.random()
+            Hitsfx.Boykisser -> BoykisserVariants.random()
         }
-
     // --- Play sound ---
     @Suppress("unused")
     private val hitHandler = handler<AttackEntityEvent> { event ->
