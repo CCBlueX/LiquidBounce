@@ -19,8 +19,8 @@
 
 import com.github.gradle.node.npm.task.NpmTask
 import com.github.gradle.node.task.NodeTask
+import dev.detekt.gradle.DetektCreateBaselineTask
 import groovy.json.JsonOutput
-import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 import org.gradle.kotlin.dsl.support.listFilesOrdered
 
 plugins {

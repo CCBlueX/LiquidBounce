@@ -53,7 +53,7 @@ fabric-kotlin = "1.13.5+kotlin.2.2.10"
 netty = "4.2.7.Final"
 
 # Other plugins
-detekt = "1.23.8"
+detekt = "2.0.0-alpha.1"
 gradleGitProperties = "2.5.4"
 dokka = "2.1.0"
 nodeGradle = "7.1.0"
@@ -102,7 +102,7 @@ iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
 fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 gradleGitProperties = { id = "com.gorylenko.gradle-git-properties", version.ref = "gradleGitProperties" }
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 nodeGradle = { id = "com.github.node-gradle.node", version.ref = "nodeGradle" }
 
