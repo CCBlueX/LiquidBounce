@@ -8,9 +8,8 @@
     export let vecAxes: VecAxis[];
     export let step: number;
 
-    $: useLocateButton = (setting as Vec3Setting)?.useLocateButton ?? false;
-
     const cSetting = setting as Setting<Vec<typeof vecAxes[number]>>;
+    const useLocateButton = (setting as Vec3Setting).useLocateButton ?? false;
 
     const dispatch = createEventDispatcher();
 
@@ -24,7 +23,6 @@
 
         if (hitResult.type === "block") {
             const blockHitResult = hitResult as BlockHitResult;
-
             (cSetting as Vec3Setting).value = blockHitResult.blockPos;
         } else {
             const playerData = await getPlayerData();
