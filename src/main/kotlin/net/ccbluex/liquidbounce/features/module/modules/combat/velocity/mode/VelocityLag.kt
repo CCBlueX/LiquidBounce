@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
@@ -65,12 +67,14 @@ internal object VelocityLag : VelocityMode("Lag") {
     }
 
     @Suppress("unused")
-    private val tickPacketProcessHandler = handler<TickPacketProcessEvent> {
+    private val tickPacketProcessHandler = sequenceHandler<TickPacketProcessEvent> {
         if (isLagging && lagTicks == 0) {
             isLagging = false
             lagTicks = 0
             PacketQueueManager.flush(TransferOrigin.INCOMING)
             shouldJump = true
+            waitTicks(2)
+            shouldJump = false
         }
     }
 
