@@ -25,7 +25,8 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.FontFace
+import net.ccbluex.liquidbounce.render.engine.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphDescriptor
 import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
@@ -42,7 +43,7 @@ class DynamicFontCacheManager(
     /**
      * Available fonts, sorted by priority
      */
-    private val availableFonts: Collection<FontManager.FontFace>
+    private val availableFonts: Collection<FontFace>
 ) {
 
     private val glyphPageLock = ReentrantLock()
@@ -227,13 +228,17 @@ class DynamicFontCacheManager(
         return requests
     }
 
-    private fun findFontForGlyph(ch: GlyphIdentifier): FontManager.FontId? {
+    private fun findFontForGlyph(ch: GlyphIdentifier): FontId? {
         return this.availableFonts.firstNotNullOfOrNull { fontFace ->
-            fontFace.styles[ch.style]?.takeIf { it.awtFont.canDisplay(ch.codepoint) }
+            fontFace.style(ch.style)?.takeIf { it.awtFont.canDisplay(ch.codepoint) }
         }
     }
 
-    class ChangeOnAtlas(val descriptor: GlyphDescriptor, val style: Int, val removed: Boolean)
+    class ChangeOnAtlas(
+        @JvmField val descriptor: GlyphDescriptor,
+        @JvmField val style: Int,
+        @JvmField val removed: Boolean,
+    )
 }
 
 private const val MAX_CACHE_TIME_MS = 30 * 1000L

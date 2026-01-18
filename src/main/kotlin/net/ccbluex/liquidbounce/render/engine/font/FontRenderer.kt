@@ -23,7 +23,7 @@ import it.unimi.dsi.fastutil.ints.IntStack
 import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeForeignInput
 import net.ccbluex.liquidbounce.render.AbstractFontRenderer
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.FontFace
 import net.ccbluex.liquidbounce.render.FontManager.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.color
@@ -51,7 +51,7 @@ class FontRenderer(
      *
      * [Font.BOLD] | [Font.ITALIC] -> 3 (Can be null)
      */
-    val font: FontManager.FontFace,
+    val font: FontFace,
     val glyphManager: FontGlyphPageManager,
     override val size: Float = DEFAULT_FONT_SIZE
 ) : AbstractFontRenderer<MinecraftTextProcessor.RecyclingProcessedText>() {
@@ -60,9 +60,9 @@ class FontRenderer(
     private val underlinesIdxStack = IntArrayList()
     private val strikethroughIdxStack = IntArrayList()
 
-    override val height: Float = font.styles.firstNotNullOf { it?.height }
+    override val height: Float = font.plainStyle.height
 
-    private val ascent: Float = font.styles.firstNotNullOf { it?.ascent }
+    private val ascent: Float = font.plainStyle.ascent
 
     private val shadowColor = Color4b(0, 0, 0, 150)
 

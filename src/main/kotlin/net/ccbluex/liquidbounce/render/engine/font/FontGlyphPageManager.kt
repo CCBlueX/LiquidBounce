@@ -25,7 +25,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.FontFace
 import net.ccbluex.liquidbounce.render.engine.font.dynamic.DynamicFontCacheManager
 import net.ccbluex.liquidbounce.render.engine.font.dynamic.DynamicGlyphPage
 import kotlin.math.ceil
@@ -33,25 +33,25 @@ import kotlin.math.ceil
 private val BASIC_CHARS = '\u0000'..'\u0200'
 
 class FontGlyphPageManager(
-    baseFonts: Collection<FontManager.FontFace>,
-    additionalFonts: Collection<FontManager.FontFace> = emptySet()
+    baseFonts: Collection<FontFace>,
+    additionalFonts: Collection<FontFace> = emptySet()
 ): EventListener {
 
     private val staticPage: List<StaticGlyphPage> = StaticGlyphPage.createGlyphPages(baseFonts.flatMap { loadedFont ->
-        loadedFont.styles.filterNotNull().flatMap { font -> BASIC_CHARS.map { ch -> FontGlyph(ch, font) } }
+        loadedFont.filledStyles.flatMap { font -> BASIC_CHARS.map { ch -> FontGlyph(ch, font) } }
     })
     private val dynamicPage: DynamicGlyphPage = DynamicGlyphPage(
-        fontHeight = ceil(baseFonts.first().styles[0]!!.height * 2.0F).toInt()
+        fontHeight = ceil(baseFonts.first().plainStyle.height * 2.0F).toInt()
     )
     private val dynamicFontManager: DynamicFontCacheManager = DynamicFontCacheManager(
         this.dynamicPage,
-        ObjectOpenHashSet<FontManager.FontFace>(baseFonts.size + staticPage.size).apply {
+        ObjectOpenHashSet<FontFace>(baseFonts.size + staticPage.size).apply {
             addAll(baseFonts)
             addAll(additionalFonts)
         }
     )
 
-    private val availableFonts: Map<FontManager.FontFace, FontGlyphRegistry>
+    private val availableFonts: Map<FontFace, FontGlyphRegistry>
     private val dynamicallyLoadedGlyphs = Long2ObjectOpenHashMap<GlyphDescriptor>()
 
     init {
@@ -74,16 +74,12 @@ class FontGlyphPageManager(
     }
 
     private fun createGlyphRegistries(
-        baseFonts: Collection<FontManager.FontFace>,
+        baseFonts: Collection<FontFace>,
         glyphPages: List<StaticGlyphPage>
-    ): Map<FontManager.FontFace, FontGlyphRegistry> = baseFonts.associateWith { loadedFont ->
+    ): Map<FontFace, FontGlyphRegistry> = baseFonts.associateWith { loadedFont ->
         val array = Array(4) { Char2ObjectOpenHashMap<GlyphDescriptor>(512) }
 
-        loadedFont.styles.forEach { fontId ->
-            if (fontId == null) {
-                return@forEach
-            }
-
+        loadedFont.filledStyles.forEach { fontId ->
             glyphPages.forEach { glyphPage ->
                 for ((font, glyphRenderInfo) in glyphPage.glyphs) {
                     if (font != fontId) {
@@ -98,11 +94,11 @@ class FontGlyphPageManager(
         FontGlyphRegistry(array, array[0]['?']!!)
     }
 
-    private fun getFont(font: FontManager.FontFace): FontGlyphRegistry {
+    private fun getFont(font: FontFace): FontGlyphRegistry {
         return availableFonts[font] ?: error("Font $font is not registered")
     }
 
-    fun requestGlyph(font: FontManager.FontFace, style: Int, ch: Char): GlyphDescriptor? {
+    fun requestGlyph(font: FontFace, style: Int, ch: Char): GlyphDescriptor? {
         val glyph = getFont(font).glyphs[style][ch]
 
         if (glyph == null) {
@@ -118,7 +114,7 @@ class FontGlyphPageManager(
         return glyph
     }
 
-    fun getFallbackGlyph(font: FontManager.FontFace): GlyphDescriptor {
+    fun getFallbackGlyph(font: FontFace): GlyphDescriptor {
         return getFont(font).fallbackGlyph
     }
 
@@ -128,8 +124,8 @@ class FontGlyphPageManager(
     }
 
     private class FontGlyphRegistry(
-        val glyphs: Array<Char2ObjectOpenHashMap<GlyphDescriptor>>,
-        val fallbackGlyph: GlyphDescriptor
+        @JvmField val glyphs: Array<Char2ObjectOpenHashMap<GlyphDescriptor>>,
+        @JvmField val fallbackGlyph: GlyphDescriptor,
     )
 
 }
