@@ -579,6 +579,7 @@
   "liquidbounce.module.fullBright.description": "无限夜视效果，让你在黑暗中看清一切。",
   "liquidbounce.module.ghostHand.description": "允许你透过墙跟一个选中的方块交互。",
   "liquidbounce.module.handDerp.description": "不断在主手和副手之间切换。",
+  "liquidbounce.module.hats.description": "在玩家头顶上方渲染帽子。",
   "liquidbounce.module.highJump.description": "允许你跳得更高。",
   "liquidbounce.module.hitbox.description": "扩大目标的命中框。",
   "liquidbounce.module.holeESP.description": "检测并显示水晶PvP的安全点。",
