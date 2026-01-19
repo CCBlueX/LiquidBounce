@@ -55,22 +55,22 @@ abstract class HatsMode(name: String) : Choice(name) {
 
     protected val height by float("HeightOffset", 0.2f, 0f..2f)
 
-    protected object EquipOffset : Configurable("EquipmentOffset") {
+    private class EquipOffset : Configurable("EquipmentOffset") {
         val equipmentOffset by float("ArmorOffset", 0.1f, 0f..1f)
     }
 
+    private val equipOffset = tree(EquipOffset())
+
     private val hurtMarked by boolean("ShowDamage", true)
 
-    protected object FriendsOptions : Configurable("FriendsOptions") {
+    private class FriendsOptions : Configurable("FriendsOptions") {
         val friendView by boolean("ViewOnFriend", true)
         val distance by int("Distance", 64, 8..512, "blocks")
     }
 
-    protected val showInFirstPerson by boolean("FirstPersonView", true)
+    private val friendsOptions = tree(FriendsOptions())
 
-    init {
-        tree(FriendsOptions)
-    }
+    protected val showInFirstPerson by boolean("FirstPersonView", true)
 
     // --- Render ---
     protected abstract fun WorldRenderEnvironment.drawHat(isHurt: Boolean)
@@ -82,12 +82,12 @@ abstract class HatsMode(name: String) : Choice(name) {
         for (entity in world.players()) {
             val isMe = entity == player
             val isFriend = FriendManager.isFriend(entity)
-            val inDistance = player.distanceTo(entity) <= FriendsOptions.distance
+            val inDistance = player.distanceTo(entity) <= friendsOptions.distance
 
             val shouldRender = if (isMe) {
                 !mc.options.cameraType.isFirstPerson || showInFirstPerson || ModuleFreeLook.enabled
             } else {
-                inDistance && (isFriend && FriendsOptions.friendView)
+                inDistance && (isFriend && friendsOptions.friendView)
             }
 
             if (shouldRender) {
@@ -96,7 +96,7 @@ abstract class HatsMode(name: String) : Choice(name) {
                 val rotation = entity.interpolateCurrentRotation(it.partialTicks)
 
                 val equipOffset = if (!entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty) {
-                    EquipOffset.equipmentOffset
+                    equipOffset.equipmentOffset
                 } else {
                     0.0F
                 }
