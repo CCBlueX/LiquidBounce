@@ -67,7 +67,7 @@ object HitFX : ToggleableConfigurable(ModuleSoundFX, "HitFX", true) {
             Hitsfx.Moan -> moanVariants.random()
         }
 
-    fun HitSound(): SoundEvent? {
+    fun hitSound(): SoundEvent? {
         if (!enabled) return null
         return hitSound
     }
