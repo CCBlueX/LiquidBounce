@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.FontManager.font
 import net.ccbluex.liquidbounce.render.WorldRenderEnvironment
 import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.drawCircleOutline
@@ -367,6 +367,7 @@ class TargetRenderer(
 
             class Text(owner: ToggleableConfigurable, override val parent: ChoiceConfigurable<*>) : Gui("Text") {
 
+                private val font by font("Font")
                 private val textScale by float("Scale", 1f, 0.01f..10f)
                 private val textShadow by boolean("Shadow", true)
                 private val color by color("Color", Color4b.RED)
@@ -383,19 +384,17 @@ class TargetRenderer(
                     )
                 }
 
-                private val fontRenderer get() = FontManager.FONT_RENDERER
-
                 override fun GuiGraphics.render(entity: Entity, partialTicks: Float) {
                     val height = heightMode.activeChoice.getHeight(entity, partialTicks)
                     val pos = entity.interpolateCurrentPosition(partialTicks).add(0.0, height, 0.0)
                     val screenPos = calculateScreenPos(pos) ?: return
 
                     texts.forEachIndexed { i, text ->
-                        fontRenderer.draw(text.asPlainText(Style.EMPTY + color)) {
+                        font.renderer.draw(text.asPlainText(Style.EMPTY + color)) {
                             horizontalAnchor = HorizontalAnchor.CENTER
                             verticalAnchor = VerticalAnchor.MIDDLE
                             x = screenPos.x
-                            y = screenPos.y + i * fontRenderer.height
+                            y = screenPos.y + i * font.renderer.height
                             shadow = textShadow
                             scale = textScale
                         }

@@ -64,7 +64,7 @@ internal fun GuiGraphics.drawNametag(nametag: Nametag, posX: Float, posY: Float)
     pose().translate(posX, posY)
     pose().scale(scale, scale)
 
-    val fontRenderer = ModuleNametags.fontRenderer
+    val fontRenderer = ModuleNametags.font.renderer
     val processedText = fontRenderer.process(nametag.text)
     val textWidth = fontRenderer.getStringWidth(processedText, shadow = true)
 

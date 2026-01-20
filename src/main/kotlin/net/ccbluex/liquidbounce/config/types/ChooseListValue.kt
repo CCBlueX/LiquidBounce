@@ -31,18 +31,8 @@ class ChooseListValue<T : NamedChoice>(
     name: String,
     aliases: List<String> = emptyList(),
     defaultValue: T,
-    choices: Set<T>,
+    @Exclude val choices: Set<T>,
 ) : Value<T>(name, aliases, defaultValue, ValueType.CHOOSE) {
-
-    @Exclude var choices: Set<T> = choices
-        set(value) {
-            require(inner in value) { "current value $inner must be in $choices" }
-            field = value
-        }
-
-    init {
-        require(defaultValue in choices) { "default value $defaultValue must be in $choices" }
-    }
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val name = element.asString

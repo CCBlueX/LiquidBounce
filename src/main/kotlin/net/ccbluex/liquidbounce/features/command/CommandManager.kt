@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.command.commands.client.CommandClear
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandContainers
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandDebug
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandFonts
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandFriend
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandHelp
 import net.ccbluex.liquidbounce.features.command.commands.client.CommandHide

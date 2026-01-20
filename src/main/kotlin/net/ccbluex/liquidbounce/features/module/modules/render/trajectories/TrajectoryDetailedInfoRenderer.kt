@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.FontManager.font
 import net.ccbluex.liquidbounce.render.engine.font.HorizontalAnchor
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
@@ -76,13 +76,12 @@ object TrajectoryDetailedInfoRenderer : ToggleableConfigurable(ModuleTrajectorie
         abstract fun format(ticks: Int): String
     }
 
+    private val font by font("Font")
     private val scale by float("Scale", 1F, 0.25F..4F)
     private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
     private fun Vec3.calcScreenPosWithOffset(): Vec3f? {
         return WorldToScreen.calculateScreenPos(add(renderOffset))
     }
-
-    private val fontRenderer get() = FontManager.FONT_RENDERER
 
     val renderHandler = handler<OverlayRenderEvent> { event ->
         with(event.context) {
@@ -125,8 +124,8 @@ object TrajectoryDetailedInfoRenderer : ToggleableConfigurable(ModuleTrajectorie
                     pose().pushMatrix()
                     pose().translate(0F, 16F)
                 }
-                pose().scale(1F / (fontRenderer.size * 0.15F))
-                val fontRenderer = fontRenderer
+                pose().scale(1F / (font.renderer.size * 0.15F))
+                val fontRenderer = font.renderer
                 var y = 0F
 
                 for (text in texts) {

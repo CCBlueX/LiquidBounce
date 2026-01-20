@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.render
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.render.engine.FontId
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import java.awt.Font
 import java.awt.image.BufferedImage
 import java.io.File
-import kotlin.jvm.Volatile
 
 class FontFace(
     val name: String,
@@ -35,7 +35,11 @@ class FontFace(
      * The file of the font. If the font is a system font, this will be null.
      */
     val file: File? = null,
-) {
+) : NamedChoice {
+
+    override val choiceName: String
+        get() = name
+
     /**
      * Style of the font. If an element is null, fall back to `[0]`
      *
@@ -71,7 +75,7 @@ class FontFace(
      */
     suspend fun fillStyle(font: Font, style: Int) {
         if (style !in 0..3) {
-            error("Illegal Style $style, should be PLAIN/BOLD/ITALIC/BOLDITA")
+            error("Illegal Style $style, should be PLAIN/BOLD/ITALIC/BOLD+ITALIC")
         }
 
         withContext(Dispatchers.Default) {
@@ -110,6 +114,10 @@ class FontFace(
             cachedHash = h
         }
         return h
+    }
+
+    override fun toString(): String {
+        return "FontFace(name='$name', size=$size, file=$file)"
     }
 
 }

@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.features.command.dsl.buildCommand
 import net.ccbluex.liquidbounce.features.command.dsl.cast
 import net.ccbluex.liquidbounce.features.command.dsl.castVararg
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
+import net.ccbluex.liquidbounce.render.FontFace
 import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.bold
@@ -43,8 +44,7 @@ import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.client.withColor
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
 import okio.Buffer
 import java.awt.GraphicsEnvironment
 import java.io.File
@@ -73,7 +73,7 @@ object CommandFonts : Command.Factory {
         .subcommand(addUrlSubcommand())
         .build()
 
-    private fun Command.fontAdded(fontFace: FontManager.FontFace) {
+    private fun Command.fontAdded(fontFace: FontFace) {
         chat("Added font: ${fontFace.name}", this)
     }
 
@@ -145,14 +145,14 @@ object CommandFonts : Command.Factory {
         .pagedQuery(
             pageSize = 8,
             header = {
-                result("fonts").withColor(Formatting.RED).bold(true)
+                result("fonts").withStyle(ChatFormatting.RED).bold(true)
             },
             items = {
                 FontManager.fontFaces.values
             },
             eachRow = { _, font ->
                 "\u2B25 ".asText()
-                    .formatted(Formatting.BLUE)
+                    .withStyle(ChatFormatting.BLUE)
                     .append(variable(font.name).copyable())
                     .append(regular(" ("))
                     .append(variable(font.size.toString()))

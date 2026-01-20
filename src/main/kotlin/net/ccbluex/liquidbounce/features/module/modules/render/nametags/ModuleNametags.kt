@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
-import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.FontManager.font
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -46,6 +46,7 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
         tree(NametagEnchantmentRenderer)
     }
 
+    internal val font by font("Font")
     internal val border by boolean("Border", true)
     internal val scale = curve(
         "Scale",
@@ -54,9 +55,6 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
         yAxis = "Scale" axis 0.25f..4f,
     )
     internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()
-
-    val fontRenderer
-        get() = FontManager.FONT_RENDERER
 
     private val nametagsToRender = mutableListOf<Nametag>()
 

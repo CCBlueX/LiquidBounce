@@ -246,8 +246,8 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
             "${textColor}${info?.displayName} $level"
         }
 
-        val processedText = ModuleNametags.fontRenderer.process(text)
-        val textWidth = ModuleNametags.fontRenderer.getStringWidth(processedText, false)
+        val processedText = ModuleNametags.font.renderer.process(text)
+        val textWidth = ModuleNametags.font.renderer.getStringWidth(processedText, false)
         return EnchantCell(
             processedText,
             textWidth,
@@ -278,9 +278,9 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
             drawQuad(rect.x1, rect.y1, rect.x2, rect.y2, fillColor = bgColor)
 
             val textX = cellX + (cellWidth - cell.textWidth * FIXED_SCALE) / 2
-            val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.fontRenderer.height * FIXED_SCALE)) / 2
+            val textY = cellY + PADDING + (LINE_HEIGHT - (ModuleNametags.font.renderer.height * FIXED_SCALE)) / 2
 
-            ModuleNametags.fontRenderer.draw(cell.processedText) {
+            ModuleNametags.font.renderer.draw(cell.processedText) {
                 this.x = textX
                 this.y = textY
                 shadow = true

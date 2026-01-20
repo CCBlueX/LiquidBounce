@@ -20,13 +20,11 @@ package net.ccbluex.liquidbounce.render
 
 import com.google.common.collect.BiMap
 import com.google.common.collect.HashBiMap
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.AsyncLazy
-import net.ccbluex.liquidbounce.config.types.ChooseListValue
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.render.FontManager.addFontFace
+import net.ccbluex.liquidbounce.render.FontManager.fontFaces
 import net.ccbluex.liquidbounce.render.engine.font.FontGlyphPageManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -41,16 +39,11 @@ import java.io.InputStream
 
 object FontManager {
 
-    private val FONT_VALUES = mutableListOf<ChooseListValue<FontFace>>()
-
     /**
      * Creates a font value. The choices will be sync with [fontFaces].
      */
     fun Configurable.font(name: String, default: FontFace = COMMON_FONT) =
-        enumChoice(name, default, fontFaces.values).apply {
-            FONT_VALUES += this
-            doNotIncludeAlways()
-        }
+        enumChoice(name, default, fontFaces.values).doNotIncludeAlways()
 
     private val STYLES = intArrayOf(
         Font.PLAIN,
@@ -103,7 +96,6 @@ object FontManager {
 
     private fun addFontFace(fontFace: FontFace) = mc.execute {
         fontFaces[fontFace.name] = fontFace
-        FONT_VALUES.forEach { it.choices = fontFaces.values }
         ModuleClickGui.reload()
     }
 
@@ -124,11 +116,6 @@ object FontManager {
      */
     val glyphManager: FontGlyphPageManager
         get() = requireNotNull(_glyphManager) { "Glyph manager was not initialized yet!" }
-
-    /**
-     * Returns the font by the given name.
-     */
-    fun fontFace(name: String) = fontFaces[name]
 
     internal fun createGlyphManager() {
         _glyphManager = FontGlyphPageManager(
