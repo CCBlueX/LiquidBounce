@@ -117,7 +117,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
         event: WorldRenderEvent
     ) {
         val (trajectoryInfo, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
-            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack.item, this.alwaysShowBow)?.let {
+            TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack, this.alwaysShowBow)?.let {
                 it to stack
             }
         } ?: return

@@ -47,7 +47,7 @@ object ModuleProjectileAimbot : ClientModule("ProjectileAimbot", ModuleCategorie
         val rotation = player.handItems.firstNotNullOfOrNull {
             val trajectory = TrajectoryData.getRenderedTrajectoryInfo(
                 player,
-                it.item,
+                it,
                 true
             ) ?: return@firstNotNullOfOrNull null
 
