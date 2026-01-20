@@ -35,6 +35,7 @@ import kotlin.math.sin
 
 object ModuleCrosshair : ClientModule("Crosshair", ModuleCategories.RENDER) {
 
+    private val showInThirdPerson by boolean("ShowInThirdPerson", true)
     private val radius by intRange("Range", 5..7, 1..25)
     private object Color : Configurable("Color") {
         val syncColors by boolean("Sync", true)
@@ -53,6 +54,7 @@ object ModuleCrosshair : ClientModule("Crosshair", ModuleCategories.RENDER) {
 
     @Suppress("unused")
     private val cursorHandler = handler<OverlayRenderEvent> {
+        if(!mc.options.cameraType.isFirstPerson && !showInThirdPerson) return@handler
         if(isInInventoryScreen || isInContainerScreen) return@handler
 
         val centerWidth = (it.context.guiWidth() / 2.002f)
@@ -75,7 +77,7 @@ object ModuleCrosshair : ClientModule("Crosshair", ModuleCategories.RENDER) {
 
             val color = getCurrentStepColor(Color.firstColor, Color.secondColor,
                 Color.syncColors, Color.Spin.spinSpeed, Color.Spin.invertSpin, cAngle)
-            
+
             it.context.drawTriangle(innerCurrX, innerCurrY, outerCurrX, outerCurrY, outerNextX, outerNextY, color)
             it.context.drawTriangle(innerCurrX, innerCurrY, outerNextX, outerNextY, innerNextX, innerNextY, color)
         }
