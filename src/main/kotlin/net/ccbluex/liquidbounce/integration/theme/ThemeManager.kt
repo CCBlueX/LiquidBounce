@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
+import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.core.renderScope
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
@@ -40,6 +40,7 @@ import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import java.io.File
+import java.util.concurrent.CompletableFuture
 
 object ThemeManager : Configurable("theme") {
 
@@ -208,7 +209,7 @@ object ThemeManager : Configurable("theme") {
         )
     }
 
-    fun loadBackground() = runBlocking {
+    fun loadBackgroundAsync(): CompletableFuture<Unit> = renderScope.future {
         theme.loadBackgroundImage()
         if (shaderEnabled) {
             theme.compileShader()
@@ -218,9 +219,9 @@ object ThemeManager : Configurable("theme") {
     @Suppress("LongParameterList")
     fun drawBackground(context: GuiGraphics, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
         val background = if (shaderEnabled) {
-            theme.themeBackgroundShader
+            theme.backgroundShader
         } else {
-            theme.themeBackgroundTexture
+            theme.backgroundImage
         } ?: return false
 
         background.draw(context, width, height, mouseX, mouseY, delta)

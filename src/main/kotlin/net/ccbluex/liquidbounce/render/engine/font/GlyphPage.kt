@@ -204,7 +204,7 @@ abstract class GlyphPage {
             }
 
             atlasGraphics.paint = Color(0, 0, 0, 0)
-            atlasGraphics.composite = AlphaComposite.getInstance(AlphaComposite.CLEAR)
+            atlasGraphics.composite = AlphaComposite.Clear
             atlasGraphics.fillRect(
                 characterInfo.atlasLocation.x,
                 characterInfo.atlasLocation.y,
@@ -212,7 +212,7 @@ abstract class GlyphPage {
                 characterInfo.atlasDimension.height
             )
             atlasGraphics.paint = Color.white
-            atlasGraphics.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
+            atlasGraphics.composite = AlphaComposite.SrcOver
 
             // Draw the character to the atlas, offset by start of the character + a pixel padding
             atlasGraphics.drawString(
