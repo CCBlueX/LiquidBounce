@@ -19,63 +19,28 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.soundfx
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.sounds.SoundEvent
+import net.ccbluex.liquidbounce.features.module.modules.misc.soundfx.modes.HitFX
+import net.ccbluex.liquidbounce.features.module.modules.misc.soundfx.modes.HitFX.getHitSound
 
 object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
 
     private val volume by float("volume", 1f, 0.1f..1f)
 
-    // --- SFX ---
-    private val HitSFX by enumChoice("Hit", Hitsfx.Bonk)
-
-    private enum class Hitsfx(override val choiceName: String) : NamedChoice {
-        Bonk("Bonk"), Boykisser("Boykisser"),
-        Click("Click"), Meow("Meow"),
-        Moan("Moan"), Nya("NYA"),
-        Pop("Pop"), Tung("Tung"),
-        Uwu("UWU"),
+    init {
+        tree(HitFX)
     }
 
-    private val BoykisserVariants = arrayOf(
-        Sounds.BOYKISSER1, Sounds.BOYKISSER2, Sounds.BOYKISSER3,
-        Sounds.BOYKISSER4, Sounds.BOYKISSER5, Sounds.BOYKISSER6,
-        )
-
-    private val ClickVariants = arrayOf(
-        Sounds.CLICK1, Sounds.CLICK2, Sounds.CLICK3,
-    )
-
-    private val MoanVariants = arrayOf(
-        Sounds.MOAN1, Sounds.MOAN2, Sounds.MOAN3,
-        Sounds.MOAN4,
-    )
-
-    private val HitSound: SoundEvent
-        get() = when (HitSFX) {
-            // --- without variants ---
-            Hitsfx.Bonk -> Sounds.BONK
-            Hitsfx.Meow -> Sounds.MEOW
-            Hitsfx.Nya -> Sounds.NYA
-            Hitsfx.Pop -> Sounds.POP
-            Hitsfx.Tung -> Sounds.TUNG
-            Hitsfx.Uwu -> Sounds.UWU
-
-            // --- with variants ---
-            Hitsfx.Boykisser -> BoykisserVariants.random()
-            Hitsfx.Click -> ClickVariants.random()
-            Hitsfx.Moan -> MoanVariants.random()
-        }
     // --- Play sound ---
     @Suppress("unused")
     private val hitHandler = handler<AttackEntityEvent> { event ->
         val player = mc.player ?: return@handler
+        val sound = getHitSound() ?: return@handler
         if(event.entity.isAlive) {
-            player.playSound(HitSound, volume, 1f)
+            player.playSound(sound, volume, 1f)
         }
     }
 }

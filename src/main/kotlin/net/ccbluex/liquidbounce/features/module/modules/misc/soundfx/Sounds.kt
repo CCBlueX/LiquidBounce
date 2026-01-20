@@ -27,35 +27,37 @@ import net.minecraft.sounds.SoundEvent
 object Sounds {
 
     private val soundIds = listOf(
-        // --- other ---
-        "bonk", "pop", "uwu", "nya", "tung", "meow",
-        // --- click ---
-        "click-1", "click-2", "click-3",
-        // --- boykisser ---
-        "boykisser-1", "boykisser-2", "boykisser-3", "boykisser-4", "boykisser-5", "boykisser-6",
-        // --- moan ---
-        "moan-1", "moan-2", "moan-3", "moan-4",
+        // HitFX
+            // --- other ---
+            "bonk", "pop", "uwu", "nya", "tung", "meow",
+            // --- click ---
+            "click-1", "click-2", "click-3",
+            // --- boykisser ---
+            "boykisser-1", "boykisser-2", "boykisser-3", "boykisser-4", "boykisser-5", "boykisser-6",
+            // --- moan ---
+            "moan-1", "moan-2", "moan-3", "moan-4",
     )
 
     val registeredSounds = mutableMapOf<String, SoundEvent>()
 
-    // --- other ---
-    lateinit var BONK: SoundEvent private set; lateinit var POP: SoundEvent private set
-    lateinit var UWU: SoundEvent private set; lateinit var NYA: SoundEvent private set
-    lateinit var TUNG: SoundEvent private set; lateinit var MEOW: SoundEvent private set
+    // HitFX
+        // --- other ---
+        lateinit var BONK: SoundEvent private set; lateinit var POP: SoundEvent private set
+        lateinit var UWU: SoundEvent private set; lateinit var NYA: SoundEvent private set
+        lateinit var TUNG: SoundEvent private set; lateinit var MEOW: SoundEvent private set
 
-    // --- click ---
-    lateinit var CLICK1: SoundEvent private set; lateinit var CLICK2: SoundEvent private set
-    lateinit var CLICK3: SoundEvent private set
+        // --- click ---
+        lateinit var CLICK1: SoundEvent private set; lateinit var CLICK2: SoundEvent private set
+        lateinit var CLICK3: SoundEvent private set
 
-    // --- boykisser ---
-    lateinit var BOYKISSER1: SoundEvent private set; lateinit var BOYKISSER2: SoundEvent private set
-    lateinit var BOYKISSER3: SoundEvent private set; lateinit var BOYKISSER4: SoundEvent private set
-    lateinit var BOYKISSER5: SoundEvent private set; lateinit var BOYKISSER6: SoundEvent private set
+        // --- boykisser ---
+        lateinit var BOYKISSER1: SoundEvent private set; lateinit var BOYKISSER2: SoundEvent private set
+        lateinit var BOYKISSER3: SoundEvent private set; lateinit var BOYKISSER4: SoundEvent private set
+        lateinit var BOYKISSER5: SoundEvent private set; lateinit var BOYKISSER6: SoundEvent private set
 
-    // --- moan ---
-    lateinit var MOAN1: SoundEvent private set; lateinit var MOAN2: SoundEvent private set;
-    lateinit var MOAN3: SoundEvent private set; lateinit var MOAN4: SoundEvent private set;
+        // --- moan ---
+        lateinit var MOAN1: SoundEvent private set; lateinit var MOAN2: SoundEvent private set
+        lateinit var MOAN3: SoundEvent private set; lateinit var MOAN4: SoundEvent private set
 
     fun registerAll() {
         for (id in soundIds) {
@@ -68,25 +70,26 @@ object Sounds {
             registeredSounds[id] = sound
 
             when (id) {
-                // --- other ---
-                "bonk" -> BONK = sound
-                "pop" -> POP = sound
-                "uwu" -> UWU = sound
-                "nya" -> NYA = sound
-                "tung" -> TUNG = sound
-                "meow" -> MEOW = sound
+                // HitFX
+                    // --- other ---
+                    "bonk" -> BONK = sound
+                    "pop" -> POP = sound
+                    "uwu" -> UWU = sound
+                    "nya" -> NYA = sound
+                    "tung" -> TUNG = sound
+                    "meow" -> MEOW = sound
 
-                // --- click ---
-                "click-1" -> CLICK1 = sound; "click-2" -> CLICK2 = sound; "click-3" -> CLICK3 = sound
+                    // --- click ---
+                    "click-1" -> CLICK1 = sound; "click-2" -> CLICK2 = sound; "click-3" -> CLICK3 = sound
 
-                // --- boykisser ---
-                "boykisser-1" -> BOYKISSER1 = sound; "boykisser-2" -> BOYKISSER2 = sound
-                "boykisser-3" -> BOYKISSER3 = sound; "boykisser-4" -> BOYKISSER4 = sound
-                "boykisser-5" -> BOYKISSER5 = sound; "boykisser-6" -> BOYKISSER6 = sound
+                    // --- boykisser ---
+                    "boykisser-1" -> BOYKISSER1 = sound; "boykisser-2" -> BOYKISSER2 = sound
+                    "boykisser-3" -> BOYKISSER3 = sound; "boykisser-4" -> BOYKISSER4 = sound
+                    "boykisser-5" -> BOYKISSER5 = sound; "boykisser-6" -> BOYKISSER6 = sound
 
-                // --- moan ---
-                "moan-1" -> MOAN1 = sound; "moan-2" -> MOAN2 = sound
-                "moan-3" -> MOAN3 = sound; "moan-4" -> MOAN4 = sound
+                    // --- moan ---
+                    "moan-1" -> MOAN1 = sound; "moan-2" -> MOAN2 = sound
+                    "moan-3" -> MOAN3 = sound; "moan-4" -> MOAN4 = sound
             }
         }
     }
