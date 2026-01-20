@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.interfaces.ClientInputAddition
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlastResistant
 import net.ccbluex.liquidbounce.utils.block.raycast
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
@@ -722,6 +723,40 @@ fun LocalPlayer.getFeetBlockPos(): BlockPos {
         Mth.ceil(bb.minY),
         Mth.floor(Mth.lerp(0.5, bb.minZ, bb.maxZ))
     )
+}
+
+@Suppress("NestedBlockDepth","CognitiveComplexMethod")
+fun isInVoid(pos: Vec3d, considerGround: Boolean = true): Boolean {
+    if (considerGround && player.isOnGround) return false
+
+    val xRange = mutableListOf(0)
+    val zRange = mutableListOf(0)
+
+    if (pos.x - floor(pos.x) <= 0.3) {
+        xRange.add(-1)
+    } else if (ceil(pos.x) - pos.x <= 0.3) {
+        xRange.add(1)
+    }
+
+    if (pos.z - floor(pos.z) <= 0.3) {
+        zRange.add(-1)
+    } else if (ceil(pos.z) - pos.z <= 0.3) {
+        zRange.add(1)
+    }
+
+    val topY = floor(pos.y).toInt() - 1
+
+    for (xOffset in xRange) {
+        for (zOffset in zRange) {
+            for (y in topY downTo -64) {
+                val blockPos = BlockPos(pos.x.toInt() + xOffset, y, pos.z.toInt() + zOffset)
+                val state = blockPos.getState()
+                if (state != null && !state.isAir) return false
+            }
+        }
+    }
+
+    return true
 }
 
 val LivingEntity.wouldBlockHit
