@@ -37,7 +37,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink.dummy
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.player.RemotePlayer
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundSpectateEntityPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.entity.EntityLookup
 import java.util.UUID
@@ -105,7 +107,10 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
             return@handler
         }
 
-        if (ambush && packet is ServerboundInteractPacket) {
+        if (ambush &&
+            (packet is ServerboundInteractPacket
+                || packet is ServerboundAttackPacket
+                || packet is ServerboundSpectateEntityPacket)) {
             enabled = false
             return@handler
         }

@@ -45,8 +45,8 @@ import net.ccbluex.liquidbounce.utils.client.warning
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
+import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -319,12 +319,8 @@ object CommandFakePlayer : Command.Factory, EventListener {
         /**
          * The server should not know that we tried to attack a fake player.
          */
-        if (
-            packet is ServerboundInteractPacket &&
-            fakePlayers.any { fakePlayer ->
-                packet.entityId == fakePlayer.id
-            }
-        ) {
+        val interactEntityId = packet.entityIdC2SInteractOrAttack ?: return@handler
+        if (fakePlayers.any { fakePlayer -> interactEntityId == fakePlayer.id }) {
             it.cancelEvent()
         }
     }
