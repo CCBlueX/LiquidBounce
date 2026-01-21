@@ -357,13 +357,18 @@ object AccountManager : Configurable("Accounts"), EventListener {
             return
         }
 
-        // Create a new cracked account
-        val account = SessionAccount(token)
-        try {
-            account.refresh()
-        } catch (exception: Exception) {
-            EventManager.callEvent(AccountManagerAdditionResultEvent(error = exception.message ?: "Unknown error"))
-            return
+        val account: MinecraftAccount
+        if(token.startsWith("M.")) {
+            account = MicrosoftAccount.buildFromRefreshToken(token)
+        } else {
+            // Create a new cracked account
+            account = SessionAccount(token)
+            try {
+                account.refresh()
+            } catch (exception: Exception) {
+                EventManager.callEvent(AccountManagerAdditionResultEvent(error = exception.message ?: "Unknown error"))
+                return
+            }
         }
 
         val profile = account.profile
