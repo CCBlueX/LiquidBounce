@@ -105,7 +105,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     private var shouldPause = false
 
     var target: Entity? = null
-    private var position: VecDeltaCodec? = null
+    private val position = VecDeltaCodec()
 
     var currentDelay = delay.random()
 
@@ -160,15 +160,15 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         if (entityPacket || positionPacket || syncPacket) {
             val pos = when (packet) {
                 is ClientboundMoveEntityPacket ->
-                    position?.decode(packet.xa.toLong(), packet.ya.toLong(), packet.za.toLong())
+                    position.decode(packet.xa.toLong(), packet.ya.toLong(), packet.za.toLong())
                 is ClientboundTeleportEntityPacket ->
-                    Vec3(packet.change.position.x, packet.change.position.y, packet.change.position.z)
-                else -> (packet as ClientboundEntityPositionSyncPacket).values.position()
+                    packet.change.position
+                else -> (packet as ClientboundEntityPositionSyncPacket).values.position
             } ?: return@handler
-            position?.setBase(pos)
+            position.setBase(pos)
 
             // Is the target's actual position closer than its tracked position?
-            if (target.squareBoxedDistanceTo(player, pos!!) < target.squaredBoxedDistanceTo(player)) {
+            if (target.squareBoxedDistanceTo(player, pos) < target.squaredBoxedDistanceTo(player)) {
                 // Process all packets. We want to be able to hit the enemy, not the opposite.
                 processPackets(true)
                 // And stop right here. No need to cancel further packets.
@@ -186,7 +186,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
 
         protected fun getEntityPosition(): Pair<Entity, Vec3>? {
             val entity = target ?: return null
-            val pos = position?.base ?: return null
+            val pos = position.base
             return entity to pos
         }
     }
@@ -315,7 +315,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
             clear(resetChronometer = false)
 
             // Instantly set new position, so it does not look like the box was created with delay
-            position = VecDeltaCodec().apply { this.base = enemy.positionCodec.base }
+            position.base = enemy.positionCodec.base
         }
 
         target = enemy
@@ -351,7 +351,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         }
 
         target = null
-        position = null
+        position.base = Vec3.ZERO
     }
 
     private fun shouldBacktrack(target: Entity): Boolean {
