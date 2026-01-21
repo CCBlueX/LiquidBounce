@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
@@ -263,7 +264,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
                     )
                 }
 
-                is ServerboundInteractPacket -> {
+                is ServerboundInteractPacket, is ServerboundAttackPacket -> {
                     event.cancelEvent()
                     sendPacketSilently(
                         ServerboundMovePlayerPacket.Rot(

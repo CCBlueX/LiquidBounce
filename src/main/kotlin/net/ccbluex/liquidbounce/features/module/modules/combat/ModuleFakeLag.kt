@@ -42,6 +42,7 @@ import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
@@ -69,7 +70,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
         val testPacket: (packet: Packet<*>?) -> Boolean
     ) : Tagged {
         ENTITY_INTERACT("EntityInteract", {
-            it is ServerboundInteractPacket
+            it is ServerboundInteractPacket || it is ServerboundAttackPacket
             || it is ServerboundSwingPacket
         }),
         BLOCK_INTERACT("BlockInteract", {
@@ -153,6 +154,7 @@ object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
             }
 
             is ServerboundInteractPacket,
+            is ServerboundAttackPacket,
             is ServerboundSwingPacket -> {
                 if (FlushOn.ENTITY_INTERACT in flushOn) {
                     chronometer.reset()

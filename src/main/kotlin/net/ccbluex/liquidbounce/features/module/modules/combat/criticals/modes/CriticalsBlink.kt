@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.wouldDoCriticalHit
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
@@ -65,6 +66,7 @@ object CriticalsBlink : Mode("Blink") {
                 is ServerboundPlayerActionPacket,
                 is ServerboundSignUpdatePacket,
                 is ServerboundInteractPacket,
+                is ServerboundAttackPacket,
                 is ServerboundSwingPacket,
                 is ServerboundResourcePackPacket -> BlinkManager.Action.PASS
                 else -> BlinkManager.Action.QUEUE

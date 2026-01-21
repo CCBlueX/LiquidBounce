@@ -25,10 +25,12 @@ import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ServerboundAttackPacket
 import net.minecraft.network.protocol.game.ServerboundContainerButtonClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClickPacket
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
 import net.minecraft.network.protocol.game.ServerboundContainerSlotStateChangedPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 
 fun Packet<*>?.isC2SContainerPacket() =
@@ -57,3 +59,13 @@ fun ClientboundSetEntityMotionPacket.isMovementYFallDamage(): Boolean {
     return this.movement.y.toRawBits() ==
         (if (isNewerThanOrEquals1_21_9) -4633060179779189496L else -4633068976409115392L)
 }
+
+/**
+ * In version <= 1.21.11 [ServerboundAttackPacket] belongs to [ServerboundInteractPacket]
+ */
+val Packet<*>.entityIdC2SInteractOrAttack: Int?
+    get() = when (this) {
+        is ServerboundInteractPacket -> this.entityId
+        is ServerboundAttackPacket -> this.entityId
+        else -> null
+    }

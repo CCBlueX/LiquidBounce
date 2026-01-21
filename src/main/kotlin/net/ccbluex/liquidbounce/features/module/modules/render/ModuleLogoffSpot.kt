@@ -29,10 +29,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
+import net.ccbluex.liquidbounce.utils.network.entityIdC2SInteractOrAttack
 import net.ccbluex.liquidbounce.utils.render.entity
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
-import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import java.time.Instant
@@ -104,10 +104,8 @@ object ModuleLogoffSpot : ClientModule("LogoffSpot", ModuleCategories.RENDER) {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is ServerboundInteractPacket) {
-            if (isLogoffEntity(packet.entityId)) {
-                event.cancelEvent()
-            }
+        if (isLogoffEntity(packet.entityIdC2SInteractOrAttack ?: return@handler)) {
+            event.cancelEvent()
         }
     }
 
