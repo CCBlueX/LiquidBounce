@@ -31,10 +31,12 @@ object HitFX : ToggleableConfigurable(ModuleSoundFX, "HitFX", true) {
 
     private enum class Hitsfx(override val choiceName: String) : NamedChoice {
         Bonk("Bonk"), Boykisser("Boykisser"),
+        Bring("Bring"), Glass("Glass"),
         Click("Click"), Meow("Meow"),
-        Moan("Moan"), Nya("NYA"),
-        Pop("Pop"), Tung("Tung"),
-        Uwu("UWU"),
+        Moan("Moan"), MagicSquash("MagicSquash"),
+        Nya("NYA"), Pop("Pop"),
+        Soft("Soft"), Squash("Squash"),
+        Tung("Tung"), Uwu("UWU"),
     }
 
     private val boykisserVariants = arrayOf(
@@ -46,6 +48,10 @@ object HitFX : ToggleableConfigurable(ModuleSoundFX, "HitFX", true) {
         Sounds.CLICK1, Sounds.CLICK2, Sounds.CLICK3,
     )
 
+    private val glassVariants = arrayOf(
+        Sounds.GLASS1, Sounds.GLASS2, Sounds.GLASS3,
+    )
+
     private val moanVariants = arrayOf(
         Sounds.MOAN1, Sounds.MOAN2, Sounds.MOAN3,
         Sounds.MOAN4,
@@ -55,15 +61,20 @@ object HitFX : ToggleableConfigurable(ModuleSoundFX, "HitFX", true) {
         get() = when (hitSFX) {
             // --- without variants ---
             Hitsfx.Bonk -> Sounds.BONK
+            Hitsfx.Bring -> Sounds.BRING
             Hitsfx.Meow -> Sounds.MEOW
+            Hitsfx.MagicSquash -> Sounds.MAGICSQUASH
             Hitsfx.Nya -> Sounds.NYA
             Hitsfx.Pop -> Sounds.POP
+            Hitsfx.Soft -> Sounds.SOFT
+            Hitsfx.Squash -> Sounds.SQUASH
             Hitsfx.Tung -> Sounds.TUNG
             Hitsfx.Uwu -> Sounds.UWU
 
             // --- with variants ---
             Hitsfx.Boykisser -> boykisserVariants.random()
             Hitsfx.Click -> clickVariants.random()
+            Hitsfx.Glass -> glassVariants.random()
             Hitsfx.Moan -> moanVariants.random()
         }
 

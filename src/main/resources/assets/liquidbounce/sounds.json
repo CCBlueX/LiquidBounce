@@ -58,5 +58,26 @@
   },
   "moan-4": {
     "sounds": ["liquidbounce:moan/moan-4"]
+  },
+  "bring": {
+    "sounds": ["liquidbounce:bring"]
+  },
+  "glass-1": {
+    "sounds": ["liquidbounce:glass/glass-1"]
+  },
+  "glass-2": {
+    "sounds": ["liquidbounce:glass/glass-2"]
+  },
+  "glass-3": {
+    "sounds": ["liquidbounce:glass/glass-3"]
+  },
+  "soft": {
+    "sounds": ["liquidbounce:soft"]
+  },
+  "magicsquash": {
+    "sounds": ["liquidbounce:magicsquash"]
+  },
+  "squash": {
+    "sounds": ["liquidbounce:squash"]
   }
 }
