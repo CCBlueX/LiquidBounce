@@ -24,7 +24,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
-import com.mojang.blaze3d.resource.ResourceHandle;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
@@ -40,7 +39,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.state.LevelRenderState;
-import net.minecraft.util.profiling.ProfilerFiller;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
@@ -96,14 +94,12 @@ public abstract class MixinLevelRenderer {
     }
 
     @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OutlineBufferSource;endOutlineBatch()V"))
-    private void onDrawOutlines(GpuBufferSlice gpuBufferSlice, LevelRenderState worldRenderState, ProfilerFiller profiler,
-        Matrix4f matrix4f, ResourceHandle handle, ResourceHandle handle2, boolean bl, ResourceHandle handle3, ResourceHandle handle4, CallbackInfo ci) {
+    private void onDrawOutlines(CallbackInfo ci) {
         OutlineShaderRenderer.INSTANCE.drawBlitIfDirty(this.minecraft.getMainRenderTarget());
     }
 
     @Inject(method = "lambda$addMainPass$0", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OutlineBufferSource;endOutlineBatch()V", shift = At.Shift.BEFORE))
-    private void onRenderGlow(GpuBufferSlice gpuBufferSlice, LevelRenderState worldRenderState, ProfilerFiller profiler,
-        Matrix4f matrix4f, ResourceHandle handle, ResourceHandle handle2, boolean bl, ResourceHandle handle3, ResourceHandle handle4, CallbackInfo ci) {
+    private void onRenderGlow(CallbackInfo ci) {
         var entityOutlineFb = entityOutlineTarget();
         if (!this.shouldShowEntityOutlines() || entityOutlineFb == null) {
             return;
