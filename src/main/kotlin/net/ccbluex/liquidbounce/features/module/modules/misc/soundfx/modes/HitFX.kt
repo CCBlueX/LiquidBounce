@@ -26,61 +26,83 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.soundfx.Sounds
 import net.minecraft.sounds.SoundEvent
 
 object HitFX : ToggleableConfigurable(ModuleSoundFX, "HitFX", true) {
-
     private val hitSFX by enumChoice("Sound", Hitsfx.Bonk)
 
-    private enum class Hitsfx(override val choiceName: String) : NamedChoice {
-        Bonk("Bonk"), Boykisser("Boykisser"),
-        Bring("Bring"), Glass("Glass"),
-        Click("Click"), Meow("Meow"),
-        Moan("Moan"), MagicSquash("MagicSquash"),
-        Nya("NYA"), Pop("Pop"),
-        Soft("Soft"), Squash("Squash"),
-        Tung("Tung"), Uwu("UWU"),
+    private enum class Hitsfx(
+        override val choiceName: String,
+    ) : NamedChoice {
+        Bonk("Bonk"),
+        Boykisser("Boykisser"),
+        Bring("Bring"),
+        Glass("Glass"),
+        Click("Click"),
+        Meow("Meow"),
+        Moan("Moan"),
+        MagicSquash("MagicSquash"),
+        Nya("NYA"),
+        Pop("Pop"),
+        Soft("Soft"),
+        Squash("Squash"),
+        Tung("Tung"),
+        Uwu("UWU"),
     }
 
-    private val boykisserVariants = arrayOf(
-        Sounds.BOYKISSER1, Sounds.BOYKISSER2, Sounds.BOYKISSER3,
-        Sounds.BOYKISSER4, Sounds.BOYKISSER5, Sounds.BOYKISSER6,
-    )
+    private val boykisserVariants =
+        arrayOf(
+            Sounds.BOYKISSER1,
+            Sounds.BOYKISSER2,
+            Sounds.BOYKISSER3,
+            Sounds.BOYKISSER4,
+            Sounds.BOYKISSER5,
+            Sounds.BOYKISSER6,
+        )
 
-    private val clickVariants = arrayOf(
-        Sounds.CLICK1, Sounds.CLICK2, Sounds.CLICK3,
-    )
+    private val clickVariants =
+        arrayOf(
+            Sounds.CLICK1,
+            Sounds.CLICK2,
+            Sounds.CLICK3,
+        )
 
-    private val glassVariants = arrayOf(
-        Sounds.GLASS1, Sounds.GLASS2, Sounds.GLASS3,
-    )
+    private val glassVariants =
+        arrayOf(
+            Sounds.GLASS1,
+            Sounds.GLASS2,
+            Sounds.GLASS3,
+        )
 
-    private val moanVariants = arrayOf(
-        Sounds.MOAN1, Sounds.MOAN2, Sounds.MOAN3,
-        Sounds.MOAN4,
-    )
+    private val moanVariants =
+        arrayOf(
+            Sounds.MOAN1,
+            Sounds.MOAN2,
+            Sounds.MOAN3,
+            Sounds.MOAN4,
+        )
 
     private val hitSound: SoundEvent
-        get() = when (hitSFX) {
-            // --- without variants ---
-            Hitsfx.Bonk -> Sounds.BONK
-            Hitsfx.Bring -> Sounds.BRING
-            Hitsfx.Meow -> Sounds.MEOW
-            Hitsfx.MagicSquash -> Sounds.MAGICSQUASH
-            Hitsfx.Nya -> Sounds.NYA
-            Hitsfx.Pop -> Sounds.POP
-            Hitsfx.Soft -> Sounds.SOFT
-            Hitsfx.Squash -> Sounds.SQUASH
-            Hitsfx.Tung -> Sounds.TUNG
-            Hitsfx.Uwu -> Sounds.UWU
+        get() =
+            when (hitSFX) {
+                // --- without variants ---
+                Hitsfx.Bonk -> Sounds.BONK
+                Hitsfx.Bring -> Sounds.BRING
+                Hitsfx.Meow -> Sounds.MEOW
+                Hitsfx.MagicSquash -> Sounds.MAGICSQUASH
+                Hitsfx.Nya -> Sounds.NYA
+                Hitsfx.Pop -> Sounds.POP
+                Hitsfx.Soft -> Sounds.SOFT
+                Hitsfx.Squash -> Sounds.SQUASH
+                Hitsfx.Tung -> Sounds.TUNG
+                Hitsfx.Uwu -> Sounds.UWU
 
-            // --- with variants ---
-            Hitsfx.Boykisser -> boykisserVariants.random()
-            Hitsfx.Click -> clickVariants.random()
-            Hitsfx.Glass -> glassVariants.random()
-            Hitsfx.Moan -> moanVariants.random()
-        }
+                // --- with variants ---
+                Hitsfx.Boykisser -> boykisserVariants.random()
+                Hitsfx.Click -> clickVariants.random()
+                Hitsfx.Glass -> glassVariants.random()
+                Hitsfx.Moan -> moanVariants.random()
+            }
 
     fun hitSound(): SoundEvent? {
         if (!enabled) return null
         return hitSound
     }
-
 }

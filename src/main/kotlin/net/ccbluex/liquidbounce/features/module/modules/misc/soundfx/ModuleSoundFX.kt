@@ -21,13 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.soundfx
 
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.soundfx.modes.HitFX
 import net.ccbluex.liquidbounce.features.module.modules.misc.soundfx.modes.HitFX.hitSound
 
 object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
-
     private val volume by float("volume", 1f, 0.1f..1f)
 
     init {
@@ -36,11 +35,12 @@ object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
 
     // --- Play sound ---
     @Suppress("unused")
-    private val hitHandler = handler<AttackEntityEvent> { event ->
-        val player = mc.player ?: return@handler
-        val sound = hitSound() ?: return@handler
-        if(event.entity.isAlive) {
-            player.playSound(sound, volume, 1f)
+    private val hitHandler =
+        handler<AttackEntityEvent> { event ->
+            val player = mc.player ?: return@handler
+            val sound = hitSound() ?: return@handler
+            if (event.entity.isAlive) {
+                player.playSound(sound, volume, 1f)
+            }
         }
-    }
 }
