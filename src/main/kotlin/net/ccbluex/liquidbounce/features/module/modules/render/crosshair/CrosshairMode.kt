@@ -65,7 +65,9 @@ abstract class CrosshairMode(name: String) : Choice(name) {
 
         val multiplier = if (Radius.DynRadius.enabled) {
             Radius.DynRadius.multiplier * (1f - cooldown)
-        } else 0f
+        } else {
+            0f
+        }
 
         return multiplier
     }
