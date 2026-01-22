@@ -30,8 +30,11 @@ import kotlin.math.sin
 object CrosshairCircle : CrosshairMode("Circle") {
     private val color = CrosshairColorSettings()
     private val spin = CrosshairColorSettings().spin
+    private val radius = Radius.radius
 
     init {
+        tree(Radius)
+        tree(Radius.DynRadius)
         tree(color)
         tree(color.spin)
     }
@@ -43,18 +46,24 @@ object CrosshairCircle : CrosshairMode("Circle") {
         val segments = 300
 
         for (i in 0 until segments) {
+
+            val multiplier = dynamicCrosshair()
+
+            val innerRadius = radius.min() + multiplier
+            val outerRadius = radius.max() + multiplier
+
             val cAngle = (Mth.TWO_PI * i / segments)
             val nAngle = (Mth.TWO_PI * (i + 1) / segments)
 
-            val innerCurrX = centerWidth + sin(cAngle) * radius.min()
-            val innerCurrY = centerHeight + cos(cAngle) * radius.min()
-            val innerNextX = centerWidth + sin(nAngle) * radius.min()
-            val innerNextY = centerHeight + cos(nAngle) * radius.min()
+            val innerCurrX = centerWidth + sin(cAngle) * innerRadius
+            val innerCurrY = centerHeight + cos(cAngle) * innerRadius
+            val innerNextX = centerWidth + sin(nAngle) * innerRadius
+            val innerNextY = centerHeight + cos(nAngle) * innerRadius
 
-            val outerCurrX = centerWidth + sin(cAngle) * radius.max()
-            val outerCurrY = centerHeight + cos(cAngle) * radius.max()
-            val outerNextX = centerWidth + sin(nAngle) * radius.max()
-            val outerNextY = centerHeight + cos(nAngle) * radius.max()
+            val outerCurrX = centerWidth + sin(cAngle) * outerRadius
+            val outerCurrY = centerHeight + cos(cAngle) * outerRadius
+            val outerNextX = centerWidth + sin(nAngle) * outerRadius
+            val outerNextY = centerHeight + cos(nAngle) * outerRadius
 
             val currentColor =
                 color.getCurrentStepColor(

@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render.crosshair
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair.modes
@@ -32,7 +34,13 @@ abstract class CrosshairMode(name: String) : Choice(name) {
         get() = modes
 
     protected val showInThirdPerson by boolean("ShowInThirdPerson", true)
-    protected val radius by intRange("Range", 3..5, 1..25)
+    protected object Radius : Configurable("Radius") {
+        val radius by intRange("Range", 3..5, 1..25)
+        object DynRadius : ToggleableConfigurable(
+            ModuleCrosshair, "DynamicRadius", false) {
+            val multiplier by int("multiplier", 1, 1..5)
+        }
+    }
 
     protected abstract fun OverlayRenderEvent.drawCrosshair(
         centerWidth: Float,
@@ -50,4 +58,15 @@ abstract class CrosshairMode(name: String) : Choice(name) {
 
             it.drawCrosshair(centerWidth, centerHeight)
         }
+
+    protected fun OverlayRenderEvent.dynamicCrosshair(): Float {
+
+        val cooldown = player.getAttackStrengthScale(tickDelta)
+
+        val multiplier = if (Radius.DynRadius.enabled) {
+            Radius.DynRadius.multiplier * (1f - cooldown)
+        } else 0f
+
+        return multiplier
+    }
 }
