@@ -34,10 +34,12 @@ abstract class CrosshairMode(name: String) : Choice(name) {
         get() = modes
 
     protected val showInThirdPerson by boolean("ShowInThirdPerson", true)
-    protected object Radius : Configurable("Radius") {
-        val radius by intRange("Range", 3..5, 1..25)
-        object DynRadius : ToggleableConfigurable(
-            ModuleCrosshair, "DynamicRadius", false) {
+    protected class Radius : Configurable("Radius") {
+        val radius by intRange("Range", 3..5, 0..25)
+
+        class DynRadius : ToggleableConfigurable(
+            ModuleCrosshair, "DynamicRadius", false
+        ) {
             val multiplier by int("multiplier", 1, 1..5)
         }
     }
@@ -59,16 +61,16 @@ abstract class CrosshairMode(name: String) : Choice(name) {
             it.drawCrosshair(centerWidth, centerHeight)
         }
 
-    protected fun OverlayRenderEvent.dynamicCrosshair(): Float {
+    protected fun OverlayRenderEvent.dynamicCrosshair(multiplier: Int, dynRadiusEnabled: Boolean): Float {
 
         val cooldown = player.getAttackStrengthScale(tickDelta)
 
-        val multiplier = if (Radius.DynRadius.enabled) {
-            Radius.DynRadius.multiplier * (1f - cooldown)
+        val finalMultiplier = if (dynRadiusEnabled) {
+            multiplier * (1f - cooldown)
         } else {
             0f
         }
 
-        return multiplier
+        return finalMultiplier
     }
 }

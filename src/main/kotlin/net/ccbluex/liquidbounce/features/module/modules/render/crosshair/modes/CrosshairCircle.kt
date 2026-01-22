@@ -30,11 +30,12 @@ import kotlin.math.sin
 object CrosshairCircle : CrosshairMode("Circle") {
     private val color = CrosshairColorSettings()
     private val spin = CrosshairColorSettings().spin
-    private val radius = Radius.radius
+    private val radiusConfig = Radius()
+    private val dynRadius = Radius.DynRadius()
 
     init {
-        tree(Radius)
-        tree(Radius.DynRadius)
+        tree(radiusConfig)
+        tree(dynRadius)
         tree(color)
         tree(color.spin)
     }
@@ -47,10 +48,10 @@ object CrosshairCircle : CrosshairMode("Circle") {
 
         for (i in 0 until segments) {
 
-            val multiplier = dynamicCrosshair()
+            val multiplier = dynamicCrosshair(dynRadius.multiplier, dynRadius.enabled)
 
-            val innerRadius = radius.min() + multiplier
-            val outerRadius = radius.max() + multiplier
+            val innerRadius = radiusConfig.radius.min() + multiplier
+            val outerRadius = radiusConfig.radius.max() + multiplier
 
             val cAngle = (Mth.TWO_PI * i / segments)
             val nAngle = (Mth.TWO_PI * (i + 1) / segments)
