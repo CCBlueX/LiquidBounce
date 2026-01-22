@@ -28,7 +28,6 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 object CrosshairCircle : CrosshairMode("Circle") {
-
     private val color = CrosshairColorSettings()
     private val spin = CrosshairColorSettings().spin
 
@@ -37,11 +36,13 @@ object CrosshairCircle : CrosshairMode("Circle") {
         tree(color.spin)
     }
 
-    override fun OverlayRenderEvent.drawCrosshair(centerWidth: Float, centerHeight: Float) {
-
+    override fun OverlayRenderEvent.drawCrosshair(
+        centerWidth: Float,
+        centerHeight: Float,
+    ) {
         val segments = 300
 
-        for(i in 0 until segments) {
+        for (i in 0 until segments) {
             val cAngle = (Mth.TWO_PI * i / segments)
             val nAngle = (Mth.TWO_PI * (i + 1) / segments)
 
@@ -55,11 +56,18 @@ object CrosshairCircle : CrosshairMode("Circle") {
             val outerNextX = centerWidth + sin(nAngle) * radius.max()
             val outerNextY = centerHeight + cos(nAngle) * radius.max()
 
-            val Color = color.getCurrentStepColor(color.firstColor, color.secondColor,
-                color.syncColors, spin.spinSpeed, spin.invertSpin, cAngle)
+            val currentColor =
+                color.getCurrentStepColor(
+                    color.firstColor,
+                    color.secondColor,
+                    color.syncColors,
+                    spin.spinSpeed,
+                    spin.invertSpin,
+                    cAngle,
+                )
 
-            context.drawTriangle(innerCurrX, innerCurrY, outerCurrX, outerCurrY, outerNextX, outerNextY, Color)
-            context.drawTriangle(innerCurrX, innerCurrY, outerNextX, outerNextY, innerNextX, innerNextY, Color)
+            context.drawTriangle(innerCurrX, innerCurrY, outerCurrX, outerCurrY, outerNextX, outerNextY, currentColor)
+            context.drawTriangle(innerCurrX, innerCurrY, outerNextX, outerNextY, innerNextX, innerNextY, currentColor)
         }
     }
 }

@@ -34,17 +34,20 @@ abstract class CrosshairMode(name: String) : Choice(name) {
     protected val showInThirdPerson by boolean("ShowInThirdPerson", true)
     protected val radius by intRange("Range", 3..5, 1..25)
 
-    protected abstract fun OverlayRenderEvent.drawCrosshair(centerWidth: Float, centerHeight: Float)
+    protected abstract fun OverlayRenderEvent.drawCrosshair(
+        centerWidth: Float,
+        centerHeight: Float,
+    )
 
     @Suppress("unused")
-    private val cursorHandler = handler<OverlayRenderEvent> {
-        if(!mc.options.cameraType.isFirstPerson && !showInThirdPerson) return@handler
-        if(isInInventoryScreen || isInContainerScreen) return@handler
+    private val cursorHandler =
+        handler<OverlayRenderEvent> {
+            if (!mc.options.cameraType.isFirstPerson && !showInThirdPerson) return@handler
+            if (isInInventoryScreen || isInContainerScreen) return@handler
 
-        val centerWidth = (it.context.guiWidth() / 2.002f)
-        val centerHeight = (it.context.guiHeight() / 2.0025f)
+            val centerWidth = (it.context.guiWidth() / 2.002f)
+            val centerHeight = (it.context.guiHeight() / 2.0025f)
 
-        it.drawCrosshair(centerWidth, centerHeight)
-
-    }
+            it.drawCrosshair(centerWidth, centerHeight)
+        }
 }

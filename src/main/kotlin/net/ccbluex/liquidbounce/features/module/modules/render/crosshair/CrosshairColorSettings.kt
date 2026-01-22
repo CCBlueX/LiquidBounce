@@ -25,7 +25,6 @@ import net.minecraft.util.Mth
 import kotlin.math.abs
 
 class CrosshairColorSettings : Configurable("Color") {
-
     val syncColors by boolean("Sync", true)
     val firstColor by color("FirstColor", Color4b(0, 0, 255, 255))
     val secondColor by color("SecondColor", Color4b(0, 0, 255, 255))
@@ -37,26 +36,33 @@ class CrosshairColorSettings : Configurable("Color") {
 
     val spin = Spin
 
-     fun getCurrentStepColor
-            (firstColor: Color4b,
-             secondColor: Color4b,
-             syncColors: Boolean,
-             spinSpeed: Float,
-             invertSpin: Boolean,
-             angle: Float): Color4b {
+    fun getCurrentStepColor(
+        firstColor: Color4b,
+        secondColor: Color4b,
+        syncColors: Boolean,
+        spinSpeed: Float,
+        invertSpin: Boolean,
+        angle: Float,
+    ): Color4b {
         val first = firstColor
         val second: Color4b = if (!syncColors) secondColor else firstColor
-        val speed = if(!invertSpin) spinSpeed else -abs(spinSpeed)
+        val speed = if (!invertSpin) spinSpeed else -abs(spinSpeed)
 
         return getColorByAngle(angle, first, second, speed)
     }
 
-    private fun getColorByAngle(angle: Float, color1: Color4b, color2: Color4b, speed: Float): Color4b {
-        val timeOffset = if (speed != 0f) {
-            ((System.currentTimeMillis().toDouble() / 10000.0) * speed.toDouble() % 1.0) * Mth.TWO_PI
-        } else {
-            0.0
-        }
+    private fun getColorByAngle(
+        angle: Float,
+        color1: Color4b,
+        color2: Color4b,
+        speed: Float,
+    ): Color4b {
+        val timeOffset =
+            if (speed != 0f) {
+                ((System.currentTimeMillis().toDouble() / 10000.0) * speed.toDouble() % 1.0) * Mth.TWO_PI
+            } else {
+                0.0
+            }
 
         val progress = (Mth.sin(angle + timeOffset) * 0.5 + 0.5)
 
