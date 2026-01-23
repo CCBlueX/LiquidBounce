@@ -26,6 +26,7 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
@@ -56,7 +57,7 @@ inline fun RenderPass.bindDynamicTransformsUniform(gpuBufferSlice: GpuBufferSlic
     setUniform("DynamicTransforms", gpuBufferSlice)
 }
 
-inline fun RenderPass.setupGlobalScissor() {
+inline fun RenderPass.setupRenderTypeScissor() {
     val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
     if (scissorState.enabled()) {
         enableScissor(
@@ -66,6 +67,28 @@ inline fun RenderPass.setupGlobalScissor() {
             scissorState.height()
         )
     }
+}
+
+/**
+ * Set vertex and index buffers for [RenderPass] and call [RenderPass.drawIndexed].
+ *
+ * This function assumes the [GpuBufferSlice]s are correctly aligned with corresponding vertex/index byte count.
+ */
+fun RenderPass.bindAndDraw(
+    vertexSlice: GpuBufferSlice,
+    indexSlice: GpuBufferSlice,
+    vertexFormat: VertexFormat,
+    indexType: VertexFormat.IndexType,
+    indexCount: Int,
+) {
+    setVertexBuffer(0, vertexSlice.buffer)
+    setIndexBuffer(indexSlice.buffer, indexType)
+    drawIndexed(
+        (vertexSlice.offset / vertexFormat.vertexSize).toInt(),
+        (indexSlice.offset / indexType.bytes).toInt(),
+        indexCount,
+        1,
+    )
 }
 
 @JvmOverloads

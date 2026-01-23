@@ -97,13 +97,14 @@ public class RenderPassRenderState {
         assert vertexFormat != null;
         assert indexSlice != null;
         assert indexType != null;
-        pass.setVertexBuffer(0, vertexSlice.buffer());
-        pass.setIndexBuffer(indexSlice.buffer(), indexType);
-        pass.drawIndexed(
-            (int) (vertexSlice.offset() / vertexFormat.getVertexSize()),
-            (int) (indexSlice.offset() / indexType.bytes),
-            indexCount,
-            1
+        // Alert: this call requires same vertex format (size) and same index type, unless offset is 0
+        RenderPassExtensionsKt.bindAndDraw(
+            pass,
+            vertexSlice,
+            indexSlice,
+            vertexFormat,
+            indexType,
+            indexCount
         );
     }
 
@@ -124,7 +125,7 @@ public class RenderPassRenderState {
         iboStorage.clear();
     }
 
-    public static Pair<GpuBufferSlice, VertexFormat.IndexType> uploadIndicesOrUseSharedSequential(
+    private static Pair<GpuBufferSlice, VertexFormat.IndexType> uploadIndicesOrUseSharedSequential(
         MeshData meshData,
         GrowableMappableRingBuffer bufferStorage,
         VertexFormat.Mode vertexFormatMode

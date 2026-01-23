@@ -17,24 +17,20 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.kotlin
+@file:Suppress("FunctionName", "PropertyName", "NOTHING_TO_INLINE")
 
-/**
- * Used for mixin interfaces (i.e. [net.ccbluex.liquidbounce.additions.MappableRingBufferAddition])
- */
-inline fun <reified B> mixinInterfaceCast(a: Any): B {
-    check(a is B) { "${a.javaClass.name} does not implement the mixin interface ${B::class.java}?!" }
+package net.ccbluex.liquidbounce.additions
 
-    return a
+import net.minecraft.client.renderer.MappableRingBuffer
+
+interface MappableRingBufferAddition {
+    fun `liquidBounce$isSafeForClose`(): Boolean
+
+    fun `liquidBounce$awaitAndRotate`()
 }
 
-/**
- * See [mixinInterfaceCast]
- */
-inline fun <reified B> mixinInterfaceCastNullable(a: Any?): B? {
-    if (a == null) {
-        return null
-    }
+inline val MappableRingBuffer.isSafeForClose
+    get() = (this as MappableRingBufferAddition).`liquidBounce$isSafeForClose`()
 
-    return mixinInterfaceCast(a)
-}
+inline fun MappableRingBuffer.awaitAndRotate() =
+    (this as MappableRingBufferAddition).`liquidBounce$awaitAndRotate`()
