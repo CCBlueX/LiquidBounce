@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.render
 import com.google.common.base.Suppliers
 import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.buffers.GpuBufferSlice
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import net.ccbluex.liquidbounce.additions.isSafeForClose
 import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.render.mapBuffer
@@ -70,7 +72,7 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
             val newSize = growPolicy.getNewSize(minSize, current?.size() ?: 0)
             current?.let {
                 // Defer closing the old ring buffer to avoid races with GPU usage.
-                DISCARD_QUEUE.add(it)
+                BUFFERS_TO_CLOSE += it
             }
             ring = MappableRingBuffer(
                 Suppliers.ofInstance(label),
@@ -182,8 +184,13 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
          *
          * @see net.ccbluex.liquidbounce.injection.mixins.blaze3d.MixinRenderSystem.onFlipFrame
          */
-        @JvmField
-        val DISCARD_QUEUE = ArrayDeque<MappableRingBuffer>()
+        @JvmStatic
+        private val BUFFERS_TO_CLOSE = ObjectArrayList<MappableRingBuffer>()
+
+        @JvmStatic
+        fun cleanup() {
+            BUFFERS_TO_CLOSE.removeIf { it.isSafeForClose }
+        }
     }
 }
 
