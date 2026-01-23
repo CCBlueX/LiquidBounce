@@ -181,16 +181,28 @@ class GrowableMappableRingBuffer @JvmOverloads constructor(
     companion object {
         /**
          * [MappableRingBuffer] to be closed.
-         *
-         * @see net.ccbluex.liquidbounce.injection.mixins.blaze3d.MixinRenderSystem.onFlipFrame
          */
         @JvmStatic
         private val BUFFERS_TO_CLOSE = ObjectArrayList<MappableRingBuffer>()
 
+        /**
+         * Checks and closes discarded [MappableRingBuffer] instances that are safe to release.
+         *
+         * This method cleans up old backing buffers that were replaced when the ring buffer grew.
+         * It should be called periodically (e.g. end of frame) to ensure GPU resources are released.
+         *
+         * @see net.ccbluex.liquidbounce.injection.mixins.blaze3d.MixinRenderSystem.onFlipFrame
+         */
         @JvmStatic
         fun cleanup() {
-            BUFFERS_TO_CLOSE.removeIf { it.isSafeForClose }
+            BUFFERS_TO_CLOSE.removeIf {
+                if (it.isSafeForClose) {
+                    it.close()
+                    true
+                } else {
+                    false
+                }
+            }
         }
     }
 }
-

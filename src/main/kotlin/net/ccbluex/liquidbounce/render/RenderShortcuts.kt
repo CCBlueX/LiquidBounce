@@ -208,7 +208,7 @@ private val sharedIboMap = enumMapOf<VertexFormat.IndexType, GrowableMappableRin
 private fun getIbo(indexType: VertexFormat.IndexType): GrowableMappableRingBuffer =
     sharedIboMap.computeIfAbsent(indexType) {
         GrowableMappableRingBuffer(
-            "${LiquidBounce.CLIENT_NAME} Shared VBO for $it",
+            "${LiquidBounce.CLIENT_NAME} Shared IBO for $it",
             GpuBuffer.USAGE_INDEX,
         )
     }
@@ -224,7 +224,7 @@ internal fun drawMesh(
     renderTarget: RenderTarget = mc.mainRenderTarget,
     colorModulator: Color4b = Color4b.WHITE,
     renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
-    shaderTextureProvider: Map<String, AbstractTexture> = emptyMap(),
+    shaderTextures: Map<String, AbstractTexture> = emptyMap(),
 ) = meshData.use { meshData ->
     val dynamicTransforms = getDynamicTransformsUniform(colorModulator = colorModulator)
 
@@ -267,10 +267,7 @@ internal fun drawMesh(
         renderPass.setupRenderTypeScissor()
         renderPass.bindDefaultUniforms()
         renderPass.bindDynamicTransformsUniform(dynamicTransforms)
-
-        for ((key, texture) in shaderTextureProvider) {
-            renderPass.bindTexture(key, texture.textureView, texture.sampler)
-        }
+        renderPass.bindTextures(shaderTextures)
 
         renderPass.bindAndDraw(vertexSlice, indexSlice, pipeline.vertexFormat, indexType, indexCount)
     }
