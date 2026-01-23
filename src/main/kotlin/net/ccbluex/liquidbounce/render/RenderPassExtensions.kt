@@ -30,10 +30,17 @@ import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
+import net.minecraft.client.renderer.texture.AbstractTexture
 import org.joml.Matrix4fc
 import java.util.OptionalDouble
 import java.util.OptionalInt
 import java.util.function.Supplier
+
+inline fun RenderPass.bindTextures(textures: Map<String, AbstractTexture?>) =
+    textures.forEach { bindTexture(it.key, it.value) }
+
+inline fun RenderPass.bindTexture(name: String, texture: AbstractTexture?) =
+    bindTexture(name, texture?.textureView, texture?.sampler)
 
 inline fun RenderPass.bindDefaultUniforms() = RenderSystem.bindDefaultUniforms(this)
 

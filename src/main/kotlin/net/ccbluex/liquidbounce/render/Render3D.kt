@@ -143,7 +143,7 @@ sealed class RenderEnvironment(val renderTarget: RenderTarget) {
         meshData,
         this.renderTarget,
         colorModulator = shaderColor,
-        shaderTextureProvider = shaderTextureProvider,
+        shaderTextures = shaderTextureProvider,
     )
 
     companion object {
