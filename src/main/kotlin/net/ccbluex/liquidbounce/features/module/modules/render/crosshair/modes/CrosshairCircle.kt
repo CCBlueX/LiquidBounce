@@ -43,12 +43,11 @@ object CrosshairCircle : CrosshairMode("Circle") {
         centerHeight: Float,
     ) {
         val segments = 300
+        val multiplier = dynamicCrosshair(dynRadius.multiplier, dynRadius.enabled)
 
         for (i in 0 until segments) {
-            val multiplier = dynamicCrosshair(dynRadius.multiplier, dynRadius.enabled)
-
-            val innerRadius = radiusConfig.radius.min() + multiplier
-            val outerRadius = radiusConfig.radius.max() + multiplier
+            val innerRadius = radiusConfig.radius.first + multiplier
+            val outerRadius = radiusConfig.radius.last + multiplier
 
             val cAngle = (Mth.TWO_PI * i / segments)
             val nAngle = (Mth.TWO_PI * (i + 1) / segments)

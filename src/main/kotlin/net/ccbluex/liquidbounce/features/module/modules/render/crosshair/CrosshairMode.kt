@@ -38,7 +38,7 @@ abstract class CrosshairMode(name: String) : Choice(name) {
         val radius by intRange("Range", 3..5, 0..25)
 
         class DynRadius(parent: CrosshairMode) : ToggleableConfigurable(parent, "DynamicRadius", false) {
-            val multiplier by int("Multiplier", 1, 1..5)
+            val multiplier by float("Multiplier", 1f, 1f..5f)
         }
     }
 
@@ -59,7 +59,7 @@ abstract class CrosshairMode(name: String) : Choice(name) {
             it.drawCrosshair(centerWidth, centerHeight)
         }
 
-    protected fun OverlayRenderEvent.dynamicCrosshair(multiplier: Int, dynRadiusEnabled: Boolean): Float {
+    protected fun OverlayRenderEvent.dynamicCrosshair(multiplier: Float, dynRadiusEnabled: Boolean): Float {
         val cooldown = player.getAttackStrengthScale(tickDelta)
 
         val finalMultiplier = if (dynRadiusEnabled) {
