@@ -25,131 +25,40 @@ import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.sounds.SoundEvent
 
 object Sounds {
-    private val soundIds =
-        listOf(
-            // without variants
-            "bonk",
-            "pop",
-            "uwu",
-            "nya",
-            "tung",
-            "meow",
-            "bring",
-            "soft",
-            "squash",
-            "magicsquash",
 
-            // click
-            "click-1",
-            "click-2",
-            "click-3",
+    enum class SoundKey(val ids: List<String>) {
+        BONK(listOf("bonk")),
+        POP(listOf("pop")),
+        UWU(listOf("uwu")),
+        NYA(listOf("nya")),
+        TUNG(listOf("tung")),
+        MEOW(listOf("meow")),
+        BRING(listOf("bring")),
+        SOFT(listOf("soft")),
+        SQUASH(listOf("squash")),
+        MAGICSQUASH(listOf("magicsquash")),
 
-            // boykisser
-            "boykisser-1",
-            "boykisser-2",
-            "boykisser-3",
-            "boykisser-4",
-            "boykisser-5",
-            "boykisser-6",
+        CLICK(listOf("click-1", "click-2", "click-3")),
+        BOYKISSER(listOf("boykisser-1","boykisser-2","boykisser-3","boykisser-4","boykisser-5","boykisser-6")),
+        GLASS(listOf("glass-1","glass-2","glass-3")),
+        MOAN(listOf("moan-1","moan-2","moan-3","moan-4"))
+    }
 
-            // glass
-            "glass-1",
-            "glass-2",
-            "glass-3",
-            
-            // moan
-            "moan-1",
-            "moan-2",
-            "moan-3",
-            "moan-4",
-        )
+    private val soundsMap = mutableMapOf<SoundKey, List<SoundEvent>>()
 
-    val registeredSounds = mutableMapOf<String, SoundEvent>()
-
-    // without variants
-    lateinit var BONK: SoundEvent private set
-    lateinit var POP: SoundEvent private set
-    lateinit var UWU: SoundEvent private set
-    lateinit var NYA: SoundEvent private set
-    lateinit var TUNG: SoundEvent private set
-    lateinit var MEOW: SoundEvent private set
-    lateinit var BRING: SoundEvent private set
-    lateinit var SOFT: SoundEvent private set
-    lateinit var SQUASH: SoundEvent private set
-    lateinit var MAGICSQUASH: SoundEvent private set
-
-    // click
-    lateinit var CLICK1: SoundEvent private set
-    lateinit var CLICK2: SoundEvent private set
-    lateinit var CLICK3: SoundEvent private set
-
-    // boykisser
-    lateinit var BOYKISSER1: SoundEvent private set
-    lateinit var BOYKISSER2: SoundEvent private set
-    lateinit var BOYKISSER3: SoundEvent private set
-    lateinit var BOYKISSER4: SoundEvent private set
-    lateinit var BOYKISSER5: SoundEvent private set
-    lateinit var BOYKISSER6: SoundEvent private set
-
-    // glass
-    lateinit var GLASS1: SoundEvent private set
-    lateinit var GLASS2: SoundEvent private set
-    lateinit var GLASS3: SoundEvent private set
-
-    // moan
-    lateinit var MOAN1: SoundEvent private set
-    lateinit var MOAN2: SoundEvent private set
-    lateinit var MOAN3: SoundEvent private set
-    lateinit var MOAN4: SoundEvent private set
+    fun get(key: SoundKey): SoundEvent = soundsMap[key]?.random() ?: error("Sound ${key.name} not registered")
 
     fun registerAll() {
-        for (id in soundIds) {
-            val soundId = identifier(id)
-            val sound =
+        SoundKey.entries.forEach { key ->
+            val events = key.ids.map { id ->
+                val soundId = identifier(id)
                 Registry.register(
                     BuiltInRegistries.SOUND_EVENT,
                     soundId,
-                    SoundEvent.createVariableRangeEvent(soundId),
+                    SoundEvent.createVariableRangeEvent(soundId)
                 )
-            registeredSounds[id] = sound
-
-            when (id) {
-                // without variants
-                "bonk" -> BONK = sound
-                "pop" -> POP = sound
-                "uwu" -> UWU = sound
-                "nya" -> NYA = sound
-                "tung" -> TUNG = sound
-                "meow" -> MEOW = sound
-                "bring" -> BRING = sound
-                "soft" -> SOFT = sound
-                "squash" -> SQUASH = sound
-                "magicsquash" -> MAGICSQUASH = sound
-
-                // click
-                "click-1" -> CLICK1 = sound
-                "click-2" -> CLICK2 = sound
-                "click-3" -> CLICK3 = sound
-
-                // boykisser
-                "boykisser-1" -> BOYKISSER1 = sound
-                "boykisser-2" -> BOYKISSER2 = sound
-                "boykisser-3" -> BOYKISSER3 = sound
-                "boykisser-4" -> BOYKISSER4 = sound
-                "boykisser-5" -> BOYKISSER5 = sound
-                "boykisser-6" -> BOYKISSER6 = sound
-
-                // glass
-                "glass-1" -> GLASS1 = sound
-                "glass-2" -> GLASS2 = sound
-                "glass-3" -> GLASS3 = sound
-
-                // moan
-                "moan-1" -> MOAN1 = sound
-                "moan-2" -> MOAN2 = sound
-                "moan-3" -> MOAN3 = sound
-                "moan-4" -> MOAN4 = sound
             }
+            soundsMap[key] = events
         }
     }
 }
