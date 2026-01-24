@@ -56,7 +56,6 @@ import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.BacktrackPacketManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
@@ -162,7 +161,7 @@ object LiquidBounce : EventListener {
         private set
 
     /**
-     * Creates an [net.minecraft.util.Identifier] starts with [CLIENT_NAME].
+     * Creates an [net.minecraft.resources.Identifier] starts with [CLIENT_NAME].
      */
     @JvmStatic
     fun identifier(path: String): Identifier = Identifier.fromNamespaceAndPath(CLIENT_NAME.lowercase(Locale.ROOT), path)
@@ -274,7 +273,6 @@ object LiquidBounce : EventListener {
         // Utility managers
         RotationManager
         PacketQueueManager
-        BacktrackPacketManager
         InteractionTracker
         CombatManager
         FriendManager
@@ -351,6 +349,7 @@ object LiquidBounce : EventListener {
                 IpInfoApi.original
             }
             launch {
+                ConfigSystem.load(ClientAccountManager)
                 if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT) {
                     runCatching {
                         ClientAccountManager.clientAccount.renew()
@@ -359,8 +358,9 @@ object LiquidBounce : EventListener {
                         ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
-                        ConfigSystem.store(ClientAccountManager)
                     }
+
+                    ConfigSystem.store(ClientAccountManager)
                 }
             }
         }
@@ -380,11 +380,13 @@ object LiquidBounce : EventListener {
 
         BrowserBackendManager.init()
         ClientInteropServer.start()
-        ThemeManager.init()
-        // Preload marketplace items
-        ConfigSystem.load(MarketplaceManager)
-        ConfigSystem.load(ThemeManager)
-        ThemeManager.load()
+        if (!ClientInteropServer.isSkipping) {
+            ThemeManager.init()
+            // Preload marketplace items
+            ConfigSystem.load(MarketplaceManager)
+            ConfigSystem.load(ThemeManager)
+            ThemeManager.load()
+        }
 
         BlurEffectRenderer
         IntegrationListener

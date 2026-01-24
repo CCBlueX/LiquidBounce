@@ -71,7 +71,7 @@ class FontFace(
      */
     suspend fun fillStyle(font: Font, style: Int) {
         if (style !in 0..3) {
-            error("Illegal Style $style, should be PLAIN/BOLD/ITALIC/BOLDITA")
+            error("Illegal Style $style, should be PLAIN/BOLD/ITALIC/BOLD+ITALIC")
         }
 
         withContext(Dispatchers.Default) {

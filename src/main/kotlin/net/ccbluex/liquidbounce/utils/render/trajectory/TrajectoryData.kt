@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.render.trajectory
 
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.player
+import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow
@@ -40,8 +41,8 @@ import net.minecraft.world.item.EnderpearlItem
 import net.minecraft.world.item.ExperienceBottleItem
 import net.minecraft.world.item.FireChargeItem
 import net.minecraft.world.item.FishingRodItem
-import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.ThrowablePotionItem
 import net.minecraft.world.item.TridentItem
@@ -51,8 +52,8 @@ import net.minecraft.world.phys.Vec3
 
 object TrajectoryData {
     @JvmStatic
-    fun getRenderedTrajectoryInfo(player: Player, item: Item, alwaysShowBow: Boolean): TrajectoryInfo? {
-        return when (item) {
+    fun getRenderedTrajectoryInfo(player: Player, stack: ItemStack, alwaysShowBow: Boolean): TrajectoryInfo? {
+        return when (stack.item) {
             is BowItem -> {
                 val useTime = if (alwaysShowBow && player.ticksUsingItem < 1) {
                     40
@@ -62,7 +63,14 @@ object TrajectoryData {
 
                 TrajectoryInfo.bowWithUsageDuration(useTime)
             }
-            is CrossbowItem -> TrajectoryInfo.BOW_FULL_PULL
+            is CrossbowItem -> {
+                val chargedProjectiles = stack[DataComponents.CHARGED_PROJECTILES]
+                if (chargedProjectiles != null && chargedProjectiles.contains(Items.FIREWORK_ROCKET)) {
+                    TrajectoryInfo.FIREBALL
+                } else {
+                    TrajectoryInfo.BOW_FULL_PULL
+                }
+            }
             is FishingRodItem -> TrajectoryInfo.FISHING_ROD
             is ThrowablePotionItem -> TrajectoryInfo.POTION
             is TridentItem -> TrajectoryInfo.TRIDENT
@@ -191,14 +199,13 @@ data class TrajectoryInfo(
         @JvmOverloads
         fun bowWithUsageDuration(usageDurationTicks: Int = player.ticksUsingItem): TrajectoryInfo? {
             // Calculate the power of bow
-            var power = usageDurationTicks / 20f
-            power = (power * power + power * 2F) / 3F
+            val power = BowItem.getPowerForTime(usageDurationTicks)
 
             if (power < 0.1F) {
                 return null
             }
 
-            val v0 = power.coerceAtMost(1.0F) * BOW_FULL_PULL.initialVelocity
+            val v0 = power * BOW_FULL_PULL.initialVelocity
 
             return BOW_FULL_PULL.copy(initialVelocity = v0)
         }

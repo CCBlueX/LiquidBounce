@@ -27,19 +27,18 @@ import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.cookie.DefaultCookie
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder
+import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.AUTH_CODE
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.netty.http.middleware.Middleware
 import net.ccbluex.netty.http.model.RequestContext
 import net.ccbluex.netty.http.util.httpUnauthorized
-import org.apache.commons.lang3.RandomStringUtils
 
 class AuthMiddleware : Middleware.OnRequest, Middleware.OnResponse,
     Middleware.OnWebSocketUpgrade {
 
     companion object {
 
-        val AUTH_CODE: String = RandomStringUtils.secure().nextAlphanumeric(16)
         const val AUTH_COOKIE_NAME = "lb_auth"
         const val AUTH_CODE_PARAM = "lb_code"
 
@@ -61,7 +60,7 @@ class AuthMiddleware : Middleware.OnRequest, Middleware.OnResponse,
 
         // Check if the authentication code is valid or if the request is already authenticated.
         if (codeParam != null && codeParam == AUTH_CODE || isAuthenticated(context.headers) ||
-            ThemeManager.theme.origin.external) {
+            ThemeManager.isThemeExternal) {
             // Allow the request to proceed.
             return null
         }
@@ -103,7 +102,7 @@ class AuthMiddleware : Middleware.OnRequest, Middleware.OnResponse,
         ctx: ChannelHandlerContext,
         request: HttpRequest
     ): FullHttpResponse? {
-        if (!isAuthenticated(request.headers()) && !ThemeManager.theme.origin.external) {
+        if (!isAuthenticated(request.headers()) && !ThemeManager.isThemeExternal) {
             logger.warn("[Interop] Unauthenticated web socket upgrade request")
             return httpUnauthorized("Authentication required")
         }

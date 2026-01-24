@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowserBacke
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -36,8 +37,10 @@ object BrowserBackendManager : EventListener {
 
     val browserBackend: BrowserBackend = CefBrowserBackend()
 
-    val isSkippingBrowser = System.getenv("LB_SKIP_BROWSER") == "true"
-        || System.getProperty("net.ccbluex.liquidbounce.skip.browser") == "true"
+    val isSkipping = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip")?.toBoolean()
+        ?: false
+    val disableAcceleration = env("LB_BROWSER_DISABLE_ACCELERATION",
+        "net.ccbluex.liquidbounce.browser.disableAcceleration")?.toBoolean() ?: false
 
     fun init() {
         PersistentLocalStorage
@@ -48,8 +51,8 @@ object BrowserBackendManager : EventListener {
      * when the dependencies are available.
      */
     fun makeDependenciesAvailable(taskManager: TaskManager) {
-        if (isSkippingBrowser) {
-            logger.warn("Environment variable 'LB_SKIP_BROWSER' is set to 'true'.")
+        if (isSkipping) {
+            logger.warn("Environment variable 'LB_BROWSER_SKIP' is set to 'true'.")
             return
         }
         browserBackend.makeDependenciesAvailable(taskManager, ::start)
@@ -67,6 +70,9 @@ object BrowserBackendManager : EventListener {
 
         browserBackend.start()
 
+        if (disableAcceleration) {
+            logger.warn("Environment variable 'LB_BROWSER_DISABLE_ACCELERATION' is set to 'true'.")
+        }
         GlobalBrowserSettings
         EventManager.callEvent(BrowserReadyEvent)
         logger.info("Successfully initialized browser.")

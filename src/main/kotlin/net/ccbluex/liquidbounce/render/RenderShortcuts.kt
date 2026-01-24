@@ -30,13 +30,14 @@ import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.VertexFormat
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
+import net.ccbluex.fastutil.enumMapOf
+import net.ccbluex.fastutil.objectObjectMapOf
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformConfigurable
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
-import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
@@ -171,7 +172,7 @@ inline fun WorldRenderEnvironment.drawCustomMeshTextured(
 
     if (!isBatchMode) {
         buffer.build()?.let {
-            draw(pipeline, it, shaderTextureProvider = Object2ObjectMaps.singleton("Sampler0", sampler0))
+            draw(pipeline, it, shaderTextureProvider = objectObjectMapOf("Sampler0", sampler0))
         }
     }
 }
@@ -193,19 +194,23 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
     }
 }
 
-private val sharedVboStorage = GrowableMappableRingBuffer(
-    "${LiquidBounce.CLIENT_NAME} Shared VBO",
-    GpuBuffer.USAGE_VERTEX,
-    // 256 bytes padding, 128KB minimum size
-    GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 8, min = 1 shl 17),
-)
+private val sharedVboMap = Object2ObjectArrayMap<VertexFormat, GrowableMappableRingBuffer>()
+private fun getVbo(vertexFormat: VertexFormat): GrowableMappableRingBuffer =
+    sharedVboMap.computeIfAbsent(vertexFormat) {
+        GrowableMappableRingBuffer(
+            "${LiquidBounce.CLIENT_NAME} Shared VBO for $it",
+            GpuBuffer.USAGE_VERTEX,
+        )
+    }
 
-private val sharedIboStorage = GrowableMappableRingBuffer(
-    "${LiquidBounce.CLIENT_NAME} Shared IBO",
-    GpuBuffer.USAGE_INDEX,
-    // 128 bytes padding, 4KB minimum size
-    GrowableMappableRingBuffer.GrowPolicy.of(paddingScale = 7, min = 1 shl 12),
-)
+private val sharedIboMap = enumMapOf<VertexFormat.IndexType, GrowableMappableRingBuffer>()
+private fun getIbo(indexType: VertexFormat.IndexType): GrowableMappableRingBuffer =
+    sharedIboMap.computeIfAbsent(indexType) {
+        GrowableMappableRingBuffer(
+            "${LiquidBounce.CLIENT_NAME} Shared IBO for $it",
+            GpuBuffer.USAGE_INDEX,
+        )
+    }
 
 /**
  * copied from RenderLayer.draw(BuiltBuffer) (1.21.5-10: RenderLayer.MultiPhase.draw)
@@ -218,7 +223,7 @@ internal fun drawMesh(
     renderTarget: RenderTarget = mc.mainRenderTarget,
     colorModulator: Color4b = Color4b.WHITE,
     renderPassLabelGetter: Supplier<String> = Supplier { "${LiquidBounce.CLIENT_NAME} RenderEnvironment RenderPass" },
-    shaderTextureProvider: Map<String, AbstractTexture> = emptyMap(),
+    shaderTextures: Map<String, AbstractTexture> = emptyMap(),
 ) = meshData.use { meshData ->
     val dynamicTransforms = getDynamicTransformsUniform(colorModulator = colorModulator)
 
@@ -229,43 +234,30 @@ internal fun drawMesh(
         )
     }
 
-    val vertexSlice = sharedVboStorage.upload(meshData.vertexBuffer())
+    val vertexSlice = getVbo(pipeline.vertexFormat).upload(meshData.vertexBuffer())
+
+    val rawIndices = meshData.indexBuffer()
     val indexCount = meshData.drawState().indexCount
-    val (indexSlice, indexType) = RenderPassRenderState.uploadIndicesOrUseSharedSequential(
-        meshData,
-        sharedIboStorage,
-        pipeline.vertexFormatMode,
-    )
+    val indexSlice: GpuBufferSlice
+    val indexType: VertexFormat.IndexType
+    if (rawIndices == null) {
+        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(pipeline.vertexFormatMode)
+        indexType = shapeIndexBuffer.type()
+        indexSlice = shapeIndexBuffer.getBuffer(indexCount)
+            .slice(0L, indexCount.toLong() * indexType.bytes)
+    } else {
+        indexType = meshData.drawState().indexType()
+        indexSlice = getIbo(indexType).upload(rawIndices)
+    }
 
-    val colorTexture = RenderSystem.outputColorTextureOverride
-        ?: renderTarget.colorTextureView!!
-    val depthTexture = RenderSystem.outputDepthTextureOverride
-        ?: renderTarget.depthTextureView.takeIf { renderTarget.useDepth }
-
-    gpuDevice.createCommandEncoder().createRenderPass(
-        renderPassLabelGetter,
-        colorTexture,
-        OptionalInt.empty(),
-        depthTexture,
-        OptionalDouble.empty(),
-    ).use { renderPass ->
+    renderTarget.createRenderPass(renderPassLabelGetter, allowOverride = true).use { renderPass ->
         renderPass.setPipeline(pipeline)
-        renderPass.setupGlobalScissor()
+        renderPass.setupRenderTypeScissor()
         renderPass.bindDefaultUniforms()
         renderPass.bindDynamicTransformsUniform(dynamicTransforms)
-        renderPass.setVertexBuffer(0, vertexSlice.buffer)
+        renderPass.bindTextures(shaderTextures)
 
-        for ((key, texture) in shaderTextureProvider) {
-            renderPass.bindTexture(key, texture.textureView, texture.sampler)
-        }
-
-        renderPass.setIndexBuffer(indexSlice.buffer, indexType)
-        renderPass.drawIndexed(
-            (vertexSlice.offset / pipeline.vertexFormat.vertexSize).toInt(),
-            (indexSlice.offset / indexType.bytes).toInt(),
-            indexCount,
-            1,
-        )
+        renderPass.bindAndDraw(vertexSlice, indexSlice, pipeline.vertexFormat, indexType, indexCount)
     }
 }
 

@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.Vel
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityHypixel
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityIntave
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityJumpReset
+import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityLag
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityModify
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityReversal
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode.VelocityStrafe
@@ -62,6 +63,7 @@ object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliase
             VelocityReversal,
             VelocityStrafe,
             VelocityJumpReset,
+            VelocityLag,
 
             // Server modes
             VelocityHypixel,

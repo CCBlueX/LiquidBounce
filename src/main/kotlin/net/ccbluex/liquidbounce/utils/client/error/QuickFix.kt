@@ -84,6 +84,41 @@ enum class QuickFix (
                 }
             }
         }
+    ),
+    D3D11_UNSATISFIED_LINK(
+        description = "D3D11 not installed",
+        testError = { throwable ->
+            throwable is UnsatisfiedLinkError && throwable.message?.contains("d3dcompiler_47.dll") == true
+        },
+        whatToDo = Instructions(true) {
+            // Tracking issue: https://github.com/CCBlueX/LiquidBounce/issues/6841
+            // For some reason, this seems to always happen for Russian users.
+            // We were never able to reproduce this on a clean Windows install.
+            arrayOf(
+                "Install Windows Updates",
+                "Install DirectX End-User Runtime",
+                "Install C++ Redistributable for Visual Studio 2017–2026",
+                "Restart LiquidBounce and try again."
+            )
+        }
+    ),
+    JCEF_UNSATISFIED_LINK(
+        description = "Windows Application control policy is blocking JCEF",
+        testError = { throwable ->
+            // This is not an accurate check, since there can be other causes to fail on jcef.dll; however,
+            //   we found that this issue happens with "An Application Control policy has blocked this file"
+            //   the most.
+            throwable is UnsatisfiedLinkError && throwable.message?.contains("jcef.dll") == true
+        },
+        whatToDo = Instructions(true) {
+            arrayOf(
+                "Open Windows Security",
+                "Navigate to App & browser control.",
+                "Click on Smart App Control settings.",
+                "Set Smart App Control to 'Off' and confirm if asked.",
+                "Restart LiquidBounce and try again."
+            )
+        }
     );
 
     val messages = mapOf(

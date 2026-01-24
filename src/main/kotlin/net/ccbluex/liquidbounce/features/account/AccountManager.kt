@@ -158,7 +158,14 @@ object AccountManager : Configurable("Accounts"), EventListener {
     }
 
     fun loginSessionAccount(token: String) {
-        val account = SessionAccount(token).also { it.refresh() }
+        val account = if (token.startsWith("M.")) {
+            MicrosoftAccount.buildFromRefreshToken(token)
+        } else {
+            SessionAccount(token).apply {
+                refresh()
+            }
+        }
+
         loginDirectAccount(account)
     }
 
@@ -357,10 +364,15 @@ object AccountManager : Configurable("Accounts"), EventListener {
             return
         }
 
-        // Create a new cracked account
-        val account = SessionAccount(token)
-        try {
-            account.refresh()
+        val account: MinecraftAccount = try {
+            if (token.startsWith("M.")) {
+                MicrosoftAccount.buildFromRefreshToken(token)
+            } else {
+                // Create a new cracked account
+                SessionAccount(token).apply {
+                    refresh()
+                }
+            }
         } catch (exception: Exception) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = exception.message ?: "Unknown error"))
             return
