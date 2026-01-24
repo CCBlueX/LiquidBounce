@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.range
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.raycast
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.wallRange
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
@@ -297,7 +296,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
         // Raycast using the current rotation and find a block or entity that should be interacted with
         val rotationToTheServer = RotationManager.serverRotation
 
-        val entityHitResult = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
+        val entityHitResult = raytraceEntity(range.maxAttackRange.toDouble(), rotationToTheServer, filter = {
             when (raycast) {
                 TRACE_NONE -> false
                 TRACE_ONLYENEMY -> it.shouldBeAttacked()
@@ -341,8 +340,8 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
             fromEntity = target,
             toEntity = player,
             rotation = target.rotation,
-            range = range.toDouble(),
-            wallsRange = wallRange.toDouble()
+            range = range.maxAttackRange.toDouble(),
+            wallsRange = range.attackThroughWallsRange.toDouble()
         )
     }
 
