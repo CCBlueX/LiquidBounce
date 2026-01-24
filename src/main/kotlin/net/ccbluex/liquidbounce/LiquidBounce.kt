@@ -56,7 +56,6 @@ import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.BacktrackPacketManager
 import net.ccbluex.liquidbounce.features.module.modules.misc.soundfx.Sounds
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.IntegrationListener
