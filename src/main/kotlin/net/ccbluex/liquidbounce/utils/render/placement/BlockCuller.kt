@@ -1,8 +1,32 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.utils.render.placement
 
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Direction.*
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.core.Direction.DOWN
+import net.minecraft.core.Direction.EAST
+import net.minecraft.core.Direction.NORTH
+import net.minecraft.core.Direction.SOUTH
+import net.minecraft.core.Direction.UP
+import net.minecraft.core.Direction.WEST
 
 private const val FACE_DOWN = (1 shl 0) or (1 shl 1) or (1 shl 2) or (1 shl 3)
 private const val FACE_UP = (1 shl 4) or (1 shl 5) or (1 shl 6) or (1 shl 7)
@@ -27,15 +51,17 @@ private const val EDGE_SOUTH_UP = ((1 shl 20) or (1 shl (21)))
 private const val EDGE_WEST_UP = ((1 shl 22) or (1 shl (23)))
 
 // TODO check whether the Boxes actually touch
-internal class BlockCuller(
-    val parent: PlacementRenderHandler
-) {
+internal class BlockCuller(val owner: Owner) {
+
+    interface Owner {
+        operator fun contains(pos: Long): Boolean
+    }
 
     private fun contains(pos: Long, direction: Direction) =
-        BlockPos.offset(pos, direction) in parent
+        BlockPos.offset(pos, direction) in owner
 
     private fun contains(pos: Long, direction1: Direction, direction2: Direction) =
-        BlockPos.offset(BlockPos.offset(pos, direction1), direction2) in parent
+        BlockPos.offset(BlockPos.offset(pos, direction1), direction2) in owner
 
     /**
      * Returns a long that stores in the first 32 bits what vertices are to be rendered for the faces and
@@ -44,8 +70,8 @@ internal class BlockCuller(
      * @param pos The position of the block, in long value.
      */
     fun getCullData(pos: Long): Long {
-        var faces = 1 shl 30
-        var edges = 1 shl 30
+        var faces = 0
+        var edges = 0
 
         val east = contains(pos, EAST)
         val west = contains(pos, WEST)
@@ -76,7 +102,7 @@ internal class BlockCuller(
 
         // combines the data in a single long and inverts it, so that all vertices that are to be rendered are
         // represented by 1s
-        return ((faces.toLong() shl 32) or edges.toLong()).inv()
+        return ((faces.toLong() shl 32) or edges.toLong())
     }
 
     /**

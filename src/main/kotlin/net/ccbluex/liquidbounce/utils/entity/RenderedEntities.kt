@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,21 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.minecraft.entity.LivingEntity
+import net.minecraft.world.entity.LivingEntity
 
-private val entities = ArrayList<LivingEntity>()
+private val entities = ReferenceArrayList<LivingEntity>()
 
 /**
  * A readonly [Collection] containing all [LivingEntity] instances that meet the [shouldBeShown] condition.
@@ -39,6 +42,24 @@ private val entities = ArrayList<LivingEntity>()
  */
 object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
     private val registry = ReferenceOpenHashSet<EventListener>()
+
+    private val onUpdate = ReferenceArrayList<Pair<EventListener, Runnable>>()
+
+    context(listener: EventListener)
+    fun onUpdated(callback: Runnable) {
+        onUpdate += listener to callback
+    }
+
+    private fun update() {
+        onUpdate.removeIf { (listener, callback) ->
+            if (listener !in registry) {
+                true
+            } else {
+                callback.run()
+                false
+            }
+        }
+    }
 
     override val running: Boolean
         get() = registry.isNotEmpty()
@@ -51,25 +72,44 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
         registry.remove(subscriber)
         if (registry.isEmpty()) {
             entities.clear()
+            update()
         }
+    }
+
+    private fun refresh() {
+        entities.clear()
+
+        val shouldCheckCombineMobs = ModuleCombineMobs.running
+
+        for (entity in world.entitiesForRendering()) {
+            if (entity is LivingEntity && entity.shouldBeShown()) {
+                if (shouldCheckCombineMobs && ModuleCombineMobs.trackEntity(entity, true)) {
+                    continue
+                }
+
+                entities += entity
+            }
+        }
+
+        update()
     }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent>(priority = FIRST_PRIORITY) {
-        if (!inGame) {
-            return@handler
+        if (inGame) {
+            refresh()
         }
+    }
 
-        entities.clear()
-        for (entity in world.entities) {
-            if (entity is LivingEntity && entity.shouldBeShown()) {
-                entities += entity
-            }
-        }
+    @Suppress("unused")
+    private val perspectiveChangeHandler = handler<PerspectiveEvent> {
+        refresh()
     }
 
     @Suppress("unused")
     private val worldHandler = handler<WorldChangeEvent> {
         entities.clear()
+        update()
     }
+
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 @file:Suppress("WildcardImport")
+
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -24,27 +25,31 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.once
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.CachedPlayerSimulation
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation
+import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.Entity
-import net.minecraft.entity.projectile.ArrowEntity
-import net.minecraft.entity.projectile.SpectralArrowEntity
-import net.minecraft.entity.projectile.TridentEntity
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.projectile.arrow.Arrow
+import net.minecraft.world.entity.projectile.arrow.SpectralArrow
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 @Suppress("MagicNumber")
-object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
+object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
     private object AllowRotationChange : ToggleableConfigurable(this, "AllowRotationChange", false) {
         val allowJump by boolean("AllowJump", true)
     }
@@ -66,7 +71,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         && !ModuleBlink.running
         && !ModuleMurderMystery.disallowsArrowDodge()
         && !(Ignore.OPEN_INVENTORY !in ignore
-            && (InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen))
+            && (InventoryManager.isInventoryOpen || mc.screen is ContainerScreen))
         && !(Ignore.USING_ITEM !in ignore && player.isUsingItem)
         && !(Ignore.USING_SCAFFOLD !in ignore && ModuleScaffold.running)
 
@@ -87,10 +92,10 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         event.directionalInput = dodgePlan.directionalInput
 
         dodgePlan.yawChange?.let { yawChange ->
-            player.yaw = yawChange
+            player.setYRot(yawChange)
         }
 
-        if (dodgePlan.shouldJump && AllowRotationChange.allowJump && player.isOnGround) {
+        if (dodgePlan.shouldJump && AllowRotationChange.allowJump && player.onGround()) {
             once<MovementInputEvent> { movementInputEvent ->
                 movementInputEvent.jump = true
             }
@@ -101,9 +106,9 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         }
     }
 
-    private fun ClientWorld.findFlyingArrows() = entities.filter { entity ->
-        (entity is ArrowEntity || entity is SpectralArrowEntity ||
-                (entity is TridentEntity && entity.returnTimer == 0)) && !entity.isInGround
+    private fun ClientLevel.findFlyingArrows() = entitiesForRendering().filter { entity ->
+        (entity is Arrow || entity is SpectralArrow ||
+                (entity is ThrownTrident && entity.clientSideReturnTridentTickCount == 0)) && !entity.isInGround
     }
 
     private fun <T : PlayerSimulation> getInflictedHits(
@@ -112,7 +117,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
         maxTicks: Int = 80,
         hitboxExpansion: Double = 0.7,
     ): HitInfo? {
-        val simulatedArrows = arrows.map { SimulatedArrow(world, it.pos, it.velocity, false) }
+        val simulatedArrows = arrows.map { SimulatedArrow(world, it.position(), it.deltaMovement, false) }
 
         for (i in 0 until maxTicks) {
             simulatedPlayer.tick()
@@ -127,10 +132,10 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
                 arrow.tick()
 
                 val playerHitBox =
-                    Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
-                        .expand(hitboxExpansion)
-                        .offset(simulatedPlayer.pos)
-                val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
+                    AABB(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
+                        .inflate(hitboxExpansion)
+                        .move(simulatedPlayer.pos)
+                val raycastResult = playerHitBox.clip(lastPos, arrow.pos)
 
                 raycastResult.orElse(null)?.let { hitPos ->
                     return HitInfo(i, arrows[arrowIndex], hitPos, lastPos, arrow.velocity)
@@ -156,9 +161,9 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
     fun findAvoidingArrowPosition(): EvadingPacket? {
         var packetIndex = 0
 
-        var lastPosition: Vec3d? = null
+        var lastPosition: Vec3? = null
 
-        var bestPacketPosition: Vec3d? = null
+        var bestPacketPosition: Vec3? = null
         var bestPacketIdx: Int? = null
         var bestTimeToImpact = 0
 
@@ -167,7 +172,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
 
             // Process packets only if they are at least some distance away from each other
             if (lastPosition != null) {
-                if (lastPosition.squaredDistanceTo(position) < 0.9 * 0.9) {
+                if (lastPosition.distanceToSqr(position) < 0.9 * 0.9) {
                     continue
                 }
             }
@@ -187,14 +192,14 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
 
         // If the evading packet is less than one player hitbox away from the current position, we should rather
         // call the evasion a failure
-        if (bestPacketIdx != null && bestPacketPosition!!.squaredDistanceTo(lastPosition!!) > 0.9) {
+        if (bestPacketIdx != null && bestPacketPosition!!.distanceToSqr(lastPosition!!) > 0.9) {
             return EvadingPacket(bestPacketIdx, bestTimeToImpact)
         }
 
         return null
     }
 
-    fun getInflictedHit(pos: Vec3d): HitInfo? {
+    fun getInflictedHit(pos: Vec3): HitInfo? {
         val arrows = world.findFlyingArrows()
         val playerSimulation = RigidPlayerSimulation(pos)
 
@@ -204,9 +209,9 @@ object ModuleAutoDodge : ClientModule("AutoDodge", Category.COMBAT) {
     data class HitInfo(
         val tickDelta: Int,
         val arrowEntity: Entity,
-        val hitPos: Vec3d,
-        val prevArrowPos: Vec3d,
-        val arrowVelocity: Vec3d,
+        val hitPos: Vec3,
+        val prevArrowPos: Vec3,
+        val arrowVelocity: Vec3,
     )
 
     private enum class Ignore(

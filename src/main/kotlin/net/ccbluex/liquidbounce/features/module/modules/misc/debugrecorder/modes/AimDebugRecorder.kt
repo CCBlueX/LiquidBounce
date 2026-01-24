@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
@@ -27,12 +25,12 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.Modul
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.lastPos
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
-import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.hit.HitResult
+import net.minecraft.world.phys.EntityHitResult
+import net.minecraft.world.phys.HitResult
 
 object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Aim") {
 
@@ -42,7 +40,7 @@ object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Aim
 
         val turnSpeed = playerLastRotation.rotationDeltaTo(playerRotation)
 
-        val crosshairTarget = mc.crosshairTarget
+        val crosshairTarget = mc.hitResult
 
         recordPacket(JsonObject().apply {
             addProperty("health", player.health)
@@ -54,30 +52,30 @@ object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Aim
             addProperty("turn_speed_v", turnSpeed.deltaPitch)
 
             add("velocity", JsonObject().apply {
-                addProperty("x", player.velocity.x)
-                addProperty("y", player.velocity.y)
-                addProperty("z", player.velocity.z)
+                addProperty("x", player.deltaMovement.x)
+                addProperty("y", player.deltaMovement.y)
+                addProperty("z", player.deltaMovement.z)
             })
 
-            world.entities.filter {
+            world.entitiesForRendering().filter {
                 it.shouldBeAttacked() && it.distanceTo(player) < 10.0f
             }.minByOrNull {
                 it.distanceTo(player)
             }?.let {
-                val vector = it.pos - player.pos
+                val vector = it.position() - player.position()
                 add("vec", JsonObject().apply {
                     addProperty("x", vector.x)
                     addProperty("y", vector.y)
                     addProperty("z", vector.z)
                 })
-                val velocity = it.pos - it.prevPos
+                val velocity = it.position() - it.lastPos
                 add("velocity", JsonObject().apply {
                     addProperty("x", velocity.x)
                     addProperty("y", velocity.y)
                     addProperty("z", velocity.z)
                 })
                 addProperty("distance", player.distanceTo(it))
-                val rotation = Rotation.lookingAt(point = it.box.center, from = player.eyePos)
+                val rotation = Rotation.lookingAt(point = it.box.center, from = player.eyePosition)
 
                 val delta = rotation.rotationDeltaTo(playerRotation)
 

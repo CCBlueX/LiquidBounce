@@ -1,12 +1,31 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.render.engine.font.processor
 
-import net.minecraft.text.CharacterVisitor
-import net.minecraft.text.OrderedText
-import net.minecraft.text.StringVisitable.StyledVisitor
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import java.util.*
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.FormattedText.StyledContentConsumer
+import net.minecraft.network.chat.Style
+import net.minecraft.util.FormattedCharSequence
+import net.minecraft.util.FormattedCharSink
+import java.util.Optional
 
 /**
  * This is a utility class which degenerates legacy formatting which is contained in new minecraft formatting
@@ -15,8 +34,8 @@ import java.util.*
  * @param innerVisitor the receiver of the degenerated text formatting.
  */
 class LegacyTextSanitizer(
-    private val innerVisitor: StyledVisitor<Nothing>
-): StyledVisitor<Nothing> {
+    private val innerVisitor: StyledContentConsumer<Nothing>
+): StyledContentConsumer<Nothing> {
 
     override fun accept(style: Style, text: String): Optional<Nothing> {
         var currentStyle = style
@@ -52,32 +71,32 @@ class LegacyTextSanitizer(
     }
 
     private fun applyCodeForStyle(codePoint: Int, currentStyle: Style): Style {
-        return Formatting.byCode(codePoint.toChar())?.applyFormatting(currentStyle) ?: currentStyle
+        return ChatFormatting.getByCode(codePoint.toChar())?.applyFormatting(currentStyle) ?: currentStyle
     }
 
-    private fun Formatting.applyFormatting(style: Style): Style {
+    private fun ChatFormatting.applyFormatting(style: Style): Style {
         return when {
             isColor -> style.withColor(this)
             else -> when (this) {
-                Formatting.RESET -> Style.EMPTY
-                Formatting.BOLD -> style.withBold(true)
-                Formatting.OBFUSCATED -> style.withObfuscated(true)
-                Formatting.STRIKETHROUGH -> style.withStrikethrough(true)
-                Formatting.UNDERLINE -> style.withUnderline(true)
-                Formatting.ITALIC -> style.withItalic(true)
+                ChatFormatting.RESET -> Style.EMPTY
+                ChatFormatting.BOLD -> style.withBold(true)
+                ChatFormatting.OBFUSCATED -> style.withObfuscated(true)
+                ChatFormatting.STRIKETHROUGH -> style.withStrikethrough(true)
+                ChatFormatting.UNDERLINE -> style.withUnderlined(true)
+                ChatFormatting.ITALIC -> style.withItalic(true)
                 else -> style
             }
         }
     }
 
-    class SanitizedLegacyText(private val text: Text): OrderedText {
-        override fun accept(visitor: CharacterVisitor): Boolean {
+    class SanitizedLegacyText(private val text: Component): FormattedCharSequence {
+        override fun accept(visitor: FormattedCharSink): Boolean {
             val degenerator = LegacyTextSanitizer { style, text ->
-                var idx = 0
-
-                text.chars().forEach { codePoint ->
-                    visitor.accept(idx, style, codePoint)
-                    idx++
+                var index = 0
+                while (index < text.length) {
+                    val codePoint = text.codePointAt(index)
+                    visitor.accept(index, style, codePoint)
+                    index += Character.charCount(codePoint)
                 }
 
                 Optional.empty()

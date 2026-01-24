@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,10 +23,12 @@ import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
+import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationTarget
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
@@ -43,23 +45,24 @@ import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.MathHelper
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.Entity
 
 /**
  * Aimbot module
  *
  * Automatically faces selected entities around you.
  */
-@Suppress("MagicNumber")
-object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("AimAssist", "AutoAim")) {
+object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = listOf("AimAssist", "AutoAim")) {
 
     private val range = float("Range", 4.2f, 1f..8f)
 
     val targetTracker = tree(TargetTracker(TargetPriority.DIRECTION, range = range))
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
     private val pointTracker = tree(PointTracker(this))
 
     private val requires by multiEnumChoice<KillAuraRequirements>("Requires")
@@ -120,17 +123,13 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
         val partialTicks = event.partialTicks
         val target = targetTracker.target ?: return@handler
 
-        if (IgnoreOpened.SCREEN !in ignores && mc.currentScreen != null) {
+        if (IgnoreOpened.SCREEN !in ignores && mc.screen != null) {
             return@handler
         }
 
         if (IgnoreOpened.CONTAINER !in ignores && (InventoryManager.isInventoryOpen ||
-                mc.currentScreen is HandledScreen<*>)) {
+                mc.screen is AbstractContainerScreen<*>)) {
             return@handler
-        }
-
-        renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(this, target, partialTicks)
         }
 
         val currentRotation = playerRotation ?: return@handler
@@ -151,35 +150,37 @@ object ModuleAimbot : ClientModule("Aimbot", Category.COMBAT, aliases = listOf("
         val f = event.cursorDeltaY.toFloat() * 0.15f
         val g = event.cursorDeltaX.toFloat() * 0.15f
 
+        fun updateRotation(rotation: Rotation): Rotation =
+            Rotation(yaw = rotation.yaw + g, pitch = (rotation.pitch + f).coerceIn(-90f, 90f))
+
         playerRotation?.let { rotation ->
-            rotation.pitch += f
-            rotation.yaw += g
-            rotation.pitch = MathHelper.clamp(rotation.pitch, -90.0f, 90.0f)
+            playerRotation = updateRotation(rotation)
         }
 
         targetRotation?.let { rotation ->
-            rotation.pitch += f
-            rotation.yaw += g
-            rotation.pitch = MathHelper.clamp(rotation.pitch, -90.0f, 90.0f)
+            targetRotation = updateRotation(rotation)
         }
     }
 
     private fun findNextTargetRotation(): Pair<Entity, RotationWithVector>? {
-        for (target in targetTracker.targets()) {
-            val eyes = player.eyePos
-            val pointOnHitbox = pointTracker.findPoint(eyes, target, 0)
-            val rotationPreference = LeastDifferencePreference(player.rotation, pointOnHitbox.pos)
+        for (entity in targetTracker.targets()) {
+            val eyes = player.eyePosition
+            val point = pointTracker.findPoint(eyes, entity)
 
-            val spot = raytraceBox(
-                eyes,
-                pointOnHitbox.box,
+            debugGeometry("Box") { ModuleDebug.DebuggedBox(point.box, Color4b.ORANGE.with(a = 90)) }
+            debugGeometry("Point") { ModuleDebug.DebuggedPoint(point.pos, Color4b.WHITE, size = 0.1) }
+
+            val rotationPreference = LeastDifferencePreference.leastDifferenceToLastPoint(eyes, point.pos)
+            val rotation = raytraceBox(
+                eyes = eyes,
+                box = point.box,
                 range = targetTracker.maxRange.toDouble(),
                 wallsRange = 0.0,
                 rotationPreference = rotationPreference
             ) ?: continue
 
-            targetTracker.target = target
-            return target to spot
+            targetTracker.target = entity
+            return entity to rotation
         }
 
         targetTracker.reset()

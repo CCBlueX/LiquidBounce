@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
@@ -25,15 +23,15 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.block.Blocks
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * ReverseStep module
@@ -41,7 +39,7 @@ import net.minecraft.util.shape.VoxelShapes
  * Allows you to step down blocks faster.
  */
 
-object ModuleReverseStep : ClientModule("ReverseStep", Category.MOVEMENT) {
+object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT) {
 
     private var modes = choices("Mode", Instant, arrayOf(Instant, Strict, Accelerator)).apply { tagBy(this) }
     private val maximumFallDistance by float("MaximumFallDistance", 1f, 1f..50f)
@@ -69,9 +67,9 @@ object ModuleReverseStep : ClientModule("ReverseStep", Category.MOVEMENT) {
     }
 
     val repeatable = tickHandler {
-        if (player.velocity.y > 0.0) {
+        if (player.deltaMovement.y > 0.0) {
             initiatedJump = true
-        } else if (player.isOnGround) {
+        } else if (player.onGround()) {
             initiatedJump = false
         }
     }
@@ -84,7 +82,7 @@ object ModuleReverseStep : ClientModule("ReverseStep", Category.MOVEMENT) {
         private val simulateFalling by boolean("SimulateFalling", false)
 
         val repeatable = tickHandler {
-            if (!initiatedJump && !player.isOnGround && !unwantedBlocksBelow) {
+            if (!initiatedJump && !player.onGround() && !unwantedBlocksBelow) {
                 if (isFallingTooFar()) {
                     return@tickHandler
                 }
@@ -92,7 +90,7 @@ object ModuleReverseStep : ClientModule("ReverseStep", Category.MOVEMENT) {
                 val simInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput.NONE)
                 val simulatePlayer = SimulatedPlayer.fromClientPlayer(simInput)
 
-                val simulationQueue = mutableListOf<PlayerMoveC2SPacket>()
+                val simulationQueue = mutableListOf<ServerboundMovePlayerPacket>()
                 for (tick in 0..ticks) {
                     // If the simulated player is on ground, we can stop the simulation and set the player position
                     // to the end.
@@ -100,16 +98,16 @@ object ModuleReverseStep : ClientModule("ReverseStep", Category.MOVEMENT) {
                     // and therefore lose the simulation.
                     if (simulatePlayer.onGround) {
                         if (simulationQueue.isNotEmpty()) {
-                            simulationQueue.forEach(network::sendPacket)
+                            simulationQueue.forEach(network::send)
                         }
 
-                        player.setPosition(simulatePlayer.pos)
+                        player.setPos(simulatePlayer.pos)
                         break
                     }
 
                     simulatePlayer.tick()
                     if (simulateFalling) {
-                        simulationQueue += PlayerMoveC2SPacket.PositionAndOnGround(
+                        simulationQueue += ServerboundMovePlayerPacket.Pos(
                             simulatePlayer.pos.x,
                             simulatePlayer.pos.y, simulatePlayer.pos.z, simulatePlayer.onGround,
                             simulatePlayer.horizontalCollision
@@ -130,12 +128,12 @@ object ModuleReverseStep : ClientModule("ReverseStep", Category.MOVEMENT) {
         private val factor by float("Factor", 1.0F, 0.1F..5.0F)
 
         val repeatable = tickHandler {
-            if (!initiatedJump && !player.isOnGround && player.velocity.y < 0.0 && !unwantedBlocksBelow) {
+            if (!initiatedJump && !player.onGround() && player.deltaMovement.y < 0.0 && !unwantedBlocksBelow) {
                 if (isFallingTooFar()) {
                     return@tickHandler
                 }
 
-                player.velocity = player.velocity.multiply(0.0, factor.toDouble(), 0.0)
+                player.setDeltaMovement(player.deltaMovement.multiply(0.0, factor.toDouble(), 0.0))
             }
         }
 
@@ -149,12 +147,12 @@ object ModuleReverseStep : ClientModule("ReverseStep", Category.MOVEMENT) {
         private val motion by float("Motion", 1.0F, 0.1F..5.0F)
 
         val repeatable = tickHandler {
-            if (!initiatedJump && !player.isOnGround && !unwantedBlocksBelow) {
+            if (!initiatedJump && !player.onGround() && !unwantedBlocksBelow) {
                 if (isFallingTooFar()) {
                     return@tickHandler
                 }
 
-                player.velocity.y = -motion.toDouble()
+                player.deltaMovement.y = -motion.toDouble()
             }
         }
     }
@@ -166,8 +164,8 @@ object ModuleReverseStep : ClientModule("ReverseStep", Category.MOVEMENT) {
 
         // If there is no collision after maximum fall distance, we do not want to reverse step and
         // risk falling deep.
-        val boundingBox = player.boundingBox.offset(0.0, (-maximumFallDistance).toDouble(), 0.0)
-        return world.getBlockCollisions(player, boundingBox).all { shape -> shape == VoxelShapes.empty() }
+        val boundingBox = player.boundingBox.move(0.0, (-maximumFallDistance).toDouble(), 0.0)
+        return world.getBlockCollisions(player, boundingBox).all { shape -> shape == Shapes.empty() }
     }
 
 }

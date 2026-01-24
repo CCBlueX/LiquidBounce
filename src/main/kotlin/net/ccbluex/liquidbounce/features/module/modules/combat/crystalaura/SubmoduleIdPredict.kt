@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,15 +27,14 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
-import net.minecraft.entity.decoration.EndCrystalEntity
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket
-import net.minecraft.network.packet.s2c.play.ExperienceOrbSpawnS2CPacket
-import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
-import net.minecraft.util.Hand
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
+import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
+import net.minecraft.network.protocol.game.ClientboundLoginPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
+import net.minecraft.world.phys.AABB
 import kotlin.math.max
 
 /**
@@ -71,13 +70,14 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
             }
 
             oldRotation = RotationManager.serverRotation
-            network.sendPacket(PlayerMoveC2SPacket.Full(
+            network.send(
+                ServerboundMovePlayerPacket.PosRot(
                 player.x,
                 player.y,
                 player.z,
                 rotation.yaw,
                 rotation.pitch,
-                player.isOnGround,
+                player.onGround(),
                 player.horizontalCollision
             ))
         }
@@ -87,13 +87,14 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
                 return
             }
 
-            network.sendPacket(PlayerMoveC2SPacket.Full(
+            network.send(
+                ServerboundMovePlayerPacket.PosRot(
                 player.x,
                 player.y,
                 player.z,
                 oldRotation!!.yaw,
                 oldRotation!!.pitch,
-                player.isOnGround,
+                player.onGround(),
                 player.horizontalCollision
             ))
         }
@@ -121,8 +122,8 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
 
         val (rotation, _) =
             raytraceBox(
-                player.eyePos,
-                Box(placePos).expand(0.5, 0.0, 0.5).withMaxY(placePos.y + 2.0),
+                player.eyePosition,
+                AABB(placePos).inflate(0.5, 0.0, 0.5).setMaxY(placePos.y + 2.0),
                 range = SubmoduleCrystalDestroyer.range.toDouble(),
                 wallsRange = SubmoduleCrystalDestroyer.wallsRange.toDouble(),
             ) ?: return
@@ -131,24 +132,24 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
 
         val swingMode = SubmoduleCrystalDestroyer.swingMode
         if (!swingAlways) {
-            swingMode.swing(Hand.MAIN_HAND)
+            swingMode.swing(InteractionHand.MAIN_HAND)
         }
 
         offsetRange.forEach { idOffset ->
             val id = highestId + idOffset
 
             // don't attack other entities in case the highest ID is wrong
-            val entity = world.getEntityById(id)
-            if (entity != null && entity !is EndCrystalEntity) {
+            val entity = world.getEntity(id)
+            if (entity != null && entity !is EndCrystal) {
                 return@forEach
             }
 
             if (swingAlways) {
-                swingMode.swing(Hand.MAIN_HAND)
+                swingMode.swing(InteractionHand.MAIN_HAND)
             }
 
-            val packet = PlayerInteractEntityC2SPacket(id, player.isSneaking, PlayerInteractEntityC2SPacket.ATTACK)
-            network.sendPacket(packet)
+            val packet = ServerboundInteractPacket(id, player.isShiftKeyDown, ServerboundInteractPacket.ATTACK_ACTION)
+            network.send(packet)
             SubmoduleCrystalDestroyer.postAttackHandlers.forEach { it.attacked(id) }
         }
 
@@ -158,7 +159,7 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
 
     private fun reset() {
         highestId = 0
-        world.entities.forEach {
+        world.entitiesForRendering().forEach {
             highestId = max(it.id, highestId)
         }
     }
@@ -166,9 +167,10 @@ object SubmoduleIdPredict : ToggleableConfigurable(ModuleCrystalAura, "IDPredict
     @Suppress("unused")
     private val entitySpawnHandler = handler<PacketEvent> {
         when(val packet = it.packet) {
-            is ExperienceOrbSpawnS2CPacket -> highestId = max(packet.entityId, highestId)
-            is EntitySpawnS2CPacket -> highestId = max(packet.entityId, highestId)
-            is GameJoinS2CPacket -> highestId = max(packet.playerEntityId, highestId)
+            // TODO: I guess this packet is merged into EntitySpawnS2CPacket
+//            is ExperienceOrbSpawnS2CPacket -> highestId = max(packet.entityId, highestId)
+            is ClientboundAddEntityPacket -> highestId = max(packet.id, highestId)
+            is ClientboundLoginPacket -> highestId = max(packet.playerId, highestId)
         }
     }
 

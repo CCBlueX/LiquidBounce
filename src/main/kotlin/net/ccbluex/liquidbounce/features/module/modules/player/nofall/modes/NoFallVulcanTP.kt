@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,24 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.entity.set
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * @anticheat Vulcan
  * @anticheatVersion 2.8.8
  * @testedOn eu.loyisa.cn
  */
-internal object NoFallVulcanTP : Choice("VulcanTP288") {
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
+internal object NoFallVulcanTP : NoFallMode("VulcanTP288") {
 
     private val voidThreshold by int("VoidLevel", 0, -256..0)
 
@@ -43,7 +37,7 @@ internal object NoFallVulcanTP : Choice("VulcanTP288") {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket && player.fallDistance in 2.5..50.0
+        if (packet is ServerboundMovePlayerPacket && player.fallDistance in 2.5..50.0
             // Check if the player is falling into the void and set safety expand to 0.0 - otherwise,
             // the player will be teleported to the void and flag
             && !player.doesNotCollideBelow(until = voidThreshold.toDouble())) {
@@ -51,7 +45,7 @@ internal object NoFallVulcanTP : Choice("VulcanTP288") {
             packet.onGround = true
 
             // Extreme high fall velocity
-            player.setVelocity(0.0, -99.887575, 0.0)
+            player.setDeltaMovement(0.0, -99.887575, 0.0)
             player.input.set(
                 sneak = true
             )

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,86 +18,87 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.ingame.fakeplayer
 
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.entity.EntityPose
-import net.minecraft.entity.player.PlayerInventory
-import net.minecraft.util.Hand
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.EntityEquipment
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.entity.player.Inventory
 
 @JvmRecord
 data class PosPoseSnapshot(
     val x: Double,
     val y: Double,
     val z: Double,
-    val prevX: Double,
-    val prevY: Double,
-    val prevZ: Double,
+    val lastX: Double,
+    val lastY: Double,
+    val lastZ: Double,
     val handSwinging: Boolean,
     val handSwingTicks: Int,
     val handSwingProgress: Float,
     val yaw: Float,
-    val prevYaw: Float,
+    val lastYaw: Float,
     val pitch: Float,
-    val prevPitch: Float,
+    val lastPitch: Float,
     val bodyYaw: Float,
-    val prevBodyYaw: Float,
+    val lastBodyYaw: Float,
     val headYaw: Float,
-    val prevHeadYaw: Float,
-    val pose: EntityPose,
-    val preferredHand: Hand,
-    val inventory: PlayerInventory,
+    val lastHeadYaw: Float,
+    val pose: Pose,
+    val preferredHand: InteractionHand,
+    val inventory: Inventory,
     val limbPos: Float
 )
 
-fun fromPlayer(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
+fun fromPlayer(entity: AbstractClientPlayer): PosPoseSnapshot {
     return PosPoseSnapshot(
         entity.x,
         entity.y,
         entity.z,
-        entity.x,
-        entity.y,
-        entity.z,
-        entity.handSwinging,
-        entity.handSwingTicks,
-        entity.handSwingProgress,
-        entity.yaw,
-        entity.yaw,
-        entity.pitch,
-        entity.pitch,
-        entity.bodyYaw,
-        entity.bodyYaw,
-        entity.headYaw,
-        entity.headYaw,
+        entity.xo,
+        entity.yo,
+        entity.zo,
+        entity.swinging,
+        entity.swingTime,
+        entity.attackAnim,
+        entity.yRot,
+        entity.yRotO,
+        entity.xRot,
+        entity.xRotO,
+        entity.yBodyRot,
+        entity.yBodyRotO,
+        entity.yHeadRot,
+        entity.yHeadRotO,
         entity.pose,
-        entity.preferredHand ?: Hand.MAIN_HAND,
+        entity.swingingArm ?: InteractionHand.MAIN_HAND,
         entity.inventory,
-        entity.limbAnimator.pos
+        entity.walkAnimation.position
     )
 }
 
-fun fromPlayerMotion(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
-    val playerInventory = PlayerInventory(null)
-    playerInventory.clone(entity.inventory)
+fun fromPlayerMotion(entity: AbstractClientPlayer): PosPoseSnapshot {
+    val playerInventory = Inventory(entity, EntityEquipment())
+    playerInventory.replaceWith(entity.inventory)
     return PosPoseSnapshot(
         entity.x,
         entity.y,
         entity.z,
-        entity.prevX,
-        entity.prevY,
-        entity.prevZ,
-        entity.handSwinging,
-        entity.handSwingTicks,
-        entity.handSwingProgress,
-        entity.yaw,
-        entity.prevYaw,
-        entity.pitch,
-        entity.prevPitch,
-        entity.bodyYaw,
-        entity.prevBodyYaw,
-        entity.headYaw,
-        entity.prevHeadYaw,
+        entity.xo,
+        entity.yo,
+        entity.zo,
+        entity.swinging,
+        entity.swingTime,
+        entity.attackAnim,
+        entity.yRot,
+        entity.yRotO,
+        entity.xRot,
+        entity.xRotO,
+        entity.yBodyRot,
+        entity.yBodyRotO,
+        entity.yHeadRot,
+        entity.yHeadRotO,
         entity.pose,
-        entity.preferredHand ?: Hand.MAIN_HAND,
+        entity.swingingArm,
         playerInventory,
-        entity.limbAnimator.pos
+        entity.walkAnimation.position
     )
 }

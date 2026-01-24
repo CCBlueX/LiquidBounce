@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
@@ -36,7 +36,8 @@ import java.util.function.Predicate
  *
  * Legit trick to build faster.
  */
-object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
+object ModuleEagle : ClientModule(
+    "Eagle", ModuleCategories.PLAYER,
     aliases = listOf("FastBridge", "BridgeAssistant", "LegitScaffold")
 ) {
 
@@ -47,16 +48,57 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
 
     private var currentEdgeDistance: Float = edgeDistance.random()
     private var wasSneaking = false
+    private var sneakCaptured = false
+
+    private fun shouldActivateEagle(event: MovementInputEvent, conditionsMet: Boolean): Boolean {
+        if (player.abilities.flying || !conditionsMet) {
+            return false
+        }
+
+        return player.isCloseToEdge(event.directionalInput, currentEdgeDistance.toDouble())
+    }
+
+    private fun updateSneakCapture(originalSneak: Boolean, active: Boolean) {
+        if (!Conditional.controlsSneak) {
+            sneakCaptured = false
+            return
+        }
+
+        when {
+            !sneakCaptured && active && originalSneak -> sneakCaptured = true
+            sneakCaptured && !originalSneak -> sneakCaptured = false
+        }
+    }
+
+    private fun shouldOverrideSneak(conditionsMet: Boolean, active: Boolean): Boolean {
+        return conditionsMet && Conditional.controlsSneak && (active || sneakCaptured)
+    }
+
+    private fun updateSneakState(isSneaking: Boolean) {
+        if (isSneaking) {
+            wasSneaking = true
+            return
+        }
+
+        if (wasSneaking) {
+            currentEdgeDistance = edgeDistance.random()
+            wasSneaking = false
+        }
+    }
 
     private object Conditional : ToggleableConfigurable(this, "Conditional", true) {
-        private val conditions by multiEnumChoice("Conditions",
+        private val conditions by multiEnumChoice(
+            "Conditions",
             Condition.ON_GROUND
         )
 
         val pitch by floatRange("Pitch", -90f..90f, -90f..90f)
 
+        val controlsSneak
+            get() = enabled && Condition.SNEAK in conditions
+
         fun shouldSneak(event: MovementInputEvent) =
-            !enabled || player.pitch in pitch && conditions.all { it.test(event) }
+            !enabled || player.xRot in pitch && conditions.all { it.test(event) }
 
         @Suppress("unused")
         private enum class Condition(override val choiceName: String) : NamedChoice, Predicate<MovementInputEvent> {
@@ -73,8 +115,8 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
                 RIGHT -> event.directionalInput.right
                 FORWARDS -> event.directionalInput.forwards
                 BACKWARDS -> event.directionalInput.backwards
-                HOLDING_BLOCKS -> isValidBlock(player.mainHandStack) || isValidBlock(player.offHandStack)
-                ON_GROUND -> player.isOnGround
+                HOLDING_BLOCKS -> isValidBlock(player.mainHandItem) || isValidBlock(player.offhandItem)
+                ON_GROUND -> player.onGround()
                 SNEAK -> event.sneak
             }
         }
@@ -86,6 +128,7 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
 
     override fun onDisabled() {
         wasSneaking = false
+        sneakCaptured = false
         super.onDisabled()
     }
 
@@ -93,17 +136,21 @@ object ModuleEagle : ClientModule("Eagle", Category.PLAYER,
     private val handleMovementInput = handler<MovementInputEvent>(priority = SAFETY_FEATURE) { event ->
         debugParameter("EdgeDistance") { currentEdgeDistance }
 
-        val shouldBeActive = !player.abilities.flying && Conditional.shouldSneak(event) &&
-            player.isCloseToEdge(event.directionalInput, currentEdgeDistance.toDouble())
+        val originalSneak = mc.options.keyShift.isDown
+        val conditionsMet = Conditional.shouldSneak(event)
+        val isActive = shouldActivateEagle(event, conditionsMet)
 
-        event.sneak = event.sneak || shouldBeActive
+        updateSneakCapture(originalSneak, isActive)
 
-        if (event.sneak) {
-            wasSneaking = true
-        } else if (wasSneaking) {
-            currentEdgeDistance = edgeDistance.random()
-            wasSneaking = false
+        val controlsSneak = shouldOverrideSneak(conditionsMet, isActive)
+
+        event.sneak = if (controlsSneak) {
+            isActive
+        } else {
+            originalSneak || isActive
         }
+
+        updateSneakState(event.sneak)
     }
 
 }

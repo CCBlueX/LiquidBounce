@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,18 +19,18 @@
 package net.ccbluex.liquidbounce.api.types.enums
 
 import com.google.gson.annotations.SerializedName
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
 
-enum class AutoSettingsStatusType(val displayName: String, val formatting: Formatting) {
+enum class AutoSettingsStatusType(val displayName: String, val formatting: ChatFormatting) {
     @SerializedName("NotBypassing")
-    NOT_BYPASSING("Not Bypassing", Formatting.RED),
+    NOT_BYPASSING("Not Bypassing", ChatFormatting.RED),
 
     @SerializedName("Bypassing")
-    BYPASSING("Bypassing", Formatting.GREEN),
+    BYPASSING("Bypassing", ChatFormatting.GREEN),
 
     @SerializedName("Undetectable")
-    UNDETECTABLE("Undetectable", Formatting.BLUE),
+    UNDETECTABLE("Undetectable", ChatFormatting.BLUE),
 
     @SerializedName("Unknown")
-    UNKNOWN("Unknown", Formatting.GOLD)
+    UNKNOWN("Unknown", ChatFormatting.GOLD)
 }

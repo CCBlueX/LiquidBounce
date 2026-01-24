@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,11 @@ import com.google.gson.GsonBuilder
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ItemInfo
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopConfig
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopElement
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionNode
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionNodeDeserializer
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ItemConditionNode
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ItemConditionNodeDeserializer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 
@@ -34,10 +34,10 @@ object AutoShopConfig {
 
     private val autoShopGson = GsonBuilder()
         .setPrettyPrinting()
-        .registerTypeAdapter(ShopElement::class.javaObjectType, ShopElementDeserializer())
-        .registerTypeAdapter(ItemInfo::class.javaObjectType, ItemInfoDeserializer())
-        .registerTypeAdapter(ConditionNode::class.javaObjectType, ConditionNodeDeserializer())
-        .registerTypeAdapter(ItemConditionNode::class.javaObjectType, ItemConditionNodeDeserializer())
+        .registerTypeAdapter(ShopElement::class.java, ShopElement.Deserializer)
+        .registerTypeAdapter(ItemInfo::class.java, ItemInfo.Deserializer)
+        .registerTypeAdapter(ConditionNode::class.java, ConditionNode.Deserializer)
+        .registerTypeAdapter(ItemConditionNode::class.java, ItemConditionNode.Deserializer)
         .create()
 
     /**
@@ -67,7 +67,7 @@ object AutoShopConfig {
             }
         }.onFailure {
             logger.error("Failed to load items for AutoShop.", it)
-            ModuleAutoShop.currentConfig = ShopConfig.emptyConfig()
+            ModuleAutoShop.currentConfig = ShopConfig.Empty
             return false
         }
 
@@ -80,7 +80,7 @@ object AutoShopConfig {
  * Represents the locally available shop configurations
  */
 @Suppress("unused")
-enum class ShopConfigPreset(override val choiceName: String, val localFileName: String) : NamedChoice {
+enum class ShopConfigPreset(override val choiceName: String, localFileName: String) : NamedChoice {
 
     PIKA_NETWORK("PikaNetwork", "pika-network"),
     BLOCKSMC("BlocksMC", "blocksmc"),

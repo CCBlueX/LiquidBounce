@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,16 +26,16 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.phys.Vec3
 import java.text.DecimalFormat
 import kotlin.math.abs
 
@@ -44,12 +44,12 @@ import kotlin.math.abs
  *
  * Show health changes of entities
  */
-object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) {
+object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.RENDER) {
 
     private val ttl by float("TimeToLive", 3F, 0.5F..5.0F, "s")
     private val scale by float("Scale", 2F, 0.25F..4F)
     private val scaleTransition by easing("ScaleTransition", Easing.QUAD_OUT)
-    private val displacement by vec3d("Displacement", Vec3d(0.0, 1.0, 0.0))
+    private val displacement by vec3d("Displacement", Vec3(0.0, 1.0, 0.0))
     private val displacementTransition by easing("DisplacementTransition", Easing.QUAD_OUT)
     private val trackMode by enumChoice("TrackMode", TrackMode.ON_TICK)
 
@@ -93,12 +93,12 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
                 System.currentTimeMillis(),
                 FORMATTER.format(delta),
                 color,
-                entity.box.center.add(entity.movement),
+                entity.box.center.add(entity.knownMovement),
             )
         }
     }
 
-    private fun shouldNotTrack(entity: LivingEntity) = entity.age == 0 || entity === player
+    private fun shouldNotTrack(entity: LivingEntity) = entity.tickCount == 0 || entity === player
 
     override fun onDisabled() {
         particles.clear()
@@ -136,7 +136,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
             return@handler
         }
 
-        val entities = world.entities
+        val entities = world.entitiesForRendering()
         for (entity in entities) {
             if (entity !is LivingEntity || shouldNotTrack(entity)) {
                 continue
@@ -150,7 +150,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
             }
         }
 
-        entityHealthMap.keys.removeIf { it !in entities || it.isDead }
+        entityHealthMap.keys.removeIf { it !in entities || it.isDeadOrDying }
     }
 
     @Suppress("unused")
@@ -165,24 +165,24 @@ object ModuleDamageParticles : ClientModule("DamageParticles", Category.RENDER) 
             val currentScale = scale * scaleTransition.transform(progress)
 
             with(event.context) {
-                matrices.push()
-                matrices.translate(screenPos.x, screenPos.y, screenPos.z)
-                matrices.scale(currentScale, currentScale, 1.0F)
+                pose().pushMatrix()
+                pose().translate(screenPos.x, screenPos.y)
+                pose().scale(currentScale, currentScale)
 
-                drawCenteredTextWithShadow(
-                    mc.textRenderer,
+                drawCenteredString(
+                    mc.font,
                     particle.text,
                     0,
                     0,
                     particle.color.toARGB(),
                 )
-                matrices.pop()
+                pose().popMatrix()
             }
         }
 
     }
 
     @JvmRecord
-    private data class Particle(val startTime: Long, val text: String, val color: Color4b, val pos: Vec3d)
+    private data class Particle(val startTime: Long, val text: String, val color: Color4b, val pos: Vec3)
 
 }

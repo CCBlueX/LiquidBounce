@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,21 @@
 package net.ccbluex.liquidbounce.utils.block.hole
 
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.minecraft.util.math.BlockBox
-import net.minecraft.util.math.Vec3i
+import net.minecraft.core.Vec3i
+import net.minecraft.world.level.levelgen.structure.BoundingBox
 
 @JvmRecord
 data class Hole(
     val type: Type,
-    val positions: BlockBox,
+    val positions: BoundingBox,
     val bedrockOnly: Boolean = false,
-    val blockInvalidators: BlockBox = positions.copy(maxY = positions.maxY + 2),
+    val blockInvalidators: BoundingBox = positions.copy(maxY = positions.maxY() + 2),
 ) : Comparable<Hole> {
 
     override fun compareTo(other: Hole): Int {
-        val yDiff = this.positions.maxX - other.positions.maxX
-        val zDiff = this.positions.maxZ - other.positions.maxZ
-        val xDiff = this.positions.minX - other.positions.minX
+        val yDiff = this.positions.maxX() - other.positions.maxX()
+        val zDiff = this.positions.maxZ() - other.positions.maxZ()
+        val xDiff = this.positions.minX() - other.positions.minX()
         return when {
             yDiff != 0 -> yDiff
             zDiff != 0 -> zDiff
@@ -41,7 +41,7 @@ data class Hole(
         }
     }
 
-    operator fun contains(pos: Vec3i): Boolean = pos in positions
+    operator fun contains(pos: Vec3i): Boolean = positions.isInside(pos)
 
     enum class Type(val size: Int) {
         ONE_ONE(1),

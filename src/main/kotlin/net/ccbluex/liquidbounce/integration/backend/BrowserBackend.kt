@@ -1,8 +1,27 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.integration.backend
 
 import net.ccbluex.liquidbounce.integration.IntegrationListener
-import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.task.TaskManager
@@ -14,7 +33,7 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 interface BrowserBackend {
 
     val isInitialized: Boolean
-    var isAccelerationSupported: Boolean
+    var accelerationFlags: BrowserAccelerationFlags
     val browsers: List<Browser>
 
     fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit)
@@ -36,7 +55,7 @@ interface BrowserBackend {
 
     fun createBrowser(
         url: String,
-        position: BrowserViewport = BrowserViewport.Companion.FULLSCREEN,
+        position: BrowserViewport = BrowserViewport.FULLSCREEN,
         settings: BrowserSettings = IntegrationListener.browserSettings,
         priority: Short = 0,
         inputAcceptor: InputAcceptor? = null

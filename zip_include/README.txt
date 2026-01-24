@@ -5,11 +5,11 @@
 █   █▄▄▄█   █  █▄█  █       █   █ █▄█   █  ▄   ██  █▄█  █       █  ▄    █    █  █    ▄▄▄█
 █       █   █      ██       █   █       █ █▄█   █       █       █ █ █   █    █▄▄█   █▄▄▄ 
 █▄▄▄▄▄▄▄█▄▄▄█▄▄▄▄██▄█▄▄▄▄▄▄▄█▄▄▄█▄▄▄▄▄▄██▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█▄█  █▄▄█▄▄▄▄▄▄▄█▄▄▄▄▄▄▄█
-an open source minecraft hacked client for 1.7 - 1.21.4.
+an open source minecraft hacked client for 1.7 - 1.21.11.
 https://liquidbounce.net/
 
-➔ How to install on Fabric 1.21.4
-1. Install the Fabric Mod Loader for 1.21.4 (How to: https://fabricmc.net/use/).
+➔ How to install on Fabric 1.21.11
+1. Install the Fabric Mod Loader for 1.21.11 (How to: https://fabricmc.net/use/).
 2. Create a folder called "mods" inside in the ".minecraft" directory.
 3. Copy "liquidbounce.jar" into the mods folder.
 4. REQUIRED: Install the Kotlin fabric language mod (https://modrinth.com/mod/fabric-language-kotlin)
@@ -17,12 +17,12 @@ https://liquidbounce.net/
 6. OPTIONAL: Install the ViaFabricPlus Mod (https://modrinth.com/mod/viafabricplus).
 7. Launch Fabric from the Minecraft launcher.
 
-➔ How to install on Forge 1.21.4
+➔ How to install on Forge 1.21.11
 | Forge is currently not supported. Sorry! Please use Fabric instead.
 
-➔ How to install on Lunar Client 1.21.4
+➔ How to install on Lunar Client 1.21.11
 1. Install Lunar Client Launcher (https://www.lunarclient.com/download).
-3. Click on "Versions" in the Lunar Launcher, select "Version 1.21.4" and click on Addons "Fabric".
+3. Click on "Versions" in the Lunar Launcher, select "Version 1.21.11" and click on Addons "Fabric".
 4. Click on settings button next to "Launch Game" and click on "Mods".
 5. Click on the folder icon "Open Mods Folder" next to "Search mods" field.
 6. Copy "liquidbounce.jar" into the mods folder.

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,38 +18,38 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
-import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition
-import net.minecraft.client.gui.hud.ChatHud
-import net.minecraft.client.gui.hud.ChatHudLine
-import net.minecraft.client.gui.hud.MessageIndicator
-import net.minecraft.text.Text
+import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition
+import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
+import net.minecraft.client.GuiMessage
+import net.minecraft.client.GuiMessageTag
+import net.minecraft.client.gui.components.ChatComponent
+import net.minecraft.network.chat.Component
 
 /**
  * Adds a message and assigns the ID to it.
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
-fun ChatHud.addMessage(message: Text, id: String?, count: Int) {
-    val indicator = if (mc.isConnectedToLocalServer) MessageIndicator.singlePlayer() else MessageIndicator.system()
-    val chatHudLine = ChatHudLine(mc.inGameHud.ticks, message, null, indicator)
-    (chatHudLine as ChatMessageAddition).`liquid_bounce$setId`(id)
-    (chatHudLine as ChatHudLineAddition).`liquid_bounce$setCount`(count)
+fun ChatComponent.addMessage(message: Component, id: String?, count: Int) = mc.execute {
+    val indicator = if (mc.isSingleplayer) GuiMessageTag.systemSinglePlayer() else GuiMessageTag.system()
+    val chatHudLine = GuiMessage(mc.gui.guiTicks, message, null, indicator)
+    (chatHudLine as GuiMessageLineAddition).`liquid_bounce$setId`(id)
+    (chatHudLine as GuiMessageAddition).`liquid_bounce$setCount`(count)
     this.logChatMessage(chatHudLine)
-    this.addVisibleMessage(chatHudLine)
-    this.addMessage(chatHudLine)
+    this.addMessageToDisplayQueue(chatHudLine)
+    this.addMessageToQueue(chatHudLine)
 }
 
 /**
  * Removes all messages with the given ID.
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
-fun ChatHud.removeMessage(id: String?) {
-    messages.removeIf {
-        val removable = it as? ChatMessageAddition ?: return@removeIf false
+fun ChatComponent.removeMessage(id: String?) = mc.execute {
+    allMessages.removeIf {
+        val removable = it as? GuiMessageLineAddition ?: return@removeIf false
         id == removable.`liquid_bounce$getId`()
     }
-    visibleMessages.removeIf {
-        val removable = it as? ChatMessageAddition ?: return@removeIf false
+    trimmedMessages.removeIf {
+        val removable = it as? GuiMessageLineAddition ?: return@removeIf false
         id == removable.`liquid_bounce$getId`()
     }
 }

@@ -1,14 +1,30 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.entity.LivingEntity
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
+import net.minecraft.world.entity.LivingEntity
 
 /**
  * Following the target on elytra.
@@ -19,7 +35,7 @@ import net.minecraft.entity.LivingEntity
  * @author sqlerrorthing
  */
 @Suppress("MagicNumber")
-object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
+object ModuleElytraTarget : ClientModule("ElytraTarget", ModuleCategories.COMBAT) {
     private val targetTracker = tree(TargetTracker())
 
     init {
@@ -27,7 +43,7 @@ object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
         tree(AutoFirework)
     }
 
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    private val targetRenderer = tree(TargetRenderer(this, targetTracker))
     private val safe by boolean("Safe", true)
     private val alwaysGlide by boolean("AlwaysGlide", false)
 
@@ -50,30 +66,19 @@ object ModuleElytraTarget : ClientModule("ElytraTarget", Category.COMBAT) {
             ?.takeIf { it == target } != null
 
     override val running: Boolean
-        get() = super.running && player.isGliding
+        get() = super.running && player.isFallFlying
 
     internal val target get() = targetTracker.target
-
-    @Suppress("unused")
-    private val renderTargetHandler = handler<WorldRenderEvent> { event ->
-        val target = targetTracker.target
-            ?.takeIf { targetRenderer.enabled }
-            ?: return@handler
-
-        renderEnvironmentForWorld(event.matrixStack) {
-            targetRenderer.render(this, target, event.partialTicks)
-        }
-    }
 
     @Suppress("unused")
     private val targetUpdateHandler = tickHandler {
         targetTracker.reset()
         targetTracker.selectFirst { potentialTarget ->
-            player.canSee(potentialTarget)
+            player.hasLineOfSight(potentialTarget)
         }
 
-        if (safe && !world.isSpaceEmpty(player.boundingBox.offset(player.velocity))) {
-            player.addVelocity(0.0, 0.1, 0.0)
+        if (safe && !world.noCollision(player.boundingBox.move(player.deltaMovement))) {
+            player.push(0.0, 0.1, 0.0)
         }
     }
 

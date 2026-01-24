@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,17 @@ import net.ccbluex.liquidbounce.features.command.builder.modules
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.util.Formatting
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.joinToText
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.withColor
+import net.minecraft.ChatFormatting
 
 /**
  * Hide Command
@@ -62,14 +71,14 @@ object CommandHide : Command.Factory {
         .pagedQuery(
             pageSize = 8,
             header = {
-                result("hidden").withColor(Formatting.RED).bold(true)
+                result("hidden").withColor(ChatFormatting.RED).bold(true)
             },
             items = {
                 ModuleManager.filter { it.hidden }
             },
             eachRow = { _, module ->
                 "\u2B25 ".asText()
-                    .formatted(Formatting.BLUE)
+                    .withStyle(ChatFormatting.BLUE)
                     .append(variable(module.name).copyable())
                     .append(regular(" ("))
                     .append(regular(result("hidden"))) // TODO: click to unhide?
@@ -91,7 +100,7 @@ object CommandHide : Command.Factory {
             chat(
                 command.result(
                     "moduleUnhidden",
-                    modules.map { variable(it.name) }.joinToText(", ".asText())
+                    modules.map { variable(it.name) }.joinToText(", ".asPlainText())
                 ),
                 metadata = MessageMetadata(id = "CHide#info")
             )
@@ -112,7 +121,7 @@ object CommandHide : Command.Factory {
             chat(
                 command.result(
                     "moduleHidden",
-                    modules.map { variable(it.name) }.joinToText(", ".asText())
+                    modules.map { variable(it.name) }.joinToText(", ".asPlainText())
                 ),
                 metadata = MessageMetadata(id = "CHide#info")
             )

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.interfaces.EntityRenderStateAddition
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.minecraft.client.render.entity.state.LivingEntityRenderState
-import net.minecraft.entity.LivingEntity
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState
+import net.minecraft.world.entity.LivingEntity
 
 /**
  * TrueSight module
@@ -33,7 +33,7 @@ import net.minecraft.entity.LivingEntity
  * Allows you to see invisible objects and entities.
  */
 @Suppress("MagicNumber")
-object ModuleTrueSight : ClientModule("TrueSight", Category.RENDER) {
+object ModuleTrueSight : ClientModule("TrueSight", ModuleCategories.RENDER) {
     private val sight by multiEnumChoice("Sight", Sight.entries)
 
     val barriers get() = Sight.BARRIERS in sight
@@ -45,16 +45,16 @@ object ModuleTrueSight : ClientModule("TrueSight", Category.RENDER) {
     @JvmStatic
     @Suppress("ComplexCondition")
     fun canRenderEntities(state: LivingEntityRenderState): Boolean {
-        val enabled = this.running && entities;
+        val enabled = this.running && entities
 
-        val entity = (state as EntityRenderStateAddition).`liquid_bounce$getEntity`()
+        val entity = (state as EntityRenderStateAddition).`liquid_bounce$getEntity`() ?: return false
         val livingEntity = entity as? LivingEntity
 
-        return ((enabled
+        return (enabled
                 || livingEntity != null
                 && ModuleESP.running
                 && ModuleESP.requiresTrueSight(livingEntity))
-                && entity.isInvisible)
+            && entity.isInvisible
     }
 
     private enum class Sight(

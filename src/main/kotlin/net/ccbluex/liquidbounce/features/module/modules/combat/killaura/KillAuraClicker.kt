@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
-import kotlinx.coroutines.CoroutineScope
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRotationsConfigurable.rotationTiming
@@ -43,13 +42,13 @@ import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.openInventorySilently
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.PosRot
 import kotlin.math.round
 
 object KillAuraClicker : Clicker<ModuleKillAura>(
     ModuleKillAura,
-    mc.options.attackKey,
+    mc.options.keyAttack,
     KillAuraClickerItemCooldown()
 ) {
 
@@ -137,7 +136,7 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
         @Suppress("CognitiveComplexMethod")
         suspend fun prepare(): Boolean {
             if (simulateInventoryClosing && isInInventoryScreen) {
-                network.sendPacket(CloseHandledScreenC2SPacket(0))
+                network.send(ServerboundContainerClosePacket(0))
             }
 
             if (player.isBlockAction) {
@@ -158,9 +157,9 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
             }
 
             if (rotationTiming == KillAuraRotationsConfigurable.KillAuraRotationTiming.ON_TICK && rotation != null) {
-                network.sendPacket(
-                    Full(
-                        player.x, player.y, player.z, rotation.yaw, rotation.pitch, player.isOnGround,
+                network.send(
+                    PosRot(
+                        player.x, player.y, player.z, rotation.yaw, rotation.pitch, player.onGround(),
                         player.horizontalCollision
                     )
                 )
@@ -170,9 +169,9 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
 
         fun unprepare() {
             if (rotationTiming == KillAuraRotationsConfigurable.KillAuraRotationTiming.ON_TICK && rotation != null) {
-                network.sendPacket(
-                    Full(
-                        player.x, player.y, player.z, player.withFixedYaw(rotation), player.pitch, player.isOnGround,
+                network.send(
+                    PosRot(
+                        player.x, player.y, player.z, player.withFixedYaw(rotation), player.xRot, player.onGround(),
                         player.horizontalCollision
                     )
                 )

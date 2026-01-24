@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,6 @@ package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
 import java.util.Collections
-import java.util.EnumMap
-import kotlin.experimental.ExperimentalTypeInference
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =
     when {
@@ -31,10 +29,3 @@ fun <T> Array<out T>?.unmodifiable(): List<T> =
         size == 1 -> Collections.singletonList(this[0])
         else -> ObjectImmutableList(this)
     }
-
-inline fun <reified K : Enum<K>, V> enumMap(): EnumMap<K, V> = EnumMap(K::class.java)
-
-@OptIn(ExperimentalTypeInference::class)
-inline fun <reified K : Enum<K>, V> enumMap(
-    @BuilderInference block: EnumMap<K, V>.() -> Unit
-): EnumMap<K, V> = EnumMap<K, V>(K::class.java).apply(block)

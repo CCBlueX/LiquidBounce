@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,9 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
-import net.minecraft.util.math.BlockBox
-import org.junit.jupiter.api.Assertions.*
+import net.minecraft.world.level.levelgen.structure.BoundingBox
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -35,7 +36,7 @@ class MovableRegionScannerTest {
 
     @Test
     fun `same region returns empty`() {
-        val region = BlockBox(0, 0, 0, 2, 2, 2)
+        val region = BoundingBox(0, 0, 0, 2, 2, 2)
 
         scanner.moveTo(region) // set first region
         val result = scanner.moveTo(region)
@@ -45,8 +46,8 @@ class MovableRegionScannerTest {
 
     @Test
     fun `new region inside old returns empty`() {
-        val oldRegion = BlockBox(0, 0, 0, 4, 4, 4)
-        val innerRegion = BlockBox(1, 1, 1, 3, 3, 3)
+        val oldRegion = BoundingBox(0, 0, 0, 4, 4, 4)
+        val innerRegion = BoundingBox(1, 1, 1, 3, 3, 3)
 
         scanner.moveTo(oldRegion)
         val result = scanner.moveTo(innerRegion)
@@ -56,8 +57,8 @@ class MovableRegionScannerTest {
 
     @Test
     fun `non overlapping returns whole new region`() {
-        val region1 = BlockBox(0, 0, 0, 2, 2, 2)
-        val region2 = BlockBox(10, 10, 10, 12, 12, 12)
+        val region1 = BoundingBox(0, 0, 0, 2, 2, 2)
+        val region2 = BoundingBox(10, 10, 10, 12, 12, 12)
 
         scanner.moveTo(region1)
         val result = scanner.moveTo(region2)
@@ -68,34 +69,34 @@ class MovableRegionScannerTest {
 
     @Test
     fun `expansion on positive X`() {
-        val region1 = BlockBox(0, 0, 0, 2, 2, 2)
-        val region2 = BlockBox(0, 0, 0, 4, 2, 2)
+        val region1 = BoundingBox(0, 0, 0, 2, 2, 2)
+        val region2 = BoundingBox(0, 0, 0, 4, 2, 2)
 
         scanner.moveTo(region1)
         val result = scanner.moveTo(region2)
 
         assertEquals(1, result.size)
         val newBox = result.first()
-        assertEquals(BlockBox(3, 0, 0, 4, 2, 2), newBox)
+        assertEquals(BoundingBox(3, 0, 0, 4, 2, 2), newBox)
     }
 
     @Test
     fun `expansion on negative Z`() {
-        val region1 = BlockBox(0, 0, 0, 2, 2, 2)
-        val region2 = BlockBox(0, 0, -2, 2, 2, 2)
+        val region1 = BoundingBox(0, 0, 0, 2, 2, 2)
+        val region2 = BoundingBox(0, 0, -2, 2, 2, 2)
 
         scanner.moveTo(region1)
         val result = scanner.moveTo(region2)
 
         assertEquals(1, result.size)
         val newBox = result.first()
-        assertEquals(BlockBox(0, 0, -2, 2, 2, -1), newBox)
+        assertEquals(BoundingBox(0, 0, -2, 2, 2, -1), newBox)
     }
 
     @Test
     fun `expansion in multiple directions`() {
-        val region1 = BlockBox(0, 0, 0, 2, 2, 2)
-        val region2 = BlockBox(-1, -1, -1, 3, 3, 3)
+        val region1 = BoundingBox(0, 0, 0, 2, 2, 2)
+        val region2 = BoundingBox(-1, -1, -1, 3, 3, 3)
 
         scanner.moveTo(region1)
         val result = scanner.moveTo(region2)

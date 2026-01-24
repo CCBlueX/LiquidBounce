@@ -1,74 +1,135 @@
 # LiquidBounce Default Theme
 
-This directory contains the source code of LiquidBounce's default theme built with [Svelte](https://svelte.dev/).
+This repository contains the source code for the LiquidBounce Default Theme, built using [Svelte](https://svelte.dev/). 
+It is intended for development, customization, and distribution through the LiquidBounce theme system and marketplace.
+
+---
+
+## Getting Started with a Custom Theme
+
+If you want to create your own LiquidBounce theme, the recommended starting point is to **fork the official default theme repository**:
+
+https://github.com/CCBlueX/LiquidBounce-Theme
+
+Forking this repository gives you a fully working baseline with proper project structure, build configuration, and marketplace integration already set up. From there, you can modify the UI, styles, and components to create your own custom theme while staying compatible with LiquidBounce’s theming system.
+
+---
 
 ## Development
 
 ### Prerequisites
-- [Bun](https://bun.com) (latest version)
+
+Ensure the following software is installed before proceeding:
+
+- Node.js (latest LTS or stable release recommended)
 
 ### Setup
 
 1. **Install dependencies**
-   ```bash
-   bun install
-   ```
 
-2. **Configure development mode**
-    - Set `IN_DEV` to `true` in [host.ts](https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src-theme/src/integration/host.ts)
+    ```bash
+    npm install
+    ```
 
-3. **Launch the client**
+2. **Launch LiquidBounce**
 
-4. **Start development server**
-   ```bash
-   bun run dev
-   ```
+    Start the LiquidBounce client before running the development server.
 
-5. **Set theme in client**
-    - `.client theme set http://localhost:5173/`
+3. **Start the development server**
 
-**Important**: Do not commit changes made to `host.ts` and `NettyServer.kt` when pushing to the repository.
+    ```bash
+    npm run dev
+    ```
 
-## Building for Production
+4. **Set the theme in the client**
 
-To build the theme for production use, follow these steps:
+    Use the live development URL provided by the dev server (for example, http://localhost:5173/):
 
-1. **Ensure development mode is disabled**
-    - Set `IN_DEV` to `false` in [host.ts](https://github.com/CCBlueX/LiquidBounce/blob/nextgen/src-theme/src/integration/host.ts)
+    ```
+    .client theme set <live-url>
+    ```
+
+
+5. **Open the theme in a browser**
+
+    Run the following command in the client and select the UI you want to open in your system browser:
+
+    ```
+    .client integration menu
+    ```
+
+### Building for Production
+
+Follow these steps to create a production-ready build of the theme.
+
+1. **Build the theme**
+
+    ```bash
+    npm run build
+    ```
+
+2. **Locate the build output**
 
 2. **Build the theme**
-   ```bash
-   bun run build
-   ```
+    ```bash
+    bun run build
+    ```
+    - The production build is generated in the `dist` directory
 
-3. **Locate build output**
-    - The production build will be generated in the `dist` folder
-    - This folder contains all the optimized and minified theme files
+    - This directory contains the optimized and minified theme files
 
-4. **Deploy to themes directory**
-    - Copy the entire `dist` folder to your themes directory
-    - You can open the themes directory by typing `.client theme browse` in the client
-    - Rename the `dist` folder to your preferred theme name
+3. **Deploy to the themes directory**
 
-5. **Apply the theme**
-   ```
-   .client theme set <your-theme-name>
-   ```
+    - Copy the entire dist directory into your LiquidBounce themes directory
+
+    - You can open the themes directory by running:
+   
+    ```
+    .client theme browse
+    ```
+
+    - Rename the dist folder to your desired theme name
+
+4. **Apply the theme**
+
+    ```
+    .client theme set <your-theme-name>
+    ```
 
 ## Marketplace Publishing
 
-1. **Get API token**
-    - Go to [https://liquidbounce.net/account](https://liquidbounce.net/account)
-    - Generate your API token
+To publish the theme to the LiquidBounce Marketplace, complete the following steps.
 
-2. **Get marketplace item ID**
-    - Navigate to [https://liquidbounce.net/marketplace](https://liquidbounce.net/marketplace)
-    - Go to your item page
-    - Copy the ID from the "Item ID" field on the right side
+1. **Generate an API token**
 
-3. **Configure repository**
-    - Add `API_TOKEN` as a repository secret in Settings → Secrets and variables → Actions
-    - Update `MARKETPLACE_ITEM_ID` and `ZIP_NAME` in the workflow file with your values
+    - Visit: https://liquidbounce.net/account
+
+    - Generate an API token from your account settings
+
+2. **Obtain the marketplace item ID**
+
+    - Navigate to: https://liquidbounce.net/marketplace
+
+    - Open your marketplace item page
+
+    - Copy the value from the Item ID field displayed on the right side
+
+3. **Configure the repository**
+
+    - Add `API_TOKEN` as a repository secret under Settings → Secrets and variables → Actions
+
+    - Update the following values in `.github/workflows/build.yml`:
+
+      - `MARKETPLACE_ITEM_ID`
+
+      - `ZIP_NAME`
 
 4. **Enable publishing**
-    - Uncomment the GitHub release and marketplace upload sections in `.github/workflows/build.yml`
+
+    - Uncomment the GitHub release and marketplace upload steps in:
+   
+    ```
+    .github/workflows/build.yml
+    ```
+
+Once configured, the workflow will automatically build and publish the theme when triggered.

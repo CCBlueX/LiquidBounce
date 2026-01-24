@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.esp
 
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.Esp2DMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspBoxMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
-import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspOutlineMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
@@ -32,15 +31,15 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
 
 /**
  * ESP module
  *
  * Allows you to see targets through walls.
  */
-object ModuleESP : ClientModule("ESP", Category.RENDER) {
+object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
         get() = "liquidbounce.module.esp"
@@ -48,7 +47,7 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     val modes = choices("Mode", EspGlowMode, arrayOf(
         EspBoxMode,
         Esp2DMode,
-        EspOutlineMode,
+//        EspOutlineMode,
         EspGlowMode
     ))
 
@@ -61,6 +60,8 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     }
     private val friendColor by color("Friends", Color4b.GREEN)
 
+    internal val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
     override fun onEnabled() {
         RenderedEntities.subscribe(this)
     }
@@ -70,17 +71,11 @@ object ModuleESP : ClientModule("ESP", Category.RENDER) {
     }
 
     fun getColor(entity: LivingEntity): Color4b {
-        val baseColor = getBaseColor(entity)
-
         if (entity.hurtTime > 0) {
             return Color4b.RED
         }
 
-        return baseColor
-    }
-
-    private fun getBaseColor(entity: LivingEntity): Color4b {
-        if (entity is PlayerEntity) {
+        if (entity is Player) {
             if (FriendManager.isFriend(entity) && friendColor.a > 0) {
                 return friendColor
             }

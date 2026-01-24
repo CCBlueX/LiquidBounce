@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.Items
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Items
 
 /**
  * MiddleClickAction module
@@ -44,7 +44,7 @@ import net.minecraft.item.Items
  */
 object ModuleMiddleClickAction : ClientModule(
     "MiddleClickAction",
-    Category.MISC,
+    ModuleCategories.MISC,
     aliases = listOf("FriendClicker", "MiddleClickPearl")
 ) {
 
@@ -61,32 +61,37 @@ object ModuleMiddleClickAction : ClientModule(
     object Pearl : Choice("Pearl") {
 
         private val slotResetDelay by int("SlotResetDelay", 1, 0..10, "ticks")
-
+        private val stopOnSubmit by floatRange("StopOnSubmit", 85F..90F, 60F..90F, "Pitch")
         private var wasPressed = false
 
-        val repeatable = tickHandler {
-            if (mc.currentScreen != null) {
+        val repeatable = handler<GameTickEvent> {
+            if (mc.screen != null) {
                 wasPressed = false
-                return@tickHandler
+                return@handler
             }
 
-            val pickup = mc.options.pickItemKey.isPressed
+            if (player.xRot in stopOnSubmit) {
+                wasPressed = false
+                return@handler
+            }
+
+            val pickup = mc.options.keyPickItem.isDown
 
             if (pickup) {
                 // visually select the slot
-                val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
+                val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@handler
                 SilentHotbar.selectSlotSilently(this, slot, slotResetDelay)
                 wasPressed = true
             } else if (wasPressed) { // the key was released
                 Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)?.let {
                     useHotbarSlotOrOffhand(it, slotResetDelay)
                 }
-
                 wasPressed = false
             }
         }
 
-        val handler = handler<WorldChangeEvent> {
+        @Suppress("unused")
+        private val handler = handler<WorldChangeEvent> {
             wasPressed = false
         }
 
@@ -111,21 +116,21 @@ object ModuleMiddleClickAction : ClientModule(
 
         private var clicked = false
 
-        val repeatable = tickHandler {
+        val repeatable = handler<GameTickEvent> {
             val rotation = player.rotation
 
-            val entity = (raytraceEntity(pickUpRange.toDouble(), rotation) { it is PlayerEntity }
-                ?: return@tickHandler).entity as PlayerEntity
+            val entity = (raytraceEntity(pickUpRange.toDouble(), rotation) { it is Player }
+                ?: return@handler).entity as Player
 
             val facesEnemy = facingEnemy(
                 toEntity = entity, rotation = rotation, range = pickUpRange.toDouble(),
                 wallsRange = 0.0
             )
 
-            val pickup = mc.options.pickItemKey.isPressed
+            val pickup = mc.options.keyPickItem.isDown
 
             if (facesEnemy && pickup && !clicked) {
-                val name = entity.nameForScoreboard
+                val name = entity.scoreboardName
 
                 if (FriendManager.isFriend(name)) {
                     FriendManager.friends.remove(FriendManager.Friend(name, null))

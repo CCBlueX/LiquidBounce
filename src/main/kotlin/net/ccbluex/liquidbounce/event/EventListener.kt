@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,6 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Job
-import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.features.misc.DebuggedOwner
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import java.util.function.Consumer
@@ -29,8 +26,8 @@ import kotlin.reflect.KProperty
 
 class EventHook<T : Event>(
     val handlerClass: EventListener,
+    val priority: Short = 0,
     val handler: Consumer<T>,
-    val priority: Short = 0
 )
 
 interface EventListener : DebuggedOwner {
@@ -72,11 +69,16 @@ interface EventListener : DebuggedOwner {
 
 }
 
+inline fun <E : Event> EventListener.newEventHook(
+    priority: Short = 0,
+    handler: Consumer<E>,
+): EventHook<E> = EventHook(this, priority, handler)
+
 fun <T : Event> EventListener.handler(
     eventClass: Class<T>,
     priority: Short = 0,
     handler: Consumer<T>,
-): EventHook<T> = EventManager.registerEventHook(eventClass, EventHook(this, handler, priority))
+): EventHook<T> = EventManager.registerEventHook(eventClass, newEventHook(priority, handler))
 
 inline fun <reified T : Event> EventListener.handler(
     priority: Short = 0,
@@ -99,36 +101,22 @@ inline fun <reified T : Event> EventListener.until(
 inline fun <reified T : Event> EventListener.once(
     priority: Short = 0,
     crossinline handler: (T) -> Unit
-): EventHook<T> = until(priority) { event ->
+): EventHook<T> = until(priority) { event -> // Don't use `repeated` 'cause for no overhead
     handler(event)
     true // This will unregister the handler after the first call
 }
 
-/**
- * Registers an event hook for events of type [T] and launches a sequence
- */
-inline fun <reified T : Event> EventListener.sequenceHandler(
-    priority: Short = 0,
-    dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable? = null,
-    crossinline eventHandler: SuspendableEventHandler<T>,
-) = handler<T>(priority) { event -> launchSequence(dispatcher, onCancellation) { eventHandler(event) } }
+inline fun <reified T : Event> EventListener.repeated(
+    times: Int = 1,
+    priority: Short = 1,
+    crossinline handler: (T) -> Unit
+): EventHook<T> {
+    require(times > 0) { "times must be > 0" }
 
-/**
- * Registers a repeatable sequence which repeats the execution of code on GameTickEvent.
- */
-fun EventListener.tickHandler(
-    dispatcher: CoroutineDispatcher? = null,
-    onCancellation: Runnable? = null,
-    eventHandler: SuspendableHandler,
-): EventHook<GameTickEvent> {
-    var sequence: Job? = null
-
-    return handler<GameTickEvent> {
-        // Check if the sequence is already running (completed or null)
-        if (sequence == null || !sequence!!.isActive) {
-            sequence = launchSequence(dispatcher, onCancellation, eventHandler)
-        }
+    var called = 0
+    return until<T>(priority) { event ->
+        handler(event)
+        ++called >= times
     }
 }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features
@@ -26,9 +24,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.StatusEffectBasedBuff
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
-import net.minecraft.item.ItemStack
-import net.minecraft.item.PotionItem
-import net.minecraft.item.SplashPotionItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.PotionItem
+import net.minecraft.world.item.SplashPotionItem
 
 internal object Drink : StatusEffectBasedBuff("Drink") {
 
@@ -42,7 +40,7 @@ internal object Drink : StatusEffectBasedBuff("Drink") {
 
     @Suppress("unused")
     private val keyBindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->
-        if (event.keyBinding == mc.options.useKey && forceUseKey) {
+        if (event.keyBinding == mc.options.keyUse && forceUseKey) {
             event.isPressed = true
         }
     }

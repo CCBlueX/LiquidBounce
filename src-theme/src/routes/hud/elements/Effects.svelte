@@ -1,7 +1,8 @@
 <script lang="ts">
     import {listen} from "../../../integration/ws";
-    import type {ClientPlayerDataEvent} from "../../../integration/events";
+    import type {ClientPlayerDataEvent, ClientPlayerEffectEvent} from "../../../integration/events";
     import type {StatusEffect} from "../../../integration/types";
+    import {effectTextureUrl} from "../../../integration/rest";
 
     let effects: StatusEffect[] = [];
 
@@ -9,47 +10,80 @@
         effects = event.playerData.effects;
     });
 
+    listen("clientPlayerEffect", (event: ClientPlayerEffectEvent) => {
+        effects = event.effects;
+    });
+
     function formatTime(duration: number): string {
-        return new Date(((duration / 20) | 0) * 1000).toISOString().substring(14, 19);
+        if (duration === -1) {
+            return "*:*";
+        }
+
+        const totalSeconds = Math.floor(duration / 20);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
     }
 
-    function convertToRoman(n: number): string {
-        switch (n) {
-            case 0: return "I";
-            case 1: return "II";
-            case 2: return "III";
-            case 3: return "IV";
-            case 4: return "V";
-            case 5: return "VI";
-            case 6: return "VII";
-            case 7: return "VIII";
-            case 8: return "IX";
-            case 9: return "X";
-            default: return "X+";
-        }
+    function formatAmplifier(n: number): string {
+        return (n + 1).toString();
     }
 </script>
 
-<div class="effects">
-    {#each effects as e}
-        <div class="effect">
-            <span class="name" style="color: {'#' + e.color.toString(16)}">{e.localizedName} {convertToRoman(e.amplifier)}:</span>
-            <span class="duration">{formatTime(e.duration)}</span>
-        </div>
-    {/each}
-</div>
+{#if effects.length > 0}
+    <div class="effects">
+        {#each effects as e}
+            <div class="effect">
+                <img class="effect-icon" src={effectTextureUrl(e.effect)} alt={e.localizedName}/>
+                <span class="name">{e.localizedName}  <span
+                        class="amplifier">{formatAmplifier(e.amplifier)}</span></span>
+                <span class="duration">{formatTime(e.duration)}</span>
+            </div>
+        {/each}
+    </div>
+{/if}
 
 <style lang="scss">
   @use "../../../colors.scss" as *;
 
+  .effects {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background-color: $effects-background-color;
+    border-radius: 5px;
+    padding: 4px 6px;
+  }
+
   .effect {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-weight: 500;
     font-size: 14px;
-    text-align: right;
+
+    .effect-icon {
+      width: 16px;
+      height: 16px;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+    }
+
+    .name {
+      color: $effects-name-color;
+    }
+
+    .amplifier {
+      color: $effects-amplifier-color;
+    }
 
     .duration {
+      margin-left: auto;
       font-family: monospace;
-      color: white;
+      color: $effects-duration-color;
+      font-size: 12px;
     }
   }
 </style>

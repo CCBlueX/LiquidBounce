@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,13 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.features
 
+import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.Value
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EVENT_NAME_TO_CLASS
+import net.ccbluex.liquidbounce.event.Event
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.newEventHook
 import net.ccbluex.liquidbounce.utils.client.logger
 
 class ScriptChoice(choiceObject: Map<String, Any>, override val parent: ChoiceConfigurable<Choice>) : Choice(
@@ -85,12 +88,7 @@ class ScriptChoice(choiceObject: Map<String, Any>, override val parent: ChoiceCo
 
         EventManager.registerEventHook(
             clazz,
-            EventHook(
-                this,
-                {
-                    callEvent(eventName, it)
-                }
-            )
+            newEventHook { callEvent(eventName, it) }
         )
     }
 }

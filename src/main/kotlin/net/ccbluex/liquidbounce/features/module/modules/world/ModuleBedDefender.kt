@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,12 +23,12 @@ import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
-import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.block.searchBedLayer
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
@@ -36,13 +36,12 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.block.BedBlock
-import net.minecraft.block.DoubleBlockProperties
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.item.BlockItem
-import net.minecraft.util.math.BlockPos
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.core.BlockPos
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.level.block.BedBlock
 
-object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD) {
+object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategories.WORLD) {
 
     private val maxLayers by int("MaxLayers", 1, 1..5)
 
@@ -59,7 +58,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
                 return@forEach
             }
 
-            val hardness = (it.itemStack.item as BlockItem).block.hardness
+            val hardness = (it.itemStack.item as BlockItem).block.defaultDestroyTime()
             // -1 is unbreakable
             if (hardness < maxHardness && hardness != -1f || maxHardness == -1f && hardness != -1f) {
                 return@forEach
@@ -102,7 +101,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (!placer.ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
+        if (!placer.ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
             return@handler
         }
 
@@ -110,13 +109,13 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
             return@handler
         }
 
-        if (requiresSneak && !player.isSneaking) {
+        if (requiresSneak && !player.isShiftKeyDown) {
             return@handler
         }
 
         placer.slotFinder(null) ?: return@handler
 
-        val eyesPos = player.eyePos
+        val eyesPos = player.eyePosition
         val rangeSq = placer.range * placer.range
 
         // The bed that need to be defended may be already covered, so we search further
@@ -124,19 +123,18 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
             val block = state.block
             when {
                 block !is BedBlock -> false
-                BedBlock.getBedPart(state) != DoubleBlockProperties.Type.FIRST -> false
                 else -> isSelfBedMode.activeChoice.shouldDefend(block, pos)
             }
         }
 
         // Get the closest bed block
         val (blockPos, state) = bedBlocks.minByOrNull {
-            (blockPos, _) -> blockPos.getSquaredDistance(eyesPos)
+            (blockPos, _) -> blockPos.distToCenterSqr(eyesPos)
         } ?: return@handler
 
-        val mutable = BlockPos.Mutable()
+        val mutable = BlockPos.MutableBlockPos()
         val placementPositions = blockPos.searchBedLayer(state, maxLayers).filter { (_, pos) ->
-            mutable.set(pos).toCenterPos().squaredDistanceTo(eyesPos) <= rangeSq
+            mutable.set(pos).center.distanceToSqr(eyesPos) <= rangeSq
         }.toCollection(mutableListOf())
 
         if (placementPositions.isEmpty()) {
@@ -148,7 +146,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
             sortWith(
                 Comparator.comparingInt<IntLongPair> { it.leftInt() }
                     .thenComparingDouble {
-                        -mutable.set(it.rightLong()).getSquaredDistance(eyesPos)
+                        -mutable.set(it.rightLong()).distToCenterSqr(eyesPos)
                     }
             )
         }
@@ -156,7 +154,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
         debugGeometry("PlacementPosition") {
             ModuleDebug.DebugCollection(
                 updatePositions.map { (_, pos) ->
-                    ModuleDebug.DebuggedPoint(mutable.set(pos).toCenterPos(), Color4b.RED.with(a = 100))
+                    ModuleDebug.DebuggedPoint(mutable.set(pos).center, Color4b.RED.with(a = 100))
                 }
             )
         }
@@ -164,7 +162,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = Category.WORLD
         // Need ordered set (like TreeSet/LinkedHashSet)
         placer.update(
             updatePositions.mapTo(linkedSetOf()) {
-                BlockPos.fromLong(it.rightLong())
+                BlockPos.of(it.rightLong())
             }
         )
     }

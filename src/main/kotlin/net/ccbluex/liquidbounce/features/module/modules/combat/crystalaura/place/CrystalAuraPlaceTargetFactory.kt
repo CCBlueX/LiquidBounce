@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,16 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.Modul
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.SubmoduleBasePlace
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer.getMaxRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.SubmoduleCrystalPlacer.oldVersion
-import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.AirAboveCondition
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.AirOldVersionCondition
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.BasePlaceCondition
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.OnlyAboveCondition
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.PredictBlockageCondition
+import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.place.conditions.ValidHeightCondition
 import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.utils.block.getSortedSphere
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntitiesReturnCrystal
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
 
@@ -46,10 +51,10 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         PredictBlockageCondition
     )
 
-    private var sphere: Array<BlockPos> = BlockPos.ORIGIN.getSortedSphere(4.5f)
+    private var sphere: Array<BlockPos> = BlockPos.ZERO.getSortedSphere(4.5f)
 
     fun updateSphere() {
-        sphere = BlockPos.ORIGIN.getSortedSphere(getMaxRange())
+        sphere = BlockPos.ZERO.getSortedSphere(getMaxRange())
     }
 
     fun updateTarget(excludeIds : IntArray?) {
@@ -95,14 +100,14 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
         positions: MutableList<PlacementPositionCandidate>
     ): Boolean {
         val target = ModuleCrystalAura.targetTracker.target ?: return true
-        val expectedCrystal = if (oldVersion) FULL_BOX.withMaxX(2.0) else FULL_BOX
+        val expectedCrystal = if (oldVersion) FULL_BOX.setMaxX(2.0) else FULL_BOX
         val basePlaceLayers = if (basePlace) SubmoduleBasePlace.getBasePlaceLayers(target.y) else IntRange.EMPTY
 
         // create the context
         val context = PlacementContext(basePlace, basePlaceLayers, expectedCrystal, target)
 
-        val playerPos = player.blockPos
-        val pos = BlockPos.Mutable()
+        val playerPos = player.blockPosition()
+        val pos = BlockPos.MutableBlockPos()
         sphere.forEach {
             // conditionChain
             pos.set(playerPos).move(it)
@@ -112,7 +117,7 @@ object CrystalAuraPlaceTargetFactory : MinecraftShortcuts {
                 val blocked = cache.up.isBlockedByEntitiesReturnCrystal(box = expectedCrystal, excludeIds = excludeIds)
                 val crystal = blocked.value() != null
                 if (!blocked.keyBoolean() || crystal) {
-                    positions.add(PlacementPositionCandidate(pos.toImmutable(), !crystal, !cache.canPlace))
+                    positions.add(PlacementPositionCandidate(pos.immutable(), !crystal, !cache.canPlace))
                 }
             }
         }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,32 +18,26 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
-internal object NoFallHypixel : Choice("Hypixel") {
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
+internal object NoFallHypixel : NoFallMode("Hypixel") {
 
     private var doJump = false
 
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is ServerboundMovePlayerPacket) {
             if (player.fallDistance >= 3.3) {
                 doJump = true
             }
 
-            if (doJump && player.isOnGround) {
+            if (doJump && player.onGround()) {
                 packet.onGround = false
-                if (!mc.options.jumpKey.isPressed) {
-                    player.setPosition(player.pos.x, player.pos.y + 0.09, player.pos.z)
+                if (!mc.options.keyJump.isDown) {
+                    player.setPos(player.position().x, player.position().y + 0.09, player.position().z)
                 }
 
                 doJump = false

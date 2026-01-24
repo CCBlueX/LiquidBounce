@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,43 +18,52 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.backtrack
 
-import com.google.common.collect.Queues
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.drawSolidBox
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.PacketSnapshot
+import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squareBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.TrackedPosition
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.play.ChatMessageC2SPacket
-import net.minecraft.network.packet.c2s.play.CommandExecutionC2SPacket
-import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
-import net.minecraft.network.packet.s2c.play.*
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.renderer.LightTexture
+import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
+import net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket
+import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket
+import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket
+import net.minecraft.network.protocol.game.ServerboundChatCommandPacket
+import net.minecraft.network.protocol.game.ServerboundChatPacket
+import net.minecraft.network.protocol.game.VecDeltaCodec
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
-object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
+object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
 
     private val range by floatRange("Range", 1f..3f, 0f..10f)
     val delay by intRange("Delay", 100..150, 0..1000, "ms")
@@ -85,9 +94,6 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         doNotIncludeAlways()
     }
 
-    val delayedPacketQueue = Queues.newConcurrentLinkedQueue<PacketSnapshot>()
-    val packetProcessQueue = Queues.newConcurrentLinkedQueue<Packet<*>>()
-
     private val chronometer = Chronometer()
     private val trackingBufferChronometer = Chronometer()
     private val attackChronometer = Chronometer()
@@ -95,46 +101,54 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
     private var shouldPause = false
 
     var target: Entity? = null
-    private var position: TrackedPosition? = null
+    private val position = VecDeltaCodec()
 
     var currentDelay = delay.random()
 
-    val arePacketQueuesEmpty
-        get() = delayedPacketQueue.isEmpty() && packetProcessQueue.isEmpty()
-
     @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
-        if (event.origin != TransferOrigin.INCOMING || event.isCancelled) {
-            return@handler
-        }
-
-        if (arePacketQueuesEmpty && !shouldCancelPackets()) {
+    private val queuePacketHandler = handler<QueuePacketEvent> { event ->
+        if (event.origin != TransferOrigin.INCOMING) {
             return@handler
         }
 
         val packet = event.packet
+        val shouldCancel = shouldCancelPackets()
+        val hasQueuedIncoming = hasQueuedIncoming()
+
+        if (packet == null) {
+            if (shouldCancel || hasQueuedIncoming) {
+                event.action = PacketQueueManager.Action.PASS
+            }
+            return@handler
+        }
+
+        if (!hasQueuedIncoming && !shouldCancel) {
+            return@handler
+        }
 
         when (packet) {
             // Ignore message-related packets
-            is ChatMessageC2SPacket, is GameMessageS2CPacket, is CommandExecutionC2SPacket -> {
+            is ServerboundChatPacket, is ClientboundSystemChatPacket, is ServerboundChatCommandPacket -> {
+                event.action = PacketQueueManager.Action.PASS
                 return@handler
             }
 
             // Flush on teleport or disconnect
-            is PlayerPositionLookS2CPacket, is DisconnectS2CPacket -> {
+            is ClientboundPlayerPositionPacket, is ClientboundDisconnectPacket -> {
                 clear(true)
                 return@handler
             }
 
             // Ignore own hurt sounds
-            is PlaySoundS2CPacket -> {
-                if (packet.sound.value() == SoundEvents.ENTITY_PLAYER_HURT) {
+            is ClientboundSoundPacket -> {
+                if (packet.sound.value() == SoundEvents.PLAYER_HURT) {
+                    event.action = PacketQueueManager.Action.PASS
                     return@handler
                 }
             }
 
             // Flush on own death
-            is HealthUpdateS2CPacket -> {
+            is ClientboundSetHealthPacket -> {
                 if (packet.health <= 0) {
                     clear(true)
                     return@handler
@@ -143,45 +157,44 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         }
 
         // Update box position with these packets
-        val entityPacket = packet is EntityS2CPacket && packet.getEntity(world) == target
-        val positionPacket = packet is EntityPositionS2CPacket && packet.entityId == target?.id
-        val syncPacket = packet is EntityPositionSyncS2CPacket && packet.id == target?.id
+        val target = target ?: return@handler
+        val entityPacket = packet is ClientboundMoveEntityPacket && packet.getEntity(world) == target
+        val positionPacket = packet is ClientboundTeleportEntityPacket && packet.id == target.id
+        val syncPacket = packet is ClientboundEntityPositionSyncPacket && packet.id == target.id
         if (entityPacket || positionPacket || syncPacket) {
-            val pos = if (packet is EntityS2CPacket) {
-                position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
-            } else if (packet is EntityPositionS2CPacket) {
-                Vec3d(packet.change.position.x, packet.change.position.y, packet.change.position.z)
-            } else {
-                (packet as EntityPositionSyncS2CPacket).values.position()
-            }
-
-            position?.setPos(pos)
+            val pos = when (packet) {
+                is ClientboundMoveEntityPacket ->
+                    position.decode(packet.xa.toLong(), packet.ya.toLong(), packet.za.toLong())
+                is ClientboundTeleportEntityPacket ->
+                    packet.change.position
+                else -> (packet as ClientboundEntityPositionSyncPacket).values.position
+            } ?: return@handler
+            position.setBase(pos)
 
             // Is the target's actual position closer than its tracked position?
-            if (target!!.squareBoxedDistanceTo(player, pos!!) < target!!.squaredBoxedDistanceTo(player)) {
+            if (target.squareBoxedDistanceTo(player, pos) < target.squaredBoxedDistanceTo(player)) {
                 // Process all packets. We want to be able to hit the enemy, not the opposite.
-                processPackets(true)
+                event.action = PacketQueueManager.Action.FLUSH
                 // And stop right here. No need to cancel further packets.
                 return@handler
             }
         }
 
-        event.cancelEvent()
-        delayedPacketQueue.add(PacketSnapshot(packet, event.origin, System.currentTimeMillis()))
+        event.action = PacketQueueManager.Action.QUEUE
     }
 
-    abstract class RenderChoice(name: String) : Choice(name) {
-        protected fun getEntityPosition(): Pair<Entity, Vec3d>? {
+    private sealed class RenderChoice(name: String) : Choice(name) {
+        final override val parent: ChoiceConfigurable<*>
+            get() = espMode
+
+        protected fun getEntityPosition(): Pair<Entity, Vec3>? {
             val entity = target ?: return null
-            val pos = position?.pos ?: return null
+            val pos = position.base
             return entity to pos
         }
     }
 
-    object Box : RenderChoice("Box") {
-        override val parent: ChoiceConfigurable<RenderChoice>
-            get() = espMode
-
+    private object Box : RenderChoice("Box") {
         private val color by color("Color", Color4b(36, 32, 147, 87))
 
         @Suppress("unused")
@@ -191,52 +204,53 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
             val dimensions = entity.getDimensions(entity.pose)
             val d = dimensions.width.toDouble() / 2.0
 
-            val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
+            val box = AABB(-d, 0.0, -d, d, dimensions.height.toDouble(), d).inflate(0.05)
 
             renderEnvironmentForWorld(event.matrixStack) {
                 withPositionRelativeToCamera(pos) {
-                    withColor(color) {
-                        drawSolidBox(box)
-                    }
+                    drawBox(box, color)
                 }
             }
         }
     }
 
-    object Model : RenderChoice("Model") {
-        override val parent: ChoiceConfigurable<RenderChoice>
-            get() = espMode
-
+    private object Model : RenderChoice("Model") {
         private val lightAmount by float("LightAmount", 0.3f, 0.01f..1f)
 
         @Suppress("unused")
         private val renderHandler = handler<WorldRenderEvent> { event ->
             val (entity, pos) = getEntityPosition() ?: return@handler
 
-            val light = world.getLightLevel(BlockPos.ORIGIN)
-            val reducedLight = (light * lightAmount.toDouble()).toInt()
+            val entityRenderer = mc.entityRenderDispatcher.getRenderer(entity)
 
-            renderEnvironmentForWorld(event.matrixStack) {
-                withPositionRelativeToCamera(pos) {
-                    mc.entityRenderDispatcher.render(
-                        entity,
-                        0.0,
-                        0.0,
-                        0.0,
-                        1f,
-                        event.matrixStack,
-                        mc.bufferBuilders.entityVertexConsumers,
-                        reducedLight
-                    )
-                }
-            }
+            val rs = entityRenderer.createRenderState(entity, event.partialTicks)
+
+            val originalBlockLight = LightTexture.block(rs.lightCoords)
+            val originalSkyLight = LightTexture.sky(rs.lightCoords)
+            rs.lightCoords = LightTexture.pack(
+                (originalBlockLight * lightAmount).floorToInt(),
+                (originalSkyLight * lightAmount).floorToInt(),
+            )
+            rs.x = pos.x
+            rs.y = pos.y
+            rs.z = pos.z
+            val cameraState = mc.gameRenderer.levelRenderState.cameraRenderState
+            rs.distanceToCameraSq = pos.distanceToSqr(cameraState.pos)
+
+            // TODO(1.21.10-port): position & light incorrect
+            mc.entityRenderDispatcher.submit(
+                rs,
+                cameraState,
+                rs.x - cameraState.pos.x,
+                rs.y - cameraState.pos.y,
+                rs.z - cameraState.pos.z,
+                event.matrixStack,
+                mc.gameRenderer.submitNodeStorage,
+            )
         }
     }
 
-    object Wireframe : RenderChoice("Wireframe") {
-        override val parent: ChoiceConfigurable<RenderChoice>
-            get() = espMode
-
+    private object Wireframe : RenderChoice("Wireframe") {
         private val color by color("Color", Color4b(36, 32, 147, 87))
         private val outlineColor by color("OutlineColor", Color4b(36, 32, 147, 255))
 
@@ -244,21 +258,36 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         private val renderHandler = handler<WorldRenderEvent> {
             val (entity, pos) = getEntityPosition() ?: return@handler
 
-            val wireframePlayer = WireframePlayer(pos, entity.yaw, entity.pitch)
+            val wireframePlayer = WireframePlayer(pos, entity.yRot, entity.xRot)
             wireframePlayer.render(it, color, outlineColor)
         }
     }
 
-    object None : RenderChoice("None") {
-        override val parent: ChoiceConfigurable<RenderChoice>
-            get() = espMode
-    }
+    private object None : RenderChoice("None")
 
     @Suppress("unused")
     private val worldChangeHandler = handler<WorldChangeEvent> { event ->
         // Clear packets on disconnect only
         if (event.world == null) {
             clear(clearOnly = true)
+        }
+    }
+
+    @Suppress("unused")
+    private val tickPacketProcessHandler = handler<TickPacketProcessEvent> {
+        val hadQueuedIncoming = hasQueuedIncoming()
+
+        if (running && shouldCancelPackets()) {
+            val now = System.currentTimeMillis()
+            PacketQueueManager.flush { snapshot ->
+                snapshot.origin == TransferOrigin.INCOMING && snapshot.timestamp <= now - currentDelay
+            }
+        } else if (hadQueuedIncoming) {
+            PacketQueueManager.flush(TransferOrigin.INCOMING)
+        }
+
+        if (!hasQueuedIncoming()) {
+            currentDelay = delay.random()
         }
     }
 
@@ -307,7 +336,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
             clear(resetChronometer = false)
 
             // Instantly set new position, so it does not look like the box was created with delay
-            position = TrackedPosition().apply { this.pos = enemy.trackedPosition.pos }
+            position.base = enemy.positionCodec.base
         }
 
         target = enemy
@@ -321,21 +350,11 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         clear(true)
     }
 
-    fun processPackets(clear: Boolean = false) {
-        delayedPacketQueue.removeIf {
-            if (clear || it.timestamp <= System.currentTimeMillis() - currentDelay) {
-                packetProcessQueue.add(it.packet)
-                return@removeIf true
-            }
-            false
-        }
-    }
-
     fun clear(handlePackets: Boolean = true, clearOnly: Boolean = false, resetChronometer: Boolean = true) {
         if (handlePackets && !clearOnly) {
-            processPackets(true)
+            PacketQueueManager.flush(TransferOrigin.INCOMING)
         } else if (clearOnly) {
-            delayedPacketQueue.clear()
+            PacketQueueManager.packetQueue.removeIf { snapshot -> snapshot.origin == TransferOrigin.INCOMING }
         }
 
         if (target != null && resetChronometer) {
@@ -343,7 +362,7 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
         }
 
         target = null
-        position = null
+        position.base = Vec3.ZERO
     }
 
     private fun shouldBacktrack(target: Entity): Boolean {
@@ -355,17 +374,21 @@ object ModuleBacktrack : ClientModule("Backtrack", Category.COMBAT) {
 
         return (inRange || !trackingBufferChronometer.hasElapsed(trackingBuffer.toLong())) &&
             target.shouldBeAttacked() &&
-            player.age > 10 &&
+            player.tickCount > 10 &&
             currentChance < chance &&
             chronometer.hasElapsed() &&
             !shouldPause() &&
             !attackChronometer.hasElapsed(lastAttackTimeToWork.toLong())
     }
 
-    fun isLagging() = running && !arePacketQueuesEmpty
+    fun isLagging() = running && hasQueuedIncoming()
 
     private fun shouldPause() = pauseOnHurtTime.enabled && shouldPause
 
     fun shouldCancelPackets() =
         target?.let { target -> target.isAlive && shouldBacktrack(target) } == true
+
+    private fun hasQueuedIncoming() =
+        PacketQueueManager.packetQueue.any { snapshot -> snapshot.origin == TransferOrigin.INCOMING }
+
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
-import net.minecraft.entity.decoration.EndCrystalEntity
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 
 object SubmoduleCrystalDestroyer : ToggleableConfigurable(ModuleCrystalAura, "Destroy", true) {
@@ -51,7 +51,7 @@ object SubmoduleCrystalDestroyer : ToggleableConfigurable(ModuleCrystalAura, "De
     var postAttackHandlers = arrayOf(CrystalAuraSpeedDebugger, SubmoduleSetDead.CrystalTracker)
     val chronometer = Chronometer()
 
-    fun tick(providedCrystal: EndCrystalEntity? = null) {
+    fun tick(providedCrystal: EndCrystal? = null) {
         if (!enabled || !chronometer.hasAtLeastElapsed(delay.toLong())) {
             return
         }
@@ -66,7 +66,7 @@ object SubmoduleCrystalDestroyer : ToggleableConfigurable(ModuleCrystalAura, "De
 
         val target = CrystalAuraDestroyTargetFactory.currentTarget ?: return
 
-        val base = FULL_BOX.offset(target.blockPos.down())
+        val base = FULL_BOX.move(target.blockPosition().below())
         mc.execute {
             ModuleDebug.debugGeometry(
                 ModuleCrystalAura,
@@ -75,7 +75,7 @@ object SubmoduleCrystalDestroyer : ToggleableConfigurable(ModuleCrystalAura, "De
             )
         }
 
-        val eyePos = player.eyePos
+        val eyePos = player.eyePosition
 
         // find the best spot (and skip if no spot was found)
         val (rotation, vec3d) =
@@ -91,7 +91,7 @@ object SubmoduleCrystalDestroyer : ToggleableConfigurable(ModuleCrystalAura, "De
         queueDestroy(rotation, target, base, eyePos, vec3d)
     }
 
-    private fun queueDestroy(rotation: Rotation, target: EndCrystalEntity, base: Box, eyePos: Vec3d, vec3d: Vec3d) {
+    private fun queueDestroy(rotation: Rotation, target: EndCrystal, base: AABB, eyePos: Vec3, vec3d: Vec3) {
         // create the action chain to execute
         val action = {
             ModuleCrystalAura.rotationMode.activeChoice.rotate(rotation, isFinished = {

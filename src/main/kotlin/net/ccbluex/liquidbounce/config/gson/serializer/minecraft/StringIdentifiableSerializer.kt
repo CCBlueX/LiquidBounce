@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,10 @@ package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
-import net.minecraft.util.StringIdentifiable
+import net.minecraft.util.StringRepresentable
 import java.lang.reflect.Type
 
-object StringIdentifiableSerializer : JsonSerializer<StringIdentifiable> {
-    override fun serialize(src: StringIdentifiable?, typeOfSrc: Type, context: JsonSerializationContext) =
-        src?.let { JsonPrimitive(it.asString()) }
+object StringIdentifiableSerializer : JsonSerializer<StringRepresentable> {
+    override fun serialize(src: StringRepresentable?, typeOfSrc: Type, context: JsonSerializationContext) =
+        src?.let { JsonPrimitive(it.serializedName) }
 }

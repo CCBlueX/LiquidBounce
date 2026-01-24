@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,12 @@
 package net.ccbluex.liquidbounce.config.types
 
 import net.ccbluex.liquidbounce.utils.input.InputBind
+import net.ccbluex.liquidbounce.utils.input.bind
 
 class BindValue(
     name: String,
     aliases: List<String> = emptyList(),
     defaultValue: InputBind,
 ) : Value<InputBind>(name, aliases, defaultValue, ValueType.BIND) {
-    override fun setByString(string: String) {
-        get().bind(string)
-    }
+    override fun setByString(string: String) = bind(string)
 }

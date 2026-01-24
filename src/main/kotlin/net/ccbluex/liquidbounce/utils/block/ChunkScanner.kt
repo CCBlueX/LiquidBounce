@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,49 +19,62 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
-import kotlinx.coroutines.*
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.launch
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.joinAll
-import net.minecraft.block.BlockState
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.UnloadChunkS2CPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.world.chunk.WorldChunk
+import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.BiConsumer
+import java.util.function.Predicate
 import kotlin.time.measureTime
 
 object ChunkScanner : EventListener, MinecraftShortcuts {
 
     private val loadedChunks = LongOpenHashSet()
 
-    private val threadLocalBlockPos = ThreadLocal.withInitial(BlockPos::Mutable)
+    private val threadLocalBlockPos = ThreadLocal.withInitial(BlockPos::MutableBlockPos)
 
     private val subscribers = CopyOnWriteArrayList<BlockChangeSubscriber>()
 
     fun subscribe(newSubscriber: BlockChangeSubscriber) {
         if (!this.subscribers.addIfAbsent(newSubscriber)) {
-            error("Subscriber ${newSubscriber.javaClass.simpleName} already registered")
+            error("Subscriber ${newSubscriber.debugName} already registered")
         }
 
-        val world = mc.world ?: return
+        val world = mc.level ?: return
         if (this.loadedChunks.isEmpty()) return
 
-        logger.info("Scanning ${this.loadedChunks.size} chunks for ${newSubscriber.javaClass.simpleName}")
-
-        val chunks = this.loadedChunks.mapToArray { longChunkPos ->
+        val chunkArray = this.loadedChunks.mapToArray { longChunkPos ->
             world.getChunk(
-                ChunkPos.getPackedX(longChunkPos),
-                ChunkPos.getPackedZ(longChunkPos)
+                ChunkPos.getX(longChunkPos),
+                ChunkPos.getZ(longChunkPos)
             )
         }
+        val chunks = ObjectArrayList.wrap(chunkArray)
+        chunks.removeIf(Predicate(LevelChunk::isEmpty))
+        if (chunks.isEmpty) return
 
         UpdateRequest.NewSubscriber(newSubscriber, chunks)
             .runAsync()
@@ -73,38 +86,40 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     }
 
     @Suppress("unused")
-    private val chunkLoadHandler = handler<ChunkLoadEvent> { event ->
-        if (subscribers.isEmpty()) return@handler
-
+    private val chunkLoadHandler = handler<ChunkLoadEvent>(READ_FINAL_STATE) { event ->
         val chunk = world.getChunk(event.x, event.z).takeUnless { it.isEmpty } ?: return@handler
 
-        UpdateRequest.ChunkLoad(chunk).runAsync()
+        loadedChunks.add(ChunkPos.asLong(event.x, event.z))
 
-        this.loadedChunks.add(ChunkPos.toLong(event.x, event.z))
+        if (subscribers.isEmpty()) return@handler
+
+        UpdateRequest.ChunkLoad(chunk).runAsync()
     }
 
     @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
-        if (subscribers.isEmpty()) return@handler
+    private val packetHandler = handler<PacketEvent>(READ_FINAL_STATE) { event ->
+        if (subscribers.isEmpty() || event.isCancelled) return@handler
 
         when (val packet = event.packet) {
-            is BlockUpdateS2CPacket ->
-                UpdateRequest.BlockUpdate(packet.pos, packet.state).runAsync()
+            is ClientboundBlockUpdatePacket ->
+                UpdateRequest.BlockUpdate(packet.pos, packet.blockState).runAsync()
 
             // All updates are in one section
-            is ChunkDeltaUpdateS2CPacket ->
+            is ClientboundSectionBlocksUpdatePacket ->
                 UpdateRequest.ChunkSectionUpdate(packet).runAsync()
 
-            is UnloadChunkS2CPacket ->
+            is ClientboundForgetLevelChunkPacket -> mc.execute {
+                loadedChunks.remove(packet.pos.toLong())
                 UpdateRequest.ChunkUnload(packet.pos).runAsync()
+            }
         }
     }
 
     @Suppress("unused")
-    private val worldChangeHandler = handler<WorldChangeEvent> {
+    private val worldChangeHandler = handler<WorldChangeEvent>(FIRST_PRIORITY) {
         cancelCurrentJobs()
-        subscribers.forEach(BlockChangeSubscriber::clearAllChunks)
         loadedChunks.clear()
+        subscribers.forEach(BlockChangeSubscriber::clearAllChunks)
     }
 
     /**
@@ -142,20 +157,20 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
      * @see WorldChunk.getBlockState
      */
     private suspend fun scanChunkSections(
-        chunk: WorldChunk,
+        chunk: LevelChunk,
         action: BiConsumer<BlockPos, BlockState>
     ) {
         // 0 rangeTo chunk.highestNonEmptySection
-        Array(chunk.highestNonEmptySection + 1) { sectionIndex ->
+        Array(chunk.highestFilledSectionIndex + 1) { sectionIndex ->
             scope.launch {
-                val startX = chunk.pos.startX
-                val startZ = chunk.pos.startZ
+                val startX = chunk.pos.minBlockX
+                val startZ = chunk.pos.minBlockZ
                 val blockPos = threadLocalBlockPos.get()
                 val section = chunk.getSection(sectionIndex)
 
                 for (sectionY in 0..15) {
                     // index == (y >> 4) - (bottomY >> 4)
-                    val y = (sectionIndex + (chunk.bottomY shr 4)) shl 4 or sectionY
+                    val y = (sectionIndex + (chunk.minY shr 4)) shl 4 or sectionY
                     for (x in 0..15) {
                         for (z in 0..15) {
                             val blockState = section.getBlockState(x, sectionY, z)
@@ -180,24 +195,15 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
          *
          * @param chunks should be non-empty
          */
-        class NewSubscriber(val subscriber: BlockChangeSubscriber, val chunks: Array<WorldChunk>) : UpdateRequest {
+        class NewSubscriber(val subscriber: BlockChangeSubscriber, val chunks: List<LevelChunk>) : UpdateRequest {
             override suspend fun run() {
-                // Check empty chunks (@see ObjectArrayList.removeIf)
-                var j = 0
-                for (i in chunks.indices) {
-                    if (!chunks[i].isEmpty) {
-                        chunks[j++] = chunks[i]
-                    }
-                }
-                val chunkCount = j
-
                 val duration = measureTime {
-                    for (i in 0 until chunkCount) {
-                        subscriber.chunkUpdate(chunks[i])
+                    chunks.forEach {
+                        subscriber.chunkUpdate(it)
                     }
                     if (subscriber.shouldCallRecordBlockOnChunkUpdate) {
-                        for (i in 0 until chunkCount) {
-                            scanChunkSections(chunks[i]) { pos, state ->
+                        chunks.forEach {
+                            scanChunkSections(it) { pos, state ->
                                 subscriber.recordBlock(pos, state, cleared = true)
                             }
                         }
@@ -205,7 +211,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
                 }
 
                 logger.debug(
-                    "Scanning chunks for ${subscriber.javaClass.simpleName} took ${duration.inWholeMicroseconds}us"
+                    "Scanning ${chunks.size} chunks for ${subscriber.debugName} took ${duration.inWholeMicroseconds}us"
                 )
             }
         }
@@ -215,7 +221,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
          *
          * @param chunk should be non-empty
          */
-        class ChunkLoad(val chunk: WorldChunk) : UpdateRequest {
+        class ChunkLoad(val chunk: LevelChunk) : UpdateRequest {
             override suspend fun run() {
                 val duration = measureTime {
                     subscribers.mapToArray {
@@ -242,9 +248,9 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
             }
         }
 
-        class ChunkSectionUpdate(val packet: ChunkDeltaUpdateS2CPacket) : UpdateRequest {
+        class ChunkSectionUpdate(val packet: ClientboundSectionBlocksUpdatePacket) : UpdateRequest {
             override suspend fun run() {
-                packet.visitUpdates { blockPos, state ->
+                packet.runUpdates { blockPos, state ->
                     subscribers.forEach {
                         it.recordBlock(blockPos, state, cleared = false)
                     }
@@ -270,6 +276,8 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
     }
 
     interface BlockChangeSubscriber {
+        val debugName: String get() = javaClass.simpleName
+
         /**
          * If this is true [recordBlock] is called on chunk updates and on single block updates.
          * This might be inefficient for some modules, so they can choose to not call that method on chunk updates.
@@ -292,7 +300,7 @@ object ChunkScanner : EventListener, MinecraftShortcuts {
          *
          * @param chunk a non-empty chunk
          */
-        fun chunkUpdate(chunk: WorldChunk)
+        fun chunkUpdate(chunk: LevelChunk)
 
         fun clearChunk(pos: ChunkPos)
 

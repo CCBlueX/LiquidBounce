@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,28 +18,22 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * @anticheat Vulcan
  * @anticheatVersion 2.7.7
  * @testedOn eu.loyisa.cn
  */
-internal object NoFallVulcan : Choice("Vulcan277") {
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
-
+internal object NoFallVulcan : NoFallMode("Vulcan277") {
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
-        if (packet is PlayerMoveC2SPacket && player.fallDistance > 7.0) {
+        if (packet is ServerboundMovePlayerPacket && player.fallDistance > 7.0) {
             packet.onGround = true
-            player.fallDistance = 0f
-            player.velocity.y = 0.0
+            player.fallDistance = 0.0
+            player.deltaMovement.y = 0.0
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.minecraft.item.Items
+import net.minecraft.world.item.Items
 
 /**
  * Uses an item called Rettungsplatform or Rettungskapsel to prevent fall damage.
@@ -41,10 +39,7 @@ import net.minecraft.item.Items
  * As such module is mostly used by German players, the name of the module is in German.
  * That is unusual for LiquidBounce, but it is the best name for this module.
  */
-internal object NoFallRettungsplatform : Choice("Rettungsplatform") {
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
+internal object NoFallRettungsplatform : NoFallMode("Rettungsplatform") {
 
     /**
      * The item used to create a platform.
@@ -52,16 +47,19 @@ internal object NoFallRettungsplatform : Choice("Rettungsplatform") {
      * We are not checking for the item name, as there are different language options causing issues.
      */
     private val itemToPlatform
-        get() = Slots.Hotbar.findClosestSlot(Items.BLAZE_ROD, Items.MAGMA_CREAM)
+        get() = Slots.OffhandWithHotbar.findClosestSlot(Items.BLAZE_ROD, Items.MAGMA_CREAM)
 
-    val repatable = tickHandler {
+    @Suppress("unused")
+    private val tickHandler = tickHandler {
         if (player.fallDistance > 2f) {
             val itemToPlatform = itemToPlatform ?: return@tickHandler
 
             // Are we actually going to fall into the void?
             // todo: check if the fall damage is actually high enough to kill us
             val collision = FallingPlayer.fromPlayer(player).findCollision(90)?.pos
-            ModuleDebug.debugParameter(ModuleNoFall, "Collision", collision?.getBlock().toString())
+            ModuleNoFall.debugParameter("Collision") {
+                collision?.getBlock()
+            }
             if (collision != null && collision.getState()?.isAir == false) {
                 return@tickHandler
             }

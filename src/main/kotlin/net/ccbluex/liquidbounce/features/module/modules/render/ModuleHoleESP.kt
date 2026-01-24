@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,20 +22,23 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawBoxSide
+import net.ccbluex.liquidbounce.render.drawGradientSides
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.hole.Hole
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManager
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
 import net.ccbluex.liquidbounce.utils.block.hole.HoleTracker
 import net.ccbluex.liquidbounce.utils.math.box
 import net.ccbluex.liquidbounce.utils.math.from
-import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -44,7 +47,7 @@ import kotlin.math.max
  *
  * Detects and displays safe spots for Crystal PvP.
  */
-object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubscriber {
+object ModuleHoleESP : ClientModule("HoleESP", ModuleCategories.RENDER), HoleManagerSubscriber {
 
     private val modes = choices("Mode", GlowingPlane, arrayOf(BoxChoice, GlowingPlane))
 
@@ -53,10 +56,10 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
 
     private val distanceFade by float("DistanceFade", 0.3f, 0f..1f)
 
-    private val colorBedrock by color("1x1Bedrock", Color4b(0x19c15c))
-    private val color1by1 by color("1x1", Color4b(0xf7381b))
-    private val color1by2 by color("1x2", Color4b(0x35bacc))
-    private val color2by2 by color("2x2", Color4b(0xf7cf1b))
+    private val colorBedrock by color("1x1Bedrock", Color4b.fullAlpha(0x19c15c))
+    private val color1by1 by color("1x1", Color4b.fullAlpha(0xf7381b))
+    private val color1by2 by color("1x2", Color4b.fullAlpha(0x35bacc))
+    private val color2by2 by color("2x2", Color4b.fullAlpha(0xf7cf1b))
 
     override fun horizontalDistance(): Int = horizontalDistance
     override fun verticalDistance(): Int = verticalDistance
@@ -78,37 +81,33 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
 
         @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
-            val pos = player.blockPos
+            val pos = player.blockPosition()
             val vDistance = verticalDistance
             val hDistance = horizontalDistance
 
             renderEnvironmentForWorld(event.matrixStack) {
+                startBatch()
                 HoleTracker.holes.forEach {
                     val positions = it.positions
 
-                    val valOutOfRange = abs(pos.y - positions.minY) > vDistance
-                    val xzOutOfRange = abs(pos.x - positions.minX) > hDistance ||
-                        abs(pos.z - positions.minZ) > hDistance
+                    val valOutOfRange = abs(pos.y - positions.minY()) > vDistance
+                    val xzOutOfRange = abs(pos.x - positions.minX()) > hDistance ||
+                        abs(pos.z - positions.minZ()) > hDistance
                     if (valOutOfRange || xzOutOfRange) {
                         return@forEach
                     }
 
                     val fade = calculateFade(positions.from)
                     val baseColor = it.color().with(a = 50).fade(fade)
-                    val box = positions.box
-                    withPositionRelativeToCamera(positions.from.toVec3d()) {
-                        withColor(baseColor) {
-                            drawSolidBox(box)
-                        }
-
-                        if (outline) {
-                            val outlineColor = it.color().with(a = 100).fade(fade)
-                            withColor(outlineColor) {
-                                drawOutlinedBox(box)
-                            }
-                        }
+                    withPositionRelativeToCamera(positions.from) {
+                        drawBox(
+                            positions.box,
+                            baseColor,
+                            if (outline) baseColor.with(a = 100).fade(fade) else null,
+                        )
                     }
                 }
+                commitBatch()
             }
         }
     }
@@ -125,50 +124,43 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
         @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val glowHeight = glowHeightSetting.toDouble()
-            val pos = player.blockPos
+            val pos = player.blockPosition()
             val vDistance = verticalDistance
             val hDistance = horizontalDistance
 
             renderEnvironmentForWorld(event.matrixStack) {
-                withDisabledCull {
-                    HoleTracker.holes.forEach {
-                        val positions = it.positions
+                HoleTracker.holes.forEach {
+                    val positions = it.positions
 
-                        val valOutOfRange = abs(pos.y - positions.minY) > vDistance
-                        val xzOutOfRange = abs(pos.x - positions.minX) > hDistance ||
-                            abs(pos.z - positions.minZ) > hDistance
-                        if (valOutOfRange || xzOutOfRange) {
-                            return@forEach
-                        }
+                    val valOutOfRange = abs(pos.y - positions.minY()) > vDistance
+                    val xzOutOfRange = abs(pos.x - positions.minX()) > hDistance ||
+                        abs(pos.z - positions.minZ()) > hDistance
+                    if (valOutOfRange || xzOutOfRange) {
+                        return@forEach
+                    }
 
-                        val fade = calculateFade(positions.from)
-                        val baseColor = it.color().with(a = 50).fade(fade)
-                        val transparentColor = baseColor.with(a = 0)
-                        val box = positions.box
-                        withPositionRelativeToCamera(positions.from.toVec3d()) {
-                            withColor(baseColor) {
-                                drawSideBox(box, Direction.DOWN)
-                            }
-
-                            if (outline) {
-                                val outlineColor = it.color().with(a = 100).fade(fade)
-                                withColor(outlineColor) {
-                                    drawSideBox(box, Direction.DOWN, onlyOutline = true)
-                                }
-                            }
-
-                            drawGradientSides(glowHeight, baseColor, transparentColor, box)
-                        }
+                    val fade = calculateFade(positions.from)
+                    val baseColor = it.color().with(a = 50).fade(fade)
+                    val transparentColor = baseColor.with(a = 0)
+                    val box = positions.box
+                    withPositionRelativeToCamera(positions.from) {
+                        drawBoxSide(
+                            box,
+                            Direction.DOWN,
+                            baseColor,
+                            if (outline) baseColor.with(a = 100).fade(fade) else null,
+                        )
+                        drawGradientSides(glowHeight, baseColor, transparentColor, box)
                     }
                 }
             }
         }
     }
 
-    private fun Hole.color() = when {
-        type == Hole.Type.ONE_ONE && bedrockOnly -> colorBedrock
-        type == Hole.Type.ONE_TWO -> color1by2
-        type == Hole.Type.TWO_TWO -> color2by2
+    private fun Hole.color() = when (type) {
+        Hole.Type.ONE_ONE if bedrockOnly -> colorBedrock
+        Hole.Type.ONE_TWO -> color1by2
+        Hole.Type.TWO_TWO -> color2by2
         else -> color1by1
     }
 
@@ -177,9 +169,9 @@ object ModuleHoleESP : ClientModule("HoleESP", Category.RENDER), HoleManagerSubs
             return 1f
         }
 
-        val verticalDistanceFraction = (player.pos.y - pos.y) / verticalDistance
+        val verticalDistanceFraction = (player.position().y - pos.y) / verticalDistance
         val horizontalDistanceFraction =
-            Vec3d(player.pos.x - pos.x, 0.0, player.pos.z - pos.z).length() / horizontalDistance
+            Vec3(player.position().x - pos.x, 0.0, player.position().z - pos.z).length() / horizontalDistance
 
         val fade = (1 - max(verticalDistanceFraction, horizontalDistanceFraction)) / distanceFade
 

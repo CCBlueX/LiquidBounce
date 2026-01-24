@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,25 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.actions
 
+import kotlinx.coroutines.delay
+
 object AutoQueueActionChat : AutoQueueAction("Chat") {
-    private val message by text("Message", "/play solo_normal")
+    private val startDelay by intRange("StartDelay", 0..0, 0..2000, "ms")
+    private val messageDelay by intRange("MessageDelay", 0..0, 0..2000, "ms")
+
+    private val messages by textList("Messages", mutableListOf("/play solo_normal"))
 
     override suspend fun execute() {
-        if (message.startsWith("/")) {
-            network.sendCommand(message.substring(1))
-        } else {
-            network.sendChatMessage(message)
+        delay(startDelay.random().toLong())
+
+        messages.forEach { message ->
+            if (message.startsWith("/")) {
+                network.sendCommand(message.substring(1))
+            } else {
+                network.sendChat(message)
+            }
+
+            delay(messageDelay.random().toLong())
         }
     }
 }

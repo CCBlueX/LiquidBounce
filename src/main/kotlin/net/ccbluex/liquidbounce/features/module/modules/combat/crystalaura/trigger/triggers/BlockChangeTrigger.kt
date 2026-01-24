@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,46 +24,46 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.runPlace
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.PostPacketTrigger
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 
 /**
  * Runs placing right when a block was broken in the area where the aura operates.
  * This can help to block the surround of enemies with immediate placements.
  */
-object BlockChangeTrigger : PostPacketTrigger<BlockUpdateS2CPacket>("BlockChange", true) {
+object BlockChangeTrigger : PostPacketTrigger<ClientboundBlockUpdatePacket>("BlockChange", true) {
 
-    override fun postPacketHandler(packet: BlockUpdateS2CPacket) {
-        if (!packet.state.isAir) {
+    override fun postPacketHandler(packet: ClientboundBlockUpdatePacket) {
+        if (!packet.blockState.isAir) {
             return
         }
 
         tickIfInRange(
             packet.pos,
-            player.eyePos,
+            player.eyePosition,
             max(SubmoduleCrystalPlacer.getMaxRange(), SubmoduleCrystalDestroyer.getMaxRange()).sq() + 1.0
         )
     }
 
-    fun postChunkUpdateHandler(packet: ChunkDeltaUpdateS2CPacket) {
+    fun postChunkUpdateHandler(packet: ClientboundSectionBlocksUpdatePacket) {
         if (!running) {
             return
         }
 
-        val eyePos = player.eyePos
+        val eyePos = player.eyePosition
         val rangeSq = max(SubmoduleCrystalPlacer.getMaxRange(), SubmoduleCrystalDestroyer.getMaxRange()).sq() + 1.0
-        packet.visitUpdates { blockPos, blockState ->
+        packet.runUpdates { blockPos, blockState ->
             if (blockState.isAir && tickIfInRange(blockPos, eyePos, rangeSq)) {
-                return@visitUpdates
+                return@runUpdates
             }
         }
     }
 
-    private fun tickIfInRange(blockPos: BlockPos, eyePos: Vec3d, rangeSq: Double): Boolean {
-        val distance = eyePos.squaredDistanceTo(
+    private fun tickIfInRange(blockPos: BlockPos, eyePos: Vec3, rangeSq: Double): Boolean {
+        val distance = eyePos.distanceToSqr(
             blockPos.x.toDouble(),
             blockPos.y.toDouble(),
             blockPos.z.toDouble()

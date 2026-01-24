@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.data
 
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
-data class RotationWithVector(val rotation: Rotation, val vec: Vec3d)
+@JvmRecord
+data class RotationWithVector(val rotation: Rotation, val vec: Vec3)

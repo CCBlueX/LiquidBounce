@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,8 +44,8 @@ class Alignment(
         width: Float,
         height: Float,
     ): BoundingBox2f {
-        val screenWidth = mc.window.scaledWidth.toFloat()
-        val screenHeight = mc.window.scaledHeight.toFloat()
+        val screenWidth = mc.window.guiScaledWidth.toFloat()
+        val screenHeight = mc.window.guiScaledHeight.toFloat()
 
         val x = when (horizontalAlignment) {
             ScreenAxisX.LEFT -> horizontalOffset.toFloat()

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,40 +19,54 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet
+import net.ccbluex.fastutil.WeightedSortedList
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlockRotation
-import net.ccbluex.liquidbounce.utils.block.*
+import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_DOWN
 import net.ccbluex.liquidbounce.utils.block.bed.isSelfBedChoices
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.block.collisionShape
+import net.ccbluex.liquidbounce.utils.block.doBreak
+import net.ccbluex.liquidbounce.utils.block.getBlock
+import net.ccbluex.liquidbounce.utils.block.getClosestSquaredDistanceTo
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.isNotBreakable
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.block.BedBlock
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.level.ClipContext
+import net.minecraft.world.level.block.BedBlock
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.phys.shapes.Shapes
+import java.util.function.ToDoubleFunction
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 
@@ -61,7 +75,7 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
-object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("BedBreaker", "IdNuker")) {
+object ModuleFucker : ClientModule("Fucker", ModuleCategories.WORLD, aliases = listOf("BedBreaker", "IdNuker")) {
 
     private val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
@@ -106,16 +120,10 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
         )
     )
 
+    private val availableToolSlots
+        get() = if (ModuleAutoTool.isInventoryConsidered) Slots.Hotbar + Slots.Inventory else Slots.Hotbar
+
     private var currentTarget: DestroyerTarget? = null
-    private fun clearCurrentTarget() {
-        currentTarget?.let {
-            interaction.cancelBlockBreaking()
-            targetRenderer.removeBlock(it.pos)
-        }
-
-        currentTarget = null
-    }
-
     private var oldTarget: DestroyerTarget? = null
 
     override fun onDisabled() {
@@ -126,7 +134,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
     @Suppress("unused")
     private val targetUpdater = handler<RotationUpdateEvent> {
-        if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
+        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
             return@handler
         }
 
@@ -136,23 +144,20 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
         oldTarget = currentTarget
         updateCurrentTarget()
-        currentTarget?.let {
-            targetRenderer.addBlock(it.pos)
-        }
     }
 
     @Suppress("unused")
     private val breaker = tickHandler {
-        if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
+        if (!ignoreOpenInventory && mc.screen is AbstractContainerScreen<*>) {
             return@tickHandler
         }
 
-        // Delay if the target changed - this also includes when introducing a new target from null.
-        if (oldTarget != currentTarget) {
-            if (currentTarget == null || delay > 0) {
-                clearCurrentTarget()
-            }
-
+        // If we don't have any new target, and we had one before, stop breaking.
+        if (oldTarget != null && currentTarget == null) {
+            interaction.stopDestroyBlock()
+            return@tickHandler
+        } else if (oldTarget != currentTarget && delay > 0) {
+            interaction.stopDestroyBlock()
             waitTicks(delay)
         }
 
@@ -163,6 +168,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
         val destroyerTarget = currentTarget ?: return@tickHandler
         val currentRotation = RotationManager.serverRotation
+        targetRenderer.addBlock(destroyerTarget.pos)
 
         if (ModulePacketMine.running && destroyerTarget.action == DestroyAction.DESTROY) {
             ModulePacketMine.setTarget(destroyerTarget.pos)
@@ -188,8 +194,8 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
         // Use action should be used if the block is the same as the current target and the action is set to use.
         if (destroyerTarget.action == DestroyAction.USE) {
-            if (interaction.interactBlock(player, Hand.MAIN_HAND, rayTraceResult) == ActionResult.SUCCESS) {
-                player.swingHand(Hand.MAIN_HAND)
+            if (interaction.useItemOn(player, InteractionHand.MAIN_HAND, rayTraceResult) == InteractionResult.SUCCESS) {
+                player.swing(InteractionHand.MAIN_HAND)
             }
 
             waitTicks(delay)
@@ -237,26 +243,27 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
         }
     }
 
+    private fun clearCurrentTarget() {
+        interaction.stopDestroyBlock()
+
+        currentTarget?.let { target ->
+            targetRenderer.removeBlock(target.pos)
+        }
+        currentTarget = null
+    }
+
     private fun searchPossibleTargetPositions(): List<BlockPos> {
-        val eyesPos = player.eyePos
-
-        val rangeSq = range.sq()
-
-        val possibleBlocks = eyesPos.searchBlocksInCuboid(range + 1) { pos, state ->
-            val block = state.block
-            when {
-                block !in targets -> false
-                block is BedBlock && isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
-                else -> getNearestPoint(eyesPos, pos.collisionShape.boundingBox.offset(pos))
-                    .squaredDistanceTo(eyesPos) <= rangeSq
+        return player.eyePosition.searchBlocksInCuboid(range + 1) { pos, state ->
+            when (val block = state.block) {
+                !in targets -> false
+                is BedBlock if isSelfBedMode.activeChoice.isSelfBed(block, pos) -> false
+                else -> true
             }
-        }.mapTo(mutableListOf()) { it.first }
-
-        if (possibleBlocks.isEmpty()) return emptyList()
-
-        possibleBlocks.sortBy { it.getCenterDistanceSquaredEyes() }
-
-        return possibleBlocks
+        }.toCollection(WeightedSortedList(upperBound = range.sq().toDouble()) { (pos, state) ->
+            state.getShape(world, pos, CollisionContext.of(player))
+                .move(pos)
+                .getClosestSquaredDistanceTo(player.eyePosition)
+        }).mapToArray { it.first }.unmodifiable()
     }
 
     private fun validateCurrentTarget(possibleBlocks: Collection<BlockPos>) {
@@ -290,37 +297,36 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
         target: BlockPos,
         startPos: BlockPos,
     ): List<BlockPos> {
-        val eyePos = player.eyePos
+        val eyePos = player.eyePosition
         val visited = LongOpenHashSet()
-        val pos = BlockPos.Mutable()
         val result = mutableListOf<BlockPos>()
-        val targetPoint = getNearestPoint(eyePos, target.collisionShape.boundingBox)
+        val targetPoint = target.collisionShape.closestPointTo(eyePos).getOrNull() ?: return emptyList()
 
-        fun trace0(currBlock: BlockPos) {
+        fun trace0(currBlock: Long) {
+            val pos = BlockPos.MutableBlockPos()
             for (direction in Direction.entries) {
-                pos.set(currBlock, direction)
+                pos.set(currBlock).move(direction)
                 if (pos == target || pos.asLong() in visited) {
                     continue
                 }
 
                 // Any of boxes raycast the line is not null -> need to break
-                val collisionShape = pos.collisionShape
-                var rc: Vec3d? = null
-                collisionShape.forEachBox { minX, minY, minZ, maxX, maxY, maxZ ->
+                var rc: Vec3? = null
+                pos.collisionShape.forAllBoxes { minX, minY, minZ, maxX, maxY, maxZ ->
                     if (rc == null) {
-                        rc = Box.raycast(minX, minY, minZ, maxX, maxY, maxZ, eyePos, targetPoint).getOrNull()
+                        rc = AABB.clip(minX, minY, minZ, maxX, maxY, maxZ, eyePos, targetPoint).getOrNull()
                     }
                 }
 
                 rc ?: continue
 
-                result.add(pos.toImmutable())
+                result.add(pos.immutable())
                 visited.add(pos.asLong())
 
-                trace0(pos)
+                trace0(pos.asLong())
             }
         }
-        trace0(startPos)
+        trace0(startPos.asLong())
 
         return result
     }
@@ -341,7 +347,7 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
         }
 
         val raytrace = raytraceBlockRotation(
-            player.eyePos,
+            player.eyePosition,
             target.pos,
             state,
             range = range,
@@ -371,12 +377,12 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
     }
 
     private fun updateSurroundings(initialPosition: BlockPos) {
-        val raytraceResult = world.raycast(
-            RaycastContext(
-                player.eyePos,
-                initialPosition.toCenterPos(),
-                RaycastContext.ShapeType.COLLIDER,
-                RaycastContext.FluidHandling.NONE,
+        val raytraceResult = world.clip(
+            ClipContext(
+                player.eyePosition,
+                initialPosition.center,
+                ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE,
                 player
             )
         ) ?: return
@@ -389,14 +395,9 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
         val arr = traceWayToTarget(initialPosition, blockPos)
 
-        val hotbarItems = Slots.Hotbar.map { it.itemStack }
-
-        val resistance = arr.mapNotNull { it.getState()?.takeUnless { state -> state.isAir } }
-            .sumOf {
-                val bestMiningSpeed = hotbarItems.maxOfOrNull { item -> item.getMiningSpeedMultiplier(it) } ?: 1.0F
-
-                it.getHardness(world, BlockPos.ORIGIN).toDouble() / bestMiningSpeed.toDouble()
-            }
+        val resistance = arr.mapNotNull {
+            it to (it.getState()?.takeUnless { state -> state.isAir } ?: return@mapNotNull null)
+        }.sumOf(::miningDuration)
 
         considerAsTarget(
             DestroyerTarget(blockPos, DestroyAction.DESTROY, SurroundingInfo(initialPosition, resistance)),
@@ -420,8 +421,6 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
                 other.isTarget -> 1
                 currentSurrounding == null -> -1
                 otherSurrounding == null -> 1
-//                currentSurrounding.resistance == otherSurrounding.resistance ->
-//                    this.pos.getCenterDistanceSquaredEyes().compareTo(other.pos.getCenterDistanceSquaredEyes())
                 else -> currentSurrounding.resistance.compareTo(otherSurrounding.resistance)
             }
         }
@@ -438,6 +437,43 @@ object ModuleFucker : ClientModule("Fucker", Category.WORLD, aliases = listOf("B
 
     private enum class DestroyAction(override val choiceName: String) : NamedChoice {
         DESTROY("Destroy"), USE("Use")
+    }
+
+    private val BlockPos.hasEntrance: Boolean
+        get() {
+            val block = this.getBlock()
+            val cache = BlockPos.MutableBlockPos()
+            return DIRECTIONS_EXCLUDING_DOWN.any {
+                val neighbor = cache.setWithOffset(this, it)
+                neighbor.collisionShape == Shapes.empty() && neighbor.getBlock() !== block
+            }
+        }
+
+    private val BlockPos.weakestNeighbor: BlockPos?
+        get() {
+            val block = this.getBlock()
+            val cache = BlockPos.MutableBlockPos()
+            val neighbors = DIRECTIONS_EXCLUDING_DOWN.mapNotNullTo(mutableListOf()) {
+                val neighbor = cache.setWithOffset(this, it)
+                val state = neighbor.getState() ?: return@mapNotNullTo null
+                if (state.block !== block && !state.isAir) neighbor.immutable() to state else null
+            }
+
+            return neighbors.minWithOrNull(comparator)?.first
+        }
+
+    private val comparator = Comparator.comparingDouble(ToDoubleFunction(::miningDuration))
+        .thenComparingDouble(ToDoubleFunction { (pos, state) ->
+            state.getShape(world, pos, CollisionContext.of(player))
+                .move(pos)
+                .getClosestSquaredDistanceTo(player.eyePosition)
+        })
+
+    @JvmStatic
+    private fun miningDuration(pair: Pair<BlockPos, BlockState>): Double {
+        val (pos, state) = pair
+        val bestMiningSpeed = availableToolSlots.maxOfOrNull { it.itemStack.getDestroySpeed(state) } ?: 1.0F
+        return state.getDestroySpeed(world, pos).toDouble() / bestMiningSpeed.toDouble()
     }
 
 }

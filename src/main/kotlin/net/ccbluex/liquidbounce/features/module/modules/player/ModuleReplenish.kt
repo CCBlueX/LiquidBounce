@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,17 +23,22 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction.Click
+import net.ccbluex.liquidbounce.utils.inventory.InventoryItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isMergeable
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
 
 /**
  * Module Replenish
@@ -42,7 +47,7 @@ import net.minecraft.item.Items
  *
  * @author ccetl
  */
-object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = listOf("Refill")) {
+object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, aliases = listOf("Refill")) {
     private val constraints = tree(PlayerInventoryConstraints())
     private val itemThreshold by int("ItemThreshold", 5, 0..63)
     private val delay by int("Delay", 40, 0..1000, "ms")
@@ -68,14 +73,14 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
 
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> { event ->
-        if (event.screen is HandledScreen<*>) {
+        if (event.screen is AbstractContainerScreen<*>) {
             clear()
         }
     }
 
     @Suppress("unused")
     private val inventoryScheduleHandler = handler<ScheduleInventoryActionEvent> { event ->
-        if (!chronometer.hasElapsed(delay.toLong()) || !player.currentScreenHandler.cursorStack.isEmpty) {
+        if (!chronometer.hasElapsed(delay.toLong()) || !player.containerMenu.carried.isEmpty) {
             return@handler
         }
 
@@ -93,7 +98,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
             val currentStackNotEmpty = !itemStack.isEmpty
 
             // check if the current stack, if not empty, is allowed to be refilled
-            val unsupportedStackSize = itemStack.maxCount <= itemThreshold
+            val unsupportedStackSize = itemStack.maxStackSize <= itemThreshold
             if (currentStackNotEmpty && (unsupportedStackSize || itemStack.count > itemThreshold)) {
                 trackedHotbarItems[idx] = itemStack.item
                 return@forEach
@@ -151,7 +156,7 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
         inventorySlots: List<InventoryItemSlot>,
         slot: HotbarItemSlot,
     ) {
-        var neededToRefill = itemStack.maxCount - count
+        var neededToRefill = itemStack.maxStackSize - count
         for (inventorySlot in inventorySlots) {
             neededToRefill -= inventorySlot.itemStack.count
             val actions = ArrayList<Click>(3)
@@ -173,11 +178,11 @@ object ModuleReplenish : ClientModule("Replenish", Category.PLAYER, aliases = li
     override val running: Boolean
         get() = super.running &&
             (InsideOf.CHESTS in insideOf
-                || (mc.currentScreen !is HandledScreen<*>
-                || mc.currentScreen is InventoryScreen)
+                || (mc.screen !is AbstractContainerScreen<*>
+                || mc.screen is InventoryScreen)
                 ) &&
             (InsideOf.INVENTORIES in insideOf
-                || mc.currentScreen !is InventoryScreen
+                || mc.screen !is InventoryScreen
                 )
 
     private enum class Features(

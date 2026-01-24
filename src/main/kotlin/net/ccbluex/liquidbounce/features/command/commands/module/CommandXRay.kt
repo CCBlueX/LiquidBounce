@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,10 +25,16 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.block
 import net.ccbluex.liquidbounce.features.command.preset.pagedQuery
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.block.Block
-import net.minecraft.registry.Registries
-import net.minecraft.util.Formatting
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.withColor
+import net.minecraft.ChatFormatting
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.level.block.Block
 
 /**
  * XRay Command
@@ -77,15 +83,15 @@ object CommandXRay : Command.Factory {
         .begin("list")
         .pagedQuery(
             pageSize = 8,
-            header = { result("list").withColor(Formatting.RED).bold(true) },
+            header = { result("list").withColor(ChatFormatting.RED).bold(true) },
             items = {
-                ModuleXRay.blocks.sortedBy { it.translationKey }
+                ModuleXRay.blocks.sortedBy { it.descriptionId }
             },
             eachRow = { _, block ->
                 regular("\u2B25 ")
                     .append(variable(block.name).copyable())
                     .append(regular(" ("))
-                    .append(variable(Registries.BLOCK.getId(block).toString()).copyable())
+                    .append(variable(BuiltInRegistries.BLOCK.getKey(block).toString()).copyable())
                     .append(regular(")"))
             }
         )

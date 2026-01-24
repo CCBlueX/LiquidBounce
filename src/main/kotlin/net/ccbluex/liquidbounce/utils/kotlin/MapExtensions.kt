@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,17 @@
  */
 package net.ccbluex.liquidbounce.utils.kotlin
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import net.ccbluex.fastutil.fastIterator
+
 /**
  * Sums the values for matching keys from another map to this map.
  * Modifies the current collection.
  */
-fun <K> MutableMap<K, Int>.sumValues(anotherMap: Map<K, Int>): MutableMap<K, Int> {
-    anotherMap.forEach { (key, amount) ->
-        this[key] = (this[key] ?: 0) + amount
+fun <K> Object2IntOpenHashMap<K>.sumValues(anotherMap: Object2IntMap<K>): Object2IntMap<K> {
+    anotherMap.fastIterator().forEach {
+        this.addTo(it.key, it.intValue)
     }
     return this
-}
-
-fun <K> MutableMap<K, Int>.incrementOrSet(key: K, amount: Int) {
-    this[key] = (this[key] ?: 0) + amount
 }

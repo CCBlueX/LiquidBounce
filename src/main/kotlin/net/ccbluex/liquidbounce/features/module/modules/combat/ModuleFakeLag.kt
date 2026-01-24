@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
@@ -36,13 +36,17 @@ import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.item.isConsumable
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
-import net.minecraft.network.packet.c2s.play.*
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
-import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
+import net.minecraft.network.protocol.game.ClientboundSetHealthPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import kotlin.jvm.optionals.getOrNull
 
 /**
@@ -51,7 +55,7 @@ import kotlin.jvm.optionals.getOrNull
  * Holds back packets to prevent you from being hit by an enemy.
  */
 @Suppress("MagicNumber")
-object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
+object ModuleFakeLag : ClientModule("FakeLag", ModuleCategories.COMBAT) {
     private val range by floatRange("Range", 2f..5f, 0f..10f)
     private val delay by intRange("Delay", 300..600, 0..1000, "ms")
     private val recoilTime by int("RecoilTime", 250, 0..1000, "ms")
@@ -64,15 +68,15 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
         val testPacket: (packet: Packet<*>?) -> Boolean
     ) : NamedChoice {
         ENTITY_INTERACT("EntityInteract", {
-            it is PlayerInteractEntityC2SPacket
-            || it is HandSwingC2SPacket
+            it is ServerboundInteractPacket
+            || it is ServerboundSwingPacket
         }),
         BLOCK_INTERACT("BlockInteract", {
-            it is PlayerInteractBlockC2SPacket
-            || it is UpdateSignC2SPacket
+            it is ServerboundUseItemOnPacket
+            || it is ServerboundSignUpdatePacket
         }),
         ACTION("Action", {
-            it is PlayerActionC2SPacket
+            it is ServerboundPlayerActionPacket
         })
     }
 
@@ -119,8 +123,8 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
 
     @Suppress("unused", "ComplexCondition")
     private val fakeLagHandler = handler<QueuePacketEvent> { event ->
-        if (event.origin != TransferOrigin.OUTGOING || player.isDead || player.isTouchingWater
-            || mc.currentScreen != null
+        if (event.origin != TransferOrigin.OUTGOING || player.isDeadOrDying || player.isInWater
+            || mc.screen != null
         ) {
             return@handler
         }
@@ -141,14 +145,14 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
 
         when (val packet = event.packet) {
 
-            is PlayerPositionLookS2CPacket,
-            is ResourcePackStatusC2SPacket -> {
+            is ClientboundPlayerPositionPacket,
+            is ServerboundResourcePackPacket -> {
                 chronometer.reset()
                 return@handler
             }
 
-            is PlayerInteractEntityC2SPacket,
-            is HandSwingC2SPacket -> {
+            is ServerboundInteractPacket,
+            is ServerboundSwingPacket -> {
                 if (FlushOn.ENTITY_INTERACT in flushOn) {
                     chronometer.reset()
                     return@handler
@@ -156,9 +160,9 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
             }
 
             // Flush on knockback
-            is EntityVelocityUpdateS2CPacket -> {
-                if (packet.entityId == player.id
-                    && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)
+            is ClientboundSetEntityMotionPacket -> {
+                if (packet.id == player.id
+                    && (packet.movement.x != 0.0 || packet.movement.y != 0.0 || packet.movement.z != 0.0)
                 ) {
                     chronometer.reset()
                     return@handler
@@ -166,7 +170,7 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
             }
 
             // Flush on explosion
-            is ExplosionS2CPacket -> {
+            is ClientboundExplodePacket -> {
                 packet.playerKnockback.getOrNull()?.let { knockback ->
                     if (knockback.x != 0.0 || knockback.y != 0.0 || knockback.z != 0.0) {
                         chronometer.reset()
@@ -176,14 +180,14 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
             }
 
             // Flush on damage
-            is HealthUpdateS2CPacket -> {
+            is ClientboundSetHealthPacket -> {
                 chronometer.reset()
                 return@handler
             }
         }
 
         // We don't want to lag when we are using an item that is not a food, milk bucket or potion.
-        if (player.isUsingItem && player.activeItem.isConsumable) {
+        if (player.isUsingItem && player.useItem.isConsumable) {
             return@handler
         }
 
@@ -205,7 +209,7 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
                     event.action = PacketQueueManager.Action.QUEUE
                     return@handler
                 }
-                val playerBox = player.dimensions.getBoxAt(position)
+                val playerBox = player.dimensions.makeBoundingBox(position)
 
                 // todo: implement if enemy is facing old player position
 
@@ -222,10 +226,10 @@ object ModuleFakeLag : ClientModule("FakeLag", Category.COMBAT) {
                     it.box.intersects(playerBox)
                 }
                 val serverDistance = entities.minOfOrNull {
-                    it.pos.distanceTo(position)
+                    it.position().distanceTo(position)
                 } ?: return@handler
                 val clientDistance = entities.minOfOrNull {
-                    it.pos.distanceTo(player.pos)
+                    it.position().distanceTo(player.position())
                 } ?: return@handler
 
                 // If the server position is not closer than the client position, we keep lagging.

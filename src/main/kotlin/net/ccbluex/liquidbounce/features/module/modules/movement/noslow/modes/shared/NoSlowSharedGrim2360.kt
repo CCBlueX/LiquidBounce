@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,9 +24,9 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.util.Hand
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.world.InteractionHand
 
 /**
  * @anticheat Grim
@@ -37,21 +37,21 @@ internal class NoSlowSharedGrim2360(override val parent: ChoiceConfigurable<*>) 
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
         if (player.isUsingItem && event.state == EventState.PRE) {
-            val hand = player.activeHand
+            val hand = player.usingItemHand
 
-            if (hand == Hand.MAIN_HAND) {
+            if (hand == InteractionHand.MAIN_HAND) {
                 untracked {
                     // Send offhand interact packet
                     // so that grim focuses on offhand noslow checks that don't exist.
-                    network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, 0, player.yaw, player.pitch))
+                    network.send(ServerboundUseItemPacket(InteractionHand.OFF_HAND, 0, player.yRot, player.xRot))
                 }
-            } else if (hand == Hand.OFF_HAND) {
+            } else if (hand == InteractionHand.OFF_HAND) {
                 // Switch slots (based on 1.8 grim switch noslow)
                 untracked {
                     val slot = player.inventory.selectedSlot
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 8 + 1))
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 7 + 2))
-                    network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
+                    network.send(ServerboundSetCarriedItemPacket(slot % 8 + 1))
+                    network.send(ServerboundSetCarriedItemPacket(slot % 7 + 2))
+                    network.send(ServerboundSetCarriedItemPacket(slot))
                 }
             }
         }

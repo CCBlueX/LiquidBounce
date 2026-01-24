@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,20 +20,20 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.plac
 
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.player
-import net.minecraft.block.Blocks
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 class PlacementContext(
     val basePlace: Boolean,
     val basePlaceLayers: IntRange,
-    val expectedCrystal: Box,
+    val expectedCrystal: AABB,
     val target: LivingEntity
 ) {
 
-    val eyePos: Vec3d = player.eyePos
+    val eyePos: Vec3 = player.eyePosition
     val range = SubmoduleCrystalPlacer.range.toDouble()
     val wallsRange = SubmoduleCrystalPlacer.wallsRange.toDouble()
 
@@ -50,7 +50,7 @@ class CandidateCache(private val candidate: BlockPos) {
     }
 
     val up: BlockPos by lazy {
-        candidate.up()
+        candidate.above()
     }
 
 }

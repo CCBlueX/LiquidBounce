@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 
 /**
  * based off of intave consume noslow, might work on some other ac
@@ -36,10 +36,10 @@ internal class NoSlowConsumeRelease(override val parent: ChoiceConfigurable<*>) 
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
         if (player.isUsingItem && event.state == EventState.PRE && player.moving) {
-            network.sendPacket(
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                    player.blockPos,
+            network.send(
+                ServerboundPlayerActionPacket(
+                    ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM,
+                    player.blockPosition(),
                     Direction.UP
                 )
             )

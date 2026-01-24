@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,9 +21,11 @@ package net.ccbluex.liquidbounce.config.types
 
 import com.google.gson.Gson
 import com.google.gson.JsonElement
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap
 import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
+import java.util.SortedMap
 
 class ChooseListValue<T : NamedChoice>(
     name: String,
@@ -66,9 +68,14 @@ interface NamedChoice {
     val choiceName: String
 
     companion object {
+        inline fun <reified T> makeLookupTable(): SortedMap<String, T> where T : NamedChoice, T : Enum<T> =
+            T::class.java.enumConstants.associateByTo(
+                Object2ObjectRBTreeMap<String, T>(String.CASE_INSENSITIVE_ORDER)
+            ) { it.choiceName }
+
         @JvmName("of")
         @JvmStatic
-        fun String.asNamedChoice(): NamedChoice = object : NamedChoice {
+        fun String.asNamedChoice(): NamedChoice = object : NamedChoice, Comparable<NamedChoice> {
             override val choiceName get() = this@asNamedChoice
 
             override fun equals(other: Any?): Boolean =
@@ -82,6 +89,8 @@ interface NamedChoice {
             override fun hashCode(): Int = this.choiceName.hashCode()
 
             override fun toString(): String = this.choiceName
+
+            override fun compareTo(other: NamedChoice): Int = this.choiceName.compareTo(other.choiceName)
         }
     }
 }

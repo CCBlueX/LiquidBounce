@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.client.gui.screen.DeathScreen
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.minecraft.client.gui.screens.DeathScreen
 
 /**
  * AutoRespawn module
  *
  * Automatically respawns the player after dying.
  */
-object ModuleAutoRespawn : ClientModule("AutoRespawn", Category.PLAYER) {
+object ModuleAutoRespawn : ClientModule("AutoRespawn", ModuleCategories.PLAYER) {
 
     // There is a delay until the button is clickable on the death screen (20 ticks)
     private val delay by int("Delay", 0, 0..20, "ticks")
@@ -41,7 +41,7 @@ object ModuleAutoRespawn : ClientModule("AutoRespawn", Category.PLAYER) {
                 waitTicks(delay)
             }
 
-            player.requestRespawn()
+            player.respawn()
             mc.setScreen(null)
         }
     }

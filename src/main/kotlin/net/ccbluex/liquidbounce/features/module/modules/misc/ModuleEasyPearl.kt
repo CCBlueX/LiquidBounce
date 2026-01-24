@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PlayerInteractItemEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.FULL_BOX
+import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawBoxSide
+import net.ccbluex.liquidbounce.render.drawGradientSides
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -34,20 +39,19 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.entity.ConstantPositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.block.BlockRenderType
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.item.Items
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.Direction
+import net.minecraft.world.entity.EntityDimensions
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.RenderShape
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec3
 
 /**
  * EasyPearl module
@@ -56,36 +60,43 @@ import net.minecraft.util.math.Vec3d
  **/
 @Suppress("MagicNumber")
 object ModuleEasyPearl :
-    ClientModule("EasyPearl", Category.MISC, aliases = listOf("PearlHelper", "PearlAssist", "PearlTP")) {
+    ClientModule("EasyPearl", ModuleCategories.MISC, aliases = listOf("PearlHelper", "PearlAssist", "PearlTP")) {
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
     private val reachableCheck by boolean("ReachableCheck", true)
     private val rotation = tree(RotationsConfigurable(this))
 
-    private var targetPosition: Vec3d? = null
+    private var targetPosition: Vec3? = null
 
+    var currentTargetRotation : Rotation? = null
+        private set
     private val enderPearlSlot: HotbarItemSlot?
         get() = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)
+
+    override fun onDisabled() {
+        currentTargetRotation = null
+        super.onDisabled()
+    }
 
     /**
      * Handler throw pearl by player self.
      */
     @Suppress("unused")
     private val interactItemHandler = handler<PlayerInteractItemEvent> { event ->
-        if (!isHoldingPearl() || !mc.options.useKey.isPressed) {
+        if (!isHoldingPearl() || !mc.options.keyUse.isDown) {
             return@handler
         }
 
         val hitResult = getPositionPlayerLookAt()
         // While reachable check is enabled, we will check if the player
         // is looking at a block father than pearl can reach
-        if (reachableCheck && getTargetRotation(hitResult.pos) == null
+        if (reachableCheck && getTargetRotation(hitResult.location) == null
             && hitResult.type != HitResult.Type.MISS) {
             chat(markAsError(message("noInReachWarning")))
             event.cancelEvent()
             targetPosition = null
             return@handler
         }
-        targetPosition = hitResult.pos
+        targetPosition = hitResult.location
 
         // check if we are rotating to the target position correctly
         if (isRotationDone(targetPosition!!)) {
@@ -110,20 +121,21 @@ object ModuleEasyPearl :
     }
 
     @Suppress("unused")
-    private val tickHandler = tickHandler {
+    private val tickHandler = handler<GameTickEvent> {
         /**
          * handler for tick event,and check if we are rotating to the target rotation correctly,if yes,throw the pearl
          */
-        val currentTargetRotation = getTargetRotation(targetPosition ?: return@tickHandler) ?: return@tickHandler
+        currentTargetRotation = targetPosition?.let(::getTargetRotation) ?: return@handler
 
-        if (isRotationDone(targetPosition ?: return@tickHandler)) {
+        if (isRotationDone(targetPosition ?: return@handler)) {
             useHotbarSlotOrOffhand(
-                enderPearlSlot ?: return@tickHandler,
+                enderPearlSlot ?: return@handler,
                 0,
-                currentTargetRotation.yaw,
-                currentTargetRotation.pitch,
+                currentTargetRotation!!.yaw,
+                currentTargetRotation!!.pitch,
             )
             targetPosition = null
+            currentTargetRotation = null
         }
     }
 
@@ -137,47 +149,44 @@ object ModuleEasyPearl :
         }
 
         val matrixStack = event.matrixStack
-        val pos = getPositionPlayerLookAt(event.partialTicks)?.pos ?: return@handler
+        val pos = getPositionPlayerLookAt(event.partialTicks)?.location ?: return@handler
         val blockPos = pos.toBlockPos()
         val state = blockPos.getState() ?: return@handler
 
         renderEnvironmentForWorld(matrixStack) {
-            withDisabledCull {
-                val color =
-                    if (getTargetRotation(pos) != null) {
-                        Color4b(0x20, 0xC2, 0x06)
-                    } else {
-                        Color4b(0xD7, 0x09, 0x09)
-                    }
+            val color =
+                if (getTargetRotation(pos) != null) {
+                    Color4b(0x20, 0xC2, 0x06)
+                } else {
+                    Color4b(0xD7, 0x09, 0x09)
+                }
 
-                val baseColor = color.with(a = 50)
-                val transparentColor = baseColor.with(a = 0)
-                val outlineColor = color.with(a = 200)
+            val baseColor = color.with(a = 50)
+            val transparentColor = baseColor.with(a = 0)
+            val outlineColor = color.with(a = 200)
 
-                withPositionRelativeToCamera(pos.toBlockPos().toVec3d()) {
-                    if (state.renderType != BlockRenderType.MODEL && state.isAir) {
-                        withColor(baseColor) {
-                            drawSideBox(FULL_BOX, Direction.DOWN)
-                        }
-                        withColor(outlineColor) {
-                            drawSideBox(FULL_BOX, Direction.DOWN, onlyOutline = true)
-                        }
-                        drawGradientSides(0.7, baseColor, transparentColor, FULL_BOX)
-                    } else {
-                        withColor(baseColor) {
-                            drawSolidBox(FULL_BOX)
-                        }
-                        withColor(outlineColor) {
-                            drawOutlinedBox(FULL_BOX)
-                        }
-                    }
+            withPositionRelativeToCamera(blockPos) {
+                if (state.renderShape != RenderShape.MODEL && state.isAir) {
+                    drawBoxSide(
+                        FULL_BOX,
+                        Direction.DOWN,
+                        baseColor,
+                        outlineColor,
+                    )
+                    drawGradientSides(0.7, baseColor, transparentColor, FULL_BOX)
+                } else {
+                    drawBox(
+                        FULL_BOX,
+                        baseColor,
+                        outlineColor,
+                    )
                 }
             }
         }
     }
 
     private fun isHoldingPearl() =
-        player.mainHandStack.item == Items.ENDER_PEARL || player.offHandStack.item == Items.ENDER_PEARL
+        player.mainHandItem.item == Items.ENDER_PEARL || player.offhandItem.item == Items.ENDER_PEARL
 
     /**
      * check if we are rotating to the target rotation correctly
@@ -185,7 +194,7 @@ object ModuleEasyPearl :
      * @return true if we are rotating to the target rotation correctly, false otherwise
      */
     @Suppress("ReturnCount")
-    private fun isRotationDone(targetPosition: Vec3d): Boolean {
+    private fun isRotationDone(targetPosition: Vec3): Boolean {
         return RotationManager.serverRotation.angleTo(
             getTargetRotation(targetPosition) ?: return true,
         ) <= aimOffThreshold
@@ -196,18 +205,18 @@ object ModuleEasyPearl :
      * @return the position player look at
      */
     private fun getPositionPlayerLookAt(tickDelta: Float = 0f) =
-        player.raycast(1000.0, tickDelta, false)
+        player.pick(1000.0, tickDelta, false)
 
     /**
      * get the target rotation for the target position
      * @param targetPosition the target position
      * @return the target rotation for the target position
      */
-    private fun getTargetRotation(targetPosition: Vec3d): Rotation? =
+    private fun getTargetRotation(targetPosition: Vec3): Rotation? =
         SituationalProjectileAngleCalculator.calculateAngleFor(
             TrajectoryInfo.GENERIC,
-            sourcePos = player.pos,
-            targetPosFunction = ConstantPositionExtrapolation(targetPosition),
+            sourcePos = player.position(),
+            targetPosFunction = PositionExtrapolation.constant(targetPosition),
             targetShape = EntityDimensions.fixed(1.0F, 0.0F),
         )
 }

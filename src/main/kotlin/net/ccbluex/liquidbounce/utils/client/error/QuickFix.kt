@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.utils.client.error
 
 import net.ccbluex.liquidbounce.utils.client.error.errors.JcefIsntCompatible
@@ -64,6 +83,41 @@ enum class QuickFix (
                     else -> null
                 }
             }
+        }
+    ),
+    D3D11_UNSATISFIED_LINK(
+        description = "D3D11 not installed",
+        testError = { throwable ->
+            throwable is UnsatisfiedLinkError && throwable.message?.contains("d3dcompiler_47.dll") == true
+        },
+        whatToDo = Instructions(true) {
+            // Tracking issue: https://github.com/CCBlueX/LiquidBounce/issues/6841
+            // For some reason, this seems to always happen for Russian users.
+            // We were never able to reproduce this on a clean Windows install.
+            arrayOf(
+                "Install Windows Updates",
+                "Install DirectX End-User Runtime",
+                "Install C++ Redistributable for Visual Studio 2017–2026",
+                "Restart LiquidBounce and try again."
+            )
+        }
+    ),
+    JCEF_UNSATISFIED_LINK(
+        description = "Windows Application control policy is blocking JCEF",
+        testError = { throwable ->
+            // This is not an accurate check, since there can be other causes to fail on jcef.dll; however,
+            //   we found that this issue happens with "An Application Control policy has blocked this file"
+            //   the most.
+            throwable is UnsatisfiedLinkError && throwable.message?.contains("jcef.dll") == true
+        },
+        whatToDo = Instructions(true) {
+            arrayOf(
+                "Open Windows Security",
+                "Navigate to App & browser control.",
+                "Click on Smart App Control settings.",
+                "Set Smart App Control to 'Off' and confirm if asked.",
+                "Restart LiquidBounce and try again."
+            )
         }
     );
 

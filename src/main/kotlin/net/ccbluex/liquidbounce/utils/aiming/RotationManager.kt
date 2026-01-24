@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,11 +27,16 @@ import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.ModuleBacktrack
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.utils.setRotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.withFixedYaw
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.ccbluex.liquidbounce.utils.client.RestrictedSingleUseAction
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -41,11 +46,11 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.entity.Entity
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import net.minecraft.world.entity.Entity
 
 /**
  * A rotation manager
@@ -84,8 +89,11 @@ object RotationManager : EventListener {
     private val fakeLagging
         get() = PacketQueueManager.isLagging || ModuleBacktrack.isLagging()
 
+    private val freezing
+        get() = ModuleFreeze.running
+
     val serverRotation: Rotation
-        get() = if (fakeLagging) theoreticalServerRotation else actualServerRotation
+        get() = if (fakeLagging || freezing) theoreticalServerRotation else actualServerRotation
 
     /**
      * The rotation that was already sent to the server and is currently active.
@@ -135,7 +143,7 @@ object RotationManager : EventListener {
         }
 
         if (rotationTarget.considerInventory) {
-            if (InventoryManager.isInventoryOpen || mc.currentScreen is GenericContainerScreen) {
+            if (InventoryManager.isInventoryOpen || mc.screen is ContainerScreen) {
                 return false
             }
         }
@@ -166,9 +174,9 @@ object RotationManager : EventListener {
                     || activeRotationTarget.processors.isEmpty()
                     || diff <= activeRotationTarget.resetThreshold)) {
                 currentRotation?.let { currentRotation ->
-                    player.yaw = player.withFixedYaw(currentRotation)
-                    player.renderYaw = player.yaw
-                    player.lastRenderYaw = player.yaw
+                    player.setYRot(player.withFixedYaw(currentRotation))
+                    player.yBob = player.yRot
+                    player.yBobO = player.yRot
                 }
 
                 currentRotation = null
@@ -209,7 +217,7 @@ object RotationManager : EventListener {
         if (activeRotationTarget?.movementCorrection != MovementCorrection.OFF) {
             val rotation = currentRotation ?: return@handler
 
-            event.velocity = Entity.movementInputToVelocity(
+            event.velocity = Entity.getInputVector(
                 event.movementInput,
                 event.speed,
                 rotation.yaw
@@ -237,17 +245,17 @@ object RotationManager : EventListener {
         priority = EventPriorityConvention.READ_FINAL_STATE
     ) { event ->
         val rotation = when (val packet = event.packet) {
-            is PlayerMoveC2SPacket -> {
+            is ServerboundMovePlayerPacket -> {
                 // If we are not changing the look, we don't need to update the rotation
-                if (!packet.changeLook) {
+                if (!packet.hasRot) {
                     return@handler
                 }
 
                 // We trust that we have sent a normalized rotation, if not, ... why?
-                Rotation(packet.yaw, packet.pitch, isNormalized = true)
+                Rotation(packet.yRot, packet.xRot, isNormalized = true)
             }
-            is PlayerPositionLookS2CPacket -> Rotation(packet.change.yaw, packet.change.pitch, isNormalized = true)
-            is PlayerInteractItemC2SPacket -> Rotation(packet.yaw, packet.pitch, isNormalized = true)
+            is ClientboundPlayerPositionPacket -> Rotation(packet.change.yRot, packet.change.xRot, isNormalized = true)
+            is ServerboundUseItemPacket -> Rotation(packet.yRot, packet.xRot, isNormalized = true)
             else -> return@handler
         }
 

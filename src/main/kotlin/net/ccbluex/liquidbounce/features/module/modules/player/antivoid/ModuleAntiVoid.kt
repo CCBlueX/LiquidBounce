@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.antivoid
 
 import net.ccbluex.liquidbounce.common.ShapeFlag
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidBlinkMode
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidFlagMode
 import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode.AntiVoidGhostBlockMode
@@ -34,14 +32,14 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * AntiVoid module protects the player from falling into the void by simulating
  * future movements and taking action if necessary.
  */
-object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
+object ModuleAntiVoid : ClientModule("AntiVoid", ModuleCategories.PLAYER) {
 
     val mode = choices(
         "Mode", AntiVoidGhostBlockMode, arrayOf(
@@ -56,7 +54,7 @@ object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
 
     // Flags indicating if an action has been already taken or needs to be taken.
     var isLikelyFalling = false
-    var rescuePosition: Vec3d? = null
+    var rescuePosition: Vec3? = null
         private set
 
     // How many future ticks to simulate to ensure safety.
@@ -97,13 +95,13 @@ object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
             return@tickHandler
         }
 
-        val boundingBox = player.boundingBox.withMinY(voidThreshold.toDouble())
+        val boundingBox = player.boundingBox.setMinY(voidThreshold.toDouble())
 
         // If no collision is detected within a threshold beyond which falling
         // into void is likely, take the necessary action.
         val collisions = world.getBlockCollisions(player, boundingBox)
 
-        if (collisions.none() || collisions.all { shape -> shape == VoxelShapes.empty() }) {
+        if (collisions.none() || collisions.all { shape -> shape == Shapes.empty() }) {
             if (mode.activeChoice.rescue()) {
                 notification(
                     "AntiVoid", "Action taken to prevent void fall",
@@ -127,16 +125,16 @@ object ModuleAntiVoid : ClientModule("AntiVoid", Category.PLAYER) {
         return false
     }
 
-    fun isSafeForRescue(pos: Vec3d): Boolean {
+    fun isSafeForRescue(pos: Vec3): Boolean {
         val boundingBox = player.boundingBox
             // Change position to the snapshot position
-            .offset(pos.subtract(player.pos))
-            .withMinY(voidThreshold.toDouble())
+            .move(pos.subtract(player.position()))
+            .setMinY(voidThreshold.toDouble())
 
         // If no collision is detected within a threshold beyond which falling
         // into void is likely, take the necessary action.
         val collisions = world.getBlockCollisions(player, boundingBox)
-        val hasCollision = collisions.none() || collisions.all { shape -> shape == VoxelShapes.empty() }
+        val hasCollision = collisions.none() || collisions.all { shape -> shape == Shapes.empty() }
         debugGeometry("BoundingBox") {
             ModuleDebug.DebuggedBox(
                 boundingBox, if (hasCollision) {

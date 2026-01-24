@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {ItemStack} from "../../../../integration/types";
-    import {REST_BASE} from "../../../../integration/host";
     import {mapToColor} from "../../../../util/color_utils";
+    import {itemTextureUrl} from "../../../../integration/rest";
 
     export let stack: ItemStack;
 
@@ -10,14 +10,13 @@
     const countColor = count <= 0 ? "red" : "white";
 
     const valueColor = mapToColor(120 * (maxDamage - damage) / maxDamage);
-    const itemIconUrl = `${REST_BASE}/api/v1/client/resource/itemTexture?id=${identifier}`;
 </script>
 
 <div class="item-stack">
     {#if enchantments}
-        <div class="mask" style="mask-image: url({itemIconUrl})"></div>
+        <div class="mask" style="mask-image: url({itemTextureUrl(identifier)})"></div>
     {/if}
-    <img class="item-icon" src={itemIconUrl} alt={identifier}/>
+    <img class="item-icon" src={itemTextureUrl(identifier)} alt={identifier}/>
 
     <div class="durability-bar" class:hidden={damage === 0}>
         <div class="durability"

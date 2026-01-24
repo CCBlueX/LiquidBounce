@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,25 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
-import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.opengl.GlStateManager
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.ingame.HandledScreen.BACKGROUND_TEXTURE
-import net.minecraft.client.gui.screen.ingame.InventoryScreen.drawEntity
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.screen.PlayerScreenHandler
-import net.minecraft.screen.slot.Slot
-import net.minecraft.text.Text
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.INVENTORY_LOCATION
+import net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventoryFollowsMouse
+import net.minecraft.client.input.KeyEvent
+import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.inventory.InventoryMenu
+import net.minecraft.world.inventory.Slot
+import net.minecraft.world.item.ItemStack
 
-class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Text.empty()) {
+class ViewedInventoryScreen(private val player: () -> Player?) : Screen(PlainText.EMPTY) {
 
-    val handler: PlayerScreenHandler?
-        get() = player()?.playerScreenHandler
+    val handler: InventoryMenu?
+        get() = player()?.inventoryMenu
 
     private val backgroundWidth: Int = 176
     private val backgroundHeight: Int = 166
@@ -46,99 +48,98 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
         y = (height - backgroundHeight) / 2
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         super.render(context, mouseX, mouseY, delta)
 
         val handler = handler ?: return
-        RenderSystem.disableDepthTest()
-        context.matrices.push()
-        context.matrices.translate(x.toFloat(), y.toFloat(), 0.0f)
+        GlStateManager._disableDepthTest()
+        context.pose().pushMatrix()
+        context.pose().translate(x.toFloat(), y.toFloat())
         var hoveredSlot: Slot? = null
 
         for (slot in handler.slots) {
-            if (slot.isEnabled) {
+            if (slot.isActive) {
                 drawSlot(context, slot)
             }
 
-            if (isPointOverSlot(slot, mouseX.toDouble(), mouseY.toDouble()) && slot.isEnabled) {
+            if (isPointOverSlot(slot, mouseX.toDouble(), mouseY.toDouble()) && slot.isActive) {
                 hoveredSlot = slot
-                if (slot.canBeHighlighted()) {
+                if (slot.isHighlightable) {
                     // draw slot highlight
                     context.fillGradient(
-                        RenderLayer.getGuiOverlay(),
                         slot.x, slot.y, slot.x + 16, slot.y + 16,
-                        -2130706433, -2130706433, 0
+                        -2130706433, -2130706433,
                     )
                 }
             }
         }
 
-        val cursorStack = handler.cursorStack
+        val cursorStack = handler.carried
         if (!cursorStack.isEmpty) {
             drawItem(context, cursorStack, mouseX - x - 8, mouseY - y - 8)
         }
 
-        context.matrices.pop()
-        RenderSystem.enableDepthTest()
+        context.pose().popMatrix()
+        GlStateManager._enableDepthTest()
 
-        if (cursorStack.isEmpty && hoveredSlot != null && hoveredSlot.hasStack()) {
-            val hoveredItemStack = hoveredSlot.stack
-            context.drawTooltip(
-                textRenderer, getTooltipFromItem(mc, hoveredItemStack),
-                hoveredItemStack.tooltipData, mouseX, mouseY
+        if (cursorStack.isEmpty && hoveredSlot != null && hoveredSlot.hasItem()) {
+            val hoveredItemStack = hoveredSlot.item
+            context.setTooltipForNextFrame(
+                font, getTooltipFromItem(mc, hoveredItemStack),
+                hoveredItemStack.tooltipImage, mouseX, mouseY
             )
         }
     }
 
-    override fun renderBackground(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        renderInGameBackground(context)
+    override fun renderBackground(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
+        renderTransparentBackground(context)
         drawBackground(context, mouseX, mouseY)
     }
 
-    private fun drawItem(context: DrawContext, stack: ItemStack, x: Int, y: Int) {
-        context.matrices.push()
-        context.matrices.translate(0f, 0f, 232f)
-        context.drawItem(stack, x, y)
-        context.drawStackOverlay(textRenderer, stack, x, y, null)
-        context.matrices.pop()
+    private fun drawItem(context: GuiGraphics, stack: ItemStack, x: Int, y: Int) {
+        context.pose().withPush {
+            context.renderItem(stack, x, y)
+            context.renderItemDecorations(font, stack, x, y, null)
+        }
     }
 
-    private fun drawBackground(context: DrawContext, mouseX: Int, mouseY: Int) {
-        context.drawTexture(RenderLayer::getGuiTextured, BACKGROUND_TEXTURE, x, y,
-            0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
+    private fun drawBackground(context: GuiGraphics, mouseX: Int, mouseY: Int) {
+        context.blit(
+            RenderPipelines.GUI_TEXTURED, INVENTORY_LOCATION, x, y,
+            0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256)
         player()?.let { player ->
-            drawEntity(
+            renderEntityInInventoryFollowsMouse(
                 context, x + 26, y + 8, x + 75, y + 78,
                 30, 0.0625f, mouseX.toFloat(), mouseY.toFloat(), player
             )
         }
     }
 
-    private fun drawSlot(context: DrawContext, slot: Slot) {
+    private fun drawSlot(context: GuiGraphics, slot: Slot) {
         var spriteDrawn = false
 
-        context.matrices.push()
-        context.matrices.translate(0f, 0f, 100f)
-        if (slot.stack.isEmpty && slot.isEnabled) {
-            val identifier = slot.backgroundSprite
+        context.pose().pushMatrix()
+        context.pose().translate(0f, 0f)
+        if (slot.item.isEmpty && slot.isActive) {
+            val identifier = slot.noItemIcon
             if (identifier != null) {
-                context.drawGuiTexture(RenderLayer::getGuiTextured, identifier, slot.x, slot.y, 16, 16);
+                context.blitSprite(RenderPipelines.GUI_TEXTURED, identifier, slot.x, slot.y, 16, 16)
                 spriteDrawn = true
             }
         }
 
         if (!spriteDrawn) {
             val seed = slot.x + slot.y * backgroundWidth
-            if (slot.disablesDynamicDisplay()) {
-                context.drawItemWithoutEntity(slot.stack, slot.x, slot.y, seed)
+            if (slot.isFake) {
+                context.renderFakeItem(slot.item, slot.x, slot.y, seed)
             } else {
-                context.drawItem(slot.stack, slot.x, slot.y, seed)
+                context.renderItem(slot.item, slot.x, slot.y, seed)
             }
 
-            context.drawStackOverlay(textRenderer, slot.stack, slot.x, slot.y, null)
+            context.renderItemDecorations(font, slot.item, slot.x, slot.y, null)
         }
 
-        context.matrices.pop()
+        context.pose().popMatrix()
     }
 
     private fun isPointOverSlot(slot: Slot, pointX: Double, pointY: Double): Boolean {
@@ -150,21 +151,21 @@ class ViewedInventoryScreen(private val player: () -> PlayerEntity?) : Screen(Te
             && pY >= slot.y - 1 && pY < slot.y + height + 1
     }
 
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        super.keyPressed(keyCode, scanCode, modifiers)
+    override fun keyPressed(input: KeyEvent): Boolean {
+        super.keyPressed(input)
 
-        if (mc.options.inventoryKey.matchesKey(keyCode, scanCode)) {
-            close()
+        if (mc.options.keyInventory.matches(input)) {
+            onClose()
         }
 
         return true
     }
 
-    override fun shouldPause() = false
+    override fun isPauseScreen() = false
 
     override fun tick() {
         if (handler == null) {
-            close()
+            onClose()
         }
     }
 }

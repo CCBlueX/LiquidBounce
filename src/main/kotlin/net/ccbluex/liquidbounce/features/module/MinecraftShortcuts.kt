@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.network.ClientPlayNetworkHandler
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.network.ClientPlayerInteractionManager
-import net.minecraft.client.world.ClientWorld
+import com.mojang.blaze3d.systems.GpuDevice
+import com.mojang.blaze3d.systems.RenderSystem
+import net.minecraft.client.Minecraft
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.multiplayer.ClientPacketListener
+import net.minecraft.client.multiplayer.MultiPlayerGameMode
+import net.minecraft.client.player.LocalPlayer
 
 /**
  * Collection of the most used variables
@@ -33,14 +35,16 @@ import net.minecraft.client.world.ClientWorld
  * fiddling with the handler code.
  */
 interface MinecraftShortcuts {
-    val mc: MinecraftClient
+    val mc: Minecraft
         get() = net.ccbluex.liquidbounce.utils.client.mc
-    val player: ClientPlayerEntity
+    val player: LocalPlayer
         get() = mc.player!!
-    val world: ClientWorld
-        get() = mc.world!!
-    val network: ClientPlayNetworkHandler
-        get() = mc.networkHandler!!
-    val interaction: ClientPlayerInteractionManager
-        get() = mc.interactionManager!!
+    val world: ClientLevel
+        get() = mc.level!!
+    val network: ClientPacketListener
+        get() = mc.connection!!
+    val interaction: MultiPlayerGameMode
+        get() = mc.gameMode!!
+    val gpuDevice: GpuDevice
+        get() = RenderSystem.getDevice()
 }

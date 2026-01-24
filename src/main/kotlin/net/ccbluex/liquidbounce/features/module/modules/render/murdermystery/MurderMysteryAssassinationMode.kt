@@ -1,46 +1,63 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.math.levenshtein
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.network.PlayerListEntry
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.component.type.MapIdComponent
-import net.minecraft.item.FilledMapItem
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
-import net.minecraft.util.Identifier
-import java.util.*
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.multiplayer.PlayerInfo
+import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.core.component.DataComponents
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
+import net.minecraft.resources.Identifier
+import net.minecraft.world.item.MapItem
+import net.minecraft.world.level.saveddata.maps.MapId
+import java.util.Locale
+import java.util.UUID
 import kotlin.math.absoluteValue
 
-object MurderMysteryAssassinationMode : Choice("Assassination"), MurderMysteryMode {
-    override val parent
-        get() = ModuleMurderMystery.modes
+object MurderMysteryAssassinationMode : MurderMysteryMode("Assassination") {
 
-    private var lastMap: MapIdComponent? = null
+    private var lastMap: MapId? = null
     private var currentAssassinationTarget: UUID? = null
     private var currentAssassin: UUID? = null
 
     val packetHandler =
         handler<PacketEvent> { packetEvent ->
-            val world = mc.world ?: return@handler
+            val world = mc.level ?: return@handler
 
-            if (packetEvent.packet is PlaySoundS2CPacket) {
+            if (packetEvent.packet is ClientboundSoundPacket) {
                 val packet = packetEvent.packet
 
-                if (packet.sound.value().id.toString() != "minecraft:block.note_block.basedrum") {
+                if (packet.sound.value().location.toString() != "minecraft:block.note_block.basedrum") {
                     return@handler
                 }
 
                 val expectedDistance = calculateDistanceFromWarningVolume(packet.volume)
 
                 val probablyAssassin =
-                    world.players.minByOrNull {
+                    world.players().minByOrNull {
                         (it.distanceTo(player) - expectedDistance).absoluteValue
                     } ?: return@handler
 
@@ -65,21 +82,21 @@ object MurderMysteryAssassinationMode : Choice("Assassination"), MurderMysteryMo
         }
 
     private fun assassinModeBs(
-        player: ClientPlayerEntity,
-        world: ClientWorld,
+        player: LocalPlayer,
+        world: ClientLevel,
     ) {
-        val equippedItem = player.inventory.getStack(3)
+        val equippedItem = player.inventory.getItem(3)
 
         val item = equippedItem?.item
 
-        if (item !is FilledMapItem) {
+        if (item !is MapItem) {
             // reset lastMap when map was removed (no longer in game)
             lastMap = null
             return
         }
 
-        val mapId = equippedItem.get(DataComponentTypes.MAP_ID)
-        val mapState = mapId?.let { world.getMapState(it) } ?: return
+        val mapId = equippedItem.get(DataComponents.MAP_ID)
+        val mapState = mapId?.let { world.getMapData(it) } ?: return
 
         if (mapId == lastMap) {
             return
@@ -107,38 +124,38 @@ object MurderMysteryAssassinationMode : Choice("Assassination"), MurderMysteryMo
 
     private fun findPlayerWithClosestName(
         name: String,
-        player: ClientPlayerEntity,
-    ): PlayerListEntry? {
-        return player.networkHandler.playerList.minByOrNull { netInfo ->
+        player: LocalPlayer,
+    ): PlayerInfo? {
+        return player.connection.onlinePlayers.minByOrNull { netInfo ->
             levenshtein(name, netInfo.profile.name.lowercase().trim())
         }
     }
 
     override fun handleHasBow(
-        entity: AbstractClientPlayerEntity,
+        entity: AbstractClientPlayer,
         locationSkin: Identifier,
     ) {
         // Nobody has a bow in this game mode
     }
 
     override fun handleHasSword(
-        entity: AbstractClientPlayerEntity,
+        entity: AbstractClientPlayer,
         locationSkin: Identifier,
     ) {
         // Everyone has a sword in this game mode
     }
 
-    override fun shouldAttack(entity: AbstractClientPlayerEntity): Boolean {
+    override fun shouldAttack(entity: AbstractClientPlayer): Boolean {
         // This person is either our assasin or our target. Attack them.
-        return this.getPlayerType(entity) == MurderMysteryMode.PlayerType.MURDERER
+        return this.getPlayerType(entity) == PlayerType.MURDERER
     }
 
-    override fun getPlayerType(player: AbstractClientPlayerEntity): MurderMysteryMode.PlayerType {
+    override fun getPlayerType(player: AbstractClientPlayer): PlayerType {
         if (player.gameProfile.id == currentAssassinationTarget || player.gameProfile.id == currentAssassin) {
-            return MurderMysteryMode.PlayerType.MURDERER
+            return PlayerType.MURDERER
         }
 
-        return MurderMysteryMode.PlayerType.NEUTRAL
+        return PlayerType.NEUTRAL
     }
 
     override fun reset() {

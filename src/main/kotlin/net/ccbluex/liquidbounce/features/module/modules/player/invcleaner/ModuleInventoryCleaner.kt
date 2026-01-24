@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,27 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap
+import it.unimi.dsi.fastutil.objects.Reference2IntMap
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
+import net.ccbluex.fastutil.objectIntArrayMapOf
+import net.ccbluex.fastutil.referenceIntArrayMapOf
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
-import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 /**
@@ -34,7 +46,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  *
  * Automatically throws away useless items and sorts them.
  */
-object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER,
+object ModuleInventoryCleaner : ClientModule("InventoryCleaner", ModuleCategories.PLAYER,
     aliases = listOf("InventoryManager")
 ) {
 
@@ -60,22 +72,22 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
 
     val cleanupTemplateFromSettings: CleanupPlanPlacementTemplate
         get() {
-            val slotTargets = hashMapOf<ItemSlot, ItemSortChoice>(
-                Pair(OffHandSlot, offHandItem),
-                Pair(Slots.Hotbar[0], slotItem1),
-                Pair(Slots.Hotbar[1], slotItem2),
-                Pair(Slots.Hotbar[2], slotItem3),
-                Pair(Slots.Hotbar[3], slotItem4),
-                Pair(Slots.Hotbar[4], slotItem5),
-                Pair(Slots.Hotbar[5], slotItem6),
-                Pair(Slots.Hotbar[6], slotItem7),
-                Pair(Slots.Hotbar[7], slotItem8),
-                Pair(Slots.Hotbar[8], slotItem9),
-            )
+            val slotTargets = Reference2ReferenceOpenHashMap<ItemSlot, ItemSortChoice>(10)
+
+            if (!isOlderThanOrEqual1_8) slotTargets[OffHandSlot] = offHandItem
+            slotTargets[Slots.Hotbar[0]] = slotItem1
+            slotTargets[Slots.Hotbar[1]] = slotItem2
+            slotTargets[Slots.Hotbar[2]] = slotItem3
+            slotTargets[Slots.Hotbar[3]] = slotItem4
+            slotTargets[Slots.Hotbar[4]] = slotItem5
+            slotTargets[Slots.Hotbar[5]] = slotItem6
+            slotTargets[Slots.Hotbar[6]] = slotItem7
+            slotTargets[Slots.Hotbar[7]] = slotItem8
+            slotTargets[Slots.Hotbar[8]] = slotItem9
 
             val forbiddenSlots = slotTargets
                 .filterValues { it == ItemSortChoice.IGNORE }
-                .keys.toHashSet()
+                .keys.toHashSet<ItemSlot>()
 
             // Disallow tampering with armor slots since auto armor already handles them
             forbiddenSlots += Slots.Armor
@@ -91,14 +103,14 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
             )
 
             val constraintProvider = AmountConstraintProvider(
-                desiredItemsPerCategory = hashMapOf(
-                    Pair(ItemSortChoice.BLOCK.category!!, maxBlocks),
-                    Pair(ItemSortChoice.THROWABLES.category!!, maxThrowables),
-                    Pair(ItemCategory(ItemType.ARROW, 0), maxArrows),
+                desiredItemsPerCategory = objectIntArrayMapOf(
+                    ItemType.BLOCK.defaultCategory, maxBlocks,
+                    ItemType.THROWABLE.defaultCategory, maxThrowables,
+                    ItemType.ARROW.defaultCategory, maxArrows,
                 ),
-                desiredValuePerFunction = hashMapOf(
-                    Pair(ItemFunction.FOOD, maxFoods),
-                    Pair(ItemFunction.WEAPON_LIKE, 1),
+                desiredValuePerFunction = referenceIntArrayMapOf(
+                    ItemFunction.FOOD, maxFoods,
+                    ItemFunction.WEAPON_LIKE, 1,
                 )
             )
 
@@ -186,11 +198,11 @@ object ModuleInventoryCleaner : ClientModule("InventoryCleaner", Category.PLAYER
     }
 
     private class AmountConstraintProvider(
-        val desiredItemsPerCategory: Map<ItemCategory, Int>,
-        val desiredValuePerFunction: Map<ItemFunction, Int>,
+        val desiredItemsPerCategory: Object2IntMap<ItemCategory>,
+        val desiredValuePerFunction: Reference2IntMap<ItemFunction>,
     ) {
-        fun getConstraints(facet: ItemFacet): ArrayList<ItemConstraintInfo> {
-            val constraints = ArrayList<ItemConstraintInfo>()
+        fun getConstraints(facet: ItemFacet): MutableList<ItemConstraintInfo> {
+            val constraints = mutableListOf<ItemConstraintInfo>()
 
             if (facet.providedItemFunctions.isEmpty()) {
                 val defaultDesiredAmount = if (facet.category.type.oneIsSufficient) 1 else Integer.MAX_VALUE

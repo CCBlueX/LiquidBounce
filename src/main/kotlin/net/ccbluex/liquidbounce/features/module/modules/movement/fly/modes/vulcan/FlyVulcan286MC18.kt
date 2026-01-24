@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
@@ -34,9 +32,9 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat Vulcan
@@ -56,7 +54,7 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
         get() = modes
 
     var flags = 0
-    private var flagPos: Vec3d? = null
+    private var flagPos: Vec3? = null
 
     override fun enable() {
         flags = 0
@@ -87,7 +85,7 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
 
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
-        if (packet is PlayerPositionLookS2CPacket) {
+        if (packet is ClientboundPlayerPositionPacket) {
             flags++
             if (autoDisable) {
                 val pos = packet.change.position
@@ -107,10 +105,10 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
     }
 
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.pos == player.blockPos.down() && !player.isSneaking) {
-            event.shape = VoxelShapes.fullCube()
+        if (event.pos == player.blockPosition().below() && !player.isShiftKeyDown) {
+            event.shape = Shapes.block()
         } else {
-            event.shape = VoxelShapes.empty()
+            event.shape = Shapes.empty()
         }
     }
 

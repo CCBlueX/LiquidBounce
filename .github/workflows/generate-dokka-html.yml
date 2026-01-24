@@ -1,0 +1,38 @@
+name: generate-dokka-html.yml
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+  
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+          cache: 'gradle'
+  
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+  
+      - name: Generate aggregated Dokka docs
+        run: ./gradlew dokkaGenerateHtml
+  
+      - name: Upload artifact for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/dokka/html
+  
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

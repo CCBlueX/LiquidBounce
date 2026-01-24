@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,26 +15,25 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.client
 
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.combat.Targets
-import java.util.*
+import java.util.EnumSet
 
 object ModuleTargets : ClientModule(
     name = "Targets",
-    category = Category.CLIENT,
+    category = ModuleCategories.CLIENT,
     notActivatable = true,
     hide = true,
     aliases = listOf("Enemies")
 ) {
     val combatConfigurable = multiEnumChoice("Combat",
-        default = EnumSet.of(
+        default = enumSetOf(
             Targets.PLAYERS,
             Targets.HOSTILE,
             Targets.ANGERABLE,
@@ -45,7 +44,7 @@ object ModuleTargets : ClientModule(
     )
 
     val visualConfigurable = multiEnumChoice("Visual",
-        default = EnumSet.of(
+        default = enumSetOf(
             Targets.PLAYERS,
             Targets.HOSTILE,
             Targets.ANGERABLE,

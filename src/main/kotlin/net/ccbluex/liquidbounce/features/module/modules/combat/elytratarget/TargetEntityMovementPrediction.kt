@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -6,8 +25,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.phys.Vec3
 
 @Suppress("MaxLineLength", "MagicNumber")
 internal object TargetEntityMovementPrediction : ToggleableConfigurable(ElytraRotationProcessor, "Prediction", true) {
@@ -17,9 +36,9 @@ internal object TargetEntityMovementPrediction : ToggleableConfigurable(ElytraRo
 
     internal fun predictPosition(
         target: LivingEntity,
-        targetPosition: Vec3d
+        targetPosition: Vec3
     ) = when {
-        !enabled || (glidingOnly && !target.isGliding) -> targetPosition
+        !enabled || (glidingOnly && !target.isFallFlying) -> targetPosition
         else -> mode.predict(target, targetPosition, multiplier.random().toDouble())
     }
 }
@@ -27,17 +46,17 @@ internal object TargetEntityMovementPrediction : ToggleableConfigurable(ElytraRo
 @Suppress("unused", "MagicNumber")
 private enum class PredictMode(
     override val choiceName: String,
-    val predict: (target: LivingEntity, targetPosition: Vec3d, multiplier: Double) -> Vec3d
+    val predict: (target: LivingEntity, targetPosition: Vec3, multiplier: Double) -> Vec3
 ) : NamedChoice {
     SIMPLE("Simple", { target, targetPosition, multiplier ->
-        targetPosition + target.velocity * multiplier
+        targetPosition + target.deltaMovement * multiplier
     }),
     WITH_GRAVITY("WithGravity", { target, targetPosition, multiplier ->
         SIMPLE.predict(
             target,
             targetPosition,
             multiplier
-        ) - Vec3d(
+        ) - Vec3(
             0.0,
             0.5 * 0.05 * multiplier * multiplier,
             0.0

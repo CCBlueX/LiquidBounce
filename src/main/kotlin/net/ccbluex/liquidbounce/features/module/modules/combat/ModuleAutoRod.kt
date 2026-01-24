@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,24 +19,21 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.computedOn
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStuck
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFreeze
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -44,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
@@ -56,20 +54,20 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.projectile.FishingBobberEntity
-import net.minecraft.item.Items
-import net.minecraft.util.math.Vec3d
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.projectile.FishingHook
+import net.minecraft.world.item.Items
+import net.minecraft.world.phys.Vec3
 import java.util.function.BooleanSupplier
 import java.util.function.Function
 
 /**
  * Auto use fishing rod for combat.
  */
-object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
+object ModuleAutoRod : ClientModule("AutoRod", ModuleCategories.COMBAT) {
 
     private val gravityType by enumChoice("GravityType", GravityType.LINEAR)
     private val range by floatRange("Range", 3.5f..5f, 2f..10f)
@@ -86,7 +84,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
     private val ignores by multiEnumChoice<Ignore>("Ignore")
     private val holdingItemsForIgnore by items(
         "HoldingItemsForIgnore",
-        ReferenceOpenHashSet.of(Items.BOW, Items.CROSSBOW, Items.TRIDENT, Items.FIRE_CHARGE, Items.ENDER_PEARL)
+        itemSortedSetOf(Items.BOW, Items.CROSSBOW, Items.TRIDENT, Items.FIRE_CHARGE, Items.ENDER_PEARL)
     )
     private val targetTracker = tree(TargetTracker(TargetPriority.DISTANCE))
     private val pointTracker = tree(PointTracker(this))
@@ -96,7 +94,9 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
     private val hitTimeout by int("HitTimeout", 30, 5..200, "ticks")
     private val pullOnOutOfRange by boolean("PullOnOutOfRange", true)
@@ -107,20 +107,20 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         get() = requires.all { it.asBoolean }
             && !ignores.any { it.asBoolean }
             && player.health > minHealth
-            && maxEnemiesNearby == 0 || targetTracker.countTargets() <= maxEnemiesNearby
             && availableRodSlot != null
-            && player.mainHandStack.item !in holdingItemsForIgnore
+            && player.mainHandItem.item !in holdingItemsForIgnore
             && !ModuleBlink.running
             && !ModuleScaffold.running
-            && !ModuleStuck.running
+            && !ModuleFreeze.running
+            && maxEnemiesNearby == 0 || targetTracker.countTargets() <= maxEnemiesNearby
 
-    private var fishingBobberEntity by computedOn<GameTickEvent, FishingBobberEntity?>(
+    private var fishingBobberEntity by computedOn<GameTickEvent, FishingHook?>(
         priority = FIRST_PRIORITY,
         initialValue = null,
     ) { _, _ ->
-        world.entities.firstOrNull { entity ->
-            entity is FishingBobberEntity && entity.playerOwner === player
-        } as FishingBobberEntity?
+        world.entitiesForRendering().firstOrNull { entity ->
+            entity is FishingHook && entity.playerOwner === player
+        } as FishingHook?
     }
 
     private var availableRodSlot by computedOn<GameTickEvent, HotbarItemSlot?>(
@@ -128,7 +128,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         initialValue = null,
     ) { _, old ->
         old?.takeIf {
-            it.isSelected && it.itemStack.isOf(Items.FISHING_ROD)
+            it.isSelected && it.itemStack.`is`(Items.FISHING_ROD)
         } ?: Slots.OffhandWithHotbar.findSlot(Items.FISHING_ROD)
     }
 
@@ -143,7 +143,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         val minRangeSq = range.start.sq()
 
         val target = targetTracker.selectFirst { enemy ->
-            player.squaredDistanceTo(enemy) in minRangeSq..maxRangeSq && player.canSee(enemy)
+            player.distanceToSqr(enemy) in minRangeSq..maxRangeSq && player.hasLineOfSight(enemy)
                 && enemy.getActualHealth() > minTargetHealth
         } ?: return@handler
 
@@ -157,7 +157,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
     @Suppress("unused")
     private val handleAutoRod = tickHandler {
-        debugParameter("fishingBobberEntity.hookedEntity") { fishingBobberEntity?.hookedEntity }
+        debugParameter("fishingBobberEntity.hookedEntity") { fishingBobberEntity?.hookedIn }
 
         if (!requirementsMet) {
             return@tickHandler
@@ -180,7 +180,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
                     // The player should hold the rod util pulling
                     ticksUntilReset = slotResetDelay.last + hitTimeout,
                     swingMode = swingMode
-                ).isAccepted
+                ).consumesAction()
             ) {
                 // Action failed
                 return@tickHandler
@@ -193,9 +193,9 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
         // 3. timeout / hit entity / no movement / out of range
         tickConditional(hitTimeout) {
-            fishingBobberEntity?.hookedEntity != null ||
-                fishingBobberEntity?.movement == Vec3d.ZERO ||
-                pullOnOutOfRange && player.squaredDistanceTo(target) !in minRangeSq..maxRangeSq
+            fishingBobberEntity?.hookedIn != null ||
+                fishingBobberEntity?.knownMovement == Vec3.ZERO ||
+                pullOnOutOfRange && player.distanceToSqr(target) !in minRangeSq..maxRangeSq
         }
 
         // 4. pull
@@ -205,19 +205,10 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         waitTicks(cooldown.random())
     }
 
-    @Suppress("unused")
-    private val renderHandler = handler<WorldRenderEvent> { event ->
-        val target = targetTracker.target ?: return@handler
-
-        renderEnvironmentForWorld(event.matrixStack) {
-            targetRenderer.render(this, target, event.partialTicks)
-        }
-    }
-
     override fun onDisabled() {
         targetTracker.reset()
         fishingBobberEntity?.let {
-            interaction.stopUsingItem(player)
+            interaction.releaseUsingItem(player)
             fishingBobberEntity = null
         }
         availableRodSlot = null
@@ -230,7 +221,7 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
 
         override fun apply(target: LivingEntity): Rotation? = when (this) {
             LINEAR -> {
-                val eyes = player.eyePos
+                val eyes = player.eyePosition
                 val point = pointTracker.findPoint(eyes, target, 1)
                 Rotation.lookingAt(point.pos, eyes)
             }
@@ -249,9 +240,9 @@ object ModuleAutoRod : ClientModule("AutoRod", Category.COMBAT) {
         HOLDING_CONSUMABLE("HoldingConsumable");
 
         override fun getAsBoolean(): Boolean = when (this) {
-            OPEN_INVENTORY -> InventoryManager.isInventoryOpen || mc.currentScreen is HandledScreen<*>
+            OPEN_INVENTORY -> InventoryManager.isInventoryOpen || mc.screen is AbstractContainerScreen<*>
             USING_ITEM -> player.isUsingItem
-            HOLDING_CONSUMABLE -> player.mainHandStack.isConsumable || player.offHandStack.isConsumable
+            HOLDING_CONSUMABLE -> player.mainHandItem.isConsumable || player.offhandItem.isConsumable
         }
     }
 

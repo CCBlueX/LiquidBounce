@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.integration.backend.input
 
 import net.ccbluex.liquidbounce.event.EventListener
@@ -54,10 +73,10 @@ class InputListener(
 
     @Suppress("unused")
     private val mouseCursorHandler = handler<MouseCursorEvent> { event ->
-        val framebufferWidth = mc.window.framebufferWidth.toDouble()
-        val framebufferHeight = mc.window.framebufferHeight.toDouble()
-        val windowWidth = mc.window.width.toDouble()
-        val windowHeight = mc.window.height.toDouble()
+        val framebufferWidth = mc.window.width.toDouble()
+        val framebufferHeight = mc.window.height.toDouble()
+        val windowWidth = mc.window.screenWidth.toDouble()
+        val windowHeight = mc.window.screenHeight.toDouble()
 
         val factorW = framebufferWidth / windowWidth
         val factorV = framebufferHeight / windowHeight

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions
 
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.*
+import it.unimi.dsi.fastutil.objects.Object2IntMap
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.autoShopItemTier
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.getAllTierItems
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.hasBetterTierItem
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.isItemWithTiers
 
-object ConditionCalculator {
-    private val items = mutableMapOf<String, Int>()
+class ConditionCalculator(
+    private val items: Object2IntMap<String>,
+) {
     private val stack = mutableListOf<Pair<ConditionNode, Boolean>>()
     private val results = mutableMapOf<ConditionNode, Boolean>()
-
-    fun items(newItems: Map<String, Int>) : ConditionCalculator {
-        this.items.clear()
-        this.items.putAll(newItems)
-        return this
-    }
 
     fun process(currentItem: String, root: ConditionNode?) : Boolean {
         if (currentItem.isItemWithTiers() && hasBetterTierItem(currentItem, items)) {
@@ -59,7 +59,7 @@ object ConditionCalculator {
 
     private fun processItemConditionNode(currentNode: ItemConditionNode) {
         if (!currentNode.id.isItemWithTiers()) {
-            val itemAmount = items[currentNode.id] ?: 0
+            val itemAmount = items.getOrDefault(currentNode.id, 0)
             val result = itemAmount <= currentNode.max &&
                 itemAmount >= currentNode.min.coerceAtMost(currentNode.max)
 
@@ -71,7 +71,7 @@ object ConditionCalculator {
         val result = getAllTierItems(currentNode.id, ModuleAutoShop.currentConfig.itemsWithTiers ?: emptyMap())
             .filter { it.autoShopItemTier() >= currentTier }
             .any {
-                val itemAmount = items[it] ?: 0
+                val itemAmount = items.getOrDefault(it, 0)
                 return@any itemAmount <= currentNode.max &&
                     itemAmount >= currentNode.min.coerceAtMost(currentNode.max)
         }

@@ -20,10 +20,7 @@
 <script lang="ts">
     import {type Alignment, HorizontalAlignment, VerticalAlignment} from "../../../integration/types.js";
 
-    export let name: string;
-    export let id: string;
     export let alignment: Alignment;
-    let element: HTMLElement | undefined;
 
     $: styleString = generateStyleString(alignment);
 
@@ -72,7 +69,7 @@
     }
 </script>
 
-<div class="draggable-element" style={styleString} bind:this={element}>
+<div class="draggable-element" style={styleString}>
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div class="contained-element">
         <slot/>
@@ -80,8 +77,6 @@
 </div>
 
 <style lang="scss">
-  @import "../../../colors";
-
   .draggable-element {
     position: relative;
   }

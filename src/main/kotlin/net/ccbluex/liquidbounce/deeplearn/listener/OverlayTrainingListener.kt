@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,20 +15,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.deeplearn.listener
 
 import ai.djl.training.Trainer
 import ai.djl.training.listener.TrainingListener
 import ai.djl.training.listener.TrainingListenerAdapter
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
 
 /**
  * Displays training overlay in Minecraft
@@ -63,20 +61,21 @@ class OverlayTrainingListener(
         val progressTotal = batch.progressTotal
         val progress = (progressCurrent.toFloat() / progressTotal.toFloat() * 100).toInt()
 
-        val progressBar = Text.empty()
-            .append(regular("Training Epoch "))
-            .append(variable("$numEpochs/$maxEpoch"))
-            .append(regular(" - "))
-            .append(regular("Batch "))
-            .append(variable("$progress%"))
-            .append(regular("\n".repeat(1)))
-            .append("[".asText().formatted(Formatting.GRAY))
-            .append("█".repeat(progress / 4).asText().formatted(Formatting.GREEN))
-            .append("░".repeat(25 - progress / 4).asText().formatted(Formatting.DARK_GRAY))
-            .append("]".asText().formatted(Formatting.GRAY))
+        val progressBar = textOf(
+            regular("Training Epoch "),
+            variable("$numEpochs/$maxEpoch"),
+            regular(" - "),
+            regular("Batch "),
+            variable("$progress%"),
+            regular("\n".repeat(1)),
+            "[".asPlainText(ChatFormatting.GRAY),
+            "█".repeat(progress / 4).asPlainText(ChatFormatting.GREEN),
+            "░".repeat(25 - progress / 4).asPlainText(ChatFormatting.DARK_GRAY),
+            "]".asPlainText(ChatFormatting.GRAY),
+        )
 
         mc.execute {
-            mc.inGameHud.setOverlayMessage(progressBar, false)
+            mc.gui.setOverlayMessage(progressBar, false)
         }
     }
 

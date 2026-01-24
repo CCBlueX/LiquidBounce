@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,9 +24,13 @@ import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.onHover
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.HoverEvent
 
 /**
  * Search marketplace items
@@ -84,13 +88,11 @@ object MarketplaceSearchCommand : Command.Factory {
                             variable(item.type.toString().lowercase()),
                             variable(if (item.featured) "★" else "")
                         ).onClick(
-                            ClickEvent(
-                                ClickEvent.Action.SUGGEST_COMMAND,
+                            ClickEvent.SuggestCommand(
                                 ".marketplace $action ${item.id}"
                             )
                         ).onHover(
-                            HoverEvent(
-                                HoverEvent.Action.SHOW_TEXT,
+                            HoverEvent.ShowText(
                                 variable(command.result("hover", variable(action), item.id))
                             )
                         )

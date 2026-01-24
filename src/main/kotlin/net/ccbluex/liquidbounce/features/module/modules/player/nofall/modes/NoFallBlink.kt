@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,25 +18,26 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall.modes
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
 
 /**
  * SpoofGround mode for the NoFall module.
  * This mode spoofs the 'onGround' flag in PlayerMoveC2SPacket to prevent fall damage.
  */
-internal object NoFallBlink : Choice("Blink") {
+internal object NoFallBlink : NoFallMode("Blink") {
 
     private const val PEEK_TICKS = 2
 
@@ -51,24 +52,18 @@ internal object NoFallBlink : Choice("Blink") {
     private var blinkFall = false
     var waitUntilGround = true
 
-    /**
-     * Specifies the parent configuration for this mode
-     */
-    override val parent: ChoiceConfigurable<*>
-        get() = modes
-
     private val inputHandler = handler<MovementInputEvent> { event ->
         // If we are invincible, we don't need to care about fall damage
-        if (player.isCreative || player.abilities.allowFlying || player.abilities.flying) {
+        if (player.isCreative || player.abilities.mayfly || player.abilities.flying) {
             blinkFall = false
             return@handler
         }
 
         // If we are not on-ground, we do some checks in-case something goes wrong
-        if (!player.isOnGround) {
+        if (!player.onGround()) {
             if (waitUntilGround || player.fallDistance > maximumFallDistance) {
                 if (blinkFall) {
-                    PacketQueueManager.rewrite<PlayerMoveC2SPacket> { packet ->
+                    PacketQueueManager.rewrite<ServerboundMovePlayerPacket> { packet ->
                         packet.onGround = false
                     }
 
@@ -112,7 +107,7 @@ internal object NoFallBlink : Choice("Blink") {
         )
 
         // Check if we collect fall distance above 2f in the next 10 ticks
-        for (ignored in 0..MAXIMUM_TICKS) {
+        for (ignored in 0 until MAXIMUM_TICKS) {
             simulatedPlayer.tick()
 
             if (simulatedPlayer.fallDistance > triggerFallDistance) {
@@ -120,7 +115,7 @@ internal object NoFallBlink : Choice("Blink") {
                     NotificationEvent.Severity.INFO)
                 blinkFall = true
 
-                ModuleDebug.debugGeometry(ModuleNoFall, "Ground", ModuleDebug.DebuggedPoint(player.pos,
+                ModuleDebug.debugGeometry(ModuleNoFall, "Ground", ModuleDebug.DebuggedPoint(player.position(),
                     Color4b(0, 0, 255, 255), size = 0.2))
                 break
             }
@@ -131,7 +126,7 @@ internal object NoFallBlink : Choice("Blink") {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket && blinkFall) {
+        if (packet is ServerboundMovePlayerPacket && blinkFall) {
             packet.onGround = true
         }
     }

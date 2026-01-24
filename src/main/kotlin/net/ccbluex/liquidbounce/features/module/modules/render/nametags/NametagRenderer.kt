@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,147 +18,88 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.render.*
-import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
+import net.ccbluex.liquidbounce.features.module.modules.render.nametags.NametagEnchantmentRenderer.drawEntityEnchantments
+import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer
+import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
+import net.ccbluex.liquidbounce.render.drawQuad
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.engine.type.Vec3
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.render.VertexFormat
-import net.minecraft.entity.LivingEntity
-import net.minecraft.item.ItemStack
-import org.lwjgl.opengl.GL11
+import net.ccbluex.liquidbounce.utils.client.player
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.world.entity.LivingEntity
 
-private const val NAMETAG_PADDING: Int = 5
-private const val ITEM_SIZE: Int = 20
-private const val ITEM_SCALE: Float = 1.0F
+private const val NAMETAG_PADDING: Int = 15
 
-class NametagRenderer {
+private const val FONT_SIZE = FontManager.DEFAULT_FONT_SIZE
+private const val BASE_SCALE_FACTOR = 1f / (FONT_SIZE * 0.15f)
+private const val BACKGROUND_X_OFFSET = 0.1f * FONT_SIZE
+private const val BACKGROUND_Y_OFFSET_TOP = -0.1f
+private const val BACKGROUND_Y_OFFSET_BOTTOM = 1.1f
+private const val BACKGROUND_X_PADDING = 0.2f * FONT_SIZE
 
-    private val quadBuffers =
-        RenderBufferBuilder(
-            VertexFormat.DrawMode.QUADS,
-            VertexInputType.Pos,
-            RenderBufferBuilder.TESSELATOR_A,
-        )
-    private val lineBuffers =
-        RenderBufferBuilder(
-            VertexFormat.DrawMode.DEBUG_LINES,
-            VertexInputType.Pos,
-            RenderBufferBuilder.TESSELATOR_B,
-        )
-
-    private val dc = newDrawContext()
-
-    private val fontBuffers = FontRendererBuffers()
-
-    fun RenderEnvironment.drawNametag(nametag: Nametag, pos: Vec3) {
-        val fontSize = FontManager.DEFAULT_FONT_SIZE
-
-        val scale = 1f / (fontSize * 0.15f) * ModuleNametags.scale
-
-        matrixStack.push()
-        matrixStack.translate(pos.x, pos.y, pos.z)
-        matrixStack.scale(scale, scale, 1f)
-
-        val x =
-            ModuleNametags.fontRenderer.draw(
-                ModuleNametags.fontRenderer.process(nametag.text),
-                0f,
-                0f,
-                shadow = true,
-                z = 0.001f,
-            )
-
-        // Make the model view matrix center the text when rendering
-        matrixStack.translate(-x * 0.5f, -ModuleNametags.fontRenderer.height * 0.5f, 0f)
-
-        ModuleNametags.fontRenderer.commit(this@drawNametag, fontBuffers)
-
-        val q1 = Vec3(-0.1f * fontSize, ModuleNametags.fontRenderer.height * -0.1f, 0f)
-        val q2 = Vec3(x + 0.2f * fontSize, ModuleNametags.fontRenderer.height * 1.1f, 0f)
-
-        quadBuffers.drawQuad(this@drawNametag, q1, q2)
-
-        if (NametagShowOptions.BORDER.isShowing()) {
-            lineBuffers.drawQuadOutlines(this@drawNametag, q1, q2)
-        }
-
-        if (NametagShowOptions.ITEMS.isShowing()) {
-            drawItemList(pos, nametag.items)
-        }
-
-        // Draw enchantments directly for the entity (regardless of whether items are shown)
-        if (NametagShowOptions.ENCHANTMENTS.isShowing() && nametag.entity is LivingEntity) {
-            val entityPos = nametag.entity.pos
-            val worldX = entityPos.x.toFloat()
-            val worldY = (entityPos.y + nametag.entity.height + 0.5f).toFloat()
-
-            NametagEnchantmentRenderer.drawEntityEnchantments(
-                this@drawNametag,
-                nametag.entity,
-                worldX,
-                worldY,
-                fontBuffers
-            )
-        }
-
-        matrixStack.pop()
-    }
-
-    private fun drawItemList(pos: Vec3, itemsToRender: List<ItemStack>) {
-        dc.matrices.push()
-        dc.matrices.translate(pos.x, pos.y - NAMETAG_PADDING, pos.z)
-        dc.matrices.scale(ITEM_SCALE * ModuleNametags.scale, ITEM_SCALE * ModuleNametags.scale, 1.0F)
-        dc.matrices.translate(-itemsToRender.size * ITEM_SIZE / 2.0F, -ITEM_SIZE.toFloat(), 0.0F)
-
-        dc.fill(
-            0,
-            0,
-            itemsToRender.size * ITEM_SIZE,
-            ITEM_SIZE,
-            Color4b.BLACK.with(a = 0).toARGB()
-        )
-
-        dc.matrices.translate(0.0F, 0.0F, 100.0F)
-
-        val itemInfo = NametagShowOptions.ITEM_INFO.isShowing()
-
-        itemsToRender.forEachIndexed { index, itemStack ->
-            if (itemStack.isEmpty) {
-                return@forEachIndexed
+internal fun GuiGraphics.drawNametag(nametag: Nametag, posX: Float, posY: Float) {
+    if (nametag.items.any { !it.isEmpty }) {
+        val currentItemStackRenderer = if (NametagEquipment.showInfo) {
+            if (nametag.entity === player) {
+                ItemStackListRenderer.SingleItemStackRenderer.All
+            } else {
+                ItemStackListRenderer.SingleItemStackRenderer.ForOtherPlayer
             }
-
-            val x = index * ITEM_SIZE
-            dc.drawItem(itemStack, x, 0)
-            if (itemInfo) {
-                dc.drawStackOverlay(mc.textRenderer, itemStack, x, 0)
-            }
+        } else {
+            ItemStackListRenderer.SingleItemStackRenderer.OnlyItem
         }
 
-        dc.matrices.pop()
+        drawItemStackList(nametag.items)
+            .centerX(posX)
+            .centerY(posY - NAMETAG_PADDING * nametag.scale)
+            .scale(nametag.scale)
+            .itemStackRenderer(currentItemStackRenderer)
+            .rectBackground(Color4b.TRANSPARENT)
+            .draw()
     }
 
-    fun commit(env: RenderEnvironment) {
-        GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT)
-        GL11.glEnable(GL11.GL_DEPTH_TEST)
+    val scale = BASE_SCALE_FACTOR * nametag.scale
 
-        RenderSystem.enableBlend()
-        RenderSystem.blendFuncSeparate(
-            GL11.GL_SRC_ALPHA,
-            GL11.GL_ONE_MINUS_SRC_ALPHA,
-            GL11.GL_ONE,
-            GL11.GL_ZERO
+    pose().pushMatrix()
+    pose().translate(posX, posY)
+    pose().scale(scale, scale)
+
+    val fontRenderer = ModuleNametags.fontRenderer
+    val processedText = fontRenderer.process(nametag.text)
+    val textWidth = fontRenderer.getStringWidth(processedText, shadow = true)
+
+    // Make the model view matrix center the text when rendering
+    pose().translate(-textWidth * 0.5f, -fontRenderer.height * 0.5f)
+
+    val x1 = -BACKGROUND_X_OFFSET
+    val y1 = fontRenderer.height * BACKGROUND_Y_OFFSET_TOP
+    val x2 = textWidth + BACKGROUND_X_PADDING
+    val y2 = fontRenderer.height * BACKGROUND_Y_OFFSET_BOTTOM
+
+    // Background
+    drawQuad(
+        x1, y1, x2, y2,
+        fillColor = Color4b.DEFAULT_BG_COLOR,
+        outlineColor = Color4b.BLACK.takeIf { ModuleNametags.border },
+    )
+
+    // Text
+    fontRenderer.draw(processedText) {
+        shadow = true
+    }
+
+    // Draw enchantments directly for the entity (regardless of whether items are shown)
+    if (NametagEnchantmentRenderer.running && nametag.entity is LivingEntity) {
+        val entityPos = nametag.entity.position()
+        val worldX = entityPos.x.toFloat()
+        val worldY = (entityPos.y + nametag.entity.bbHeight + 0.5f).toFloat()
+
+        drawEntityEnchantments(
+            nametag.entity,
+            worldX,
+            worldY,
         )
-
-        env.withColor(Color4b(0, 0, 0, 120)) {
-            quadBuffers.draw()
-        }
-        env.withColor(Color4b(0, 0, 0, 255)) {
-            lineBuffers.draw()
-        }
-        env.withColor(Color4b.WHITE) {
-            fontBuffers.draw()
-        }
     }
+
+    pose().popMatrix()
 }

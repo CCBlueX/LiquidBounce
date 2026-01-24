@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
@@ -15,9 +34,8 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.entity.LivingEntity
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -26,7 +44,6 @@ private const val BASE_YAW_SPEED = 45.0f
 private const val BASE_PITCH_SPEED = 35.0f
 private const val IDEAL_DISTANCE = 10
 
-@Suppress("MagicNumber")
 internal object ElytraRotationProcessor : Configurable("Rotations"), RotationProcessor, EventListener {
     private val sharpRotations by boolean("Sharp", false)
     internal val ignoreKillAura by boolean("IgnoreKillAuraRotation", true)
@@ -54,7 +71,7 @@ internal object ElytraRotationProcessor : Configurable("Rotations"), RotationPro
 
     private inline val randomDirectionVector
         get() = with (System.currentTimeMillis() / 1000.0) {
-            Vec3d(
+            Vec3(
                 sin(this * 1.8) * 0.04 + (Math.random() - 0.5) * 0.02,
                 sin(this * 2.2) * 0.03 + (Math.random() - 0.5) * 0.015,
                 cos(this * 1.8) * 0.04 + (Math.random() - 0.5) * 0.02,
@@ -108,8 +125,8 @@ internal object ElytraRotationProcessor : Configurable("Rotations"), RotationPro
 
         val microAdjustment = (sin(currentTime / 80.0) * 0.08 + cos(currentTime / 120.0) * 0.05).toFloat()
 
-        var moveYaw = MathHelper.clamp(deltaYaw, -yawSpeed, yawSpeed)
-        var movePitch = MathHelper.clamp(deltaPitch, -pitchSpeed, pitchSpeed)
+        var moveYaw = Math.clamp(deltaYaw, -yawSpeed, yawSpeed)
+        var movePitch = Math.clamp(deltaPitch, -pitchSpeed, pitchSpeed)
 
         if (difference < 5.0f) {
             moveYaw += microAdjustment * 0.2f
@@ -118,7 +135,7 @@ internal object ElytraRotationProcessor : Configurable("Rotations"), RotationPro
 
         return Rotation(
             currentRotation.yaw + moveYaw,
-            MathHelper.clamp(currentRotation.pitch + movePitch, -90.0f, 90.0f),
+            Math.clamp(currentRotation.pitch + movePitch, -90.0f, 90.0f),
         )
     }
 
@@ -158,14 +175,14 @@ internal object ElytraRotationProcessor : Configurable("Rotations"), RotationPro
         var targetPos = prediction.predictPosition(target, rotateAt.position(target)) + randomDirectionVector * 4.0
 
         if (autoDistance) {
-            val direction = (targetPos - player.pos).normalize()
-            val distance = player.pos.squaredDistanceTo(direction)
+            val direction = (targetPos - player.position()).normalize()
+            val distance = player.position().distanceToSqr(direction)
 
             if (distance < IDEAL_DISTANCE * IDEAL_DISTANCE) {
                 targetPos -= direction * (IDEAL_DISTANCE - distance)
             }
         }
 
-        return Rotation.lookingAt(targetPos, player.pos)
+        return Rotation.lookingAt(targetPos, player.position())
     }
 }

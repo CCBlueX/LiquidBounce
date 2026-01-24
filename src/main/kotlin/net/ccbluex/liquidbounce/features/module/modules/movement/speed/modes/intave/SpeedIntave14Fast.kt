@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave
 
@@ -26,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.multiply
 
 /**
  * Intave 14 speed (~8.7% faster than vanilla)
@@ -39,13 +39,11 @@ class SpeedIntave14Fast(override val parent: ChoiceConfigurable<*>) : SpeedBHopB
     private val tickHandler = tickHandler {
         when (player.airTicks) {
             1 -> {
-                player.velocity.x *= 1.04
-                player.velocity.z *= 1.04
+                player.deltaMovement = player.deltaMovement.multiply(factorX = 1.04F, factorZ = 1.04F)
             }
 
             2, 3, 4 -> {
-                player.velocity.x *= 1.02
-                player.velocity.z *= 1.02
+                player.deltaMovement = player.deltaMovement.multiply(factorX = 1.02F, factorZ = 1.02F)
             }
         }
 

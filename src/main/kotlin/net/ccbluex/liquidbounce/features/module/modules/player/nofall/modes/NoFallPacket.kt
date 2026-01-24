@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,25 +21,20 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.minecraft.entity.attribute.EntityAttributes
 
-internal object NoFallPacket : Choice("Packet") {
+internal object NoFallPacket : NoFallMode("Packet") {
     private val packetType by enumChoice("PacketType", MovePacketType.FULL)
     private val filter = choices("Filter", FallDistance, arrayOf(FallDistance, Always))
 
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
-
     val repeatable = tickHandler {
         if (filter.activeChoice.isActive) {
-            network.sendPacket(packetType.generatePacket().apply {
+            network.send(packetType.generatePacket().apply {
                 onGround = true
             })
 
             if (filter.activeChoice is FallDistance && FallDistance.resetFallDistance) {
-                player.onLanding()
+                player.resetFallDistance()
             }
         }
     }
@@ -53,7 +48,7 @@ internal object NoFallPacket : Choice("Packet") {
 
     private object FallDistance : Filter("FallDistance") {
         override val isActive: Boolean
-            get() = player.fallDistance - player.velocity.y > distance.activeChoice.value && player.age > 20
+            get() = player.fallDistance - player.deltaMovement.y > distance.activeChoice.value && player.tickCount > 20
 
         private val distance = choices("Distance", Smart, arrayOf(Smart, Constant))
         val resetFallDistance by boolean("ResetFallDistance", true)
@@ -67,7 +62,7 @@ internal object NoFallPacket : Choice("Packet") {
 
         private object Smart : DistanceMode("Smart") {
             override val value: Float
-                get() = player.getAttributeValue(EntityAttributes.SAFE_FALL_DISTANCE).toFloat()
+                get() = playerSafeFallDistance.toFloat()
         }
 
         private object Constant : DistanceMode("Constant") {

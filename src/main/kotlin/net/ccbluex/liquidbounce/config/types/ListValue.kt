@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,11 +22,11 @@ package net.ccbluex.liquidbounce.config.types
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
-import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.fastutil.enumMapOf
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.gson.stategies.ProtocolExclude
 import net.ccbluex.liquidbounce.utils.input.HumanInputDeserializer
-import net.ccbluex.liquidbounce.utils.kotlin.enumMap
+import java.util.SequencedSet
 
 open class ListValue<T : MutableCollection<E>, E>(
     name: String,
@@ -59,7 +59,7 @@ open class ListValue<T : MutableCollection<E>, E>(
 ) {
 
     @Suppress("UNCHECKED_CAST")
-    override fun setByString(string: String) {
+    final override fun setByString(string: String) {
         val deserializer = this.innerValueType.deserializer
 
         requireNotNull(deserializer) { "Cannot deserialize values of type ${this.innerValueType} yet." }
@@ -67,15 +67,19 @@ open class ListValue<T : MutableCollection<E>, E>(
         set(HumanInputDeserializer.parseArray(string, deserializer) as T)
     }
 
-    override fun deserializeFrom(gson: Gson, element: JsonElement) {
-        // TODO: Might add adaptation for single element like : ["foo", "bar"] or "foo"
-        element as? JsonArray ?: error("ListValue can only be deserialized from a JsonArray.")
-
+    final override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val currValue = this.inner
-
-        val newItems = element.asList().mapToArray { gson.fromJson(it, this.innerType) }
-        currValue.clear()
-        currValue.addAll(newItems)
+        if (element is JsonArray) {
+            val newItems = Array(element.size()) {
+                gson.fromJson(element[it], this.innerType)
+            }
+            currValue.clear()
+            currValue.addAll(newItems)
+        } else {
+            val newItem = gson.fromJson(element, this.innerType)
+            currValue.clear()
+            currValue.add(newItem)
+        }
 
         set(currValue) { /** Trigger listener callbacks */ }
     }
@@ -111,7 +115,7 @@ open class ItemListValue<T : MutableSet<E>, E>(
 ) : ListValue<T, E>(
     name,
     value,
-    ValueType.ITEM_LIST,
+    ValueType.NAMED_ITEM_LIST,
     innerValueType,
     innerType
 ) {
@@ -130,7 +134,10 @@ open class ItemListValue<T : MutableSet<E>, E>(
 
 }
 
-class RegistryListValue<T : MutableSet<E>, E>(
+/**
+ *
+ */
+class RegistryListValue<T : SequencedSet<E>, E>(
     name: String,
     value: T,
     innerValueType: ValueType = ValueType.INVALID,
@@ -147,21 +154,19 @@ class RegistryListValue<T : MutableSet<E>, E>(
      * This is used to determine the registry endpoint for the API.
      */
     @Exclude
-    val registry: String = TYPE_TO_REGISTRY_NAME[innerValueType] ?: error("Unsupported registry type: $innerValueType")
-
-    companion object {
-        @JvmField
-        internal val TYPE_TO_REGISTRY_NAME = enumMap<ValueType, String> {
-            put(ValueType.BLOCK, "blocks")
-            put(ValueType.ITEM, "items")
-            put(ValueType.SOUND, "sounds")
-            put(ValueType.STATUS_EFFECT, "statuseffects")
-            put(ValueType.CLIENT_PACKET, "clientpackets")
-            put(ValueType.SERVER_PACKET, "serverpackets")
-            put(ValueType.ENTITY_TYPE, "entity_type")
-            put(ValueType.SCREEN_HANDLER, "screen_handler")
-            put(ValueType.CLIENT_MODULE, "client_module")
-        }
-    }
+    val registry: String =
+        VALUE_TYPE_TO_REGISTRY_NAME[innerValueType] ?: error("Unsupported registry type: $innerValueType")
 
 }
+
+private val VALUE_TYPE_TO_REGISTRY_NAME = enumMapOf(
+    ValueType.BLOCK, "block",
+    ValueType.ITEM, "item",
+    ValueType.SOUND_EVENT, "sound_event",
+    ValueType.MOB_EFFECT, "mob_effect",
+    ValueType.C2S_PACKET, "c2s_packet",
+    ValueType.S2C_PACKET, "s2c_packet",
+    ValueType.ENTITY_TYPE, "entity_type",
+    ValueType.MENU, "menu",
+    ValueType.CLIENT_MODULE, "client_module",
+)

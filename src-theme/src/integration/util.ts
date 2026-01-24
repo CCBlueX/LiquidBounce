@@ -1,4 +1,6 @@
-import type { Module, GroupedModules } from "./types"
+import type {GroupedModules, Module} from "./types"
+
+export const delay = (millis: number) => new Promise(resolve => setTimeout(resolve, millis));
 
 export function groupByCategory(modules: Module[]): GroupedModules {
     return modules.reduce((acc: GroupedModules, current: Module) => {
@@ -36,3 +38,21 @@ export function intToRgba(value: number): number[] {
     const alpha = (value >> 24) & 0xff;
     return [red, green, blue, alpha];
 }
+
+export const swap = (array: any[], i: number, j: number) => {
+    if (i < 0 || i >= array.length || j < 0 || j >= array.length) return;
+
+    const it = array[i];
+    array[i] = array[j];
+    array[j] = it;
+}
+
+export const contentEquals = <T>(a: T[], b: T[]): boolean => {
+    if (a.length !== b.length) return false;
+    return a.every((item, index) => item === b[index]);
+}
+
+export const getHashParams = (): URLSearchParams => {
+    const hash = window.location.hash.split('?')[1] || '';
+    return new URLSearchParams(hash);
+};

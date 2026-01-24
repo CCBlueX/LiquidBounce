@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.event.EventListener
@@ -9,15 +28,15 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MO
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.MODEL_STATE
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
 object PlayerSimulationCache: EventListener {
-    private val otherPlayerCache = ConcurrentHashMap<PlayerEntity, SimulatedPlayerCache>()
+    private val otherPlayerCache = ConcurrentHashMap<Player, SimulatedPlayerCache>()
     private var localPlayerCache: SimulatedPlayerCache? = null
 
     @Suppress("unused")
@@ -65,7 +84,7 @@ object PlayerSimulationCache: EventListener {
         localPlayerCache = SimulatedPlayerCache(simulatedPlayer)
     }
 
-    fun getSimulationForOtherPlayers(player: PlayerEntity): SimulatedPlayerCache {
+    fun getSimulationForOtherPlayers(player: Player): SimulatedPlayerCache {
         return otherPlayerCache.computeIfAbsent(player) {
             val simulatedPlayer = SimulatedPlayer.fromOtherPlayer(
                 player,
@@ -162,9 +181,9 @@ class SimulatedPlayerCache(internal val simulatedPlayer: SimulatedPlayer) {
 }
 
 data class SimulatedPlayerSnapshot(
-    val pos: Vec3d,
-    val fallDistance: Float,
-    val velocity: Vec3d,
+    val pos: Vec3,
+    val fallDistance: Double,
+    val velocity: Vec3,
     val onGround: Boolean,
     val clipLedged: Boolean
 ) {
@@ -181,7 +200,7 @@ data class SimulatedPlayerSnapshot(
  * Yes, this name sucks as [SimulatedPlayerCache] already exists, but I don't know a better name :/
  */
 class CachedPlayerSimulation(val simulatedPlayer: SimulatedPlayerCache): PlayerSimulation {
-    override val pos: Vec3d
+    override val pos: Vec3
         get() = this.simulatedPlayer.getSnapshotAt(this.ticks).pos
 
     private var ticks = 0

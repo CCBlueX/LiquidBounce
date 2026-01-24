@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,34 +18,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.doesNotCollideBelow
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
-internal object NoFallHypixelPacket : Choice("HypixelPacket") {
+internal object NoFallHypixelPacket : NoFallMode("HypixelPacket") {
 
     private val void by boolean("OverVoid", false)
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleNoFall.modes
 
     private fun voidCheck(): Boolean {
         return (!player.doesNotCollideBelow() && !void || void)
     }
 
     val repeatable = tickHandler {
-        if (player.fallDistance - player.velocity.y >= 3.3 && voidCheck()) {
+        if (player.fallDistance - player.deltaMovement.y >= 3.3 && voidCheck()) {
             Timer.requestTimerSpeed(0.5f, Priority.IMPORTANT_FOR_PLAYER_LIFE, ModuleNoFall)
-            network.sendPacket(MovePacketType.ON_GROUND_ONLY.generatePacket().apply {
+            network.send(MovePacketType.ON_GROUND_ONLY.generatePacket().apply {
                 onGround = true
             })
-            player.fallDistance = 0F
+            player.fallDistance = 0.0
             waitTicks(1)
             Timer.requestTimerSpeed(1f, Priority.NORMAL, ModuleNoFall)
         }

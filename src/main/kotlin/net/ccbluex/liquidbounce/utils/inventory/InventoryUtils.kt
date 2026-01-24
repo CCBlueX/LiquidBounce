@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,35 +15,52 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 @file:Suppress("TooManyFunctions", "WildcardImport")
 
 package net.ccbluex.liquidbounce.utils.inventory
 
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
+import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.SwingMode
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.interactItem
+import net.ccbluex.liquidbounce.utils.client.interaction
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.asComparator
+import net.ccbluex.liquidbounce.utils.collection.blockSortedSetOf
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
-import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
+import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
-import net.minecraft.block.Block
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.component.type.DyedColorComponent
-import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.registry.Registries
-import net.minecraft.registry.tag.ItemTags
-import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.ScreenHandlerType
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import java.util.*
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.network.chat.Component
+import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
+import net.minecraft.tags.ItemTags
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.MenuType
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.component.DyedItemColor
+import net.minecraft.world.level.block.Block
+import java.util.EnumSet
+import java.util.SortedSet
 import java.util.function.Predicate
 
 /**
@@ -59,12 +76,13 @@ open class InventoryConstraints : Configurable("Constraints") {
     internal val closeDelay by intRange("CloseDelay", 1..2, 0..20, "ticks")
     internal val missChance by intRange("MissChance", 0..0, 0..100, "%")
 
-    internal val requirements by multiEnumChoice<InventoryRequirements>("Requires",
-        default = emptyEnumSet(),
+    internal val requirements by multiEnumChoice<InventoryRequirements>(
+        "Requires",
+        default = enumSetOf(),
         choices = requirementChoices(),
     )
 
-    protected open fun requirementChoices(): EnumSet<InventoryRequirements> = EnumSet.of(
+    protected open fun requirementChoices(): EnumSet<InventoryRequirements> = enumSetOf(
         InventoryRequirements.NO_MOVEMENT,
         InventoryRequirements.NO_ROTATION
     )
@@ -113,13 +131,79 @@ enum class InventoryRequirements(
     OPEN_INVENTORY("InventoryOpen");
 
     override fun test(action: InventoryAction): Boolean = when (this) {
-        NO_MOVEMENT -> player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f && !player.jumping
+        NO_MOVEMENT -> player.input.moveVector.isLikelyZero && !player.jumping
         NO_ROTATION -> RotationManager.rotationMatchesPreviousRotation()
         OPEN_INVENTORY -> !action.requiresPlayerInventoryOpen() || InventoryManager.isInventoryOpen
     }
 }
 
-fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
+class CheckScreenHandlerTypeConfigurable(
+    parent: EventListener,
+) : ToggleableConfigurable(parent, "CheckScreenHandlerType", enabled = true) {
+    private val types by registryList(
+        "Types",
+        objectRBTreeSetOf(
+            BuiltInRegistries.MENU.asComparator(),
+            MenuType.GENERIC_9x3, MenuType.GENERIC_9x6, MenuType.SHULKER_BOX,
+        ),
+        ValueType.MENU
+    )
+    private val filter by enumChoice("Filter", Filter.WHITELIST)
+
+    fun isValid(screen: AbstractContainerScreen<*>): Boolean {
+        return !running || filter(screen.menu.typeOrNull, types)
+    }
+}
+
+class CheckScreenTitleConfigurable(
+    parent: EventListener,
+) : ToggleableConfigurable(parent, "CheckScreenTitle", enabled = true, aliases = listOf("CheckTitle")) {
+    private val titles by multiEnumChoice(
+        "Titles",
+        enumSetOf(
+            ContainerTitle.CHEST, ContainerTitle.LARGE_CHEST,
+            ContainerTitle.SHULKER_BOX, ContainerTitle.BARREL,
+            ContainerTitle.CHEST_MINECART,
+        ),
+    )
+    private val customTitles by textList("Custom", ObjectRBTreeSet())
+    private val filter by enumChoice("Filter", Filter.WHITELIST)
+
+    fun isValid(screen: Screen): Boolean {
+        if (!running) return true
+
+        val titleString = screen.title.string
+        val matches = titles.any {
+            Component.translatable(it.translatableKey).string == titleString
+        } || titleString in customTitles
+
+        return when (filter) {
+            Filter.WHITELIST -> matches
+            Filter.BLACKLIST -> !matches
+        }
+    }
+
+    @Suppress("unused")
+    private enum class ContainerTitle(override val choiceName: String, val translatableKey: String) : NamedChoice {
+        BARREL("Barrel", "container.barrel"),
+        BEACON("Beacon", "container.beacon"),
+        BLAST_FURNACE("BlastFurnace", "container.blast_furnace"),
+        BREWING_STAND("BrewingStand", "container.brewing"),
+        CHEST("Chest", "container.chest"),
+        LARGE_CHEST("LargeChest", "container.chestDouble"),
+        DISPENSER("Dispenser", "container.dispenser"),
+        DROPPER("Dropper", "container.dropper"),
+        ENDER_CHEST("EnderChest", "container.enderchest"),
+        FURNACE("Furnace", "container.furnace"),
+        HOPPER("Hopper", "container.hopper"),
+        SHULKER_BOX("ShulkerBox", "container.shulkerBox"),
+        SMOKER("Smoker", "container.smoker"),
+        CHEST_MINECART("ChestMinecart", "entity.minecraft.chest_minecart"),
+        HOPPER_MINECART("HopperMinecart", "entity.minecraft.hopper_minecart"),
+    }
+}
+
+fun hasInventorySpace() = player.inventory.nonEquipmentItems.any { it.isEmpty }
 
 fun findEmptyStorageSlotsInInventory(): List<ItemSlot> {
     return (Slots.Inventory + Slots.Hotbar).filter { it.itemStack.isEmpty }
@@ -142,64 +226,64 @@ fun openInventorySilently() {
     }
 
     network.sendPacket(
-        OpenInventorySilentlyPacket(),
+        OpenInventorySilentlyPacket,
         onSuccess = { InventoryManager.isInventoryOpenServerSide = true },
         onFailure = { chat(markAsError("Failed to open inventory using ViaFabricPlus, report to developers!")) }
     )
 }
 
 fun closeInventorySilently() {
-    network.sendPacket(CloseHandledScreenC2SPacket(0))
+    network.send(ServerboundContainerClosePacket(0))
 }
 
-fun HandledScreen<*>.getSlotsInContainer() =
-    this.screenHandler.slots
-        .filter { it.inventory !== player.inventory }
-        .map { ContainerItemSlot(it.id) }
+fun AbstractContainerScreen<*>.getSlotsInContainer(): List<ContainerItemSlot> =
+    this.menu.slots
+        .filter { it.container !== player.inventory }
+        .map { ContainerItemSlot(it.index) }
 
-fun HandledScreen<*>.findItemsInContainer() =
-    this.screenHandler.slots
-        .filter { !it.stack.isEmpty && it.inventory !== player.inventory }
-        .map { ContainerItemSlot(it.id) }
+fun AbstractContainerScreen<*>.findItemsInContainer(): List<ContainerItemSlot> =
+    this.menu.slots
+        .filter { !it.item.isEmpty && it.container !== player.inventory }
+        .map { ContainerItemSlot(it.index) }
 
 @JvmOverloads
 fun useHotbarSlotOrOffhand(
     item: HotbarItemSlot,
     ticksUntilReset: Int = 1,
-    yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
-    pitch: Float = RotationManager.currentRotation?.pitch ?: player.pitch,
+    yaw: Float = RotationManager.currentRotation?.yaw ?: player.yRot,
+    pitch: Float = RotationManager.currentRotation?.pitch ?: player.xRot,
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
-): ActionResult = when (item) {
-    OffHandSlot -> interactItem(Hand.OFF_HAND, yaw, pitch, swingMode)
+): InteractionResult = when (item) {
+    OffHandSlot -> interactItem(InteractionHand.OFF_HAND, yaw, pitch, swingMode)
     else -> {
         SilentHotbar.selectSlotSilently(null, item, ticksUntilReset)
-        interactItem(Hand.MAIN_HAND, yaw, pitch, swingMode)
+        interactItem(InteractionHand.MAIN_HAND, yaw, pitch, swingMode)
     }
 }
 
 @JvmOverloads
 fun interactItem(
-    hand: Hand,
-    yaw: Float = RotationManager.currentRotation?.yaw ?: player.yaw,
-    pitch: Float = RotationManager.currentRotation?.pitch ?: player.pitch,
+    hand: InteractionHand,
+    yaw: Float = RotationManager.currentRotation?.yaw ?: player.yRot,
+    pitch: Float = RotationManager.currentRotation?.pitch ?: player.xRot,
     swingMode: SwingMode = SwingMode.DO_NOT_HIDE,
-): ActionResult {
+): InteractionResult {
     val result = interaction.interactItem(player, hand, yaw, pitch)
 
-    if (result.isAccepted) {
+    if (result.consumesAction()) {
         if (result.shouldSwingHand()) {
             swingMode.accept(hand)
         }
 
-        mc.gameRenderer.firstPersonRenderer.resetEquipProgress(hand)
+        mc.gameRenderer.itemInHandRenderer.itemUsed(hand)
     }
 
     return result
 }
 
-internal fun findBlocksEndingWith(vararg targets: String): MutableSet<Block> =
-    Registries.BLOCK.filterTo(ReferenceOpenHashSet()) { block ->
-        targets.any { Registries.BLOCK.getId(block).path.endsWith(it.lowercase()) }
+internal fun findBlocksEndingWith(vararg targets: String): SortedSet<Block> =
+    BuiltInRegistries.BLOCK.filterTo(blockSortedSetOf()) { block ->
+        targets.any { BuiltInRegistries.BLOCK.getKey(block).path.endsWith(it.lowercase()) }
     }
 
 /**
@@ -218,12 +302,12 @@ fun getArmorColor() = Slots.Armor.firstNotNullOfOrNull { slot ->
  * @see [net.minecraft.client.render.entity.feature.ArmorFeatureRenderer.renderArmor]
  */
 fun ItemStack.getArmorColor(): Int? {
-    return if (isIn(ItemTags.DYEABLE)) {
-        DyedColorComponent.getColor(this, DyedColorComponent.DEFAULT_COLOR) // #FFA06540
+    return if (`is`(ItemTags.DYEABLE)) {
+        DyedItemColor.getOrDefault(this, DyedItemColor.LEATHER_COLOR) // #FFA06540
     } else {
         null
     }
 }
 
-val ScreenHandler.typeOrNull: ScreenHandlerType<*>?
+val AbstractContainerMenu.typeOrNull: MenuType<*>?
     get() = runCatching { type }.getOrNull()

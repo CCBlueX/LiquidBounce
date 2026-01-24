@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,13 @@
 
 package net.ccbluex.liquidbounce.config.gson.util
 
-import com.google.gson.*
+import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonElement
+import com.google.gson.JsonNull
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import net.ccbluex.liquidbounce.config.gson.publicGson
@@ -65,10 +71,8 @@ private val EMPTY_JSON_OBJECT = JsonObject()
 internal fun emptyJsonArray(): JsonArray = EMPTY_JSON_ARRAY
 internal fun emptyJsonObject(): JsonObject = EMPTY_JSON_OBJECT
 
-fun String.toJsonPrimitive(): JsonPrimitive = JsonPrimitive(this)
-fun Char.toJsonPrimitive(): JsonPrimitive = JsonPrimitive(this)
-fun Number.toJsonPrimitive(): JsonPrimitive = JsonPrimitive(this)
-fun Boolean.toJsonPrimitive(): JsonPrimitive = JsonPrimitive(this)
+inline fun <reified T> JsonDeserializationContext.deserialize(json: JsonElement): T =
+    deserialize(json, object : TypeToken<T>() {}.type)
 
 fun jsonArrayOf(vararg elements: JsonElement) = JsonArray(elements.size).apply {
     elements.forEach { add(it) }

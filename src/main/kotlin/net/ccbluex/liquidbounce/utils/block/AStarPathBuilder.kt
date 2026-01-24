@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,14 @@
 
 package net.ccbluex.liquidbounce.utils.block
 
+import net.ccbluex.fastutil.Pool.Companion.use
+import net.ccbluex.fastutil.objectRBTreeSetOf
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.collection.ObjectPool
+import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3i
-import java.util.Comparator
-import java.util.TreeSet
+import net.minecraft.core.Vec3i
+import net.minecraft.world.phys.AABB
 
 private class Node(val position: Vec3i, var parent: Node? = null) {
     var g = 0
@@ -76,7 +76,7 @@ interface AStarPathBuilder {
 
     val Vec3i.isPassable: Boolean
         get() {
-            val box = Box(x.toDouble(), y.toDouble(), z.toDouble(), x + 1.0, y + 2.0, z + 1.0)
+            val box = AABB(x.toDouble(), y.toDouble(), z.toDouble(), x + 1.0, y + 2.0, z + 1.0)
 
             val collisions = world.getBlockCollisions(player, box)
 
@@ -87,13 +87,13 @@ interface AStarPathBuilder {
         (this.x - that.x).sq() + (this.y - that.y).sq() + (this.z - that.z).sq()
 
     fun findPath(start: Vec3i, end: Vec3i, maxCost: Int): List<Vec3i> {
-        if (end.isWithinDistance(start, stopRange)) return emptyList()
+        if (end.closerThan(start, stopRange)) return emptyList()
 
         val startNode = Node(start)
         val endNode = Node(end)
 
         // Node::f won't be modified after added
-        val openList = TreeSet(NODE_COMPARATOR).apply { add(startNode) }
+        val openList = objectRBTreeSetOf(NODE_COMPARATOR).apply { add(startNode) }
         val closedList = hashSetOf<Node>()
 
         var iterations = 0
@@ -106,7 +106,7 @@ interface AStarPathBuilder {
             val currentNode = openList.removeFirst()
             closedList.add(currentNode)
 
-            if (currentNode.position.isWithinDistance(endNode.position, stopRange)) {
+            if (currentNode.position.closerThan(endNode.position, stopRange)) {
                 return currentNode.buildPath()
             }
 
@@ -138,24 +138,25 @@ interface AStarPathBuilder {
     }
 
     private fun MutableList<Node>.getAdjacentNodesDirect(node: Node) {
-        ObjectPool.MutableBlockPos.use { pos ->
+        Pools.MutableBlockPos.use { pos ->
             for (direction in directions) {
-                val adjacentPosition = pos.set(node.position, direction)
+                val adjacentPosition = pos.setWithOffset(node.position, direction)
                 if (adjacentPosition.isPassable) {
-                    add(Node(adjacentPosition.toImmutable(), node))
+                    add(Node(adjacentPosition.immutable(), node))
                 }
             }
         }
     }
 
     private fun MutableList<Node>.getAdjacentNodesDiagonal(node: Node) {
-        ObjectPool.MutableBlockPos.use { pos ->
+        Pools.MutableBlockPos.use { pos ->
             for (direction in diagonalDirections) {
-                val adjacentPosition = pos.set(node.position, direction)
+                val adjacentPosition = pos.setWithOffset(node.position, direction)
                 if (adjacentPosition.isPassable &&
-                        node.position.add(direction.x, 0, 0).isPassable &&
-                        node.position.add(0, 0, direction.z).isPassable) {
-                    add(Node(adjacentPosition.toImmutable(), node))
+                    node.position.offset(direction.x, 0, 0).isPassable &&
+                    node.position.offset(0, 0, direction.z).isPassable
+                ) {
+                    add(Node(adjacentPosition.immutable(), node))
                 }
             }
         }

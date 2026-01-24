@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.placer.BlockPlacer
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  *
  * Builds structures.
  */
-object ModuleAutoBuild : ClientModule("AutoBuild", Category.WORLD, aliases = listOf("Platform", "AutoPortal")) {
+object ModuleAutoBuild : ClientModule("AutoBuild", ModuleCategories.WORLD, aliases = listOf("Platform", "AutoPortal")) {
 
     private val mode = choices("Mode", PortalMode, arrayOf(PortalMode, PlatformMode)).apply { tagBy(this) }
     val placer = tree(BlockPlacer("Placing", this, Priority.NORMAL, { mode.activeChoice.getSlot() }))

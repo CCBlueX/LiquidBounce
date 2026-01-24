@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,15 @@
 
 package net.ccbluex.liquidbounce.features.command
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent
@@ -27,10 +35,22 @@ import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.highlight
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.onClick
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.removeMessage
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.ClickEvent
 import okio.appendingSink
 import okio.buffer
 import java.io.File
@@ -104,7 +124,7 @@ object CommandExecutor : EventListener {
             }.invokeOnCompletion {
                 running.set(false)
                 progressJob.cancel()
-                mc.inGameHud.chatHud.removeMessage(progressMessageMetadata.id)
+                mc.gui.chat.removeMessage(progressMessageMetadata.id)
             }
         }
     }
@@ -127,29 +147,28 @@ object CommandExecutor : EventListener {
         MinecraftDispatcher + SupervisorJob() + coroutineExceptionHandler
     )
 
-    private fun handleExceptions(e: Throwable) {
+    internal fun handleExceptions(e: Throwable) {
         when (e) {
             is CommandException -> {
-                mc.inGameHud.chatHud.removeMessage("CommandManager#error")
+                mc.gui.chat.removeMessage("CommandManager#error")
                 val data = MessageMetadata(id = "CommandManager#error", remove = false)
-                chat(e.text.formatted(Formatting.RED), metadata = data)
+                chat(e.text.withStyle(ChatFormatting.RED), metadata = data)
 
-                if (!e.usageInfo.isNullOrEmpty()) {
+                if (e.usageInfo.isNotEmpty()) {
                     chat(highlight("Usage: ").bold(true), metadata = data)
 
                     // Zip the usage info together, e.g.
                     // ⬥ .friend add <name> [<alias>]
                     // ⬥ .friend remove <name>
                     for (usage in e.usageInfo) {
-                        chat(
-                            "\u2B25 ".asText()
-                                .formatted(Formatting.BLUE)
-                                .append(regular(CommandManager.Options.prefix + usage))
-                                .onClick {
-                                    mc.openChat(CommandManager.Options.prefix + usage)
-                                },
-                            metadata = data
-                        )
+                        val prefix = CommandManager.Options.prefix
+                        val text = regular("")
+                            .append("\u2B25 ".asPlainText(ChatFormatting.BLUE))
+                            .append(regular(prefix))
+                            .append(usage)
+                            .onClick(ClickEvent.SuggestCommand(prefix + usage.string))
+
+                        chat(text, metadata = data)
                     }
                 }
             }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,35 +21,35 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.entity.effect.StatusEffect
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.registry.Registries
-import net.minecraft.registry.entry.RegistryEntry
-import net.minecraft.util.Language
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.minecraft.core.Holder
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.locale.Language
+import net.minecraft.world.effect.MobEffect
+import net.minecraft.world.effect.MobEffectInstance
 
 /**
  * PotionSpoof
  *
  * Allows the player to have potion effects without actually having the potion.
  */
-object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
+object ModulePotionSpoof : ClientModule("PotionSpoof", ModuleCategories.PLAYER) {
 
     private class StatusEffectConfigurable(
-        val registryEntry: RegistryEntry<StatusEffect>,
+        val registryEntry: Holder<MobEffect>,
         specifiedLanguage: Map<String, String>,
     ) : ToggleableConfigurable(
         parent = this,
         // Value name (en_us)
-        name = specifiedLanguage.getOrDefault(registryEntry.value().translationKey, "Unknown"),
+        name = specifiedLanguage.getOrDefault(registryEntry.value().descriptionId, "Unknown"),
         enabled = false,
     ) {
         private val level = int("Level", 1, 1..10).onChanged {
-            instance = StatusEffectInstance(registryEntry, 0, it - 1)
+            instance = MobEffectInstance(registryEntry, 0, it - 1)
         }
 
-        var instance: StatusEffectInstance = StatusEffectInstance(registryEntry, 0, level.get() - 1)
+        var instance: MobEffectInstance = MobEffectInstance(registryEntry, 0, level.get() - 1)
             private set
     }
 
@@ -57,30 +57,35 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", Category.PLAYER) {
         /** @see Language.create */
         val language = Language::class.java.getResourceAsStream("/assets/minecraft/lang/en_us.json").let { stream ->
             val map = HashMap<String, String>(8192)
-            Language.load(stream, map::put)
+            Language.loadFromJson(stream, map::put)
             map
         }
 
-        Registries.STATUS_EFFECT.streamEntries().map {
+        BuiltInRegistries.MOB_EFFECT.listElements().map {
             tree(StatusEffectConfigurable(it, specifiedLanguage = language))
         }.toList()
     }
 
     override fun onDisabled() {
         for (spoofedEffect in statusEffectValues) {
-            if (spoofedEffect.enabled && player.getStatusEffect(spoofedEffect.registryEntry)?.duration == 0) {
-                player.removeStatusEffect(spoofedEffect.registryEntry)
+            if (spoofedEffect.enabled && player.getEffect(spoofedEffect.registryEntry)?.duration == 0) {
+                player.removeEffect(spoofedEffect.registryEntry)
             }
         }
     }
 
     @Suppress("unused")
     private val tickHandler = handler<PlayerTickEvent> {
-        for (configurable in statusEffectValues) {
-            if (configurable.enabled) {
-                player.addStatusEffect(configurable.instance)
-            } else if (player.getStatusEffect(configurable.registryEntry)?.duration == 0) {
-                player.removeStatusEffect(configurable.registryEntry)
+        for (effect in statusEffectValues) {
+            if (effect.enabled) {
+                player.addEffect(effect.instance)
+                effect.instance.effect.value().addAttributeModifiers(
+                    player.attributes,
+                    effect.instance.amplifier
+                )
+            } else if (player.getEffect(effect.registryEntry)?.duration == 0) {
+                player.removeEffect(effect.registryEntry)
+                effect.instance.effect.value().removeAttributeModifiers(player.attributes)
             }
         }
     }

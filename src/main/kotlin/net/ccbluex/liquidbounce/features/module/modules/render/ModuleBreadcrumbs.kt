@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.opengl.GlStateManager
+import com.mojang.blaze3d.vertex.VertexConsumer
 import it.unimi.dsi.fastutil.objects.ObjectFloatMutablePair
 import it.unimi.dsi.fastutil.objects.ObjectFloatPair
 import net.ccbluex.fastutil.component1
@@ -29,29 +30,28 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.VertexInputType
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.drawCustomMesh
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.minecraft.client.render.BufferBuilder
-import net.minecraft.client.render.Camera
-import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.Vec3d
-import org.joml.Matrix4f
+import net.minecraft.client.Camera
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.phys.Vec3
+import org.joml.Matrix4fc
 import org.joml.Vector3f
 import org.joml.Vector4f
-import java.util.*
+import java.util.ArrayDeque
+import java.util.IdentityHashMap
 
 /**
  * Breadcrumbs module
  *
  * Leaves traces behind players.
  */
-object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases = listOf("PlayerTrails")) {
+object ModuleBreadcrumbs : ClientModule("Breadcrumbs", ModuleCategories.RENDER, aliases = listOf("PlayerTrails")) {
 
     private val onlyOwn by boolean("OnlyOwn", true)
     private val color by color("Color", Color4b(70, 119, 255, 120))
@@ -68,7 +68,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
     }
 
     private val trails = IdentityHashMap<Entity, Trail>()
-    private val lastPositions = IdentityHashMap<Entity, Vec3d>()
+    private val lastPositions = IdentityHashMap<Entity, Vec3>()
 
     override fun onDisabled() {
         clear()
@@ -84,7 +84,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
 
         renderEnvironmentForWorld(matrixStack) {
             if (height > 0) {
-                RenderSystem.disableCull()
+                GlStateManager._disableCull()
             }
 
             val camera = mc.entityRenderDispatcher.camera ?: return@handler
@@ -92,8 +92,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
             val lines = height == 0f
             drawCustomMesh(
-                if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS,
-                VertexInputType.PosColor,
+                if (lines) ClientRenderPipelines.Lines else ClientRenderPipelines.Quads
             ) { matrix ->
                 val renderData = RenderData(matrix, this, colorF, lines)
                 trails.forEach { (entity, trail) ->
@@ -102,7 +101,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             }
 
             if (height > 0) {
-                RenderSystem.enableCull()
+                GlStateManager._enableCull()
             }
         }
     }
@@ -120,7 +119,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             return@handler
         }
 
-        val actualPresent = world.players
+        val actualPresent = world.players()
         actualPresent.forEach { player -> updateEntityTrail(time, player) }
         trails.keys.removeIf { key ->
             actualPresent.none { it === key } || !key.isAlive
@@ -133,7 +132,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
             return
         }
 
-        lastPositions[entity] = Vec3d(entity.x, entity.y, entity.z)
+        lastPositions[entity] = Vec3(entity.x, entity.y, entity.z)
         trails.getOrPut(entity, ::Trail).positions.add(TrailPart(entity.x, entity.y, entity.z, time))
     }
 
@@ -151,8 +150,8 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
     private data class TrailPart(val x: Double, val y: Double, val z: Double, val creationTime: Long)
 
     private class RenderData(
-        val matrix: Matrix4f,
-        val bufferBuilder: BufferBuilder,
+        val matrix: Matrix4fc,
+        val bufferBuilder: VertexConsumer,
         val color: Vector4f,
         val lines: Boolean
     )
@@ -193,7 +192,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
                 ObjectFloatMutablePair.of(point, alpha)
             }
 
-            val interpolatedPos = entity.getLerpedPos(mc.renderTickCounter.getTickDelta(true))
+            val interpolatedPos = entity.getPosition(mc.deltaTracker.getGameTimeDeltaPartialTick(true))
             val point = calculatePoint(camera, interpolatedPos.x, interpolatedPos.y, interpolatedPos.z)
             pointsWithAlpha.last().left(point)
 
@@ -202,7 +201,7 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
 
         private fun calculatePoint(camera: Camera, x: Double, y: Double, z: Double): Vector3f {
             val point = Vector3f(x.toFloat(), y.toFloat(), z.toFloat())
-            point.sub(camera.pos.x.toFloat(), camera.pos.y.toFloat(), camera.pos.z.toFloat())
+            point.sub(camera.position().x.toFloat(), camera.position().y.toFloat(), camera.position().z.toFloat())
             return point
         }
 
@@ -216,11 +215,11 @@ object ModuleBreadcrumbs : ClientModule("Breadcrumbs", Category.RENDER, aliases 
                     val (v0, alpha0) = list[i]
                     val (v2, alpha2) = list[i - 1]
 
-                    vertex(renderData.matrix, v0.x, v0.y, v0.z).color(red, green, blue, alpha0)
-                    vertex(renderData.matrix, v2.x, v2.y, v2.z).color(red, green, blue, alpha2)
+                    addVertex(renderData.matrix, v0.x, v0.y, v0.z).setColor(red, green, blue, alpha0)
+                    addVertex(renderData.matrix, v2.x, v2.y, v2.z).setColor(red, green, blue, alpha2)
                     if (!renderData.lines) {
-                        vertex(renderData.matrix, v2.x, v2.y + height, v2.z).color(red, green, blue, alpha2)
-                        vertex(renderData.matrix, v0.x, v0.y + height, v0.z).color(red, green, blue, alpha0)
+                        addVertex(renderData.matrix, v2.x, v2.y + height, v2.z).setColor(red, green, blue, alpha2)
+                        addVertex(renderData.matrix, v0.x, v0.y + height, v0.z).setColor(red, green, blue, alpha0)
                     }
                 }
             }

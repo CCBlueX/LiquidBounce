@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 202 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
 import java.lang.reflect.ParameterizedType
-import java.util.*
+import java.util.Optional
 
 class OptionalAdapter<T : Any> private constructor(private val adapter: TypeAdapter<T>) : TypeAdapter<Optional<T>>() {
     override fun write(sink: JsonWriter, value: Optional<T>?) {

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.deeplearn
 
@@ -26,7 +24,7 @@ import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.ConfigSystem.rootFolder
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.logger
-import java.util.*
+import java.util.Locale
 
 object DeepLearningEngine {
 
@@ -61,7 +59,7 @@ object DeepLearningEngine {
         // Enforce CPU pytorch flavor (CUDA often conflicts with NVIDIA CUDA and is too large for our use case)
         System.setProperty("PYTORCH_FLAVOR", "cpu")
 
-        ModelHolster
+        ModelManager
     }
 
     @JvmStatic
@@ -78,14 +76,14 @@ object DeepLearningEngine {
     suspend fun init(task: Task) {
         this.task = task
 
-        logger.info("[DeepLearning] Initializing engine...")
+        logger.info("[AI] Initializing engine...")
         val engine = withContext(Dispatchers.IO) {
             Engine.getInstance()
         }
         val name = engine.engineName
         val version = engine.version
         val deviceType = engine.defaultDevice().deviceType.uppercase(Locale.ENGLISH)
-        logger.info("[DeepLearning] Using engine $name $version on $deviceType.")
+        logger.info("[AI] Using deep learning engine $name $version on $deviceType.")
 
         isInitialized = true
         this.task = null

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,122 +18,141 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
+import net.ccbluex.liquidbounce.config.types.NamedChoice
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCombineMobs
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.joinToText
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.withColor
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.ping
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.text.TextColor
-import net.minecraft.util.Formatting
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.Style
+import net.minecraft.network.chat.TextColor
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
+import java.util.function.Function
 import kotlin.math.roundToInt
 
-@Suppress("MagicNumber")
-class NametagTextFormatter(private val entity: Entity) {
-    fun format(): Text {
-        val outputText = Text.empty()
+private val COUNT_STYLE = Style.EMPTY.applyFormats(ChatFormatting.AQUA, ChatFormatting.BOLD)
 
-        if (NametagShowOptions.DISTANCE.isShowing()) {
-            outputText.append(this.distanceText).append(" ")
-        }
-        if (NametagShowOptions.PING.isShowing()) {
-            outputText.append(this.pingText).append(" ")
-        }
+private val BOT_STYLE = Style.EMPTY.applyFormats(ChatFormatting.RED, ChatFormatting.BOLD)
 
-        val name = entity.displayName!!
-        val nameColor = this.nameColor
+private val BABY_TEXT = "Baby ".asPlainText()
 
-        val nameText: Text = if (nameColor != null) {
-            name.string.asText().withColor(nameColor)
-        } else {
-            name
-        }
+private val BOT_TEXT = "Bot".asPlainText(BOT_STYLE)
 
-        outputText.append(nameText)
+internal object NametagTextFormatter : Configurable("Text") {
 
-        if (NametagShowOptions.HEALTH.isShowing()) {
-            outputText.append(" ").append(this.healthText)
-        }
+    private val parts by multiEnumChoice(
+        "Parts",
+        ObjectLinkedOpenHashSet(Part.entries),
+        canBeNone = false
+    )
 
-        if (this.isBot) {
-            outputText.append(" ").append("Bot".asText().formatted().bold(true).withColor(Formatting.RED))
-        }
+    private enum class Part(override val choiceName: String) : NamedChoice, Function<Entity, Component?> {
+        DISTANCE("Distance") {
+            override fun apply(t: Entity): Component? {
+                if (t === player) return null
 
-        return outputText
-    }
-
-    private val isBot = ModuleAntiBot.isBot(entity)
-
-    private val nameColor: TextColor?
-        get() {
-            val tagColor = EntityTaggingManager.getTag(this.entity).color
-
-            return when {
-                isBot -> Formatting.DARK_AQUA.toTextColor()
-                entity.isInvisible -> Formatting.GOLD.toTextColor()
-                entity.isSneaking -> Formatting.DARK_RED.toTextColor()
-                tagColor != null -> tagColor.toTextColor()
-                else -> null
+                val playerDistanceRounded = player.distanceTo(t).roundToInt()
+                return "${playerDistanceRounded}m".asPlainText(ChatFormatting.GRAY)
             }
-        }
+        },
 
-    private val distanceText: Text
-        get() {
-            val playerDistanceRounded = player.distanceTo(entity).roundToInt()
+        PING("Ping") {
+            private val leftBracket = "[".asPlainText(ChatFormatting.GRAY)
+            private val rightBracket = "]".asPlainText(ChatFormatting.GRAY)
 
-            return "${playerDistanceRounded}m".asText().formatted(Formatting.GRAY)
-        }
+            override fun apply(t: Entity): Component? {
+                val entity = t as? Player ?: return null
 
-    private fun getPing(entity: Entity): Int? {
-        return (entity as? PlayerEntity)?.ping
-    }
+                val playerPing = entity.ping
 
-    private val pingText: Text
-        get() {
-            val playerPing = getPing(entity) ?: return Text.of("")
+                val coloringBasedOnPing = when {
+                    playerPing > 200 -> ChatFormatting.RED
+                    playerPing > 100 -> ChatFormatting.YELLOW
+                    else -> ChatFormatting.GREEN
+                }
 
-            val coloringBasedOnPing = when {
-                playerPing > 200 -> Formatting.RED
-                playerPing > 100 -> Formatting.YELLOW
-                else -> Formatting.GREEN
-            }
-
-            return regular(" [")
-                .append(
-                    (playerPing.toString() + "ms").asText().formatted(coloringBasedOnPing)
+                return textOf(
+                    leftBracket,
+                    "${playerPing}ms".asPlainText(coloringBasedOnPing),
+                    rightBracket,
                 )
-                .append(regular("]"))
-        }
-
-    private val healthText: Text
-        get() {
-            if (entity !is LivingEntity) {
-                return regular("")
             }
+        },
 
-            val actualHealth = (entity.getActualHealth() +
-                if (entity.hasHealthScoreboard()) 0f else entity.absorptionAmount).toInt()
+        NAME("Name") {
+            override fun apply(entity: Entity): Component {
+                val isBaby = entity is LivingEntity && entity.isBaby
 
-            val healthColor = when {
-                // Perhaps you should modify the values here
-                actualHealth >= 14 -> Formatting.GREEN
-                actualHealth >= 8 -> Formatting.YELLOW
-                else -> Formatting.RED
+                // Optimized entity.getDisplayName()
+                val displayName = entity.team?.getFormattedName(entity.name) ?: entity.name
+
+                val coloredName = entity.nameColor?.let { nameColor ->
+                    displayName.copy().withColor(nameColor)
+                } ?: displayName
+
+                val count = ModuleCombineMobs.getCombinedCount(entity)
+                return when {
+                    isBaby && count > 1 -> textOf(BABY_TEXT, coloredName, " ($count)".asPlainText(COUNT_STYLE))
+                    isBaby -> textOf(BABY_TEXT, coloredName)
+                    count > 1 -> textOf(coloredName, " ($count)".asPlainText(COUNT_STYLE))
+                    else -> coloredName
+                }
             }
+        },
 
-            return "$actualHealth HP".asText().formatted(healthColor)
+        HEALTH("Health") {
+            override fun apply(t: Entity): Component? {
+                val entity = t as? LivingEntity ?: return null
 
-        }
+                val actualHealth = (entity.getActualHealth() +
+                    if (entity.hasHealthScoreboard()) 0f else entity.absorptionAmount).toInt()
+
+                val healthColor = when {
+                    actualHealth >= 14 -> ChatFormatting.GREEN
+                    actualHealth >= 8 -> ChatFormatting.YELLOW
+                    else -> ChatFormatting.RED
+                }
+
+                return "$actualHealth HP".asPlainText(healthColor)
+            }
+        },
+
+        BOT_MARK("BotMark") {
+            override fun apply(t: Entity): Component? {
+                return if (t.isBot) BOT_TEXT else null
+            }
+        },
+    }
+
+    fun format(entity: Entity): Component {
+        return parts.mapNotNull { it.apply(entity) }.joinToText(PlainText.SPACE)
+    }
+
 }
 
-private fun Formatting.toTextColor(): TextColor {
-    return TextColor.fromFormatting(this)!!
+private val Entity.isBot get() = ModuleAntiBot.isBot(this)
+
+private val Entity.nameColor: TextColor?
+    get() = when {
+        isBot -> ChatFormatting.DARK_AQUA.toTextColor()
+        isInvisible -> ChatFormatting.GOLD.toTextColor()
+        isShiftKeyDown -> ChatFormatting.DARK_RED.toTextColor()
+        else -> EntityTaggingManager.getTag(this).color?.toTextColor()
+    }
+
+private fun ChatFormatting.toTextColor(): TextColor {
+    return TextColor.fromLegacyFormat(this)!!
 }

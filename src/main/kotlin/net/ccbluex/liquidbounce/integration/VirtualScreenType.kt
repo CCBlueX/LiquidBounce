@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,28 +15,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.integration
 
 import com.google.common.base.Predicates
+import com.mojang.realmsclient.RealmsMainScreen
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
-import net.minecraft.client.gui.screen.DisconnectedScreen
-import net.minecraft.client.gui.screen.GameMenuScreen
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.TitleScreen
-import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen
-import net.minecraft.client.gui.screen.option.OptionsScreen
-import net.minecraft.client.gui.screen.world.CreateWorldScreen
-import net.minecraft.client.gui.screen.world.SelectWorldScreen
-import net.minecraft.client.realms.gui.screen.RealmsMainScreen
+import net.minecraft.client.gui.screens.DisconnectedScreen
+import net.minecraft.client.gui.screens.PauseScreen
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.TitleScreen
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
+import net.minecraft.client.gui.screens.multiplayer.SafetyScreen
+import net.minecraft.client.gui.screens.options.OptionsScreen
+import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen
 import java.util.function.Predicate
 
 /**
@@ -45,7 +43,7 @@ import java.util.function.Predicate
  * TODO: Do not simply replace any Lunar Screen with the title screen, if not in a world
  */
 private val Screen.isLunar
-    get() = javaClass.name.startsWith("com.moonsworth.lunar.") && mc.world == null
+    get() = javaClass.name.startsWith("com.moonsworth.lunar.") && mc.level == null
 
 enum class VirtualScreenType(
     val routeName: String,
@@ -69,8 +67,8 @@ enum class VirtualScreenType(
 
     MULTIPLAYER(
         "multiplayer",
-        recognizer = { it is MultiplayerScreen || it is MultiplayerWarningScreen },
-        open = { mc.setScreen(MultiplayerScreen(IntegrationListener.parent)) }
+        recognizer = { it is JoinMultiplayerScreen || it is SafetyScreen },
+        open = { mc.setScreen(JoinMultiplayerScreen(IntegrationListener.parent)) }
     ),
 
     MULTIPLAYER_REALMS(
@@ -90,7 +88,16 @@ enum class VirtualScreenType(
     CREATE_WORLD(
         "create_world",
         recognizer = { it is CreateWorldScreen },
-        open = { CreateWorldScreen.show(mc, IntegrationListener.parent) }
+        open = {
+            // Store parent before opening CreateWorldScreen, since IntegrationListener.parent
+            // will change to CreateWorldScreen once it's opened
+            val parentScreen = IntegrationListener.parent
+            CreateWorldScreen.openFresh(mc) {
+                // Return to SelectWorldScreen instead of the stored parent,
+                // as this is the expected navigation flow from Create World
+                mc.setScreen(SelectWorldScreen(parentScreen))
+            }
+        }
     ),
 
     OPTIONS(
@@ -103,17 +110,17 @@ enum class VirtualScreenType(
 
     GAME_MENU(
         "game_menu",
-        recognizer = { it is GameMenuScreen }
+        recognizer = { it is PauseScreen }
     ),
 
     INVENTORY(
         "inventory",
-        recognizer = { it is InventoryScreen || it is CreativeInventoryScreen }
+        recognizer = { it is InventoryScreen || it is CreativeModeInventoryScreen }
     ),
 
     CONTAINER(
         "container",
-        recognizer = { it is GenericContainerScreen }
+        recognizer = { it is ContainerScreen }
     ),
 
     DISCONNECTED("disconnected",

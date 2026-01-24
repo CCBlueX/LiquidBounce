@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,28 +22,28 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerInteractedItemEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.drawBoxes
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.drawBox
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.item.isFood
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.item.ArmorStandItem
-import net.minecraft.item.BlockItem
-import net.minecraft.item.ItemStack
-import net.minecraft.item.SpawnEggItem
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.item.ArmorStandItem
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.SpawnEggItem
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.Vec3
 
 /**
  * AirPlace module
  *
  *  Allows you to place blocks in mid-air.
  */
-object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
+object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
 
     private object Preview : ToggleableConfigurable(this, "Preview", true) {
         val outlineOnly by boolean("OutlineOnly", false)
@@ -56,7 +56,7 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
     }
 
 
-    private inline val Vec3d.isBlockAir: Boolean
+    private inline val Vec3.isBlockAir: Boolean
         get() = world.getBlockState(toBlockPos()).isAir
 
     // ---------- Utils ----------
@@ -67,8 +67,8 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
     }
 
     private fun playerHasAllowedItems(): Boolean {
-        val mainHand = player.mainHandStack
-        val offHand = player.offHandStack
+        val mainHand = player.mainHandItem
+        val offHand = player.offhandItem
         return isAirPlaceableItem(mainHand) || isAirPlaceableItem(offHand)
     }
 
@@ -77,35 +77,35 @@ object ModuleAirPlace : ClientModule("AirPlace", Category.WORLD) {
     private val renderHandler = handler<WorldRenderEvent> { event ->
         if (!Preview.running) return@handler
 
-        val target = mc.crosshairTarget ?: return@handler
-        if (!target.pos.isBlockAir) return@handler
+        val target = mc.hitResult ?: return@handler
+        if (!target.location.isBlockAir) return@handler
         if (!playerHasAllowedItems()) return@handler
 
-        val targetPos = target.pos.toBlockPos()
-        val worldSpaceBox = Box(targetPos)
+        val targetPos = target.location.toBlockPos()
+        val worldSpaceBox = AABB(targetPos)
 
-        val negCameraPos = mc.entityRenderDispatcher.camera.pos.negate()
-        val viewSpaceBox = worldSpaceBox.offset(negCameraPos)
+        val negCameraPos = mc.entityRenderDispatcher.camera?.position()?.reverse() ?: return@handler
+        val viewSpaceBox = worldSpaceBox.move(negCameraPos)
 
         val fill = if (Preview.outlineOnly) Color4b.TRANSPARENT else Preview.fillColor
         val outline = Preview.outlineColor
 
         renderEnvironmentForWorld(event.matrixStack) {
-            drawBoxes { drawBox(viewSpaceBox, fill, outline) }
+            drawBox(viewSpaceBox, fill, outline)
         }
     }
 
     // ---------- Place ----------
     @Suppress("unused")
     private val placeHandler = handler<PlayerInteractedItemEvent> { event ->
-        val target = mc.crosshairTarget ?: return@handler
-        if (!target.pos.isBlockAir) return@handler
+        val target = mc.hitResult ?: return@handler
+        if (!target.location.isBlockAir) return@handler
         if (!playerHasAllowedItems()) return@handler
 
         val hand = event.hand
         if (target !is BlockHitResult) return@handler
-        val actionResult = interaction.interactBlock(player, hand, target)
-        if (actionResult.isAccepted) player.swingHand(hand)
+        val actionResult = interaction.useItemOn(player, hand, target)
+        if (actionResult.consumesAction()) player.swing(hand)
 
     }
 

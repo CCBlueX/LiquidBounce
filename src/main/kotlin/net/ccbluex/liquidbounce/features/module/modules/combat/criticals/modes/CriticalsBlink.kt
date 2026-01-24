@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,8 +28,12 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.wouldDoCriticalHit
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
-import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
-import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.protocol.common.ServerboundResourcePackPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
+import net.minecraft.network.protocol.game.ServerboundSignUpdatePacket
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 
 object CriticalsBlink : Choice("Blink") {
 
@@ -57,12 +61,12 @@ object CriticalsBlink : Choice("Blink") {
             }
 
             event.action = when (event.packet) {
-                is PlayerInteractBlockC2SPacket,
-                is PlayerActionC2SPacket,
-                is UpdateSignC2SPacket,
-                is PlayerInteractEntityC2SPacket,
-                is HandSwingC2SPacket,
-                is ResourcePackStatusC2SPacket -> PacketQueueManager.Action.PASS
+                is ServerboundUseItemOnPacket,
+                is ServerboundPlayerActionPacket,
+                is ServerboundSignUpdatePacket,
+                is ServerboundInteractPacket,
+                is ServerboundSwingPacket,
+                is ServerboundResourcePackPacket -> PacketQueueManager.Action.PASS
                 else -> PacketQueueManager.Action.QUEUE
             }
             isInState = true

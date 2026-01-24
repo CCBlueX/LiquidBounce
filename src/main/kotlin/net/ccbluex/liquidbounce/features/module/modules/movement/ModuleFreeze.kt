@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,37 +18,52 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleEasyPearl
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.ccbluex.liquidbounce.utils.math.toVec3f
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.protocol.common.ServerboundPongPacket
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ServerboundInteractPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
+import kotlin.math.abs
+import kotlin.random.Random
 
 /**
  * Freeze module
  *
  * Allows you to freeze yourself without the server knowing.
  */
-object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
+object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableOnQuit = true) {
 
-    private val modes = choices("Mode", Queue, arrayOf(Queue, Cancel, Stationary))
+    private val modes = choices("Mode", Stationary, arrayOf(Queue, Cancel, Stationary))
         .apply { tagBy(this) }
-
     private val disableOnFlag by boolean("DisableOnFlag", true)
+    private val notification by boolean("Notification", false)
     private val balance by boolean("BalanceWarp", false)
 
     // todo: use global balance system
@@ -95,24 +110,24 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
         // Create a simulated player from the client player, as we cannot use the player simulation cache
         // since we are going to modify the player's yaw and pitch
         val directionalInput = DirectionalInput(
-            mc.options.forwardKey.isPressedOnAny,
-            mc.options.backKey.isPressedOnAny,
-            mc.options.leftKey.isPressedOnAny,
-            mc.options.rightKey.isPressedOnAny
+            mc.options.keyUp.isPressedOnAny,
+            mc.options.keyDown.isPressedOnAny,
+            mc.options.keyLeft.isPressedOnAny,
+            mc.options.keyRight.isPressedOnAny
         )
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
             SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(
                 directionalInput,
-                mc.options.jumpKey.isPressedOnAny,
-                mc.options.sprintKey.isPressedOnAny || player.isSprinting,
-                mc.options.sneakKey.isPressedOnAny
+                mc.options.keyJump.isPressedOnAny,
+                mc.options.keySprint.isPressedOnAny || player.isSprinting,
+                mc.options.keyShift.isPressedOnAny
             )
         )
 
         // Alter the simulated player's yaw and pitch to match the camera
-        simulatedPlayer.yaw = event.camera.yaw
-        simulatedPlayer.pitch = event.camera.pitch
+        simulatedPlayer.yaw = event.camera.yRot()
+        simulatedPlayer.pitch = event.camera.xRot()
 
         // Create a cache for the simulated player
         val simulatedPlayerCache = SimulatedPlayerCache(simulatedPlayer)
@@ -120,16 +135,27 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
             .getSnapshotsBetween(0 until this.missedOutTick)
 
         renderEnvironmentForWorld(event.matrixStack) {
-            withColor(Color4b(0x00, 0x80, 0xFF, 0xFF)) {
-                drawLineStrip(positions = cachedPositions.map { relativeToCamera(it.pos).toVec3() })
-            }
+            drawLineStrip(
+                argb = Color4b(0x00, 0x80, 0xFF, 0xFF).toARGB(),
+                positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3f() },
+            )
         }
     }
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlayerPositionLookS2CPacket && disableOnFlag) {
-            enabled = false
+        if (event.packet is ClientboundPlayerPositionPacket) {
+            missedOutTick = 0
+            if (disableOnFlag) {
+                if (notification) {
+                    notification(
+                        this.name,
+                        message("disabledOnFlag"),
+                        NotificationEvent.Severity.INFO
+                    )
+                }
+                enabled = false
+            }
         }
     }
 
@@ -177,20 +203,94 @@ object ModuleFreeze : ClientModule("Freeze", Category.MOVEMENT) {
      * Stationary freeze - only cancel movement but keeps network communication intact
      */
     object Stationary : Choice("Stationary") {
+        /**
+         * Bypasses Grim's BadPacketsR and Matrix7 Timer Check
+         */
+        private val cancelC0B by boolean("CancelC0B",true)
+        private val yawOffset = FloatOffsetGenerator()
+        private val pitchOffset = FloatOffsetGenerator()
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        /**
+         * Bypasses Grim's duplicate rotation check
+         */
+        private class FloatOffsetGenerator : FloatIterator() {
+            private var prev = 0f
+            override fun hasNext() = true
+            override fun nextFloat(): Float {
+                var offset: Float
+                do {
+                    offset = Random.nextDouble(0.002, 0.01).toFloat()
+                } while (abs(offset - prev) < 1.0E-6F)
+                return offset.also { prev = it }
+            }
+        }
+
         @Suppress("unused")
-        private val packetHandler = handler<PacketEvent> { event ->
-            // This might actually be useless since we cancel [PlayerTickEvent] which is responsible for movement
-            // as well, so this is just a double check
-            when (event.packet) {
-                is PlayerMoveC2SPacket -> event.cancelEvent()
+        private val packetEventHandler = handler<PacketEvent> { event ->
+            val yaw = RotationManager.currentRotation?.yaw ?: player.yRot
+            val pitch = RotationManager.currentRotation?.pitch ?: player.xRot
+            val yawOffset = yawOffset.nextFloat()
+            val pitchOffset = pitchOffset.nextFloat()
+
+            when (val packet = event.packet) {
+
+                is ServerboundPongPacket -> {
+                    if (cancelC0B) {
+                        event.cancelEvent()
+                    }
+                }
+
+                is ServerboundUseItemPacket -> {
+                    event.cancelEvent()
+                    sendPacketSilently(
+                        ServerboundMovePlayerPacket.Rot(
+                            ModuleEasyPearl.currentTargetRotation?.yaw ?: (player.yRot + yawOffset),
+                            ModuleEasyPearl.currentTargetRotation?.pitch ?: (player.xRot + pitchOffset),
+                            player.onGround(),
+                            player.horizontalCollision
+                        )
+                    )
+                    sendPacketSilently(
+                        ServerboundUseItemPacket(
+                            packet.hand,
+                            packet.sequence,
+                            yaw + yawOffset,
+                            pitch + pitchOffset,
+                        )
+                    )
+                }
+
+                is ServerboundInteractPacket -> {
+                    event.cancelEvent()
+                    sendPacketSilently(
+                        ServerboundMovePlayerPacket.Rot(
+                            yaw + yawOffset,
+                            pitch + pitchOffset,
+                            player.onGround(),
+                            player.horizontalCollision
+                        )
+                    )
+                    sendPacketSilently(packet)
+                }
+
+                is ServerboundUseItemOnPacket -> {
+                    event.cancelEvent()
+                    sendPacketSilently(
+                        ServerboundMovePlayerPacket.Rot(
+                            yaw + yawOffset,
+                            pitch + pitchOffset,
+                            player.onGround(),
+                            player.horizontalCollision
+                        )
+                    )
+                    sendPacketSilently(packet)
+                }
             }
         }
 
     }
 
 }
-

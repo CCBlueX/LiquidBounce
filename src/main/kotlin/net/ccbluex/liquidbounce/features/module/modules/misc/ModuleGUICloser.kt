@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,31 +22,36 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.text.Text
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.network.chat.Component
 import java.util.function.BiPredicate
 
 /**
  * Closes HandledScreen with its title contains specified words
  */
-object ModuleGUICloser : ClientModule("GUICloser", Category.MISC, aliases = listOf("AutoClose", "ContainerCloser")) {
+object ModuleGUICloser : ClientModule(
+    "GUICloser",
+    ModuleCategories.MISC,
+    aliases = listOf("AutoClose", "ContainerCloser")
+) {
+
     override val baseKey: String
         get() = "liquidbounce.module.guiCloser"
 
     private val mode by enumChoice("Mode", Mode.MATCHES)
     private val filters by regexList("Filter", mutableSetOf(Regex("^Vote$")))
 
-    private enum class Mode(override val choiceName: String) : NamedChoice, BiPredicate<Regex, Text> {
+    private enum class Mode(override val choiceName: String) : NamedChoice, BiPredicate<Regex, Component> {
         MATCHES("Matches"),
         CONTAINS("Contains");
 
-        override fun test(regex: Regex, text: Text): Boolean = when (this) {
+        override fun test(regex: Regex, text: Component): Boolean = when (this) {
             MATCHES -> regex.matches(text.string)
             CONTAINS -> regex.containsMatchIn(text.string)
         }
@@ -54,13 +59,13 @@ object ModuleGUICloser : ClientModule("GUICloser", Category.MISC, aliases = list
 
     private val printScreenTitle by boolean("PrintScreenTitle", false).doNotIncludeAlways()
 
-    private fun isInFilter(entry: Text) = filters.any { regex ->
+    private fun isInFilter(entry: Component) = filters.any { regex ->
         mode.test(regex, entry)
     }
 
     @Suppress("unused")
     private val openScreenHandler = handler<ScreenEvent> {
-        val screen = it.screen as? HandledScreen<*> ?: return@handler
+        val screen = it.screen as? AbstractContainerScreen<*> ?: return@handler
 
         if (isInFilter(screen.title)) {
             it.cancelEvent()

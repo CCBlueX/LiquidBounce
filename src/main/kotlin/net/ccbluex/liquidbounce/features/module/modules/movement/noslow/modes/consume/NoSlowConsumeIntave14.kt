@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.consume
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.util.math.Direction
+import net.minecraft.core.Direction
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 
 /**
  * tested on mineblaze.net
@@ -35,10 +35,10 @@ internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>)
     private val mode by enumChoice("Mode", Mode.RELEASE)
 
     private fun releasePacket() {
-        network.sendPacket(
-            PlayerActionC2SPacket(
-                PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                player.blockPos,
+        network.send(
+            ServerboundPlayerActionPacket(
+                ServerboundPlayerActionPacket.Action.RELEASE_USE_ITEM,
+                player.blockPosition(),
                 Direction.UP
             )
         )
@@ -53,14 +53,14 @@ internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>)
                         releasePacket()
                     }
 
-                    if (player.itemUseTime == 3) {
-                        player.stopUsingItem()
+                    if (player.ticksUsingItem == 3) {
+                        player.releaseUsingItem()
                         releasePacket()
                     }
                 }
 
                 Mode.NEW -> {
-                    if (player.itemUseTime <= 2 || player.itemUseTimeLeft == 0) {
+                    if (player.ticksUsingItem <= 2 || player.useItemRemainingTicks == 0) {
                         releasePacket()
                     }
                 }

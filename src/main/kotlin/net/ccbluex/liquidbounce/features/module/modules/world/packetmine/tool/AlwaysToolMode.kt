@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoTool
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.MineTarget
 import net.ccbluex.liquidbounce.features.module.modules.world.packetmine.ModulePacketMine
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.network.packet.s2c.play.UpdateSelectedSlotS2CPacket
+import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 
 object AlwaysToolMode : MineToolMode("Always", syncOnStart = true) {
 
@@ -41,10 +41,10 @@ object AlwaysToolMode : MineToolMode("Always", syncOnStart = true) {
             }
 
             val packet = event.packet
-            val serverInitiatedSwitch = packet is UpdateSelectedSlotS2CPacket &&
+            val serverInitiatedSwitch = packet is ClientboundSetHeldSlotPacket &&
                     packet.slot == getSlot(target.blockState)?.firstInt()
-            val clientInitiatedSwitch = packet is UpdateSelectedSlotC2SPacket &&
-                    packet.selectedSlot == getSlot(target.blockState)?.firstInt()
+            val clientInitiatedSwitch = packet is ServerboundSetCarriedItemPacket &&
+                    packet.slot == getSlot(target.blockState)?.firstInt()
             if (serverInitiatedSwitch || clientInitiatedSwitch) {
                 ModulePacketMine._resetTarget()
             }

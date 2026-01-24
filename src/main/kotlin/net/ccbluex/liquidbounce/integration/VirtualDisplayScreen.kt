@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,38 +15,37 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.integration
 
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screens.Screen
 
 class VirtualDisplayScreen(
     private val screenType: VirtualScreenType,
     private val theme: Theme = ThemeManager.getScreenLocation(screenType).theme,
     val originalScreen: Screen? = null,
-    val parentScreen: Screen? = mc.currentScreen
-) : Screen("VS-${screenType.routeName.uppercase()}".asText()) {
+    val parentScreen: Screen? = mc.screen
+) : Screen("VS-${screenType.routeName.uppercase()}".asPlainText()) {
 
     override fun init() {
         IntegrationListener.virtualOpen(theme, screenType)
     }
 
-    override fun close() {
+    override fun onClose() {
         if (parentScreen is VirtualDisplayScreen) {
             mc.setScreen(parentScreen)
         } else {
             IntegrationListener.virtualClose()
-            mc.mouse.lockCursor()
-            super.close()
+            mc.mouseHandler.grabMouse()
+            super.onClose()
         }
     }
 
-    override fun shouldPause(): Boolean {
+    override fun isPauseScreen(): Boolean {
         // preventing game pause
         return false
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,15 +21,15 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * NoPush module
  *
  * Disables pushing from other players and some other situations where someone/something can push.
  */
-object ModuleNoPush : ClientModule("NoPush", Category.MOVEMENT) {
+object ModuleNoPush : ClientModule("NoPush", ModuleCategories.MOVEMENT) {
     private val noPushBy = multiEnumChoice("PushBy",
         NoPushBy.ENTITIES,
         NoPushBy.LIQUIDS
@@ -44,12 +44,12 @@ object ModuleNoPush : ClientModule("NoPush", Category.MOVEMENT) {
             return@handler
         }
 
-        if (mc.options.jumpKey.isPressed || mc.options.sneakKey.isPressed) {
+        if (mc.options.keyJump.isDown || mc.options.keyShift.isDown) {
             return@handler
         }
 
-        if ((player.isTouchingWater || player.isInLava) && player.velocity.y < 0) {
-            player.velocity.y = 0.0
+        if ((player.isInWater || player.isInLava) && player.deltaMovement.y < 0) {
+            player.deltaMovement.y = 0.0
         }
     }
 }
