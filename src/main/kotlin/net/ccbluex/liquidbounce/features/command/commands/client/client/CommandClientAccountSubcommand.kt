@@ -30,8 +30,10 @@ import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
+import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.joinToText
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
@@ -56,11 +58,11 @@ object CommandClientAccountSubcommand {
                 val account = ClientAccountManager.clientAccount
                 account.updateInfo()
                 account.userInformation?.let { info ->
-                        chat(regular("Nickname: "), variable(info.nickname))
-                        chat(regular("Email: "), variable(info.email))
-                        chat(regular("User ID: "), variable(info.userId))
-                        chat(regular("Groups: "), info.groups.map(::variable).joinToText(", ".asText()))
-                        chat(regular("Premium: "), variable(if (info.premium) "Yes" else "No"))
+                    info.nickname?.let { nickname -> chat(regular("Nickname: "), variable(nickname)) }
+                    chat(regular("Email: "), variable(info.email))
+                    chat(regular("User ID: "), variable(info.userId))
+                    chat(regular("Groups: "), info.groups.map(::variable).joinToText(", ".asText()))
+                    chat(regular("Premium: "), variable(if (info.premium) "Yes" else "No"))
                 }
             } catch (e: HttpException) {
                 chat(markAsError("Failed to get user information: ${e.content}"))

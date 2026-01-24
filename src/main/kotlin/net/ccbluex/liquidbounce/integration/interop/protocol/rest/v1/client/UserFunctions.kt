@@ -21,8 +21,6 @@
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
 import io.netty.handler.codec.http.FullHttpResponse
-import kotlinx.coroutines.runBlocking
-import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.auth.ClientAccount
 import net.ccbluex.liquidbounce.api.services.auth.OAuthClient.startAuth
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -31,26 +29,24 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.UserLoggedInEvent
 import net.ccbluex.liquidbounce.event.events.UserLoggedOutEvent
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
+import net.ccbluex.liquidbounce.utils.client.browseUrl
 import net.ccbluex.netty.http.model.RequestObject
+import net.ccbluex.netty.http.util.httpBadRequest
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.netty.http.util.httpUnauthorized
-import net.minecraft.util.Util
 
 // GET /api/v1/client/user
 @Suppress("UNUSED_PARAMETER")
-fun getUser(requestObject: RequestObject): FullHttpResponse {
+suspend fun getUser(requestObject: RequestObject): FullHttpResponse {
     val clientAccount = ClientAccountManager.clientAccount
-
     if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
         return httpUnauthorized("Not logged in")
     }
 
     val userInformation = if (clientAccount.userInformation == null) {
-        runBlocking {
-            clientAccount.updateInfo()
-            clientAccount.userInformation
-        }
+        clientAccount.updateInfo()
+        clientAccount.userInformation
     } else {
         clientAccount.userInformation
     }
@@ -60,21 +56,20 @@ fun getUser(requestObject: RequestObject): FullHttpResponse {
 
 // POST /api/v2/client/user/login
 @Suppress("UNUSED_PARAMETER")
-fun loginUser(requestObject: RequestObject): FullHttpResponse {
+suspend fun loginUser(requestObject: RequestObject): FullHttpResponse {
     val clientAccount = ClientAccountManager.clientAccount
-
     if (clientAccount != ClientAccount.EMPTY_ACCOUNT) {
-        return httpNoContent()
+        return httpBadRequest("Already logged in")
     }
 
-    withScope {
-        val account = startAuth { Util.getOperatingSystem().open(it) }
-        ClientAccountManager.clientAccount = account
-        ConfigSystem.store(ClientAccountManager)
-        EventManager.callEvent(UserLoggedInEvent)
+    val account = startAuth { url -> browseUrl(url) }.apply {
+        updateInfo()
     }
+    ClientAccountManager.clientAccount = account
+    ConfigSystem.store(ClientAccountManager)
+    EventManager.callEvent(UserLoggedInEvent)
 
-    return httpNoContent()
+    return httpOk(interopGson.toJsonTree(account.userInformation))
 }
 
 // POST /api/v2/client/user/logout
@@ -82,7 +77,7 @@ fun loginUser(requestObject: RequestObject): FullHttpResponse {
 fun logoutUser(requestObject: RequestObject): FullHttpResponse {
     val clientAccount = ClientAccountManager.clientAccount
     if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
-        return httpNoContent()
+        return httpBadRequest("Not logged in")
     }
 
     ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
