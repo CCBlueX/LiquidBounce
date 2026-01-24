@@ -32,31 +32,39 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
+import net.ccbluex.liquidbounce.utils.entity.handItems
+import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.BowItem
+import net.minecraft.world.item.CrossbowItem
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.TridentItem
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 
 object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoot", true) {
 
-    val charged by int("Charged", 15, 3..20, suffix = "ticks")
+    private val charged by int("Charged", 15, 3..20, suffix = "ticks")
 
-    val chargedRandom by floatRange(
+    private val chargedRandom by floatRange(
         "ChargedRandom",
         0.0F..0.0F,
         -10.0F..10.0F,
         suffix = "ticks"
     )
-    val delayBetweenShots by float("DelayBetweenShots", 0.0F, 0.0F..5.0F, suffix = "s")
-    val aimThreshold by float("AimThreshold", 1.5F, 1.0F..4.0F, suffix = "°")
-    val requiresHypotheticalHit by boolean("RequiresHypotheticalHit", false)
+    private val delayBetweenShots by float("DelayBetweenShots", 0.0F, 0.0F..5.0F, suffix = "s")
+    private val aimThreshold by float("AimThreshold", 1.5F, 1.0F..4.0F, suffix = "°")
+    private val requiresHypotheticalHit by boolean("RequiresHypotheticalHit", false)
+    private val usePrechargedCrossbow by boolean("UsePrechargedCrossbow", false)
 
-    var currentChargeRandom: Int? = null
+    private var currentChargeRandom: Int? = null
 
-    fun updateChargeRandom() {
+    private fun updateChargeRandom() {
         val lenHalf = (chargedRandom.endInclusive - chargedRandom.start) / 2.0F
         val mid = chargedRandom.start + lenHalf
 
@@ -65,7 +73,7 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
                 .coerceIn(chargedRandom.start.toInt()..chargedRandom.endInclusive.toInt())
     }
 
-    fun getChargedRandom(): Int {
+    private fun getChargedRandom(): Int {
         if (currentChargeRandom == null) {
             updateChargeRandom()
         }
@@ -79,15 +87,37 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
     private val tickHandler = handler<GameTickEvent> {
         forceUncharged = false
 
-        val currentItem = player.useItem?.item
+        val usingItemHand = player.usingItemHand
+            ?: if (usePrechargedCrossbow) {
+                InteractionHand.entries.find { player.getItemInHand(it).isChargedCrossbow } ?: return@handler
+            } else {
+                return@handler
+            }
 
-        // Should check if player is using bow
-        if (currentItem !is BowItem && currentItem !is TridentItem) {
-            return@handler
-        }
+        val usingItemStack = if (player.isUsingItem) player.useItem else player.getItemInHand(usingItemHand)
 
-        if (player.ticksUsingItem < charged + getChargedRandom()) { // Wait until the bow is fully charged
-            return@handler
+        when (usingItemStack.item) {
+            is CrossbowItem -> {
+                val pullTime = CrossbowItem.getChargeDuration(usingItemStack, player)
+                val isChargedNow = usingItemStack.isChargedCrossbow
+                if (!isChargedNow && player.ticksUsingItem < pullTime) {
+                    return@handler
+                }
+            }
+
+            is BowItem -> {
+                if (player.ticksUsingItem < charged + getChargedRandom()) {
+                    return@handler
+                }
+            }
+
+            is TridentItem -> {
+                if (player.ticksUsingItem <= TridentItem.THROW_THRESHOLD_TIME) {
+                    return@handler
+                }
+            }
+
+            else -> return@handler
         }
 
         if (!ModuleAutoBow.lastShotTimer.hasElapsed((delayBetweenShots * 1000.0F).toLong())) {
@@ -114,8 +144,20 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
             }
         }
 
-        forceUncharged = true
-        updateChargeRandom()
+        if (usingItemStack.item is CrossbowItem) {
+            val isChargedNow = usingItemStack.isChargedCrossbow
+            if (isChargedNow) {
+                interactItem(usingItemHand)
+                ModuleAutoBow.lastShotTimer.reset()
+            } else {
+                forceUncharged = true
+            }
+        } else {
+            forceUncharged = true
+            if (usingItemStack.item is BowItem) {
+                updateChargeRandom()
+            }
+        }
     }
 
     @Suppress("unused")
@@ -125,14 +167,15 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
         }
     }
 
-    private val playerHitboxBase = AABB(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
-
-    fun getHypotheticalHit(): AbstractClientPlayer? {
+    private fun getHypotheticalHit(): Entity? {
+        player.usingItemHand ?: return null
         val rotation = RotationManager.serverRotation
         val yaw = rotation.yaw
         val pitch = rotation.pitch
 
-        val velocity = (TrajectoryInfo.bowWithUsageDuration() ?: return null).initialVelocity
+        val trajectoryInfo = TrajectoryData.getRenderedTrajectoryInfo(player, player.activeItem, false) ?: return null
+
+        val velocity = trajectoryInfo.initialVelocity
 
         val vX = -yaw.toRadians().fastSin() * pitch.toRadians().fastCos() * velocity
         val vY = -pitch.toRadians().fastSin() * velocity
@@ -145,22 +188,25 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
             collideEntities = false
         )
 
-        val players = findAndBuildSimulatedPlayers()
+        val entities = findAndBuildSimulatedEntities()
 
         for (i in 0 until 40) {
             val lastPos = arrow.pos
 
             arrow.tick()
 
-            players.forEach { (entity, player) ->
-                val playerSnapshot = player.getSnapshotAt(i)
+            entities.forEach { (entity, simulatedPos) ->
+                val predictedPos = if (entity is AbstractClientPlayer && simulatedPos != null) {
+                    simulatedPos.getSnapshotAt(i).pos
+                } else {
+                    entity.position().add(entity.deltaMovement.scale(i.toDouble()))
+                }
 
-                val playerHitBox =
-                    playerHitboxBase.inflate(0.3).move(playerSnapshot.pos)
+                val entityBox = entity.boundingBox
+                    .inflate(0.3)
+                    .move(predictedPos.subtract(entity.position()))
 
-                val raycastResult = playerHitBox.clip(lastPos, arrow.pos)
-
-                raycastResult.orElse(null)?.let {
+                if (entityBox.clip(lastPos, arrow.pos).isPresent) {
                     return entity
                 }
             }
@@ -169,14 +215,24 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
         return null
     }
 
-    private fun findAndBuildSimulatedPlayers(): List<Pair<AbstractClientPlayer, SimulatedPlayerCache>> {
-        return world.players().filter {
-            it != player &&
-                Line(player.position(), player.lookAngle).squaredDistanceTo(it.position()) < 10.0 * 10.0
-        }.map {
-            Pair(it, PlayerSimulationCache.getSimulationForOtherPlayers(it))
+    private fun findAndBuildSimulatedEntities(): List<Pair<Entity, SimulatedPlayerCache?>> {
+        return world.entitiesForRendering().filter { entity ->
+            entity != player &&
+                entity.shouldBeAttacked() &&
+                Line(player.position(), player.rotation.directionVector)
+                    .squaredDistanceTo(entity.position()) < 10.0 * 10.0
+        }.map { entity ->
+            val simulation = if (entity is AbstractClientPlayer) {
+                PlayerSimulationCache.getSimulationForOtherPlayers(entity)
+            } else {
+                null
+            }
+            Pair(entity, simulation)
         }
     }
+
+    private inline val ItemStack.isChargedCrossbow
+        get() = CrossbowItem.isCharged(this)
 
     override fun onDisabled() {
         forceUncharged = false
