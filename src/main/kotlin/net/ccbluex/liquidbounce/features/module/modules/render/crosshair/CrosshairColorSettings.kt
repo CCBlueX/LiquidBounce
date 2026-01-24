@@ -37,7 +37,7 @@ class CrosshairColorSettings : Configurable("Color") {
         angle: Float,
     ): Color4b {
         val first = firstColor
-        val second: Color4b = if (!syncColors) secondColor else firstColor
+        val second = if (!syncColors) secondColor else firstColor
 
         return getColorByAngle(angle, first, second, spinSpeed)
     }

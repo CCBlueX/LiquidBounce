@@ -21,11 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render.crosshair
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair.modes
+import net.ccbluex.liquidbounce.render.withPush
 import net.ccbluex.liquidbounce.utils.inventory.isInContainerScreen
 import net.ccbluex.liquidbounce.utils.inventory.isInInventoryScreen
 
@@ -34,18 +33,8 @@ abstract class CrosshairMode(name: String) : Choice(name) {
         get() = modes
 
     protected val showInThirdPerson by boolean("ShowInThirdPerson", true)
-    protected class Radius : Configurable("Radius") {
-        val radius by intRange("Range", 3..5, 0..25)
 
-        class DynRadius(parent: CrosshairMode) : ToggleableConfigurable(parent, "DynamicRadius", false) {
-            val multiplier by float("Multiplier", 1f, 1f..5f)
-        }
-    }
-
-    protected abstract fun OverlayRenderEvent.drawCrosshair(
-        centerWidth: Float,
-        centerHeight: Float,
-    )
+    protected abstract fun OverlayRenderEvent.drawCrosshair()
 
     @Suppress("unused")
     private val cursorHandler =
@@ -53,21 +42,12 @@ abstract class CrosshairMode(name: String) : Choice(name) {
             if (!mc.options.cameraType.isFirstPerson && !showInThirdPerson) return@handler
             if (isInInventoryScreen || isInContainerScreen) return@handler
 
-            val centerWidth = (it.context.guiWidth() / 2.002f)
-            val centerHeight = (it.context.guiHeight() / 2.0025f)
+            val centerX = (it.context.guiWidth() / 2.002f)
+            val centerY = (it.context.guiHeight() / 2.0025f)
 
-            it.drawCrosshair(centerWidth, centerHeight)
+            it.context.pose().withPush {
+                translate(centerX, centerY)
+                it.drawCrosshair()
+            }
         }
-
-    protected fun OverlayRenderEvent.dynamicCrosshair(multiplier: Float, dynRadiusEnabled: Boolean): Float {
-        val cooldown = player.getAttackStrengthScale(tickDelta)
-
-        val finalMultiplier = if (dynRadiusEnabled) {
-            multiplier * (1f - cooldown)
-        } else {
-            0f
-        }
-
-        return finalMultiplier
-    }
 }
