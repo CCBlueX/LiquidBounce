@@ -39,7 +39,7 @@ object SituationalProjectileAngleCalculator: ProjectileAngleCalculator() {
 
         val actualImplementation = when {
             // Our flagship implementation is unstable at low distances...
-            basePos.distanceTo(sourcePos) < 5.0 -> PolynomialProjectileAngleCalculator
+            basePos.distanceToSqr(sourcePos) < 5.0 * 5.0 -> PolynomialProjectileAngleCalculator
             else -> CydhranianProjectileAngleCalculator
         }
 

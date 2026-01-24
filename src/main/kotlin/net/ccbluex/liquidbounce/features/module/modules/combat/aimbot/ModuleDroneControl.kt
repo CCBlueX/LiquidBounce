@@ -19,13 +19,14 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
-import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAngleCalculator
-import net.ccbluex.liquidbounce.utils.entity.ConstantPositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.minecraft.world.InteractionHand
@@ -55,12 +56,13 @@ object ModuleDroneControl : ClientModule("DroneControl", ModuleCategories.COMBAT
     var currentTarget: Pair<Entity, Vec3>? = null
     var mayShoot = false
 
-    private val repeatable = tickHandler {
+    @Suppress("unused")
+    private val repeatable = handler<GameTickEvent> {
         val currentRotation = currentTarget?.let { (entity, pos) ->
             SituationalProjectileAngleCalculator.calculateAngleFor(
                 TrajectoryInfo.BOW_FULL_PULL,
                 sourcePos = player.eyePosition,
-                targetPosFunction = ConstantPositionExtrapolation(pos),
+                targetPosFunction = PositionExtrapolation.constant(pos),
                 targetShape = entity.dimensions
             )
         }

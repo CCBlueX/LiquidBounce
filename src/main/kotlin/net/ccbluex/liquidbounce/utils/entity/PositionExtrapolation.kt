@@ -31,24 +31,21 @@ import kotlin.math.round
 /**
  * A utility which predicts the position of something in n ticks.
  */
-interface PositionExtrapolation {
+fun interface PositionExtrapolation {
     fun getPositionInTicks(ticks: Double): Vec3
 
     companion object {
+        @JvmStatic
         fun getBestForEntity(target: Entity): PositionExtrapolation {
             return when (target) {
                 is Player -> PlayerSimulationExtrapolation(target)
                 else -> LinearPositionExtrapolation(target)
             }
         }
-    }
-}
 
-class ConstantPositionExtrapolation(private val pos: Vec3) : PositionExtrapolation {
-    override fun getPositionInTicks(ticks: Double): Vec3 {
-        return pos
+        @JvmStatic
+        fun constant(pos: Vec3): PositionExtrapolation = PositionExtrapolation { pos }
     }
-
 }
 
 /**

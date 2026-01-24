@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.utils.aiming.projectiles.SituationalProjectileAn
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.entity.ConstantPositionExtrapolation
+import net.ccbluex.liquidbounce.utils.entity.PositionExtrapolation
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
@@ -216,7 +216,7 @@ object ModuleEasyPearl :
         SituationalProjectileAngleCalculator.calculateAngleFor(
             TrajectoryInfo.GENERIC,
             sourcePos = player.position(),
-            targetPosFunction = ConstantPositionExtrapolation(targetPosition),
+            targetPosFunction = PositionExtrapolation.constant(targetPosition),
             targetShape = EntityDimensions.fixed(1.0F, 0.0F),
         )
 }
