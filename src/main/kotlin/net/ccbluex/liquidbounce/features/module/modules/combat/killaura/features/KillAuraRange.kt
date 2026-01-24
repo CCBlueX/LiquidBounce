@@ -43,15 +43,15 @@ object KillAuraRange : Configurable("Range"), MinecraftShortcuts {
     /**
      * This will be added to the normal entity interaction range.
      */
-    private val rangeModifier by floatRange("RangeModifier", -2.0f..1.0f, -2.0f..8f)
+    private val rangeModifier by floatRange("RangeModifier", -2.0f..1.0f, -2.0f..8f, "blocks")
 
     /**
      * This will use only this value for non-visible entities. Originally, we could never attack through walls,
      * so this makes sense to keep starting from 0.0
      */
-    private val wallRange by float("WallRange", 3f, 0f..8f)
+    private val wallRange by float("WallRange", 3f, 0f..8f, "blocks")
 
-    private val scanExtraRange by floatRange("AddScanRange", 2.0f..3.0f, 0.0f..7.0f).onChanged { range ->
+    private val scanExtraRange by floatRange("AddScanRange", 2.0f..3.0f, 0.0f..7.0f, "blocks").onChanged { range ->
         currentScanExtraRange = range.random()
     }
     private var currentScanExtraRange: Float = scanExtraRange.random()
