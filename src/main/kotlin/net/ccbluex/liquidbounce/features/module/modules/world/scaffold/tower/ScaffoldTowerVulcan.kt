@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,22 +24,22 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.stat.Stats
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.stats.Stats
 
 object ScaffoldTowerVulcan : ScaffoldTower("Vulcan") {
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (!mc.options.jumpKey.isPressed || ModuleScaffold.blockCount <= 0 || !isBlockBelow) {
+        if (!mc.options.keyJump.isDown || ModuleScaffold.blockCount <= 0 || !isBlockBelow) {
             return@tickHandler
         }
 
-        if (player.age % 2 == 0) {
-            player.velocity.y = 0.7
+        if (player.tickCount % 2 == 0) {
+            player.deltaMovement.y = 0.7
         } else {
-            player.velocity.y = if(player.moving) 0.42f.toDouble() else 0.6
-            player.incrementStat(Stats.JUMP)
+            player.deltaMovement.y = if(player.moving) 0.42f.toDouble() else 0.6
+            player.awardStat(Stats.JUMP)
         }
     }
 
@@ -47,8 +47,8 @@ object ScaffoldTowerVulcan : ScaffoldTower("Vulcan") {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if(packet is PlayerMoveC2SPacket && !player.moving) {
-            if (player.age % 2 == 0) {
+        if(packet is ServerboundMovePlayerPacket && !player.moving) {
+            if (player.tickCount % 2 == 0) {
                 packet.x += 0.1
                 packet.z += 0.1
             }

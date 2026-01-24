@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
-import net.minecraft.entity.LivingEntity
+import net.minecraft.world.entity.LivingEntity
 
 private val entities = ReferenceArrayList<LivingEntity>()
 
@@ -46,7 +46,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
     private val onUpdate = ReferenceArrayList<Pair<EventListener, Runnable>>()
 
     context(listener: EventListener)
-    fun onUpdate(callback: Runnable) {
+    fun onUpdated(callback: Runnable) {
         onUpdate += listener to callback
     }
 
@@ -81,7 +81,7 @@ object RenderedEntities : Collection<LivingEntity> by entities, EventListener {
 
         val shouldCheckCombineMobs = ModuleCombineMobs.running
 
-        for (entity in world.entities) {
+        for (entity in world.entitiesForRendering()) {
             if (entity is LivingEntity && entity.shouldBeShown()) {
                 if (shouldCheckCombineMobs && ModuleCombineMobs.trackEntity(entity, true)) {
                     continue

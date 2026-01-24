@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,13 @@ package net.ccbluex.liquidbounce.api.models.user
 import com.google.gson.annotations.SerializedName
 
 data class UserInformation(
-    @SerializedName("user_id") val userId: String,
-    val premium: Boolean
+    @SerializedName("user_id")
+    val userId: String,
+    val email: String,
+    val name: String?,
+    val nickname: String?,
+    val groups: List<String>,
+    val premium: Boolean,
+    @SerializedName("is_admin")
+    val admin: Boolean
 )

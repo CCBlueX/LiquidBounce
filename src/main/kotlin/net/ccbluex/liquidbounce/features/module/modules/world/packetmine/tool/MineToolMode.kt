@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,14 +29,14 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.block.BlockState
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.attribute.EntityAttributes
-import net.minecraft.entity.effect.StatusEffectUtil
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.tag.FluidTags
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
+import net.minecraft.tags.FluidTags
+import net.minecraft.world.effect.MobEffectUtil
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.level.block.state.BlockState
 
 /**
  * Determines when to switch to a tool and calculates the breaking process delta.
@@ -54,7 +54,7 @@ abstract class MineToolMode(
 
     fun getBlockBreakingDelta(pos: BlockPos, state: BlockState, itemStack: ItemStack?): Float {
         if (switchesNever || itemStack == null) {
-            return state.calcBlockBreakingDelta(player, world, pos)
+            return state.getDestroyProgress(player, world, pos)
         }
 
         return calcBlockBreakingDelta(pos, state, itemStack)
@@ -78,20 +78,20 @@ abstract class MineToolMode(
 /* tweaked minecraft code start */
 
 /**
- * See [BlockState.calcBlockBreakingDelta]
+ * @see net.minecraft.world.level.block.state.BlockBehaviour.getDestroyProgress
  */
 private fun calcBlockBreakingDelta(pos: BlockPos, state: BlockState, stack: ItemStack): Float {
-    val hardness = state.getHardness(world, pos)
+    val hardness = state.getDestroySpeed(world, pos)
     if (hardness == -1f) {
         return 0f
     }
 
-    val suitableMultiplier = if (!state.isToolRequired || stack.isSuitableFor(state)) 30 else 100
+    val suitableMultiplier = if (!state.requiresCorrectToolForDrops() || stack.isCorrectToolForDrops(state)) 30 else 100
     return getBlockBreakingSpeed(state, stack) / hardness / suitableMultiplier
 }
 
 private fun getBlockBreakingSpeed(state: BlockState, stack: ItemStack): Float {
-    var speed = stack.getMiningSpeedMultiplier(state)
+    var speed = stack.getDestroySpeed(state)
 
     val enchantmentLevel = stack.getEnchantment(Enchantments.EFFICIENCY)
     if (speed > 1f && enchantmentLevel != 0) {
@@ -102,12 +102,12 @@ private fun getBlockBreakingSpeed(state: BlockState, stack: ItemStack): Float {
         speed += enchantmentAddition.coerceIn(0f..1024f)
     }
 
-    if (StatusEffectUtil.hasHaste(player)) {
-        speed *= 1f + (StatusEffectUtil.getHasteAmplifier(player) + 1).toFloat() * 0.2f
+    if (MobEffectUtil.hasDigSpeed(player)) {
+        speed *= 1f + (MobEffectUtil.getDigSpeedAmplification(player) + 1).toFloat() * 0.2f
     }
 
-    if (player.hasStatusEffect(StatusEffects.MINING_FATIGUE)) {
-        val miningFatigueMultiplier = when (player.getStatusEffect(StatusEffects.MINING_FATIGUE)!!.amplifier) {
+    if (player.hasEffect(MobEffects.MINING_FATIGUE)) {
+        val miningFatigueMultiplier = when (player.getEffect(MobEffects.MINING_FATIGUE)!!.amplifier) {
             0 -> 0.3f
             1 -> 0.09f
             2 -> 0.0027f
@@ -118,12 +118,12 @@ private fun getBlockBreakingSpeed(state: BlockState, stack: ItemStack): Float {
         speed *= miningFatigueMultiplier
     }
 
-    speed *= player.getAttributeValue(EntityAttributes.BLOCK_BREAK_SPEED).toFloat()
-    if (player.isSubmergedIn(FluidTags.WATER)) {
-        speed *= player.getAttributeInstance(EntityAttributes.SUBMERGED_MINING_SPEED)!!.value.toFloat()
+    speed *= player.getAttributeValue(Attributes.BLOCK_BREAK_SPEED).toFloat()
+    if (player.isEyeInFluid(FluidTags.WATER)) {
+        speed *= player.getAttribute(Attributes.SUBMERGED_MINING_SPEED)!!.value.toFloat()
     }
 
-    if (!player.isOnGround) {
+    if (!player.onGround()) {
         speed /= 5f
     }
 

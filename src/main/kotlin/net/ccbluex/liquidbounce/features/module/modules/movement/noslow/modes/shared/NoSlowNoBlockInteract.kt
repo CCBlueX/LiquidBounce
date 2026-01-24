@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.minecraft.item.consume.UseAction
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
+import net.minecraft.world.item.ItemUseAnimation
 
 /**
  * Cancels block interactions allowing to bypass certain anti-cheats
@@ -34,16 +34,16 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
  */
 internal class NoSlowNoBlockInteract(
     parent: EventListener? = null,
-    actionFilter: (UseAction) -> Boolean = { true }
+    actionFilter: (ItemUseAnimation) -> Boolean = { true }
 ) : ToggleableConfigurable(parent, "NoBlockInteract", true) {
 
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerInteractBlockC2SPacket) {
+        if (packet is ServerboundUseItemOnPacket) {
             val useAction =
-                player.getStackInHand(packet.hand)?.useAction ?: return@handler
-            val blockPos = packet.blockHitResult?.blockPos
+                player.getItemInHand(packet.hand)?.useAnimation ?: return@handler
+            val blockPos = packet.hitResult?.blockPos
 
             // Check if we might click a block that is not air
             if (blockPos != null && blockPos.getState()?.isAir != true) {

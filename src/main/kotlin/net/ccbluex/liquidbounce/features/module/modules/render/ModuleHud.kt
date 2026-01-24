@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.config.types.nesting.Toggleable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
@@ -29,20 +28,20 @@ import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.themes
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapComponent
+import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.minecraft.client.gui.screen.DisconnectedScreen
-import net.minecraft.client.gui.screen.DownloadingTerrainScreen
+import net.minecraft.client.gui.screens.DisconnectedScreen
+import net.minecraft.client.gui.screens.LevelLoadingScreen
 
 /**
  * Module HUD
@@ -50,7 +49,7 @@ import net.minecraft.client.gui.screen.DownloadingTerrainScreen
  * The client in-game dashboard.
  */
 
-object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = true) {
+object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hide = true) {
 
     override val running
         get() = this.enabled && !isDestructed
@@ -79,24 +78,24 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
         state
     }
 
-    val centeredCrosshair by boolean("CenteredCrosshair", false)
-
     val isBlurEffectActive
-        get() = Blur.enabled && !(mc.options.hudHidden && mc.currentScreen == null)
+        get() = Blur.enabled && !(mc.options.hideGui && mc.screen == null)
 
     private var browserSettings: BrowserSettings? = null
 
     val themes = tree(Configurable("Themes"))
 
     val components = tree(Configurable("AdditionalComponents")).apply {
-        tree(MinimapComponent)
+        tree(MinimapHudComponent)
     }
 
     /**
      * Updates [themes] content
      */
     fun updateThemes() {
-        themes.inner.clear()
+        themes.inner.filterIsInstance<Configurable>().forEach {
+            themes.drop(it)
+        }
         for (theme in ThemeManager.themes) {
             themes.tree(theme.settings)
         }
@@ -135,7 +134,7 @@ object ModuleHud : ClientModule("HUD", Category.RENDER, state = true, hide = tru
 
         // Otherwise, open the tab and set its visibility
         val browserTab = open()
-        browserTab.visible = event.screen !is DisconnectedScreen && event.screen !is DownloadingTerrainScreen
+        browserTab.visible = event.screen !is DisconnectedScreen && event.screen !is LevelLoadingScreen
     }
 
     @Suppress("unused")

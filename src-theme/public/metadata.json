@@ -29,6 +29,7 @@
     "ArmorItems",
     "Inventory",
     "CraftingInventory",
+    "EnderChestInventory",
     "TargetHud",
     "BlockCounter",
     "Effects",

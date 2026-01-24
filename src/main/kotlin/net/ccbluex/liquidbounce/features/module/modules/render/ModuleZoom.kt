@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,13 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMouse
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.util.math.MathHelper
+import net.minecraft.util.Mth
 import kotlin.math.abs
 import kotlin.math.round
 
@@ -38,7 +37,7 @@ import kotlin.math.round
  *
  * The mouse is slowed down with the help of mixins in [MixinMouse].
  */
-object ModuleZoom : ClientModule("Zoom", Category.RENDER, bindAction = InputBind.BindAction.HOLD) {
+object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = InputBind.BindAction.HOLD) {
 
     val zoom by int("Zoom", 30, 10..150)
 
@@ -93,11 +92,11 @@ object ModuleZoom : ClientModule("Zoom", Category.RENDER, bindAction = InputBind
             disableAnimationFinished = true
         }
 
-        return MathHelper.lerp(transition.transform(factor), previousFov, targetFov)
+        return Mth.lerpInt(transition.transform(factor), previousFov, targetFov)
     }
 
     private fun getDefaultFov(): Int {
-        val fov = mc.options.fov.value
+        val fov = mc.options.fov().get()
         return if (ModuleNoFov.running) ModuleNoFov.getFov(fov) else fov
     }
 

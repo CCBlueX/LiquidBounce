@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@ import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.util.shape.VoxelShapes
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.minecraft.world.phys.shapes.Shapes
 
-object ModuleAirJump : ClientModule("AirJump", Category.MOVEMENT) {
+object ModuleAirJump : ClientModule("AirJump", ModuleCategories.MOVEMENT) {
 
     val mode by enumChoice("Mode", Mode.JUMP_FREELY)
 
@@ -37,22 +37,22 @@ object ModuleAirJump : ClientModule("AirJump", Category.MOVEMENT) {
         get() = running && (mode == Mode.JUMP_FREELY || mode == Mode.DOUBLE_JUMP && doubleJump)
 
     val repeatable = tickHandler {
-        if (player.isOnGround) {
+        if (player.onGround()) {
             doubleJump = true
         }
     }
 
     @Suppress("unused")
     val jumpEvent = handler<PlayerJumpEvent> {
-        if (doubleJump && !player.isOnGround) {
+        if (doubleJump && !player.onGround()) {
             doubleJump = false
         }
     }
 
     @Suppress("unused")
     val handleBlockBox = handler<BlockShapeEvent> { event ->
-        if (mode == Mode.GHOST_BLOCK && event.pos.y < player.blockPos.y && mc.options.jumpKey.isPressed) {
-            event.shape = VoxelShapes.fullCube()
+        if (mode == Mode.GHOST_BLOCK && event.pos.y < player.blockPosition().y && mc.options.keyJump.isDown) {
+            event.shape = Shapes.block()
         }
     }
 

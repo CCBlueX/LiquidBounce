@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +15,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.api.thirdparty.translator
 
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.MutableText
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.network.chat.MutableComponent
 
 sealed class TranslationResult(
     val isValid: Boolean
 ) {
-    abstract fun toResultText(): MutableText
+    abstract fun toResultText(): MutableComponent
 
     data class Success(
         val origin: String,
@@ -37,7 +39,7 @@ sealed class TranslationResult(
     ) : TranslationResult(
         origin != translation && fromLanguage != toLanguage
     ) {
-        override fun toResultText(): MutableText = "".asText()
+        override fun toResultText(): MutableComponent = "".asText()
             .append(regular("("))
             .append(variable(fromLanguage.literal))
             .append(regular("->"))
@@ -49,7 +51,7 @@ sealed class TranslationResult(
     data class Failure(
         val ex: Exception,
     ) : TranslationResult(false) {
-        override fun toResultText(): MutableText = "".asText()
+        override fun toResultText(): MutableComponent = "".asText()
             .append(markAsError("Failed to translate (${ex.javaClass.simpleName}): ${ex.message}"))
     }
 }

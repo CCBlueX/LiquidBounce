@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes
@@ -28,9 +26,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.phys.Vec3
 
 /**
  * @anticheat Vulcan
@@ -71,19 +69,19 @@ internal object VulcanLongJump : Choice("Vulcan289") {
     private val repeatable = tickHandler {
         if (started) {
             if (recievedLagback) {
-                player.velocity.y = 1.0
-                player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
-                player.velocity = player.velocity.withStrafe(strength = 1.0, speed = 4.2)
+                player.deltaMovement.y = 1.0
+                player.setPos(player.position().x, player.position().y + 8, player.position().z)
+                player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 1.0, speed = 4.2))
                 recievedLagback = false
             }
 
             when (player.hurtTime) {
                 10 -> {
-                    player.setPosition(player.pos.x, player.pos.y - 0.5, player.pos.z)
+                    player.setPos(player.position().x, player.position().y - 0.5, player.position().z)
                 }
                 5 -> {
-                    player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
-                    player.velocity = player.velocity.withStrafe(strength = 1.0, speed = 0.3)
+                    player.setPos(player.position().x, player.position().y + 8, player.position().z)
+                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 1.0, speed = 0.3))
                     started = false
                     ModuleLongJump.jumped = true
                     ModuleLongJump.boosted = true
@@ -91,22 +89,24 @@ internal object VulcanLongJump : Choice("Vulcan289") {
             }
         }
 
-        player.velocity = Vec3d(
-            player.velocity.x,
-            if (player.age % 2 == 0) -0.0971 else -0.148,
-            player.velocity.z
+        player.setDeltaMovement(
+            Vec3(
+                player.deltaMovement.x,
+                if (player.tickCount % 2 == 0) -0.0971 else -0.148,
+                player.deltaMovement.z
+            )
         )
 
         val didLongJump = ModuleLongJump.autoDisable && ModuleLongJump.jumped
 
-        if (player.isOnGround && !recievedLagback && player.hurtTime == 0 && !didLongJump) {
+        if (player.onGround() && !recievedLagback && player.hurtTime == 0 && !didLongJump) {
             repeat(3) {
                 for (position in jumpingSequence) {
-                    network.sendPacket(
-                        PlayerMoveC2SPacket.PositionAndOnGround(
-                            player.pos.x,
-                            player.pos.y + position,
-                            player.pos.z,
+                    network.send(
+                        ServerboundMovePlayerPacket.Pos(
+                            player.position().x,
+                            player.position().y + position,
+                            player.position().z,
                             false,
                             false
                         )
@@ -122,7 +122,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerPositionLookS2CPacket) {
+        if (packet is ClientboundPlayerPositionPacket) {
             recievedLagback = true
         }
     }

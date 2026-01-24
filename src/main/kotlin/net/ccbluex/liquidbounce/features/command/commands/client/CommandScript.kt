@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,12 +65,12 @@ object CommandScript : Command.Factory {
             return@handler
         }
 
-        Util.getOperatingSystem().open(scriptFile)
+        Util.getPlatform().openFile(scriptFile)
         chat(regular(command.result("opened", variable(name))))
     }.build()
 
     private fun browseSubcommand() = CommandBuilder.begin("browse").handler {
-        Util.getOperatingSystem().open(ScriptManager.root)
+        Util.getPlatform().openFile(ScriptManager.root)
         chat(regular(command.result("browse", clickablePath(ScriptManager.root))))
     }.build()
 

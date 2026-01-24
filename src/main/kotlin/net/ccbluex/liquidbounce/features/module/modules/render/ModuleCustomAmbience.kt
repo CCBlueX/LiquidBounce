@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,65 +18,57 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.textures.GpuTexture
-import com.mojang.blaze3d.textures.TextureFormat
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinBackgroundRenderer
-import net.ccbluex.liquidbounce.render.ClientRenderPipelines
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import net.ccbluex.liquidbounce.render.setUniform
-import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
-import net.ccbluex.liquidbounce.utils.kotlin.optional
-import net.minecraft.block.enums.CameraSubmersionType
-import net.minecraft.client.render.Camera
-import net.minecraft.client.render.Fog
-import net.minecraft.client.render.FogShape
+import net.minecraft.client.renderer.fog.FogData
 
 /**
  * CustomAmbience module
  *
  * Override the ambience of the game
  */
-object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, aliases = listOf("FogChanger")) {
+object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RENDER, aliases = listOf("FogChanger")) {
 
     val weather = enumChoice("Weather", WeatherType.SNOWY)
     private val time = enumChoice("Time", TimeType.NIGHT)
 
     object Precipitation : ToggleableConfigurable(this, "ModifyPrecipitation", true) {
         val gradient by float("Gradient", 0.7f, 0.1f..1f)
-        val layers by int("Layers", 3, 1..14)
+//        val layers by int("Layers", 3, 1..14)
     }
 
+    /**
+     * @see FogData
+     */
     object FogConfigurable : ToggleableConfigurable(this, "Fog", true) {
 
-        private val color by color("Color", Color4b(47, 128, 255, 201))
+        val color by color("Color", Color4b(47, 128, 255, 201))
         private val backgroundColor by color("BackgroundColor", Color4b(47, 128, 255, 201))
-        private val fogStart by float("Distance", 0f, -8f..500f)
-        private val density by float("Density", 10f, 0f..100f)
-        private val fogShape by enumChoice("FogShape", Shape.SPHERE)
+
+        private val environmental by floatRange("Environmental", 0f..0f, 0f..100f)
+        private val renderDistance by floatRange("RenderDistance", 0f..0f, 0f..100f)
+        private val skyEnd by float("SkyEnd", 0f, 0f..100f)
+        private val cloudEnd by float("CloudEnd", 0f, 0f..100f)
 
         /**
-         * [MixinBackgroundRenderer]
+         * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinFogRenderer
+         *
+         * FIXME: redesign
          */
-        fun modifyFog(camera: Camera, viewDistance: Float, fog: Fog): Fog {
+        fun modifyFogData(fogData: FogData) {
             if (!this.running) {
-                return fog
+                return
             }
 
-            val start = Math.clamp(fogStart, -8f, viewDistance)
-            val end = Math.clamp(fogStart + density, 0f, viewDistance)
-
-            var shape = fog.shape
-            val type = camera.submersionType
-            if (type == CameraSubmersionType.NONE) {
-                shape = fogShape.fogShape
-            }
-
-            return Fog(start, end, shape, color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
+            fogData.environmentalStart = this.environmental.start
+            fogData.environmentalEnd = this.environmental.endInclusive
+            fogData.renderDistanceStart = this.renderDistance.start
+            fogData.renderDistanceEnd = this.renderDistance.endInclusive
+            fogData.skyEnd = this.skyEnd
+            fogData.cloudEnd = this.cloudEnd
         }
 
         fun modifyClearColor(original: Int): Int {
@@ -86,42 +78,26 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", Category.RENDER, al
 
             return backgroundColor.toARGB()
         }
-
-        @Suppress("unused")
-        private enum class Shape(override val choiceName: String, val fogShape: FogShape) : NamedChoice {
-            SPHERE("Sphere", FogShape.SPHERE),
-            CYLINDER("Cylinder", FogShape.CYLINDER);
-        }
-
     }
 
-    object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", true) {
-        private val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
+    /**
+     * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmapTextureManager
+     *
+     * FIXME: redesign
+     */
+    object CustomLightmap : ToggleableConfigurable(this, "CustomLightmap", false) {
+        val color by color("Color", Color4b.LIQUID_BOUNCE)
+    }
 
-        val texture: GpuTexture = gpuDevice.createTexture(
-            "Custom Light Texture",
-            TextureFormat.RGBA8,
-            16, 16,
-            1,
-        ).apply {
-            setTextureFilter(FilterMode.LINEAR, false)
-        }
-
-        fun update() {
-            gpuDevice.createCommandEncoder()
-                .createRenderPass(this.texture, optional(-1)).use { pass ->
-                    pass.setPipeline(ClientRenderPipelines.Blend)
-                    pass.bindSampler("texture0", this.texture)
-                    pass.setUniform("mixColor", lightColor)
-                    pass.drawFullScreenPositionTexture()
-                }
-        }
+    object SkyColor : ToggleableConfigurable(this, "SkyColor", false) {
+        val color by color("Color", Color4b.BLUE)
     }
 
     init {
         tree(Precipitation)
         tree(FogConfigurable)
-        tree(CustomLightColor)
+        tree(CustomLightmap)
+        tree(SkyColor)
     }
 
     @JvmStatic

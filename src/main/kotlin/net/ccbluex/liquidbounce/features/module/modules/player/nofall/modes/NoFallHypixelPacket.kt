@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,9 +35,9 @@ internal object NoFallHypixelPacket : NoFallMode("HypixelPacket") {
     }
 
     val repeatable = tickHandler {
-        if (player.fallDistance - player.velocity.y >= 3.3 && voidCheck()) {
+        if (player.fallDistance - player.deltaMovement.y >= 3.3 && voidCheck()) {
             Timer.requestTimerSpeed(0.5f, Priority.IMPORTANT_FOR_PLAYER_LIFE, ModuleNoFall)
-            network.sendPacket(MovePacketType.ON_GROUND_ONLY.generatePacket().apply {
+            network.send(MovePacketType.ON_GROUND_ONLY.generatePacket().apply {
                 onGround = true
             })
             player.fallDistance = 0.0

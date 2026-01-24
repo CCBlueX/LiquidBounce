@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,8 +24,6 @@ import net.ccbluex.liquidbounce.api.models.client.AutoSettings
 import net.ccbluex.liquidbounce.api.services.client.ClientApi
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.types.enums.AutoSettingsType
-import net.ccbluex.liquidbounce.authlib.utils.array
-import net.ccbluex.liquidbounce.authlib.utils.int
 import net.ccbluex.liquidbounce.authlib.utils.obj
 import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.ConfigSystem.deserializeConfigurable
@@ -36,22 +34,28 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.util.Formatting
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.dropPort
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.markAsError
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.plus
+import net.ccbluex.liquidbounce.utils.client.protocolVersion
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.rootDomain
+import net.ccbluex.liquidbounce.utils.client.selectProtocolVersion
+import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Style
 import java.io.Reader
 import java.io.Writer
 import java.text.SimpleDateFormat
-import java.util.*
-
-data class IncludeConfiguration(
-    val includeBinds: Boolean = false,
-    val includeAction: Boolean = false,
-    val includeHidden: Boolean = false
-) {
-    companion object {
-        val DEFAULT = IncludeConfiguration()
-    }
-}
+import java.util.Date
 
 object AutoConfig {
 
@@ -122,7 +126,7 @@ object AutoConfig {
         modules: Collection<Configurable> = emptyList()
     ) {
         chat(metadata = MessageMetadata(prefix = false))
-        chat(regular("Auto Config").formatted(Formatting.LIGHT_PURPLE).bold(true))
+        chat("Auto Config".asPlainText(Style.EMPTY + ChatFormatting.LIGHT_PURPLE + ChatFormatting.BOLD))
 
         val name = jsonObject.string("name") ?: throw IllegalArgumentException("Auto Config has no name")
         when (name) {
@@ -142,14 +146,16 @@ object AutoConfig {
         }
 
         // Auto Config
-        printOutInformation(jsonObject)
+        printOutMetadata(jsonObject)
     }
 
     /**
      * Print out information from the auto config
      */
-    private fun printOutInformation(jsonObject: JsonObject) {
-        val serverAddress = jsonObject.string("serverAddress")
+    private fun printOutMetadata(jsonObject: JsonObject) {
+        val metadata = publicGson.fromJson(jsonObject, AutoSettingsMetadata::class.java)
+
+        val serverAddress = metadata.serverAddress
         if (serverAddress != null) {
             chat(
                 regular("for server "),
@@ -157,18 +163,18 @@ object AutoConfig {
             )
         }
 
-        val pName = jsonObject.string("protocolName")
-        val pVersion = jsonObject.int("protocolVersion")
+        val pName = metadata.protocolName
+        val pVersion = metadata.protocolVersion
 
         if (pName != null && pVersion != null) {
             formatAutoConfigProtocolInfo(pVersion, pName)
         }
 
-        val date = jsonObject.string("date")
-        val time = jsonObject.string("time")
-        val author = jsonObject.string("author")
-        val lbVersion = jsonObject.string("clientVersion")
-        val lbCommit = jsonObject.string("clientCommit")
+        val date = metadata.date
+        val time = metadata.time
+        val author = metadata.author
+        val lbVersion = metadata.clientVersion
+        val lbCommit = metadata.clientCommit
 
         if (date != null || time != null) {
             chat(
@@ -194,9 +200,9 @@ object AutoConfig {
             )
         }
 
-        jsonObject.array("chat")?.let { chatMessages ->
+        metadata.chat?.let { chatMessages ->
             for (messages in chatMessages) {
-                chat(messages.asString)
+                chat(messages)
             }
         }
     }
@@ -213,11 +219,11 @@ object AutoConfig {
         chat(
             regular("for protocol "),
             variable("$pName $pVersion")
-                .styled {
+                .withStyle {
                     if (!matchesVersion) {
-                        it.withFormatting(Formatting.RED, Formatting.BOLD)
+                        it.applyFormats(ChatFormatting.RED, ChatFormatting.BOLD)
                     } else {
-                        it.withFormatting(Formatting.GREEN)
+                        it.applyFormat(ChatFormatting.GREEN)
                     }
                 },
             regular(" and your current protocol is "),
@@ -269,7 +275,7 @@ object AutoConfig {
         jsonObject.add("modules", moduleTree.asJsonObject)
         jsonObject.add("spoofers", spooferTree.asJsonObject)
 
-        val author = mc.session.username
+        val author = mc.user.name
 
         val now = Date()
         val dateFormatter = SimpleDateFormat("dd/MM/yyyy")
@@ -284,8 +290,8 @@ object AutoConfig {
         jsonObject.addProperty("time", time)
         jsonObject.addProperty("clientVersion", LiquidBounce.clientVersion)
         jsonObject.addProperty("clientCommit", LiquidBounce.clientCommit)
-        mc.currentServerEntry?.let {
-            jsonObject.addProperty("serverAddress", it.address.dropPort().rootDomain())
+        mc.currentServer?.let {
+            jsonObject.addProperty("serverAddress", it.ip.dropPort().rootDomain())
         }
         jsonObject.addProperty("protocolName", protocolName)
         jsonObject.addProperty("protocolVersion", protocolVersion)

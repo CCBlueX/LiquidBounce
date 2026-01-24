@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,19 +26,19 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.entity.EntityPose
-import net.minecraft.item.ItemStack
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.core.Vec3i
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.Vec3
 
 sealed class ScaffoldTechnique(name: String) : Choice(name) {
     final override val parent: ChoiceConfigurable<ScaffoldTechnique>
         get() = ModuleScaffold.technique
 
     abstract fun findPlacementTarget(
-        predictedPos: Vec3d,
-        predictedPose: EntityPose,
+        predictedPos: Vec3,
+        predictedPose: Pose,
         optimalLine: Line?,
         bestStack: ItemStack
     ): BlockPlacementTarget?

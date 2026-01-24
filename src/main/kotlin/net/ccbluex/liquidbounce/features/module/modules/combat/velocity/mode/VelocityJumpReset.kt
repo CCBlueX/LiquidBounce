@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 import kotlin.random.Random
 
 /**
@@ -56,7 +56,7 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
     @Suppress("ComplexCondition", "unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->
         // To be able to alter velocity when receiving knockback, player must be sprinting.
-        if (player.hurtTime != 9 || !player.isOnGround || !player.isSprinting ||
+        if (player.hurtTime != 9 || !player.onGround() || !player.isSprinting ||
             isFallDamage || !isCooldownOver() || chance != 100f && Random.nextInt(100) > chance)
         {
             updateLimit()
@@ -74,10 +74,10 @@ internal object VelocityJumpReset : VelocityMode("JumpReset") {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-            val velocityX = packet.velocityX / 8000.0
-            val velocityY = packet.velocityY / 8000.0
-            val velocityZ = packet.velocityZ / 8000.0
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+            val velocityX = packet.movement.x
+            val velocityY = packet.movement.y
+            val velocityZ = packet.movement.z
 
             // Check if the player is taking fall damage
             // We set this on every packet, because if the player gets hit afterward,

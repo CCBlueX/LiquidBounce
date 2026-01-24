@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,17 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ItemLoreQueryEvent;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item.TooltipContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item.TooltipContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,16 +35,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mixin(ItemStack.class)
-public class MixinItemStack {
+public abstract class MixinItemStack {
 
-    @Inject(method = "getTooltip", at = @At("RETURN"), cancellable = true)
-    void injectLoreQueryEvent(TooltipContext context, @Nullable PlayerEntity player, TooltipType type, CallbackInfoReturnable<List<Text>> cir) {
-        List<Text> lore = cir.getReturnValue();
-        if (!(lore instanceof ArrayList<Text>)) {
+    @Inject(method = "getTooltipLines", at = @At("RETURN"), cancellable = true)
+    void injectLoreQueryEvent(
+        TooltipContext context, @Nullable Player player, TooltipFlag type, CallbackInfoReturnable<List<Component>> cir) {
+        List<Component> lore = cir.getReturnValue();
+        if (!(lore instanceof ArrayList<Component>)) {
             return;
         }
 
-        ItemLoreQueryEvent event = new ItemLoreQueryEvent(ItemStack.class.cast(this), (ArrayList<Text>) lore);
+        ItemLoreQueryEvent event = new ItemLoreQueryEvent(ItemStack.class.cast(this), (ArrayList<Component>) lore);
         EventManager.INSTANCE.callEvent(event);
         cir.setReturnValue(event.getLore());
     }

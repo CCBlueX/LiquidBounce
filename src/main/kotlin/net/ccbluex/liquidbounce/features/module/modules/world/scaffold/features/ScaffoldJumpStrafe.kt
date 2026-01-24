@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -50,15 +50,15 @@ object ScaffoldJumpStrafe : ToggleableConfigurable(ModuleScaffold, "StrafeOnJump
         val dirInput = DirectionalInput(player.input)
 
         // Taken from GodBridge feature
-        val direction = getMovementDirectionOfInput(player.yaw, dirInput) + 180
+        val direction = getMovementDirectionOfInput(player.yRot, dirInput) + 180
 
         // Round to 45°-steps (NORTH, NORTH_EAST, etc.)
         val movingYaw = round(direction / 45) * 45
         val isMovingStraight = movingYaw % 90 == 0f
 
         val speed = if (isMovingStraight) straightSpeed else diagonalSpeed
-        player.velocity = player.velocity.withStrafe(speed = speed.random().toDouble())
-        ModuleDebug.debugParameter(ModuleScaffold, "Telly-Speed", "%.2f".format(player.sqrtSpeed))
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.random().toDouble()))
+        ModuleDebug.debugParameter(ModuleScaffold, "Telly-Speed", "%.2f".format(player.horizontalSpeed))
     }
 
 }

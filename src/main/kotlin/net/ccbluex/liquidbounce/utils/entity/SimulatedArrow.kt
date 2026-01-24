@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,20 +21,19 @@ package net.ccbluex.liquidbounce.utils.entity
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.projectile.ArrowEntity
-import net.minecraft.entity.projectile.ProjectileUtil
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.world.entity.projectile.ProjectileUtil
+import net.minecraft.world.entity.projectile.arrow.Arrow
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.ClipContext
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.HitResult
+import net.minecraft.world.phys.Vec3
 
 class SimulatedArrow(
-    val world: ClientWorld,
-    var pos: Vec3d,
-    var velocity: Vec3d,
+    val world: ClientLevel,
+    var pos: Vec3,
+    var velocity: Vec3,
     private val collideEntities: Boolean = true
 ) {
     var inGround = false
@@ -57,7 +56,7 @@ class SimulatedArrow(
         velocity.y -= 0.05000000074505806
 
         updateCollision(pos, newPos)?.let {
-            this.pos = it.pos
+            this.pos = it.location
             this.inGround = true
 
             return it
@@ -68,19 +67,22 @@ class SimulatedArrow(
         return null
     }
 
-    private fun updateCollision(pos: Vec3d, newPos: Vec3d): HitResult? {
+    @Suppress("CognitiveComplexMethod")
+    private fun updateCollision(pos: Vec3, newPos: Vec3): HitResult? {
         val world = this.world
 
-        val arrowEntity = ArrowEntity(this.world, this.pos.x, this.pos.y, this.pos.z, ItemStack(Items.ARROW),
-            null)
+        val arrowEntity = Arrow(
+            this.world, this.pos.x, this.pos.y, this.pos.z,
+            Items.ARROW.defaultInstance, null
+        )
 
         // Get landing position
-        val blockHitResult = world.raycast(
-            RaycastContext(
+        val blockHitResult = world.clip(
+            ClipContext(
                 pos,
                 newPos,
-                RaycastContext.ShapeType.COLLIDER,
-                RaycastContext.FluidHandling.NONE,
+                ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE,
                 arrowEntity
             )
         )
@@ -89,29 +91,29 @@ class SimulatedArrow(
 //            val size = 0.3
             val size = 0.45
 
-            val entityHitResult = ProjectileUtil.getEntityCollision(
+            val entityHitResult = ProjectileUtil.getEntityHitResult(
                 this.world,
                 arrowEntity,
                 pos,
                 newPos,
-                Box(
+                AABB(
                     -size,
                     -size,
                     -size,
                     +size,
                     +size,
                     +size
-                ).offset(pos).stretch(newPos.subtract(pos)).expand(1.0)
+                ).move(pos).expandTowards(newPos.subtract(pos)).inflate(1.0)
             ) {
                 val canBeHit = !it.isSpectator && it.isAlive
 
-                if (canBeHit && (it.canHit() || arrowEntity != mc.player && it == arrowEntity)) {
-                    if (arrowEntity.isConnectedThroughVehicle(it)) return@getEntityCollision false
+                if (canBeHit && (it.isPickable || arrowEntity != mc.player && it == arrowEntity)) {
+                    if (arrowEntity.isPassengerOfSameVehicle(it)) return@getEntityHitResult false
                 } else {
-                    return@getEntityCollision false
+                    return@getEntityHitResult false
                 }
 
-                return@getEntityCollision true
+                return@getEntityHitResult true
             }
 
             // Check if arrow is landing
@@ -120,11 +122,7 @@ class SimulatedArrow(
             }
         }
 
-        if (blockHitResult != null && blockHitResult.type != HitResult.Type.MISS) {
-            return blockHitResult
-        }
-
-        return null
+        return blockHitResult.takeIf { it.type != HitResult.Type.MISS }
     }
 
     @Suppress("FunctionOnlyReturningConstant")

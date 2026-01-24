@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,42 +18,47 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
+import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
-import com.mojang.blaze3d.vertex.VertexFormat
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
-import net.ccbluex.liquidbounce.render.buffer.MinecraftFramebuffer
-import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
-import net.ccbluex.liquidbounce.render.newRenderPass
-import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.ccbluex.liquidbounce.utils.render.clearColor
-import net.ccbluex.liquidbounce.utils.render.clearDepth
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gl.SimpleFramebuffer
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ChatScreen
-import java.util.*
+import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
+import net.ccbluex.liquidbounce.utils.render.createUbo
+import net.ccbluex.liquidbounce.utils.render.writeStd140
+import net.minecraft.client.gui.screens.ChatScreen
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
-    private var isDrawingHudFramebuffer = false
+    var isDrawingHudFramebuffer = false
+        set(value) {
+            if (value) {
+                clearOverlay()
+            }
+            field = value
+        }
 
-    private val overlayFramebuffer = SimpleFramebuffer(
-        "BlurOverlay",
-        mc.window.framebufferWidth,
-        mc.window.framebufferHeight,
+    val overlayFramebuffer = TextureTarget(
+        "${LiquidBounce.CLIENT_NAME} BlurOverlay",
+        mc.window.width,
+        mc.window.height,
         true
-    ).apply {
-        this.setFilter(FilterMode.NEAREST)
+    )
+
+    private val overlaySampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST)
+
+    private fun clearOverlay() {
+        overlayFramebuffer.clearColorAndDepth()
     }
 
     private val lastTimeScreenOpened = Chronometer()
@@ -61,52 +66,45 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
     @Suppress("unused")
     private val resizeHandler = handler<FramebufferResizeEvent> {
-        this.overlayFramebuffer.resize(it.width, it.height)
-    }
-
-    fun startOverlayDrawing(context: DrawContext, tickDelta: Float) {
-        if (ItemImageAtlas.updateAtlas(context)) {
-            return
-        }
-
-        if (ModuleHud.isBlurEffectActive) {
-            this.isDrawingHudFramebuffer = true
-            overlayFramebuffer.colorAttachment?.clearColor(0)
-            overlayFramebuffer.depthAttachment?.clearDepth(1.0)
-
-            // TODO: GlobalFramebuffer is incompatible with OSX
-            if (!MinecraftClient.IS_SYSTEM_MAC) {
-                val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
-                framebufferWrapper.beginWrite(viewport = true, clear = false)
+        if ((it.width != this.overlayFramebuffer.width || it.height != this.overlayFramebuffer.height)) {
+            if (it.width == 0 || it.height == 0) {
+                clearOverlay()
+            } else {
+                this.overlayFramebuffer.resize(it.width, it.height)
             }
-
-            callEvent(OverlayRenderEvent(this.overlayFramebuffer, context, tickDelta))
-        } else {
-            callEvent(OverlayRenderEvent(mc.framebuffer, context, tickDelta))
         }
     }
 
-    fun endOverlayDrawing() {
-        if (!this.isDrawingHudFramebuffer) {
+    private val GUI_BLUR_UNIFORM_BUFFER = gpuDevice.createUbo(
+        labelGetter = { "GUI blur UBO" },
+        std140Size = { float + float + float },
+    ).slice()
+
+    private fun hasNoFullScreen(): Boolean =
+        mc.screen == null || mc.screen is ChatScreen || FeatureSilentScreen.shouldHide
+
+    fun shouldDrawBlur(): Boolean = inGame && hasNoFullScreen() &&
+        ModuleHud.running && ModuleHud.isBlurEffectActive
+
+    fun blitBlurOverlay() {
+        if (!isDrawingHudFramebuffer) {
             return
         }
-
-        this.isDrawingHudFramebuffer = false
-
-        if (!MinecraftClient.IS_SYSTEM_MAC) {
-            val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
-            framebufferWrapper.end()
-        }
+        isDrawingHudFramebuffer = false
 
         // Draw blur areas
-        newRenderPass(mc.framebuffer).use { pass ->
+        GUI_BLUR_UNIFORM_BUFFER.writeStd140 {
+            putFloat(getBlurRadius())
+            putFloat(ModuleHud.Blur.alphaBlendRange.start)
+            putFloat(ModuleHud.Blur.alphaBlendRange.endInclusive)
+        }
+
+        mc.mainRenderTarget.createRenderPass({ "GUI blur pass" }).use { pass ->
             pass.setPipeline(ClientRenderPipelines.GuiBlur)
-            pass.bindSampler("texture0", mc.framebuffer.colorAttachment)
-            pass.bindSampler("overlay", overlayFramebuffer.colorAttachment)
-            pass.setUniform("radius", getBlurRadius())
-            pass.setUniform("alphaBlendMin", ModuleHud.Blur.alphaBlendRange.start)
-            pass.setUniform("alphaBlendMax", ModuleHud.Blur.alphaBlendRange.endInclusive)
-            pass.drawFullScreenPositionTexture()
+            pass.bindTexture("texture0", mc.mainRenderTarget.colorTextureView, overlaySampler)
+            pass.bindTexture("overlay", overlayFramebuffer.colorTextureView, overlaySampler)
+            pass.setUniform("BlurData", GUI_BLUR_UNIFORM_BUFFER)
+            pass.draw(0, 3)
         }
 
         // overlayFramebuffer ---blit--> mc.framebuffer
@@ -116,26 +114,23 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
     /**
      * Draws a blit using a custom JCEF-compatible blending pipeline.
      * Replaces the call to `overlayFramebuffer.drawBlit(mc.framebuffer.colorAttachment)`.
+     *
+     * @see net.minecraft.client.gl.Framebuffer.drawBlit
      */
     private fun drawOverlayBlit() {
-        val shapeIndexBuffer = RenderSystem.getSequentialBuffer(VertexFormat.DrawMode.QUADS)
-        val indexBuffer = shapeIndexBuffer.getIndexBuffer(6)
-        val vertexBuffer = RenderSystem.getQuadVertexBuffer()
-
-        gpuDevice.createCommandEncoder().createRenderPass(
-            mc.framebuffer.colorAttachment,
-            OptionalInt.empty()
+        mc.mainRenderTarget.colorTextureView!!.createRenderPass(
+            { "GUI blur overlay blit pass" },
         ).use { renderPass ->
             renderPass.setPipeline(ClientRenderPipelines.JCEF.Blit)
-            renderPass.setVertexBuffer(0, vertexBuffer)
-            renderPass.setIndexBuffer(indexBuffer, shapeIndexBuffer.indexType)
-            renderPass.bindSampler("InSampler", overlayFramebuffer.colorAttachment)
-            renderPass.drawIndexed(0, 6)
+            RenderSystem.bindDefaultUniforms(renderPass)
+
+            renderPass.bindTexture("InSampler", overlayFramebuffer.colorTextureView, overlaySampler)
+            renderPass.draw(0, 3)
         }
     }
 
-    fun getBlurRadiusFactor(): Float {
-        val isScreenOpen = mc.currentScreen != null && mc.currentScreen !is ChatScreen
+    private fun getBlurRadiusFactor(): Float {
+        val isScreenOpen = !hasNoFullScreen()
 
         if (isScreenOpen && !wasScreenOpen) {
             lastTimeScreenOpened.reset()

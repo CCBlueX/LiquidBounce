@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import com.mojang.blaze3d.platform.InputConstants
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
@@ -40,7 +41,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.minecraft.client.util.InputUtil
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -48,8 +48,8 @@ import net.minecraft.client.util.InputUtil
 @Suppress("LongParameterList", "detekt:TooManyFunctions")
 open class ClientModule(
     name: String, // name parameter in configurable
-    @Exclude val category: Category, // module category
-    bind: Int = InputUtil.UNKNOWN_KEY.code, // default bind
+    @Exclude val category: ModuleCategory, // module category
+    bind: Int = InputConstants.UNKNOWN.value, // default bind
     bindAction: InputBind.BindAction = InputBind.BindAction.TOGGLE, // default action
     state: Boolean = false, // default state
     @Exclude val notActivatable: Boolean = false, // disable settings that are not needed if the module can't be enabled
@@ -68,7 +68,7 @@ open class ClientModule(
     override val running: Boolean
         get() = super<EventListener>.running && inGame && (enabled || notActivatable)
 
-    internal val bindValue = bind("Bind", InputBind(InputUtil.Type.KEYSYM, bind, bindAction))
+    internal val bindValue = bind("Bind", InputBind(InputConstants.Type.KEYSYM, bind, bindAction))
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
         .independentDescription().apply {
             if (notActivatable) {
@@ -123,7 +123,8 @@ open class ClientModule(
     final override fun onEnabledValueRegistration(value: Value<Boolean>) =
         super.onEnabledValueRegistration(value).also { value ->
             // Might not include the enabled state of the module depending on the category
-            if (category == Category.MISC || category == Category.FUN || category == Category.RENDER) {
+            if (category == ModuleCategories.MISC || category == ModuleCategories.FUN ||
+                category == ModuleCategories.RENDER) {
                 if (this is ModuleAntiBot) {
                     return@also
                 }

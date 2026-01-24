@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,28 +15,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.icespeed
 
+import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockSlipperinessMultiplierEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.icespeed.IceSpeed.Motion.horizontalMotion
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
+import net.minecraft.world.level.block.Blocks
 
 /**
  * Ice Speed allows you to manipulate slipperiness speed
  */
 internal object IceSpeed : ToggleableConfigurable(ModuleTerrainSpeed, "IceSpeed", true) {
 
-    val slipperiness by float("Slipperiness", 0.6f, 0.3f..1f)
+    private val slipperiness by float("Slipperiness", 0.6f, 0.3f..1f)
 
-    object Motion : ToggleableConfigurable(ModuleTerrainSpeed, "Motion", false) {
+    private object Motion : ToggleableConfigurable(ModuleTerrainSpeed, "Motion", false) {
         val horizontalMotion by float("Motion", 0.5f, 0.2f..1.5f)
     }
 
@@ -44,14 +42,14 @@ internal object IceSpeed : ToggleableConfigurable(ModuleTerrainSpeed, "IceSpeed"
         tree(Motion)
     }
 
-    val iceBlocks = hashSetOf<Block>(Blocks.ICE, Blocks.BLUE_ICE, Blocks.FROSTED_ICE, Blocks.PACKED_ICE)
+    private val iceBlocks = referenceHashSetOf(Blocks.ICE, Blocks.BLUE_ICE, Blocks.FROSTED_ICE, Blocks.PACKED_ICE)
 
     @Suppress("unused")
     val blockSlipperinessMultiplierHandler = handler<BlockSlipperinessMultiplierEvent> { event ->
         if (event.block in iceBlocks) {
             if (Motion.enabled) {
-                player.velocity.x *= horizontalMotion
-                player.velocity.z *= horizontalMotion
+                player.deltaMovement =
+                    player.deltaMovement.multiply(horizontalMotion.toDouble(), 1.0, horizontalMotion.toDouble())
             }
 
             event.slipperiness = slipperiness

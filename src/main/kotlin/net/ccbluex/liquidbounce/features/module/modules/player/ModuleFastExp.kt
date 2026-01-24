@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,24 +24,28 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.maxDurabilityToContinueRepair
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastExp.NoWaste.minDurabilityToStartRepair
-import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbEntityAccessor
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinExperienceOrbAccessor
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.item.Items
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.enchantment.Enchantments
 
 /**
  * FastExp module
@@ -50,7 +54,7 @@ import net.minecraft.item.Items
  */
 object ModuleFastExp : ClientModule(
     "FastExp",
-    Category.PLAYER,
+    ModuleCategories.PLAYER,
     bindAction = InputBind.BindAction.HOLD,
     disableOnQuit = true
 ) {
@@ -148,7 +152,7 @@ object ModuleFastExp : ClientModule(
         }
 
         val slot = Slots.OffhandWithHotbar.findSlot(Items.EXPERIENCE_BOTTLE)
-        if (slot == null || player.isDead) {
+        if (slot == null || player.isDeadOrDying) {
             bottlesUsed = 0
             bottlesRequired = 0
             repairing = false
@@ -187,9 +191,9 @@ object ModuleFastExp : ClientModule(
     }
 
     private fun anyExpOrbMovingToPlayer(): Boolean =
-        world.entities.any {
-            (it is MixinExperienceOrbEntityAccessor) && it.target === player
-                && it.velocity.lengthSquared() > player.velocity.lengthSquared()
+        world.entitiesForRendering().any {
+            (it is MixinExperienceOrbAccessor) && it.followingPlayer === player
+                && it.deltaMovement.lengthSqr() > player.deltaMovement.lengthSqr()
         }
 
     private suspend fun waitForExperienceOrbs() {
@@ -208,7 +212,7 @@ object ModuleFastExp : ClientModule(
 
         if (Rotate.enabled) {
             tickUntil {
-                val rotation = Rotation(player.yaw, 90f)
+                val rotation = Rotation(player.yRot, 90f)
                 RotationManager.setRotationTarget(
                     Rotate.rotations.toRotationTarget(rotation),
                     Priority.IMPORTANT_FOR_USAGE_3,
@@ -247,15 +251,15 @@ object ModuleFastExp : ClientModule(
         }
 
         val itemsToRepair = arrayOf(
-            player.getEquippedStack(EquipmentSlot.HEAD),
-            player.getEquippedStack(EquipmentSlot.CHEST),
-            player.getEquippedStack(EquipmentSlot.LEGS),
-            player.getEquippedStack(EquipmentSlot.FEET),
+            player.getItemBySlot(EquipmentSlot.HEAD),
+            player.getItemBySlot(EquipmentSlot.CHEST),
+            player.getItemBySlot(EquipmentSlot.LEGS),
+            player.getItemBySlot(EquipmentSlot.FEET),
             // an item in the other hand, not holding the exp bottle could also get repaired
             if (slot == OffHandSlot) {
-                player.getEquippedStack(EquipmentSlot.MAINHAND)
+                player.getItemBySlot(EquipmentSlot.MAINHAND)
             } else {
-                player.getEquippedStack(EquipmentSlot.OFFHAND)
+                player.getItemBySlot(EquipmentSlot.OFFHAND)
             },
         ).filter { it.getEnchantment(Enchantments.MENDING) != 0 }
 
@@ -273,7 +277,7 @@ object ModuleFastExp : ClientModule(
             return 0
         }
 
-        val totalDamage = itemsToRepair.sumOf { it.damage }
+        val totalDamage = itemsToRepair.sumOf { it.damageValue }
         val experienceRequired = totalDamage / REPAIR_RATE
         val bottlesRequired = experienceRequired / EXPERIENCE_PER_BOTTLE
 

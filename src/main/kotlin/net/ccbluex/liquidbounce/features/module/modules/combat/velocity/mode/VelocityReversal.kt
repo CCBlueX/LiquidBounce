@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,10 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.ccbluex.liquidbounce.utils.math.multiply
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * A velocity mode that reverses your velocity after a set amount of ticks.
@@ -41,8 +42,8 @@ internal object VelocityReversal : VelocityMode("Reversal") {
     private var velocityTicks = 0
 
     private fun checkPacket(packet: Packet<*>): Boolean {
-        val isExplosion = packet is ExplosionS2CPacket
-        val isSelfVelocity = packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id
+        val isExplosion = packet is ClientboundExplodePacket
+        val isSelfVelocity = packet is ClientboundSetEntityMotionPacket && packet.id == player.id
 
         return (isSelfVelocity || isExplosion)
     }
@@ -68,10 +69,12 @@ internal object VelocityReversal : VelocityMode("Reversal") {
         }
 
         when {
-            player.velocity.lengthSquared() == 0.0 -> reset()
+            player.deltaMovement.lengthSqr() == 0.0 -> reset()
             velocityTicks++ >= delay -> {
-                player.velocity.x *= -xModifier
-                player.velocity.z *= -zModifier
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = -xModifier,
+                    factorZ = -zModifier,
+                )
                 reset()
             }
         }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,18 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.mob.MobEntity
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.entity.RenderedEntities
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.Mob
+import net.minecraft.world.entity.decoration.ArmorStand
+import net.minecraft.world.entity.vehicle.minecart.AbstractMinecart
 
 /**
  * Combine Mobs
@@ -37,56 +42,63 @@ import net.minecraft.entity.mob.MobEntity
  * The idea behind this module originates from the video
  * "2b2t's WAR Against Chicken Lag" https://www.youtube.com/watch?v=Qqmz76Z5az0
  */
-object ModuleCombineMobs : ClientModule("CombineMobs", Category.RENDER) {
+object ModuleCombineMobs : ClientModule("CombineMobs", ModuleCategories.RENDER) {
 
     @JvmRecord
     private data class CombineKey(val type: EntityType<*>, val babyGroup: Boolean)
 
-    private val renderTracked = HashMap<CombineKey, Long2IntOpenHashMap>()
-    private val nametagTracked = HashMap<CombineKey, Long2IntOpenHashMap>()
+    private val renderTracker = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
+    private val nametagTracker = Object2ObjectOpenHashMap<CombineKey, Long2IntOpenHashMap>()
+
+    private val combineArmorStands by boolean("CombineArmorStands", false)
+    private val combineMinecarts by boolean("CombineMinecarts", false)
+
+    override fun onEnabled() {
+        RenderedEntities.subscribe(this)
+        RenderedEntities.onUpdated(nametagTracker::clear)
+        super.onEnabled()
+    }
 
     override fun onDisabled() {
-        renderTracked.clear()
-        nametagTracked.clear()
+        RenderedEntities.unsubscribe(this)
+        renderTracker.clear()
+        nametagTracker.clear()
     }
 
-    /**
-     * On each frame, we start with a clean slate
-     */
     @Suppress("unused")
-    val renderGameHandler = handler<GameRenderEvent> {
-        renderTracked.clear()
-        nametagTracked.clear()
+    private val renderGameHandler = handler<GameRenderEvent> {
+        renderTracker.clear()
     }
 
-    private fun keyFor(mob: MobEntity): CombineKey {
+    private fun keyFor(mob: Entity): CombineKey {
+        if (mob !is LivingEntity) {
+            return CombineKey(mob.type, false)
+        }
         val babyGroup = mob.isBaby
         return CombineKey(mob.type, babyGroup)
     }
 
     @JvmOverloads
     fun trackEntity(entity: Entity, forNametag: Boolean = false): Boolean {
-        val mob = entity as? MobEntity ?: return false
-        val target = if (forNametag) nametagTracked else renderTracked
+        val canCombine = entity is Mob ||
+            (entity is ArmorStand && combineArmorStands) ||
+            (entity is AbstractMinecart && combineMinecarts)
+        if (!canCombine) return false
 
-        val key = keyFor(mob)
-        val pos = mob.blockPos.asLong()
-
-        val posMap = target.getOrPut(key, ::Long2IntOpenHashMap)
-        val count = posMap.addTo(pos, 1)
-
-        return count > 0
+        return (if (forNametag) nametagTracker else renderTracker)
+            .getOrPut(keyFor(entity), ::Long2IntOpenHashMap)
+            .addTo(entity.blockPosition().asLong(), 1) > 0
     }
 
     fun getCombinedCount(entity: Entity): Int {
-        val mob = entity as? MobEntity ?: return 1
+        if (!running) return 1
 
-        val key = keyFor(mob)
-        val pos = mob.blockPos.asLong()
+        val key = keyFor(entity)
+        val pos = entity.blockPosition().asLong()
 
-        val count = renderTracked[key]?.getOrDefault(pos, 0) ?: 0
+        val count = renderTracker[key]?.getOrDefault(pos, 0) ?: 0
         if (count > 0) return count
 
-        return nametagTracked[key]?.getOrDefault(pos, 1) ?: 1
+        return nametagTracker[key]?.getOrDefault(pos, 1) ?: 1
     }
 }

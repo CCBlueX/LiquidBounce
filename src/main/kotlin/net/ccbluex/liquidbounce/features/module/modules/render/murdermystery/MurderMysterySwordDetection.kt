@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
@@ -25,8 +24,11 @@ import net.ccbluex.liquidbounce.utils.item.isHoe
 import net.ccbluex.liquidbounce.utils.item.isPickaxe
 import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.isSword
-import net.minecraft.block.Blocks
-import net.minecraft.item.*
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.BoatItem
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Blocks
 
 object MurderMysterySwordDetection {
     private val KNOWN_SWORD_ITEMS =

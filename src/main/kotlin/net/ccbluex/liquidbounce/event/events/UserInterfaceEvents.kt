@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +15,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData
-import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.minecraft.text.Text
+import net.minecraft.network.chat.Component
+import net.minecraft.world.effect.MobEffectInstance
 
 @Nameable("fps")
 @Suppress("unused")
@@ -38,30 +38,26 @@ class FpsLimitEvent(var fps: Int) : Event()
 
 @Nameable("clientPlayerData")
 @Suppress("unused")
-class ClientPlayerDataEvent(val playerData: PlayerData) : Event(), WebSocketEvent {
-    companion object {
-        fun fromPlayerStatistics(stats: PlayerData) = ClientPlayerDataEvent(stats)
-    }
-}
+class ClientPlayerDataEvent(val playerData: PlayerData) : Event(), WebSocketEvent
+
+@Nameable("clientPlayerEffect")
+@Suppress("unused")
+class ClientPlayerEffectEvent(val effects: List<MobEffectInstance>) : Event(), WebSocketEvent
 
 @Nameable("clientPlayerInventory")
 @Suppress("unused")
-class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event(), WebSocketEvent {
-    companion object {
-        fun fromPlayerInventory(inventory: PlayerInventoryData) = ClientPlayerInventoryEvent(inventory)
-    }
-}
+class ClientPlayerInventoryEvent(val inventory: PlayerInventoryData) : Event(), WebSocketEvent
 
 sealed class TitleEvent : CancellableEvent(), WebSocketEvent {
     sealed class TextContent : TitleEvent() {
-        abstract var text: Text?
+        abstract var text: Component?
     }
 
     @Nameable("title")
-    class Title(override var text: Text?) : TextContent()
+    class Title(override var text: Component?) : TextContent()
 
     @Nameable("subtitle")
-    class Subtitle(override var text: Text?) : TextContent()
+    class Subtitle(override var text: Component?) : TextContent()
 
     @Nameable("titleFade")
     class Fade(var fadeInTicks: Int, var stayTicks: Int, var fadeOutTicks: Int) : TitleEvent()

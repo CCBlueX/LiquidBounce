@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,23 +24,23 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.average
-import net.minecraft.entity.EntityDimensions
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.entity.EntityDimensions
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.phys.Vec3
 import kotlin.math.pow
 import kotlin.math.sqrt
 
 object TrapPlayerSimulation {
-    private val predictedPlayerStatesCache = HashMap<PlayerEntity, ArrayDeque<PredictedPlayerPos>>()
+    private val predictedPlayerStatesCache = HashMap<Player, ArrayDeque<PredictedPlayerPos>>()
 
     private const val SIMULATION_DISTANCE: Double = 10.0
 
     fun runSimulations(enemies: List<LivingEntity>) {
-        val seenPlayers = HashSet<PlayerEntity>()
+        val seenPlayers = HashSet<Player>()
 
         for (enemy in enemies) {
-            if (enemy !is PlayerEntity || enemy.squaredDistanceTo(player) > SIMULATION_DISTANCE.pow(2)) {
+            if (enemy !is Player || enemy.distanceToSqr(player) > SIMULATION_DISTANCE.pow(2)) {
                 continue
             }
 
@@ -48,24 +48,24 @@ object TrapPlayerSimulation {
 
             val predictedState = simulation.simulateBetween(0..25)
 
-            var wasAirborne = !enemy.isOnGround
+            var wasAirborne = !enemy.onGround()
 
             var ticks = 1
 
             val predictedPos = predictedState.firstNotNullOfOrNull {
                 if (wasAirborne && it.onGround) {
-                    return@firstNotNullOfOrNull PredictedPlayerPos(it.pos, ticks, enemy.pos, false)
+                    return@firstNotNullOfOrNull PredictedPlayerPos(it.pos, ticks, enemy.position(), false)
                 }
 
-                wasAirborne = !enemy.isOnGround
+                wasAirborne = !enemy.onGround()
                 ticks++
 
                 null
             } ?: PredictedPlayerPos(
                 null,
                 null,
-                enemy.pos,
-                enemy.velocity.lengthSquared() < 0.05
+                enemy.position(),
+                enemy.deltaMovement.lengthSqr() < 0.05
             )
 
             seenPlayers.add(enemy)
@@ -83,14 +83,14 @@ object TrapPlayerSimulation {
     }
 
     /**
-     * Searches for a position where a trap could be layed. Currently that is just the landing position of
+     * Searches for a position where a trap could be laid. Currently, that is just the landing position of
      * a jumping/falling player.
      *
      * @return position for the trap. `null` if the trap should not be placed.
      */
-    fun findPosForTrap(target: LivingEntity, isTargetLocked: Boolean): Vec3d? {
-        if (target !is PlayerEntity) {
-            return target.pos
+    fun findPosForTrap(target: LivingEntity, isTargetLocked: Boolean): Vec3? {
+        if (target !is Player) {
+            return target.position()
         }
 
         val simulationCache = this.predictedPlayerStatesCache[target] ?: return null
@@ -107,19 +107,19 @@ object TrapPlayerSimulation {
 
         val avg = positions.average()
         val std = positions
-            .fold(0.0) { acc, vec -> acc + vec.subtract(avg).lengthSquared() }
+            .fold(0.0) { acc, vec -> acc + vec.subtract(avg).lengthSqr() }
             .let { sqrt(it / positions.size) }
 
         ModuleDebug.debugGeometry(
             ModuleAutoTrap,
             "PredictedPlayerPos",
-            ModuleDebug.DebuggedBox(target.dimensions.getBoxAt(positions.last()), Color4b.RED.with(a = 127))
+            ModuleDebug.DebuggedBox(target.dimensions.makeBoundingBox(positions.last()), Color4b.RED.with(a = 127))
         )
         ModuleDebug.debugGeometry(
             ModuleAutoTrap,
             "PredictedPlayerPosStd",
             ModuleDebug.DebuggedBox(
-                EntityDimensions.fixed((target.dimensions.width * std).toFloat(), 0.5F).getBoxAt(avg),
+                EntityDimensions.fixed((target.dimensions.width * std).toFloat(), 0.5F).makeBoundingBox(avg),
                 Color4b.BLUE.with(a = 127)
             )
         )
@@ -133,9 +133,9 @@ object TrapPlayerSimulation {
     }
 
     private class PredictedPlayerPos(
-        val nextOnGround: Vec3d?,
+        val nextOnGround: Vec3?,
         val ticksToGround: Int?,
-        val currPos: Vec3d,
+        val currPos: Vec3,
         val isStationary: Boolean
     )
 }

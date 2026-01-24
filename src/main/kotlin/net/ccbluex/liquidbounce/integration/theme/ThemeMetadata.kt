@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.integration.theme
 
 import com.google.gson.JsonObject
 
+@JvmRecord
 data class ThemeMetadata(
     val id: String,
     val name: String,
@@ -47,7 +48,8 @@ data class ThemeMetadata(
     }
 }
 
+@JvmRecord
 data class Background(
     val name: String,
-    val types: List<String>
+    val types: Set<String>
 )

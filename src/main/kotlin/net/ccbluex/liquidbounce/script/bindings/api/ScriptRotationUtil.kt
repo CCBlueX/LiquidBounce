@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.script.bindings.api.ScriptRotationUtil.newRotationEntity
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.features.MovementCorrection
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.entity.Entity
+import net.minecraft.world.entity.Entity
 import kotlin.math.sqrt
 
 /**
@@ -58,7 +58,7 @@ object ScriptRotationUtil {
 
         // Finds the best spot (and undefined if no spot was found)
         val (rotation, _) = raytraceBox(
-            mc.player!!.eyePos,
+            mc.player!!.eyePosition,
             box,
             range = sqrt(range),
             wallsRange = throughWallsRange
@@ -77,7 +77,7 @@ object ScriptRotationUtil {
     @JvmName("newRotationEntity")
     fun newRotationEntity(entity: Entity) = Rotation.lookingAt(
         point = entity.boundingBox.center,
-        from = mc.player!!.eyePos
+        from = mc.player!!.eyePosition
     )
 
     /**
@@ -94,7 +94,7 @@ object ScriptRotationUtil {
             configurable = RotationsConfigurable(
                 object : EventListener { },
                 movementCorrection = if (fixVelocity) MovementCorrection.SILENT else MovementCorrection.OFF
-            ), priority = Priority.NORMAL, provider = ClientModule("ScriptAPI", Category.MISC)
+            ), priority = Priority.NORMAL, provider = ClientModule("ScriptAPI", ModuleCategories.MISC)
         )
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,19 +19,23 @@
 
 package net.ccbluex.liquidbounce.config.gson.adapter
 
-import com.google.gson.*
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
-import java.awt.Color
 import java.lang.reflect.Type
 
 object ColorAdapter : JsonSerializer<Color4b>, JsonDeserializer<Color4b> {
 
     override fun serialize(src: Color4b, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
-        return JsonPrimitive(src.toARGB())
+        return JsonPrimitive(src.argb)
     }
 
     override fun deserialize(json: JsonElement, typeOfT: Type?, context: JsonDeserializationContext?): Color4b {
-        return Color4b(Color(json.asInt, true))
+        return Color4b(json.asInt)
     }
 
 }

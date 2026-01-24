@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,24 +15,22 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
-import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.UseHotbar
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor.UseHotbar
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.durability
 import net.ccbluex.liquidbounce.utils.item.isPlayerArmor
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.entity.EquipmentSlot
-import java.util.EnumSet
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
 
 object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor", true) {
     val durabilityThreshold by int("DurabilityThreshold", 24, 0..100)
@@ -91,12 +89,12 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
          *
          * (1) - not including the player's own inventory which is also a handled screen.
          */
-        val hasLostArmorPiece = shouldTrackArmor && player.armor < prevArmor
-        prevArmor = player.armor
+        val hasLostArmorPiece = shouldTrackArmor && player.armorValue < prevArmor
+        prevArmor = player.armorValue
 
         // closes the current screen so that the armor slots are synced again
         if (hasLostArmorPiece) {
-            player.closeHandledScreen()
+            player.closeContainer()
             return@tickHandler
         }
 
@@ -119,9 +117,7 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
             return@tickHandler
         }
 
-        val armorSlotsToEquip = armorToEquipWithSlots.mapTo(
-            EnumSet.noneOf(EquipmentSlot::class.java)
-        ) { ArmorPiece(it.itemSlot).slotType }
+        val armorSlotsToEquip = armorToEquipWithSlots.mapTo(enumSetOf()) { ArmorPiece(it.itemSlot).slotType }
 
         val hasArmorToReplace = Slots.Armor.any {
             val armorStack = it.itemStack
@@ -148,8 +144,8 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
         waitTicks(ModuleAutoArmor.inventoryConstraints.closeDelay.random())
 
         // the current screen might change while the module is waiting
-        if (mc.currentScreen is InventoryScreen) {
-            player.closeHandledScreen()
+        if (mc.screen is InventoryScreen) {
+            player.closeContainer()
         }
     }
 
@@ -157,20 +153,20 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
      * Closes the previous game screen and opens the inventory.
      */
     private suspend fun openInventory(hasArmorToReplace: Boolean) {
-        while (hasArmorToReplace && mc.currentScreen !is InventoryScreen) {
+        while (hasArmorToReplace && mc.screen !is InventoryScreen) {
 
-            if (mc.currentScreen is HandledScreen<*>) {
+            if (mc.screen is AbstractContainerScreen<*>) {
                 // closes chests/crating tables/etc. (it never happens)
-                player.closeHandledScreen()
-            } else if (mc.currentScreen != null) {
+                player.closeContainer()
+            } else if (mc.screen != null) {
                 // closes ClickGUI, game chat, etc. to save some armor :)
-                mc.currentScreen!!.close()
+                mc.screen!!.onClose()
             }
 
             waitTicks(1)
 
             // again, the current screen might change while the module is waiting
-            if (mc.currentScreen == null) {
+            if (mc.screen == null) {
                 mc.setScreen(InventoryScreen(player))
                 hasOpenedInventory = true
             }
@@ -178,5 +174,5 @@ object AutoArmorSaveArmor : ToggleableConfigurable(ModuleAutoArmor, "SaveArmor",
     }
 
     private val shouldTrackArmor : Boolean
-        get() = mc.currentScreen !is InventoryScreen && mc.currentScreen is HandledScreen<*>
+        get() = mc.screen !is InventoryScreen && mc.screen is AbstractContainerScreen<*>
 }

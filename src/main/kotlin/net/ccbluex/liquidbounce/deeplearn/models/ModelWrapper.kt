@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@ import net.ccbluex.liquidbounce.deeplearn.listener.OverlayTrainingListener
 import java.io.Closeable
 import java.io.InputStream
 import java.nio.file.Path
-import java.util.*
+import java.util.Locale
 
 private const val NUM_EPOCH = 100
 private const val BATCH_SIZE = 32

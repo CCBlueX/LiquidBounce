@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -30,9 +30,9 @@ import net.ccbluex.liquidbounce.render.utils.shiftHue
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.collection.ExpiringList.Companion.ExpiringList
 import net.ccbluex.liquidbounce.utils.math.Easing
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.Vec3
 
-object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
+object ModuleJumpEffect : ClientModule("JumpEffect", ModuleCategories.RENDER) {
 
     private val endRadius by floatRange("EndRadius", 0.15F..0.8F, 0F..3F)
 
@@ -45,7 +45,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
     private val lifetime by int("Lifetime", 15, 1..30)
 
-    private val circles = ExpiringList<Vec3d>()
+    private val circles = ExpiringList<Vec3>()
 
     override fun onDisabled() {
         circles.clear()
@@ -86,7 +86,7 @@ object ModuleJumpEffect : ClientModule("JumpEffect", Category.RENDER) {
 
     private val playerJumpHandler = handler<PlayerJumpEvent> { _ ->
         // Adds new circle when the player jumps
-        circles.add(player.pos, lifetime)
+        circles.add(player.position(), lifetime)
     }
 
 }

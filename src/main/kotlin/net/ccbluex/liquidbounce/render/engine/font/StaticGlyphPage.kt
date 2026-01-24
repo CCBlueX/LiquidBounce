@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,17 +15,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.render.engine.font
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
-import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.engine.FontId
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
+import net.ccbluex.liquidbounce.render.engine.font.StaticGlyphPage.Companion.createGlyphPageWithFittingCharacters
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.client.renderer.texture.DynamicTexture
 import java.awt.Dimension
 import java.awt.Point
 import kotlin.math.max
@@ -36,8 +37,8 @@ import kotlin.math.sqrt
  * A staticly allocated glyph page.
  */
 class StaticGlyphPage(
-    override val texture: NativeImageBackedTexture,
-    val glyphs: Set<Pair<FontManager.FontId, GlyphRenderInfo>>
+    override val texture: DynamicTexture,
+    val glyphs: Set<Pair<FontId, GlyphRenderInfo>>
 ): GlyphPage() {
     companion object {
         @JvmStatic
@@ -108,11 +109,10 @@ class StaticGlyphPage(
                     it.fontGlyph.font to createGlyphFromGenerationInfo(it, placementPlan.atlasDimension)
                 }
 
-            val nativeImage = atlas.toNativeImage()
-            val texture = NativeImageBackedTexture(null, nativeImage)
-
             return StaticGlyphPage(
-                texture,
+                atlas.toNativeImage().asTexture {
+                    "StaticGlyphPage ${placementPlan.atlasDimension.width}x${placementPlan.atlasDimension.height}"
+                },
                 glyphs,
             )
         }

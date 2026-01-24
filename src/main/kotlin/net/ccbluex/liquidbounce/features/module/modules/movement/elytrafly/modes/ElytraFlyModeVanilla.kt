@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,12 +26,14 @@ internal object ElytraFlyModeVanilla : ElytraFlyMode("Vanilla") {
 
     override fun onTick() {
         if (player.moving) {
-            player.velocity = player.velocity.withStrafe(speed = ModuleElytraFly.Speed.horizontal.toDouble())
+            player.deltaMovement = player.deltaMovement.withStrafe(
+                speed = ModuleElytraFly.Speed.horizontal.toDouble()
+            )
         }
 
-        player.velocity.y = when {
-            mc.options.jumpKey.isPressed -> ModuleElytraFly.Speed.vertical.toDouble()
-            mc.options.sneakKey.isPressed -> -ModuleElytraFly.Speed.vertical.toDouble()
+        player.deltaMovement.y = when {
+            mc.options.keyJump.isDown -> ModuleElytraFly.Speed.vertical.toDouble()
+            mc.options.keyShift.isDown -> -ModuleElytraFly.Speed.vertical.toDouble()
             else -> return
         }
     }

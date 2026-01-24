@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.copy
 
 internal object ElytraFlyModeStatic : ElytraFlyMode("Static") {
 
@@ -53,12 +54,12 @@ internal object ElytraFlyModeStatic : ElytraFlyMode("Static") {
 
     @Suppress("unused")
     private val moveHandler = handler<PlayerMoveEvent> { event ->
-        if (ModuleElytraFly.shouldNotOperate() || !player.isGliding) {
+        if (ModuleElytraFly.shouldNotOperate() || !player.isFallFlying) {
             return@handler
         }
 
         val speed = ModuleElytraFly.Speed.enabled
-        val input = player.input.playerInput
+        val input = player.input.keyPresses
         val isMoving = input.forward || input.backward || input.left || input.right
         if (speed && isMoving) {
             event.movement = event.movement.withStrafe(speed = ModuleElytraFly.Speed.horizontal.toDouble())
@@ -71,13 +72,12 @@ internal object ElytraFlyModeStatic : ElytraFlyMode("Static") {
                 glideZ = normalized.z * Glide.horizontalGlide.toDouble()
             }
 
-            event.movement.x = glideX
-            event.movement.z = glideZ
+            event.movement = event.movement.copy(x = glideX, z = glideZ)
         }
 
         event.movement.y = when {
-            mc.options.jumpKey.isPressed && speed -> ModuleElytraFly.Speed.vertical.toDouble()
-            mc.options.sneakKey.isPressed && speed -> -ModuleElytraFly.Speed.vertical.toDouble()
+            mc.options.keyJump.isDown && speed -> ModuleElytraFly.Speed.vertical.toDouble()
+            mc.options.keyShift.isDown && speed -> -ModuleElytraFly.Speed.vertical.toDouble()
             else -> if (Glide.running) -Glide.verticalGlide.toDouble() else 0.0
         }
     }

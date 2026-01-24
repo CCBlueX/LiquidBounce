@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trig
 
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.event.EventListener
-import net.minecraft.network.packet.Packet
+import net.minecraft.network.protocol.Packet
 
 /**
  * Options Define when the CA should run. Only tick is the most legit.

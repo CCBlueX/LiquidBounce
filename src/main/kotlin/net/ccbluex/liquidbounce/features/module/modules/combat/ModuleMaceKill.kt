@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,21 +20,21 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.warp
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
-import net.minecraft.item.Items
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.world.item.Items
+import net.minecraft.world.phys.shapes.Shapes
 import kotlin.math.abs
 import kotlin.math.ceil
 
 /**
  * Makes the mace powerful by faking fall height.
  */
-object ModuleMaceKill : ClientModule("MaceKill", Category.COMBAT) {
+object ModuleMaceKill : ClientModule("MaceKill", ModuleCategories.COMBAT) {
 
     private val fallHeight by int("FallHeight", 22, 1..170).apply { tagBy(this) }
 
@@ -47,7 +47,7 @@ object ModuleMaceKill : ClientModule("MaceKill", Category.COMBAT) {
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         // Check if player is holding a mace
-        val mainHandStack = player.mainHandStack
+        val mainHandStack = player.mainHandItem
 
         if (mainHandStack.item != Items.MACE) {
             // Auto Select Mace
@@ -65,14 +65,14 @@ object ModuleMaceKill : ClientModule("MaceKill", Category.COMBAT) {
             }
         } else {
             // Do it at least twice to neutralize horizontal distance
-            repeat(2) { player.warp(null, onGround = player.isOnGround) }
+            repeat(2) { player.warp(null, onGround = player.onGround()) }
         }
 
         // Teleport to the calculated height
-        player.warp(player.pos.add(0.0, height.toDouble(), 0.0), onGround = false)
+        player.warp(player.position().add(0.0, height.toDouble(), 0.0), onGround = false)
 
         // Make sure we get back to the ground
-        player.warp(player.pos, onGround = false)
+        player.warp(player.position(), onGround = false)
     }
 
     /**
@@ -88,10 +88,10 @@ object ModuleMaceKill : ClientModule("MaceKill", Category.COMBAT) {
         val boundingBox = player.boundingBox
         for (i in fallHeight downTo 1) {
             // Offset bounding box by i blocks
-            val newBoundingBox = boundingBox.offset(0.0, i.toDouble(), 0.0)
+            val newBoundingBox = boundingBox.move(0.0, i.toDouble(), 0.0)
 
             // Check if the player would collide with a block
-            if (world.getBlockCollisions(player, newBoundingBox).all(VoxelShapes.empty()::equals)) {
+            if (world.getBlockCollisions(player, newBoundingBox).all(Shapes.empty()::equals)) {
                 return i
             }
         }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,25 +25,25 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.runPlace
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.CrystalAuraTriggerer.world
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigger.PostPacketTrigger
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.decoration.EndCrystalEntity
-import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 /**
  * Runs destroying when the information, that a crystal is spawned is received.
  *
  * When Set-Dead is enabled, this will also run placing.
  */
-object CrystalSpawnTrigger : PostPacketTrigger<EntitySpawnS2CPacket>("CrystalSpawn", true) {
+object CrystalSpawnTrigger : PostPacketTrigger<ClientboundAddEntityPacket>("CrystalSpawn", true) {
 
-    override fun postPacketHandler(packet: EntitySpawnS2CPacket) {
-        if (packet.entityType != EntityType.END_CRYSTAL) {
+    override fun postPacketHandler(packet: ClientboundAddEntityPacket) {
+        if (packet.type != EntityType.END_CRYSTAL) {
             return
         }
 
         runDestroy {
-            val entity = world.getEntityById(packet.entityId)
-            if (entity !is EndCrystalEntity) {
+            val entity = world.getEntity(packet.id)
+            if (entity !is EndCrystal) {
                 return@runDestroy
             }
 

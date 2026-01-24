@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,39 +15,41 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.block.placer
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.immutable
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
 import net.ccbluex.liquidbounce.utils.block.isInteractable
-import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
-import net.minecraft.block.BlockState
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3i
+import net.minecraft.core.BlockPos
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.state.BlockState
 
 fun BlockPlacer.placeInstantOnBlockUpdate(event: PacketEvent) {
     when (val packet = event.packet) {
-        is BlockUpdateS2CPacket -> placeInstant(packet.pos, packet.state)
-        is ChunkDeltaUpdateS2CPacket -> {
-            packet.visitUpdates { pos, state -> placeInstant(pos, state) }
+        is ClientboundBlockUpdatePacket -> placeInstant(packet.pos, packet.blockState)
+        is ClientboundSectionBlocksUpdatePacket -> {
+            packet.runUpdates { pos, state -> placeInstant(pos, state) }
         }
     }
 }
 
 private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
-    val irrelevantPacket = !state.isReplaceable || pos.asLong() !in blocks
+    val irrelevantPacket = !state.canBeReplaced() || pos.asLong() !in blocks
 
     val rotationMode = rotationMode.activeChoice
     if (irrelevantPacket || rotationMode !is NoRotationMode || pos.isBlockedByEntities()) {
@@ -55,13 +57,10 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
     }
 
     val searchOptions = BlockPlacementTargetFindingOptions(
-        BlockOffsetOptions(
-            listOf(Vec3i.ZERO),
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-        ),
+        BlockOffsetOptions.Default,
         FaceHandlingOptions(CenterTargetPositionFactory, considerFacingAwayFaces = wallRange > 0),
-        stackToPlaceWith = Items.SANDSTONE.defaultStack,
-        PlayerLocationOnPlacement(position = player.pos, pose = player.pose),
+        stackToPlaceWith = Items.SANDSTONE.defaultInstance,
+        PlayerLocationOnPlacement(position = player.position(), pose = player.pose),
     )
 
     val placementTarget = findBestBlockPlacementTarget(pos, searchOptions) ?: return
@@ -77,8 +76,8 @@ private fun BlockPlacer.placeInstant(pos: BlockPos, state: BlockState) {
 
     if (rotationMode.send) {
         val rotation = placementTarget.rotation.normalize()
-        network.sendPacket(
-            PlayerMoveC2SPacket.LookAndOnGround(rotation.yaw, rotation.pitch, player.isOnGround,
+        network.send(
+            ServerboundMovePlayerPacket.Rot(rotation.yaw, rotation.pitch, player.onGround(),
                 player.horizontalCollision)
         )
     }

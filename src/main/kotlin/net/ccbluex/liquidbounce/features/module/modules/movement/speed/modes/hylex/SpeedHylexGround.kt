@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.hy
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.world.effect.MobEffects
 
 /**
  * Hylex Ground
@@ -40,7 +40,7 @@ class SpeedHylexGround(override val parent: ChoiceConfigurable<*>) : Choice("Hyl
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
-        if (!player.isOnGround) {
+        if (!player.onGround()) {
             groundTicks = 0
             return@tickHandler
         }
@@ -55,23 +55,27 @@ class SpeedHylexGround(override val parent: ChoiceConfigurable<*>) : Choice("Hyl
             return@tickHandler
         }
 
-        if ((player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) >= 1) {
+        if ((player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) >= 1) {
             return@tickHandler
         }
 
-        if (!(mc.options.leftKey.isPressed || mc.options.rightKey.isPressed)) {
-            player.velocity = player.velocity.multiply(
-                1.2174,
-                1.0,
-                1.2174
+        if (!(mc.options.keyLeft.isDown || mc.options.keyRight.isDown)) {
+            player.setDeltaMovement(
+                player.deltaMovement.multiply(
+                    1.2174,
+                    1.0,
+                    1.2174
+                )
             )
             return@tickHandler
         }
 
-        player.velocity = player.velocity.multiply(
-            1.214,
-            1.0,
-            1.214
+        player.setDeltaMovement(
+            player.deltaMovement.multiply(
+                1.214,
+                1.0,
+                1.214
+            )
         )
     }
 }

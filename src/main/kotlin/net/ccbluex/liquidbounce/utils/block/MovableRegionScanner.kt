@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.math.contains
-import net.minecraft.util.math.BlockBox
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.levelgen.structure.BoundingBox
 
-private val ORIGIN = BlockBox(BlockPos.ORIGIN)
+private val ORIGIN = BoundingBox(BlockPos.ZERO)
 
 class MovableRegionScanner {
     var currentRegion = ORIGIN
@@ -31,7 +31,7 @@ class MovableRegionScanner {
     /**
      * Moves the current region; returns regions that have been newly covered
      */
-    fun moveTo(region: BlockBox): List<BlockBox> {
+    fun moveTo(region: BoundingBox): List<BoundingBox> {
         val lastRegion = this.currentRegion
 
         this.currentRegion = region
@@ -46,49 +46,49 @@ class MovableRegionScanner {
         }
     }
 
-    private fun computeDifference(region: BlockBox, lastRegion: BlockBox): List<BlockBox> {
-        val result = ArrayList<BlockBox>(6)
+    private fun computeDifference(region: BoundingBox, lastRegion: BoundingBox): List<BoundingBox> {
+        val result = ArrayList<BoundingBox>(6)
 
         // Along +X
-        if (region.maxX > lastRegion.maxX) {
-            result += BlockBox(
-                lastRegion.maxX + 1, region.minY, region.minZ,
-                region.maxX, region.maxY, region.maxZ
+        if (region.maxX() > lastRegion.maxX()) {
+            result += BoundingBox(
+                lastRegion.maxX() + 1, region.minY(), region.minZ(),
+                region.maxX(), region.maxY(), region.maxZ()
             )
         }
         // Along -X
-        if (region.minX < lastRegion.minX) {
-            result += BlockBox(
-                region.minX, region.minY, region.minZ,
-                lastRegion.minX - 1, region.maxY, region.maxZ
+        if (region.minX() < lastRegion.minX()) {
+            result += BoundingBox(
+                region.minX(), region.minY(), region.minZ(),
+                lastRegion.minX() - 1, region.maxY(), region.maxZ()
             )
         }
         // Along +Y
-        if (region.maxY > lastRegion.maxY) {
-            result += BlockBox(
-                region.minX, lastRegion.maxY + 1, region.minZ,
-                region.maxX, region.maxY, region.maxZ
+        if (region.maxY() > lastRegion.maxY()) {
+            result += BoundingBox(
+                region.minX(), lastRegion.maxY() + 1, region.minZ(),
+                region.maxX(), region.maxY(), region.maxZ()
             )
         }
         // Along -Y
-        if (region.minY < lastRegion.minY) {
-            result += BlockBox(
-                region.minX, region.minY, region.minZ,
-                region.maxX, lastRegion.minY - 1, region.maxZ
+        if (region.minY() < lastRegion.minY()) {
+            result += BoundingBox(
+                region.minX(), region.minY(), region.minZ(),
+                region.maxX(), lastRegion.minY() - 1, region.maxZ()
             )
         }
         // Along +Z
-        if (region.maxZ > lastRegion.maxZ) {
-            result += BlockBox(
-                region.minX, region.minY, lastRegion.maxZ + 1,
-                region.maxX, region.maxY, region.maxZ
+        if (region.maxZ() > lastRegion.maxZ()) {
+            result += BoundingBox(
+                region.minX(), region.minY(), lastRegion.maxZ() + 1,
+                region.maxX(), region.maxY(), region.maxZ()
             )
         }
         // Along -Z
-        if (region.minZ < lastRegion.minZ) {
-            result += BlockBox(
-                region.minX, region.minY, region.minZ,
-                region.maxX, region.maxY, lastRegion.minZ - 1
+        if (region.minZ() < lastRegion.minZ()) {
+            result += BoundingBox(
+                region.minX(), region.minY(), region.minZ(),
+                region.maxX(), region.maxY(), lastRegion.minZ() - 1
             )
         }
 

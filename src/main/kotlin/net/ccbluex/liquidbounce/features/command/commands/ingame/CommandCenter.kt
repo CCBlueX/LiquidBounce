@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,8 +52,8 @@ object CommandCenter : Command.Factory, EventListener {
                 return@handler
             }
 
-            val pos = player.blockPos.toCenterPos()
-            val delta = player.pos.subtract(pos)
+            val pos = player.blockPosition().center
+            val delta = player.position().subtract(pos)
             it.x = delta.x
             it.y = delta.y
             it.z = delta.z
