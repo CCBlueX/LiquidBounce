@@ -259,17 +259,17 @@ object ScreenManager : EventListener {
 
     private fun handleCurrentScreen(screen: Screen?): Boolean {
         if (HideAppearance.isHidingNow || ClientInteropServer.isSkipping) {
-            if (screen is CustomMinecraftScreen) {
-                val original = (mc.screen as CustomMinecraftScreen).originalScreen
+            return if (screen is CustomMinecraftScreen) {
+                val original = screen.originalScreen
                 if (original is CustomMinecraftScreen) {
                     return false
                 }
 
                 mc.setScreen(original)
-                return true
+                true
             } else {
                 closeScreen()
-                return false
+                false
             }
         }
 
