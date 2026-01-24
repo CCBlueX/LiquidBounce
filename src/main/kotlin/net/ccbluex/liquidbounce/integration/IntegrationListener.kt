@@ -29,6 +29,8 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
@@ -40,6 +42,8 @@ import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.error.QuickFix
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -48,6 +52,7 @@ import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
 import org.lwjgl.glfw.GLFW
 import kotlin.math.min
+import kotlin.time.Duration.Companion.seconds
 
 object IntegrationListener : EventListener {
 
@@ -58,10 +63,9 @@ object IntegrationListener : EventListener {
      *
      * The client tab will be initialized when the browser is ready.
      */
-    lateinit var browser: Browser
+    var browser: Browser? = null
         private set
-    lateinit var browserSettings: IntegrationBrowserSettings
-        private set
+    val browserSettings = IntegrationBrowserSettings(0, ::restart)
 
     var momentaryVirtualScreen: VirtualScreen? = null
         private set
@@ -105,16 +109,22 @@ object IntegrationListener : EventListener {
     internal val parent: Screen
         get() = mc.screen ?: TitleScreen()
 
-    private var browserIsReady = false
-
     @Suppress("unused")
-    val handleBrowserReady = handler<BrowserReadyEvent>(priority = FIRST_PRIORITY) {
-        logger.info("Browser is ready.")
+    private val handleBrowserReady = suspendHandler<BrowserReadyEvent>(priority = FIRST_PRIORITY) {
+        runCatching {
+            logger.info("Browser backend is ready. Initializing browser...")
+            val browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
 
-        // Fires up the client tab
-        browserSettings = IntegrationBrowserSettings(0, ::restart)
-        browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
-        browserIsReady = true
+            logger.info("Waiting for browser to be initialized...")
+            // We currently proceed to go to the Minecraft Title Screen
+            //   until this times out. [ErrorHandler.fatal] will kill the game anyway.
+            waitMatchesWithTimeout<GameTickEvent>(timeout = 30.seconds) { browser.isInitialized }
+            this@IntegrationListener.browser = browser
+
+            logger.info("Integration Browser $browser is ready.")
+        }.onFailure {
+            ErrorHandler.fatal(it, QuickFix.BROWSER_IS_NOT_RESPONDING)
+        }
     }
 
     @Suppress("unused")
@@ -163,13 +173,14 @@ object IntegrationListener : EventListener {
     }
 
     fun restart() {
-        if (!browserIsReady || !BrowserBackendManager.browserBackend.isInitialized) {
+        val browser = this.browser ?: return
+        if (!BrowserBackendManager.browserBackend.isInitialized) {
             return
         }
 
         try {
             browser.close()
-            browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
+            this.browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
         } catch (e: Exception) {
             logger.error("Failed to restart browser backend for screen integration.", e)
         }
@@ -188,10 +199,7 @@ object IntegrationListener : EventListener {
     }
 
     fun update() {
-        if (!browserIsReady || !BrowserBackendManager.browserBackend.isInitialized) {
-            return
-        }
-
+        val browser = browser ?: return
         logger.info(
             "Reloading integration browser ${browser.javaClass.simpleName} " +
                 "to ${ThemeManager.getScreenLocation()}"
@@ -219,8 +227,9 @@ object IntegrationListener : EventListener {
     }
 
     @Suppress("unused")
-    private val screenRefresher = handler<GameTickEvent> {
-        if (browserIsReady && mc.screen !is TaskProgressScreen) {
+    private val screenUpdater = handler<GameTickEvent> {
+        val browser = browser ?: return@handler
+        if (mc.screen !is TaskProgressScreen) {
             handleCurrentScreen(mc.screen)
         }
     }
@@ -244,7 +253,7 @@ object IntegrationListener : EventListener {
 
     @Suppress("unused")
     private val fpsLimitHandler = handler<FpsLimitEvent> { event ->
-        if (!browserIsReady || !browserSettings.syncGameFps || !isClientScreen(mc.screen)) {
+        if (this.browser == null || !browserSettings.syncGameFps || !isClientScreen(mc.screen)) {
             return@handler
         }
 
@@ -280,7 +289,7 @@ object IntegrationListener : EventListener {
 
                 false
             }
-            !browserIsReady || screen is VirtualDisplayScreen -> false
+            this.browser == null || screen is VirtualDisplayScreen -> false
             else -> {
                 // Are we currently playing the game?
                 if (mc.level != null && screen == null) {
