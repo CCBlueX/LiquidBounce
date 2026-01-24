@@ -19,8 +19,12 @@
 
 package net.ccbluex.liquidbounce.utils.network
 
+import net.ccbluex.liquidbounce.utils.client.isNewerThanOrEquals1_21_9
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 fun ClientboundSetEntityMotionPacket.isMovementYFallDamage(): Boolean {
-    return this.movement.y.toRawBits() == -4633060179779189496L // -0.0783739241897089
+    // >= 1.21.9 -0.0783739241897089
+    // < 1.21.9 -0.07825184642617344
+    return this.movement.y.toRawBits() ==
+        (if (isNewerThanOrEquals1_21_9) -4633060179779189496L else -4633068976409115392L)
 }
