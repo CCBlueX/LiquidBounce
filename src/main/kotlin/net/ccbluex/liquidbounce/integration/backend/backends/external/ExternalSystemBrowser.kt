@@ -50,15 +50,19 @@ class ExternalSystemBrowser(
 
     override val texture: BrowserTexture? = null
 
+    @Suppress("EmptyFunctionBlock")
     override fun forceReload() {
     }
 
+    @Suppress("EmptyFunctionBlock")
     override fun reload() {
     }
 
+    @Suppress("EmptyFunctionBlock")
     override fun goForward() {
     }
 
+    @Suppress("EmptyFunctionBlock")
     override fun goBack() {
     }
 
@@ -74,6 +78,7 @@ class ExternalSystemBrowser(
         viewport = viewport.copy(width = width, height = height)
     }
 
+    @Suppress("EmptyFunctionBlock")
     override fun invalidate() {
     }
 
