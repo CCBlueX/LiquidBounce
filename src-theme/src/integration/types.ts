@@ -469,6 +469,16 @@ export interface Screen {
     title: string,
 }
 
+export interface ClientUser {
+    userId: string;
+    email: string;
+    name: string | null;
+    nickname: string | null;
+    groups: string[];
+    premium: boolean;
+    admin: boolean;
+}
+
 export interface RegistryItem {
     name: string;
     icon: string | undefined;

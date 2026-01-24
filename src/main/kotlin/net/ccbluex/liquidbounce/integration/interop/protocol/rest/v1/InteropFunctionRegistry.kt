@@ -52,8 +52,11 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getS
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getTheme
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getToggleShaderInfo
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getUpdateInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getUser
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getVirtualScreenInfo
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getWindowInfo
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.loginUser
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.logoutUser
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postAddProxy
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postBrowse
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.postBrowsePath
@@ -134,6 +137,12 @@ internal fun Node.registerInteropFunctions() = withPath("/api/v1/client") {
     post("/exit", ::postExit)
     get("/window", ::getWindowInfo)
     post("/browse", ::postBrowse)
+
+    // User Functions
+    get("/user", ::getUser).apply {
+        post("/login", ::loginUser)
+        post("/logout", ::logoutUser)
+    }
 
     // OS File Functions
     post("/browsePath", ::postBrowsePath)

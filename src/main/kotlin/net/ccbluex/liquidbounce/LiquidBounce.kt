@@ -349,6 +349,7 @@ object LiquidBounce : EventListener {
                 IpInfoApi.original
             }
             launch {
+                ConfigSystem.load(ClientAccountManager)
                 if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT) {
                     runCatching {
                         ClientAccountManager.clientAccount.renew()
@@ -357,8 +358,9 @@ object LiquidBounce : EventListener {
                         ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
-                        ConfigSystem.store(ClientAccountManager)
                     }
+
+                    ConfigSystem.store(ClientAccountManager)
                 }
             }
         }

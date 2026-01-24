@@ -43,6 +43,8 @@ export interface EventMap {
     componentsUpdate: ComponentsUpdateEvent;
     scaleFactorChange: ScaleFactorChangeEvent;
     browserUrlChange: BrowserUrlChangeEvent;
+    userLoggedIn: void;
+    userLoggedOut: void;
 
     //WindowEvents.kt
     mouseButton: MouseButtonEvent;
