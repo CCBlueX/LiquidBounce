@@ -45,6 +45,9 @@ object ClientInteropServer {
 
     internal val httpServer = HttpServer()
 
+    val isSkipping = env("LB_INTEROP_SKIP", "net.ccbluex.liquidbounce.interop.skip")?.toBoolean()
+        ?: false
+
     var PORT = env("LB_INTEROP_PORT", "net.ccbluex.liquidbounce.interop.port")?.toIntOrNull()
         ?: ServerSocket(0).use { socket -> socket.localPort }
     val AUTH_CODE: String = env("LB_INTEROP_AUTH_CODE", "net.ccbluex.liquidbounce.interop.authCode")
@@ -53,6 +56,11 @@ object ClientInteropServer {
     val url get() = "http://127.0.0.1:$PORT"
 
     suspend fun start() {
+        if (isSkipping) {
+            logger.warn("Environment variable 'LB_INTEROP_SKIP' is set to 'true'.")
+            return
+        }
+
         runCatching {
             // RestAPI
             httpServer.apply {

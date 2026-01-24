@@ -31,7 +31,7 @@ object HudComponentManager {
     val nativeComponents = listOf(MinimapHudComponent)
 
     val components: List<HudComponent>
-        get() = nativeComponents + ThemeManager.theme.components
+        get() = nativeComponents + (ThemeManager.theme?.components ?: emptyList())
 
     @JvmStatic
     fun isTweakEnabled(tweak: HudComponentTweak) = ModuleHud.running && !HideAppearance.isHidingNow &&
@@ -62,7 +62,8 @@ object HudComponentManager {
     fun updateComponents() {
         // Might be necessary later on.
         // EventManager.callEvent(ComponentsUpdate(null, components))
-        EventManager.callEvent(ComponentsUpdateEvent(ThemeManager.theme.metadata.id, ThemeManager.theme.components))
+        val theme = ThemeManager.theme ?: return
+        EventManager.callEvent(ComponentsUpdateEvent(theme.metadata.id, theme.components))
     }
 
 }

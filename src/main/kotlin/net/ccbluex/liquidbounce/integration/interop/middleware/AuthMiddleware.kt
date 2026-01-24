@@ -60,7 +60,7 @@ class AuthMiddleware : Middleware.OnRequest, Middleware.OnResponse,
 
         // Check if the authentication code is valid or if the request is already authenticated.
         if (codeParam != null && codeParam == AUTH_CODE || isAuthenticated(context.headers) ||
-            ThemeManager.theme.origin.external) {
+            ThemeManager.isThemeExternal) {
             // Allow the request to proceed.
             return null
         }
@@ -102,7 +102,7 @@ class AuthMiddleware : Middleware.OnRequest, Middleware.OnResponse,
         ctx: ChannelHandlerContext,
         request: HttpRequest
     ): FullHttpResponse? {
-        if (!isAuthenticated(request.headers()) && !ThemeManager.theme.origin.external) {
+        if (!isAuthenticated(request.headers()) && !ThemeManager.isThemeExternal) {
             logger.warn("[Interop] Unauthenticated web socket upgrade request")
             return httpUnauthorized("Authentication required")
         }
