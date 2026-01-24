@@ -25,12 +25,14 @@ import net.ccbluex.liquidbounce.integration.interop.middleware.AuthMiddleware
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.SocketEventListener
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.registerInteropFunctions
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.netty.http.HttpServer
 import net.ccbluex.netty.http.middleware.CorsMiddleware
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
+import org.apache.commons.lang3.RandomStringUtils
 import java.net.BindException
 import java.net.ServerSocket
 
@@ -43,9 +45,12 @@ object ClientInteropServer {
 
     internal val httpServer = HttpServer()
 
-    var port = ServerSocket(0).use { socket -> socket.localPort }
+    var PORT = env("LB_INTEROP_PORT", "net.ccbluex.liquidbounce.interop.port")?.toIntOrNull()
+        ?: ServerSocket(0).use { socket -> socket.localPort }
+    val AUTH_CODE: String = env("LB_INTEROP_AUTH_CODE", "net.ccbluex.liquidbounce.interop.authCode")
+        ?: RandomStringUtils.secure().nextAlphanumeric(16)
 
-    val url get() = "http://127.0.0.1:$port"
+    val url get() = "http://127.0.0.1:$PORT"
 
     suspend fun start() {
         runCatching {
@@ -71,7 +76,7 @@ object ClientInteropServer {
         }
 
         // Start the HTTP server
-        this.port = startServer(this.port)
+        this.PORT = startServer(this.PORT)
     }
 
     private var attempt = 0
