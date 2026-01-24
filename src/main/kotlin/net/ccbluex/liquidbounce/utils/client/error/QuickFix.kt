@@ -119,6 +119,16 @@ enum class QuickFix (
                 "Restart LiquidBounce and try again."
             )
         }
+    ),
+    BROWSER_IS_NOT_RESPONDING(
+        description = "The UI browser is not responding",
+        whatToDo = Instructions(true) {
+            arrayOf(
+                "Disable/Uninstall AV software",
+                "Disable Smart App Control",
+                "Restart LiquidBounce and try again."
+            )
+        }
     );
 
     val messages = mapOf(

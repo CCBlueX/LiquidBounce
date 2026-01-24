@@ -108,8 +108,9 @@ suspend fun <T : Event> EventListener.waitMatches(
         }
     }
 
-    return suspendCancellableCoroutine { continuation ->
-        continuation.invokeOnCancellation {
+    return suspendCancellableCoroutine { cont ->
+        continuation = cont
+        cont.invokeOnCancellation {
             EventManager.unregisterEventHook(eventClass, eventHook)
         }
         EventManager.registerEventHook(eventClass, eventHook)

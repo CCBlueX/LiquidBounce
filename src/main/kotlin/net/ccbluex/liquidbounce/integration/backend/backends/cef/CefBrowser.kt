@@ -43,6 +43,9 @@ class CefBrowser(
     inputAcceptor: InputAcceptor? = null
 ) : Browser, InputHandler, MinecraftShortcuts {
 
+    override val isInitialized: Boolean
+        get() = mcefBrowser.identifier != -1
+
     override var viewport: BrowserViewport = viewport
         set(value) {
             field = value
@@ -111,6 +114,10 @@ class CefBrowser(
     override var url: String
         get() = mcefBrowser.url
         set(value) {
+            if (!isInitialized) {
+                logger.warn("Cannot set URL of uninitialized browser $this.")
+            }
+
             mcefBrowser.loadURL(value)
         }
 
@@ -163,7 +170,12 @@ class CefBrowser(
         mcefBrowser.clear()
     }
 
-    override fun toString() = "CefBrowser(url='$url', viewport=$viewport, visible=$visible, priority=$priority)"
+    override fun toString() = "CefBrowser(" +
+        "id='${mcefBrowser.identifier}', " +
+        "url='$url', " +
+        "visible=$visible, " +
+        "priority=$priority" +
+        ")"
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
         mcefBrowser.setFocus(true)
