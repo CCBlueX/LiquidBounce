@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.config.types.RangedValue
 import net.ccbluex.liquidbounce.config.types.RegistryListValue
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
+import net.ccbluex.liquidbounce.config.types.Vec3Value
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -356,9 +357,21 @@ open class Configurable(
 
     fun vec2f(name: String, default: Vector2fc) = value(name, default, ValueType.VECTOR2_F)
 
-    fun vec3i(name: String, default: Vec3i) = value(name, default, ValueType.VECTOR3_I)
+    @JvmOverloads
+    fun vec3i(
+        name: String,
+        default: Vec3i = Vec3i.ZERO,
+        useLocateButton: Boolean = true,
+        aliases: List<String> = emptyList(),
+    ): Value<Vec3i> = Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_I).also(inner::add)
 
-    fun vec3d(name: String, default: Vec3) = value(name, default, ValueType.VECTOR3_D)
+    @JvmOverloads
+    fun vec3d(
+        name: String,
+        default: Vec3 = Vec3.ZERO,
+        useLocateButton: Boolean = true,
+        aliases: List<String> = emptyList(),
+    ): Value<Vec3> = Vec3Value(name, aliases, default, useLocateButton, ValueType.VECTOR3_D).also(inner::add)
 
     fun <C : SequencedSet<Block>> blocks(name: String, default: C) =
         registryList(name, default, ValueType.BLOCK)

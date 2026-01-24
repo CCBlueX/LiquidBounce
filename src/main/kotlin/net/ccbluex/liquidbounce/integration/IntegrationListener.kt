@@ -257,7 +257,7 @@ object IntegrationListener : EventListener {
 
         // F12 to toggle GPU acceleration
         if (event.action == GLFW.GLFW_PRESS && keyCode == GLFW.GLFW_KEY_F12) {
-            if (!BrowserBackendManager.browserBackend.isAccelerationSupported) {
+            if (!BrowserBackendManager.browserBackend.accelerationFlags.isSupported) {
                 logger.warn("GPU acceleration is not supported by the current browser backend.")
                 return@handler
             }
