@@ -29,10 +29,10 @@ import kotlin.math.max
 object KillAuraRange : Configurable("Range"), MinecraftShortcuts {
 
     internal val maxAttackRange
-        get() = player.entityAttackRange().effectiveMaxRange(player) + adjustRange.endInclusive
+        get() = player.entityAttackRange().effectiveMaxRange(player) + rangeModifier.endInclusive
 
     internal val minAttackRange
-        get() = max(0f, player.entityAttackRange().effectiveMinRange(player) + adjustRange.start)
+        get() = max(0f, player.entityAttackRange().effectiveMinRange(player) + rangeModifier.start)
 
     internal val attackThroughWallsRange
         get() = wallRange
@@ -43,7 +43,7 @@ object KillAuraRange : Configurable("Range"), MinecraftShortcuts {
     /**
      * This will be added to the normal entity interaction range.
      */
-    private val adjustRange by floatRange("AdjustRange", -2.0f..1.0f, -2.0f..8f)
+    private val rangeModifier by floatRange("RangeModifier", -2.0f..1.0f, -2.0f..8f)
 
     /**
      * This will use only this value for non-visible entities. Originally, we could never attack through walls,
