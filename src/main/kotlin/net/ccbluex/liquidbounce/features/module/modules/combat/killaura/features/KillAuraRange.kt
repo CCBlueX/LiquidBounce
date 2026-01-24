@@ -38,7 +38,7 @@ object KillAuraRange : Configurable("Range"), MinecraftShortcuts {
         get() = wallRange
 
     internal val scanRange
-        get() = maxOf(maxAttackRange, wallRange) + currentScanExtraRange
+        get() = maxOf(maxAttackRange, wallRange) + currentScanRangeAddition
 
     /**
      * This will be added to the normal entity interaction range.
@@ -51,13 +51,13 @@ object KillAuraRange : Configurable("Range"), MinecraftShortcuts {
      */
     private val wallRange by float("WallRange", 3f, 0f..8f, "blocks")
 
-    private val scanExtraRange by floatRange("AddScanRange", 2.0f..3.0f, 0.0f..7.0f, "blocks").onChanged { range ->
-        currentScanExtraRange = range.random()
+    private val scanRangeAddition by floatRange("ScanRangeAddition", 2.0f..3.0f, 0.0f..7.0f, "blocks").onChanged { range ->
+        currentScanRangeAddition = range.random()
     }
-    private var currentScanExtraRange: Float = scanExtraRange.random()
+    private var currentScanRangeAddition: Float = scanRangeAddition.random()
 
     fun update() {
-        currentScanExtraRange = scanExtraRange.random()
+        currentScanRangeAddition = scanRangeAddition.random()
     }
 
 }
