@@ -158,9 +158,10 @@ public abstract class MixinCamera {
         Vec3 original = new Vec3(args.get(0), args.get(1), args.get(2));
         ModuleSmoothCamera.cameraUpdate(original);
         if (ModuleSmoothCamera.shouldApplyChanges()) {
-            args.set(0, ModuleSmoothCamera.INSTANCE.getSmoothPos().x);
-            args.set(1, ModuleSmoothCamera.INSTANCE.getSmoothPos().y);
-            args.set(2, ModuleSmoothCamera.INSTANCE.getSmoothPos().z);
+            Vec3 smoothPos = ModuleSmoothCamera.INSTANCE.getSmoothPos();
+            args.set(0, smoothPos.x);
+            args.set(1, smoothPos.y);
+            args.set(2, smoothPos.z);
         }
     }
 }
