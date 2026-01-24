@@ -102,7 +102,7 @@ class AuthMiddleware : Middleware.OnRequest, Middleware.OnResponse,
         ctx: ChannelHandlerContext,
         request: HttpRequest
     ): FullHttpResponse? {
-        if (!isAuthenticated(request.headers()) && ThemeManager.theme?.origin?.external == false) {
+        if (!isAuthenticated(request.headers()) && !ThemeManager.isThemeExternal) {
             logger.warn("[Interop] Unauthenticated web socket upgrade request")
             return httpUnauthorized("Authentication required")
         }
