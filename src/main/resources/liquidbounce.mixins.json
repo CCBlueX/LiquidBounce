@@ -43,6 +43,7 @@
     "minecraft.client.network.MixinCommonNetworkHandler",
     "minecraft.client.network.message.MixinChatListener",
     "minecraft.client.option.MixinServerListAccessor",
+    "minecraft.client.renderer.MixinMappableRingBuffer",
     "minecraft.entity.MixinAbstractClientPlayer",
     "minecraft.entity.MixinAvatar",
     "minecraft.entity.MixinBeaconRenderer",

@@ -72,7 +72,7 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
         xAxis = "Distance" axis 0f..128f,
         yAxis = "Scale" axis 0.25f..4f,
     )
-    private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
+    private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
     private val rowLength by int("RowLength", 100, 1..100)
     private val preventOverlap by boolean("PreventOverlap", true)
     private val clusterEntities = curve(

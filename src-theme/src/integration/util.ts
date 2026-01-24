@@ -47,6 +47,11 @@ export const swap = (array: any[], i: number, j: number) => {
     array[j] = it;
 }
 
+export const contentEquals = <T>(a: T[], b: T[]): boolean => {
+    if (a.length !== b.length) return false;
+    return a.every((item, index) => item === b[index]);
+}
+
 export const getHashParams = (): URLSearchParams => {
     const hash = window.location.hash.split('?')[1] || '';
     return new URLSearchParams(hash);
