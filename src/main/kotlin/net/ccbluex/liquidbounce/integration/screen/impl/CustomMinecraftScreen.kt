@@ -16,30 +16,33 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration
 
+package net.ccbluex.liquidbounce.integration.screen.impl
+
+import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screens.Screen
 
-class VirtualDisplayScreen(
-    private val screenType: VirtualScreenType,
+class CustomMinecraftScreen(
+    private val screenType: CustomScreenType,
     private val theme: Theme = ThemeManager.getScreenLocation(screenType).theme,
     val originalScreen: Screen? = null,
     val parentScreen: Screen? = mc.screen
 ) : Screen("VS-${screenType.routeName.uppercase()}".asPlainText()) {
 
     override fun init() {
-        IntegrationListener.virtualOpen(theme, screenType)
+        ScreenManager.openScreen(theme, screenType)
     }
 
     override fun onClose() {
-        if (parentScreen is VirtualDisplayScreen) {
+        if (parentScreen is CustomMinecraftScreen) {
             mc.setScreen(parentScreen)
         } else {
-            IntegrationListener.virtualClose()
+            ScreenManager.closeScreen()
             mc.mouseHandler.grabMouse()
             super.onClose()
         }

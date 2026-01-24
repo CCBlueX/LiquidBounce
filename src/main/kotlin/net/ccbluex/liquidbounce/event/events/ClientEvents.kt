@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
-import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
+import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
@@ -159,7 +159,7 @@ object BrowserReadyEvent : Event()
 
 @Nameable("virtualScreen")
 class VirtualScreenEvent(
-    val type: VirtualScreenType,
+    val type: CustomScreenType,
     @Deprecated("Use `type` instead") val screenName: String = type.routeName,
     val action: Action
 ) : Event(), WebSocketEvent {

@@ -37,10 +37,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
-import net.ccbluex.liquidbounce.integration.BrowserScreen;
-import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData;
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerInventoryData;
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomMinecraftScreen;
+import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen;
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
@@ -446,7 +446,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     @WrapWithCondition(method = "clientSideCloseContainer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"))
     private boolean preventCloseScreen(Minecraft instance, Screen screen) {
         // Prevent closing screen if the current screen is a client screen
-        return !(instance.screen instanceof BrowserScreen || instance.screen instanceof VirtualDisplayScreen ||
+        return !(instance.screen instanceof InternetExplorerScreen || instance.screen instanceof CustomMinecraftScreen ||
                 instance.screen instanceof ModuleClickGui.ClickScreen);
     }
 

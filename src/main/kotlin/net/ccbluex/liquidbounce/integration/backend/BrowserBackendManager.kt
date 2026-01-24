@@ -35,7 +35,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIOR
 
 object BrowserBackendManager : EventListener {
 
-    val browserBackend: BrowserBackend = CefBrowserBackend()
+    val isInitialized: Boolean
+        get() = backend?.isInitialized ?: false
+    var backend: BrowserBackend? = null
 
     val isSkipping = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip")?.toBoolean()
         ?: false
@@ -55,6 +57,9 @@ object BrowserBackendManager : EventListener {
             logger.warn("Environment variable 'LB_BROWSER_SKIP' is set to 'true'.")
             return
         }
+
+        val browserBackend = CefBrowserBackend()
+        this.backend = browserBackend
         browserBackend.makeDependenciesAvailable(taskManager, ::start)
     }
 
@@ -68,6 +73,7 @@ object BrowserBackendManager : EventListener {
         // Ensure that the browser is started on the render thread
         RenderSystem.assertOnRenderThread()
 
+        val browserBackend = backend ?: return
         browserBackend.start()
 
         if (disableAcceleration) {
@@ -82,7 +88,7 @@ object BrowserBackendManager : EventListener {
      * Shuts down the browser.
      */
     fun stop() = runCatching {
-        browserBackend.stop()
+        backend?.stop()
     }.onFailure {
         logger.error("Failed to shutdown browser.", it)
     }.onSuccess {
@@ -93,6 +99,8 @@ object BrowserBackendManager : EventListener {
      * Causes an update of every browser by re-setting their viewport.
      */
     fun forceUpdate() = mc.execute {
+        val browserBackend = backend ?: return@execute
+
         for (browser in browserBackend.browsers) {
             try {
                 browser.viewport = browser.viewport
@@ -104,6 +112,7 @@ object BrowserBackendManager : EventListener {
 
     @Suppress("unused")
     private val gameRenderHandler = handler<GameRenderEvent>(priority = FIRST_PRIORITY) {
+        val browserBackend = backend ?: return@handler
         if (!browserBackend.isInitialized) {
             return@handler
         }
