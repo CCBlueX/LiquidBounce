@@ -69,7 +69,7 @@ object AutoBowAimbotFeature : ToggleableConfigurable(ModuleAutoBow, "BowAimbot",
             return@handler
         }
 
-        val projectileInfo = TrajectoryData.getRenderedTrajectoryInfo(
+        val (projectileInfo, _) = TrajectoryData.getRenderedTrajectoryInfo(
             player,
             activeStack,
             true
