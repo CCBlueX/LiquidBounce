@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -39,8 +38,6 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 @Mixin(Camera.class)
 public abstract class MixinCamera {
 
-    @Shadow
-    private Vec3 position;
     @Shadow
     private boolean detached;
     @Shadow
@@ -143,7 +140,7 @@ public abstract class MixinCamera {
         return ModuleCameraClip.INSTANCE.getRunning() ? getMaxZoom(ModuleCameraClip.INSTANCE.getDistance()) : original;
     }
 
-    @Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3;add(Lnet/minecraft/util/math/Vec3;)Lnet/minecraft/util/math/Vec3;"))
+    @Redirect(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 modifyPositionVehicle(Vec3 instance, Vec3 vec) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
             return vec;
@@ -152,13 +149,13 @@ public abstract class MixinCamera {
         return ModuleSmoothCamera.shouldApplyChanges() ? vec.add(0, 1, 0) : vec;
     }
 
-    @ModifyArgs(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", remap = false))
+    @ModifyArgs(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V"))
     private void modifyPosition(Args args) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
             return;
         }
 
-        Vec3d original = new Vec3d(args.get(0), args.get(1), args.get(2));
+        Vec3 original = new Vec3(args.get(0), args.get(1), args.get(2));
         ModuleSmoothCamera.cameraUpdate(original);
         if (ModuleSmoothCamera.shouldApplyChanges()) {
             args.set(0, ModuleSmoothCamera.INSTANCE.getSmoothPos().x);

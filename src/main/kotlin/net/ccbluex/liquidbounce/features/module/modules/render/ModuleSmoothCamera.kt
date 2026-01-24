@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
-import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
 
 /**
@@ -42,7 +41,7 @@ object ModuleSmoothCamera : ClientModule("SmoothCamera", ModuleCategories.RENDER
         private set
 
     private val perspective
-        get () = mc.options.perspective
+        get () = mc.options.cameraType
 
     private var lastPerspective = perspective
 
