@@ -171,7 +171,8 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
         val yaw = rotation.yaw
         val pitch = rotation.pitch
 
-        val (trajectoryInfo, _) = TrajectoryData.getRenderedTrajectoryInfo(player, player.activeItem, false) ?: return null
+        val (trajectoryInfo, _) =
+            TrajectoryData.getRenderedTrajectoryInfo(player, player.activeItem, false) ?: return null
 
         val velocity = trajectoryInfo.initialVelocity
 
