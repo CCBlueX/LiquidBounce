@@ -32,13 +32,11 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayerCache
-import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryData
 import net.minecraft.client.player.AbstractClientPlayer
-import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.BowItem
@@ -173,7 +171,8 @@ object AutoBowAutoShootFeature : ToggleableConfigurable(ModuleAutoBow, "AutoShoo
         val yaw = rotation.yaw
         val pitch = rotation.pitch
 
-        val trajectoryInfo = TrajectoryData.getRenderedTrajectoryInfo(player, player.activeItem, false) ?: return null
+        val (trajectoryInfo, _) =
+            TrajectoryData.getRenderedTrajectoryInfo(player, player.activeItem, false) ?: return null
 
         val velocity = trajectoryInfo.initialVelocity
 

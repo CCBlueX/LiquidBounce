@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfoRenderer
+import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryType
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EntityDimensions
@@ -210,6 +211,7 @@ object ModuleAutoPearl : ClientModule(
         val simulatedDestination = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             owner = player,
             trajectoryInfo = TrajectoryInfo.GENERIC,
+            trajectoryType = TrajectoryType.EnderPearl,
             rotation = angles
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult?.location ?: return false
 
@@ -229,6 +231,7 @@ object ModuleAutoPearl : ClientModule(
             velocity = velocity,
             pos = pos,
             trajectoryInfo = trajectoryInfo,
+            trajectoryType = TrajectoryType.EnderPearl,
             type = TrajectoryInfoRenderer.Type.REAL,
             renderOffset = renderOffset
         ).runSimulation(MAX_SIMULATED_TICKS).hitResult

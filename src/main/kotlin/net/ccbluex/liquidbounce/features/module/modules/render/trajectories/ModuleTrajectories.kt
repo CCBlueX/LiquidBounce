@@ -68,7 +68,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
     val renderHandler = handler<WorldRenderEvent> { event ->
         simulationResults.clear()
         world.entitiesForRendering().forEach {
-            val trajectoryInfo = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
+            val (trajectoryInfo, trajectoryType) = TrajectoryData.getRenderTrajectoryInfoForOtherEntity(
                 it,
                 this.activeTrajectoryArrow,
                 this.activeTrajectoryOther
@@ -82,6 +82,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
                 velocity = it.deltaMovement,
                 pos = it.position(),
                 trajectoryInfo = trajectoryInfo,
+                trajectoryType = trajectoryType,
                 type = TrajectoryInfoRenderer.Type.REAL,
                 renderOffset = Vec3.ZERO,
             )
@@ -116,7 +117,7 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
         otherPlayer: Player,
         event: WorldRenderEvent
     ) {
-        val (trajectoryInfo, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
+        val (trajectoryInfoTyped, stack) = otherPlayer.handItems.firstNotNullOfOrNull { stack ->
             TrajectoryData.getRenderedTrajectoryInfo(otherPlayer, stack, this.alwaysShowBow)?.let {
                 it to stack
             }
@@ -136,7 +137,8 @@ object ModuleTrajectories : ClientModule("Trajectories", ModuleCategories.RENDER
         val renderer = TrajectoryInfoRenderer.getHypotheticalTrajectory(
             owner = otherPlayer,
             icon = stack,
-            trajectoryInfo = trajectoryInfo,
+            trajectoryInfo = trajectoryInfoTyped.info,
+            trajectoryType = trajectoryInfoTyped.type,
             rotation = rotation,
             partialTicks = event.partialTicks
         )

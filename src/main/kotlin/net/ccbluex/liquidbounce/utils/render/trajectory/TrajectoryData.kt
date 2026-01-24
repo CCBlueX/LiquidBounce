@@ -52,7 +52,11 @@ import net.minecraft.world.phys.Vec3
 
 object TrajectoryData {
     @JvmStatic
-    fun getRenderedTrajectoryInfo(player: Player, stack: ItemStack, alwaysShowBow: Boolean): TrajectoryInfo? {
+    fun getRenderedTrajectoryInfo(
+        player: Player,
+        stack: ItemStack,
+        alwaysShowBow: Boolean,
+    ): TrajectoryInfo.Typed? {
         return when (stack.item) {
             is BowItem -> {
                 val useTime = if (alwaysShowBow && player.ticksUsingItem < 1) {
@@ -61,25 +65,25 @@ object TrajectoryData {
                     player.ticksUsingItem
                 }
 
-                TrajectoryInfo.bowWithUsageDuration(useTime)
+                TrajectoryInfo.bowWithUsageDuration(useTime)?.typed(TrajectoryType.Arrow)
             }
             is CrossbowItem -> {
                 val chargedProjectiles = stack[DataComponents.CHARGED_PROJECTILES]
                 if (chargedProjectiles != null && chargedProjectiles.contains(Items.FIREWORK_ROCKET)) {
-                    TrajectoryInfo.FIREBALL
+                    TrajectoryInfo.FIREBALL.typed(TrajectoryType.Fireball)
                 } else {
-                    TrajectoryInfo.BOW_FULL_PULL
+                    TrajectoryInfo.BOW_FULL_PULL.typed(TrajectoryType.Arrow)
                 }
             }
-            is FishingRodItem -> TrajectoryInfo.FISHING_ROD
-            is ThrowablePotionItem -> TrajectoryInfo.POTION
-            is TridentItem -> TrajectoryInfo.TRIDENT
-            is SnowballItem -> TrajectoryInfo.GENERIC
-            is EnderpearlItem -> TrajectoryInfo.GENERIC
-            is EggItem -> TrajectoryInfo.GENERIC
-            is ExperienceBottleItem -> TrajectoryInfo.EXP_BOTTLE
-            is FireChargeItem -> TrajectoryInfo.FIREBALL
-            is WindChargeItem -> TrajectoryInfo.WIND_CHARGE
+            is FishingRodItem -> TrajectoryInfo.FISHING_ROD.typed(TrajectoryType.FishingBobber)
+            is ThrowablePotionItem -> TrajectoryInfo.POTION.typed(TrajectoryType.Potion)
+            is TridentItem -> TrajectoryInfo.TRIDENT.typed(TrajectoryType.Trident)
+            is SnowballItem -> TrajectoryInfo.GENERIC.typed(TrajectoryType.Snowball)
+            is EnderpearlItem -> TrajectoryInfo.GENERIC.typed(TrajectoryType.EnderPearl)
+            is EggItem -> TrajectoryInfo.GENERIC.typed(TrajectoryType.Egg)
+            is ExperienceBottleItem -> TrajectoryInfo.EXP_BOTTLE.typed(TrajectoryType.ExpBottle)
+            is FireChargeItem -> TrajectoryInfo.FIREBALL.typed(TrajectoryType.Fireball)
+            is WindChargeItem -> TrajectoryInfo.WIND_CHARGE.typed(TrajectoryType.WindCharge)
             else -> null
         }
     }
@@ -98,28 +102,28 @@ object TrajectoryData {
         entity: Entity,
         activeArrows: Boolean,
         activeOthers: Boolean,
-    ): TrajectoryInfo? {
+    ): TrajectoryInfo.Typed? {
         if (activeArrows && entity is Arrow && !entity.isInGround) {
-            return TrajectoryInfo(0.05, 0.3)
+            return TrajectoryInfo(0.05, 0.3).typed(TrajectoryType.Arrow)
         }
         if (!activeOthers) {
             return null
         }
 
         return when (entity) {
-            is AbstractThrownPotion -> TrajectoryInfo.POTION
+            is AbstractThrownPotion -> TrajectoryInfo.POTION.typed(TrajectoryType.Potion)
             is ThrownTrident -> {
                 if (!entity.isInGround) {
-                    TrajectoryInfo.TRIDENT
+                    TrajectoryInfo.TRIDENT.typed(TrajectoryType.Trident)
                 } else {
                     null
                 }
             }
-            is ThrownEnderpearl -> TrajectoryInfo.GENERIC
-            is Snowball -> TrajectoryInfo.GENERIC
-            is ThrownExperienceBottle -> TrajectoryInfo.EXP_BOTTLE
-            is ThrownEgg -> TrajectoryInfo.GENERIC
-            is Fireball -> TrajectoryInfo.FIREBALL
+            is ThrownEnderpearl -> TrajectoryInfo.GENERIC.typed(TrajectoryType.EnderPearl)
+            is Snowball -> TrajectoryInfo.GENERIC.typed(TrajectoryType.Snowball)
+            is ThrownExperienceBottle -> TrajectoryInfo.EXP_BOTTLE.typed(TrajectoryType.ExpBottle)
+            is ThrownEgg -> TrajectoryInfo.GENERIC.typed(TrajectoryType.Egg)
+            is Fireball -> TrajectoryInfo.FIREBALL.typed(TrajectoryType.Fireball)
             else -> null
         }
     }
@@ -174,6 +178,11 @@ data class TrajectoryInfo(
         center.y + hitboxRadius,
         center.z + hitboxRadius,
     )
+
+    fun typed(type: TrajectoryType) = Typed(this, type)
+
+    @JvmRecord
+    data class Typed(val info: TrajectoryInfo, val type: TrajectoryType)
 
     companion object {
         @JvmField
