@@ -363,7 +363,7 @@ fun GuiGraphics.drawCircle(
     y: Float,
     radius: Float,
     innerRadius: Float = 0f,
-    segments: Int = 72,
+    segments: Int = 40,
     colorGetter: Float2IntFunction = Float2IntFunction { Color4b.WHITE.argb },
 ) {
     val bounds = createBounds(x - radius, y - radius, radius * 2, radius * 2)
