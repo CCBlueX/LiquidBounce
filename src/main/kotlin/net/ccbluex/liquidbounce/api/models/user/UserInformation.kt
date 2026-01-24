@@ -25,7 +25,7 @@ data class UserInformation(
     val userId: String,
     val email: String,
     val name: String?,
-    val nickname: String,
+    val nickname: String?,
     val groups: List<String>,
     val premium: Boolean,
     @SerializedName("is_admin")
