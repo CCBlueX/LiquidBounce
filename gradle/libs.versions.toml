@@ -15,7 +15,7 @@ fabric-api = "0.140.0+1.21.11"
 # mcef
 mcef = "3.1.6-1.21.11"
 # mc-authlib
-mc_authlib = "1.6.0"
+mc_authlib = "1.7.0"
 # Polyglot
 polyglot = "25.0.2"
 # djl
