@@ -49,10 +49,13 @@ class ExternalSystemBrowserBackend : BrowserBackend, EventListener {
         whenAvailable()
     }
 
+    @Suppress("EmptyFunctionBlock")
     override fun start() { }
 
+    @Suppress("EmptyFunctionBlock")
     override fun stop() { }
 
+    @Suppress("EmptyFunctionBlock")
     override fun update() { }
 
     override fun createBrowser(
