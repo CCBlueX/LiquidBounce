@@ -8,12 +8,12 @@
 </script>
 
 <label class="switch-container">
-    <div class="switch">
+    <span class="switch">
         <input type="checkbox" bind:checked={value} on:change={() => dispatch("change")}/>
         <span class="slider"></span>
-    </div>
+    </span>
 
-    <div class="name">{name}</div>
+    <span class="name">{name}</span>
 </label>
 
 <style lang="scss">

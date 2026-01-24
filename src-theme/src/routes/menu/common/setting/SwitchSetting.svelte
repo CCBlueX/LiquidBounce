@@ -7,14 +7,15 @@
     const dispatch = createEventDispatcher();
 </script>
 
-<div class="switch-setting">
-    <label class="switch">
+<label class="switch-setting">
+    <span class="switch">
         <input type="checkbox" bind:checked={value} on:change={() => dispatch("change")}/>
         <span class="slider"></span>
-    </label>
+    </span>
 
-    <div class="title">{title}</div>
-</div>
+    <span class="title">{title}</span>
+</label>
+
 <style lang="scss">
   @use "sass:color";
   @use "../../../../colors.scss" as *;
@@ -22,6 +23,7 @@
   .switch-setting {
     display: flex;
     align-items: center;
+    cursor: pointer;
   }
 
   .title {
@@ -61,7 +63,6 @@
     width: 28px;
     height: 18px;
     align-items: center;
-    cursor: pointer;
     margin: 0 10px;
 
     input {
