@@ -158,7 +158,14 @@ object AccountManager : Configurable("Accounts"), EventListener {
     }
 
     fun loginSessionAccount(token: String) {
-        val account = SessionAccount(token).also { it.refresh() }
+        val account = if (token.startsWith("M.")) {
+            MicrosoftAccount.buildFromRefreshToken(token)
+        } else {
+            SessionAccount(token).apply {
+                refresh()
+            }
+        }
+
         loginDirectAccount(account)
     }
 
