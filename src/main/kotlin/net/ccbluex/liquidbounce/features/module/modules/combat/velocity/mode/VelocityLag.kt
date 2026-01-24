@@ -33,6 +33,10 @@ import net.ccbluex.liquidbounce.utils.client.PacketQueueManager.Action
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
+/**
+ * Lag mode. It delays some ticks of knockback.
+ * It is equals to "delay velocity".
+ */
 internal object VelocityLag : VelocityMode("Lag") {
     private val lagTime by intRange("LagTime", 5..5, 1..20, "ticks")
     private val jumpReset by boolean("JumpReset", false)
