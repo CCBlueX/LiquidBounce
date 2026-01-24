@@ -37,9 +37,10 @@ object BrowserBackendManager : EventListener {
 
     val browserBackend: BrowserBackend = CefBrowserBackend()
 
-    val isSkipping = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip") == "true"
+    val isSkipping = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip")?.toBoolean()
+        ?: false
     val disableAcceleration = env("LB_BROWSER_DISABLE_ACCELERATION",
-        "net.ccbluex.liquidbounce.browser.disableAcceleration") == "true"
+        "net.ccbluex.liquidbounce.browser.disableAcceleration")?.toBoolean() ?: false
 
     fun init() {
         PersistentLocalStorage

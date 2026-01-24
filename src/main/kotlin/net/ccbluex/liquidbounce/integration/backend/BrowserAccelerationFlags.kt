@@ -26,6 +26,7 @@ package net.ccbluex.liquidbounce.integration.backend
  */
 data class BrowserAccelerationFlags(val isSupported: Boolean, val isBeta: Boolean) {
     companion object {
+        @JvmField
         val UNSUPPORTED = BrowserAccelerationFlags(isSupported = false, isBeta = false)
     }
 }

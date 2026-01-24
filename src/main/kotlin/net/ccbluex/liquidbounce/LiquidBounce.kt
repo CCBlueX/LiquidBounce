@@ -378,11 +378,13 @@ object LiquidBounce : EventListener {
 
         BrowserBackendManager.init()
         ClientInteropServer.start()
-        ThemeManager.init()
-        // Preload marketplace items
-        ConfigSystem.load(MarketplaceManager)
-        ConfigSystem.load(ThemeManager)
-        ThemeManager.load()
+        if (!ClientInteropServer.isSkipping) {
+            ThemeManager.init()
+            // Preload marketplace items
+            ConfigSystem.load(MarketplaceManager)
+            ConfigSystem.load(ThemeManager)
+            ThemeManager.load()
+        }
 
         BlurEffectRenderer
         IntegrationListener
