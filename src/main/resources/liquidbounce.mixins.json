@@ -135,6 +135,7 @@
     "minecraft.render.MixinSkyRenderer",
     "minecraft.render.MixinVisGraph",
     "minecraft.render.MixinWeatherEffectRenderer",
+    "minecraft.render.entity.MixinArmedEntityRenderState",
     "minecraft.render.entity.MixinEntityRenderState",
     "minecraft.render.entity.feature.MixinDeadmau5EarsLayer",
     "minecraft.render.entity.feature.MixinRenderLayer",
