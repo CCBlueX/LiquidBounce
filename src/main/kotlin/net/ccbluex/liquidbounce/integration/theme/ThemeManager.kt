@@ -165,7 +165,7 @@ object ThemeManager : Configurable("theme") {
 
     /**
      * Open [Browser] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
-     * This tab will be locked to 60 FPS since it is not input aware.
+     * This tab will be locked to 60 FPS since it is not input-aware.
      */
     fun openImmediate(
         virtualScreenType: VirtualScreenType? = null,
@@ -179,7 +179,7 @@ object ThemeManager : Configurable("theme") {
 
     /**
      * Open [Browser] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
-     * This tab will be locked to the highest refresh rate since it is input aware.
+     * This tab will be locked to the highest refresh rate since it is input-aware.
      */
     fun openInputAwareImmediate(
         virtualScreenType: VirtualScreenType? = null,

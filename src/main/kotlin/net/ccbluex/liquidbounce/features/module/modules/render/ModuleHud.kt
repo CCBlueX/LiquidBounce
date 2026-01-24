@@ -81,7 +81,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     val isBlurEffectActive
         get() = Blur.enabled && !(mc.options.hideGui && mc.screen == null)
 
-    private var browserSettings: BrowserSettings? = null
+    private val browserSettings = BrowserSettings(60, ::reopen)
 
     val themes = tree(Configurable("Themes"))
 
@@ -121,7 +121,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
         tree(GlobalBrowserSettings)
-        browserSettings = tree(BrowserSettings(60, ::reopen))
+        tree(browserSettings)
     }
 
     @Suppress("unused")
@@ -148,7 +148,7 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
         return ThemeManager.openImmediate(
             VirtualScreenType.HUD,
             true,
-            browserSettings!!
+            browserSettings
         ).also { browser ->
             browserBrowser = browser
         }
