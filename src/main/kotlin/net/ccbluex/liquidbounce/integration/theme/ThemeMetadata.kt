@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.integration.theme
 
 import com.google.gson.JsonObject
 
+@JvmRecord
 data class ThemeMetadata(
     val id: String,
     val name: String,
@@ -47,7 +48,8 @@ data class ThemeMetadata(
     }
 }
 
+@JvmRecord
 data class Background(
     val name: String,
-    val types: List<String>
+    val types: Set<String>
 )

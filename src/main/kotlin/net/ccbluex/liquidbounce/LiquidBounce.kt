@@ -165,7 +165,7 @@ object LiquidBounce : EventListener {
         private set
 
     /**
-     * Creates an [net.minecraft.util.Identifier] starts with [CLIENT_NAME].
+     * Creates an [net.minecraft.resources.Identifier] starts with [CLIENT_NAME].
      */
     @JvmStatic
     fun identifier(path: String): Identifier = Identifier.fromNamespaceAndPath(CLIENT_NAME.lowercase(Locale.ROOT), path)
@@ -277,7 +277,6 @@ object LiquidBounce : EventListener {
         // Utility managers
         RotationManager
         PacketQueueManager
-        BacktrackPacketManager
         InteractionTracker
         CombatManager
         FriendManager

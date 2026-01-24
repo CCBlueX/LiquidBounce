@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.api.core
 
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KProperty
@@ -28,26 +29,23 @@ class AsyncLazy<T>(
     private val initializer: suspend () -> T
 ) {
     private val deferred: CompletableDeferred<T> = CompletableDeferred()
-    private var initialized = false
+    private val initialized = atomic(false)
 
     private suspend fun initialize() {
-        if (!initialized) {
-            initialized = true
+        if (initialized.compareAndSet(expect = false, update = true)) {
             try {
                 val result = initializer()
                 deferred.complete(result)
             } catch (e: Throwable) {
                 deferred.completeExceptionally(e)
                 // Reset initialized flag if initialization fails
-                initialized = false
+                initialized.value = false
             }
         }
     }
 
     suspend fun get(): T {
-        if (!initialized) {
-            initialize()
-        }
+        initialize()
         return deferred.await()
     }
 

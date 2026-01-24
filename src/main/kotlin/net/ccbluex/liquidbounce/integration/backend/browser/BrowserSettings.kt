@@ -48,7 +48,7 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
         private set
 
     init {
-        if (browserBackend.isAccelerationSupported) {
+        if (!BrowserBackendManager.disableAcceleration && browserBackend.isAccelerationSupported) {
             accelerated = boolean("Accelerated(BETA)", false).onChanged {
                 mc.execute {
                     IntegrationListener.restart()

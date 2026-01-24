@@ -17,24 +17,14 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.kotlin
+package net.ccbluex.liquidbounce.render.engine
 
-/**
- * Used for mixin interfaces (i.e. [net.ccbluex.liquidbounce.additions.MappableRingBufferAddition])
- */
-inline fun <reified B> mixinInterfaceCast(a: Any): B {
-    check(a is B) { "${a.javaClass.name} does not implement the mixin interface ${B::class.java}?!" }
+import java.awt.Font
 
-    return a
-}
-
-/**
- * See [mixinInterfaceCast]
- */
-inline fun <reified B> mixinInterfaceCastNullable(a: Any?): B? {
-    if (a == null) {
-        return null
-    }
-
-    return mixinInterfaceCast(a)
-}
+@JvmRecord
+data class FontId(
+    val style: Int,
+    val awtFont: Font,
+    val height: Float,
+    val ascent: Float
+)

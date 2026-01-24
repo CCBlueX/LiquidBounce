@@ -17,24 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.kotlin
+package net.ccbluex.liquidbounce.config.types
 
-/**
- * Used for mixin interfaces (i.e. [net.ccbluex.liquidbounce.additions.MappableRingBufferAddition])
- */
-inline fun <reified B> mixinInterfaceCast(a: Any): B {
-    check(a is B) { "${a.javaClass.name} does not implement the mixin interface ${B::class.java}?!" }
+import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 
-    return a
-}
-
-/**
- * See [mixinInterfaceCast]
- */
-inline fun <reified B> mixinInterfaceCastNullable(a: Any?): B? {
-    if (a == null) {
-        return null
-    }
-
-    return mixinInterfaceCast(a)
-}
+internal class Vec3Value<T : Any>(
+    name: String,
+    aliases: List<String>,
+    default: T,
+    /**
+     * For theme only
+     */
+    @Exclude
+    val useLocateButton: Boolean,
+    valueType: ValueType,
+) : Value<T>(name, aliases, default, valueType)
