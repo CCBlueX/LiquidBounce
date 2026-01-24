@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.modmenu.ModMenuCompatibility
@@ -70,7 +71,7 @@ object HideAppearance : EventListener {
 
     private val shiftChronometer = Chronometer()
 
-    var isHidingNow = false
+    var isHidingNow = env("LB_UI_HIDE", "net.ccbluex.liquidbounce.ui.hide")?.toBoolean() ?: false
         set(value) {
             field = value
             mc.schedule(::updateClient)

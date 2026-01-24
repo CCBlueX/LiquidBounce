@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.IntegrationBrowserSettings
+import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
@@ -202,7 +203,6 @@ object ScreenManager : EventListener {
 
     @Suppress("unused")
     private val screenUpdater = handler<GameTickEvent> {
-        val browser = mainBrowser ?: return@handler
         if (mc.screen !is TaskProgressScreen) {
             handleCurrentScreen(mc.screen)
         }
@@ -258,12 +258,12 @@ object ScreenManager : EventListener {
     }
 
     private fun handleCurrentScreen(screen: Screen?): Boolean {
-        return when {
-            screen !is CustomMinecraftScreen && HideAppearance.isHidingNow -> {
+        return when (screen) {
+            !is CustomMinecraftScreen if (HideAppearance.isHidingNow || ClientInteropServer.isSkipping) -> {
                 closeScreen()
                 false
             }
-            this.mainBrowser == null || screen is CustomMinecraftScreen -> false
+            is CustomMinecraftScreen -> false
             else -> {
                 // Are we currently playing the game?
                 if (mc.level != null && screen == null) {
@@ -284,7 +284,6 @@ object ScreenManager : EventListener {
         val customScreenType = CustomScreenType.recognize(minecraftScreen)
         if (customScreenType == null) {
             closeScreen()
-
             return false
         }
 
