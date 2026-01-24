@@ -30,15 +30,14 @@ import com.mojang.blaze3d.vertex.MeshData
 import com.mojang.blaze3d.vertex.PoseStack
 import com.mojang.blaze3d.vertex.VertexConsumer
 import com.mojang.blaze3d.vertex.VertexFormat
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap
 import net.ccbluex.fastutil.enumMapOf
+import net.ccbluex.fastutil.objectObjectMapOf
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformConfigurable
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
-import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
@@ -173,7 +172,7 @@ inline fun WorldRenderEnvironment.drawCustomMeshTextured(
 
     if (!isBatchMode) {
         buffer.build()?.let {
-            draw(pipeline, it, shaderTextureProvider = Object2ObjectMaps.singleton("Sampler0", sampler0))
+            draw(pipeline, it, shaderTextureProvider = objectObjectMapOf("Sampler0", sampler0))
         }
     }
 }
@@ -195,7 +194,7 @@ inline fun WorldRenderEnvironment.drawCustomMesh(
     }
 }
 
-private val sharedVboMap = Object2ObjectOpenHashMap<VertexFormat, GrowableMappableRingBuffer>()
+private val sharedVboMap = Object2ObjectArrayMap<VertexFormat, GrowableMappableRingBuffer>()
 private fun getVbo(vertexFormat: VertexFormat): GrowableMappableRingBuffer =
     sharedVboMap.computeIfAbsent(vertexFormat) {
         GrowableMappableRingBuffer(
@@ -251,18 +250,7 @@ internal fun drawMesh(
         indexSlice = getIbo(indexType).upload(rawIndices)
     }
 
-    val colorTexture = RenderSystem.outputColorTextureOverride
-        ?: renderTarget.colorTextureView!!
-    val depthTexture = RenderSystem.outputDepthTextureOverride
-        ?: renderTarget.depthTextureView.takeIf { renderTarget.useDepth }
-
-    gpuDevice.createCommandEncoder().createRenderPass(
-        renderPassLabelGetter,
-        colorTexture,
-        OptionalInt.empty(),
-        depthTexture,
-        OptionalDouble.empty(),
-    ).use { renderPass ->
+    renderTarget.createRenderPass(renderPassLabelGetter, allowOverride = true).use { renderPass ->
         renderPass.setPipeline(pipeline)
         renderPass.setupRenderTypeScissor()
         renderPass.bindDefaultUniforms()
