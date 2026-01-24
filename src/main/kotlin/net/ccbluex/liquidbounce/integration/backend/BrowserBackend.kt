@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.integration.task.TaskManager
 interface BrowserBackend {
 
     val isInitialized: Boolean
-    var isAccelerationSupported: Boolean
+    var accelerationFlags: BrowserAccelerationFlags
     val browsers: List<Browser>
 
     fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit)
@@ -55,7 +55,7 @@ interface BrowserBackend {
 
     fun createBrowser(
         url: String,
-        position: BrowserViewport = BrowserViewport.Companion.FULLSCREEN,
+        position: BrowserViewport = BrowserViewport.FULLSCREEN,
         settings: BrowserSettings = IntegrationListener.browserSettings,
         priority: Short = 0,
         inputAcceptor: InputAcceptor? = null

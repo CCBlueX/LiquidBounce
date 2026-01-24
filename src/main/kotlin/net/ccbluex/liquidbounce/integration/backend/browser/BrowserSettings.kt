@@ -48,8 +48,14 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
         private set
 
     init {
-        if (!BrowserBackendManager.disableAcceleration && browserBackend.isAccelerationSupported) {
-            accelerated = boolean("Accelerated(BETA)", false).onChanged {
+        val accelerationFlags = browserBackend.accelerationFlags
+
+        if (!BrowserBackendManager.disableAcceleration && accelerationFlags.isSupported) {
+            accelerated = if (accelerationFlags.isBeta) {
+                boolean("Accelerated(BETA)", false)
+            } else {
+                boolean("Accelerated", true)
+            }.onChanged {
                 mc.execute {
                     IntegrationListener.restart()
                     mc.updateTitle()

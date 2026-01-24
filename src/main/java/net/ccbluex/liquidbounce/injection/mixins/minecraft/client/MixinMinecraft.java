@@ -215,7 +215,7 @@ public abstract class MixinMinecraft {
         // For debugging purposes, will be removed until we have a stable release
         if (Util.getPlatform() == Util.OS.WINDOWS) {
             if (BrowserBackendManager.INSTANCE.getBrowserBackend().isInitialized() &&
-                    BrowserBackendManager.INSTANCE.getBrowserBackend().isAccelerationSupported()) {
+                    BrowserBackendManager.INSTANCE.getBrowserBackend().getAccelerationFlags().isSupported()) {
                 var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
 
                 if (accelerated != null && accelerated.get()) {
