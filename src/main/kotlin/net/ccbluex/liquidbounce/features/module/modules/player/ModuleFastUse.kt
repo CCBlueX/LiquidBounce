@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,15 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -34,8 +34,7 @@ import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.world.effect.MobEffects
 
 /**
  * FastUse module
@@ -43,7 +42,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * Allows you to use items faster.
  */
 
-object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = listOf("FastEat")) {
+object ModuleFastUse : ClientModule("FastUse", ModuleCategories.PLAYER, aliases = listOf("FastEat")) {
 
     private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime)).apply { tagBy(this) }
 
@@ -71,12 +70,12 @@ object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = listOf
         get() = if (conditions.any { it.meetsConditions() }) {
             false
         } else {
-            player.isUsingItem && player.activeItem.isConsumable
+            player.isUsingItem && player.useItem.isConsumable
         }
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent>(priority = CRITICAL_MODIFICATION) { event ->
-        if (mc.options.useKey.isPressed && stopInput) {
+        if (mc.options.keyUse.isDown && stopInput) {
             event.directionalInput = DirectionalInput.NONE
         }
     }
@@ -106,9 +105,9 @@ object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = listOf
 
                 waitTicks(delay)
                 repeat(speed) {
-                    network.sendPacket(packetType.generatePacket())
+                    network.send(packetType.generatePacket())
                 }
-                player.stopUsingItem()
+                player.releaseUsingItem()
             }
         }
 
@@ -124,12 +123,12 @@ object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = listOf
 
         @Suppress("unused")
         val repeatable = tickHandler {
-            if (accelerateNow && player.itemUseTime >= consumeTime) {
+            if (accelerateNow && player.ticksUsingItem >= consumeTime) {
                 repeat(speed) {
-                    network.sendPacket(packetType.generatePacket())
+                    network.send(packetType.generatePacket())
                 }
 
-                player.stopUsingItem()
+                player.releaseUsingItem()
             }
         }
 
@@ -141,13 +140,13 @@ object ModuleFastUse : ClientModule("FastUse", Category.PLAYER, aliases = listOf
         val meetsConditions: () -> Boolean
     ) : NamedChoice {
         NOT_IN_THE_AIR("NotInTheAir", {
-            !player.isOnGround
+            !player.onGround()
         }),
         NOT_DURING_MOVE("NotDuringMove", {
             player.moving
         }),
         NOT_DURING_REGENERATION("NotDuringRegeneration", {
-            player.hasStatusEffect(StatusEffects.REGENERATION)
+            player.hasEffect(MobEffects.REGENERATION)
         })
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,23 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.minecraft.client.input.Input
-import net.minecraft.util.PlayerInput
+import net.minecraft.client.player.ClientInput
+import net.minecraft.world.entity.player.Input
 
-val PlayerInput.any: Boolean
+val Input.any: Boolean
     get() = forward || backward || left || right
 
 @Suppress("LongParameterList")
-fun PlayerInput.copy(
+fun Input.copy(
     forward: Boolean = this.forward,
     backward: Boolean = this.backward,
     left: Boolean = this.left,
     right: Boolean = this.right,
     jump: Boolean = this.jump,
-    sneak: Boolean = this.sneak,
+    sneak: Boolean = this.shift,
     sprint: Boolean = this.sprint
-): PlayerInput {
-    return PlayerInput(
+): Input {
+    return Input(
         forward,
         backward,
         left,
@@ -46,16 +46,16 @@ fun PlayerInput.copy(
 }
 
 @Suppress("LongParameterList")
-fun Input.set(
-    forward: Boolean = playerInput.forward,
-    backward: Boolean = playerInput.backward,
-    left: Boolean = playerInput.left,
-    right: Boolean = playerInput.right,
-    jump: Boolean = playerInput.jump,
-    sneak: Boolean = playerInput.sneak,
-    sprint: Boolean = playerInput.sprint
+fun ClientInput.set(
+    forward: Boolean = keyPresses.forward,
+    backward: Boolean = keyPresses.backward,
+    left: Boolean = keyPresses.left,
+    right: Boolean = keyPresses.right,
+    jump: Boolean = keyPresses.jump,
+    sneak: Boolean = keyPresses.shift,
+    sprint: Boolean = keyPresses.sprint
 ) {
-    this.playerInput = PlayerInput(
+    this.keyPresses = Input(
         forward,
         backward,
         left,

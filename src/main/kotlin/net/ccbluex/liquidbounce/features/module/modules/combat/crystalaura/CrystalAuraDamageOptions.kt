@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,10 +29,10 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.trigg
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
 import net.ccbluex.liquidbounce.utils.kotlin.LruCache
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.phys.Vec3
 
 object CrystalAuraDamageOptions : Configurable("Damage") {
 
@@ -62,7 +62,7 @@ object CrystalAuraDamageOptions : Configurable("Damage") {
      *
      * The first float is the self-damage, the second is the enemy damage.
      */
-    internal fun approximateExplosionDamage(pos: Vec3d, requestingSubmodule: RequestingSubmodule): FloatFloatPair? {
+    internal fun approximateExplosionDamage(pos: Vec3, requestingSubmodule: RequestingSubmodule): FloatFloatPair? {
         val target = targetTracker.target ?: return null
         val damageToTarget = target.getDamage(pos, requestingSubmodule, CheckedEntity.TARGET)
         val notEnoughDamage = damageToTarget.isSmallerThan(minEnemyDamage)
@@ -100,11 +100,11 @@ object CrystalAuraDamageOptions : Configurable("Damage") {
     }
 
     private fun LivingEntity.getDamage(
-        crystal: Vec3d,
+        crystal: Vec3,
         requestingSubmodule: RequestingSubmodule,
         checkedEntity: CheckedEntity
     ): DamageProvider {
-        val damageConstellation = DamageConstellation(this, blockPos, crystal, requestingSubmodule)
+        val damageConstellation = DamageConstellation(this, blockPosition(), crystal, requestingSubmodule)
         val calc: (DamageConstellation) -> DamageProvider = {
             val excludeNotBlastResistant = terrain &&
                 (!requestingSubmodule.basePlace || SubmoduleBasePlace.terrain)
@@ -113,7 +113,7 @@ object CrystalAuraDamageOptions : Configurable("Damage") {
                 requestingSubmodule,
                 crystal,
                 if (excludeNotBlastResistant) 9f else null,
-                if (requestingSubmodule.basePlace) BlockPos.ofFloored(crystal).down() else null
+                if (requestingSubmodule.basePlace) BlockPos.containing(crystal).below() else null
             )
         }
 
@@ -128,7 +128,7 @@ object CrystalAuraDamageOptions : Configurable("Damage") {
     data class DamageConstellation(
         val entity: LivingEntity,
         val pos: BlockPos,
-        val crystal: Vec3d,
+        val crystal: Vec3,
         val requestingSubmodule: RequestingSubmodule // TODO optimize the cache, so that it caches the damage values
         // itself
     )
@@ -145,7 +145,7 @@ object CrystalAuraDamageOptions : Configurable("Damage") {
             override fun getDamage(
                 entity: LivingEntity,
                 requestingSubmodule: RequestingSubmodule,
-                crystal: Vec3d,
+                crystal: Vec3,
                 maxBlastResistance: Float?,
                 include: BlockPos?
             ): DamageProvider {
@@ -155,18 +155,18 @@ object CrystalAuraDamageOptions : Configurable("Damage") {
                     RequestingSubmodule.BASE_PLACE -> SelfPredict.basePlaceTicks
                 }
 
-                return SelfPredict.getDamage(entity as PlayerEntity, ticks, crystal, maxBlastResistance, include)
+                return SelfPredict.getDamage(entity as Player, ticks, crystal, maxBlastResistance, include)
             }
         },
         TARGET {
             override fun getDamage(
                 entity: LivingEntity,
                 requestingSubmodule: RequestingSubmodule,
-                crystal: Vec3d,
+                crystal: Vec3,
                 maxBlastResistance: Float?,
                 include: BlockPos?
             ): DamageProvider {
-                if (entity !is PlayerEntity) {
+                if (entity !is Player) {
                     return OTHER.getDamage(entity, requestingSubmodule, crystal, maxBlastResistance, include)
                 }
 
@@ -183,7 +183,7 @@ object CrystalAuraDamageOptions : Configurable("Damage") {
             override fun getDamage(
                 entity: LivingEntity,
                 requestingSubmodule: RequestingSubmodule,
-                crystal: Vec3d,
+                crystal: Vec3,
                 maxBlastResistance: Float?,
                 include: BlockPos?
             ): DamageProvider {
@@ -198,7 +198,7 @@ object CrystalAuraDamageOptions : Configurable("Damage") {
         abstract fun getDamage(
             entity: LivingEntity,
             requestingSubmodule: RequestingSubmodule,
-            crystal: Vec3d,
+            crystal: Vec3,
             maxBlastResistance: Float? = null,
             include: BlockPos? = null
         ): DamageProvider

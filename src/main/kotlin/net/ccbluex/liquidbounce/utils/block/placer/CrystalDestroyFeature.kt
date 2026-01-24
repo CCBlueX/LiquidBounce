@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.getExplosionDamageFromEntity
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.entity.decoration.EndCrystalEntity
-import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
 class CrystalDestroyFeature(eventListener: EventListener, private val module: ClientModule) :
     ToggleableConfigurable(eventListener, "DestroyCrystals", true) {
@@ -50,11 +50,11 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
 
     private val chronometer = Chronometer()
 
-    var currentTarget: EndCrystalEntity? = null
+    var currentTarget: EndCrystal? = null
         set(value) {
             if (value != field && value != null) {
                 raytraceBox(
-                    player.eyePos,
+                    player.eyePosition,
                     value.boundingBox,
                     range = range.toDouble(),
                     wallsRange = wallRange.toDouble(),
@@ -79,7 +79,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
         // find the best spot (and skip if no spot was found)
         val (rotation, _) =
             raytraceBox(
-                player.eyePos,
+                player.eyePosition,
                 target.boundingBox,
                 range = range.toDouble(),
                 wallsRange = wallRange.toDouble(),
@@ -113,7 +113,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
     /**
      * Checks whether the crystal would kill us.
      */
-    private fun wouldKill(target: EndCrystalEntity): Boolean {
+    private fun wouldKill(target: EndCrystal): Boolean {
         val health = player.health + player.absorptionAmount
         return health - player.getExplosionDamageFromEntity(target) <= 0f
     }
@@ -123,7 +123,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
         val target = currentTarget ?: return@handler
 
         val packet = it.packet
-        if (packet is EntitiesDestroyS2CPacket && target.id in packet.entityIds) {
+        if (packet is ClientboundRemoveEntitiesPacket && target.id in packet.entityIds) {
             currentTarget = null
         }
     }

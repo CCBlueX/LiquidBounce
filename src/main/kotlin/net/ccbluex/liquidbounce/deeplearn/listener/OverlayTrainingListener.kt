@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.deeplearn.listener
 
@@ -28,7 +26,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.textOf
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
 
 /**
  * Displays training overlay in Minecraft
@@ -70,14 +68,14 @@ class OverlayTrainingListener(
             regular("Batch "),
             variable("$progress%"),
             regular("\n".repeat(1)),
-            "[".asPlainText(Formatting.GRAY),
-            "█".repeat(progress / 4).asPlainText(Formatting.GREEN),
-            "░".repeat(25 - progress / 4).asPlainText(Formatting.DARK_GRAY),
-            "]".asPlainText(Formatting.GRAY),
+            "[".asPlainText(ChatFormatting.GRAY),
+            "█".repeat(progress / 4).asPlainText(ChatFormatting.GREEN),
+            "░".repeat(25 - progress / 4).asPlainText(ChatFormatting.DARK_GRAY),
+            "]".asPlainText(ChatFormatting.GRAY),
         )
 
         mc.execute {
-            mc.inGameHud.setOverlayMessage(progressBar, false)
+            mc.gui.setOverlayMessage(progressBar, false)
         }
     }
 

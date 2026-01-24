@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,22 +15,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.fastclimb.FastClimb
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.icespeed.IceSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.waterspeed.WaterSpeed
 
 /**
  * TerrainSpeed module
  *
  * Move faster on specific surfaces.
  */
-object ModuleTerrainSpeed : ClientModule("TerrainSpeed", Category.MOVEMENT, aliases = listOf("FastClimb")) {
+object ModuleTerrainSpeed : ClientModule("TerrainSpeed", ModuleCategories.MOVEMENT, aliases = listOf("FastClimb")) {
 
     init {
         enableLock()
@@ -39,6 +38,7 @@ object ModuleTerrainSpeed : ClientModule("TerrainSpeed", Category.MOVEMENT, alia
     init {
         tree(FastClimb)
         tree(IceSpeed)
+        tree(WaterSpeed)
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,25 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow
 
-import it.unimi.dsi.fastutil.floats.FloatFloatImmutablePair
 import it.unimi.dsi.fastutil.floats.FloatFloatPair
+import net.ccbluex.fastutil.pair
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2371
 
+/**
+ * @see net.minecraft.component.type.UseEffectsComponent
+ */
 abstract class NoSlowUseActionHandler(name: String) : ToggleableConfigurable(ModuleNoSlow, name, true) {
 
-    private val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
-    private val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
+    private val forwardMultiplier by float("Forward", 1f, 0f..1f)
+    private val sidewaysMultiplier by float("Sideways", 1f, 0f..1f)
 
-    companion object {
-        @JvmField
-        val DEFAULT_USE_MUL = FloatFloatImmutablePair(0.2f, 0.2f)
-    }
-
-    open fun getMultiplier() : FloatFloatPair {
+    open fun getMultiplier(forward: Float, sideways: Float): FloatFloatPair {
         if (!this.enabled || NoSlowSharedGrim2371.shouldPreventNoSlow) {
-            return DEFAULT_USE_MUL
+            return forward pair sideways
         }
 
-        return FloatFloatImmutablePair(forwardMultiplier, sidewaysMultiplier)
+        return forwardMultiplier pair sidewaysMultiplier
     }
 
 }

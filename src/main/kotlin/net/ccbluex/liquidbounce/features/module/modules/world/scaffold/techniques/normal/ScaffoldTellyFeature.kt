@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -60,14 +60,14 @@ object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "T
 
     @Suppress("unused")
     private val gameHandler = handler<GameTickEvent> {
-        if (player.isOnGround) {
+        if (player.onGround()) {
             ticksUntilJump++
         }
     }
 
     @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> { event ->
-        if (!player.moving || ModuleScaffold.blockCount <= 0 || !player.isOnGround) {
+        if (!player.moving || ModuleScaffold.blockCount <= 0 || !player.onGround()) {
             return@handler
         }
 

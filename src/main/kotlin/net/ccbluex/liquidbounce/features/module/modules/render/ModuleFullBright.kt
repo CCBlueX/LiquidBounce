@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,17 +22,17 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
 
 /**
  * A full bright module
  *
  * Allows you to see in the dark.
  */
-object ModuleFullBright : ClientModule("FullBright", Category.RENDER) {
+object ModuleFullBright : ClientModule("FullBright", ModuleCategories.RENDER) {
 
     private val modes = choices(
         "Mode", FullBrightGamma, arrayOf(
@@ -50,7 +50,7 @@ object ModuleFullBright : ClientModule("FullBright", Category.RENDER) {
         var gamma = 0.0
 
         override fun enable() {
-            gamma = mc.options.gamma.value
+            gamma = mc.options.gamma().get()
         }
 
         val tickHandler = handler<PlayerPostTickEvent> {
@@ -68,11 +68,11 @@ object ModuleFullBright : ClientModule("FullBright", Category.RENDER) {
 
         @Suppress("unused")
         val tickHandler = handler<PlayerPostTickEvent> {
-            player.addStatusEffect(StatusEffectInstance(StatusEffects.NIGHT_VISION, 1337))
+            player.addEffect(MobEffectInstance(MobEffects.NIGHT_VISION, 1337))
         }
 
         override fun disable() {
-            player.removeStatusEffect(StatusEffects.NIGHT_VISION)
+            player.removeEffect(MobEffects.NIGHT_VISION)
         }
 
     }

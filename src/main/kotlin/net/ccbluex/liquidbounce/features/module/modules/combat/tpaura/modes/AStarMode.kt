@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes
@@ -25,12 +24,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.fastutil.WeightedSortedList
 import net.ccbluex.fastutil.mapToArray
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.desyncPlayerPosition
@@ -44,14 +43,17 @@ import net.ccbluex.liquidbounce.utils.block.AStarPathBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.math.*
-import net.minecraft.entity.LivingEntity
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionAndOnGround
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3i
+import net.ccbluex.liquidbounce.utils.math.set
+import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Pos
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.phys.AABB
 
 object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
@@ -65,15 +67,15 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
     private var pathCache: PathCache? = null
 
-    private val pathStart = BlockPos.Mutable()
+    private val pathStart = BlockPos.MutableBlockPos()
 
     private val pathContext = Dispatchers.Default + CoroutineName("${ModuleTpAura.name}-${name}")
 
     @Suppress("unused")
     private val tickHandler = tickHandler {
         pathCache = withContext(pathContext) {
-            val playerEyePos = player.eyePos
-            val playerPosition = pathStart.takeIf { it != BlockPos.ORIGIN } ?: player.blockPos
+            val playerEyePos = player.eyePosition
+            val playerPosition = pathStart.takeIf { it != BlockPos.ZERO } ?: player.blockPosition()
 
             val maximumDistanceSq = maximumDistance.sq().toDouble()
 
@@ -83,7 +85,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
                     weighter = { it.squaredBoxedDistanceTo(playerEyePos) }
                 )
             ).firstNotNullOfOrNull { enemy ->
-                val path = findPath(playerPosition, enemy.blockPos, maximumCost)
+                val path = findPath(playerPosition, enemy.blockPosition(), maximumCost)
 
                 // Skip if the path is empty
                 if (path.isNotEmpty()) {
@@ -105,7 +107,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
         waitTicks(stickAt)
         if (tpBack) {
             travel(path.asReversed())
-            pathStart.set(BlockPos.ORIGIN)
+            pathStart.set(BlockPos.ZERO)
         } else {
             desyncPlayerPosition?.let {
                 pathStart.set(it)
@@ -116,7 +118,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
     override fun disable() {
         desyncPlayerPosition = null
-        pathStart.set(BlockPos.ORIGIN)
+        pathStart.set(BlockPos.ZERO)
         pathCache = null
         super.disable()
     }
@@ -130,7 +132,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
             drawLineStrip(
                 argb = Color4b.WHITE.toARGB(),
                 positions = path.mapToArray {
-                    relativeToCamera(it.toVec3d(0.5, 0.5, 0.5)).toVec3()
+                    relativeToCamera(it.toVec3d(0.5, 0.5, 0.5)).toVec3f()
                 }
             )
         }
@@ -140,15 +142,15 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
     private val packetHandler = handler<PacketEvent> {
         val packet = it.packet
 
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is ServerboundMovePlayerPacket) {
             val position = desyncPlayerPosition ?: return@handler
 
             // Set the packet position to the player position
             packet.x = position.x
             packet.y = position.y
             packet.z = position.z
-            packet.changePosition = true
-        } else if (packet is PlayerPositionLookS2CPacket) {
+            packet.hasPos = true
+        } else if (packet is ClientboundPlayerPositionPacket) {
             val change = packet.change.position
             chat(markAsError("Server setback detected - teleport failed at ${change.x} ${change.y} ${change.z}!"))
             stuckChronometer.reset()
@@ -168,11 +170,11 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
             val start = chunk.first().toVec3d(0.5, 0.5, 0.5)
             val end = chunk.last().toVec3d(0.5, 0.5, 0.5)
 
-            if (world.getBlockCollisions(player, Box(start, end)).any()) {
+            if (world.getBlockCollisions(player, AABB(start, end)).any()) {
                 // If the path is not clear, we need to go one by one.
                 for (position in chunk) {
-                    network.sendPacket(
-                        PositionAndOnGround(
+                    network.send(
+                        Pos(
                             position.x + 0.5, position.y.toDouble(), position.z + 0.5, false, false
                         )
                     )
@@ -181,7 +183,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
                 continue
             } else {
                 // If the path is clear, we can teleport to the last position of the chunk.
-                network.sendPacket(PositionAndOnGround(end.x, end.y, end.z, false, false))
+                network.send(Pos(end.x, end.y, end.z, false, false))
                 desyncPlayerPosition = end
             }
         }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.modes
@@ -32,9 +30,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.Modu
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk.standingOnWater
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.minecraft.block.FluidBlock
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.shape.VoxelShapes
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.level.block.LiquidBlock
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat Verus
@@ -50,21 +48,21 @@ internal object LiquidWalkVerusB3901 : Choice("VerusB3901") {
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (mc.options.sneakKey.isPressed || player.fallDistance > 3.0f || player.isOnFire) {
+        if (mc.options.keyShift.isDown || player.fallDistance > 3.0f || player.isOnFire) {
             return@handler
         }
 
-        if (event.state.block is FluidBlock && !player.box.isBlockAtPosition { it is FluidBlock }) {
-            event.shape = VoxelShapes.fullCube()
+        if (event.state.block is LiquidBlock && !player.box.isBlockAtPosition { it is LiquidBlock }) {
+            event.shape = Shapes.block()
         }
     }
 
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (event.origin == TransferOrigin.OUTGOING && packet is PlayerMoveC2SPacket) {
-            if (!mc.options.sneakKey.isPressed &&
-                !player.isTouchingWater &&
+        if (event.origin == TransferOrigin.OUTGOING && packet is ServerboundMovePlayerPacket) {
+            if (!mc.options.keyShift.isDown &&
+                !player.isInWater &&
                 standingOnWater() &&
                 !collidesWithAnythingElse()
                 ) {

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeFirework
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModePitch40Infinite
@@ -30,17 +30,17 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.ElytraFlyModeVanilla
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.set
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.item.Items
 
 /**
  * ElytraFly module
  *
  * Makes elytra flying easier to control.
  */
-object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
+object ModuleElytraFly : ClientModule("ElytraFly", ModuleCategories.MOVEMENT) {
 
     private val instant by multiEnumChoice("Instant", Instant.STOP)
 
@@ -90,19 +90,21 @@ object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
         }
 
         val stop =
-            mc.options.sneakKey.isPressed
+            mc.options.keyShift.isDown
             && Instant.STOP in instant
-            && player.isOnGround
-            || notInFluid && player.isInFluid
+            && player.onGround()
+            || notInFluid && player.isInLiquid
 
-        if (stop && player.isGliding) {
-            player.stopGliding()
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_FALL_FLYING))
+        if (stop && player.isFallFlying) {
+            player.stopFallFlying()
+            network.send(
+                ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+            )
             needsToRestart = false
             return@tickHandler
         }
 
-        if (player.isGliding) {
+        if (player.isFallFlying) {
             // we're already flying, yay
             val activeChoice = modes.activeChoice
             if (Speed.enabled) {
@@ -112,12 +114,14 @@ object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
             val modeDoesNotPreventStopping = activeChoice !is ElytraFlyModeStatic ||
                 !activeChoice.durabilityExploitNotWhileMove || !player.moving
             if (durabilityExploit && modeDoesNotPreventStopping) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_FALL_FLYING))
+                network.send(
+                    ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+                )
                 needsToRestart = true
             }
         } else if (
-            player.input.playerInput.jump
-            && player.velocity.y != 0.0
+            player.input.keyPresses.jump
+            && player.deltaMovement.y != 0.0
             && Instant.START in instant
             || needsToRestart
         ) {
@@ -125,8 +129,10 @@ object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
 
             // Jump must be off due to abnormal speed boosts
             player.input.set(jump = false)
-            player.startGliding()
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_FALL_FLYING))
+            player.startFallFlying()
+            network.send(
+                ServerboundPlayerCommandPacket(player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING)
+            )
         }
     }
 
@@ -135,15 +141,15 @@ object ModuleElytraFly : ClientModule("ElytraFly", Category.MOVEMENT) {
             return true
         }
 
-        if (player.abilities.creativeMode || player.hasStatusEffect(StatusEffects.LEVITATION)) {
+        if (player.abilities.instabuild || player.hasEffect(MobEffects.LEVITATION)) {
             return true
         }
 
         // Find the chest slot
-        val chestSlot = player.getEquippedStack(EquipmentSlot.CHEST)
+        val chestSlot = player.getItemBySlot(EquipmentSlot.CHEST)
 
         // If the player doesn't have an elytra in the chest slot or is in fluids
-        return chestSlot.item != Items.ELYTRA || chestSlot.willBreakNextUse()
+        return chestSlot.item != Items.ELYTRA || chestSlot.nextDamageWillBreak()
     }
 
     private enum class Instant(

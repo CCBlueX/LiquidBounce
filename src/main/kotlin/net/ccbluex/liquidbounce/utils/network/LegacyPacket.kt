@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import com.viaversion.viaversion.api.protocol.Protocol
 import com.viaversion.viaversion.api.protocol.packet.PacketType
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.network.ClientCommonNetworkHandler
+import net.minecraft.client.multiplayer.ClientCommonPacketListenerImpl
 
 /**
  * A packet that is directly sent to the server over ViaVersion.
@@ -61,7 +61,7 @@ interface LegacyPacket {
  * @param onSuccess Gets executed when sending succeeds.
  * @param onFailure Gets executed when sending fails.
  */
-inline fun ClientCommonNetworkHandler.sendPacket(
+inline fun ClientCommonPacketListenerImpl.sendPacket(
     packet: LegacyPacket,
     onSuccess: () -> Unit = {},
     onFailure: () -> Unit = {}

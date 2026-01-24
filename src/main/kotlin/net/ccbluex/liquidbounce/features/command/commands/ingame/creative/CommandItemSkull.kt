@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.item.createItem
-import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
+import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket
 
 /**
  * CommandItemSkull
@@ -55,15 +55,15 @@ object CommandItemSkull : Command.Factory, MinecraftShortcuts {
                 }
 
                 val itemStack = createItem("minecraft:player_head[profile=$name]")
-                val emptySlot = player.inventory!!.emptySlot
+                val emptySlot = player.inventory!!.freeSlot
 
                 if (emptySlot == -1) {
                     throw CommandException(command.result("noEmptySlot"))
                 }
 
-                player.inventory!!.setStack(emptySlot, itemStack)
-                mc.networkHandler!!.sendPacket(
-                    CreativeInventoryActionC2SPacket(
+                player.inventory!!.setItem(emptySlot, itemStack)
+                mc.connection!!.send(
+                    ServerboundSetCreativeModeSlotPacket(
                         if (emptySlot < 9) emptySlot + 36 else emptySlot,
                         itemStack
                     )

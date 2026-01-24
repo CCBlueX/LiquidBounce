@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
@@ -23,13 +22,13 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
-import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition
+import net.ccbluex.liquidbounce.interfaces.GuiMessageAddition
+import net.ccbluex.liquidbounce.interfaces.GuiMessageLineAddition
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.minecraft.text.Text
-import net.minecraft.text.TextVisitFactory
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
+import net.minecraft.util.StringDecomposer
 
 object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
 
@@ -38,7 +37,7 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
 
     @Suppress("unused", "CAST_NEVER_SUCCEEDS" /* succeed with mixins */)
     val chatHandler = handler<ChatReceiveEvent> { event ->
-        val string = TextVisitFactory.removeFormattingCodes(event.textData)
+        val string = StringDecomposer.getPlainText(event.textData)
 
         if (regexFilters.isNotEmpty()) {
             val content = string.subSequence(string.indexOf('>') + 1, string.length).trim()
@@ -64,18 +63,18 @@ object AntiSpam : ToggleableConfigurable(ModuleBetterChat, "AntiSpam", true) {
             // imitate client messages
             val id = "$string-external"
 
-            val literalText = Text.literal("")
+            val literalText = Component.literal("")
             val text = event.applyChatDecoration.invoke(event.textData)
             literalText.append(text)
 
-            val other = mc.inGameHud.chatHud.messages.find {
-                (it as ChatMessageAddition).`liquid_bounce$getId`() == id
+            val other = mc.gui.chat.allMessages.find {
+                (it as GuiMessageLineAddition).`liquid_bounce$getId`() == id
             }
 
             var count = 1
             other?.let {
-                count += (other as ChatHudLineAddition).`liquid_bounce$getCount`()
-                literalText.append(" ${Formatting.GRAY}[$count]")
+                count += (other as GuiMessageAddition).`liquid_bounce$getCount`()
+                literalText.append(" ${ChatFormatting.GRAY}[$count]")
             }
 
             val data = MessageMetadata(prefix = false, id = id, remove = true, count = count)

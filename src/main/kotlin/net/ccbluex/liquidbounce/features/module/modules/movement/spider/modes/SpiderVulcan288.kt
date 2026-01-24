@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 
 /**
@@ -45,15 +45,15 @@ internal object SpiderVulcan288 : Choice("Vulcan288") {
 
     val repeatable = tickHandler {
         if (player.horizontalCollision) {
-            if (!player.isClimbing) {
+            if (!player.onClimbable()) {
                 requiresStop = true
                 waitTicks(2)
-                player.velocity.y = 9.6599696
+                player.deltaMovement.y = 9.6599696
                 waitTicks(2)
-                player.setVelocity(0.0, 0.0001, 0.0)
+                player.setDeltaMovement(0.0, 0.0001, 0.0)
             }
         }else if (requiresStop) {
-            player.velocity.y = 0.0
+            player.deltaMovement.y = 0.0
             requiresStop = false
         }
     }

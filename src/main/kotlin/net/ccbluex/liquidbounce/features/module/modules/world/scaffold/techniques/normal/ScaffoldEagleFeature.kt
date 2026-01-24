@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.config.util.asRefreshable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
-import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
-import net.ccbluex.liquidbounce.utils.client.sendStopSneaking
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Eagle", false) {
 
-    private val mode by enumChoice("Mode", EagleMode.INPUT)
     private val blocksToEagle = intRange("BlocksToEagle", 0..0, 0..10).asRefreshable()
     private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..1.3f)
     private val onlyOnGround by boolean("OnlyOnGround", true)
@@ -40,9 +36,10 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
     // Makes you sneak until first block placed, so with eagle enabled you won't fall off, when enabled
     private var placedBlocks = 0
 
-    val stateUpdateHandler =
+    @Suppress("unused")
+    private val stateUpdateHandler =
         handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-            if (mode == EagleMode.INPUT && shouldEagle(it.directionalInput)) {
+            if (!it.sneak && shouldEagle(it.directionalInput)) {
                 it.sneak = true
             }
         }
@@ -52,7 +49,7 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
             return false
         }
 
-        if (!player.isOnGround && onlyOnGround) {
+        if (!player.onGround() && onlyOnGround) {
             return false
         }
 
@@ -66,22 +63,12 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
             return
         }
 
-        placedBlocks += 1
+        placedBlocks++
 
         if (placedBlocks > blocksToEagle.current) {
             placedBlocks = 0
             blocksToEagle.refresh()
-
-            if (mode == EagleMode.PACKET) {
-                sendStartSneaking()
-                sendStopSneaking()
-            }
         }
-    }
-
-    enum class EagleMode(override val choiceName: String) : NamedChoice {
-        INPUT("Input"),
-        PACKET("Packet")
     }
 
 }

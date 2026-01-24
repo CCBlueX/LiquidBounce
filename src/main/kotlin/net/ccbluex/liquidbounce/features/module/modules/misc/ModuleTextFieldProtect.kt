@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,19 +20,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.fastutil.objectLinkedSetOf
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.repeat
-import net.minecraft.client.gui.widget.TextFieldWidget
-import net.minecraft.text.OrderedText
-import java.util.function.BiFunction
 
 /**
  * TextFieldProtect Module
  *
  * Hides rendered text of text field widget when it matches certain patterns.
  */
-object ModuleTextFieldProtect : ClientModule("TextFieldProtect", Category.MISC) {
+object ModuleTextFieldProtect : ClientModule("TextFieldProtect", ModuleCategories.MISC) {
 
     private val patterns by regexList("Patterns",
         objectLinkedSetOf(
@@ -44,23 +41,11 @@ object ModuleTextFieldProtect : ClientModule("TextFieldProtect", Category.MISC) 
 
     private const val MASK_CHAR = '*'
 
-    fun getWrappedRenderTextProvider(
-        textFieldWidget: TextFieldWidget,
-        original: BiFunction<String, Int, OrderedText>,
-    ): BiFunction<String, Int, OrderedText> {
-        if (!running) return original
-
-        return BiFunction<String, Int, OrderedText> { t, u ->
-            val fullText = textFieldWidget.text
-
-            val wrapped = if (patterns.none { it.matches(fullText) }) {
-                fullText
-            } else {
-                MASK_CHAR.repeat(t.length)
-            }
-
-            original.apply(wrapped, u)
+    fun protect(input: String, firstCharacterIndex: Int): String {
+        return if (!running || patterns.none { it.matches(input) }) {
+            input
+        } else {
+            MASK_CHAR.repeat(firstCharacterIndex)
         }
     }
-
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,23 +24,31 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
+import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawBox
+import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
+import net.ccbluex.liquidbounce.render.engine.type.Vec3f
+import net.ccbluex.liquidbounce.render.longLines
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
 import net.ccbluex.liquidbounce.utils.entity.cameraDistanceSq
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.entity.Entity
-import net.minecraft.entity.ItemEntity
-import net.minecraft.entity.projectile.ArrowEntity
-import net.minecraft.entity.projectile.PersistentProjectileEntity.PickupPermission
-import net.minecraft.entity.projectile.SpectralArrowEntity
-import net.minecraft.entity.projectile.TridentEntity
-import net.minecraft.util.math.Box
+import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow.Pickup
+import net.minecraft.world.entity.projectile.arrow.Arrow
+import net.minecraft.world.entity.projectile.arrow.SpectralArrow
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident
+import net.minecraft.world.phys.AABB
 
 /**
  * ItemESP module
@@ -48,7 +56,7 @@ import net.minecraft.util.math.Box
  * Allows you to see dropped items through walls.
  */
 
-object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
+object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
 
     override val baseKey: String
         get() = "liquidbounce.module.itemEsp"
@@ -56,6 +64,8 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
     private val items by items("Items", itemSortedSetOf())
     private val maximumDistance by float("MaximumDistance", 128F, 1F..512F)
+
+    val showTracers by boolean("Tracers", false)
 
     private object ShowArrows : ToggleableConfigurable(this, "ShowArrows", true) {
         val regularArrows by boolean("RegularArrows", true)
@@ -83,12 +93,48 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         )
     }
 
+    // showTracers
+    @Suppress("unused")
+    private val tracerRenderHandler = handler<WorldRenderEvent> { event ->
+        // Check if the tracer option is enabled
+        if (!showTracers) return@handler
+
+        renderEnvironmentForWorld(event.matrixStack) {
+            // We calculate the gaze vector (where the camera is looking)
+            val eyeVector = Vec3f(0.0, 0.0, 1.0)
+                .rotatePitch(-camera.xRot().toRadians())
+                .rotateYaw(-camera.yRot().toRadians())
+
+            longLines {
+                startBatch()
+                // Using entitiesForRendering() to get a list of entities around
+                val entities = world.entitiesForRendering()
+                for (entity in entities) {
+                    // Using the existing filtering logic (distance, type, etc.)
+                    if (!shouldRender(entity)) continue
+
+                    val color = getColor()
+
+                    // Interpolating the position (motion smoothing)
+                    val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
+
+                    drawLine(
+                        argb = color.toARGB(),
+                        p1 = eyeVector,
+                        p2 = pos,
+                    )
+                }
+                commitBatch()
+            }
+        }
+    }
+
     private object BoxMode : Choice("Box") {
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        private val box = Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
+        private val box = AABB(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
 
         private val entities = mutableListOf<Entity>()
 
@@ -100,7 +146,7 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
         @Suppress("unused")
         private val tickHandler = handler<GameTickEvent> {
             entities.clear()
-            world.entities.filterTo(entities, ::shouldRender)
+            world.entitiesForRendering().filterTo(entities, ::shouldRender)
         }
 
         @Suppress("unused")
@@ -140,13 +186,13 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
     fun shouldRender(entity: Entity?) : Boolean {
         if (entity == null) return false
 
-        val distanceSq = entity.eyePos.cameraDistanceSq()
+        val distanceSq = entity.eyePosition.cameraDistanceSq()
         if (distanceSq > maximumDistance.sq()) return false
 
         return when (entity) {
-            is ItemEntity -> filter(entity.stack.item, items)
+            is ItemEntity -> filter(entity.item.item, items)
 
-            is TridentEntity -> showTridents
+            is ThrownTrident -> showTridents
 
             // arrow checks
             // The server never sends the actual pickupType of arrows fired
@@ -156,10 +202,10 @@ object ModuleItemESP : ClientModule("ItemESP", Category.RENDER) {
 
             // However, it's not completely useless:
             // arrows shot by mobs such as skeletons and pillagers are not rendered.
-            is ArrowEntity if ShowArrows.running && entity.pickupType == PickupPermission.ALLOWED ->
+            is Arrow if ShowArrows.running && entity.pickup == Pickup.ALLOWED ->
                 if (entity.color == -1) ShowArrows.regularArrows else ShowArrows.arrowsWithEffects
 
-            is SpectralArrowEntity if ShowArrows.running && entity.pickupType == PickupPermission.ALLOWED ->
+            is SpectralArrow if ShowArrows.running && entity.pickup == Pickup.ALLOWED ->
                 ShowArrows.spectralArrows
 
             else -> false

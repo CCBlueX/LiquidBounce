@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ object CommandClear : Command.Factory {
             .begin("clear")
             .handler {
                 ModuleBetterChat.antiChatClearPaused = true
-                mc.inGameHud.chatHud.clear(true)
+                mc.gui.chat.clearMessages(true)
                 ModuleBetterChat.antiChatClearPaused = false
             }
             .build()

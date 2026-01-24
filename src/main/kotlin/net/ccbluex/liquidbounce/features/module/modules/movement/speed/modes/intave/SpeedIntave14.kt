@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave
 
@@ -26,6 +25,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.airTicks
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.math.multiply
 
 /**
  * Intave 14 speed
@@ -42,8 +42,8 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
 
         @Suppress("unused")
         private val tickHandler = tickHandler {
-            if (player.isSprinting && (player.isOnGround || player.airTicks == 11)) {
-                player.velocity = player.velocity.withStrafe(strength = strength.toDouble())
+            if (player.isSprinting && (player.onGround() || player.airTicks == 11)) {
+                player.deltaMovement = player.deltaMovement.withStrafe(strength = strength.toDouble())
             }
         }
     }
@@ -52,9 +52,11 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
 
         @Suppress("unused")
         private val tickHandler = tickHandler {
-            if (player.velocity.y > 0.003 && player.isSprinting) {
-                player.velocity.x *= 1f + (BOOST_CONSTANT * 0.25)
-                player.velocity.z *= 1f + (BOOST_CONSTANT * 0.25)
+            if (player.deltaMovement.y > 0.003 && player.isSprinting) {
+                player.deltaMovement = player.deltaMovement.multiply(
+                    factorX = 1f + (BOOST_CONSTANT * 0.25),
+                    factorZ = 1f + (BOOST_CONSTANT * 0.25),
+                )
             }
         }
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +15,22 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.render.engine.font.dynamic
 
+import com.mojang.blaze3d.platform.NativeImage
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
-import net.ccbluex.liquidbounce.render.engine.font.*
+import net.ccbluex.liquidbounce.render.engine.font.AtlasSliceHandle
+import net.ccbluex.liquidbounce.render.engine.font.DynamicAtlasAllocator
+import net.ccbluex.liquidbounce.render.engine.font.FontGlyph
 import net.ccbluex.liquidbounce.render.engine.font.GlyphIdentifier
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion
+import net.ccbluex.liquidbounce.render.engine.font.GlyphRenderInfo
+import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.client.texture.NativeImageBackedTexture
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.image.BufferedImage
@@ -34,7 +38,7 @@ import kotlin.math.min
 
 class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight: Int) : GlyphPage() {
     private val image = createBufferedImageWithDimensions(atlasSize)
-    override val texture = NativeImageBackedTexture({ "DynamicGlyphPage" }, image.toNativeImage())
+    override val texture = image.toNativeImage().asTexture { "DynamicGlyphPage ${atlasSize.width}x${atlasSize.height}" }
     private val glyphMap = Long2ObjectOpenHashMap<Pair<GlyphRenderInfo, AtlasSliceHandle>>()
     val dirty = ArrayList<GlyphRenderInfo>()
 
@@ -115,7 +119,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
     private fun updateNativeTexture(generationInfo: Companion.CharacterGenerationInfo, glyph: GlyphRenderInfo) {
         copyImageSection(
             fromImage = this.image,
-            toImage = texture.image!!,
+            toImage = texture.pixels!!,
             fromLocation = generationInfo.atlasLocation,
             toLocation = generationInfo.atlasLocation,
             patchSize = generationInfo.atlasDimension
@@ -135,7 +139,7 @@ class DynamicGlyphPage(val atlasSize: Dimension = DEFAULT_ATLAS_SIZE, fontHeight
             for (j in 0 until patchSize.height) {
                 val color = fromImage.getRGB(fromLocation.x + i, fromLocation.y + j)
 
-                toImage.setColorArgb(toLocation.x + i, toLocation.y + j, color)
+                toImage.setPixel(toLocation.x + i, toLocation.y + j, color)
             }
         }
     }

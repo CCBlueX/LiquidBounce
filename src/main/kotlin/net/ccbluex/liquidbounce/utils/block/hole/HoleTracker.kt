@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.block.hole
 
 import it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap
+import net.ccbluex.fastutil.referenceHashSetOf
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.DIRECTIONS_EXCLUDING_UP
@@ -29,14 +30,14 @@ import net.ccbluex.liquidbounce.utils.math.iterate
 import net.ccbluex.liquidbounce.utils.math.iterator
 import net.ccbluex.liquidbounce.utils.math.size
 import net.ccbluex.liquidbounce.utils.math.toBlockBox
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.registry.Registries
-import net.minecraft.util.math.BlockBox
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.ChunkPos
-import net.minecraft.util.math.Direction
-import net.minecraft.world.chunk.WorldChunk
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.level.ChunkPos
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
+import net.minecraft.world.level.levelgen.structure.BoundingBox
 import java.util.concurrent.ConcurrentSkipListSet
 
 private const val INDESTRUCTIBLE = (-2).toByte()
@@ -51,13 +52,17 @@ private typealias BlockStateBuffer = Long2ByteOpenHashMap
 object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
 
     val holes = ConcurrentSkipListSet<Hole>()
-    private val mutable by ThreadLocal.withInitial(BlockPos::Mutable)
+    private val mutable by ThreadLocal.withInitial(BlockPos::MutableBlockPos)
     private val BLAST_RESISTANT_BLOCKS: Set<Block> by lazy {
-        Registries.BLOCK.filterTo(hashSetOf()) { it.blastResistance >= 600 && it.blastResistance < 3_600_000 }
+        BuiltInRegistries.BLOCK.filterTo(referenceHashSetOf()) {
+            it.explosionResistance >= 600 && it.explosionResistance < 3_600_000
+        }
     }
 
     private val INDESTRUCTIBLE_BLOCKS: Set<Block> by lazy {
-        Registries.BLOCK.filterTo(hashSetOf()) { it.blastResistance >= 3_600_000 }
+        BuiltInRegistries.BLOCK.filterTo(referenceHashSetOf()) {
+            it.explosionResistance >= 3_600_000
+        }
     }
 
     override val shouldCallRecordBlockOnChunkUpdate: Boolean
@@ -67,9 +72,9 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         // Invalidate old ones
         if (state.isAir) {
             // if one of the neighbor blocks becomes air, invalidate the hole
-            holes.removeIf { it.positions.iterate().any { p -> p.getManhattanDistance(pos) == 1 } }
+            holes.removeIf { it.positions.iterate().any { p -> p.distManhattan(pos) == 1 } }
         } else {
-            holes.removeIf { pos in it.blockInvalidators }
+            holes.removeIf { it.blockInvalidators.isInside(pos) }
         }
 
         // Check new ones
@@ -78,22 +83,22 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         region.cachedUpdate()
     }
 
-    private fun invalidate(region: BlockBox) {
+    private fun invalidate(region: BoundingBox) {
         holes.removeIf { it.positions.intersects(region) }
     }
 
     @Suppress("CognitiveComplexMethod", "LongMethod", "LoopWithTooManyJumpStatements")
-    fun BlockBox.cachedUpdate() {
+    fun BoundingBox.cachedUpdate() {
         val buffer = BlockStateBuffer(size)
 
-        val mutableLocal = BlockPos.Mutable()
+        val mutableLocal = BlockPos.MutableBlockPos()
 
-        val topY = world.topYInclusive - 2
+        val topY = world.maxY - 2
 
         val holesInRegion = if (holes.size >= 32) {
             holes.subSet(
-                Hole(Hole.Type.ONE_ONE, BlockBox(mutableLocal.set(minX - 2, minY - 2, minZ - 2))), true,
-                Hole(Hole.Type.ONE_ONE, BlockBox(mutableLocal.set(maxX + 2, maxY + 2, maxZ + 2))), true
+                Hole(Hole.Type.ONE_ONE, BoundingBox(mutableLocal.set(minX() - 2, minY() - 2, minZ() - 2))), true,
+                Hole(Hole.Type.ONE_ONE, BoundingBox(mutableLocal.set(maxX() + 2, maxY() + 2, maxZ() + 2))), true
             )
         } else {
             holes
@@ -105,8 +110,8 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                 continue
             }
 
-            val surroundings = Direction.HORIZONTAL.filterTo(ArrayList(4)) { direction ->
-                val cached = buffer.cache(mutable.set(pos, direction))
+            val surroundings = Direction.BY_2D_DATA.filterTo(ArrayList(4)) { direction ->
+                val cached = buffer.cache(mutable.setWithOffset(pos, direction))
                 cached == BLAST_RESISTANT || cached == INDESTRUCTIBLE
             }
 
@@ -114,16 +119,16 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                 // 1*1
                 4 -> {
                     val bedrockOnly = DIRECTIONS_EXCLUDING_UP.all { direction ->
-                        val cached = buffer.cache(mutable.set(pos, direction))
+                        val cached = buffer.cache(mutable.setWithOffset(pos, direction))
                         cached == INDESTRUCTIBLE
                     }
 
-                    holes += Hole(Hole.Type.ONE_ONE, BlockBox(pos), bedrockOnly)
+                    holes += Hole(Hole.Type.ONE_ONE, BoundingBox(pos), bedrockOnly)
                 }
                 // 1*2
                 3 -> {
-                    val airDirection = Direction.HORIZONTAL.first { it !in surroundings }
-                    val another = pos.offset(airDirection)
+                    val airDirection = Direction.BY_2D_DATA.first { it !in surroundings }
+                    val another = pos.relative(airDirection)
 
                     if (!buffer.checkSameXZ(another)) {
                         continue
@@ -132,23 +137,31 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                     val airOpposite = airDirection.opposite
                     var idx = 0
                     val checkDirections = Array(3) {
-                        val value = Direction.HORIZONTAL[idx++]
-                        if (value === airOpposite) Direction.HORIZONTAL[idx++] else value
+                        val value = Direction.BY_2D_DATA[idx++]
+                        if (value === airOpposite) Direction.BY_2D_DATA[idx++] else value
                     }
 
                     if (buffer.checkSurroundings(another, checkDirections)) {
-                        holes += Hole(Hole.Type.ONE_TWO, BlockBox.create(pos, another))
+                        holes += Hole(Hole.Type.ONE_TWO, BoundingBox.fromCorners(pos, another))
                     }
                 }
                 // 2*2
                 2 -> {
-                    val (direction1, direction2) = Direction.HORIZONTAL.filterTo(ArrayList(2)) { it !in surroundings }
+                    val (direction1, direction2) = Direction.BY_2D_DATA.filterTo(ArrayList(2)) { it !in surroundings }
 
-                    if (!buffer.checkState(mutableLocal.set(pos, direction1), direction1, direction2.opposite)) {
+                    if (!buffer.checkState(
+                            mutableLocal.setWithOffset(pos, direction1),
+                            direction1, direction2.opposite
+                        )
+                    ) {
                         continue
                     }
 
-                    if (!buffer.checkState(mutableLocal.set(pos, direction2), direction2, direction1.opposite)) {
+                    if (!buffer.checkState(
+                            mutableLocal.setWithOffset(pos, direction2),
+                            direction2, direction1.opposite
+                        )
+                    ) {
                         continue
                     }
 
@@ -156,7 +169,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
                         continue
                     }
 
-                    holes += Hole(Hole.Type.TWO_TWO, BlockBox.create(pos, mutableLocal))
+                    holes += Hole(Hole.Type.TWO_TWO, BoundingBox.fromCorners(pos, mutableLocal))
                 }
             }
         }
@@ -201,7 +214,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         directions: Array<out Direction>
     ): Boolean {
         return directions.all {
-            val cached = cache(mutable.set(blockPos, it))
+            val cached = cache(mutable.setWithOffset(blockPos, it))
             cached == BLAST_RESISTANT || cached == INDESTRUCTIBLE
         }
     }
@@ -213,7 +226,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
         return checkSameXZ(blockPos) && checkSurroundings(blockPos, directions)
     }
 
-    override fun chunkUpdate(chunk: WorldChunk) {
+    override fun chunkUpdate(chunk: LevelChunk) {
         val region = chunk.toBlockBox()
         if (region.intersects(HoleManager.movableRegionScanner.currentRegion)) {
             invalidate(region)

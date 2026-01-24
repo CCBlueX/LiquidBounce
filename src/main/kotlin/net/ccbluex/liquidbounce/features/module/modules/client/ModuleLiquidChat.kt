@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.client
@@ -24,7 +22,12 @@ package net.ccbluex.liquidbounce.features.module.modules.client
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.event.SuspendHandlerBehavior.CancelPrevious
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
+import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
+import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.event.tickHandler
@@ -34,16 +37,25 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.withColor
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.MutableComponent
 import kotlin.time.Duration.Companion.seconds
 
-object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = true, state = true,
+object ModuleLiquidChat : ClientModule("LiquidChat", ModuleCategories.CLIENT, hide = true, state = true,
     aliases = listOf("GlobalChat", "IRC")
 ) {
 
@@ -52,11 +64,11 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
     private val autoTranslate by multiEnumChoice<ClientChatMessageEvent.ChatGroup>("AutoTranslate")
 
     private val chatClient = ChatClient()
-    private val prefix: Text = "".asText()
-        .formatted(Formatting.RESET).formatted(Formatting.GRAY)
-        .append(this.name.asPlainText(Formatting.BLUE))
-        .formatted(Formatting.BOLD)
-        .append(" ▸ ".asText().formatted(Formatting.RESET).withColor(Formatting.DARK_GRAY))
+    private val prefix: Component = "".asText()
+        .withStyle(ChatFormatting.RESET).withStyle(ChatFormatting.GRAY)
+        .append(this.name.asPlainText(ChatFormatting.BLUE))
+        .withStyle(ChatFormatting.BOLD)
+        .append(" ▸ ".asText().withStyle(ChatFormatting.RESET).withColor(ChatFormatting.DARK_GRAY))
     private val exceptionData = MessageMetadata(prefix = false, id = "LiquidChat#exception")
     private val messageData = MessageMetadata(prefix = false)
 
@@ -73,7 +85,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
         .handler {
             if (!chatClient.connected) {
                 chat(
-                    prefix, translation("liquidbounce.liquidchat.notConnected").formatted(Formatting.GRAY),
+                    prefix, translation("liquidbounce.liquidchat.notConnected").withStyle(ChatFormatting.GRAY),
                     metadata = exceptionData
                 )
                 return@handler
@@ -81,7 +93,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
 
             if (!chatClient.loggedIn) {
                 chat(
-                    prefix, translation("liquidbounce.liquidchat.notLoggedIn").formatted(Formatting.GRAY),
+                    prefix, translation("liquidbounce.liquidchat.notLoggedIn").withStyle(ChatFormatting.GRAY),
                     metadata = exceptionData
                 )
                 return@handler
@@ -96,7 +108,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
         .handler {
             if (!chatClient.connected) {
                 chat(
-                    prefix, translation("liquidbounce.liquidchat.notConnected").formatted(Formatting.GRAY),
+                    prefix, translation("liquidbounce.liquidchat.notConnected").withStyle(ChatFormatting.GRAY),
                     metadata = exceptionData
                 )
                 return@handler
@@ -104,7 +116,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
 
             chatClient.sendPacket(ServerRequestJWTPacket())
             chat(
-                prefix, translation("liquidbounce.liquidchat.jwtTokenRequested").formatted(Formatting.GRAY),
+                prefix, translation("liquidbounce.liquidchat.jwtTokenRequested").withStyle(ChatFormatting.GRAY),
                 metadata = exceptionData
             )
         }
@@ -145,16 +157,16 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
 
     @Suppress("unused")
     private val handleChatMessage = suspendHandler<ClientChatMessageEvent> { event ->
-        fun prefix(): MutableText = when (event.chatGroup) {
+        fun prefix(): MutableComponent = when (event.chatGroup) {
             ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT ->
-                event.user.name.asText().formatted(Formatting.GRAY).copyable(copyContent = event.user.name)
-                    .append(" ▸ ".asPlainText(Formatting.DARK_GRAY))
+                event.user.name.asText().withStyle(ChatFormatting.GRAY).copyable(copyContent = event.user.name)
+                    .append(" ▸ ".asPlainText(ChatFormatting.DARK_GRAY))
             ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT ->
-                "[".asText().formatted(Formatting.DARK_GRAY)
+                "[".asText().withStyle(ChatFormatting.DARK_GRAY)
                     .append(
-                        event.user.name.asText().formatted(Formatting.BLUE).copyable(copyContent = event.message)
+                        event.user.name.asText().withStyle(ChatFormatting.BLUE).copyable(copyContent = event.message)
                     )
-                    .append("] ".asPlainText(Formatting.DARK_GRAY))
+                    .append("] ".asPlainText(ChatFormatting.DARK_GRAY))
         }
 
         writeChat(prefix().append(regular(event.message).copyable(copyContent = event.message)))
@@ -221,7 +233,7 @@ object ModuleLiquidChat : ClientModule("LiquidChat", Category.CLIENT, hide = tru
         }
     }
 
-    private fun writeChat(message: Text) {
+    private fun writeChat(message: Component) {
         if (!inGame) {
             logger.info("[Chat] $message")
         } else {

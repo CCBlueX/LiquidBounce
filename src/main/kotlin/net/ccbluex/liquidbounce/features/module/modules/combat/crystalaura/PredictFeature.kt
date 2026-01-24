@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,19 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.getDamageFromExplosion
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 
 /**
@@ -66,13 +66,13 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
     private val checkIntersect by boolean("CheckIntersect", true)
 
     companion object {
-        fun willBeBlocked(box: Box, target: LivingEntity, basePlace: Boolean): Boolean {
+        fun willBeBlocked(box: AABB, target: LivingEntity, basePlace: Boolean): Boolean {
             return SelfPredict.willBeBlocked(box, null, basePlace) ||
-                (target is PlayerEntity && TargetPredict.willBeBlocked(box, target, basePlace))
+                (target is Player && TargetPredict.willBeBlocked(box, target, basePlace))
         }
     }
 
-    fun willBeBlocked(box: Box, target: PlayerEntity?, basePlace: Boolean): Boolean {
+    fun willBeBlocked(box: AABB, target: Player?, basePlace: Boolean): Boolean {
         if (!enabled || !checkIntersect) {
             return false
         }
@@ -81,7 +81,7 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
 
         val boundingBox = target?.boundingBox ?: player.boundingBox
         val halfWidth = abs(boundingBox.maxX - boundingBox.minX) / 2.0
-        val predictedBoundingBox = Box(
+        val predictedBoundingBox = AABB(
             simulation.x - halfWidth,
             simulation.y,
             simulation.z - halfWidth,
@@ -102,9 +102,9 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
     }
 
     fun getDamage(
-        player: PlayerEntity,
+        player: Player,
         ticks: Int,
-        crystal: Vec3d,
+        crystal: Vec3,
         maxBlastResistance: Float? = null,
         include: BlockPos? = null
     ): DamageProvider {
@@ -120,7 +120,7 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
 
         val boundingBox = player.boundingBox
         val halfWidth = abs(boundingBox.maxX - boundingBox.minX) / 2.0
-        val predictedBoundingBox = Box(
+        val predictedBoundingBox = AABB(
             simulated.x - halfWidth,
             simulated.y,
             simulated.z - halfWidth,
@@ -154,7 +154,7 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
         return calcMode.logicalOperator.getDamageProvider(damage, predictedDamage)
     }
 
-    abstract fun getSnapshotPos(player: PlayerEntity?, ticks: Int): Vec3d
+    abstract fun getSnapshotPos(player: Player?, ticks: Int): Vec3
 
     abstract class CalculationMode(
         name: String,
@@ -189,13 +189,13 @@ abstract class PredictFeature(name: String) : ToggleableConfigurable(ModuleCryst
 }
 
 object SelfPredict : PredictFeature("Self") {
-    override fun getSnapshotPos(player: PlayerEntity?, ticks: Int): Vec3d {
+    override fun getSnapshotPos(player: Player?, ticks: Int): Vec3 {
         return PlayerSimulationCache.getSimulationForLocalPlayer().getSnapshotAt(ticks).pos
     }
 }
 
 object TargetPredict : PredictFeature("Target") {
-    override fun getSnapshotPos(player: PlayerEntity?, ticks: Int): Vec3d {
+    override fun getSnapshotPos(player: Player?, ticks: Int): Vec3 {
         return PlayerSimulationCache.getSimulationForOtherPlayers(player!!).getSnapshotAt(ticks).pos
     }
 }

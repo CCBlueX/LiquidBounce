@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.config.gson.serializer.minecraft
@@ -24,29 +23,29 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.minecraft.SharedConstants
-import net.minecraft.client.network.ServerInfo
+import net.minecraft.client.multiplayer.ServerData
 import java.lang.reflect.Type
-import java.util.*
+import java.util.Base64
 
-object ServerInfoSerializer : JsonSerializer<ServerInfo> {
-    override fun serialize(src: ServerInfo, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
+object ServerInfoSerializer : JsonSerializer<ServerData> {
+    override fun serialize(src: ServerData, typeOfSrc: Type, context: JsonSerializationContext) = JsonObject().apply {
         addProperty("name", src.name)
-        addProperty("address", src.address)
-        addProperty("status", src.status.name)
-        add("playerList", context.serialize(src.playerListSummary))
-        add("label", context.serialize(src.label))
-        add("playerCountLabel", context.serialize(src.playerCountLabel))
+        addProperty("address", src.ip)
+        addProperty("status", src.state().name)
+        add("playerList", context.serialize(src.playerList))
+        add("label", context.serialize(src.motd))
+        add("playerCountLabel", context.serialize(src.status))
         add("version", context.serialize(src.version))
-        addProperty("protocolVersion", src.protocolVersion)
-        addProperty("protocolVersionMatches", src.protocolVersion == SharedConstants.getGameVersion().protocolVersion)
+        addProperty("protocolVersion", src.protocol)
+        addProperty("protocolVersionMatches", src.protocol == SharedConstants.getCurrentVersion().protocolVersion())
         addProperty("ping", src.ping)
         add("players", JsonObject().apply {
             addProperty("max", src.players?.max)
             addProperty("online", src.players?.online)
         })
-        addProperty("resourcePackPolicy", ResourcePolicy.fromMinecraftPolicy(src.resourcePackPolicy).policyName)
+        addProperty("resourcePackPolicy", ResourcePolicy.fromMinecraftPolicy(src.resourcePackStatus).policyName)
 
-        src.favicon?.let {
+        src.iconBytes?.let {
             addProperty("icon", Base64.getEncoder().encodeToString(it))
         }
     }
@@ -57,16 +56,16 @@ enum class ResourcePolicy(val policyName: String) {
     PROMPT("Prompt"), ENABLED("Enabled"), DISABLED("Disabled");
 
     fun toMinecraftPolicy() = when (this) {
-        PROMPT -> ServerInfo.ResourcePackPolicy.PROMPT
-        ENABLED -> ServerInfo.ResourcePackPolicy.ENABLED
-        DISABLED -> ServerInfo.ResourcePackPolicy.DISABLED
+        PROMPT -> ServerData.ServerPackStatus.PROMPT
+        ENABLED -> ServerData.ServerPackStatus.ENABLED
+        DISABLED -> ServerData.ServerPackStatus.DISABLED
     }
 
     companion object {
-        fun fromMinecraftPolicy(policy: ServerInfo.ResourcePackPolicy) = when (policy) {
-            ServerInfo.ResourcePackPolicy.PROMPT -> PROMPT
-            ServerInfo.ResourcePackPolicy.ENABLED -> ENABLED
-            ServerInfo.ResourcePackPolicy.DISABLED -> DISABLED
+        fun fromMinecraftPolicy(policy: ServerData.ServerPackStatus) = when (policy) {
+            ServerData.ServerPackStatus.PROMPT -> PROMPT
+            ServerData.ServerPackStatus.ENABLED -> ENABLED
+            ServerData.ServerPackStatus.DISABLED -> DISABLED
         }
 
         fun fromString(policy: String) = entries.find { it.policyName == policy }

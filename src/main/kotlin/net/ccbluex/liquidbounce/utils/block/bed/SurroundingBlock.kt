@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.block.bed
 
-import net.minecraft.block.Block
+import net.minecraft.world.level.block.Block
 
 @JvmRecord
 data class SurroundingBlock(
@@ -28,5 +28,5 @@ data class SurroundingBlock(
 ) : Comparable<SurroundingBlock> {
     override fun compareTo(other: SurroundingBlock): Int = compareValuesBy(
         this, other,
-        { it.layer }, { -it.count }, { -it.block.hardness }, { it.block.translationKey })
+        { it.layer }, { -it.count }, { -it.block.defaultDestroyTime() }, { it.block.descriptionId })
 }

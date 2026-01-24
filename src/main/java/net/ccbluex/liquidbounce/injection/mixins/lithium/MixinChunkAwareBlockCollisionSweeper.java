@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.injection.mixins.lithium;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
@@ -6,9 +25,9 @@ import net.caffeinemc.mods.lithium.common.entity.movement.ChunkAwareBlockCollisi
 import net.ccbluex.liquidbounce.common.ShapeFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -17,11 +36,11 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Pseudo
 @Mixin(value = ChunkAwareBlockCollisionSweeper.class)
-public class MixinChunkAwareBlockCollisionSweeper {
+public abstract class MixinChunkAwareBlockCollisionSweeper {
 
     @Shadow
     @Final
-    private BlockPos.Mutable pos;
+    private BlockPos.MutableBlockPos pos;
 
     /**
      * Hook collision shape event
@@ -29,9 +48,9 @@ public class MixinChunkAwareBlockCollisionSweeper {
      * @param original voxel shape
      * @return possibly modified voxel shape
      */
-    @ModifyExpressionValue(method = "computeNext()Lnet/minecraft/util/shape/VoxelShape;", at = @At(
+    @ModifyExpressionValue(method = "computeNext()Lnet/minecraft/world/phys/shapes/VoxelShape;", at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/block/ShapeContext;getCollisionShape(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/CollisionView;Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/util/shape/VoxelShape;"
+            target = "Lnet/minecraft/world/phys/shapes/CollisionContext;getCollisionShape(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/CollisionGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/shapes/VoxelShape;"
     ))
     private VoxelShape hookCollisionShape(VoxelShape original, @Local BlockState blockState) {
         if (this.pos == null || ShapeFlag.noShapeChange) {

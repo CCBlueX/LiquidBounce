@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,22 +27,34 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.bold
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.copyable
+import net.ccbluex.liquidbounce.utils.client.highlight
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.toName
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.collection.Filter
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.isNotRoot
 import net.ccbluex.liquidbounce.utils.kotlin.toFullString
 import net.ccbluex.liquidbounce.utils.mappings.EnvironmentRemapper
-import net.minecraft.network.packet.Packet
-import net.minecraft.text.MutableText
-import net.minecraft.util.Formatting
-import net.minecraft.util.Identifier
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.network.protocol.Packet
+import net.minecraft.resources.Identifier
 import okio.appendingSink
 import okio.buffer
 import java.io.File
-import java.lang.reflect.*
+import java.lang.reflect.Field
+import java.lang.reflect.Modifier
+import java.lang.reflect.Type
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 
@@ -53,11 +65,11 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * @author ccetl
  */
-object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
+object ModulePacketLogger : ClientModule("PacketLogger", ModuleCategories.MISC) {
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val clientPackets by clientPackets("ClientPackets", sortedSetOf())
-    private val serverPackets by serverPackets("ServerPackets", sortedSetOf())
+    private val clientPackets by c2sPackets("C2SPackets", sortedSetOf())
+    private val serverPackets by s2cPackets("S2CPackets", sortedSetOf())
     private val showFieldType by boolean("ShowFieldType", true)
 
     private val outputTarget by multiEnumChoice("OutputTarget", OutputTarget.CHAT, canBeNone = false).onChanged {
@@ -106,7 +118,7 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
             return
         }
 
-        val packetId = packet.packetType.id
+        val packetId = packet.type().id
         if (!filter(packetId, if (origin == TransferOrigin.INCOMING) serverPackets else clientPackets)) {
             return
         }
@@ -126,9 +138,9 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
 
                 val text = "".asText()
                 if (origin == TransferOrigin.INCOMING) {
-                    text.append(message("receive").formatted(Formatting.BLUE).bold(true))
+                    text.append(message("receive").withStyle(ChatFormatting.BLUE).bold(true))
                 } else {
-                    text.append(message("send").formatted(Formatting.GRAY).bold(true))
+                    text.append(message("send").withStyle(ChatFormatting.GRAY).bold(true))
                 }
 
                 text.append(" ")
@@ -142,13 +154,13 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
                 text.append(regular(")"))
 
                 if (clazz.isRecord) {
-                    text.append(" (Record)".asPlainText(Formatting.DARK_GRAY))
+                    text.append(" (Record)".asPlainText(ChatFormatting.DARK_GRAY))
                 }
 
                 if (canceled) {
-                    text.append(" (".asPlainText(Formatting.RED))
-                    text.append(message("canceled").formatted(Formatting.RED))
-                    text.append(")".asPlainText(Formatting.RED))
+                    text.append(" (".asPlainText(ChatFormatting.RED))
+                    text.append(message("canceled").withStyle(ChatFormatting.RED))
+                    text.append(")".asPlainText(ChatFormatting.RED))
                 }
 
                 text.appendFields(clazz, packet)
@@ -231,19 +243,19 @@ object ModulePacketLogger : ClientModule("PacketLogger", Category.MISC) {
         return fields
     }
 
-    private fun MutableText.appendFields(clazz: Class<out Packet<*>>, packet: Packet<*>) {
+    private fun MutableComponent.appendFields(clazz: Class<out Packet<*>>, packet: Packet<*>) {
         val fieldTexts = collectFields(clazz, packet).mapToArray { (name, type, value) ->
             buildList {
-                add("- ".asPlainText(Formatting.GRAY))
-                add(name.asText().formatted(Formatting.AQUA).copyable(copyContent = name))
+                add("- ".asPlainText(ChatFormatting.GRAY))
+                add(name.asText().withStyle(ChatFormatting.AQUA).copyable(copyContent = name))
                 if (showFieldType) {
-                    add(": ".asPlainText(Formatting.GRAY))
+                    add(": ".asPlainText(ChatFormatting.GRAY))
                     val typeString = type.toFullString()
-                    add(typeString.asText().formatted(Formatting.YELLOW).copyable(copyContent = typeString))
+                    add(typeString.asText().withStyle(ChatFormatting.YELLOW).copyable(copyContent = typeString))
                 }
-                add(" = ".asPlainText(Formatting.GRAY))
+                add(" = ".asPlainText(ChatFormatting.GRAY))
                 val valueString = value.toString()
-                add(valueString.asText().formatted(Formatting.WHITE).copyable(copyContent = valueString))
+                add(valueString.asText().withStyle(ChatFormatting.WHITE).copyable(copyContent = valueString))
             }.asText()
         }
 

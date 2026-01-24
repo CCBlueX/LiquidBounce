@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.input.InputBind
 
 object ModuleQuickPerspectiveSwap : ClientModule(
-    "QuickPerspectiveSwap", Category.RENDER, disableOnQuit = true, bindAction = InputBind.BindAction.HOLD
+    "QuickPerspectiveSwap", ModuleCategories.RENDER, disableOnQuit = true, bindAction = InputBind.BindAction.HOLD
 ) {
     val rearView by boolean("RearView", false)
 }

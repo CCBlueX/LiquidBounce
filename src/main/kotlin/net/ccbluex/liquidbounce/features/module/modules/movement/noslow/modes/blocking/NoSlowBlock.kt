@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
-import it.unimi.dsi.fastutil.floats.FloatFloatImmutablePair
 import it.unimi.dsi.fastutil.floats.FloatFloatPair
+import net.ccbluex.fastutil.pair
 import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.NoSlowUseActionHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sh
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedInvalidHand
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.isBlocking
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.minecraft.item.consume.UseAction
+import net.minecraft.world.item.ItemUseAnimation
 
 internal object NoSlowBlock : NoSlowUseActionHandler("Blocking") {
 
@@ -49,12 +49,12 @@ internal object NoSlowBlock : NoSlowUseActionHandler("Blocking") {
         )
     }
 
-    override fun getMultiplier(): FloatFloatPair {
+    override fun getMultiplier(forward: Float, sideways: Float): FloatFloatPair {
         if (onlySlowOnServerSide && isBlocking) {
-            return DEFAULT_USE_MUL
+            return forward pair sideways
         }
 
-        return super.getMultiplier()
+        return super.getMultiplier(forward, sideways)
     }
 
     override val running: Boolean
@@ -64,7 +64,7 @@ internal object NoSlowBlock : NoSlowUseActionHandler("Blocking") {
             }
 
             // Check if we are using a block item
-            return (player.isUsingItem && player.activeItem.useAction == UseAction.BLOCK) || isBlocking
+            return (player.isUsingItem && player.useItem.useAnimation == ItemUseAnimation.BLOCK) || isBlocking
         }
 
 }

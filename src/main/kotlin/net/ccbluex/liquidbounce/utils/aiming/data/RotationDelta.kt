@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming.data
 
-import net.minecraft.util.math.Vec2f
+import net.minecraft.world.phys.Vec2
 import kotlin.math.hypot
 
+@JvmRecord
 data class RotationDelta(val deltaYaw: Float, val deltaPitch: Float) {
     fun length() = hypot(deltaYaw, deltaPitch)
-    fun toVec2f() = Vec2f(deltaYaw, deltaPitch)
+    fun toVec2f() = Vec2(deltaYaw, deltaPitch)
 }

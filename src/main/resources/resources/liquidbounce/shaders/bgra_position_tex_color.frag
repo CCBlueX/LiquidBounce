@@ -1,8 +1,6 @@
-#version 410
+#version 330 core
 
 uniform sampler2D Sampler0;
-
-uniform vec4 ColorModulator;
 
 in vec2 texCoord0;
 in vec4 vertexColor;
@@ -15,5 +13,5 @@ void main() {
         discard;
     }
     texColor.rgb = texColor.bgr;
-    fragColor = texColor * vertexColor * ColorModulator;
+    fragColor = texColor * vertexColor;
 }

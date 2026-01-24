@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,8 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.account
 
-import net.minecraft.client.session.Session
-import java.util.*
+import net.minecraft.client.User
+import java.util.Optional
+import java.util.UUID
 
 @Suppress("LongParameterList")
 class SessionWithService(
@@ -29,12 +30,11 @@ class SessionWithService(
     accessToken: String,
     xuid: Optional<String>,
     clientId: Optional<String>,
-    accountType: AccountType?,
     val service: AccountService
-) : Session(username, uuid, accessToken, xuid, clientId, accountType) {
+) : User(username, uuid, accessToken, xuid, clientId) {
 
     companion object {
-        fun getService(session: Session) = when {
+        fun getService(session: User) = when {
             session is SessionWithService -> session.service
             session.couldBeOnline() -> AccountService.MICROSOFT
             else -> AccountService.CRACKED
@@ -46,5 +46,4 @@ class SessionWithService(
 /**
  * Checks if the session is online by checking the account type and if we have a valid access token.
  */
-fun Session.couldBeOnline() = (accountType == Session.AccountType.MOJANG || accountType == Session.AccountType.MSA)
-    && accessToken.isNotBlank() && accessToken.length > 3
+fun User.couldBeOnline() = accessToken.startsWith("eyJra") && accessToken.length >= 13

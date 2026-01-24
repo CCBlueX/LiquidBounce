@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,21 +19,22 @@
 
 package net.ccbluex.liquidbounce.utils.client;
 
-import net.minecraft.text.ClickEvent;
+import net.minecraft.network.chat.ClickEvent;
+import org.jetbrains.annotations.NotNull;
 
 /**
- * Allows {@link net.minecraft.text.MutableText} to execute anything on click.
+ * Allows {@link net.minecraft.network.chat.MutableComponent} to execute anything on click.
  * <p>
  * Known issue: This type cannot be resolved with {@link ClickEvent#CODEC}.
  */
-public record RunnableClickEvent(Runnable action) implements ClickEvent, Runnable {
+public record RunnableClickEvent(Runnable runnable) implements ClickEvent, Runnable {
     @Override
-    public ClickEvent.Action getAction() {
-        return null;
+    public ClickEvent.@NotNull Action action() {
+        return Action.CUSTOM;
     }
 
     @Override
     public void run() {
-        action.run();
+        runnable.run();
     }
 }

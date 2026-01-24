@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.event.events
 
 import com.google.gson.annotations.SerializedName
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.config.gson.accessibleInteropGson
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.Value
@@ -32,15 +32,15 @@ import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
-import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.integration.theme.component.HudComponent
 import net.ccbluex.liquidbounce.utils.block.bed.BedState
-import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.unmodifiable
-import net.minecraft.client.network.ServerInfo
-import net.minecraft.world.GameMode
+import net.minecraft.client.multiplayer.ServerData
+import net.minecraft.world.level.GameType
+import net.minecraft.world.level.block.Block
 
 @Deprecated(
     "The `clickGuiScaleChange` event has been deprecated.",
@@ -85,13 +85,13 @@ class NotificationEvent(val title: String, val message: String, val severity: Se
 }
 
 @Nameable("gameModeChange")
-class GameModeChangeEvent(val gameMode: GameMode) : Event(), WebSocketEvent
+class GameModeChangeEvent(val gameMode: GameType) : Event(), WebSocketEvent
 
 @Nameable("targetChange")
 class TargetChangeEvent(val target: PlayerData?) : Event(), WebSocketEvent
 
 @Nameable("blockCountChange")
-class BlockCountChangeEvent(val count: Int?) : Event(), WebSocketEvent
+class BlockCountChangeEvent(val nextBlock: Block?, val count: Int?) : Event(), WebSocketEvent
 
 @Nameable("bedStateChange")
 class BedStateChangeEvent(val bedStates: Collection<BedState>) : Event(), WebSocketEvent
@@ -175,10 +175,10 @@ class VirtualScreenEvent(
 }
 
 @Nameable("serverPinged")
-class ServerPingedEvent(val server: ServerInfo) : Event(), WebSocketEvent
+class ServerPingedEvent(val server: ServerData) : Event(), WebSocketEvent
 
 @Nameable("componentsUpdate")
-class ComponentsUpdateEvent(val id: String? = null, val components: List<Component>) : Event(), WebSocketEvent {
+class ComponentsUpdateEvent(val id: String? = null, val components: List<HudComponent>) : Event(), WebSocketEvent {
     override val serializer get() = accessibleInteropGson
 }
 
@@ -189,7 +189,7 @@ object RotationUpdateEvent : Event()
 object ResourceReloadEvent : Event()
 
 @Nameable("scaleFactorChange")
-class ScaleFactorChangeEvent(val scaleFactor: Double) : Event(), WebSocketEvent
+class ScaleFactorChangeEvent(val scaleFactor: Int) : Event(), WebSocketEvent
 
 @Nameable("scheduleInventoryAction")
 class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryAction.Chain> = mutableListOf()) : Event() {
@@ -224,3 +224,10 @@ class SelectHotbarSlotSilentlyEvent(val requester: Any?, val slot: Int): Cancell
 
 @Nameable("browserUrlChange")
 class BrowserUrlChangeEvent(val index: Int, val url: String) : Event(), WebSocketEvent
+
+@Nameable("userLoggedIn")
+object UserLoggedInEvent : Event(), WebSocketEvent
+
+@Nameable("userLoggedOut")
+object UserLoggedOutEvent : Event(), WebSocketEvent
+

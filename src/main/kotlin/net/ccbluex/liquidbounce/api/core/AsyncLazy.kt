@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 
 package net.ccbluex.liquidbounce.api.core
 
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import kotlin.reflect.KProperty
@@ -29,26 +29,23 @@ class AsyncLazy<T>(
     private val initializer: suspend () -> T
 ) {
     private val deferred: CompletableDeferred<T> = CompletableDeferred()
-    private var initialized = false
+    private val initialized = atomic(false)
 
     private suspend fun initialize() {
-        if (!initialized) {
-            initialized = true
+        if (initialized.compareAndSet(expect = false, update = true)) {
             try {
                 val result = initializer()
                 deferred.complete(result)
             } catch (e: Throwable) {
                 deferred.completeExceptionally(e)
                 // Reset initialized flag if initialization fails
-                initialized = false
+                initialized.value = false
             }
         }
     }
 
     suspend fun get(): T {
-        if (!initialized) {
-            initialize()
-        }
+        initialize()
         return deferred.await()
     }
 

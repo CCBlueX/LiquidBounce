@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,16 +22,16 @@ import com.mojang.authlib.GameProfile
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.CustomAntiBotMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.HorizonAntiBotMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.IntaveHeavyAntiBotMode
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.MatrixAntiBotMode
-import net.minecraft.entity.Entity
-import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.player.Player
 
-object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
+object ModuleAntiBot : ClientModule("AntiBot", ModuleCategories.MISC) {
 
     val modes = choices("Mode", CustomAntiBotMode, arrayOf(
         CustomAntiBotMode,
@@ -54,7 +54,7 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
     }
 
     private fun reset() = this.modes.choices.forEach {
-        (it as IAntiBotMode).reset()
+        it.reset()
     }
 
     override fun onDisabled() {
@@ -67,7 +67,7 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
     }
 
     fun isADuplicate(profile: GameProfile): Boolean {
-        return network.playerList.count { it.profile.name == profile.name && it.profile.id != profile.id } == 1
+        return network.onlinePlayers.count { it.profile.name == profile.name && it.profile.id != profile.id } == 1
     }
 
     /**
@@ -76,7 +76,7 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
      * Used to prevent false positives when a player is on a minigame such as Practice and joins a duel
      */
     fun isGameProfileUnique(profile: GameProfile): Boolean {
-        return network.playerList.count { it.profile.name == profile.name && it.profile.id == profile.id } == 1
+        return network.onlinePlayers.count { it.profile.name == profile.name && it.profile.id == profile.id } == 1
     }
 
     /**
@@ -87,19 +87,15 @@ object ModuleAntiBot : ClientModule("AntiBot", Category.MISC) {
             return false
         }
 
-        if (player !is PlayerEntity) {
+        if (player !is Player) {
             return false
         }
 
-        if (literalNPC && !network.playerUuids.contains(player.uuid)) {
+        if (literalNPC && !network.onlinePlayerIds.contains(player.uuid)) {
             return true
         }
 
-        return (this.modes.activeChoice as IAntiBotMode).isBot(player)
+        return this.modes.activeChoice.isBot(player)
     }
 
-    interface IAntiBotMode {
-        fun reset() { }
-        fun isBot(entity: PlayerEntity): Boolean
-    }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,37 +19,37 @@
 package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 
 @Suppress("unused")
 object ScriptMovementUtil {
 
     @JvmName("getSpeed")
-    fun getSpeed(): Double = player.sqrtSpeed
+    fun getSpeed(): Double = player.horizontalSpeed
 
     @JvmName("isMoving")
     fun isMoving(): Boolean = player.moving
 
     @JvmName("strafe")
     fun strafe() {
-        player.velocity = player.velocity.withStrafe()
+        player.setDeltaMovement(player.deltaMovement.withStrafe())
     }
 
     @JvmName("strafeWithSpeed")
     fun strafeWithSpeed(speed: Double) {
-        player.velocity = player.velocity.withStrafe(speed = speed)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
     }
 
     @JvmName("strafeWithStrength")
     fun strafeWithStrength(strength: Double) {
-        player.velocity = player.velocity.withStrafe(strength = strength)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(strength = strength))
     }
 
     @JvmName("strafeWithSpeedAndStrength")
     fun strafeWithSpeedAndStrength(speed: Double, strength: Double) {
-        player.velocity = player.velocity.withStrafe(speed = speed, strength = strength)
+        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed, strength = strength))
     }
 
 }

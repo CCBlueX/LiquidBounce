@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,8 +34,8 @@ import net.ccbluex.liquidbounce.config.ShopConfigPreset
 import net.ccbluex.liquidbounce.event.tickConditional
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.NormalPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.QuickPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ItemInfo
@@ -47,8 +47,8 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.kotlin.subList
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.screen.slot.SlotActionType
+import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.world.inventory.ClickType
 import kotlin.math.ceil
 import kotlin.math.min
 
@@ -58,7 +58,7 @@ import kotlin.math.min
  * Automatically buys specific items in a BedWars shop.
  */
 @Suppress("TooManyFunctions")
-object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
+object ModuleAutoShop : ClientModule("AutoShop", ModuleCategories.PLAYER) {
 
     private var shopConfig by enumChoice("Config", ShopConfigPreset.PIKA_NETWORK).onChanged {
         loadAutoShopConfig(it)
@@ -128,7 +128,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
 
         // close the shop after buying items
         if (waitedBeforeTheFirstClick && autoClose && canAutoClose) {
-            player.closeHandledScreen()
+            player.closeContainer()
         }
         reset()
     }
@@ -163,13 +163,13 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
             return
         }
 
-        val prevShopStacks = (mc.currentScreen as GenericContainerScreen).stacks()
-        interaction.clickSlot(
-            (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
+        val prevShopStacks = (mc.screen as ContainerScreen).stacks()
+        interaction.handleInventoryMouseClick(
+            (mc.screen as ContainerScreen).menu.containerId,
             nextCategorySlot,
             0,
-            SlotActionType.PICKUP,
-            mc.player
+            ClickType.PICKUP,
+            mc.player!!
         )
 
         if (ModuleDebug.running) {
@@ -184,12 +184,12 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
     private suspend fun buyItem(itemSlot: Int, shopElement: ShopElement) {
         val currentInventory = AutoShopInventoryManager.getInventoryItems()
 
-        interaction.clickSlot(
-            (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
+        interaction.handleInventoryMouseClick(
+            (mc.screen as ContainerScreen).menu.containerId,
             itemSlot,
             0,
-            SlotActionType.PICKUP,
-            mc.player
+            ClickType.PICKUP,
+            mc.player!!
         )
 
         if (ModuleDebug.running) {
@@ -222,7 +222,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
         val simulationResult = simulateNextPurchases(remainingElements, onlySameCategory = true)
         val slotsToClick = simulationResult.first
         val prevInventory = AutoShopInventoryManager.getInventoryItems()
-        val prevShopStacks = (mc.currentScreen as GenericContainerScreen).stacks()
+        val prevShopStacks = (mc.screen as ContainerScreen).stacks()
 
         slotsToClick.forEachInt { slot ->
             if (slot == -1) {
@@ -231,12 +231,12 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
 
             delay(QuickPurchaseMode.delay.random().toLong())
 
-            interaction.clickSlot(
-                (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
+            interaction.handleInventoryMouseClick(
+                (mc.screen as ContainerScreen).menu.containerId,
                 slot,
                 0,
-                SlotActionType.PICKUP,
-                mc.player
+                ClickType.PICKUP,
+                mc.player!!
             )
 
             if (ModuleDebug.running) {
@@ -272,7 +272,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
     }
 
     private fun hasItemCategoryChanged(prevShopStacks: List<String>): Boolean {
-        val currentShopStacks = (mc.currentScreen as GenericContainerScreen).stacks()
+        val currentShopStacks = (mc.screen as ContainerScreen).stacks()
 
         val difference = currentShopStacks
             .filter { !prevShopStacks.contains(it) }
@@ -455,7 +455,7 @@ object ModuleAutoShop : ClientModule("AutoShop", Category.PLAYER) {
     }
 
     private fun isShopOpen(): Boolean {
-        val screen = mc.currentScreen as? GenericContainerScreen ?: return false
+        val screen = mc.screen as? ContainerScreen ?: return false
 
         val title = screen.title.string.stripMinecraftColorCodes()
         val isTitleValid = currentConfig.traderTitles.any {

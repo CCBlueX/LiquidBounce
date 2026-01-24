@@ -38,7 +38,7 @@
 
     {#if expanded}
         <div class="options">
-            {#each options as o}
+            {#each options as o (o)}
                 <div
                         class="option"
                         class:active={o === value}
@@ -53,6 +53,7 @@
 
 <style lang="scss">
   @use "../../../../colors.scss" as *;
+  @use "../../icon-settings-expand" as *;
 
   .dropdown {
     position: relative;
@@ -90,20 +91,7 @@
     }
 
     .text::after {
-      content: "";
-      display: block;
-      position: absolute;
-      height: 10px;
-      width: 10px;
-      right: 10px;
-      top: 50%;
-      background-image: url("/img/clickgui/icon-settings-expand.svg");
-      background-position: center;
-      background-repeat: no-repeat;
-      transform-origin: 50% 50%;
-      transform: translateY(-50%) rotate(-90deg);
-      transition: ease opacity 0.2s,
-      ease transform 0.4s;
+      @include icon-settings-expand();
     }
   }
 

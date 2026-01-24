@@ -133,7 +133,8 @@
 </div>
 
 <style lang="scss">
-  @use "../../colors.scss" as *;
+  @use "../../colors" as *;
+  @use "./icon-settings-expand" as *;
 
   .module {
     position: relative;
@@ -178,21 +179,8 @@
 
     &.has-settings {
       .name::after {
-        content: "";
-        display: block;
-        position: absolute;
-        height: 10px;
-        width: 10px;
-        right: 15px;
-        top: 50%;
-        background-image: url("/img/clickgui/icon-settings-expand.svg");
-        background-position: center;
-        background-repeat: no-repeat;
+        @include icon-settings-expand($right: 15px);
         opacity: 0.5;
-        transform-origin: 50% 50%;
-        transform: translateY(-50%) rotate(-90deg);
-        transition: ease opacity 0.2s,
-        ease transform 0.4s;
       }
 
       &.expanded .name::after {

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.input.InputTracker.timeSinceLastPress
-import net.minecraft.item.BlockItem
-import net.minecraft.item.Item
-import net.minecraft.item.ProjectileItem
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ProjectileItem
 import java.util.function.Predicate
 
 /**
@@ -34,7 +34,7 @@ import java.util.function.Predicate
  *
  * Allows you to place blocks faster.
  */
-object ModuleFastPlace : ClientModule("FastPlace", Category.WORLD) {
+object ModuleFastPlace : ClientModule("FastPlace", ModuleCategories.WORLD) {
 
     private val cooldown by intRange("Cooldown", 0..0, 0..4, "ticks")
     private val applyTo by multiEnumChoice("ApplyTo", ApplyTo.entries)
@@ -42,12 +42,12 @@ object ModuleFastPlace : ClientModule("FastPlace", Category.WORLD) {
 
     @Suppress("unused")
     private val useCooldownHandler = handler<UseCooldownEvent> { event ->
-        val mainHandItem = player.mainHandStack.item
-        val offHandItem = player.offHandStack.item
+        val mainHandItem = player.mainHandItem.item
+        val offHandItem = player.offhandItem.item
 
         if (applyTo.any {
                 it.condition.test(mainHandItem) || it.condition.test(offHandItem)
-            } && (startDelay <= 0 || mc.options.useKey.timeSinceLastPress >= startDelay)) {
+            } && (startDelay <= 0 || mc.options.keyUse.timeSinceLastPress >= startDelay)) {
             event.cooldown = cooldown.random()
         }
     }

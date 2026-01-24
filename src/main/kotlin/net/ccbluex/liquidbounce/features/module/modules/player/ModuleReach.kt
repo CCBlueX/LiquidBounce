@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
  * Reach module
  *
  * Increases your reach.
+ *
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinPlayer
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.item.MixinAttackRange
  */
 
-object ModuleReach : ClientModule("Reach", Category.PLAYER) {
-    val combatReach by float("CombatReach", 4.2f, 3f..8f).apply { tagBy(this) }
-    val blockReach by float("BlockReach", 5f, 4.5f..8f)
+object ModuleReach : ClientModule("Reach", ModuleCategories.PLAYER) {
+    val entityInteractionReach by float("EntityInteractionReach", 1.2f, 0f..64f)
+    val blockInteractionReach by float("BlockInteractionReach", 0.5f, 0f..64f)
+
+    // For 1.21.11 Spear
+    val componentMinRangeReach by float("ComponentMinRangeReach", 0f, 0f..64f)
+    val componentMaxRangeReach by float("ComponentMaxRangeReach", 0f, 0f..64f)
 }
