@@ -35,9 +35,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
-import net.ccbluex.liquidbounce.integration.IntegrationListener;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
@@ -214,8 +214,9 @@ public abstract class MixinMinecraft {
 
         // For debugging purposes, will be removed until we have a stable release
         if (Util.getPlatform() == Util.OS.WINDOWS) {
-            if (BrowserBackendManager.INSTANCE.getBrowserBackend().isInitialized() &&
-                    BrowserBackendManager.INSTANCE.getBrowserBackend().getAccelerationFlags().isSupported()) {
+            if (BrowserBackendManager.INSTANCE.getBackend() != null &&
+                BrowserBackendManager.INSTANCE.getBackend().isInitialized() &&
+                    BrowserBackendManager.INSTANCE.getBackend().getAccelerationFlags().isSupported()) {
                 var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
 
                 if (accelerated != null && accelerated.get()) {
@@ -411,7 +412,7 @@ public abstract class MixinMinecraft {
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 4, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void passthroughInputHandler(CallbackInfo ci, @Local ProfilerFiller profiler) {
         if (this.overlay == null && this.player != null && this.level
-            != null && IntegrationListener.isClientScreen(this.screen)) {
+            != null && ScreenManager.isClientScreen(this.screen)) {
             profiler.popPush("Keybindings");
 
             if (ModuleAutoBreak.INSTANCE.getEnabled()) {
@@ -442,7 +443,7 @@ public abstract class MixinMinecraft {
     private boolean injectFixAttackCooldownOnVirtualBrowserScreen(Minecraft instance, int value) {
         // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
         // unintended modification to the attack cooldown, which is not intended.
-        return !IntegrationListener.isClientScreen(this.screen);
+        return !ScreenManager.isClientScreen(this.screen);
     }
 
     @Inject(method = "clearDownloadedResourcePacks", at = @At("HEAD"))

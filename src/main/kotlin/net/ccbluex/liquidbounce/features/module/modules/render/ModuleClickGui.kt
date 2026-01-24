@@ -33,11 +33,11 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitSeconds
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.integration.IntegrationListener
-import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
-import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
+import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomMinecraftScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -74,7 +74,7 @@ object ModuleClickGui :
                 close()
             }
 
-            if (mc.screen is VirtualDisplayScreen || mc.screen is ClickScreen) {
+            if (mc.screen is CustomMinecraftScreen || mc.screen is ClickScreen) {
                 onEnabled()
             }
         }
@@ -88,7 +88,7 @@ object ModuleClickGui :
     }
 
     val isInSearchBar: Boolean
-        get() = (mc.screen is VirtualDisplayScreen || mc.screen is ClickScreen) && isTyping
+        get() = (mc.screen is CustomMinecraftScreen || mc.screen is ClickScreen) && isTyping
 
     object Snapping : ToggleableConfigurable(this, "Snapping", true) {
 
@@ -119,7 +119,7 @@ object ModuleClickGui :
 
         mc.setScreen(
             if (clickGuiBrowser == null) {
-                VirtualDisplayScreen(VirtualScreenType.CLICK_GUI)
+                CustomMinecraftScreen(CustomScreenType.CLICK_GUI)
             } else {
                 ClickScreen()
             }
@@ -133,10 +133,10 @@ object ModuleClickGui :
         }
 
         clickGuiBrowser = ThemeManager.openInputAwareImmediate(
-            VirtualScreenType.CLICK_GUI,
+            CustomScreenType.CLICK_GUI,
             true,
             priority = 20,
-            settings = IntegrationListener.browserSettings
+            settings = ScreenManager.browserSettings
         ) {
             mc.screen is ClickScreen
         }
@@ -166,7 +166,7 @@ object ModuleClickGui :
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent>(priority = READ_FINAL_STATE) {
-        tree(IntegrationListener.browserSettings)
+        tree(ScreenManager.browserSettings)
         open()
     }
 

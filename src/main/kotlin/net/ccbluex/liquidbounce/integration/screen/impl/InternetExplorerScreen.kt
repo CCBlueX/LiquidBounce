@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration
+package net.ccbluex.liquidbounce.integration.screen.impl
 
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserUrlChangeEvent
@@ -31,7 +31,7 @@ import net.minecraft.network.chat.Component
 
 val browserBrowsers = mutableListOf<Browser>()
 
-class BrowserScreen(val url: String, title: Component = PlainText.EMPTY) : Screen(title) {
+class InternetExplorerScreen(val url: String, title: Component = PlainText.EMPTY) : Screen(title) {
 
     // todo: implement multi-tab support and tab switching
     var selectedIndex = 0
@@ -44,13 +44,12 @@ class BrowserScreen(val url: String, title: Component = PlainText.EMPTY) : Scree
         val viewport = BrowserViewport(
             20,
             20,
-            ((width - 20) * mc.window.guiScale).toInt(),
-            ((height - 50) * mc.window.guiScale).toInt()
+            (width - 20) * mc.window.guiScale,
+            (height - 50) * mc.window.guiScale
         )
 
         if (browserBrowsers.isEmpty()) {
-            val browser = BrowserBackendManager.browserBackend
-
+            val browser = BrowserBackendManager.backend ?: return
             browser.createBrowser(url, viewport, priority = 20) { mc.screen == this }
                 .also { browserBrowsers.add(it) }
             return

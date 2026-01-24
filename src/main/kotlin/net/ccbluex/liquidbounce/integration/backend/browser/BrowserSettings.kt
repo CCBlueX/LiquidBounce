@@ -21,9 +21,10 @@ package net.ccbluex.liquidbounce.integration.backend.browser
 
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
-import net.ccbluex.liquidbounce.integration.IntegrationListener
+import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
-import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager.browserBackend
+import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager.backend
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
 import kotlin.math.max
@@ -48,7 +49,7 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
         private set
 
     init {
-        val accelerationFlags = browserBackend.accelerationFlags
+        val accelerationFlags = backend?.accelerationFlags ?: BrowserAccelerationFlags.UNSUPPORTED
 
         if (!BrowserBackendManager.disableAcceleration && accelerationFlags.isSupported) {
             accelerated = if (accelerationFlags.isBeta) {
@@ -57,7 +58,7 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
                 boolean("Accelerated", true)
             }.onChanged {
                 mc.execute {
-                    IntegrationListener.restart()
+                    ScreenManager.restart()
                     mc.updateTitle()
                 }
             }

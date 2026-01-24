@@ -31,10 +31,10 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud.themes
-import net.ccbluex.liquidbounce.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
+import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomOverlay
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.integration.theme.component.components.minimap.MinimapHudComponent
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -53,13 +53,16 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
 
     override val running
         get() = this.enabled && !isDestructed
-
-    private val visible: Boolean
-        get() = !isHidingNow && inGame
-
     override val baseKey: String
         get() = "liquidbounce.module.hud"
-    private var browserBrowser: Browser? = null
+
+    private val isVisible: Boolean
+        get() = !isHidingNow && inGame
+
+    private var overlay = CustomOverlay(
+        screenType = CustomScreenType.HUD,
+        browserSettings = BrowserSettings(60, ::reopen)
+    )
 
     init {
         tree(Blur)
@@ -80,8 +83,6 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
 
     val isBlurEffectActive
         get() = Blur.enabled && !(mc.options.hideGui && mc.screen == null)
-
-    private val browserSettings = BrowserSettings(60, ::reopen)
 
     val themes = tree(Configurable("Themes"))
 
@@ -108,68 +109,43 @@ object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hi
             chat(markAsError(message("hidingAppearance")))
         }
 
-        if (visible) {
-            open()
+        if (isVisible) {
+            overlay.open()
         }
     }
 
     override fun onDisabled() {
-        // Closes tab entirely
-        close()
+        overlay.close()
     }
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
         tree(GlobalBrowserSettings)
-        tree(browserSettings)
+        tree(overlay.browserSettings)
     }
 
     @Suppress("unused")
     private val screenHandler = handler<ScreenEvent> { event ->
         // Close the tab when the HUD is not running, is hiding now, or the player is not in-game
-        if (!enabled || !visible) {
-            close()
+        if (!enabled || !isVisible) {
+            overlay.close()
             return@handler
         }
 
         // Otherwise, open the tab and set its visibility
-        val browserTab = open()
-        browserTab.visible = event.screen !is DisconnectedScreen && event.screen !is LevelLoadingScreen
+        overlay.visible = event.screen !is DisconnectedScreen && event.screen !is LevelLoadingScreen
     }
 
     @Suppress("unused")
     private val disconnectHandler = handler<DisconnectEvent> {
-        close()
-    }
-
-    private fun open(): Browser {
-        browserBrowser?.let { return it }
-
-        return ThemeManager.openImmediate(
-            VirtualScreenType.HUD,
-            true,
-            browserSettings
-        ).also { browser ->
-            browserBrowser = browser
-        }
-    }
-
-    private fun close() {
-        browserBrowser?.let {
-            it.close()
-            browserBrowser = null
-        }
+        overlay.close()
     }
 
     fun reopen() {
-        close()
-        if (enabled && visible) {
-            open()
+        overlay.close()
+        if (enabled && isVisible) {
+            overlay.open()
         }
-    }
-
-    fun disableBlur() {
-        Blur.enabled = false
     }
 
 }
