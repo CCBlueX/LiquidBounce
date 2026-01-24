@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.backtrack
 
-import com.google.common.collect.Queues
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TickPacketProcessEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.PacketSnapshot
+import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -46,7 +46,6 @@ import net.ccbluex.liquidbounce.utils.entity.squareBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
 import net.minecraft.client.renderer.LightTexture
-import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ClientboundDisconnectPacket
 import net.minecraft.network.protocol.game.ClientboundEntityPositionSyncPacket
 import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
@@ -95,9 +94,6 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         doNotIncludeAlways()
     }
 
-    val delayedPacketQueue = Queues.newConcurrentLinkedQueue<PacketSnapshot>()
-    val packetProcessQueue = Queues.newConcurrentLinkedQueue<Packet<*>>()
-
     private val chronometer = Chronometer()
     private val trackingBufferChronometer = Chronometer()
     private val attackChronometer = Chronometer()
@@ -105,28 +101,35 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
     private var shouldPause = false
 
     var target: Entity? = null
-    private var position: VecDeltaCodec? = null
+    private val position = VecDeltaCodec()
 
     var currentDelay = delay.random()
 
-    val arePacketQueuesEmpty
-        get() = delayedPacketQueue.isEmpty() && packetProcessQueue.isEmpty()
-
     @Suppress("unused")
-    private val packetHandler = handler<PacketEvent> { event ->
-        if (event.origin != TransferOrigin.INCOMING || event.isCancelled) {
-            return@handler
-        }
-
-        if (arePacketQueuesEmpty && !shouldCancelPackets()) {
+    private val queuePacketHandler = handler<QueuePacketEvent> { event ->
+        if (event.origin != TransferOrigin.INCOMING) {
             return@handler
         }
 
         val packet = event.packet
+        val shouldCancel = shouldCancelPackets()
+        val hasQueuedIncoming = hasQueuedIncoming()
+
+        if (packet == null) {
+            if (shouldCancel || hasQueuedIncoming) {
+                event.action = PacketQueueManager.Action.PASS
+            }
+            return@handler
+        }
+
+        if (!hasQueuedIncoming && !shouldCancel) {
+            return@handler
+        }
 
         when (packet) {
             // Ignore message-related packets
             is ServerboundChatPacket, is ClientboundSystemChatPacket, is ServerboundChatCommandPacket -> {
+                event.action = PacketQueueManager.Action.PASS
                 return@handler
             }
 
@@ -139,6 +142,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
             // Ignore own hurt sounds
             is ClientboundSoundPacket -> {
                 if (packet.sound.value() == SoundEvents.PLAYER_HURT) {
+                    event.action = PacketQueueManager.Action.PASS
                     return@handler
                 }
             }
@@ -160,24 +164,23 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         if (entityPacket || positionPacket || syncPacket) {
             val pos = when (packet) {
                 is ClientboundMoveEntityPacket ->
-                    position?.decode(packet.xa.toLong(), packet.ya.toLong(), packet.za.toLong())
+                    position.decode(packet.xa.toLong(), packet.ya.toLong(), packet.za.toLong())
                 is ClientboundTeleportEntityPacket ->
-                    Vec3(packet.change.position.x, packet.change.position.y, packet.change.position.z)
-                else -> (packet as ClientboundEntityPositionSyncPacket).values.position()
+                    packet.change.position
+                else -> (packet as ClientboundEntityPositionSyncPacket).values.position
             } ?: return@handler
-            position?.setBase(pos)
+            position.setBase(pos)
 
             // Is the target's actual position closer than its tracked position?
-            if (target.squareBoxedDistanceTo(player, pos!!) < target.squaredBoxedDistanceTo(player)) {
+            if (target.squareBoxedDistanceTo(player, pos) < target.squaredBoxedDistanceTo(player)) {
                 // Process all packets. We want to be able to hit the enemy, not the opposite.
-                processPackets(true)
+                event.action = PacketQueueManager.Action.FLUSH
                 // And stop right here. No need to cancel further packets.
                 return@handler
             }
         }
 
-        event.cancelEvent()
-        delayedPacketQueue.add(PacketSnapshot(packet, event.origin, System.currentTimeMillis()))
+        event.action = PacketQueueManager.Action.QUEUE
     }
 
     private sealed class RenderChoice(name: String) : Choice(name) {
@@ -186,7 +189,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
 
         protected fun getEntityPosition(): Pair<Entity, Vec3>? {
             val entity = target ?: return null
-            val pos = position?.base ?: return null
+            val pos = position.base
             return entity to pos
         }
     }
@@ -270,6 +273,24 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         }
     }
 
+    @Suppress("unused")
+    private val tickPacketProcessHandler = handler<TickPacketProcessEvent> {
+        val hadQueuedIncoming = hasQueuedIncoming()
+
+        if (running && shouldCancelPackets()) {
+            val now = System.currentTimeMillis()
+            PacketQueueManager.flush { snapshot ->
+                snapshot.origin == TransferOrigin.INCOMING && snapshot.timestamp <= now - currentDelay
+            }
+        } else if (hadQueuedIncoming) {
+            PacketQueueManager.flush(TransferOrigin.INCOMING)
+        }
+
+        if (!hasQueuedIncoming()) {
+            currentDelay = delay.random()
+        }
+    }
+
     private fun getTargetEntity(): Entity? {
         return when (targetMode) {
             Mode.ATTACK -> null // the attack handler will handle this
@@ -315,7 +336,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
             clear(resetChronometer = false)
 
             // Instantly set new position, so it does not look like the box was created with delay
-            position = VecDeltaCodec().apply { this.base = enemy.positionCodec.base }
+            position.base = enemy.positionCodec.base
         }
 
         target = enemy
@@ -329,21 +350,11 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         clear(true)
     }
 
-    fun processPackets(clear: Boolean = false) {
-        delayedPacketQueue.removeIf {
-            if (clear || it.timestamp <= System.currentTimeMillis() - currentDelay) {
-                packetProcessQueue.add(it.packet)
-                return@removeIf true
-            }
-            false
-        }
-    }
-
     fun clear(handlePackets: Boolean = true, clearOnly: Boolean = false, resetChronometer: Boolean = true) {
         if (handlePackets && !clearOnly) {
-            processPackets(true)
+            PacketQueueManager.flush(TransferOrigin.INCOMING)
         } else if (clearOnly) {
-            delayedPacketQueue.clear()
+            PacketQueueManager.packetQueue.removeIf { snapshot -> snapshot.origin == TransferOrigin.INCOMING }
         }
 
         if (target != null && resetChronometer) {
@@ -351,7 +362,7 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
         }
 
         target = null
-        position = null
+        position.base = Vec3.ZERO
     }
 
     private fun shouldBacktrack(target: Entity): Boolean {
@@ -370,10 +381,14 @@ object ModuleBacktrack : ClientModule("Backtrack", ModuleCategories.COMBAT) {
             !attackChronometer.hasElapsed(lastAttackTimeToWork.toLong())
     }
 
-    fun isLagging() = running && !arePacketQueuesEmpty
+    fun isLagging() = running && hasQueuedIncoming()
 
     private fun shouldPause() = pauseOnHurtTime.enabled && shouldPause
 
     fun shouldCancelPackets() =
         target?.let { target -> target.isAlive && shouldBacktrack(target) } == true
+
+    private fun hasQueuedIncoming() =
+        PacketQueueManager.packetQueue.any { snapshot -> snapshot.origin == TransferOrigin.INCOMING }
+
 }
