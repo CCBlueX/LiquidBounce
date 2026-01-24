@@ -258,23 +258,32 @@ object ScreenManager : EventListener {
     }
 
     private fun handleCurrentScreen(screen: Screen?): Boolean {
-        return when (screen) {
-            !is CustomMinecraftScreen if (HideAppearance.isHidingNow || ClientInteropServer.isSkipping) -> {
-                closeScreen()
-                false
-            }
-            is CustomMinecraftScreen -> false
-            else -> {
-                // Are we currently playing the game?
-                if (mc.level != null && screen == null) {
-                    closeScreen()
-
+        if (HideAppearance.isHidingNow || ClientInteropServer.isSkipping) {
+            return if (screen is CustomMinecraftScreen) {
+                val original = screen.originalScreen
+                if (original is CustomMinecraftScreen) {
                     return false
                 }
 
-                handleCurrentMinecraftScreen(screen ?: TitleScreen())
+                mc.setScreen(original)
+                true
+            } else {
+                closeScreen()
+                false
             }
         }
+
+        if (screen is CustomMinecraftScreen) {
+            return false
+        }
+
+        // Are we currently playing the game?
+        if (mc.level != null && screen == null) {
+            closeScreen()
+            return false
+        }
+
+        return handleCurrentMinecraftScreen(screen ?: TitleScreen())
     }
 
     /**
