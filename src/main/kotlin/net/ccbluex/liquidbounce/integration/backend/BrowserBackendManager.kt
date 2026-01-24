@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.integration.backend.backends.cef.CefBrowserBacke
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
+import net.ccbluex.liquidbounce.utils.client.env
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
@@ -36,10 +37,9 @@ object BrowserBackendManager : EventListener {
 
     val browserBackend: BrowserBackend = CefBrowserBackend()
 
-    val isSkipping = System.getenv("LB_BROWSER_SKIP") == "true"
-        || System.getProperty("net.ccbluex.liquidbounce.browser.skip") == "true"
-    val disableAcceleration = System.getenv("LB_BROWSER_DISABLE_ACCELERATION") == "true"
-        || System.getProperty("net.ccbluex.liquidbounce.browser.disableAcceleration") == "true"
+    val isSkipping = env("LB_BROWSER_SKIP", "net.ccbluex.liquidbounce.browser.skip") == "true"
+    val disableAcceleration = env("LB_BROWSER_DISABLE_ACCELERATION",
+        "net.ccbluex.liquidbounce.browser.disableAcceleration") == "true"
 
     fun init() {
         PersistentLocalStorage

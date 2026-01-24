@@ -27,19 +27,18 @@ import io.netty.handler.codec.http.HttpRequest
 import io.netty.handler.codec.http.cookie.DefaultCookie
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder
+import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer.AUTH_CODE
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.netty.http.middleware.Middleware
 import net.ccbluex.netty.http.model.RequestContext
 import net.ccbluex.netty.http.util.httpUnauthorized
-import org.apache.commons.lang3.RandomStringUtils
 
 class AuthMiddleware : Middleware.OnRequest, Middleware.OnResponse,
     Middleware.OnWebSocketUpgrade {
 
     companion object {
 
-        val AUTH_CODE: String = RandomStringUtils.secure().nextAlphanumeric(16)
         const val AUTH_COOKIE_NAME = "lb_auth"
         const val AUTH_CODE_PARAM = "lb_code"
 
