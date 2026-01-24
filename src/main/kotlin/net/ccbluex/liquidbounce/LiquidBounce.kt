@@ -350,6 +350,10 @@ object LiquidBounce : EventListener {
             }
             launch {
                 ConfigSystem.load(ClientAccountManager)
+                if (ClientAccount.ENV_ACCOUNT != null) {
+                    ClientAccountManager.clientAccount = ClientAccount.ENV_ACCOUNT
+                }
+
                 if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT) {
                     runCatching {
                         ClientAccountManager.clientAccount.renew()
