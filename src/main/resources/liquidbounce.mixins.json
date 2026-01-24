@@ -9,6 +9,7 @@
     "authlib.MixinMinecraftClient",
     "authlib.MixinYggdrasilMinecraftSessionService",
     "authlib.MixinYggdrasilMinecraftSessionServiceAccessor",
+    "blaze3d.MixinGpuBuffer",
     "blaze3d.MixinRenderSystem",
     "djl.MixinUtils",
     "lithium.MixinChunkAwareBlockCollisionSweeper",
