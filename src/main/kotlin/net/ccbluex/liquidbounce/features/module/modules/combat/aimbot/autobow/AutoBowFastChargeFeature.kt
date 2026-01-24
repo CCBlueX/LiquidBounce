@@ -45,8 +45,8 @@ object AutoBowFastChargeFeature : ToggleableConfigurable(ModuleAutoBow, "FastCha
     private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
     @Suppress("unused")
-    val tickRepeatable = tickHandler {
-        val currentItem = player.useItem
+    private val tickRepeatable = tickHandler {
+        val currentItem = if (player.isUsingItem) player.useItem else return@tickHandler
 
         // Should speed up game ticks when using bow
         if (currentItem?.item is BowItem) {
