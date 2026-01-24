@@ -16,26 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.minecraft.client.Minecraft
-import net.minecraft.util.Util
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
+package net.ccbluex.liquidbounce.config.types
 
-val logger: Logger = LogManager.getLogger(CLIENT_NAME)
+import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 
-val inGame: Boolean
-    get() = Minecraft.getInstance()?.let { mc -> mc.player != null && mc.level != null } == true
-
-/**
- * Open uri in browser
- */
-fun browseUrl(url: String) = Util.getPlatform().openUri(url)
-
-/**
- * Get environment variable or system property.
- */
-fun env(name: String, property: String) =
-    (System.getenv(name) ?: System.getProperty(property))?.takeIf { string -> string.isNotBlank() }
+internal class Vec3Value<T : Any>(
+    name: String,
+    aliases: List<String>,
+    default: T,
+    /**
+     * For theme only
+     */
+    @Exclude
+    val useLocateButton: Boolean,
+    valueType: ValueType,
+) : Value<T>(name, aliases, default, valueType)

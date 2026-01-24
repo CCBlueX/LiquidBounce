@@ -123,7 +123,12 @@ object IntegrationListener : EventListener {
         virtualOpen(type = type)
     }
 
-    fun virtualOpen(theme: Theme = ThemeManager.theme, type: VirtualScreenType) {
+    fun virtualOpen(theme: Theme? = ThemeManager.theme, type: VirtualScreenType) {
+        if (theme == null) {
+            logger.warn("Theme is null, can't open virtual screen.")
+            return
+        }
+
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.type == type) {
             return
@@ -257,7 +262,7 @@ object IntegrationListener : EventListener {
 
         // F12 to toggle GPU acceleration
         if (event.action == GLFW.GLFW_PRESS && keyCode == GLFW.GLFW_KEY_F12) {
-            if (!BrowserBackendManager.browserBackend.isAccelerationSupported) {
+            if (!BrowserBackendManager.browserBackend.accelerationFlags.isSupported) {
                 logger.warn("GPU acceleration is not supported by the current browser backend.")
                 return@handler
             }

@@ -211,7 +211,7 @@ class AccelerationAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Acce
 
         return FloatFloatPair.of(
             prevDiff.deltaYaw + yawAccel + yawErrorProvider.getError(yawAccel),
-            prevDiff.deltaPitch + pitchAccel + pitchErrorProvider.getError(yawAccel)
+            prevDiff.deltaPitch + pitchAccel + pitchErrorProvider.getError(pitchAccel)
         )
     }
 

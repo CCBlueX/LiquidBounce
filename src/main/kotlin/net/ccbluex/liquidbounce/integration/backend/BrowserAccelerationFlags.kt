@@ -16,26 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.minecraft.client.Minecraft
-import net.minecraft.util.Util
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
-
-val logger: Logger = LogManager.getLogger(CLIENT_NAME)
-
-val inGame: Boolean
-    get() = Minecraft.getInstance()?.let { mc -> mc.player != null && mc.level != null } == true
+package net.ccbluex.liquidbounce.integration.backend
 
 /**
- * Open uri in browser
+ * Determines if acceleration is supported on the current system.
+ * Is In Beta is a flag to prevent it from being used by default on a supported
+ * but not tested system.
  */
-fun browseUrl(url: String) = Util.getPlatform().openUri(url)
-
-/**
- * Get environment variable or system property.
- */
-fun env(name: String, property: String) =
-    (System.getenv(name) ?: System.getProperty(property))?.takeIf { string -> string.isNotBlank() }
+data class BrowserAccelerationFlags(val isSupported: Boolean, val isBeta: Boolean) {
+    companion object {
+        @JvmField
+        val UNSUPPORTED = BrowserAccelerationFlags(isSupported = false, isBeta = false)
+    }
+}

@@ -26,13 +26,21 @@ import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.systems.RenderPass
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.GpuTextureView
+import com.mojang.blaze3d.vertex.VertexFormat
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.gpuDevice
+import net.minecraft.client.renderer.texture.AbstractTexture
 import org.joml.Matrix4fc
 import java.util.OptionalDouble
 import java.util.OptionalInt
 import java.util.function.Supplier
+
+inline fun RenderPass.bindTextures(textures: Map<String, AbstractTexture?>) =
+    textures.forEach { bindTexture(it.key, it.value) }
+
+inline fun RenderPass.bindTexture(name: String, texture: AbstractTexture?) =
+    bindTexture(name, texture?.textureView, texture?.sampler)
 
 inline fun RenderPass.bindDefaultUniforms() = RenderSystem.bindDefaultUniforms(this)
 
@@ -56,7 +64,7 @@ inline fun RenderPass.bindDynamicTransformsUniform(gpuBufferSlice: GpuBufferSlic
     setUniform("DynamicTransforms", gpuBufferSlice)
 }
 
-inline fun RenderPass.setupGlobalScissor() {
+inline fun RenderPass.setupRenderTypeScissor() {
     val scissorState = RenderSystem.getScissorStateForRenderTypeDraws()
     if (scissorState.enabled()) {
         enableScissor(
@@ -66,6 +74,28 @@ inline fun RenderPass.setupGlobalScissor() {
             scissorState.height()
         )
     }
+}
+
+/**
+ * Set vertex and index buffers for [RenderPass] and call [RenderPass.drawIndexed].
+ *
+ * This function assumes the [GpuBufferSlice]s are correctly aligned with corresponding vertex/index byte count.
+ */
+fun RenderPass.bindAndDraw(
+    vertexSlice: GpuBufferSlice,
+    indexSlice: GpuBufferSlice,
+    vertexFormat: VertexFormat,
+    indexType: VertexFormat.IndexType,
+    indexCount: Int,
+) {
+    setVertexBuffer(0, vertexSlice.buffer)
+    setIndexBuffer(indexSlice.buffer, indexType)
+    drawIndexed(
+        (vertexSlice.offset / vertexFormat.vertexSize).toInt(),
+        (indexSlice.offset / indexType.bytes).toInt(),
+        indexCount,
+        1,
+    )
 }
 
 @JvmOverloads
@@ -92,11 +122,15 @@ fun RenderTarget.createRenderPass(
     clearColor: OptionalInt = OptionalInt.empty(),
     clearDepth: OptionalDouble = OptionalDouble.empty(),
     useDepthAttachment: Boolean = true,
+    allowOverride: Boolean = false,
 ): RenderPass = newRenderPass(
     labelGetter,
-    colorTextureView!!,
+    colorAttachment =
+        RenderSystem.outputColorTextureOverride?.takeIf { allowOverride } ?: this.colorTextureView!!,
     clearColor,
-    depthTextureView.takeIf { this.useDepth && useDepthAttachment },
+    depthAttachment =
+        RenderSystem.outputDepthTextureOverride?.takeIf { allowOverride }
+            ?: depthTextureView.takeIf { this.useDepth && useDepthAttachment },
     clearDepth,
 )
 
@@ -107,7 +141,12 @@ fun RenderTarget.createRenderPass(
 fun GpuTextureView.createRenderPass(
     labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
     clearColor: OptionalInt = OptionalInt.empty(),
-): RenderPass = newRenderPass(labelGetter, colorAttachment = this, clearColor)
+    allowOverride: Boolean = false,
+): RenderPass = newRenderPass(
+    labelGetter,
+    colorAttachment = RenderSystem.outputColorTextureOverride?.takeIf { allowOverride } ?: this,
+    clearColor,
+)
 
 @Suppress("NOTHING_TO_INLINE")
 private inline fun newRenderPass(
