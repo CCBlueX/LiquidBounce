@@ -88,7 +88,9 @@ object ScreenManager : EventListener {
         get() = mc.screen ?: TitleScreen()
 
     @Suppress("unused")
-    private val handleBrowserReady = suspendHandler<BrowserReadyEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) {
+    private val handleBrowserReady = suspendHandler<BrowserReadyEvent>(
+        priority = EventPriorityConvention.FIRST_PRIORITY
+    ) {
         runCatching {
             logger.info("Browser backend is ready. Initializing browser...")
             val browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
