@@ -43,7 +43,7 @@ import net.minecraft.world.phys.Vec3
  */
 internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
 
-    private val modification by vec3d("Modification", Vec3(1337.0, 0.0, 1337.0))
+    private val modification by vec3d("Modification", Vec3(1337.0, 0.0, 1337.0), useLocateButton = false)
 
     @Volatile
     private var prevFallDistance = 0.0
@@ -82,7 +82,7 @@ internal object NoFallSpoofLanding : NoFallMode("SpoofLanding") {
             }
 
             prevOnGround = packet.onGround
-            prevFallDistance = player.fallDistance.toDouble()
+            prevFallDistance = player.fallDistance
         }
     }
 

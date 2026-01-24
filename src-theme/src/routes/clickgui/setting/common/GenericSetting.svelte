@@ -62,8 +62,12 @@
         <RegistryListSetting {path} bind:setting={setting} on:change/>
     {:else if setting.valueType === "BIND"}
         <BindSetting bind:setting={setting} on:change/>
-    {:else if setting.valueType === "VECTOR3_I" || setting.valueType === "VECTOR3_D" }
-        <VectorSetting bind:setting={setting} on:change/>
+    {:else if setting.valueType === "VECTOR3_I" }
+        <VectorSetting vecAxes={["x", "y", "z"]} step={1} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "VECTOR3_D" }
+        <VectorSetting vecAxes={["x", "y", "z"]} step={0.01} bind:setting={setting} on:change/>
+    {:else if setting.valueType === "VECTOR2_F" }
+        <VectorSetting vecAxes={["x", "y"]} step={0.01} bind:setting={setting} on:change/>
     {:else if setting.valueType === "KEY"}
         <KeySetting bind:setting={setting} on:change/>
     {:else if setting.valueType === "CURVE"}

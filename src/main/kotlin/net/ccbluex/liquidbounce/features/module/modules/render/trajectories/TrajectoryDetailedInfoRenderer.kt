@@ -77,7 +77,7 @@ object TrajectoryDetailedInfoRenderer : ToggleableConfigurable(ModuleTrajectorie
     }
 
     private val scale by float("Scale", 1F, 0.25F..4F)
-    private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
+    private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
     private fun Vec3.calcScreenPosWithOffset(): Vec3f? {
         return WorldToScreen.calculateScreenPos(add(renderOffset))
     }

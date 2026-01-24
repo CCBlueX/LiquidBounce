@@ -39,7 +39,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket
 import net.minecraft.world.phys.HitResult
-import net.minecraft.world.phys.Vec3
 
 /**
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMinecraft
@@ -53,7 +52,7 @@ object FeatureSilentScreen : ToggleableConfigurable(ModuleChestStealer, "SilentS
 
         private val background = choices(this, "Background", 0, ::backgroundChoices)
         private val scale by float("Scale", 1.5F, 0.25F..4F)
-        private val renderOffset by vec3d("RenderOffset", Vec3.ZERO)
+        private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
         private val showTitle by boolean("ShowTitle", false)
 
         init {
