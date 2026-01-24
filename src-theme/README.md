@@ -3,6 +3,18 @@
 This repository contains the source code for the LiquidBounce Default Theme, built using [Svelte](https://svelte.dev/). 
 It is intended for development, customization, and distribution through the LiquidBounce theme system and marketplace.
 
+---
+
+## Getting Started with a Custom Theme
+
+If you want to create your own LiquidBounce theme, the recommended starting point is to **fork the official default theme repository**:
+
+https://github.com/CCBlueX/LiquidBounce-Theme
+
+Forking this repository gives you a fully working baseline with proper project structure, build configuration, and marketplace integration already set up. From there, you can modify the UI, styles, and components to create your own custom theme while staying compatible with LiquidBounce’s theming system.
+
+---
+
 ## Development
 
 ### Prerequisites
