@@ -122,11 +122,15 @@ fun RenderTarget.createRenderPass(
     clearColor: OptionalInt = OptionalInt.empty(),
     clearDepth: OptionalDouble = OptionalDouble.empty(),
     useDepthAttachment: Boolean = true,
+    allowOverride: Boolean = false,
 ): RenderPass = newRenderPass(
     labelGetter,
-    colorTextureView!!,
+    colorAttachment =
+        RenderSystem.outputColorTextureOverride?.takeIf { allowOverride } ?: this.colorTextureView!!,
     clearColor,
-    depthTextureView.takeIf { this.useDepth && useDepthAttachment },
+    depthAttachment =
+        RenderSystem.outputDepthTextureOverride?.takeIf { allowOverride }
+            ?: depthTextureView.takeIf { this.useDepth && useDepthAttachment },
     clearDepth,
 )
 
@@ -137,7 +141,12 @@ fun RenderTarget.createRenderPass(
 fun GpuTextureView.createRenderPass(
     labelGetter: Supplier<String> = RENDER_PASS_DEFAULT_LABEL,
     clearColor: OptionalInt = OptionalInt.empty(),
-): RenderPass = newRenderPass(labelGetter, colorAttachment = this, clearColor)
+    allowOverride: Boolean = false,
+): RenderPass = newRenderPass(
+    labelGetter,
+    colorAttachment = RenderSystem.outputColorTextureOverride?.takeIf { allowOverride } ?: this,
+    clearColor,
+)
 
 @Suppress("NOTHING_TO_INLINE")
 private inline fun newRenderPass(
