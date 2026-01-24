@@ -96,7 +96,7 @@ public abstract class MixinMultiPlayerGameMode {
 
     @Inject(method = "useItem", at = @At("HEAD"), cancellable = true)
     private void hookItemInteractAtHead(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        final PlayerInteractItemEvent cancelEvent = new PlayerInteractItemEvent();
+        final PlayerInteractItemEvent cancelEvent = new PlayerInteractItemEvent(player, hand);
         EventManager.INSTANCE.callEvent(cancelEvent);
         if (cancelEvent.isCancelled()) {
             cir.setReturnValue(InteractionResult.PASS);

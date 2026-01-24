@@ -19,10 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.platform.InputConstants
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ScrollAdjustConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.ScrollAdjustOptions
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
-import net.ccbluex.liquidbounce.event.events.MouseScrollEvent
-import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
@@ -53,11 +52,19 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
             cameraDistance.get()
         }
 
-    private object ScrollAdjust : ToggleableConfigurable(ModuleCameraClip, "ScrollAdjust", true) {
+    private object ScrollAdjust : ScrollAdjustConfigurable(
+        ModuleCameraClip,
+        "ScrollAdjust",
+        true,
+        { delta -> ScrollAdjust.scrolledDistance += delta },
+        ScrollAdjustOptions(
+            modifierKeyDefault = GLFW.GLFW_KEY_LEFT_CONTROL,
+            sensitivityDefault = 0.3f,
+            sensitivityRange = 0.1f..2f
+        )
+    ) {
         private val rememberScrolled by boolean("RememberScrolled", false)
         private val requireFreeLook by boolean("RequireFreeLook", false)
-        private val sensitivity by float("Sensitivity", 0.3f, 0.1f..2f)
-        private val modifierKey by key("Modifier", GLFW.GLFW_KEY_LEFT_CONTROL)
 
         var scrolledDistance = cameraDistance.get()
             private set(value) {
@@ -65,7 +72,7 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
                 field = value.coerceIn(cameraDistance.range as ClosedFloatingPointRange<Float>)
             }
 
-        private val canPerformScroll get() =
+        override fun canPerformScroll(): Boolean =
             (modifierKey == InputConstants.UNKNOWN || modifierKey.isPressed)
                 && (!requireFreeLook || ModuleFreeLook.running)
                 && (mc.options.cameraType != CameraType.FIRST_PERSON || ModuleFreeLook.running)
@@ -80,25 +87,9 @@ object ModuleCameraClip : ClientModule("CameraClip", ModuleCategories.RENDER) {
         }
 
         @Suppress("unused")
-        private val scrollHandler = handler<MouseScrollEvent> {
-            if (!canPerformScroll) {
-                return@handler
-            }
-
-            scrolledDistance += (sensitivity * it.vertical).toFloat()
-        }
-
-        @Suppress("unused")
         private val releaseModifierHandler = handler<KeyboardKeyEvent> {
             if (it.key == modifierKey && it.action == GLFW.GLFW_RELEASE) {
                 reset()
-            }
-        }
-
-        @Suppress("unused")
-        private val hotbarScrollHandler = handler<MouseScrollInHotbarEvent> {
-            if (canPerformScroll) {
-                it.cancelEvent()
             }
         }
 
