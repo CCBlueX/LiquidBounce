@@ -30,7 +30,6 @@ import org.lwjgl.glfw.GLFW
 /**
  * A configurable for scroll-adjusting values.
  */
-
 data class ScrollAdjustOptions(
     val modifierKeyDefault: Int = GLFW.GLFW_KEY_LEFT_ALT,
     val sensitivityDefault: Float = 0.5f,
@@ -50,18 +49,21 @@ open class ScrollAdjustConfigurable(
 
     open fun canPerformScroll(): Boolean = modifierKey == InputConstants.UNKNOWN || modifierKey.isPressed
 
-    init {
-        handler<MouseScrollEvent> { event ->
-            if (!running) return@handler
-            if (!canPerformScroll()) return@handler
-            val delta = event.vertical.toFloat() * sensitivity
-            adjustFunction.accept(delta)
+    @Suppress("unused")
+    private val mouseScrollHandler = handler<MouseScrollEvent> { event ->
+        if (!running || !canPerformScroll()) {
+            return@handler
         }
 
-        handler<MouseScrollInHotbarEvent> {
-            if (running && canPerformScroll()) {
-                it.cancelEvent()
-            }
+        val delta = event.vertical.toFloat() * sensitivity
+        adjustFunction.accept(delta)
+    }
+
+    @Suppress("unused")
+    private val scrollInHotbarHandler = handler<MouseScrollInHotbarEvent> { event ->
+        if (running && canPerformScroll()) {
+            event.cancelEvent()
         }
     }
+
 }
