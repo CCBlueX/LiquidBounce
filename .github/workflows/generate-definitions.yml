@@ -41,7 +41,8 @@ jobs:
       - name: Run LiquidBounce with Gradle
         env:
           SCRIPT_TYPEGEN_BUILD: "true"  # Set the CI_BUILD flag to auto-execute ts-defgen
-          SKIP_BROWSER: "true"
+          LB_BROWSER_SKIP: "true"
+          LB_INTEROP_SKIP: "true"
         run: |
           chmod +x ./gradlew
           timeout 60m xvfb-run --auto-servernum --server-args="-screen 0 1280x720x24" ./gradlew runClient -Dfabric.headless=true || exit 0

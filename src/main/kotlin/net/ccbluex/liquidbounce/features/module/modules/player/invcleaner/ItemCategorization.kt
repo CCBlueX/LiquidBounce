@@ -57,8 +57,6 @@ import net.ccbluex.liquidbounce.utils.item.isSpear
 import net.ccbluex.liquidbounce.utils.item.isSword
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.world.entity.EquipmentSlot
-import net.minecraft.world.level.material.LavaFluid
-import net.minecraft.world.level.material.WaterFluid
 import net.minecraft.world.item.ArrowItem
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.BowItem
@@ -75,6 +73,8 @@ import net.minecraft.world.item.PotionItem
 import net.minecraft.world.item.ShieldItem
 import net.minecraft.world.item.SnowballItem
 import net.minecraft.world.item.WindChargeItem
+import net.minecraft.world.level.material.LavaFluid
+import net.minecraft.world.level.material.WaterFluid
 import java.util.function.Predicate
 
 @JvmRecord
@@ -178,7 +178,7 @@ class ItemCategorization(
     companion object {
         @JvmStatic
         private fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
-            return ArmorPiece(VirtualItemSlot(item.defaultInstance, ItemSlotType.ARMOR, id))
+            return ArmorPiece(VirtualItemSlot(item.defaultInstance, ItemSlot.Type.ARMOR, id))
         }
 
         /**
@@ -196,7 +196,7 @@ class ItemCategorization(
     /**
      * Sometimes there are situations where armor pieces are not the best ones with the current armor, but become
      * the best ones as soon as we upgrade one of the other armor pieces.
-     * In those cases we don't want to miss out on this armor piece in the future thus we keep it.
+     * In those cases, we don't want to miss out on this armor piece in the future thus we keep it.
      */
     private val futureArmorToKeep: List<ItemSlot>
     private val armorComparator: ArmorComparator

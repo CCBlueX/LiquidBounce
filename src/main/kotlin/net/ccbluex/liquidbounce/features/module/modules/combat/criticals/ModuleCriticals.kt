@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsBlink
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsJump
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround
@@ -39,19 +39,19 @@ import net.ccbluex.liquidbounce.utils.client.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.minecraft.world.level.block.WebBlock
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.effect.MobEffects.BLINDNESS
 import net.minecraft.world.effect.MobEffects.LEVITATION
 import net.minecraft.world.effect.MobEffects.SLOW_FALLING
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.level.block.WebBlock
 
 /**
  * Criticals module
  *
  * Automatically crits every time you attack someone.
  */
-object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
+object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
     init {
         enableLock()

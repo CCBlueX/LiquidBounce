@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem.jsonFile
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
-import net.ccbluex.liquidbounce.deeplearn.ModelHolster
+import net.ccbluex.liquidbounce.deeplearn.ModelManager
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
@@ -56,7 +56,6 @@ import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.module.modules.combat.backtrack.BacktrackPacketManager
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
 import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
@@ -94,7 +93,7 @@ import net.minecraft.resources.Identifier
 import net.minecraft.server.packs.resources.PreparableReloadListener
 import net.minecraft.server.packs.resources.ReloadableResourceManager
 import java.io.InputStream
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import kotlin.time.measureTime
@@ -162,7 +161,7 @@ object LiquidBounce : EventListener {
         private set
 
     /**
-     * Creates an [net.minecraft.util.Identifier] starts with [CLIENT_NAME].
+     * Creates an [net.minecraft.resources.Identifier] starts with [CLIENT_NAME].
      */
     @JvmStatic
     fun identifier(path: String): Identifier = Identifier.fromNamespaceAndPath(CLIENT_NAME.lowercase(Locale.ROOT), path)
@@ -274,7 +273,6 @@ object LiquidBounce : EventListener {
         // Utility managers
         RotationManager
         PacketQueueManager
-        BacktrackPacketManager
         InteractionTracker
         CombatManager
         FriendManager
@@ -380,11 +378,13 @@ object LiquidBounce : EventListener {
 
         BrowserBackendManager.init()
         ClientInteropServer.start()
-        ThemeManager.init()
-        // Preload marketplace items
-        ConfigSystem.load(MarketplaceManager)
-        ConfigSystem.load(ThemeManager)
-        ThemeManager.load()
+        if (!ClientInteropServer.isSkipping) {
+            ThemeManager.init()
+            // Preload marketplace items
+            ConfigSystem.load(MarketplaceManager)
+            ConfigSystem.load(ThemeManager)
+            ThemeManager.load()
+        }
 
         BlurEffectRenderer
         IntegrationListener
@@ -399,7 +399,7 @@ object LiquidBounce : EventListener {
             launch("Deep Learning") { task ->
                 runCatching {
                     DeepLearningEngine.init(task)
-                    ModelHolster.load()
+                    ModelManager.load()
                 }.onFailure { exception ->
                     task.subTasks.clear()
 

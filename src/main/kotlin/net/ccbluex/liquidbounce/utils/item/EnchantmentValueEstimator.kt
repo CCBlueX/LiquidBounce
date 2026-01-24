@@ -18,9 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.minecraft.world.item.enchantment.Enchantment
-import net.minecraft.world.item.ItemStack
 import net.minecraft.resources.ResourceKey
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantment
 
 class EnchantmentValueEstimator(
     private vararg val weightedEnchantments: WeightedEnchantment,

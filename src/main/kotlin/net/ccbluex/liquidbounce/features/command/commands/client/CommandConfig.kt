@@ -54,8 +54,8 @@ import net.ccbluex.liquidbounce.utils.text.AsyncLoadingText
 import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.ClickEvent
-import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.Style
 import org.apache.commons.io.input.CharSequenceReader
 

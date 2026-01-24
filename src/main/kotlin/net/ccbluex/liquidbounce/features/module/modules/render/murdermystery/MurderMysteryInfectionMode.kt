@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.handItems
 import net.minecraft.client.player.AbstractClientPlayer
+import net.minecraft.resources.Identifier
 import net.minecraft.world.item.BowItem
 import net.minecraft.world.item.Items
-import net.minecraft.resources.Identifier
 
 object MurderMysteryInfectionMode : SkinBasedMurderMysteryMode("Infection") {
 

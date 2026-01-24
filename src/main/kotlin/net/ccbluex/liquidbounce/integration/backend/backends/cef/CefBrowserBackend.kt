@@ -22,6 +22,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
@@ -66,7 +67,7 @@ class CefBrowserBackend : BrowserBackend, EventListener {
     override val isInitialized: Boolean
         get() = MCEF.INSTANCE.isInitialized
     override var browsers = mutableListOf<CefBrowser>()
-    override var isAccelerationSupported: Boolean = false
+    override var accelerationFlags = BrowserAccelerationFlags.UNSUPPORTED
 
     @Suppress("ThrowingExceptionsWithoutMessageOrCause")
     override fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit) {
@@ -155,12 +156,12 @@ class CefBrowserBackend : BrowserBackend, EventListener {
 
         // Check if acceleration is supported
         val system = Util.getPlatform()
-        isAccelerationSupported = when (system) {
+        accelerationFlags = when (system) {
             Util.OS.WINDOWS -> {
                 // Check if required OpenGL extensions for D3D11 shared texture interop are supported
                 checkAccelerationSupport()
             }
-            else -> false
+            else -> return
         }
     }
 
@@ -197,12 +198,16 @@ class CefBrowserBackend : BrowserBackend, EventListener {
     }
 
     /**
-     * Checks if the GPU supports the required OpenGL extensions for accelerated CEF rendering.
-     * Currently only NVIDIA GPUs are known to work reliably with D3D11 shared texture interoperability.
+     * Checks if the GPU supports the required OpenGL extensions for faster CEF rendering.
+     * Currently, only NVIDIA GPUs are known to work reliably with D3D11 shared texture interoperability.
+     *
+     * NVIDIA has been tested by @MukjepScarlet consistently.
+     * AMD has been tested by @1zun4 and @SenkJu; however,
+     *   it is marked as beta until https://issues.chromium.org/issues/442032120 is fixed.
      *
      * @return true if all required extensions are supported, false otherwise
      */
-    private fun checkAccelerationSupport(): Boolean {
+    private fun checkAccelerationSupport(): BrowserAccelerationFlags {
         return try {
             RenderSystem.assertOnRenderThread()
 
@@ -218,16 +223,12 @@ class CefBrowserBackend : BrowserBackend, EventListener {
             // On Intel GPU (Intel ARC), it does not work as well and is reported:
             // https://github.com/IGCIT/Intel-GPU-Community-Issue-Tracker-IGCIT/issues/1143
 
-            val isSupportedGpu =
-                vendor.contains("nvidia", true) ||
-                    renderer.contains("geforce", true) ||
-                    renderer.contains("quadro", true) ||
-                    vendor.contains("amd", true) ||
-                    renderer.contains("radeon", true)
+            val isNvidiaGpu = isNvidiaGpu(vendor, renderer)
+            val isSupportedGpu = isNvidiaGpu || isAmdGpu(vendor, renderer)
             if (!isSupportedGpu) {
                 logger.warn("GPU acceleration only supported on NVIDIA and AMD GPUs")
                 logger.info("Falling back to software rendering for browser")
-                return false
+                return BrowserAccelerationFlags.UNSUPPORTED
             }
 
             // Required OpenGL extensions for D3D11 shared texture interoperability
@@ -243,15 +244,25 @@ class CefBrowserBackend : BrowserBackend, EventListener {
                 if (!extension) {
                     logger.warn("Required OpenGL extension for GPU acceleration not supported")
                     logger.info("Falling back to software rendering for browser")
-                    return false
+                    return BrowserAccelerationFlags.UNSUPPORTED
                 }
             }
 
-            true
+            BrowserAccelerationFlags(true, !isNvidiaGpu)
         } catch (e: Exception) {
             logger.warn("Failed to check GPU acceleration support: ${e.message}")
             logger.info("Falling back to software rendering for browser")
-            false
+            BrowserAccelerationFlags.UNSUPPORTED
         }
     }
+
+    private fun isNvidiaGpu(vendor: String, renderer: String) =
+        vendor.contains("nvidia", true)
+            || renderer.contains("geforce", true)
+            || renderer.contains("quadro", true)
+
+    private fun isAmdGpu(vendor: String, renderer: String) =
+        vendor.contains("amd", true)
+            || renderer.contains("radeon", true)
+
 }

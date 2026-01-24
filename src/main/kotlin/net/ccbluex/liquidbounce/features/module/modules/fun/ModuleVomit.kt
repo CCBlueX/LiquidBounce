@@ -20,17 +20,17 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.findEmptyStorageSlotsInInventory
 import net.ccbluex.liquidbounce.utils.inventory.findItemsInContainer
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptyStorageSlotsInInventory
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
-import net.minecraft.world.item.ItemStack
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.util.RandomSource
+import net.minecraft.world.item.ItemStack
 
 /**
  * Vomit module
@@ -38,7 +38,7 @@ import net.minecraft.util.RandomSource
  * Drops items from the inventory in a random order to make it look like the player is vomiting.
  * If the player is in creative mode, the player will drop random block items.
  */
-object ModuleVomit : ClientModule("Vomit", Category.FUN) {
+object ModuleVomit : ClientModule("Vomit", ModuleCategories.FUN) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
     private val random = RandomSource.create()

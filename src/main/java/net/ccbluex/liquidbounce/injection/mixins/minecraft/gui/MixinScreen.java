@@ -70,7 +70,7 @@ public abstract class MixinScreen implements ScreenAddition {
             return;
         }
 
-        ThemeManager.INSTANCE.loadBackground();
+        ThemeManager.INSTANCE.loadBackgroundAsync();
     }
 
     @Inject(method = "init()V", at = @At("TAIL"))
@@ -79,7 +79,7 @@ public abstract class MixinScreen implements ScreenAddition {
             return;
         }
 
-        ThemeManager.INSTANCE.loadBackground();
+        ThemeManager.INSTANCE.loadBackgroundAsync();
     }
 
     @Inject(method = "renderTransparentBackground", at = @At("HEAD"), cancellable = true)

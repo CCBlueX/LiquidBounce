@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.utils.client.sendStartSprinting
@@ -50,7 +50,7 @@ import net.minecraft.world.entity.LivingEntity
  * Increases knockback dealt to other entities.
  */
 @Suppress("MagicNumber")
-object ModuleSuperKnockback : ClientModule("SuperKnockback", Category.COMBAT, aliases = listOf("WTap")) {
+object ModuleSuperKnockback : ClientModule("SuperKnockback", ModuleCategories.COMBAT, aliases = listOf("WTap")) {
 
     val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap)).apply(::tagBy)
     val hurtTime by int("HurtTime", 10, 0..10)

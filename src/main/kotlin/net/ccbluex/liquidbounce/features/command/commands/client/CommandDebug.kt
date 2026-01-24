@@ -42,13 +42,13 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.minecraft.ChatFormatting
 import net.minecraft.SharedConstants
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.TextColor
-import net.minecraft.ChatFormatting
 import java.net.URI
-import java.util.*
+import java.util.EnumSet
 
 /**
  * Debug Command to collect information about the client

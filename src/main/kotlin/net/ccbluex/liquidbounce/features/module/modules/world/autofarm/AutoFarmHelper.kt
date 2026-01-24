@@ -21,25 +21,21 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.BambooStalkBlock
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.BonemealableBlock
 import net.minecraft.world.level.block.CactusBlock
 import net.minecraft.world.level.block.CocoaBlock
 import net.minecraft.world.level.block.CropBlock
-import net.minecraft.world.level.block.FarmBlock
-import net.minecraft.world.level.block.BonemealableBlock
 import net.minecraft.world.level.block.KelpPlantBlock
 import net.minecraft.world.level.block.NetherWartBlock
 import net.minecraft.world.level.block.PumpkinBlock
-import net.minecraft.world.level.block.SoulSandBlock
 import net.minecraft.world.level.block.StemBlock
 import net.minecraft.world.level.block.SugarCaneBlock
 import net.minecraft.world.level.block.SweetBerryBushBlock
-import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.state.BlockState
 
 private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
     return pos.below().getBlock() is T && pos.below(2).getBlock() !is T

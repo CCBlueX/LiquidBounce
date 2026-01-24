@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.copy
-import net.minecraft.world.level.block.LiquidBlock
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.level.block.LiquidBlock
 import net.minecraft.world.phys.shapes.Shapes
 
 /**

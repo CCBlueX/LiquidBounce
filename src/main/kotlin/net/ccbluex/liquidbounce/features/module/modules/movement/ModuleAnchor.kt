@@ -22,8 +22,8 @@ import net.ccbluex.fastutil.mapToArray
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManager
 import net.ccbluex.liquidbounce.utils.block.hole.HoleManagerSubscriber
 import net.ccbluex.liquidbounce.utils.block.hole.HoleTracker
@@ -47,7 +47,7 @@ import kotlin.math.max
  */
 object ModuleAnchor : ClientModule(
     "Anchor",
-    Category.MOVEMENT,
+    ModuleCategories.MOVEMENT,
     bindAction = InputBind.BindAction.HOLD,
     disableOnQuit = true
 ), HoleManagerSubscriber {

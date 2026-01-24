@@ -23,16 +23,16 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.render.drawPlane
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
+import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
 import net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket
 import net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket
-import net.minecraft.network.protocol.game.ClientboundForgetLevelChunkPacket
 import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.phys.Vec3
 import java.util.concurrent.ConcurrentHashMap
@@ -44,7 +44,7 @@ import kotlin.math.max
  *
  * Highlights chunks that are likely newly generated.
  */
-object ModuleNewChunks : ClientModule("NewChunks", Category.RENDER) {
+object ModuleNewChunks : ClientModule("NewChunks", ModuleCategories.RENDER) {
 
     private val renderDistance by int("RenderDistance", 32, 4..128, "chunks")
     private val renderY by float("RenderY", 0.0f, -64.0f..320.0f)

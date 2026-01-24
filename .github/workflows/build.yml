@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       lb_version: ${{ steps.versions.outputs.lb_version }}
+      jdk_version: ${{ steps.versions.outputs.jdk_version }}
       minecraft_version: ${{ steps.versions.outputs.minecraft_version }}
       loader_version: ${{ steps.versions.outputs.loader_version }}
       fabricapi_version: ${{ steps.versions.outputs.fabricapi_version }}
@@ -46,6 +47,7 @@ jobs:
           }
           
           LB_VERSION=$(gradleprop 'mod_version')
+          JDK_VERSION=$(tomlprop 'jdk')
           MINECRAFT_VERSION=$(tomlprop 'minecraft')
           LOADER_VERSION=$(tomlprop 'fabric-loader')
           FABRICAPI_VERSION=$(tomlprop 'fabric-api')
@@ -53,6 +55,7 @@ jobs:
           FABRIC_KOTLIN_VERSION=$(tomlprop 'fabric-kotlin')
           
           echo "lb_version=$LB_VERSION" >> "$GITHUB_OUTPUT"
+          echo "jdk_version=$JDK_VERSION" >> "$GITHUB_OUTPUT"
           echo "minecraft_version=$MINECRAFT_VERSION" >> "$GITHUB_OUTPUT"
           echo "loader_version=$LOADER_VERSION" >> "$GITHUB_OUTPUT"
           echo "fabricapi_version=$FABRICAPI_VERSION" >> "$GITHUB_OUTPUT"
@@ -60,6 +63,7 @@ jobs:
           echo "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" >> "$GITHUB_OUTPUT"
           
           echo "LiquidBounce: $LB_VERSION"
+          echo "JDK: $JDK_VERSION"
           echo "Minecraft: $MINECRAFT_VERSION"
           echo "Fabric Loader: $LOADER_VERSION"
           echo "Fabric API: $FABRICAPI_VERSION"
@@ -75,11 +79,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Setting up JDK 21
+      - name: Setting up JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: ${{ needs.extract-versions.outputs.jdk_version }}
       - name: Grant permissions to src-theme
         run: sudo chmod -R 777 src-theme
       - name: Setup Gradle
@@ -94,6 +98,7 @@ jobs:
       - name: Upload artifact
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          JDK_VERSION: ${{ needs.extract-versions.outputs.jdk_version }}
           LB_VERSION: ${{ needs.extract-versions.outputs.lb_version }}
           MINECRAFT_VERSION: ${{ needs.extract-versions.outputs.minecraft_version }}
           LOADER_VERSION: ${{ needs.extract-versions.outputs.loader_version }}
@@ -124,7 +129,7 @@ jobs:
             -F "lb_version=$LB_VERSION" \
             -F "mc_version=$MINECRAFT_VERSION" \
             -F "subsystem=fabric" \
-            -F "jre_version=21" \
+            -F "jre_version=$JDK_VERSION" \
             -F "fabric_loader_version=$LOADER_VERSION" \
             -F "fabric_api_version=$FABRICAPI_VERSION" \
             -F "kotlin_version=$KOTLIN_VERSION" \
@@ -140,11 +145,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Setting up JDK 21
+      - name: Setting up JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: ${{ needs.extract-versions.outputs.jdk_version }}
       - name: Grant permissions to src-theme
         run: sudo chmod -R 777 src-theme
       - name: Setup Gradle

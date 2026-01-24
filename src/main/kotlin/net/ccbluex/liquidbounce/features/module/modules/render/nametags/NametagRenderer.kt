@@ -51,14 +51,14 @@ internal fun GuiGraphics.drawNametag(nametag: Nametag, posX: Float, posY: Float)
 
         drawItemStackList(nametag.items)
             .centerX(posX)
-            .centerY(posY - NAMETAG_PADDING * ModuleNametags.scale)
-            .scale(ModuleNametags.scale)
+            .centerY(posY - NAMETAG_PADDING * nametag.scale)
+            .scale(nametag.scale)
             .itemStackRenderer(currentItemStackRenderer)
             .rectBackground(Color4b.TRANSPARENT)
             .draw()
     }
 
-    val scale = BASE_SCALE_FACTOR * ModuleNametags.scale
+    val scale = BASE_SCALE_FACTOR * nametag.scale
 
     pose().pushMatrix()
     pose().translate(posX, posY)

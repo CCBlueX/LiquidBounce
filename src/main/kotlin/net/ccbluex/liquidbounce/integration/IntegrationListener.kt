@@ -21,13 +21,13 @@ package net.ccbluex.liquidbounce.integration
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
+import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
 import net.ccbluex.liquidbounce.event.events.FpsLimitEvent
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
-import net.ccbluex.liquidbounce.event.events.ClientPlayerEffectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
@@ -123,7 +123,12 @@ object IntegrationListener : EventListener {
         virtualOpen(type = type)
     }
 
-    fun virtualOpen(theme: Theme = ThemeManager.theme, type: VirtualScreenType) {
+    fun virtualOpen(theme: Theme? = ThemeManager.theme, type: VirtualScreenType) {
+        if (theme == null) {
+            logger.warn("Theme is null, can't open virtual screen.")
+            return
+        }
+
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.type == type) {
             return
@@ -257,7 +262,7 @@ object IntegrationListener : EventListener {
 
         // F12 to toggle GPU acceleration
         if (event.action == GLFW.GLFW_PRESS && keyCode == GLFW.GLFW_KEY_F12) {
-            if (!BrowserBackendManager.browserBackend.isAccelerationSupported) {
+            if (!BrowserBackendManager.browserBackend.accelerationFlags.isSupported) {
                 logger.warn("GPU acceleration is not supported by the current browser backend.")
                 return@handler
             }

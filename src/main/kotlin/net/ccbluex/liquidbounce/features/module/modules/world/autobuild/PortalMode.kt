@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.item.BlockItem
-import net.minecraft.world.item.Items
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.world.item.BlockItem
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Blocks
 
 object PortalMode : ModuleAutoBuild.AutoBuildMode("Portal") {
 

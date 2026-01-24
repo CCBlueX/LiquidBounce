@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.client.player.LocalPlayer
-import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.Pose
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Holder
+import net.minecraft.util.Mth
 import net.minecraft.world.effect.MobEffect
 import net.minecraft.world.effect.MobEffects
-import net.minecraft.core.Holder
-import net.minecraft.core.BlockPos
-import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.Pose
 import net.minecraft.world.phys.Vec3
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.sqrt
@@ -66,7 +66,6 @@ class FallingPlayer(
         if (bl && hasStatusEffect(MobEffects.SLOW_FALLING)) {
             d = 0.01
         }
-
 
         val j: Double = this.player.xRot.toDouble() * Mth.DEG_TO_RAD
 

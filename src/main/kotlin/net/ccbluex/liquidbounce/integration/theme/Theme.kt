@@ -19,8 +19,11 @@
 
 package net.ccbluex.liquidbounce.integration.theme
 
+import com.mojang.blaze3d.platform.NativeImage
 import io.netty.handler.codec.http.HttpHeaderNames
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.config.types.NamedChoice
@@ -35,14 +38,13 @@ import net.ccbluex.liquidbounce.render.FontManager
 import net.ccbluex.liquidbounce.utils.client.capitalize
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import com.mojang.blaze3d.platform.NativeImage
 import net.minecraft.server.packs.resources.ResourceManager
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener
 import okhttp3.Headers
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
-import java.util.*
+import java.util.Locale
 
 /**
  * A web-based theme loaded from the provided URL.
@@ -56,7 +58,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         defaultHeaders = Headers.Builder()
             .add(
                 HttpHeaderNames.COOKIE.toString(),
-                "${AuthMiddleware.AUTH_COOKIE_NAME}=${AuthMiddleware.AUTH_CODE}"
+                "${AuthMiddleware.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}"
             )
             .build()
     ), Closeable, ResourceManagerReloadListener {
@@ -142,13 +144,15 @@ class Theme private constructor(val origin: Origin, url: String) :
         loadFonts()
     }
 
-    var themeBackgroundShader: ThemeBackground? = null
+    var backgroundShader: ThemeBackground? = null
         private set
-    var themeBackgroundTexture: ThemeBackground? = null
+    private val shaderMutex = Mutex()
+    var backgroundImage: ThemeBackground? = null
         private set
+    private val imageMutex = Mutex()
 
-    suspend fun compileShader(): Boolean {
-        if (themeBackgroundShader != null) {
+    suspend fun compileShader(): Boolean = shaderMutex.withLock {
+        if (backgroundShader != null) {
             return true
         }
 
@@ -164,7 +168,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         }.getOrNull() ?: return false
 
         withContext(Dispatchers.Minecraft) {
-            themeBackgroundShader = ThemeBackground.Shader.build(
+            backgroundShader = ThemeBackground.Shader.build(
                 metadata,
                 background,
                 fragmentShader,
@@ -177,8 +181,8 @@ class Theme private constructor(val origin: Origin, url: String) :
         return true
     }
 
-    suspend fun loadBackgroundImage(): Boolean {
-        if (themeBackgroundTexture != null) {
+    suspend fun loadBackgroundImage(): Boolean = imageMutex.withLock {
+        if (backgroundImage != null) {
             return true
         }
 
@@ -194,7 +198,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         }.getOrNull() ?: return false
 
         withContext(Dispatchers.Minecraft) {
-            themeBackgroundTexture = ThemeBackground.Image(metadata, image).also {
+            backgroundImage = ThemeBackground.Image(metadata, image).also {
                 it.onResourceReload()
             }
         }
@@ -207,9 +211,9 @@ class Theme private constructor(val origin: Origin, url: String) :
      */
     fun getUrl(name: String? = null, markAsStatic: Boolean = false): String {
         val baseUrlWithFragment = "$baseUrl/?${AuthMiddleware.AUTH_CODE_PARAM}=" +
-            "${AuthMiddleware.AUTH_CODE}#/${name.orEmpty()}"
+            "${ClientInteropServer.AUTH_CODE}#/${name.orEmpty()}"
         val params = buildList {
-            if (origin.external) add("port=${ClientInteropServer.port}")
+            if (origin.external) add("port=${ClientInteropServer.PORT}")
             if (markAsStatic) add("static")
         }.joinToString("&")
 
@@ -223,14 +227,14 @@ class Theme private constructor(val origin: Origin, url: String) :
     fun isOverlaySupported(name: String?) = name != null && metadata.overlays.contains(name)
 
     override fun onResourceManagerReload(manager: ResourceManager) {
-        themeBackgroundShader?.onResourceReload()
-        themeBackgroundTexture?.onResourceReload()
+        backgroundShader?.onResourceReload()
+        backgroundImage?.onResourceReload()
         logger.info("Reloaded theme '${metadata.name}'.")
     }
 
     override fun close() {
-        themeBackgroundShader?.close()
-        themeBackgroundTexture?.close()
+        backgroundShader?.close()
+        backgroundImage?.close()
         _components?.forEach { EventManager.unregisterEventHandler(it) }
     }
 

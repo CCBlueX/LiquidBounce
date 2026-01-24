@@ -401,8 +401,8 @@
   "liquidbounce.command.marketplace.error.installFailed": "安装物品 #%s 失败：%s",
   "liquidbounce.command.marketplace.error.updateFailed": "更新物品 #%s 失败：%s",
 
-  "liquidbounce.unsupportedDeepLearning": "❌ 深度学习引擎尚未初始化。您的系统可能不受支持。",
-  "liquidbounce.rotationSystem.angleSmooth.minarai.fallback": "Minarai 需要深度学习引擎，因此会回退到 %s 角度平滑。",
+  "liquidbounce.unsupportedDeepLearning": "深度学习引擎尚未初始化。您的系统可能不受支持。",
+  "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "因此会回退到 %s 角度平滑。",
 
   "liquidbounce.commandManager.commandExecuting": "已经在执行命令 \"%s\"，请稍候…",
   "liquidbounce.commandManager.commandNotExecutable": "无法执行命令 \"%s\"。",
@@ -579,6 +579,7 @@
   "liquidbounce.module.fullBright.description": "无限夜视效果，让你在黑暗中看清一切。",
   "liquidbounce.module.ghostHand.description": "允许你透过墙跟一个选中的方块交互。",
   "liquidbounce.module.handDerp.description": "不断在主手和副手之间切换。",
+  "liquidbounce.module.hats.description": "在玩家头顶上方渲染帽子。",
   "liquidbounce.module.highJump.description": "允许你跳得更高。",
   "liquidbounce.module.hitbox.description": "扩大目标的命中框。",
   "liquidbounce.module.holeESP.description": "检测并显示水晶PvP的安全点。",

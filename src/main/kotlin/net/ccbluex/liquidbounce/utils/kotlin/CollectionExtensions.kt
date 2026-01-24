@@ -21,7 +21,7 @@
 package net.ccbluex.liquidbounce.utils.kotlin
 
 import it.unimi.dsi.fastutil.objects.ObjectImmutableList
-import java.util.*
+import java.util.Collections
 
 fun <T> Array<out T>?.unmodifiable(): List<T> =
     when {

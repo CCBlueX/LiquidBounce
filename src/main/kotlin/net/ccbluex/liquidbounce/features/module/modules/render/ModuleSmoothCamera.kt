@@ -19,8 +19,8 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.Vec3
@@ -30,7 +30,7 @@ import net.minecraft.world.phys.Vec3
  *
  * Makes your camera move smoother.
  */
-object ModuleSmoothCamera : ClientModule("SmoothCamera", Category.RENDER) {
+object ModuleSmoothCamera : ClientModule("SmoothCamera", ModuleCategories.RENDER) {
 
     private val factor by float("Factor", 0.2f, 0.0f..1.0f)
 

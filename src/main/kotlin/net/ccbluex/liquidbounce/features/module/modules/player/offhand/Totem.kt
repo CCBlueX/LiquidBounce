@@ -39,10 +39,10 @@ import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.world.bedRule
 import net.ccbluex.liquidbounce.utils.world.respawnAnchorWorks
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.Pose
 import net.minecraft.world.level.block.BedBlock
 import net.minecraft.world.level.block.RespawnAnchorBlock
-import net.minecraft.world.entity.Pose
-import net.minecraft.core.BlockPos
 
 internal object Totem : ToggleableConfigurable(ModuleOffhand, "Totem", true) {
 

@@ -20,13 +20,13 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.utils.client.world
-import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
-import net.minecraft.world.level.ChunkPos
 import net.minecraft.core.Direction
-import net.minecraft.world.phys.Vec3
+import net.minecraft.world.level.ChunkPos
 import net.minecraft.world.level.chunk.ChunkAccess
+import net.minecraft.world.level.levelgen.structure.BoundingBox
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 fun BoundingBox.iterate(): Iterable<BlockPos> =
     BlockPos.betweenClosed(minX(), minY(), minZ(), maxX(), maxY(), maxZ())

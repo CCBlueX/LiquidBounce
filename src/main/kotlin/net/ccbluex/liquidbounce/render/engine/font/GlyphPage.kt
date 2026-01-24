@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine.font
 
-import net.ccbluex.liquidbounce.render.FontManager
+import net.ccbluex.liquidbounce.render.engine.FontId
 import net.ccbluex.liquidbounce.render.engine.type.UV2f
 import net.minecraft.client.renderer.texture.DynamicTexture
 import org.lwjgl.opengl.GL11
@@ -204,7 +204,7 @@ abstract class GlyphPage {
             }
 
             atlasGraphics.paint = Color(0, 0, 0, 0)
-            atlasGraphics.composite = AlphaComposite.getInstance(AlphaComposite.CLEAR)
+            atlasGraphics.composite = AlphaComposite.Clear
             atlasGraphics.fillRect(
                 characterInfo.atlasLocation.x,
                 characterInfo.atlasLocation.y,
@@ -212,7 +212,7 @@ abstract class GlyphPage {
                 characterInfo.atlasDimension.height
             )
             atlasGraphics.paint = Color.white
-            atlasGraphics.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
+            atlasGraphics.composite = AlphaComposite.SrcOver
 
             // Draw the character to the atlas, offset by start of the character + a pixel padding
             atlasGraphics.drawString(
@@ -275,5 +275,5 @@ abstract class GlyphPage {
 }
 
 @JvmRecord
-data class FontGlyph(val codepoint: Char, val font: FontManager.FontId)
+data class FontGlyph(val codepoint: Char, val font: FontId)
 

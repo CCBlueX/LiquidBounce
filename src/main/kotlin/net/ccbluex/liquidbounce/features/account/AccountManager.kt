@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.with
 import net.minecraft.client.multiplayer.ProfileKeyPairManager
 import java.net.Proxy
-import java.util.*
+import java.util.Optional
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Suppress("TooManyFunctions")
@@ -158,7 +158,14 @@ object AccountManager : Configurable("Accounts"), EventListener {
     }
 
     fun loginSessionAccount(token: String) {
-        val account = SessionAccount(token).also { it.refresh() }
+        val account = if (token.startsWith("M.")) {
+            MicrosoftAccount.buildFromRefreshToken(token)
+        } else {
+            SessionAccount(token).apply {
+                refresh()
+            }
+        }
+
         loginDirectAccount(account)
     }
 
@@ -357,10 +364,15 @@ object AccountManager : Configurable("Accounts"), EventListener {
             return
         }
 
-        // Create a new cracked account
-        val account = SessionAccount(token)
-        try {
-            account.refresh()
+        val account: MinecraftAccount = try {
+            if (token.startsWith("M.")) {
+                MicrosoftAccount.buildFromRefreshToken(token)
+            } else {
+                // Create a new cracked account
+                SessionAccount(token).apply {
+                    refresh()
+                }
+            }
         } catch (exception: Exception) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = exception.message ?: "Unknown error"))
             return

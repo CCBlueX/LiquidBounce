@@ -32,14 +32,10 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
-import net.ccbluex.liquidbounce.utils.math.set
 import net.ccbluex.liquidbounce.utils.render.asTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.ChatFormatting
 import net.minecraft.client.renderer.texture.DynamicTexture
-import net.minecraft.world.phys.Vec3
-import org.joml.Vector3f
-import org.joml.Vector3fc
 import kotlin.properties.ReadOnlyProperty
 import kotlin.time.Duration.Companion.seconds
 
@@ -74,10 +70,4 @@ fun <V> FileValue.toTextureProperty(
     }
 
     return ReadOnlyProperty { _, _ -> texture }
-}
-
-fun Value<Vec3>.asVector3fc(): Vector3fc {
-    val vector = Vector3f()
-    onChanged { vector.set(it) }
-    return vector
 }

@@ -19,16 +19,16 @@
 package net.ccbluex.liquidbounce.features.item
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.text.PlainText
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.ChatFormatting
 import net.minecraft.core.component.DataComponentPatch
 import net.minecraft.core.component.DataComponents
+import net.minecraft.network.chat.Component
+import net.minecraft.world.SimpleContainer
 import net.minecraft.world.item.component.ItemContainerContents
 import net.minecraft.world.item.component.ItemLore
-import net.minecraft.world.SimpleContainer
-import net.minecraft.network.chat.Component
-import net.minecraft.ChatFormatting
 
 /**
  * Generates a list of [ComponentChanges]s from a [SimpleInventory]

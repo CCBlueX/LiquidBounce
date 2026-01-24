@@ -21,8 +21,8 @@ package net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.im
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.deeplearn.DeepLearningEngine
-import net.ccbluex.liquidbounce.deeplearn.ModelHolster.models
-import net.ccbluex.liquidbounce.deeplearn.data.TrainingData
+import net.ccbluex.liquidbounce.deeplearn.ModelManager.models
+import net.ccbluex.liquidbounce.deeplearn.data.CombatSample
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -43,15 +43,15 @@ import kotlin.time.measureTimedValue
 
 /**
  * Record using
- * - [net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.MinaraiCombatRecorder]
- * - [net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.MinaraiTrainer]
+ * - [net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatRecorder]
+ * - [net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCombatTrainerRecorder]
  * and then train a model - after that you will be able to use it with
- * [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.MinaraiAngleSmooth].
+ * [net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.impl.AiAngleSmooth].
  */
-class MinaraiAngleSmooth(
+class AiAngleSmooth(
     parent: ChoiceConfigurable<*>,
     val fallback: AngleSmooth
-) : AngleSmooth("Minarai", parent) {
+) : AngleSmooth("AI", parent, arrayListOf("Minarai")) {
 
     private val choices = choices("Model", 0) { local ->
         models.onChanged { _ ->
@@ -100,7 +100,7 @@ class MinaraiAngleSmooth(
             if (notificationChronometer.hasElapsed(UNSUPPORTED_NOTIFICATION_TIME)) {
                 chat(markAsError(translation("liquidbounce.unsupportedDeepLearning")))
                 chat(markAsError(translation(
-                    "liquidbounce.rotationSystem.angleSmooth.minarai.fallback",
+                    "liquidbounce.rotationSystem.angleSmooth.ai.fallback",
                     fallback.name
                 )))
                 notificationChronometer.reset()
@@ -117,7 +117,7 @@ class MinaraiAngleSmooth(
         ModuleDebug.debugParameter(this, "DeltaYaw", totalDelta.deltaYaw)
         ModuleDebug.debugParameter(this, "DeltaPitch", totalDelta.deltaPitch)
 
-        val input = TrainingData(
+        val input = CombatSample(
             currentVector = currentRotation.directionVector,
             previousVector = prevRotation.directionVector,
             targetVector = targetRotation.directionVector,

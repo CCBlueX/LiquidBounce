@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.events.KeybindIsPressedEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.client.KeyMapping
 import net.minecraft.world.phys.BlockHitResult
@@ -32,7 +32,7 @@ import net.minecraft.world.phys.HitResult
  *
  * Automatically breaks blocks.
  */
-object ModuleAutoBreak : ClientModule("AutoBreak", Category.PLAYER) {
+object ModuleAutoBreak : ClientModule("AutoBreak", ModuleCategories.PLAYER) {
 
     @Suppress("unused")
     private val keybindIsPressedHandler = handler<KeybindIsPressedEvent> { event ->

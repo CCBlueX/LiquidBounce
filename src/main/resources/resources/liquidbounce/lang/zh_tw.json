@@ -311,8 +311,8 @@
   "liquidbounce.command.models.subcommand.delete.result.modelNotFound": "❌ 未找到模型%s。",
   "liquidbounce.command.models.subcommand.delete.result.modelDeleted": "✔ 模型%s已刪除。",
 
-  "liquidbounce.unsupportedDeepLearning": "❌ 深度學習引擎尚未初始化。您的系統可能不受支援。",
-  "liquidbounce.rotationSystem.angleSmooth.minarai.fallback": "Minarai 需要深度學習引擎，因此會回退到 %s 角度平滑。",
+  "liquidbounce.unsupportedDeepLearning": "深度學習引擎尚未初始化。您的系統可能不受支援。",
+  "liquidbounce.rotationSystem.angleSmooth.ai.fallback": "因此會回退到 %s 角度平滑。",
 
   "liquidbounce.commandManager.commandExecuting": "正在執行命令 \"%s\"，請稍候…",
   "liquidbounce.commandManager.commandNotExecutable": "無法執行命令 \"%s\"。",

@@ -16,17 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.deeplearn.models
 
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.deeplearn.translators.FloatArrayInAndOutTranslator
+package net.ccbluex.liquidbounce.config.types
 
-class MinaraiModel(
+import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+
+internal class Vec3Value<T : Any>(
     name: String,
-    parent: ChoiceConfigurable<*>
-) : ModelWrapper<FloatArray, FloatArray>(
-    name,
-    FloatArrayInAndOutTranslator(),
-    2, // X, Y
-    parent
-)
+    aliases: List<String>,
+    default: T,
+    /**
+     * For theme only
+     */
+    @Exclude
+    val useLocateButton: Boolean,
+    valueType: ValueType,
+) : Value<T>(name, aliases, default, valueType)

@@ -19,10 +19,10 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.reporthelper
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
-object ModuleReportHelper : ClientModule("ReportHelper", Category.PLAYER, aliases = listOf("AutoReport")) {
+object ModuleReportHelper : ClientModule("ReportHelper", ModuleCategories.PLAYER, aliases = listOf("AutoReport")) {
 
     init {
         tree(ReportHelperAutoReport)

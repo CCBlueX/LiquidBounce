@@ -17,20 +17,16 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
+package net.ccbluex.liquidbounce.integration.backend
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
-import net.minecraft.client.multiplayer.ClientLevel;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-
-@Mixin(ClientLevel.ClientLevelData.class)
-public abstract class MixinClientWorldProperties {
-
-    @ModifyReturnValue(method = "getDayTime", at = @At("RETURN"))
-    private long injectOverrideTime(long original) {
-        return ModuleCustomAmbience.getTime(original);
+/**
+ * Determines if acceleration is supported on the current system.
+ * Is In Beta is a flag to prevent it from being used by default on a supported
+ * but not tested system.
+ */
+data class BrowserAccelerationFlags(val isSupported: Boolean, val isBeta: Boolean) {
+    companion object {
+        @JvmField
+        val UNSUPPORTED = BrowserAccelerationFlags(isSupported = false, isBeta = false)
     }
-
 }

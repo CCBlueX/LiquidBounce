@@ -34,6 +34,12 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot.isADuplicate
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.minecraft.network.protocol.game.ClientboundAnimatePacket
+import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
+import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket
+import net.minecraft.tags.ItemTags
+import net.minecraft.tags.TagKey
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
@@ -41,13 +47,7 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.equipment.ArmorMaterials
-import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
-import net.minecraft.network.protocol.game.ClientboundAnimatePacket
-import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket
-import net.minecraft.network.protocol.game.ClientboundMoveEntityPacket
-import net.minecraft.tags.ItemTags
-import net.minecraft.tags.TagKey
-import java.util.*
+import java.util.function.IntPredicate
 import java.util.function.Predicate
 import kotlin.math.abs
 
@@ -179,18 +179,42 @@ object CustomAntiBotMode : AntiBotMode("Custom") {
 
     private object Name : ToggleableConfigurable(ModuleAntiBot, "Name", true), AntiBotPredicate {
         private val lengthRange by intRange("Length", 3..16, 1..32)
-        private val validateChars by boolean("ValidateChars", true)
+        private val validateChars by multiEnumChoice("ValidateChars", enumSetOf(CharacterValidator.VANILLA))
 
-        private val VALID_CHARS_OF_NAME = BitSet(128).apply {
-            set('0'.code, '9'.code + 1)
-            set('a'.code, 'z'.code + 1)
-            set('A'.code, 'Z'.code + 1)
-            set('_'.code)
+        /**
+         * https://en.wikipedia.org/wiki/Unicode_block
+         */
+        private enum class CharacterValidator(override val choiceName: String) : NamedChoice, IntPredicate {
+            VANILLA("Vanilla") {
+                override fun test(value: Int): Boolean {
+                    return value in '0'.code..'9'.code
+                        || value in 'a'.code..'z'.code
+                        || value in 'A'.code..'Z'.code
+                        || value == '_'.code
+                }
+            },
+
+            /** Cyrillic + Cyrillic Supplement */
+            CYRILLIC("Cyrillic") {
+                override fun test(value: Int): Boolean {
+                    return value in 0x0400..0x052F
+                }
+            },
+
+            CJK_UNIFIED_IDEOGRAPHS("CJKUnifiedIdeographs") {
+                override fun test(value: Int): Boolean {
+                    return value in 0x4E00..0x9FA5
+                }
+            };
+
+            fun test(string: String): Boolean {
+                return string.chars().allMatch(this)
+            }
         }
 
         override fun isBot(entity: Player): Boolean {
             val name = entity.scoreboardName
-            return name.length !in lengthRange || (validateChars && name.any { !VALID_CHARS_OF_NAME[it.code] })
+            return name.length !in lengthRange || (validateChars.any { !it.test(name) })
         }
     }
 

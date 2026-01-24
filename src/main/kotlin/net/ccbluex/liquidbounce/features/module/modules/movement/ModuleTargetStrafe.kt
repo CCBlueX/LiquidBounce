@@ -25,16 +25,16 @@ import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelLowHop
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
 import net.ccbluex.liquidbounce.utils.entity.any
-import net.ccbluex.liquidbounce.utils.entity.initial
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
+import net.ccbluex.liquidbounce.utils.entity.initial
 import net.ccbluex.liquidbounce.utils.entity.untransformed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
@@ -54,7 +54,7 @@ import kotlin.math.sin
  *
  * TODO: Implement visuals
  */
-object ModuleTargetStrafe : ClientModule("TargetStrafe", Category.MOVEMENT) {
+object ModuleTargetStrafe : ClientModule("TargetStrafe", ModuleCategories.MOVEMENT) {
 
     // Configuration options
     private val modes = choices<Choice>("Mode", MotionMode, arrayOf(MotionMode)).apply { tagBy(this) }
