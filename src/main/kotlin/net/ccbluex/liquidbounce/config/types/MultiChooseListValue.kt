@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,12 +23,14 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
+import java.util.SequencedSet
 import java.util.TreeMap
 
 class MultiChooseListValue<T : NamedChoice>(
     name: String,
     /**
-     * Enabled values. A mutable and unordered [Set].
+     * Enabled values in [MutableSet].
+     * Its order is determined by the implementation of [MutableSet].
      */
     value: MutableSet<T>,
     /**
@@ -40,6 +42,11 @@ class MultiChooseListValue<T : NamedChoice>(
      * Can deselect all values or enable at least one
      */
     @Exclude val canBeNone: Boolean = true,
+
+    /**
+     * Determines whether the order of enabled values matters.
+     */
+    @Exclude val isOrderSensitive: Boolean = false,
 ) : Value<MutableSet<T>>(
     name,
     defaultValue = value,
@@ -55,6 +62,12 @@ class MultiChooseListValue<T : NamedChoice>(
             require(value.isNotEmpty()) {
                 "There are no default values enabled, " +
                     "but at least one must be selected. (required because by canBeNone = false)"
+            }
+        }
+
+        if (isOrderSensitive) {
+            require(value is SequencedSet) {
+                "The value must be a SequencedSet (e.g. TreeSet or LinkedHashSet) when isOrderSensitive is true."
             }
         }
 
@@ -76,7 +89,7 @@ class MultiChooseListValue<T : NamedChoice>(
             active.addAll(choices)
         }
 
-        set(active)
+        set(active) { /** Trigger listener callbacks */ }
     }
 
     private fun MutableSet<T>.tryToEnable(name: String) {

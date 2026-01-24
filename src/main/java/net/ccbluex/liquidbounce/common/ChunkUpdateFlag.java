@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.common;
 
 public final class ChunkUpdateFlag {
     /**
-     * Marks if the client world is processing a {@link net.minecraft.network.packet.s2c.play.ChunkDeltaUpdateS2CPacket}.
+     * Marks if the client world is processing a {@link net.minecraft.network.protocol.game.ClientboundSectionBlocksUpdatePacket}.
      */
     public static volatile boolean chunkDeltaUpdating = false;
 }

@@ -11,6 +11,7 @@
     } from "../../integration/rest.js";
     import {listen} from "../../integration/ws";
     import type {BrowserUrlChangeEvent} from "../../integration/events";
+    import {delay} from "../../integration/util";
 
     let browser: Browser;
 
@@ -19,7 +20,7 @@
     }
 
     onMount(async () => {
-        await new Promise(resolve => setTimeout(resolve, 250));
+        await delay(250);
         await loadBrowser();
     });
 

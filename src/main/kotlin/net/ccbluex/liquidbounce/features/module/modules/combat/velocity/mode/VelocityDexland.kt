@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.math.multiply
 
 internal object VelocityDexland : VelocityMode("Dexland") {
 
@@ -32,8 +33,10 @@ internal object VelocityDexland : VelocityMode("Dexland") {
     @Suppress("unused")
     private val attackHandler = handler<AttackEntityEvent> { event ->
         if (player.hurtTime > 0 && ++count % times == 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
-            player.velocity.x *= hReduce
-            player.velocity.z *= hReduce
+            player.deltaMovement = player.deltaMovement.multiply(
+                factorX = hReduce,
+                factorZ = hReduce,
+            )
         }
 
         lastAttackTime = System.currentTimeMillis()

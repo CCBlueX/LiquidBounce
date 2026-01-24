@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
@@ -42,7 +40,7 @@ import net.ccbluex.netty.http.util.httpOk
 // GET /api/v1/client/localStorage
 fun getLocalStorage(requestObject: RequestObject) = with(requestObject) {
     val key = queryParams["key"] ?: return@with httpForbidden("No key")
-    val value = PersistentLocalStorage[key] ?: return@with httpForbidden("No value for key $key")
+    val value = PersistentLocalStorage.map[key] ?: return@with httpForbidden("No value for key $key")
 
     httpOk(JsonObject().apply {
         addProperty("value", value)
@@ -55,14 +53,14 @@ fun putLocalStorage(requestObject: RequestObject) = with(requestObject) {
     val key = body["key"]?.asString ?: return@with httpForbidden("No key")
     val value = body["value"]?.asString ?: return@with httpForbidden("No value")
 
-    PersistentLocalStorage[key] = value
+    PersistentLocalStorage.map[key] = value
     httpNoContent()
 }
 
 // DELETE /api/v1/client/localStorage
 fun deleteLocalStorage(requestObject: RequestObject) = with(requestObject) {
     val key = queryParams["key"] ?: return@with httpForbidden("No key")
-    PersistentLocalStorage.remove(key)
+    PersistentLocalStorage.map.remove(key)
     httpNoContent()
 }
 
@@ -71,7 +69,7 @@ fun getAllLocalStorage(requestObject: RequestObject) = with(requestObject) {
     httpOk(JsonObject().apply {
         val jsonArray = JsonArray()
 
-        PersistentLocalStorage.forEach { (key, value) ->
+        PersistentLocalStorage.map.forEach { (key, value) ->
             jsonArray.add(JsonObject().apply {
                 addProperty("key", key)
                 addProperty("value", value)
@@ -89,9 +87,9 @@ fun putAllLocalStorage(requestObject: RequestObject) = with(requestObject) {
 
     val body = asJson<StoragePutRequest>()
 
-    PersistentLocalStorage.clear()
+    PersistentLocalStorage.map.clear()
     body.items.forEach { item ->
-        PersistentLocalStorage[item.key] = item.value
+        PersistentLocalStorage.map[item.key] = item.value
     }
 
     httpNoContent()

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.api.core.BaseApi
 import net.ccbluex.liquidbounce.api.core.HttpException
-import net.ccbluex.liquidbounce.api.core.toRequestBody
+import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
 import net.ccbluex.liquidbounce.utils.client.logger
 
 const val OPENAI_BASE_URL = "https://api.openai.com/v1"

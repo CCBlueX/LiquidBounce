@@ -1,5 +1,6 @@
 import {WS_BASE} from "./host";
 import type {EventMap} from "./events";
+import {onDestroy} from "svelte";
 
 console.log("Connecting to server at: ", WS_BASE);
 
@@ -45,7 +46,14 @@ export function listenAlways<NAME extends keyof EventMap>(eventName: NAME, callb
     alwaysListeners.get(eventName)!!.push(callback);
 }
 
-export function listen<NAME extends keyof EventMap>(eventName: NAME, callback: (event: EventMap[NAME]) => void) {
+/**
+ * Registers a event listener that will be called on every event of the given name.
+ *
+ * @param eventName
+ * @param callback
+ * @return A function that can be called to remove the listener.
+ */
+function listenNonComponent<NAME extends keyof EventMap>(eventName: NAME, callback: (event: EventMap[NAME]) => void) {
     if (!listeners.has(eventName)) {
         listeners.set(eventName, []);
     }
@@ -53,6 +61,40 @@ export function listen<NAME extends keyof EventMap>(eventName: NAME, callback: (
     listeners.get(eventName)!!.push(callback);
 
     return () => deleteListener(eventName, callback);
+}
+
+/**
+ * Registers a event listener that will be called on every event of the given name.
+ *
+ * The listener will be automatically removed when the component is destroyed.
+ *
+ * Should only be used inside a Svelte component.
+ *
+ * @param eventName
+ * @param callback
+ */
+export function listen<NAME extends keyof EventMap>(eventName: NAME, callback: (event: EventMap[NAME]) => void) {
+    const onDestroyHook = listenNonComponent(eventName, callback);
+    onDestroy(onDestroyHook);
+}
+
+/**
+ * Wait next event which matches given {@link predicate}.
+ */
+export async function waitMatches<NAME extends keyof EventMap>(eventName: NAME, predicate: (event: EventMap[NAME]) => boolean): Promise<EventMap[NAME]> {
+    return new Promise((resolve, reject) => {
+        const deleteHandler = listenNonComponent(eventName, (e) => {
+            try {
+                if (predicate(e)) {
+                    resolve(e);
+                    deleteHandler();
+                }
+            } catch (e) {
+                reject(e);
+                deleteHandler();
+            }
+        })
+    });
 }
 
 export function cleanupListeners() {

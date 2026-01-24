@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.utils.client.vfp;
@@ -27,7 +25,7 @@ import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
 import com.viaversion.viaversion.api.protocol.packet.ServerboundPacketType;
 import com.viaversion.viaversion.api.type.Types;
 import com.viaversion.viaversion.protocols.v1_8to1_9.packet.ServerboundPackets1_8;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 import java.util.function.Consumer;
 
@@ -55,7 +53,7 @@ public enum VfpCompatibility1_8 {
         });
     }
 
-    public void sendPlayerInput(Float sideways, Float forwards, boolean jumping, boolean sneaking) {
+    public void sendPlayerInput(float sideways, float forwards, boolean jumping, boolean sneaking) {
         writePacket(ServerboundPackets1_8.PLAYER_INPUT, packet -> {
             packet.write(Types.FLOAT, sideways);
             packet.write(Types.FLOAT, forwards);

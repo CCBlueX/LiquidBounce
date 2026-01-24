@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,11 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent;
@@ -28,35 +32,22 @@ import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoEntityInteract;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
-import net.ccbluex.liquidbounce.interfaces.LightmapTextureManagerAddition;
-import net.ccbluex.liquidbounce.render.engine.BlurEffectRenderer;
-import net.ccbluex.liquidbounce.render.shader.shaders.OutlineEffectShader;
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
-import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingKt;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ChatScreen;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
-import net.minecraft.util.math.Vec3d;
-import org.jetbrains.annotations.Nullable;
+import net.ccbluex.liquidbounce.utils.collection.Pools;
+import net.minecraft.client.Camera;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
-import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -71,21 +62,21 @@ public abstract class MixinGameRenderer {
 
     @Shadow
     @Final
-    private MinecraftClient client;
+    private Minecraft minecraft;
 
     @Shadow
-    public abstract MinecraftClient getClient();
+    public abstract Minecraft getMinecraft();
 
     @Shadow
     @Final
-    private Camera camera;
+    private Camera mainCamera;
 
     @Shadow
     public abstract void tick();
 
     @Shadow
     @Final
-    private LightmapTextureManager lightmapTextureManager;
+    private LightTexture lightTexture;
 
     /**
      * Hook game render event
@@ -96,94 +87,48 @@ public abstract class MixinGameRenderer {
     }
 
     /**
-     * We change crossHairTarget according to server side rotations
-     */
-    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
-    private HitResult hookRaycast(HitResult original, Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta) {
-        if (camera != client.player) {
-            return original;
-        }
-
-        var cameraRotation = new Rotation(camera.getYaw(tickDelta), camera.getPitch(tickDelta), true);
-
-        Rotation rotation;
-        if (RotationManager.INSTANCE.getCurrentRotation() != null) {
-            rotation = RotationManager.INSTANCE.getCurrentRotation();
-        } else if (ModuleFreeCam.INSTANCE.getRunning()) {
-            var serverRotation = RotationManager.INSTANCE.getServerRotation();
-            rotation = ModuleFreeCam.INSTANCE.shouldDisableCameraInteract() ? serverRotation : cameraRotation;
-        } else {
-            rotation = cameraRotation;
-        }
-
-        return RaytracingKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange),
-                ModuleLiquidPlace.INSTANCE.getRunning(), tickDelta);
-    }
-
-    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
-    private Vec3d hookRotationVector(Vec3d original, Entity camera, double blockInteractionRange, double entityInteractionRange, float tickDelta) {
-        if (camera != client.player) {
-            return original;
-        }
-
-        var rotation = RotationManager.INSTANCE.getCurrentRotation();
-        return rotation != null ? rotation.getDirectionVector() : original;
-    }
-
-    @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/projectile/ProjectileUtil;raycast(Lnet/minecraft/entity/Entity;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Vec3d;Lnet/minecraft/util/math/Box;Ljava/util/function/Predicate;D)Lnet/minecraft/util/hit/EntityHitResult;"))
-    private @Nullable EntityHitResult hookEntityHitResult(@Nullable EntityHitResult original) {
-        return original == null || !ModuleNoEntityInteract.INSTANCE.test(original) ? null : original;
-    }
-
-    /**
      * Hook world render event
      */
-    @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0))
-    public void hookWorldRender(RenderTickCounter tickCounter, CallbackInfo ci, @Local(ordinal = 2) Matrix4f matrix4f2) {
-        // TODO: Improve this
-        var newMatStack = new MatrixStack();
-
-        newMatStack.multiplyPositionMatrix(matrix4f2);
-
-        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.camera, tickCounter.getTickDelta(false)));
+    @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;isSleeping()Z"))
+    public void hookWorldRender(DeltaTracker tickCounter, CallbackInfo ci, @Local(ordinal = 1) Matrix4f matrix4f2) {
+        var newMatStack = Pools.MatStack.borrow();
+        newMatStack.mulPose(matrix4f2);
+        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.mainCamera, tickCounter.getGameTimeDeltaPartialTick(false)));
+        Pools.MatStack.recycle(newMatStack);
     }
 
-    @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/LightmapTextureManager;enable()V", shift = At.Shift.AFTER))
-    public void prepareItemCharms(Camera camera, float tickDelta, Matrix4f matrix4f, CallbackInfo ci) {
-        if (ModuleItemChams.INSTANCE.getRunning()) {
-            ModuleItemChams.INSTANCE.setData();
-            OutlineEffectShader.INSTANCE.prepare();
-        }
-    }
-
-    @Inject(method = "renderHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", shift = At.Shift.AFTER))
-    public void drawItemCharms(Camera camera, float tickDelta, Matrix4f matrix4f, CallbackInfo ci) {
-        if (ModuleItemChams.INSTANCE.getActive()) {
-            ModuleItemChams.INSTANCE.setActive(false);
-            OutlineEffectShader.INSTANCE.apply(true);
-        }
+    @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/player/LocalPlayer;I)V"))
+    public void drawItemCharms(ItemInHandRenderer instance, float tickProgress, PoseStack matrices,
+        SubmitNodeCollector orderedRenderCommandQueue, LocalPlayer player, int light,
+        Operation<Void> original) {
+        ModuleItemChams.INSTANCE.applyToTexture(this.lightTexture.getTextureView());
+        original.call(instance, tickProgress, matrices, orderedRenderCommandQueue, player, light);
+        ModuleItemChams.INSTANCE.resetTexture(this.lightTexture.getTextureView());
     }
 
     /**
      * Hook screen render event
      */
     @Inject(method = "render", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V",
+            target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphics;IIF)V",
             shift = At.Shift.AFTER))
-    public void hookScreenRender(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci, @Local DrawContext drawContext) {
-        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(drawContext, tickCounter.getTickDelta(false)));
+    public void hookScreenRender(DeltaTracker tickCounter, boolean tick, CallbackInfo ci, @Local GuiGraphics drawContext) {
+        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(drawContext, tickCounter.getGameTimeDeltaPartialTick(false)));
     }
 
-    @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
-    private void injectHurtCam(MatrixStack matrixStack, float f, CallbackInfo callbackInfo) {
+    @Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true)
+    private void injectHurtCam(PoseStack matrixStack, float f, CallbackInfo callbackInfo) {
         if (ModuleNoHurtCam.INSTANCE.getRunning()) {
             callbackInfo.cancel();
         }
     }
 
     @Inject(method = "bobView", at = @At("HEAD"), cancellable = true)
-    private void injectBobView(MatrixStack matrixStack, float f, CallbackInfo callbackInfo) {
-        if (ModuleNoBob.INSTANCE.getRunning() || ModuleTracers.INSTANCE.getRunning()) {
+    private void injectBobView(PoseStack matrixStack, float tickProgress, CallbackInfo callbackInfo) {
+        if (ModuleNoBob.INSTANCE.getRunning() ||
+            ModuleTracers.INSTANCE.getRunning() ||
+            (ModuleItemESP.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.getShowTracers())) {
+
             callbackInfo.cancel();
             return;
         }
@@ -192,49 +137,32 @@ public abstract class MixinGameRenderer {
             return;
         }
 
-        if (!(client.getCameraEntity() instanceof AbstractClientPlayerEntity playerEntity)) {
+        if (!(minecraft.getCameraEntity() instanceof AbstractClientPlayer playerEntity)) {
             return;
         }
 
         float additionalBobbing = ModuleDankBobbing.INSTANCE.getMotion();
 
-        float g = playerEntity.distanceMoved - playerEntity.lastDistanceMoved;
-        float h = -(playerEntity.distanceMoved + g * f);
-        float i = MathHelper.lerp(f, playerEntity.prevStrideDistance, playerEntity.strideDistance);
-        matrixStack.translate((MathHelper.sin(h * MathHelper.PI) * i * 0.5F), -Math.abs(MathHelper.cos(h * MathHelper.PI) * i), 0.0D);
-        matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(h * MathHelper.PI) * i * (3.0F + additionalBobbing)));
-        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * i) * 5.0F));
+        final var state = playerEntity.avatarState();
+
+        float g = state.getBackwardsInterpolatedWalkDistance(tickProgress);
+        float h = state.getInterpolatedBob(tickProgress);
+        matrixStack.translate(Mth.sin(g * Mth.PI) * h * 0.5f, -Math.abs(Mth.cos(g * Mth.PI) * h), 0.0f);
+        matrixStack.mulPose(Axis.ZP.rotationDegrees(Mth.sin(h * Mth.PI) * h * (3.0F + additionalBobbing)));
+        matrixStack.mulPose(Axis.XP.rotationDegrees(Math.abs(Mth.cos(h * Mth.PI - (0.2F + additionalBobbing)) * h) * 5.0F));
 
         callbackInfo.cancel();
     }
 
-    @Inject(method = "onResized", at = @At("HEAD"))
+    @Inject(method = "resize", at = @At("HEAD"))
     private void hookBlurEffectResize(int width, int height, CallbackInfo ci) {
-        BlurEffectRenderer.INSTANCE.setupDimensions(width, height);
     }
 
-    @Inject(method = "render", at = @At(value = "RETURN"))
-    private void hookBlurEffectEnd(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
-        BlurEffectRenderer.INSTANCE.endOverlayDrawing();
-    }
-
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V", shift = At.Shift.BEFORE))
-    private void hookBlurEffectEndAlternative(CallbackInfo ci) {
-        if (!(client.currentScreen instanceof ChatScreen)) {
-            BlurEffectRenderer.INSTANCE.endOverlayDrawing();
-        }
-    }
-
-    @Inject(method = "showFloatingItem", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "displayItemActivation", at = @At("HEAD"), cancellable = true)
     private void hookShowFloatingItem(ItemStack floatingItem, CallbackInfo ci) {
         if (!ModuleAntiBlind.canRender(DoRender.FLOATING_ITEMS)) {
             ci.cancel();
         }
-    }
-
-    @Inject(method = "renderWorld", at = @At(value = "RETURN"))
-    private void hookRestoreLightMap(RenderTickCounter tickCounter, CallbackInfo ci) {
-        ((LightmapTextureManagerAddition) lightmapTextureManager).liquid_bounce$restoreLightMap();
     }
 
     @ModifyExpressionValue(method = "getFov", at = @At(value = "INVOKE", target = "Ljava/lang/Integer;intValue()I", remap = false))
@@ -254,8 +182,8 @@ public abstract class MixinGameRenderer {
         return result;
     }
 
-    @ModifyExpressionValue(method = "renderWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F"))
-    private float hookNausea(float original) {
+    @ModifyExpressionValue(method = "renderLevel", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(FF)F", ordinal = 0, remap = false))
+    private float hookAntiNausea(float original) {
         if (!ModuleAntiBlind.canRender(DoRender.NAUSEA)) {
             return 0f;
         }
@@ -263,23 +191,23 @@ public abstract class MixinGameRenderer {
         return original;
     }
 
-    @ModifyExpressionValue(method = "renderWorld",
+    @ModifyExpressionValue(method = "renderLevel",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/option/GameOptions;getPerspective()Lnet/minecraft/client/option/Perspective;"
+                    target = "Lnet/minecraft/client/Options;getCameraType()Lnet/minecraft/client/CameraType;"
             )
     )
-    private Perspective hookPerspectiveEventOnCamera(Perspective original) {
+    private CameraType hookPerspectiveEventOnCamera(CameraType original) {
         return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
     }
 
-    @ModifyExpressionValue(method = "renderHand",
+    @ModifyExpressionValue(method = "renderItemInHand",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/option/GameOptions;getPerspective()Lnet/minecraft/client/option/Perspective;"
+                    target = "Lnet/minecraft/client/Options;getCameraType()Lnet/minecraft/client/CameraType;"
             )
     )
-    private Perspective hookPerspectiveEventOnHand(Perspective original) {
+    private CameraType hookPerspectiveEventOnHand(CameraType original) {
         return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
     }
 
@@ -294,7 +222,7 @@ public abstract class MixinGameRenderer {
         return original;
     }
 
-    @ModifyArgs(method = "getBasicProjectionMatrix", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;perspective(FFFF)Lorg/joml/Matrix4f;", remap = false))
+    @ModifyArgs(method = "getProjectionMatrix", at = @At(value = "INVOKE", target = "Lorg/joml/Matrix4f;perspective(FFFF)Lorg/joml/Matrix4f;", remap = false))
     private void hookBasicProjectionMatrix(Args args) {
         if (ModuleAspect.INSTANCE.getRunning()) {
             args.set(1, (float) args.get(1) / ModuleAspect.getRatioMultiplier());

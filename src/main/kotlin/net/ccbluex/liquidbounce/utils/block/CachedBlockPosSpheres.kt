@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import it.unimi.dsi.fastutil.longs.LongImmutableList
 import it.unimi.dsi.fastutil.longs.LongList
 import net.ccbluex.liquidbounce.utils.block.CachedBlockPosSpheres.RADIUS
 import net.ccbluex.liquidbounce.utils.math.sq
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 internal object CachedBlockPosSpheres {
 

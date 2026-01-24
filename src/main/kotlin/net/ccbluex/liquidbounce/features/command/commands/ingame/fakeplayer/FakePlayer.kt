@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,67 +23,68 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.network.OtherClientPlayerEntity
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.player.RemotePlayer
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
 
 /**
  * This class represents a Fake Player implementing
  * attackability and assured totem pops instead of death
- * into [OtherClientPlayerEntity].
+ * into [RemotePlayer].
  */
 open class FakePlayer(
-    clientWorld: ClientWorld?,
-    gameProfile: GameProfile?,
-) : OtherClientPlayerEntity(
+    clientWorld: ClientLevel,
+    gameProfile: GameProfile,
+) : RemotePlayer(
     clientWorld,
     gameProfile
 ), MinecraftShortcuts {
 
-    lateinit var onRemoval: () -> Unit
+    var onRemoval: Runnable? = null
 
     /**
      * Loads the attributes from the player into the fake player.
      */
     fun loadAttributes(snapshot: PosPoseSnapshot) {
-        this.setPosition(snapshot.x, snapshot.y, snapshot.z)
-        this.prevX = snapshot.prevX
-        this.prevY = snapshot.prevY
-        this.prevZ = snapshot.prevZ
-        this.handSwinging = snapshot.handSwinging
-        this.handSwingTicks = snapshot.handSwingTicks
-        this.handSwingProgress = snapshot.handSwingProgress
-        this.prevYaw = snapshot.yaw
-        this.yaw = snapshot.prevYaw
-        this.prevPitch = snapshot.pitch
-        this.pitch = snapshot.prevPitch
-        this.prevBodyYaw = snapshot.bodyYaw
-        this.bodyYaw = snapshot.prevBodyYaw
-        this.prevHeadYaw = snapshot.headYaw
-        this.headYaw = snapshot.prevHeadYaw
+        this.setPos(snapshot.x, snapshot.y, snapshot.z)
+        this.xo = snapshot.lastX
+        this.yo = snapshot.lastY
+        this.zo = snapshot.lastZ
+        this.xOld = snapshot.lastX
+        this.yOld = snapshot.lastY
+        this.zOld = snapshot.lastZ
+        this.swinging = snapshot.handSwinging
+        this.swingTime = snapshot.handSwingTicks
+        this.attackAnim = snapshot.handSwingProgress
+        this.yRot = snapshot.yaw
+        this.yRotO = snapshot.lastYaw
+        this.xRot = snapshot.pitch
+        this.xRotO = snapshot.lastPitch
+        this.yBodyRot = snapshot.bodyYaw
+        this.yBodyRotO = snapshot.lastBodyYaw
+        this.yHeadRot = snapshot.headYaw
+        this.yHeadRotO = snapshot.lastHeadYaw
         this.pose = snapshot.pose
-        this.preferredHand = snapshot.preferredHand
-        this.inventory.clone(snapshot.inventory)
-        this.limbAnimator.pos = snapshot.limbPos
+        this.swingingArm = snapshot.preferredHand
+        this.inventory.replaceWith(snapshot.inventory)
+        this.walkAnimation.position = snapshot.limbPos
     }
 
     override fun setHealth(health: Float) {
         super.setHealth(health)
         if (getHealth() <= 0f) {
-            addStatusEffect(StatusEffectInstance(StatusEffects.REGENERATION, 900, 1))
-            addStatusEffect(StatusEffectInstance(StatusEffects.ABSORPTION, 100, 1))
-            addStatusEffect(StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, 800, 0))
+            addEffect(MobEffectInstance(MobEffects.REGENERATION, 900, 1))
+            addEffect(MobEffectInstance(MobEffects.ABSORPTION, 100, 1))
+            addEffect(MobEffectInstance(MobEffects.FIRE_RESISTANCE, 800, 0))
             setHealth(1.0f)
 
-            val packet = EntityStatusS2CPacket(LivingEntity::class.java.cast(this), 35.toByte())
+            val packet = ClientboundEntityEventPacket(this, 35.toByte())
             val event = PacketEvent(TransferOrigin.INCOMING, packet, true)
             callEvent(event)
             if (!event.isCancelled) {
-                mc.execute { packet.apply(MinecraftClient.getInstance().networkHandler) }
+                mc.execute { packet.handle(mc.connection!!) }
             }
         }
     }
@@ -93,12 +94,12 @@ open class FakePlayer(
      */
     override fun tick() {
         if (removalReason != null) {
-            onRemoval()
+            onRemoval?.run()
         }
 
         super.tick()
 
-        if (age % 10 == 0 && health < 20f) {
+        if (tickCount % 10 == 0 && health < 20f) {
             health = (health + 0.5f).coerceAtMost(20f)
         }
     }
@@ -107,11 +108,11 @@ open class FakePlayer(
      * The fake player takes no knockback.
      */
     // this could perhaps be an option, but it could conflict with the recording
-    override fun takeKnockback(strength: Double, x: Double, z: Double) {
+    override fun knockback(strength: Double, x: Double, z: Double) {
         /* nope */
     }
 
-    override fun remove(reason: RemovalReason?) {
+    override fun remove(reason: RemovalReason) {
         super.remove(reason)
     }
 

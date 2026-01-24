@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.api.models.user.UserInformation
 import net.ccbluex.liquidbounce.api.services.auth.OAuthClient
 import net.ccbluex.liquidbounce.api.services.user.UserApi
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
-import java.util.*
+import java.util.UUID
 
 
 /**
@@ -61,6 +61,7 @@ data class ClientAccount(
     }
 
     companion object {
+        @JvmField
         val EMPTY_ACCOUNT = ClientAccount(null, null, null)
     }
 }

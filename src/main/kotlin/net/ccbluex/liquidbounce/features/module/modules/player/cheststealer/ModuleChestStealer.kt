@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,35 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.cheststealer
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
-import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanGenerator
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.InventoryCleanupPlan
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
+import net.ccbluex.liquidbounce.utils.inventory.CheckScreenHandlerTypeConfigurable
+import net.ccbluex.liquidbounce.utils.inventory.CheckScreenTitleConfigurable
+import net.ccbluex.liquidbounce.utils.inventory.ContainerItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findItemsInContainer
+import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.item.isMergeable
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.item.ItemStack
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.gui.screens.inventory.InventoryScreen
+import net.minecraft.world.item.ItemStack
 import kotlin.math.ceil
 
 /**
@@ -42,7 +52,7 @@ import kotlin.math.ceil
  * Automatically steals all items from a chest.
  */
 
-object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
+object ModuleChestStealer : ClientModule("ChestStealer", ModuleCategories.PLAYER) {
 
     private val inventoryConstrains = tree(InventoryConstraints())
     private val autoClose by boolean("AutoClose", true)
@@ -122,8 +132,8 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
             val targetStack = it.itemStack
             when {
                 blacklist != null && it in blacklist -> 0
-                targetStack.isEmpty -> itemStack.maxCount
-                targetStack.isMergeable(itemStack) -> targetStack.maxCount - targetStack.count
+                targetStack.isEmpty -> itemStack.maxStackSize
+                targetStack.isMergeable(itemStack) -> targetStack.maxStackSize - targetStack.count
                 else -> 0
             }
         }
@@ -133,7 +143,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      */
     @Suppress("CognitiveComplexMethod")
     private fun Iterable<ItemSlot>.findPossiblePickActions(
-        screen: HandledScreen<*>,
+        screen: AbstractContainerScreen<*>,
         from: ItemSlot,
         targetBlacklist: MutableSet<ItemSlot>? = null,
     ): List<InventoryAction.Click>? {
@@ -155,7 +165,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
                 }
 
                 /* The remaining count after merged with [fromStack]. Negative -> fromStack has remaining */
-                fun mergedRemaining(target: ItemStack) = fromStack.maxCount - fromStack.count - target.count
+                fun mergedRemaining(target: ItemStack) = fromStack.maxStackSize - fromStack.count - target.count
 
                 buildList {
                     // Pick up
@@ -192,7 +202,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
      */
     private fun throwItem(
         cleanupPlan: InventoryCleanupPlan,
-        screen: HandledScreen<*>,
+        screen: AbstractContainerScreen<*>,
         targetBlacklist: MutableSet<ItemSlot>,
     ): List<InventoryAction>? {
         val itemsInInv = findNonEmptySlotsInInventory()
@@ -220,10 +230,10 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
         val freeSlotsInInv = mainInventory.count { it.itemStack.isEmpty }
 
         val spaceGainedThroughMerge = cleanupPlan.mergeableItems.entries.sumOf { (id, slots) ->
-            val slotsInChest = slots.count { it.slotType == ItemSlotType.CONTAINER }
+            val slotsInChest = slots.count { it.slotType == ItemSlot.Type.CONTAINER }
             val totalCount = slots.sumOf { it.itemStack.count }
 
-            val mergedStackCount = ceil(totalCount.toDouble() / id.item.maxCount.toDouble()).toInt()
+            val mergedStackCount = ceil(totalCount.toDouble() / id.item.defaultMaxStackSize.toDouble()).toInt()
 
             (slots.size - mergedStackCount).coerceAtMost(slotsInChest)
         }
@@ -239,12 +249,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     private fun performQuickSwaps(
         event: ScheduleInventoryActionEvent,
         cleanupPlan: InventoryCleanupPlan,
-        screen: HandledScreen<*>
+        screen: AbstractContainerScreen<*>
     ): Boolean? {
         for (i in cleanupPlan.swaps.indices) {
             val hotbarSwap = cleanupPlan.swaps[i]
             // We only care about swaps from the chest to the hotbar
-            if (hotbarSwap.from.slotType != ItemSlotType.CONTAINER) {
+            if (hotbarSwap.from.slotType != ItemSlot.Type.CONTAINER) {
                 continue
             }
 
@@ -277,7 +287,7 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     /**
      * Either asks [ModuleInventoryCleaner] what to do or just takes everything.
      */
-    private fun createCleanupPlan(screen: HandledScreen<*>): InventoryCleanupPlan {
+    private fun createCleanupPlan(screen: AbstractContainerScreen<*>): InventoryCleanupPlan {
         val cleanupPlan = if (!ModuleInventoryCleaner.running) {
             val usefulItems = screen.findItemsInContainer()
 
@@ -304,12 +314,12 @@ object ModuleChestStealer : ClientModule("ChestStealer", Category.PLAYER) {
     /**
      * @return the chest screen if it is open and the title matches the chest title
      */
-    private fun getChestScreen(): HandledScreen<*>? {
-        return mc.currentScreen?.takeIf { it.canBeStolen() } as HandledScreen<*>?
+    private fun getChestScreen(): AbstractContainerScreen<*>? {
+        return mc.screen?.takeIf { it.canBeStolen() } as AbstractContainerScreen<*>?
     }
 
     fun Screen.canBeStolen(): Boolean {
-        return running && this is HandledScreen<*> && this !is InventoryScreen &&
+        return running && this is AbstractContainerScreen<*> && this !is InventoryScreen &&
             checkScreenHandlerType.isValid(this) && checkScreenTitle.isValid(this)
     }
 

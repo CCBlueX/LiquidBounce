@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes
 
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
-import java.util.*
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket
+import net.minecraft.world.entity.player.Player
+import java.util.UUID
 
-object HorizonAntiBotMode : Choice("Horizon"), ModuleAntiBot.IAntiBotMode {
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleAntiBot.modes
+object HorizonAntiBotMode : AntiBotMode("Horizon") {
 
-    private val botList = hashSetOf<UUID>()
+    private val botList = objectHashSetOf<UUID>()
 
     val packetHandler = handler<PacketEvent> {
         when (val packet = it.packet) {
-            is PlayerListS2CPacket -> {
-                if (packet.actions.first() == PlayerListS2CPacket.Action.ADD_PLAYER) {
-                    for (entry in packet.entries) {
+            is ClientboundPlayerInfoUpdatePacket -> {
+                if (ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER in packet.actions()) {
+                    for (entry in packet.entries()) {
                         if (entry.gameMode != null) {
                             continue
                         }
@@ -48,13 +44,13 @@ object HorizonAntiBotMode : Choice("Horizon"), ModuleAntiBot.IAntiBotMode {
                 }
             }
 
-            is PlayerRemoveS2CPacket -> {
+            is ClientboundPlayerInfoRemovePacket -> {
                 packet.profileIds.forEach(botList::remove)
             }
         }
     }
 
-    override fun isBot(entity: PlayerEntity): Boolean {
+    override fun isBot(entity: Player): Boolean {
         return botList.contains(entity.uuid)
     }
 

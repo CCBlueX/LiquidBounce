@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ internal object SpiderPolar29thMarch2025 : Choice("Polar-29.03.2025") {
 
     @Suppress("unused")
     private val boxHandler = handler<BlockShapeEvent> { event ->
-        if (event.pos.y >= player.pos.y || player.isSneaking && player.isOnGround) {
+        if (event.pos.y >= player.position().y || player.isShiftKeyDown && player.onGround()) {
             event.shape = event.shape.shrink(
                 x = 0.0001,
                 z = 0.0001

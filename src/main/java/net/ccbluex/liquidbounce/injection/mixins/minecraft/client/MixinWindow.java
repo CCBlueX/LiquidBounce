@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,16 +18,16 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
+import com.mojang.blaze3d.platform.IconSet;
+import com.mojang.blaze3d.platform.Window;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.FrameBufferResizeEvent;
+import net.ccbluex.liquidbounce.event.events.FramebufferResizeEvent;
 import net.ccbluex.liquidbounce.event.events.ScaleFactorChangeEvent;
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
-import net.minecraft.client.util.Icons;
-import net.minecraft.client.util.Window;
-import net.minecraft.resource.InputSupplier;
-import net.minecraft.resource.ResourcePack;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.resources.IoSupplier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -41,7 +41,7 @@ import java.io.InputStream;
 import java.util.List;
 
 @Mixin(Window.class)
-public class MixinWindow {
+public abstract class MixinWindow {
 
     @Shadow
     @Final
@@ -52,10 +52,10 @@ public class MixinWindow {
      *
      * @return modified game icon
      */
-    @Redirect(method = "setIcon", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Icons;getIcons(Lnet/minecraft/resource/ResourcePack;)Ljava/util/List;"))
-    private List<InputSupplier<InputStream>> setupIcon(Icons instance, ResourcePack resourcePack) throws IOException {
+    @Redirect(method = "setIcon", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/IconSet;getStandardIcons(Lnet/minecraft/server/packs/PackResources;)Ljava/util/List;"))
+    private List<IoSupplier<InputStream>> setupIcon(IconSet instance, PackResources resourcePack) throws IOException {
         if (HideAppearance.INSTANCE.isHidingNow()) {
-            return instance.getIcons(resourcePack);
+            return instance.getStandardIcons(resourcePack);
         }
 
         LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
@@ -69,7 +69,7 @@ public class MixinWindow {
             LiquidBounce.INSTANCE.getLogger().error("Unable to find client icons.");
 
             // Load default icons
-            return instance.getIcons(resourcePack);
+            return instance.getStandardIcons(resourcePack);
         }
 
         return List.of(() -> stream16, () -> stream32);
@@ -78,22 +78,22 @@ public class MixinWindow {
     /**
      * Hook window resize
      */
-    @Inject(method = "onWindowSizeChanged", at = @At("RETURN"))
+    @Inject(method = "onResize", at = @At("RETURN"))
     public void hookResize(long window, int width, int height, CallbackInfo callbackInfo) {
         if (window == handle) {
             EventManager.INSTANCE.callEvent(new WindowResizeEvent(width, height));
         }
     }
 
-    @Inject(method = "onFramebufferSizeChanged", at = @At("RETURN"))
+    @Inject(method = "onFramebufferResize", at = @At("RETURN"))
     public void hookFramebufferResize(long window, int width, int height, CallbackInfo callbackInfo) {
         if (window == handle) {
-            EventManager.INSTANCE.callEvent(new FrameBufferResizeEvent(width, height));
+            EventManager.INSTANCE.callEvent(new FramebufferResizeEvent(width, height));
         }
     }
 
-    @Inject(method = "setScaleFactor", at = @At("RETURN"))
-    public void hookScaleFactor(double scaleFactor, CallbackInfo ci) {
+    @Inject(method = "setGuiScale", at = @At("RETURN"))
+    public void hookScaleFactor(int scaleFactor, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new ScaleFactorChangeEvent(scaleFactor));
     }
 

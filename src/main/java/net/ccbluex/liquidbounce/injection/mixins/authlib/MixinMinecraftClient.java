@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,14 +15,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.injection.mixins.authlib;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.authlib.minecraft.client.MinecraftClient;
 import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager;
-import net.minecraft.client.gui.screen.multiplayer.ConnectScreen;
+import net.minecraft.client.gui.screens.ConnectScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -40,7 +39,7 @@ public abstract class MixinMinecraftClient {
     ))
     private Proxy hookClientProxy(Proxy proxy) {
         // We only want to use the proxy when connecting to a server
-        if (!(net.minecraft.client.MinecraftClient.getInstance().currentScreen instanceof ConnectScreen)) {
+        if (!(net.minecraft.client.Minecraft.getInstance().screen instanceof ConnectScreen)) {
             return Proxy.NO_PROXY;
         }
 

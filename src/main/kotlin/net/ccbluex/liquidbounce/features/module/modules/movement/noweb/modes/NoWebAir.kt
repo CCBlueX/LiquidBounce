@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 /**
  * No collision with cobwebs

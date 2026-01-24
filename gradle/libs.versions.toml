@@ -1,0 +1,110 @@
+[versions]
+# Minecraft 1.21.1 upwards uses Java 21
+# 26.1 upwards uses Java 25
+jdk = "21"
+
+# Fabric Properties
+# Check these on https://fabricmc.net/versions.html
+# https://mods.upcraft.dev/dev/versions
+minecraft = "1.21.11"
+fabric-loom = "1.15-SNAPSHOT"
+fabric-loader = "0.18.4"
+fabric-loaderMin = "0.16.14"
+fabric-api = "0.140.0+1.21.11"
+
+# mcef
+mcef = "3.1.6-1.21.11"
+# mc-authlib
+mc_authlib = "1.7.0"
+# Polyglot
+polyglot = "25.0.2"
+# djl
+djl = "0.36.0"
+# https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+okhttp = "5.3.2"
+
+httpServer = "2.5.2"
+discordIpc = "4.0.0"
+semver4j = "3.1.0"
+ahocorasick = "0.6.3"
+fastutil4k = "0.2.5"
+
+# Recommended mods
+modmenu = "17.0.0-beta.1"
+exploit_preventer_api = "0.0.1"
+exploit_preventer_mod = "0.1.10"
+sodium = "mc1.21.11-0.8.2-fabric"
+lithium = "mc1.21.11-0.21.2-fabric"
+viafabricplus = "4.4.4"
+# Mods for compatibility test (runtime only)
+immediatelyFast = "1.14.1+1.21.11-fabric"
+iris = "1.10.3+1.21.11-fabric"
+
+# Kotlin
+# https://kotlinlang.org/releases.html
+kotlin = "2.2.10"
+# https://central.sonatype.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-test/overview
+kotlinx-coroutines = "1.10.2"
+# https://maven.fabricmc.net/net/fabricmc/fabric-language-kotlin/
+fabric-kotlin = "1.13.5+kotlin.2.2.10"
+
+# Netty, should be sync with game version
+# https://mvnrepository.com/artifact/io.netty/netty-all
+netty = "4.2.7.Final"
+
+# Other plugins
+detekt = "2.0.0-alpha.1"
+gradleGitProperties = "2.5.4"
+dokka = "2.1.0"
+nodeGradle = "7.1.0"
+
+[libraries]
+minecraft = { group = "com.mojang", name = "minecraft", version.ref = "minecraft" }
+fabric-loader = { group = "net.fabricmc", name = "fabric-loader", version.ref = "fabric-loader" }
+fabric-api = { group = "net.fabricmc.fabric-api", name = "fabric-api", version.ref = "fabric-api" }
+fabric-kotlin = { group = "net.fabricmc", name = "fabric-language-kotlin", version.ref = "fabric-kotlin" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+fabric-loader-junit = { group = "net.fabricmc", name = "fabric-loader-junit", version.ref = "fabric-loader" }
+
+netty-handler-proxy = { group = "io.netty", name = "netty-handler-proxy", version.ref = "netty" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-coroutines = { group = "com.squareup.okhttp3", name = "okhttp-coroutines", version.ref = "okhttp" }
+mcAuthlib = { group = "net.ccbluex", name = "mc-authlib", version.ref = "mc_authlib" }
+mcef = { group = "com.github.CCBlueX", name = "mcef", version.ref = "mcef" }
+httpServer = { group = "net.ccbluex", name = "netty-httpserver", version.ref = "httpServer" }
+discordIpc = { group = "com.github.CCBlueX", name = "DiscordIPC", version.ref = "discordIpc" }
+semver4j = { group = "com.vdurmont", name = "semver4j", version.ref = "semver4j" }
+ahocorasick = { group = "org.ahocorasick", name = "ahocorasick", version.ref = "ahocorasick" }
+fastutil4k-extensionsOnly = { group = "net.ccbluex", name = "fastutil4k-extensions-only", version.ref = "fastutil4k" }
+fastutil4k-moreCollections = { group = "net.ccbluex", name = "fastutil4k-more-collections", version.ref = "fastutil4k" }
+
+polyglot = { group = "org.graalvm.polyglot", name = "polyglot", version.ref = "polyglot" }
+polyglot-tools = { group = "org.graalvm.polyglot", name = "tools-community", version.ref = "polyglot" }
+polyglot-js = { group = "org.graalvm.polyglot", name = "js-community", version.ref = "polyglot" }
+
+djl-api = { group = "ai.djl", name = "api", version.ref = "djl" }
+djl-pytorch = { group = "ai.djl.pytorch", name = "pytorch-engine", version.ref = "djl" }
+#djl-mxnet = { group = "ai.djl.mxnet", name = "mxnet-engine", version.ref = "djl" }
+#djl-tensorflow = { group = "ai.djl.tensorflow", name = "tensorflow-engine", version.ref = "djl" }
+
+# mods
+modmenu = { group = "maven.modrinth", name = "modmenu", version.ref = "modmenu" }
+sodium = { group = "maven.modrinth", name = "sodium", version.ref = "sodium" }
+lithium = { group = "maven.modrinth", name = "lithium", version.ref = "lithium" }
+vfp-api = { group = "com.viaversion", name = "viafabricplus-api", version.ref = "viafabricplus" }
+vfp = { group = "com.viaversion", name = "viafabricplus", version.ref = "viafabricplus" }
+exploitPreventer-api = { group = "com.nikoverflow", name = "ExploitPreventer-API", version.ref = "exploit_preventer_api" }
+exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", version.ref = "exploit_preventer_mod" }
+immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
+iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
+
+[plugins]
+fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+gradleGitProperties = { id = "com.gorylenko.gradle-git-properties", version.ref = "gradleGitProperties" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+nodeGradle = { id = "com.github.node-gradle.node", version.ref = "nodeGradle" }
+
+[bundles]
+okhttp = ["okhttp", "okhttp-coroutines"]

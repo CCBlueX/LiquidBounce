@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,14 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
+import com.mojang.math.Axis
 import net.ccbluex.liquidbounce.script.bindings.features.ScriptSetting
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.util.Hand
-import net.minecraft.util.math.*
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
+import net.minecraft.util.Mth
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.Vec3
 import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.Value
 import java.util.concurrent.ConcurrentHashMap
@@ -45,11 +49,11 @@ object ScriptContextProvider {
 
             // -> Minecraft API
             putMember("Vec3i", Vec3i::class.java)
-            putMember("Vec3d", Vec3d::class.java)
-            putMember("MathHelper", MathHelper::class.java)
+            putMember("Vec3d", Vec3::class.java)
+            putMember("MathHelper", Mth::class.java)
             putMember("BlockPos", BlockPos::class.java)
-            putMember("Hand", Hand::class.java)
-            putMember("RotationAxis", RotationAxis::class.java)
+            putMember("Hand", InteractionHand::class.java)
+            putMember("RotationAxis", Axis::class.java)
 
             // Variable bindings
             putMember("mc", mc)

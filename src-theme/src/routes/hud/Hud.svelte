@@ -7,26 +7,28 @@
     import HotBar from "./elements/hotbar/HotBar.svelte";
     import Scoreboard from "./elements/Scoreboard.svelte";
     import {onMount} from "svelte";
-    import {getComponents, getGameWindow, getMetadata} from "../../integration/rest";
+    import {getClientInfo, getComponents, getGameWindow, getMetadata} from "../../integration/rest";
     import {listen} from "../../integration/ws";
-    import type {Component, Metadata} from "../../integration/types";
+    import type {HudComponent, Metadata} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
     import type {ComponentsUpdateEvent, ScaleFactorChangeEvent} from "../../integration/events";
     import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
     import Effects from "./elements/Effects.svelte";
     import BlockCounter from "./elements/BlockCounter.svelte";
-    import ArmorItems from "./elements/inventory/ArmorItems.svelte";
-    import InventoryContainer from "./elements/inventory/InventoryContainer.svelte";
     import Text from "./elements/Text.svelte";
-    import CraftingInput from "./elements/inventory/CraftingInput.svelte";
     import DraggableComponent from "./elements/DraggableComponent.svelte";
+    import KeyBinds from "./elements/KeyBinds.svelte";
+    import GenericPlayerInventory from "./elements/inventory/GenericPlayerInventory.svelte";
+    import {os} from "../clickgui/clickgui_store";
     import BedPlatesView from "./elements/BedPlatesView.svelte";
 
     let zoom = 100;
     let metadata: Metadata;
-    let components: Component[] = [];
+    let components: HudComponent[] = [];
 
     onMount(async () => {
+        $os = (await getClientInfo()).os;
+
         const gameWindow = await getGameWindow();
         zoom = gameWindow.scaleFactor * 50;
 
@@ -53,11 +55,11 @@
 <div class="hud" style="zoom: {zoom}%">
     {#each components as c}
         {#if c.settings.enabled}
-            <DraggableComponent name={c.name} id={c.id} alignment={c.settings.alignment} >
+            <DraggableComponent alignment={c.settings.alignment} >
                 {#if c.name === "Watermark"}
                     <Watermark/>
                 {:else if c.name === "ArrayList"}
-                    <ArrayList/>
+                    <ArrayList settings={c.settings}/>
                 {:else if c.name === "TabGui"}
                     <TabGui/>
                 {:else if c.name === "Notifications"}
@@ -65,19 +67,26 @@
                 {:else if c.name === "TargetHud"}
                     <TargetHud/>
                 {:else if c.name === "BlockCounter"}
-                    <BlockCounter/>
+                    <BlockCounter settings={c.settings}/>
                 {:else if c.name === "BedPlatesView"}
                     <BedPlatesView settings={c.settings}/>
                 {:else if c.name === "Hotbar"}
                     <HotBar/>
                 {:else if c.name === "Scoreboard"}
-                    <Scoreboard/>
+                    <Scoreboard settings={c.settings}/>
                 {:else if c.name === "ArmorItems"}
-                    <ArmorItems/>
+                    <GenericPlayerInventory
+                            rowLength={1}
+                            backgroundColor="transparent"
+                            gap="2px"
+                            getRenderedStacks={it => Array.from(it.armor).reverse()}
+                    />
                 {:else if c.name === "Inventory"}
-                    <InventoryContainer/>
+                    <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.main.slice(9)} />
                 {:else if c.name === "CraftingInventory"}
-                    <CraftingInput/>
+                    <GenericPlayerInventory rowLength={2} getRenderedStacks={it => it.crafting} />
+                {:else if c.name === "EnderChestInventory"}
+                    <GenericPlayerInventory rowLength={9} getRenderedStacks={it => it.enderChest} />
                 {:else if c.name === "Taco"}
                     <Taco/>
                 {:else if c.name === "Keystrokes"}
@@ -88,6 +97,8 @@
                     <Text settings={c.settings} />
                 {:else if c.name === "Image"}
                     <img alt="" src="{c.settings.uRL}" style="scale: {c.settings.scale};">
+                {:else if c.name === "KeyBinds"}
+                    <KeyBinds/>
                 {/if}
             </DraggableComponent>
         {/if}

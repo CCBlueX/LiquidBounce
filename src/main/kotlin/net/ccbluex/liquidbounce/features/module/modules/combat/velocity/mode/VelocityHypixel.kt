@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 internal object VelocityHypixel : VelocityMode("Hypixel") {
 
@@ -31,28 +31,28 @@ internal object VelocityHypixel : VelocityMode("Hypixel") {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        
+
         if (ModuleFly.enabled) {
             return@handler
         }
 
         // Check if this is a regular velocity update
-        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-            if (!player.isOnGround) {
+        if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
+            if (!player.onGround()) {
                 if (!absorbedVelocity) {
                     event.cancelEvent()
                     absorbedVelocity = true
                     return@handler
                 }
             }
-            packet.velocityX = (player.velocity.x * 8000).toInt()
-            packet.velocityZ = (player.velocity.z * 8000).toInt()
+            packet.movement.x = player.deltaMovement.x
+            packet.movement.z = player.deltaMovement.z
         }
     }
 
     @Suppress("unused")
     private val gameHandler = tickHandler {
-        if (player.isOnGround) {
+        if (player.onGround()) {
             absorbedVelocity = false
         }
     }

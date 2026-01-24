@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,24 +15,27 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.minecraft.block.FluidBlock
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.shape.VoxelShapes
+import net.ccbluex.liquidbounce.utils.math.copy
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.level.block.LiquidBlock
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat Verus
@@ -51,15 +54,15 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is ServerboundMovePlayerPacket) {
             packet.onGround = true
         }
     }
 
     @Suppress("unused")
     private val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.block !is FluidBlock && event.pos.y < player.y) {
-            event.shape = VoxelShapes.fullCube()
+        if (event.state.block !is LiquidBlock && event.pos.y < player.y) {
+            event.shape = Shapes.block()
         }
     }
 
@@ -81,11 +84,11 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
     }
 
     override fun disable() {
-        player.velocity.x = 0.0
-        player.velocity.z = 0.0
+        val player = mc.player ?: return
+        player.deltaMovement = player.deltaMovement.copy(x = 0.0, z = 0.0)
 
-        network.sendPacket(
-            PlayerMoveC2SPacket.PositionAndOnGround(
+        network.send(
+            ServerboundMovePlayerPacket.Pos(
                 player.x, player.y - 0.5, player.z,
                 false, player.horizontalCollision
             )

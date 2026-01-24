@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,18 +23,34 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.api.core.formatAvatarUrl
-import net.ccbluex.liquidbounce.utils.client.isPremium
-import net.minecraft.client.session.Session
+import net.ccbluex.liquidbounce.features.account.SessionWithService
+import net.ccbluex.liquidbounce.features.account.couldBeOnline
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.User
 import java.lang.reflect.Type
 
-object SessionSerializer : JsonSerializer<Session> {
-    override fun serialize(src: Session?, typeOfSrc: Type, context: JsonSerializationContext) = src?.let {
+val User.accountType
+    get() = when {
+        !this.couldBeOnline()
+            || profileId == null
+            || mc.isOfflineDeveloperMode -> "legacy" // cracked
+        xuid.isEmpty || clientId.isEmpty -> "mojang" // Mojang account
+        xuid.isPresent || clientId.isPresent -> "msa" // Microsoft account
+        else -> "legacy"
+    }
+
+object SessionSerializer : JsonSerializer<User> {
+    override fun serialize(src: User?, typeOfSrc: Type, context: JsonSerializationContext) = src?.let {
         JsonObject().apply {
-            addProperty("username", it.username)
-            addProperty("uuid", it.uuidOrNull.toString())
-            addProperty("accountType", it.accountType.getName())
-            addProperty("avatar", formatAvatarUrl(it.uuidOrNull, it.username))
-            addProperty("premium", it.isPremium())
+            val service = SessionWithService.getService(src)
+
+            addProperty("username", it.name)
+            addProperty("uuid", it.profileId.toString())
+            addProperty("service", service.choiceName)
+            addProperty("type", it.accountType)
+            addProperty("avatar", formatAvatarUrl(it.profileId, it.name))
+            addProperty("online", service.canJoinOnline)
+            addProperty("premium", service.canJoinOnline) // todo: deprecated, kept for compatibility
         }
     }
 }

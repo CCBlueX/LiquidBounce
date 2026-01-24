@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ data class ShopConfig (
     val elements: List<ShopElement>
 ) {
     companion object {
-        fun emptyConfig() = ShopConfig(emptyList(), -1, emptyMap(), emptyList())
+        @JvmField
+        val Empty = ShopConfig(emptyList(), -1, emptyMap(), emptyList())
     }
 }

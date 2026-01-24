@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
@@ -26,13 +24,13 @@ import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.protocol.game.ServerboundSwingPacket
 import org.lwjgl.glfw.GLFW
 
 object DebugCPSRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("CPS") {
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet !is HandSwingC2SPacket) {
+        if (event.packet !is ServerboundSwingPacket) {
             return@handler
         }
 

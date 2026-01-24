@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 202 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,17 +18,29 @@
  */
 package net.ccbluex.liquidbounce.config.gson.adapter
 
-import com.google.gson.*
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.fastutil.enumSetOf
+import net.ccbluex.liquidbounce.authlib.utils.array
+import net.ccbluex.liquidbounce.authlib.utils.string
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.minecraft.client.util.InputUtil
 import java.lang.reflect.Type
 
 object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind> {
 
     override fun serialize(src: InputBind, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         return JsonObject().apply {
-            add("boundKey", context.serialize(src.boundKey, InputUtil.Key::class.java))
-            addProperty("action", src.action.choiceName)
+            add("boundKey", context.serialize(src.boundKey, InputConstants.Key::class.java))
+            add("action", context.serialize(src.action, NamedChoice::class.java))
+            if (src.modifiers.isNotEmpty()) {
+                add("modifiers", context.serialize(src.modifiers))
+            }
         }
     }
 
@@ -38,21 +50,31 @@ object InputBindAdapter : JsonSerializer<InputBind>, JsonDeserializer<InputBind>
 
             // We do not want to throw an error but simply unbind the key instead.
             if (!primitive.isNumber) {
-                return InputBind(InputUtil.UNKNOWN_KEY, InputBind.BindAction.TOGGLE)
+                return InputBind(InputConstants.UNKNOWN, InputBind.BindAction.TOGGLE, emptySet())
             }
 
             // Bind Action goes missing as we cannot access the action that is located
             // one element above - Sorry!
-            return InputBind(InputUtil.Type.KEYSYM.createFromCode(primitive.asInt), InputBind.BindAction.TOGGLE)
+            return InputBind(
+                InputConstants.Type.KEYSYM.getOrCreate(primitive.asInt),
+                InputBind.BindAction.TOGGLE,
+                emptySet(),
+            )
         }
 
         val jsonObject = json.asJsonObject
-        val boundKey = context.deserialize<InputUtil.Key>(jsonObject.get("boundKey"), InputUtil.Key::class.java)
-        val actionStr = jsonObject.get("action").asString
-        val action = InputBind.BindAction.entries.find { it.choiceName == actionStr }
+        val boundKey = context.deserialize<InputConstants.Key>(
+            jsonObject.get("boundKey"),
+            InputConstants.Key::class.java
+        )
+        val actionStr = jsonObject.string("action")
+        val action = InputBind.BindAction.entries.find { it.choiceName.equals(actionStr, ignoreCase = true) }
             ?: InputBind.BindAction.TOGGLE
+        val modifierSet = jsonObject.array("modifiers")?.mapNotNullTo(enumSetOf<InputBind.Modifier>()) { element ->
+            InputBind.Modifier.of(element.asString)
+        }.orEmpty()
 
-        return InputBind(boundKey, action)
+        return InputBind(boundKey, action, modifierSet)
     }
 
 }

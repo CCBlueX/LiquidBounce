@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,18 @@
 
 package net.ccbluex.liquidbounce.event
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.MinecraftDispatcher
+import net.minecraft.ReportedException
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.Continuation
@@ -42,11 +51,13 @@ val EventListener.eventListenerScope: CoroutineScope
     get() = eventListenerScopeHolder.computeIfAbsent(this) {
         CoroutineScope(
             SupervisorJob() // Prevent exception canceling
-                + CoroutineExceptionHandler { ctx, throwable -> // logging
-                if (throwable is EventListenerNotListeningException) {
-                    logger.debug("{} is not listening, job cancelled", throwable.eventListener)
-                } else {
-                    logger.error("Exception occurred in CoroutineScope of $it", throwable)
+                + CoroutineExceptionHandler { _, throwable -> // logging
+                when (throwable) {
+                    is EventListenerNotListeningException ->
+                        logger.debug("{} is not listening, job cancelled", throwable.eventListener)
+                    is ReportedException ->
+                        ErrorHandler.fatal(throwable, additionalMessage = "CoroutineScope of $it")
+                    else -> logger.error("Exception occurred in CoroutineScope of $it", throwable)
                 }
             }
                 + CoroutineName(it.toString()) // Name

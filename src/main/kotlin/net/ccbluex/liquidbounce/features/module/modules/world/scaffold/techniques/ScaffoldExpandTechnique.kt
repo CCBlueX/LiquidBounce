@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,16 +20,20 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.FaceHandlingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacement
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.math.toVec3d
-import net.minecraft.entity.EntityPose
-import net.minecraft.item.ItemStack
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.Vec3
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -41,8 +45,8 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
     private val expandLength by int("Length", 4, 1..10, "blocks")
 
     override fun findPlacementTarget(
-        predictedPos: Vec3d,
-        predictedPose: EntityPose,
+        predictedPos: Vec3,
+        predictedPose: Pose,
         optimalLine: Line?,
         bestStack: ItemStack
     ): BlockPlacementTarget? {
@@ -50,13 +54,13 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
             val position = getTargetedPosition(expandPos(predictedPos, i))
 
             val searchOptions = BlockPlacementTargetFindingOptions(
-                BlockOffsetOptions(
-                    listOf(Vec3i.ZERO),
-                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                BlockOffsetOptions.Default,
+                FaceHandlingOptions(
+                    CenterTargetPositionFactory,
+                    considerFacingAwayFaces = true
                 ),
-                FaceHandlingOptions(CenterTargetPositionFactory),
                 stackToPlaceWith = bestStack,
-                PlayerLocationOnPlacement(position = position.toVec3d(), pose = predictedPose),
+                PlayerLocationOnPlacement(position = predictedPos, pose = predictedPose)
             )
 
             return findBestBlockPlacementTarget(position, searchOptions) ?: continue
@@ -66,22 +70,22 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
     }
 
     override fun getRotations(target: BlockPlacementTarget?): Rotation? {
-        val blockCenter = target?.placedBlock?.toCenterPos() ?: return null
+        val blockCenter = target?.placedBlock?.center ?: return null
 
-        return Rotation.lookingAt(point = blockCenter, from = player.eyePos)
+        return Rotation.lookingAt(point = blockCenter, from = player.eyePosition)
     }
 
     override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
         val crosshairTarget = super.getCrosshairTarget(target ?: return null, rotation)
 
-        if (crosshairTarget != null && target.doesCrosshairTargetFullFillRequirements(crosshairTarget)) {
+        if (crosshairTarget != null && target.doesCrosshairTargetMatchRequirements(crosshairTarget)) {
             return crosshairTarget
         }
 
         return target.blockHitResult
     }
 
-    private fun expandPos(position: Vec3d, expand: Int, yaw: Float = player.yaw) = position.toBlockPos().add(
+    private fun expandPos(position: Vec3, expand: Int, yaw: Float = player.yRot) = position.toBlockPos().offset(
         (-sin(yaw.toRadians()) * expand).toInt(),
         0,
         (cos(yaw.toRadians()) * expand).toInt()

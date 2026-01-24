@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,22 +18,27 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
+import net.ccbluex.fastutil.objectHashSetOf
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.client.fastCos
+import net.ccbluex.liquidbounce.utils.client.fastSin
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
-import kotlin.math.*
+import net.minecraft.core.BlockPos
+import net.minecraft.util.Mth
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
+import kotlin.math.round
 
 object ScaffoldMovementPlanner {
     private const val MAX_LAST_PLACE_BLOCKS: Int = 4
@@ -49,7 +54,7 @@ object ScaffoldMovementPlanner {
         val direction =
             chooseDirection(
                 getMovementDirectionOfInput(
-                    player.yaw,
+                    player.yRot,
                     directionalInput,
                 ),
             )
@@ -68,20 +73,18 @@ object ScaffoldMovementPlanner {
         }
 
         // We try to make the player run on this line
-        val optimalLine = Line(Vec3d(lineBaseBlock.x + 0.5, player.pos.y, lineBaseBlock.z + 0.5), direction)
+        val optimalLine = Line(Vec3(lineBaseBlock.x + 0.5, player.position().y, lineBaseBlock.z + 0.5), direction)
 
         // Debug optimal line
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "optimalLine",
+        ModuleScaffold.debugGeometry("optimalLine") {
             ModuleDebug.DebuggedLine(optimalLine, if (lastBlocksLine == null) Color4b.RED else Color4b.GREEN)
-        )
+        }
 
         return optimalLine
     }
 
-    private fun divergesTooMuchFromDirection(lastBlocksLine: Line, direction: Vec3d): Boolean {
-        return acos(lastBlocksLine.direction.dotProduct(direction)).absoluteValue / Math.PI * 180 > 50.0
+    private fun divergesTooMuchFromDirection(lastBlocksLine: Line, direction: Vec3): Boolean {
+        return lastBlocksLine.direction.dot(direction) < 0.5 // cos(60deg)
     }
 
     /**
@@ -89,37 +92,35 @@ object ScaffoldMovementPlanner {
      */
     private fun fitLinesThroughLastPlacedBlocks(): Line? {
         // Take the last 2 blocks placed
-        val lastPlacedBlocksToConsider =
-            lastPlacedBlocks.subList(
-                fromIndex = (lastPlacedBlocks.size - 2).coerceAtLeast(0),
-                toIndex = (lastPlacedBlocks.size).coerceAtLeast(0),
-            )
-
-        if (lastPlacedBlocksToConsider.size < 2) {
+        if (lastPlacedBlocks.size < 2) {
             return null
         }
+        val last = lastPlacedBlocks.last()
+        val secondToLast = lastPlacedBlocks[lastPlacedBlocks.size - 2]
 
         // Just debug stuff
-        debugLastPlacedBlocks(lastPlacedBlocksToConsider)
+        if (ModuleDebug.running) {
+            debugLastPlacedBlocks(listOf(secondToLast, last))
+        }
 
-        val avgPos = Vec3d.of(lastPlacedBlocksToConsider[0].add(lastPlacedBlocksToConsider[1])).multiply(0.5)
-        val dir = Vec3d.of(lastPlacedBlocksToConsider[1].subtract(lastPlacedBlocksToConsider[0])).normalize()
+        val avgPos = secondToLast.offset(last).toVec3d() * 0.5
+        val dir = last.subtract(secondToLast).toVec3d().normalize()
 
         // Calculate the average direction of the last placed blocks
         return Line(avgPos, dir)
     }
 
-    private fun debugLastPlacedBlocks(lastPlacedBlocksToConsider: MutableList<BlockPos>) {
+    private fun debugLastPlacedBlocks(lastPlacedBlocksToConsider: List<BlockPos>) {
         lastPlacedBlocksToConsider.forEachIndexed { idx, pos ->
             val alpha = ((1.0 - idx.toDouble() / lastPlacedBlocksToConsider.size.toDouble()) * 255.0).toInt()
 
-            ModuleDebug.debugGeometry(
-                ModuleScaffold,
-                "lastPlacedBlock$idx",
-                ModuleDebug.DebuggedBox(Box.from(pos.toVec3d()), Color4b(alpha, alpha, 255, 127)),
-            )
+            ModuleScaffold.debugGeometry("lastPlacedBlock$idx") {
+                ModuleDebug.DebuggedBox(AABB(pos), Color4b(alpha, alpha, 255, 127))
+            }
         }
     }
+
+    private val offsetsToTry = doubleArrayOf(0.301, 0.0, -0.301)
 
     /**
      * Find the block the player stands on.
@@ -127,15 +128,14 @@ object ScaffoldMovementPlanner {
      * block this function returned, this block is preferred.
      */
     private fun findBlockPlayerStandsOn(): BlockPos? {
-        val offsetsToTry = arrayOf(0.301, 0.0, -0.301)
         // Contains the blocks which the player is currently supported by
-        val candidates = mutableListOf<BlockPos>()
+        val candidates = objectHashSetOf<BlockPos>()
 
         for (xOffset in offsetsToTry) {
             for (zOffset in offsetsToTry) {
-                val playerPos = player.pos.add(xOffset, -1.0, zOffset).toBlockPos()
+                val playerPos = player.position().toBlockPos(xOffset, -1.0, zOffset)
 
-                val isEmpty = playerPos.getState()?.getCollisionShape(world, BlockPos.ORIGIN)?.isEmpty ?: true
+                val isEmpty = playerPos.getState()?.getCollisionShape(world, playerPos)?.isEmpty ?: true
 
                 if (!isEmpty) {
                     candidates.add(playerPos)
@@ -156,11 +156,7 @@ object ScaffoldMovementPlanner {
         }
 
         // We have no reason to prefer a candidate so just pick any.
-        val currPosition = candidates.firstOrNull()
-
-        lastPosition = currPosition
-
-        return currPosition
+        return candidates.firstOrNull().also { lastPosition = it }
     }
 
     /**
@@ -168,27 +164,30 @@ object ScaffoldMovementPlanner {
      * follow (NORTH, NORTH_EAST, EAST, etc.). This function chooses such a direction based on the current angle.
      * i.e. if we were looking like 30° to the right, we would choose the direction NORTH_EAST (1.0, 0.0, 1.0).
      * And scaffold would move diagonally to the right.
+     *
+     * @return normalized direction vector without y value
      */
-    private fun chooseDirection(currentAngle: Float): Vec3d {
+    private fun chooseDirection(currentAngle: Float): Vec3 {
         // Transform the angle ([-180; 180]) to [0; 8]
-        val currentDirection = currentAngle / 180.0 * 4 + 4
+        val currentDirection = currentAngle / 180.0F * 4 + 4
 
         // Round the angle to the nearest integer, which represents the direction.
         val newDirectionNumber = round(currentDirection)
         // Do this transformation backwards, and we have an angle that follows one of the 8 directions.
-        val newDirectionAngle = MathHelper.wrapDegrees((newDirectionNumber - 4) / 4.0 * 180.0 + 90.0) / 180.0 * PI
+        val newDirectionAngle = Mth.wrapDegrees((newDirectionNumber - 4) / 4.0F * 180.0F + 90.0F).toRadians()
 
-        return Vec3d(cos(newDirectionAngle), 0.0, sin(newDirectionAngle))
+        return Vec3(newDirectionAngle.fastCos().toDouble(), 0.0, newDirectionAngle.fastSin().toDouble())
     }
 
     /**
      * Remembers the last placed blocks and removes old ones.
      */
-    fun trackPlacedBlock(target: BlockPlacementTarget) {
-        lastPlacedBlocks.add(target.placedBlock)
-
-        while (lastPlacedBlocks.size > MAX_LAST_PLACE_BLOCKS)
+    fun trackPlacedBlock(target: BlockPos) {
+        while (lastPlacedBlocks.size >= MAX_LAST_PLACE_BLOCKS) {
             lastPlacedBlocks.removeFirst()
+        }
+
+        lastPlacedBlocks.add(target)
     }
 
     fun reset() {

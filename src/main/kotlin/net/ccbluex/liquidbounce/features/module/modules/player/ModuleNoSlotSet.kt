@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,20 +21,20 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.network.packet.s2c.play.UpdateSelectedSlotS2CPacket
+import net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 
-object ModuleNoSlotSet : ClientModule("NoSlotSet", Category.PLAYER) {
+object ModuleNoSlotSet : ClientModule("NoSlotSet", ModuleCategories.PLAYER) {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet !is UpdateSelectedSlotS2CPacket) {
+        if (event.packet !is ClientboundSetHeldSlotPacket) {
             return@handler
         }
 
         event.cancelEvent()
-        player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(SilentHotbar.serversideSlot))
+        player.connection.send(ServerboundSetCarriedItemPacket(SilentHotbar.serversideSlot))
     }
 }

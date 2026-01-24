@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
@@ -27,7 +25,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.utils.io.toJson
-import net.minecraft.entity.Entity
+import net.minecraft.world.entity.Entity
 import java.util.concurrent.CopyOnWriteArraySet
 
 object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>("Generic") {
@@ -47,7 +45,7 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
         }
 
         for (scheduledEntityDebug in due) {
-            val entity = world.getEntityById(scheduledEntityDebug.entityId)
+            val entity = world.getEntity(scheduledEntityDebug.entityId)
 
             if (entity != null) {
                 recordDebugInfo(ModuleDebugRecorder, "entity", debugObject(entity))
@@ -69,8 +67,8 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode<JsonObject>(
     fun debugObject(entity: Entity): JsonElement {
         return JsonObject().apply {
             addProperty("id", entity.id)
-            add("pos", entity.pos.toJson())
-            add("velocity", entity.velocity.toJson())
+            add("pos", entity.position().toJson())
+            add("velocity", entity.deltaMovement.toJson())
         }
     }
 }

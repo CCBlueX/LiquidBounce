@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.NoWebMode
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 /**
  * Intave needs to improve their movement checks
@@ -31,12 +31,12 @@ import net.minecraft.util.math.BlockPos
 object NoWebIntave14 : NoWebMode("Intave14") {
     override fun handleEntityCollision(pos: BlockPos): Boolean {
         if (player.moving) {
-            if (player.isOnGround) {
-                if (player.age % 3 == 0) {
-                    player.velocity = player.velocity.withStrafe(strength = 0.734)
+            if (player.onGround()) {
+                if (player.tickCount % 3 == 0) {
+                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 0.734))
                 } else {
-                    player.jump()
-                    player.velocity = player.velocity.withStrafe(strength = 0.346)
+                    player.jumpFromGround()
+                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 0.346))
                 }
             }
         }

@@ -4,7 +4,8 @@ import type {
     Browser,
     ClientInfo,
     ClientUpdate,
-    Component,
+    ClientUser,
+    HudComponent,
     ConfigurableSetting,
     FileSelectDialog,
     FileSelectResult,
@@ -604,7 +605,7 @@ export async function getTheme(id: string): Promise<Theme> {
 /**
  * @param id Use the ID from [getMetadata].
  */
-export async function getComponents(id: string): Promise<Component[]> {
+export async function getComponents(id: string): Promise<HudComponent[]> {
     const response = await fetch(`${API_BASE}/client/components/${id}`);
     return await response.json();
 }
@@ -699,4 +700,44 @@ export async function setTyping(typing: boolean) {
         },
         body: JSON.stringify({typing})
     });
+}
+
+export async function getClientUser(): Promise<ClientUser | null> {
+    const response = await fetch(`${API_BASE}/client/user`);
+    
+    if (!response.ok) {
+        if (response.status === 401) {
+            return null;
+        }
+        throw new Error(`Failed to get client user: ${response.status} ${response.statusText}`);
+    }
+    
+    const data: ClientUser = await response.json();
+    return data;
+}
+
+export async function loginClientUser() {
+    await fetch(`${API_BASE}/client/user/login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+}
+
+export async function logoutClientUser() {
+    await fetch(`${API_BASE}/client/user/logout`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+}
+
+export function itemTextureUrl(identifier: string) {
+    return `${API_BASE}/client/resource/itemTexture?id=${identifier}`
+}
+
+export function effectTextureUrl(effectId: string) {
+    return `${API_BASE}/client/resource/effectTexture?id=${effectId}`
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.minecraft.entity.player.PlayerModelPart
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.minecraft.world.entity.player.PlayerModelPart
 import kotlin.random.Random
 
 /**
@@ -32,7 +32,7 @@ import kotlin.random.Random
  * Makes your skin blink (Requires multi-layer skin).
  */
 @Suppress("MagicNumber")
-object ModuleSkinDerp : ClientModule("SkinDerp", Category.FUN) {
+object ModuleSkinDerp : ClientModule("SkinDerp", ModuleCategories.FUN) {
     private val sync by boolean("Sync", false)
     private val delay by int("Delay", 0, 0..20, "ticks")
     private val parts by multiEnumChoice("Parts", DerpParts.entries)
@@ -40,17 +40,17 @@ object ModuleSkinDerp : ClientModule("SkinDerp", Category.FUN) {
     private var prevModelParts = emptySet<PlayerModelPart>()
 
     override fun onEnabled() {
-        prevModelParts = mc.options.enabledPlayerModelParts.toSet()
+        prevModelParts = mc.options.modelParts.toSet()
     }
 
     override fun onDisabled() {
         // Disable all current model parts
         for (modelPart in PlayerModelPart.entries) {
-            mc.options.setPlayerModelPart(modelPart, false)
+            mc.options.setModelPart(modelPart, false)
         }
         // Enable all old model parts
         for (modelPart in prevModelParts) {
-            mc.options.setPlayerModelPart(modelPart, true)
+            mc.options.setModelPart(modelPart, true)
         }
     }
 
@@ -59,9 +59,9 @@ object ModuleSkinDerp : ClientModule("SkinDerp", Category.FUN) {
 
         parts.forEach {
             if (sync) {
-                mc.options.setPlayerModelPart(it.part, !mc.options.isPlayerModelPartEnabled(it.part))
+                mc.options.setModelPart(it.part, !mc.options.isModelPartEnabled(it.part))
             } else {
-                mc.options.setPlayerModelPart(it.part, Random.nextBoolean())
+                mc.options.setModelPart(it.part, Random.nextBoolean())
             }
         }
     }

@@ -17,7 +17,7 @@ export interface Metadata {
 export interface Module {
     name: string;
     category: string;
-    keyBind: number;
+    keyBind: InputBind;
     enabled: boolean;
     description: string;
     hidden: boolean;
@@ -47,7 +47,8 @@ export type ModuleSetting =
     | ColorSetting
     | TextSetting
     | BindSetting
-    | VectorSetting
+    | Vec2Setting
+    | Vec3Setting
     | KeySetting
     | FileSetting
     | CurveSetting;
@@ -78,7 +79,7 @@ export interface FileSetting extends Setting<File> {
     supportedExtensions: string[] | undefined;
 }
 
-export interface CurveSetting extends Setting<Vector2f[]> {
+export interface CurveSetting extends Setting<Vec2[]> {
     xAxis: {
         label: string;
         range: Range;
@@ -103,7 +104,11 @@ export interface BindSetting extends Setting<InputBind> {
 export interface TextSetting extends Setting<string> {
 }
 
-export interface VectorSetting extends Setting<Vec3> {
+export interface Vec2Setting extends Setting<Vec2> {
+}
+
+export interface Vec3Setting extends Setting<Vec3> {
+    useLocateButton: boolean;
 }
 
 export interface ColorSetting extends Setting<number> {
@@ -144,6 +149,7 @@ export interface ChooseSetting extends Setting<string> {
 export interface MultiChooseSetting extends Setting<string[]> {
     choices: string[];
     canBeNone: boolean;
+    isOrderSensitive: boolean;
 }
 
 export interface ListSetting extends Setting<string[]> {
@@ -172,8 +178,13 @@ export interface TogglableSetting extends Setting<ModuleSetting[]> {
 
 export interface InputBind {
     boundKey: string;
-    action: "Toggle" | "Hold";
+    action: BindAction;
+    modifiers: BindModifier[];
 }
+
+export type BindAction = "Toggle" | "Hold";
+
+export type BindModifier = "Shift" | "Control" | "Alt" | "Super";
 
 export interface PersistentStorageItem {
     key: string;
@@ -231,11 +242,15 @@ export interface StatusEffect {
     color: number;
 }
 
-export interface Vec3 {
-    x: number;
-    y: number;
-    z: number;
+export interface Vec2 extends Vec<"x" | "y"> {
 }
+
+export interface Vec3 extends Vec<"x" | "y" | "z"> {
+}
+
+export type VecAxis = "x" | "y" | "z" | "w";
+
+export type Vec<D extends VecAxis> = Record<D, number>;
 
 export interface ItemStack {
     identifier: string;
@@ -262,9 +277,10 @@ export interface MinecraftKeybind {
 
 export interface Session {
     username: string;
-    accountType: string;
+    type: string;
+    service: string;
     avatar: string;
-    premium: boolean;
+    online: boolean;
     uuid: string;
 }
 
@@ -364,7 +380,7 @@ export interface Theme {
     settings: { [name: string]: any };
 }
 
-export interface Component {
+export interface HudComponent {
     name: string;
     id: string;
     settings: { [name: string]: any };
@@ -391,7 +407,10 @@ export enum VerticalAlignment {
     CENTER_TRANSLATED = "CenterTranslated",
 }
 
+export type OS = "linux" | "solaris" | "windows" | "mac" | "unknown";
+
 export interface ClientInfo {
+    os: OS;
     gameVersion: string;
     clientVersion: string;
     clientName: string;
@@ -450,6 +469,16 @@ export interface Screen {
     title: string,
 }
 
+export interface ClientUser {
+    userId: string;
+    email: string;
+    name: string | null;
+    nickname: string | null;
+    groups: string[];
+    premium: boolean;
+    admin: boolean;
+}
+
 export interface RegistryItem {
     name: string;
     icon: string | undefined;
@@ -458,11 +487,6 @@ export interface RegistryItem {
 export interface Range {
     from: number;
     to: number;
-}
-
-export interface Vector2f {
-    x: number;
-    y: number;
 }
 
 export interface BedState {

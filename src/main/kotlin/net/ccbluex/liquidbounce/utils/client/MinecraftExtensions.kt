@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,51 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.network.ClientPlayNetworkHandler
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.network.ClientPlayerInteractionManager
-import net.minecraft.client.util.Window
-import net.minecraft.client.world.ClientWorld
-
+import com.mojang.authlib.GameProfileRepository
+import com.mojang.authlib.minecraft.MinecraftSessionService
+import com.mojang.authlib.yggdrasil.ServicesKeySet
+import com.mojang.blaze3d.platform.Window
+import com.mojang.blaze3d.systems.GpuDevice
+import com.mojang.blaze3d.systems.RenderSystem
+import net.minecraft.client.Minecraft
+import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.client.multiplayer.ClientPacketListener
+import net.minecraft.client.multiplayer.MultiPlayerGameMode
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.server.Services
+import net.minecraft.server.players.ProfileResolver
+import net.minecraft.server.players.UserNameToIdResolver
 
 val Window.dimensions
-    get() = Pair(width, height)
+    get() = intArrayOf(screenWidth, screenHeight)
 
 val Window.scaledDimension
-    get() = Pair(scaledWidth, scaledHeight)
+    get() = intArrayOf(guiScaledWidth, guiScaledHeight)
 
-val mc: MinecraftClient
-    inline get() = MinecraftClient.getInstance()!!
-val player: ClientPlayerEntity
+val mc: Minecraft
+    inline get() = Minecraft.getInstance()!!
+val player: LocalPlayer
     inline get() = mc.player!!
-val world: ClientWorld
-    inline get() = mc.world!!
-val network: ClientPlayNetworkHandler
-    inline get() = mc.networkHandler!!
-val interaction: ClientPlayerInteractionManager
-    inline get() = mc.interactionManager!!
+val world: ClientLevel
+    inline get() = mc.level!!
+val network: ClientPacketListener
+    inline get() = mc.connection!!
+val interaction: MultiPlayerGameMode
+    inline get() = mc.gameMode!!
+val gpuDevice: GpuDevice
+    inline get() = RenderSystem.getDevice()
+
+fun Services.with(
+    sessionService: MinecraftSessionService = this.sessionService,
+    servicesKeySet: ServicesKeySet = this.servicesKeySet,
+    profileRepository: GameProfileRepository = this.profileRepository,
+    nameToIdCache: UserNameToIdResolver = this.nameToIdCache,
+    profileResolver: ProfileResolver = this.profileResolver
+): Services {
+    return Services(
+        sessionService, servicesKeySet,
+        profileRepository,
+        nameToIdCache,
+        profileResolver
+    )
+}

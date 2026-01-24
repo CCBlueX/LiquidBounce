@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,26 +15,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar
 
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.QueuePacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.handlePacket
-import net.minecraft.network.packet.s2c.common.CommonPingS2CPacket
-import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.protocol.common.ClientboundPingPacket
+import net.minecraft.network.protocol.game.ClientboundDamageEventPacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * @anticheat Hycraft (Polar)
@@ -79,21 +77,21 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
         }
 
         event.action = when {
-            packet is EntityDamageS2CPacket && packet.entityId == player.id && ticks <= 0 -> {
+            packet is ClientboundDamageEventPacket && packet.entityId == player.id && ticks <= 0 -> {
                 damageTaken = true
                 ticks = 40
                 handlePacket(packet)
                 PacketQueueManager.Action.QUEUE
             }
 
-            packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id && damageTaken -> {
+            packet is ClientboundSetEntityMotionPacket && packet.id == player.id && damageTaken -> {
                 damageTaken = false
                 release = true
                 handlePacket(packet)
                 PacketQueueManager.Action.QUEUE
             }
 
-            packet is CommonPingS2CPacket -> {
+            packet is ClientboundPingPacket -> {
                 if (ticks <= 0) {
                     if (release) {
                         ModuleFly.enabled = false

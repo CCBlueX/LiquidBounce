@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,12 +21,12 @@ package net.ccbluex.liquidbounce.api.services.user
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.api.core.ApiConfig.Companion.config
 import net.ccbluex.liquidbounce.api.core.BaseApi
-import net.ccbluex.liquidbounce.api.core.toRequestBody
 import net.ccbluex.liquidbounce.api.models.auth.OAuthSession
 import net.ccbluex.liquidbounce.api.models.auth.addAuth
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.user.UserInformation
-import java.util.*
+import net.ccbluex.liquidbounce.authlib.utils.toRequestBody
+import java.util.UUID
 
 /**
  * API for user-related endpoints that require authentication

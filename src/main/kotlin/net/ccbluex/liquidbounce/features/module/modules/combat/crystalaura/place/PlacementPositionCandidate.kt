@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.plac
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.CrystalAuraDamageOptions
 import net.ccbluex.liquidbounce.utils.client.player
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.Vec3
 
 class PlacementPositionCandidate(
     val pos: BlockPos, // the block the crystal should be placed on
@@ -42,7 +42,7 @@ class PlacementPositionCandidate(
     /**
      * The distance to us.
      */
-    private val distanceSq by lazy { pos.getSquaredDistance(player.pos) }
+    private val distanceSq by lazy { pos.distToCenterSqr(player.position()) }
 
     init {
         calculate()
@@ -52,7 +52,7 @@ class PlacementPositionCandidate(
      * Evaluates the explosion damage to the target, sets it to `null` if the position is invalid.
      */
     fun calculate() {
-        val damageSourceLoc = Vec3d.of(pos).add(0.5, 1.0, 0.5)
+        val damageSourceLoc = Vec3.atLowerCornerOf(pos).add(0.5, 1.0, 0.5)
         val explosionDamage = CrystalAuraDamageOptions.approximateExplosionDamage(
             damageSourceLoc,
             if (requiresBasePlace) {

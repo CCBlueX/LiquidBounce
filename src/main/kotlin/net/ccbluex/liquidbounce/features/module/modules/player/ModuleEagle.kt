@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugParameter
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
@@ -37,7 +37,7 @@ import java.util.function.Predicate
  * Legit trick to build faster.
  */
 object ModuleEagle : ClientModule(
-    "Eagle", Category.PLAYER,
+    "Eagle", ModuleCategories.PLAYER,
     aliases = listOf("FastBridge", "BridgeAssistant", "LegitScaffold")
 ) {
 
@@ -98,7 +98,7 @@ object ModuleEagle : ClientModule(
             get() = enabled && Condition.SNEAK in conditions
 
         fun shouldSneak(event: MovementInputEvent) =
-            !enabled || player.pitch in pitch && conditions.all { it.test(event) }
+            !enabled || player.xRot in pitch && conditions.all { it.test(event) }
 
         @Suppress("unused")
         private enum class Condition(override val choiceName: String) : NamedChoice, Predicate<MovementInputEvent> {
@@ -115,8 +115,8 @@ object ModuleEagle : ClientModule(
                 RIGHT -> event.directionalInput.right
                 FORWARDS -> event.directionalInput.forwards
                 BACKWARDS -> event.directionalInput.backwards
-                HOLDING_BLOCKS -> isValidBlock(player.mainHandStack) || isValidBlock(player.offHandStack)
-                ON_GROUND -> player.isOnGround
+                HOLDING_BLOCKS -> isValidBlock(player.mainHandItem) || isValidBlock(player.offhandItem)
+                ON_GROUND -> player.onGround()
                 SNEAK -> event.sneak
             }
         }
@@ -136,7 +136,7 @@ object ModuleEagle : ClientModule(
     private val handleMovementInput = handler<MovementInputEvent>(priority = SAFETY_FEATURE) { event ->
         debugParameter("EdgeDistance") { currentEdgeDistance }
 
-        val originalSneak = mc.options.sneakKey.isPressed
+        val originalSneak = mc.options.keyShift.isDown
         val conditionsMet = Conditional.shouldSneak(event)
         val isActive = shouldActivateEagle(event, conditionsMet)
 

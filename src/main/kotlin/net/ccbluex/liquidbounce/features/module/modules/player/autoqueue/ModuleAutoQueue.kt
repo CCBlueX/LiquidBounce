@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoqueue
 
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets.AutoQueueCustom
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets.AutoQueueGommeDuels
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.presets.AutoQueueHypixelSW
 
-object ModuleAutoQueue : ClientModule("AutoQueue", Category.PLAYER, aliases = listOf("AutoPlay")) {
+object ModuleAutoQueue : ClientModule("AutoQueue", ModuleCategories.PLAYER, aliases = listOf("AutoPlay")) {
     val presets = choices("Presets", AutoQueueHypixelSW, arrayOf(
         AutoQueueHypixelSW,
         AutoQueueGommeDuels,

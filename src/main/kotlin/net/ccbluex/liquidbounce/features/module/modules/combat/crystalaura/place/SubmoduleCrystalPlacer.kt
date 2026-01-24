@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,11 +37,11 @@ import net.ccbluex.liquidbounce.utils.client.clickBlockWithSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
 import net.ccbluex.liquidbounce.utils.render.placement.PlacementRenderer
-import net.minecraft.item.Items
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.item.Items
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.HitResult
 import kotlin.math.max
 
 object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place", true) {
@@ -116,7 +116,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
         var side = Direction.UP
         val rotation = if (onlyAbove) {
             raytraceUpperBlockSide(
-                player.eyePos,
+                player.eyePosition,
                 range.toDouble(),
                 wallsRange.toDouble(),
                 targetPos,
@@ -124,7 +124,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
             )
         } else {
             val data = findClosestPointOnBlockInLineWithCrystal(
-                player.eyePos,
+                player.eyePosition,
                 range.toDouble(),
                 wallsRange.toDouble(),
                 targetPos,
@@ -167,7 +167,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
 
             clickBlockWithSlot(
                 player,
-                blockHitResult?.withSide(side) ?: return@rotate,
+                blockHitResult?.withDirection(side) ?: return@rotate,
                 getSlot() ?: return@rotate,
                 swingMode,
                 switchMode,

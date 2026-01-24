@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,70 +21,75 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autofarm
 
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.inventory.Slots
-import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
-import net.minecraft.block.BambooBlock
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.CactusBlock
-import net.minecraft.block.CocoaBlock
-import net.minecraft.block.CropBlock
-import net.minecraft.block.FarmlandBlock
-import net.minecraft.block.Fertilizable
-import net.minecraft.block.KelpPlantBlock
-import net.minecraft.block.NetherWartBlock
-import net.minecraft.block.PumpkinBlock
-import net.minecraft.block.SoulSandBlock
-import net.minecraft.block.StemBlock
-import net.minecraft.block.SugarCaneBlock
-import net.minecraft.block.SweetBerryBushBlock
-import net.minecraft.item.Items
-import net.minecraft.util.math.BlockPos
-
-private const val NETHER_WART_MAX_AGE = 3
-private const val COCOA_MAX_AGE = 2
-//    private const val SWEET_BERRY_BUSH_MAX_AGE = 3 TODO: right click it
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.BambooStalkBlock
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.BonemealableBlock
+import net.minecraft.world.level.block.CactusBlock
+import net.minecraft.world.level.block.CocoaBlock
+import net.minecraft.world.level.block.CropBlock
+import net.minecraft.world.level.block.KelpPlantBlock
+import net.minecraft.world.level.block.NetherWartBlock
+import net.minecraft.world.level.block.PumpkinBlock
+import net.minecraft.world.level.block.StemBlock
+import net.minecraft.world.level.block.SugarCaneBlock
+import net.minecraft.world.level.block.SweetBerryBushBlock
+import net.minecraft.world.level.block.state.BlockState
 
 private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
-    return pos.down().getBlock() is T && pos.down(2).getBlock() !is T
+    return pos.below().getBlock() is T && pos.below(2).getBlock() !is T
 }
 
 /**
- * @see Fertilizable
+ * @see BonemealableBlock
  */
 internal fun BlockPos.canUseBoneMeal(state: BlockState): Boolean {
     return when (val block = state.block) {
         is CropBlock, is StemBlock, is CocoaBlock, is SweetBerryBushBlock ->
-            block.isFertilizable(world, this, state)
+            block.isValidBonemealTarget(world, this, state)
         else -> false
     }
 }
+
+enum class HarvestAction {
+    /**
+     * Break the block to harvest it. e.g. Melon, Pumpkin, Cactus
+     */
+    BREAK,
+    /**
+     * Use the item in hand to harvest the block. e.g. Sweet Berry Bush
+     */
+    USE,
+}
+
+/**
+ * Get the harvest action for the block. The block itself might be not ready for harvest!
+ * Call [BlockPos.readyForHarvest] before performing the harvest action.
+ */
+val Block.harvestAction: HarvestAction?
+    get() = when (this) {
+        is PumpkinBlock, is CropBlock, is NetherWartBlock, is CocoaBlock,
+        is SugarCaneBlock, is CactusBlock, is KelpPlantBlock, is BambooStalkBlock, Blocks.MELON -> HarvestAction.BREAK
+        is SweetBerryBushBlock -> HarvestAction.USE
+        else -> null
+    }
 
 /**
  * Check if [this@shouldBeDestroyed] with [state] is ready for harvest
  */
-internal fun BlockPos.readyForHarvest(state: BlockState): Boolean {
+fun BlockPos.readyForHarvest(state: BlockState): Boolean {
     return when (val block = state.block) {
         is PumpkinBlock -> true
         Blocks.MELON -> true
-        is CropBlock -> block.isMature(state)
-        is NetherWartBlock -> state.get(NetherWartBlock.AGE) >= NETHER_WART_MAX_AGE
-        is CocoaBlock -> state.get(CocoaBlock.AGE) >= COCOA_MAX_AGE
+        is CropBlock -> block.isMaxAge(state)
+        is NetherWartBlock -> state.getValue(NetherWartBlock.AGE) >= NetherWartBlock.MAX_AGE
+        is CocoaBlock -> state.getValue(CocoaBlock.AGE) >= CocoaBlock.MAX_AGE
+        is SweetBerryBushBlock -> state.getValue(SweetBerryBushBlock.AGE) >= SweetBerryBushBlock.MAX_AGE
         is SugarCaneBlock -> isAboveLast<SugarCaneBlock>(this)
         is CactusBlock -> isAboveLast<CactusBlock>(this)
         is KelpPlantBlock -> isAboveLast<KelpPlantBlock>(this)
-        is BambooBlock -> isAboveLast<BambooBlock>(this)
+        is BambooStalkBlock -> isAboveLast<BambooStalkBlock>(this)
         else -> false
     }
 }
-
-internal val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
-internal val itemsForSoulSand = arrayOf(Items.NETHER_WART)
-
-internal fun getAvailableSlotForBlock(blockState: BlockState) =
-    when (blockState.block) {
-        is FarmlandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForFarmland)
-        is SoulSandBlock -> Slots.OffhandWithHotbar.findClosestSlot(items = itemsForSoulSand)
-        else -> null
-    }

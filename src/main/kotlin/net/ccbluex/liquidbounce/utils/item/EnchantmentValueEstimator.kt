@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,11 +18,13 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.RegistryKey
+import net.minecraft.resources.ResourceKey
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantment
 
-class EnchantmentValueEstimator(private vararg val weightedEnchantments: WeightedEnchantment) {
+class EnchantmentValueEstimator(
+    private vararg val weightedEnchantments: WeightedEnchantment,
+) : Comparator<ItemStack> {
 
     fun estimateValue(itemStack: ItemStack): Float {
         var sum = 0.0f
@@ -34,5 +36,8 @@ class EnchantmentValueEstimator(private vararg val weightedEnchantments: Weighte
         return sum
     }
 
-    class WeightedEnchantment(val enchantment: RegistryKey<Enchantment>, val factor: Float)
+    override fun compare(o1: ItemStack, o2: ItemStack): Int =
+        this.estimateValue(o1).compareTo(this.estimateValue(o2))
+
+    class WeightedEnchantment(val enchantment: ResourceKey<Enchantment>, val factor: Float)
 }

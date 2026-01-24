@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,14 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
-import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
+import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.item.Items
+import net.minecraft.world.item.Items
 
 class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
@@ -54,7 +52,7 @@ class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         get() = listOf(ObjectIntPair.of(ItemFunction.FOOD, itemStack.count * itemStack.foodComponent!!.nutrition))
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.FOOD, 0)
+        get() = ItemType.FOOD.defaultCategory
 
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as FoodItemFacet)

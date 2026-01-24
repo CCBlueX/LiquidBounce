@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,21 +15,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
@@ -41,13 +37,19 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
+import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.inventory.findClosestSlot
+import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.ccbluex.liquidbounce.utils.render.trajectory.TrajectoryInfo
-import net.minecraft.entity.LivingEntity
-import net.minecraft.item.Item
-import net.minecraft.item.Items
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.EggItem
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.SnowballItem
 import java.util.function.Function
 
 /**
@@ -60,12 +62,12 @@ import java.util.function.Function
  *
  * @author 1zuna
  */
-object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
+object ModuleAutoShoot : ClientModule("AutoShoot", ModuleCategories.COMBAT) {
 
     private val throwableType by enumChoice("ThrowableType", ThrowableType.EGG_AND_SNOWBALL)
     private val gravityType by enumChoice("GravityType", GravityType.AUTO).apply { tagBy(this) }
 
-    private val clicker = tree(Clicker(this, mc.options.useKey, itemCooldown = null))
+    private val clicker = tree(Clicker(this, mc.options.keyUse, itemCooldown = null))
 
     /**
      * The target tracker to find the best enemy to attack.
@@ -89,7 +91,9 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
     /**
      * The target renderer to render the target, which we are currently aiming at.
      */
-    private val targetRenderer = tree(WorldTargetRenderer(this))
+    init {
+        tree(TargetRenderer(this, targetTracker))
+    }
 
     private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
     private val tickUntilReset by int("TicksUntillSlotReset", 1, 0..20)
@@ -122,7 +126,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         // Find the recommended target
         val target = targetTracker.selectFirst {
             // Check if we can see the enemy
-            player.canSee(it)
+            player.hasLineOfSight(it)
         } ?: return@handler
 
         if (notDuringCombat && CombatManager.isInCombat) {
@@ -190,16 +194,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
             interactItem(
                 slot.useHand,
                 swingMode = swingMode,
-            ).isAccepted
-        }
-    }
-
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-        val target = targetTracker.target ?: return@handler
-
-        renderEnvironmentForWorld(matrixStack) {
-            targetRenderer.render(this, target, event.partialTicks)
+            ).consumesAction()
         }
     }
 
@@ -208,10 +203,12 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
         ANYTHING("Anything");
 
         override fun invoke(): HotbarItemSlot? = when (this) {
-            EGG_AND_SNOWBALL -> Slots.OffhandWithHotbar.findClosestSlot(Items.EGG, Items.SNOWBALL)
+            EGG_AND_SNOWBALL -> Slots.OffhandWithHotbar.findClosestSlot {
+                it.item is EggItem || it.item is SnowballItem
+            }
             ANYTHING -> when {
-                !player.mainHandStack.isEmpty -> Slots.Hotbar[player.inventory.selectedSlot]
-                !player.offHandStack.isEmpty -> OffHandSlot
+                !player.mainHandItem.isEmpty -> Slots.Hotbar[player.inventory.selectedSlot]
+                !player.offhandItem.isEmpty -> OffHandSlot
                 else -> null
             }
         }
@@ -232,7 +229,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
             LINEAR -> {
                 // On linear we likely don't need to care about gravity,
                 // but instead aim exactly at the hitbox of the target.
-                val eyes = player.eyePos
+                val eyes = player.eyePosition
                 val point = pointTracker.findPoint(eyes, target, 1)
                 Rotation.lookingAt(point.pos, eyes)
             }
@@ -256,7 +253,7 @@ object ModuleAutoShoot : ClientModule("AutoShoot", Category.COMBAT) {
                 return when (gravityType) {
                     AUTO -> {
                         when (item) {
-                            Items.EGG, Items.SNOWBALL -> PROJECTILE
+                            is EggItem, is SnowballItem -> PROJECTILE
                             else -> LINEAR
                         }
                     }

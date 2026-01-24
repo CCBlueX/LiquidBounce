@@ -1,14 +1,15 @@
 import type {
     BedState,
-    Component,
+    HudComponent,
     ConfigurableSetting,
     ItemStack, MinecraftKey, MinecraftKeyboardKey, MinecraftMouseKey,
     PlayerData,
     Proxy,
     Screen,
     Server,
-    Session,
+    Session, Setting,
     TextComponent,
+    StatusEffect,
 } from "./types";
 
 
@@ -42,6 +43,8 @@ export interface EventMap {
     componentsUpdate: ComponentsUpdateEvent;
     scaleFactorChange: ScaleFactorChangeEvent;
     browserUrlChange: BrowserUrlChangeEvent;
+    userLoggedIn: void;
+    userLoggedOut: void;
 
     //WindowEvents.kt
     mouseButton: MouseButtonEvent;
@@ -51,6 +54,7 @@ export interface EventMap {
     //UserInterfaceEvents.kt
     fps: FpsChangeEvent;
     clientPlayerData: ClientPlayerDataEvent;
+    clientPlayerEffect: ClientPlayerEffectEvent;
     clientPlayerInventory: ClientPlayerInventoryEvent;
     title: TitleEventTitle;
     subtitle: TitleEventSubtitle;
@@ -108,11 +112,15 @@ export interface ScaleFactorChangeEvent {
 
 export interface ComponentsUpdateEvent {
     id: string | null;
-    components: Component[];
+    components: HudComponent[];
 }
 
 export interface ClientPlayerDataEvent {
     playerData: PlayerData;
+}
+
+export interface ClientPlayerEffectEvent {
+    effects: StatusEffect[];
 }
 
 export interface OverlayMessageEvent {
@@ -136,6 +144,7 @@ export interface TargetChangeEvent {
 }
 
 export interface BlockCountChangeEvent {
+    nextBlock?: string;
     count?: number;
 }
 
@@ -191,7 +200,7 @@ export interface BrowserUrlChangeEvent {
 }
 
 export interface ValueChangedEvent {
-    value: ConfigurableSetting;
+    value: Setting<any>;
 }
 
 export interface ClickGuiScaleChangeEvent {

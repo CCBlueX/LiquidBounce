@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +15,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.sneaking
 
+import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.ccbluex.liquidbounce.utils.client.sendStartSneaking
 
 internal class NoSlowSneakingAAC5(override val parent: ChoiceConfigurable<*>) : Choice("AAC5") {
     private val timingMode by enumChoice("Timing", TimingMode.PRE_POST)
@@ -36,7 +35,7 @@ internal class NoSlowSneakingAAC5(override val parent: ChoiceConfigurable<*>) : 
         if (timingMode == TimingMode.PRE_POST
             || event.state == EventState.PRE && timingMode == TimingMode.PRE_TICK
             || event.state == EventState.POST && timingMode == TimingMode.POST_TICK) {
-            network.sendPacket(ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+            sendStartSneaking()
         }
     }
 

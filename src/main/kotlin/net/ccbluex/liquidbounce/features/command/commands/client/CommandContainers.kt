@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.nbt.StringNbtReader
-import net.minecraft.util.Formatting
+import net.minecraft.ChatFormatting
+import net.minecraft.nbt.TagParser
 
 object CommandContainers : Command.Factory {
 
@@ -61,9 +61,9 @@ object CommandContainers : Command.Factory {
             }
 
             itemStacks.forEachIndexed { index, itemStack ->
-                chat(regular("-> ").append(variable(index.toString()).styled {
-                    it.withColor(Formatting.GOLD)
-                }).append(regular(": ")).append(variable(itemStack.name.string)))
+                chat(regular("-> ").append(variable(index.toString()).withStyle {
+                    it.withColor(ChatFormatting.GOLD)
+                }).append(regular(": ")).append(variable(itemStack.hoverName.string)))
             }
         }
         .build()
@@ -99,7 +99,7 @@ object CommandContainers : Command.Factory {
         )
         .handler {
             val tag = args[0] as String
-            val nbtCompound = StringNbtReader.parse(tag)
+            val nbtCompound = TagParser.parseCompoundFully(tag)
 
             if (!nbtCompound.contains("BlockEntityTag")) {
                 throw CommandException(command.result("noBlockEntityTag"))

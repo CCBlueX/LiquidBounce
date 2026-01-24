@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.traps
 
-import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
-import net.minecraft.item.Item
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3i
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.minecraft.core.Direction
+import net.minecraft.core.Vec3i
+import net.minecraft.world.item.Item
+import net.minecraft.world.phys.BlockHitResult
 
 class BlockChangeIntent<T>(
     val blockChangeInfo: BlockChangeInfo,

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game
 
@@ -28,14 +27,14 @@ import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpInternalServerError
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
-import net.ccbluex.netty.http.util.readImageAsBase64
-import net.minecraft.client.gui.screen.TitleScreen
-import net.minecraft.client.gui.screen.world.EditWorldScreen
-import net.minecraft.client.gui.screen.world.SelectWorldScreen
-import net.minecraft.client.gui.screen.world.SymlinkWarningScreen
-import net.minecraft.client.toast.SystemToast
-import net.minecraft.util.path.SymlinkValidationException
+import net.ccbluex.netty.http.util.readAsBase64
+import net.minecraft.client.gui.components.toasts.SystemToast
+import net.minecraft.client.gui.screens.NoticeWithLinkScreen
+import net.minecraft.client.gui.screens.TitleScreen
+import net.minecraft.client.gui.screens.worldselection.EditWorldScreen
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen
 import net.minecraft.world.level.storage.LevelSummary
+import net.minecraft.world.level.validation.ContentValidationException
 import java.io.IOException
 
 @Volatile
@@ -47,33 +46,33 @@ fun getWorlds(requestObject: RequestObject): FullHttpResponse {
     val worlds = JsonArray()
 
     return runCatching {
-        val levelList = mc.levelStorage.levelList
+        val levelList = mc.levelSource.findLevelCandidates()
         if (levelList.isEmpty) {
             return@runCatching httpOk(worlds)
         }
 
         // Refreshes the list of summaries
-        summaries = mc.levelStorage.loadSummaries(levelList).get()
+        summaries = mc.levelSource.loadLevelSummaries(levelList).get()
 
         for ((index, summary) in summaries.withIndex()) {
             worlds.add(JsonObject().apply {
                 addProperty("id", index)
-                addProperty("name", summary.name)
-                addProperty("displayName", summary.displayName)
+                addProperty("name", summary.levelId)
+                addProperty("displayName", summary.levelName)
                 addProperty("lastPlayed", summary.lastPlayed)
-                addProperty("gameMode", summary.levelInfo.gameMode.getName())
-                addProperty("difficulty", summary.levelInfo.difficulty.getName())
-                addProperty("icon", runCatching { readImageAsBase64(summary.iconPath) }.onFailure {
+                addProperty("gameMode", summary.settings.gameType().serializedName)
+                addProperty("difficulty", summary.settings.difficulty().serializedName)
+                addProperty("icon", runCatching { summary.icon.readAsBase64() }.onFailure {
                     //logger.error("Failed to read icon for world ${summary.name}", it)
                 }.getOrNull())
-                addProperty("version", summary.versionInfo.versionName)
-                addProperty("hardcore", summary.levelInfo.isHardcore)
-                addProperty("commandsAllowed", summary.levelInfo.areCommandsAllowed())
+                addProperty("version", summary.levelVersion().minecraftVersionName())
+                addProperty("hardcore", summary.settings.hardcore())
+                addProperty("commandsAllowed", summary.settings.allowCommands())
                 addProperty("locked", summary.isLocked)
-                addProperty("requiresConversion", summary.requiresConversion())
-                addProperty("isVersionAvailable", summary.isVersionAvailable)
-                addProperty("shouldPromptBackup", summary.shouldPromptBackup())
-                addProperty("wouldBeDowngraded", summary.wouldBeDowngraded())
+                addProperty("requiresConversion", summary.requiresManualConversion())
+                addProperty("isVersionAvailable", summary.isCompatible)
+                addProperty("shouldPromptBackup", summary.shouldBackup())
+                addProperty("wouldBeDowngraded", summary.isDowngrade)
             })
         }
         httpOk(worlds)
@@ -87,7 +86,7 @@ fun postJoinWorld(requestObject: RequestObject): FullHttpResponse {
 
     mc.execute {
         runCatching {
-            mc.createIntegratedServerLoader().start(request.name) {
+            mc.createWorldOpenFlows().openWorld(request.name) {
                 mc.setScreen(SelectWorldScreen(TitleScreen()))
             }
         }.onFailure {
@@ -105,17 +104,21 @@ fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
 
     mc.execute {
         val session = runCatching {
-            mc.levelStorage.createSession(request.name)
+            mc.levelSource.validateAndCreateAccess(request.name)
         }.onFailure { exception ->
             when (exception) {
                 is IOException -> {
-                    SystemToast.addWorldAccessFailureToast(mc, request.name)
+                    SystemToast.onWorldAccessFailure(mc, request.name)
                     logger.error("Failed to access level ${request.name}", exception)
                 }
-                is SymlinkValidationException -> {
+
+                is ContentValidationException -> {
                     logger.warn(exception.message)
-                    mc.setScreen(SymlinkWarningScreen.world { mc.setScreen(SelectWorldScreen(TitleScreen())) })
+                    mc.setScreen(NoticeWithLinkScreen.createWorldSymlinkWarningScreen { mc.setScreen(
+                        SelectWorldScreen(
+                            TitleScreen())) })
                 }
+
                 else -> {
                     logger.error("Failed to access level ${request.name}", exception)
                 }
@@ -124,12 +127,12 @@ fun postEditWorld(requestObject: RequestObject): FullHttpResponse {
 
         runCatching {
             EditWorldScreen.create(mc, session) { _ ->
-                session.tryClose()
+                session.safeClose()
                 mc.setScreen(SelectWorldScreen(TitleScreen()))
             }
         }.onFailure { exception ->
-            session.tryClose()
-            SystemToast.addWorldAccessFailureToast(mc, request.name)
+            session.safeClose()
+            SystemToast.onWorldAccessFailure(mc, request.name)
             logger.error("Failed to load world data ${request.name}", exception)
         }.onSuccess { screen ->
             mc.setScreen(screen)
@@ -145,8 +148,8 @@ fun postDeleteWorld(requestObject: RequestObject): FullHttpResponse {
     val request = requestObject.asJson<LevelRequest>()
 
     runCatching {
-        mc.levelStorage.createSessionWithoutSymlinkCheck(request.name).use { session ->
-            session.deleteSessionLock()
+        mc.levelSource.createAccess(request.name).use { session ->
+            session.deleteLevel()
         }
     }.onFailure {
         logger.error("Failed to delete world ${request.name}", it)

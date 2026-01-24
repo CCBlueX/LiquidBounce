@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 
 /**
  * @anticheat Grim
@@ -39,9 +39,9 @@ internal class NoSlowSharedGrim2364MC18(override val parent: ChoiceConfigurable<
             // Introduced with https://github.com/GrimAnticheat/Grim/issues/874
             untracked {
                 val slot = player.inventory.selectedSlot
-                network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 8 + 1))
-                network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 7 + 2))
-                network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
+                network.send(ServerboundSetCarriedItemPacket(slot % 8 + 1))
+                network.send(ServerboundSetCarriedItemPacket(slot % 7 + 2))
+                network.send(ServerboundSetCarriedItemPacket(slot))
             }
         }
     }

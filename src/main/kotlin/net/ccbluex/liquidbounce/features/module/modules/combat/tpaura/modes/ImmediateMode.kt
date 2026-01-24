@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,32 +15,31 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes
 
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.desyncPlayerPosition
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.stuckChronometer
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.ModuleTpAura.targetSelector
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.TpAuraChoice
-import net.ccbluex.liquidbounce.render.drawLineStrip
+import net.ccbluex.liquidbounce.render.drawLine
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
+import net.ccbluex.liquidbounce.utils.math.toVec3f
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.phys.Vec3
 import kotlin.math.abs
 import kotlin.math.floor
 
@@ -51,8 +50,10 @@ object ImmediateMode : TpAuraChoice("Immediate") {
             return@tickHandler
         }
 
-        val playerPosition = player.pos
-        val enemyPosition = targetSelector.targets().minByOrNull { it.squaredBoxedDistanceTo(playerPosition) }?.pos
+        val playerPosition = player.position()
+        val enemyPosition = targetSelector.targets()
+            .minByOrNull { it.squaredBoxedDistanceTo(playerPosition) }
+            ?.position()
             ?: return@tickHandler
 
         travel(enemyPosition)
@@ -66,10 +67,10 @@ object ImmediateMode : TpAuraChoice("Immediate") {
 
         renderEnvironmentForWorld(matrixStack) {
             desyncPlayerPosition?.let { playerPosition ->
-                drawLineStrip(
+                drawLine(
+                    relativeToCamera(player.position().add(0.0, 1.0, 0.0)).toVec3f(),
+                    relativeToCamera(playerPosition.add(0.0, 1.0, 0.0)).toVec3f(),
                     Color4b.WHITE.toARGB(),
-                    relativeToCamera(player.pos.add(0.0, 1.0, 0.0)).toVec3(),
-                    relativeToCamera(playerPosition.add(0.0, 1.0, 0.0)).toVec3()
                 )
             }
         }
@@ -78,22 +79,22 @@ object ImmediateMode : TpAuraChoice("Immediate") {
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
 
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is ServerboundMovePlayerPacket) {
             val position = desyncPlayerPosition ?: return@handler
 
             // Set the packet position to the player position
             packet.x = position.x
             packet.y = position.y
             packet.z = position.z
-            packet.changePosition = true
-        } else if (packet is PlayerPositionLookS2CPacket) {
+            packet.hasPos = true
+        } else if (packet is ClientboundPlayerPositionPacket) {
             chat(markAsError("Server setback detected - teleport failed!"))
             stuckChronometer.reset()
             desyncPlayerPosition = null
         }
     }
 
-    private fun travel(position: Vec3d) {
+    private fun travel(position: Vec3) {
         val x = position.x
         val y = position.y
         val z = position.z
@@ -105,23 +106,23 @@ object ImmediateMode : TpAuraChoice("Immediate") {
         val times = (floor((abs(deltaX) + abs(deltaY) + abs(deltaZ)) / 10) - 1).toInt()
         val packetToSend = MovePacketType.FULL
         repeat(times) {
-            network.sendPacket(packetToSend.generatePacket().apply {
+            network.send(packetToSend.generatePacket().apply {
                 this.x = player.x
                 this.y = player.y
                 this.z = player.z
-                this.yaw = player.yaw
-                this.pitch = player.pitch
-                this.onGround = player.isOnGround
+                this.yRot = player.yRot
+                this.xRot = player.xRot
+                this.onGround = player.onGround()
             })
         }
 
-        network.sendPacket(packetToSend.generatePacket().apply {
+        network.send(packetToSend.generatePacket().apply {
             this.x = x
             this.y = y
             this.z = z
-            this.yaw = player.yaw
-            this.pitch = player.pitch
-            this.onGround = player.isOnGround
+            this.yRot = player.yRot
+            this.xRot = player.xRot
+            this.onGround = player.onGround()
         })
 
         desyncPlayerPosition = position

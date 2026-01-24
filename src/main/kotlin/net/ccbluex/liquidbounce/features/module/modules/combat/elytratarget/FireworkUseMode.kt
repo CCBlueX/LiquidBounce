@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
@@ -28,8 +27,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget.Modu
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
+import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 
 @Suppress("unused")
 internal enum class FireworkUseMode(
@@ -45,16 +44,16 @@ internal enum class FireworkUseMode(
 
             if (slotUpdateFlag) {
                 player.inventory.selectedSlot = slot.hotbarSlotForServer
-                network.sendPacket(UpdateSelectedSlotC2SPacket(slot.hotbarSlotForServer))
+                network.send(ServerboundSetCarriedItemPacket(slot.hotbarSlotForServer))
             }
 
-            interaction.sendSequencedPacket(world) { sequence ->
-                PlayerInteractItemC2SPacket(slot.useHand, sequence, player.yaw, player.pitch)
+            interaction.startPrediction(world) { sequence ->
+                ServerboundUseItemPacket(slot.useHand, sequence, player.yRot, player.xRot)
             }
 
             if (slotUpdateFlag) {
                 player.inventory.selectedSlot = this
-                network.sendPacket(UpdateSelectedSlotC2SPacket(this))
+                network.send(ServerboundSetCarriedItemPacket(this))
             }
         }
     })

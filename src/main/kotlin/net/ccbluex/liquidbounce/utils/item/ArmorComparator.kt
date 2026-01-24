@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,18 +18,16 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.utils.kotlin.enumMapOf
+import net.ccbluex.fastutil.enumMapOf
+import net.ccbluex.liquidbounce.utils.client.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.enchantment.Enchantment
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.RegistryKey
-import net.minecraft.util.math.MathHelper
-import java.math.BigDecimal
-import java.math.RoundingMode
+import net.minecraft.core.component.DataComponents
+import net.minecraft.resources.ResourceKey
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantment
+import net.minecraft.world.item.enchantment.Enchantments
 
 class ArmorParameter(val defensePoints: Float, val toughness: Float)
 
@@ -93,7 +91,7 @@ class ArmorComparator(
     private val durabilityThreshold : Int = Int.MIN_VALUE
 ) : Comparator<ArmorPiece> {
     companion object {
-        private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
+        private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<ResourceKey<Enchantment>> = arrayOf(
             Enchantments.PROTECTION,
             Enchantments.PROJECTILE_PROTECTION,
             Enchantments.FIRE_PROTECTION,
@@ -101,7 +99,7 @@ class ArmorComparator(
         )
         private val ENCHANTMENT_FACTORS = floatArrayOf(1.2f, 0.4f, 0.39f, 0.38f)
         private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(0.04f, 0.08f, 0.15f, 0.08f)
-        private val OTHER_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
+        private val OTHER_ENCHANTMENTS: Array<ResourceKey<Enchantment>> = arrayOf(
             Enchantments.FEATHER_FALLING,
             Enchantments.THORNS,
             Enchantments.RESPIRATION,
@@ -113,10 +111,10 @@ class ArmorComparator(
 
     private val comparator = ComparatorChain(
         compareBy { it.itemSlot.itemStack.durability > durabilityThreshold },
-        compareByDescending { round(getThresholdedDamageReduction(it.itemSlot.itemStack).toDouble(), 3) },
-        compareBy { round(getEnchantmentThreshold(it.itemSlot.itemStack).toDouble(), 3) },
+        compareByDescending { getThresholdedDamageReduction(it.itemSlot.itemStack).roundToDecimalPlaces(3) },
+        compareBy { getEnchantmentThreshold(it.itemSlot.itemStack).roundToDecimalPlaces(3) },
         compareBy { it.itemSlot.itemStack.getEnchantmentCount() },
-        compareBy { it.itemSlot.itemStack.get(DataComponentTypes.ENCHANTABLE)?.value ?: 0 },
+        compareBy { it.itemSlot.itemStack.get(DataComponents.ENCHANTABLE)?.value ?: 0 },
         compareByCondition(ArmorPiece::isAlreadyEquipped),
         compareByCondition(ArmorPiece::isReachableByHand)
     )
@@ -144,7 +142,7 @@ class ArmorComparator(
      */
     fun getDamageFactor(damage: Float, defensePoints: Float, toughness: Float): Float {
         val f = 2.0f + toughness / 4.0f
-        val g = MathHelper.clamp(defensePoints - damage / f, defensePoints * 0.2f, 20.0f)
+        val g = Math.clamp(defensePoints - damage / f, defensePoints * 0.2f, 20.0f)
 
         return 1.0f - g / 25.0f
     }
@@ -169,22 +167,6 @@ class ArmorComparator(
         }
 
         return sum
-    }
-
-    /**
-     * Rounds a double. From https://stackoverflow.com/a/2808648/9140494
-     *
-     * @param value  the value to be rounded
-     * @param places Decimal places
-     * @return The rounded value
-     */
-    fun round(value: Double, places: Int): Double {
-        require(places >= 0)
-
-        var bd = BigDecimal.valueOf(value)
-        bd = bd.setScale(places, RoundingMode.HALF_UP)
-
-        return bd.toDouble()
     }
 
 }

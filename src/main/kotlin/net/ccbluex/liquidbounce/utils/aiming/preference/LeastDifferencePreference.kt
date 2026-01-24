@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,15 +27,15 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 class LeastDifferencePreference(
     private val baseRotation: Rotation,
-    private val basePoint: Vec3d? = null
+    private val basePoint: Vec3? = null
 ) : RotationPreference {
 
-    override fun getPreferredSpot(eyesPos: Vec3d, range: Double): Vec3d {
+    override fun getPreferredSpot(eyesPos: Vec3, range: Double): Vec3 {
         if (basePoint != null) {
             return basePoint
         }
@@ -43,7 +43,7 @@ class LeastDifferencePreference(
         return eyesPos + baseRotation.directionVector * range
     }
 
-    override fun getPreferredSpotOnBox(box: Box, eyesPos: Vec3d, range: Double): Vec3d {
+    override fun getPreferredSpotOnBox(box: AABB, eyesPos: Vec3, range: Double): Vec3 {
         if (basePoint != null) {
             return basePoint
         }
@@ -55,7 +55,7 @@ class LeastDifferencePreference(
 
         val look = Line(eyesPos, preferredSpot - eyesPos)
         return look.getPointOnBoxInDirection(box)
-            ?.takeIf { it.squaredDistanceTo(eyesPos) <= range.sq() }
+            ?.takeIf { it.distanceToSqr(eyesPos) <= range.sq() }
             ?: preferredSpot
     }
 
@@ -71,7 +71,7 @@ class LeastDifferencePreference(
         val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
             get() = LeastDifferencePreference(RotationManager.currentRotation ?: player.rotation)
 
-        fun leastDifferenceToLastPoint(eyes: Vec3d, point: Vec3d): LeastDifferencePreference {
+        fun leastDifferenceToLastPoint(eyes: Vec3, point: Vec3): LeastDifferencePreference {
             return LeastDifferencePreference(Rotation.lookingAt(point, from = eyes), point)
         }
 

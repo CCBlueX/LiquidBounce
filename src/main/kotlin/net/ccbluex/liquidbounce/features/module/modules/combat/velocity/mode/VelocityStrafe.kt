@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,20 +19,20 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.velocity.mode
 
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.network.protocol.game.ClientboundExplodePacket
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 /**
  * Strafe velocity
@@ -74,7 +74,9 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
         val packet = event.packet
 
         // Check if this is a regular velocity update
-        if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) || packet is ExplosionS2CPacket) {
+        if ((packet is ClientboundSetEntityMotionPacket && packet.id == player.id)
+            || packet is ClientboundExplodePacket
+        ) {
             if (OnlyFacing.enabled && !shouldStrafe) {
                 return@sequenceHandler
             }
@@ -83,7 +85,7 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
             waitTicks(delay)
 
             // Apply strafe
-            player.velocity = player.velocity.withStrafe(speed = player.sqrtSpeed * strength)
+            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed * strength))
 
             if (untilGround) {
                 applyStrafe = true
@@ -93,10 +95,10 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
 
     @Suppress("unused")
     private val moveHandler = handler<PlayerMoveEvent> { event ->
-        if (player.isOnGround) {
+        if (player.onGround()) {
             applyStrafe = false
         } else if (applyStrafe) {
-            event.movement = event.movement.withStrafe(speed = player.sqrtSpeed * strength)
+            event.movement = event.movement.withStrafe(speed = player.horizontalSpeed * strength)
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,18 +20,18 @@ package net.ccbluex.liquidbounce.integration
 
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserUrlChangeEvent
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.text.Text
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.network.chat.Component
 
-var browserBrowsers = mutableListOf<Browser>()
+val browserBrowsers = mutableListOf<Browser>()
 
-class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) {
+class BrowserScreen(val url: String, title: Component = PlainText.EMPTY) : Screen(title) {
 
     // todo: implement multi-tab support and tab switching
     var selectedIndex = 0
@@ -44,14 +44,14 @@ class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) 
         val viewport = BrowserViewport(
             20,
             20,
-            ((width - 20) * mc.window.scaleFactor).toInt(),
-            ((height - 50) * mc.window.scaleFactor).toInt()
+            ((width - 20) * mc.window.guiScale).toInt(),
+            ((height - 50) * mc.window.guiScale).toInt()
         )
 
         if (browserBrowsers.isEmpty()) {
             val browser = BrowserBackendManager.browserBackend
 
-            browser.createBrowser(url, viewport, priority = 20) { mc.currentScreen == this }
+            browser.createBrowser(url, viewport, priority = 20) { mc.screen == this }
                 .also { browserBrowsers.add(it) }
             return
         }
@@ -60,7 +60,7 @@ class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) 
         browserBrowsers.forEach { browser -> browser.viewport = viewport }
     }
 
-    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, delta: Float) {
         browserBrowser?.let { browser ->
             val currentUrl = browser.url
 
@@ -73,16 +73,16 @@ class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) 
         // render nothing
     }
 
-    override fun shouldPause() = false
+    override fun isPauseScreen() = false
 
-    override fun close() {
+    override fun onClose() {
         // Close all tabs
         browserBrowsers.removeIf {
             it.close()
             true
         }
 
-        super.close()
+        super.onClose()
     }
 
     override fun shouldCloseOnEsc() = true

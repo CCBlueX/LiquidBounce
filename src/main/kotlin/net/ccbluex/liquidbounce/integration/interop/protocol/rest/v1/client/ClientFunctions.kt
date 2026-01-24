@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client
 
@@ -29,21 +28,26 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.netty.http.model.RequestObject
-import net.ccbluex.netty.http.util.*
+import net.ccbluex.netty.http.util.httpBadRequest
+import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpNoContent
+import net.ccbluex.netty.http.util.httpNotFound
+import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.util.Util
 import java.io.File
 import java.net.URI
-import java.util.*
+import java.util.Properties
 
 // GET /api/v1/client/info
 @Suppress("UNUSED_PARAMETER")
 fun getClientInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("gameVersion", mc.gameVersion)
+    addProperty("os", Util.getPlatform().telemetryName())
+    addProperty("gameVersion", mc.launchedVersion)
     addProperty("clientVersion", LiquidBounce.clientVersion)
     addProperty("clientName", LiquidBounce.CLIENT_NAME)
     addProperty("development", LiquidBounce.IN_DEVELOPMENT)
-    addProperty("fps", mc.currentFps)
-    addProperty("gameDir", mc.runDirectory.path)
+    addProperty("fps", mc.fps)
+    addProperty("gameDir", mc.gameDirectory.path)
     addProperty("clientDir", ConfigSystem.rootFolder.path)
     addProperty("inGame", inGame)
     addProperty("viaFabricPlus", usesViaFabricPlus)
@@ -75,19 +79,19 @@ fun getUpdateInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
 // POST /api/v1/client/exit
 @Suppress("UNUSED_PARAMETER")
 fun postExit(requestObject: RequestObject): FullHttpResponse {
-    mc.scheduleStop()
+    mc.stop()
     return httpNoContent()
 }
 
 // GET /api/v1/client/window
 @Suppress("UNUSED_PARAMETER")
 fun getWindowInfo(requestObject: RequestObject) = httpOk(JsonObject().apply {
-    addProperty("width", mc.window.width)
-    addProperty("height", mc.window.height)
-    addProperty("scaledWidth", mc.window.scaledWidth)
-    addProperty("scaledHeight", mc.window.scaledHeight)
-    addProperty("scaleFactor", mc.window.scaleFactor)
-    addProperty("guiScale", mc.options.guiScale.value)
+    addProperty("width", mc.window.screenWidth)
+    addProperty("height", mc.window.screenHeight)
+    addProperty("scaledWidth", mc.window.guiScaledWidth)
+    addProperty("scaledHeight", mc.window.guiScaledHeight)
+    addProperty("scaleFactor", mc.window.guiScale)
+    addProperty("guiScale", mc.options.guiScale().get())
 })
 
 // POST /api/v1/client/browse
@@ -97,7 +101,7 @@ fun postBrowse(requestObject: RequestObject): FullHttpResponse {
 
     val url = POSSIBLE_URL_TARGETS[target] ?: return httpForbidden("Unknown target")
 
-    Util.getOperatingSystem().open(url)
+    Util.getPlatform().openUri(url)
     return httpNoContent()
 }
 
@@ -122,7 +126,7 @@ fun postBrowsePath(requestObject: RequestObject): FullHttpResponse {
         else -> return httpForbidden("Invalid file type")
     }
 
-    Util.getOperatingSystem().open(directoryToOpen)
+    Util.getPlatform().openFile(directoryToOpen)
     return httpNoContent()
 }
 

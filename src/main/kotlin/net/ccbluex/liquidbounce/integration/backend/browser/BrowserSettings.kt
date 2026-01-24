@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2026 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.integration.backend.browser
 
 import net.ccbluex.liquidbounce.config.types.Value
@@ -29,11 +48,17 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
         private set
 
     init {
-        if (browserBackend.isAccelerationSupported) {
-            accelerated = boolean("Accelerated(BETA)", false).onChanged {
+        val accelerationFlags = browserBackend.accelerationFlags
+
+        if (!BrowserBackendManager.disableAcceleration && accelerationFlags.isSupported) {
+            accelerated = if (accelerationFlags.isBeta) {
+                boolean("Accelerated(BETA)", false)
+            } else {
+                boolean("Accelerated", true)
+            }.onChanged {
                 mc.execute {
                     IntegrationListener.restart()
-                    mc.updateWindowTitle()
+                    mc.updateTitle()
                 }
             }
         }
@@ -43,16 +68,14 @@ object GlobalBrowserSettings : Configurable("GlobalRenderer") {
 
 open class BrowserSettings(
     fpsLimit: Int = 0,
-    update: () -> Unit
+    update: Runnable,
 ) : Configurable("Renderer") {
 
     /**
      * The maximum frames per second the browser renderer should run at.
      */
     val fps = int("Fps", fpsLimit, 0..max(0, refreshRate), "FPS").onChanged {
-        mc.execute {
-            update()
-        }
+        mc.execute(update)
     }
 
     val currentFps: Int
@@ -65,7 +88,7 @@ open class BrowserSettings(
 
 class IntegrationBrowserSettings(
     fpsLimit: Int = 0,
-    update: () -> Unit
+    update: Runnable,
 ) : BrowserSettings(fpsLimit, update) {
     val syncGameFps by boolean("SyncGameFps", true)
 }

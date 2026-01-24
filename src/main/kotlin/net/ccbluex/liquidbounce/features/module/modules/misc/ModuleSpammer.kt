@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,14 +19,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import it.unimi.dsi.fastutil.longs.LongArrayList
+import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.ccbluex.fastutil.longListOf
+import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.io.skipLine
@@ -42,11 +47,13 @@ import kotlin.time.Duration.Companion.seconds
  *
  * Spams the chat with a given message.
  */
-object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = true) {
+object ModuleSpammer : ClientModule("Spammer", ModuleCategories.MISC, disableOnQuit = true) {
 
     init {
         doNotIncludeAlways()
     }
+
+    private const val MAX_CHARS = 256
 
     private val delay by floatRange("Delay", 2f..4f, 0f..300f, "secs")
     private val mps by intRange("MPS", 1..1, 1..500, "messages")
@@ -61,7 +68,7 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
         abstract fun nextMessage(): String
 
         object Setting : MessageProvider("Setting") {
-            private var linear = 0
+            private val linear = atomic(0)
 
             private val texts by textList("Message", mutableListOf(
                 "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}",
@@ -73,33 +80,40 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
             override fun nextMessage(): String =
                 when (pattern) {
                     SpammerPattern.RANDOM -> texts.random()
-                    SpammerPattern.LINEAR -> texts[linear++ % texts.size]
+                    SpammerPattern.LINEAR -> texts[linear.getAndIncrement() % texts.size]
                 }
         }
 
         object File : MessageProvider("File") {
 
+            private val coroutineName = CoroutineName("SpammerFileSourceReader")
+
             private val source by file("Source").onChanged {
-                lineIndex.clear()
                 if (!it.isFile) return@onChanged
 
-                lineIndex.add(0L)
-                RandomAccessFile(it, "r").use { raf ->
-                    while (raf.skipLine() != 0L) {
-                        lineIndex.add(raf.filePointer)
+                ioScope.launch(coroutineName) {
+                    val newIndices = LongArrayList()
+                    newIndices.add(0L)
+                    RandomAccessFile(it, "r").use { raf ->
+                        while (raf.skipLine() != 0L) {
+                            newIndices.add(raf.filePointer)
+                        }
                     }
+                    lineIndex = newIndices
                 }
             }
 
-            private var linear = 0
-            private val lineIndex = LongArrayList()
+            private val linear = atomic(0)
+            @Volatile
+            private var lineIndex = longListOf()
 
             override fun nextMessage(): String {
+                val lineIndex = lineIndex
                 require(lineIndex.isNotEmpty()) { "File is empty or not selected" }
 
                 val index = when (pattern) {
                     SpammerPattern.RANDOM -> lineIndex.getLong(Random.nextInt(lineIndex.size))
-                    SpammerPattern.LINEAR -> lineIndex.getLong(linear++ % lineIndex.size)
+                    SpammerPattern.LINEAR -> lineIndex.getLong(linear.getAndIncrement() % lineIndex.size)
                 }
                 return RandomAccessFile(source, "r").use { raf ->
                     raf.seek(index)
@@ -141,15 +155,15 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
     }
 
     private fun sendMessageOrCommand(text: String) {
-        if (text.length > 256) {
-            chat("Spammer message is too long! (Max 256 characters)")
+        if (text.length > MAX_CHARS) {
+            chat("Spammer message is too long! (Max $MAX_CHARS characters)")
             return
         }
 
         if (text.startsWith('/')) {
             network.sendCommand(text.substring(1))
         } else {
-            network.sendChatMessage(text)
+            network.sendChat(text)
         }
     }
 
@@ -163,7 +177,7 @@ object ModuleSpammer : ClientModule("Spammer", Category.MISC, disableOnQuit = tr
         }
 
         if (formattedText.contains("@a")) {
-            mc.networkHandler?.playerList?.mapNotNull {
+            mc.connection?.onlinePlayers?.mapNotNull {
                 it?.profile?.name.takeIf { n -> n != player.gameProfile?.name }
             }?.takeIf { it.isNotEmpty() }?.let { playerNameList ->
                 formattedText = formattedText.replace("@a") { playerNameList.random() }

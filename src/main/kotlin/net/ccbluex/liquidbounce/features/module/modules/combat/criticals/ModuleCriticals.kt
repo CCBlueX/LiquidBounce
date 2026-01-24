@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,28 +24,34 @@ import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.*
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsBlink
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsJump
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsNoGround
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsPacket
+import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.modes.CriticalsTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
+import net.ccbluex.liquidbounce.utils.client.sendStopSprinting
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.CRITICAL_MODIFICATION
-import net.minecraft.block.CobwebBlock
-import net.minecraft.entity.Entity
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffects.*
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.world.effect.MobEffects.BLINDNESS
+import net.minecraft.world.effect.MobEffects.LEVITATION
+import net.minecraft.world.effect.MobEffects.SLOW_FALLING
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.level.block.WebBlock
 
 /**
  * Criticals module
  *
  * Automatically crits every time you attack someone.
  */
-object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
+object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
     init {
         enableLock()
@@ -82,9 +88,9 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
         private val attackHandler = handler<AttackEntityEvent>(
             priority = CRITICAL_MODIFICATION
         ) { event ->
-            if (stopSprinting == StopSprintingMode.ON_ATTACK && player.lastSprinting) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
-                player.lastSprinting = false
+            if (stopSprinting == StopSprintingMode.ON_ATTACK && player.wasSprinting) {
+                sendStopSprinting()
+                player.wasSprinting = false
             }
         }
 
@@ -137,11 +143,11 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
             }
 
             repeat(critical) {
-                player.addCritParticles(entity)
+                player.crit(entity)
             }
 
             repeat(magic) {
-                player.addEnchantedHitParticles(entity)
+                player.magicCrit(entity)
             }
         }
 
@@ -176,7 +182,7 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
             }
 
             // On ground, we cannot do critical hits anyway.
-            if (player.isOnGround) {
+            if (player.onGround()) {
                 return false
             }
 
@@ -198,16 +204,16 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
             // Modules
             ModuleFly.running,
             ModuleLiquidWalk.running && ModuleLiquidWalk.standingOnWater(),
-            player.isInLava, player.isTouchingWater, player.hasVehicle(),
+            player.isInLava, player.isInWater, player.isPassenger,
             // Cobwebs
-            player.box.collideBlockIntersects(checkCollisionShape = false) { it is CobwebBlock },
+            player.box.collideBlockIntersects(checkCollisionShape = false) { it is WebBlock },
             // Effects
-            blockingEffects.any(player::hasStatusEffect),
+            blockingEffects.any(player::hasEffect),
             // Disabling conditions
-            player.isClimbing, player.hasNoGravity(), player.isRiding,
+            player.onClimbable(), player.isNoGravity, player.isHandsBusy,
             player.abilities.flying,
             // On Ground
-            player.isOnGround && !ignoreOnGround
+            player.onGround() && !ignoreOnGround
         )
 
         // Do not replace this with .none() since it is equivalent to .isEmpty()
@@ -215,7 +221,7 @@ object ModuleCriticals : ClientModule("Criticals", Category.COMBAT) {
     }
 
     fun canDoCriticalHit(ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) =
-        allowsCriticalHit(ignoreOnGround) && player.getAttackCooldownProgress(0.5f) > 0.9f &&
+        allowsCriticalHit(ignoreOnGround) && player.getAttackStrengthScale(0.5f) > 0.9f &&
             (!player.isSprinting || ignoreSprint)
 
     fun wouldDoCriticalHit(ignoreSprint: Boolean = false) =

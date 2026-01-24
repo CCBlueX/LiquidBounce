@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,13 +26,13 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
 import net.ccbluex.liquidbounce.utils.math.expendToBlockBox
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 
 object HoleManager : EventListener, MinecraftShortcuts {
 
     internal val movableRegionScanner = MovableRegionScanner()
     private val activeModules = ReferenceOpenHashSet<HoleManagerSubscriber>()
-    private val playerPos = BlockPos.Mutable()
+    private val playerPos = BlockPos.MutableBlockPos()
 
     override val running: Boolean
         get() = activeModules.isNotEmpty()
@@ -41,7 +41,7 @@ object HoleManager : EventListener, MinecraftShortcuts {
         activeModules += subscriber
         if (activeModules.size == 1) {
             ChunkScanner.subscribe(HoleTracker)
-            mc.player?.blockPos?.let(::updateScanRegion)
+            mc.player?.blockPosition()?.let(::updateScanRegion)
         }
     }
 
@@ -55,10 +55,10 @@ object HoleManager : EventListener, MinecraftShortcuts {
 
     @Suppress("unused")
     private val movementHandler = handler<PlayerPostTickEvent> {
-        val currentPos = player.blockPos
+        val currentPos = player.blockPosition()
 
         // Update when player moves
-        if (playerPos.getManhattanDistance(currentPos) >= 4) {
+        if (playerPos.distManhattan(currentPos) >= 4) {
             updateScanRegion(currentPos)
         }
     }

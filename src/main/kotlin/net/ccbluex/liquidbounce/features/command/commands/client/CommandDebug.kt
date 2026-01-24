@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.command.commands.client
@@ -32,6 +30,7 @@ import net.ccbluex.liquidbounce.api.core.asForm
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.gson.publicGson
+import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -43,12 +42,13 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.onClick
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
+import net.minecraft.ChatFormatting
 import net.minecraft.SharedConstants
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.Text
-import net.minecraft.text.TextColor
-import net.minecraft.util.Formatting
-import java.util.*
+import net.minecraft.network.chat.ClickEvent
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.TextColor
+import java.net.URI
+import java.util.EnumSet
 
 /**
  * Debug Command to collect information about the client
@@ -82,12 +82,12 @@ object CommandDebug : Command.Factory {
             buffer.clear()
 
             chat(
-                Text.literal("Debug information has been uploaded to: ").styled { style ->
-                    style.withColor(TextColor.fromFormatting(Formatting.GREEN))
+                Component.literal("Debug information has been uploaded to: ").withStyle { style ->
+                    style.withColor(TextColor.fromLegacyFormat(ChatFormatting.GREEN))
                 }.append(
-                    Text.literal(paste)
-                        .formatted(Formatting.YELLOW)
-                        .onClick(ClickEvent(ClickEvent.Action.OPEN_URL, paste))
+                    Component.literal(paste)
+                        .withStyle(ChatFormatting.YELLOW)
+                        .onClick(ClickEvent.OpenUrl(URI(paste)))
                 )
             )
         }
@@ -107,7 +107,7 @@ object CommandDebug : Command.Factory {
         })
 
         add("minecraft", JsonObject().apply {
-            addProperty("version", SharedConstants.getGameVersion().name)
+            addProperty("version", SharedConstants.getCurrentVersion().name())
             addProperty("protocol", SharedConstants.getProtocolVersion())
         })
 
@@ -129,21 +129,21 @@ object CommandDebug : Command.Factory {
         })
 
         add("profile", JsonObject().apply {
-            addProperty("name", mc.session.username)
-            addProperty("uuid", mc.session.uuidOrNull.toString())
-            addProperty("type", mc.session.accountType.toString())
+            addProperty("name", mc.user.name)
+            addProperty("uuid", mc.user.profileId.toString())
+            addProperty("type", mc.user.accountType)
         })
 
         add("language", JsonObject().apply {
-            addProperty("language", mc.languageManager.language)
+            addProperty("language", mc.languageManager.selected)
             addProperty("clientLanguage", LanguageManager.languageIdentifier)
         })
 
         add("server", JsonObject().apply {
-            mc.currentServerEntry?.let {
+            mc.currentServer?.let {
                 addProperty("name", it.name)
-                addProperty("address", it.address)
-                addProperty("protocol", it.protocolVersion)
+                addProperty("address", it.ip)
+                addProperty("protocol", it.protocol)
             }
         })
 

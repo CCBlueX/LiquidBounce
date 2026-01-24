@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,25 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.event.events
 
+import com.mojang.blaze3d.pipeline.RenderTarget
+import com.mojang.blaze3d.vertex.PoseStack
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.render.Camera
-import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.client.Camera
+import net.minecraft.client.gui.GuiGraphics
 
 @Nameable("gameRender")
 object GameRenderEvent : Event()
 
 @Nameable("screenRender")
-class ScreenRenderEvent(val context: DrawContext, val partialTicks: Float) : Event()
+class ScreenRenderEvent(val context: GuiGraphics, val partialTicks: Float) : Event()
 
 @Nameable("worldRender")
-class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val partialTicks: Float) : Event()
+class WorldRenderEvent(val matrixStack: PoseStack, val camera: Camera, val partialTicks: Float) : Event()
 
 /**
  * Sometimes, modules might want to contribute something to the glow framebuffer. They can hook this event
@@ -43,7 +43,8 @@ class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val par
  */
 @Nameable("drawOutlines")
 class DrawOutlinesEvent(
-    val matrixStack: MatrixStack,
+    val renderTarget: RenderTarget,
+    val matrixStack: PoseStack,
     val camera: Camera,
     val partialTicks: Float,
     val type: OutlineType,
@@ -65,4 +66,7 @@ class DrawOutlinesEvent(
 }
 
 @Nameable("overlayRender")
-class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
+class OverlayRenderEvent(
+    val context: GuiGraphics,
+    val tickDelta: Float,
+) : Event()

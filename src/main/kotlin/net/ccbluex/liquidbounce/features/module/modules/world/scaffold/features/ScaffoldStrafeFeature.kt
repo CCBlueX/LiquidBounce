@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
-import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.world.effect.MobEffects
 
 object ScaffoldStrafeFeature : ToggleableConfigurable(ModuleScaffold, "Strafe", false) {
 
@@ -42,10 +42,12 @@ object ScaffoldStrafeFeature : ToggleableConfigurable(ModuleScaffold, "Strafe", 
         if (!hypixel) {
             return
         }
-        player.velocity = player.velocity.multiply(
-            0.5,
-            1.0,
-            0.5
+        player.setDeltaMovement(
+            player.deltaMovement.multiply(
+                0.5,
+                1.0,
+                0.5
+            )
         )
         super.onDisabled()
     }
@@ -61,24 +63,24 @@ object ScaffoldStrafeFeature : ToggleableConfigurable(ModuleScaffold, "Strafe", 
 
     @Suppress("unused")
     private val strafeHandler = tickHandler {
-        if (onlyOnGround && !player.isOnGround) {
+        if (onlyOnGround && !player.onGround()) {
             return@tickHandler
         }
 
         if (hypixel) {
             var speed = 0.207
 
-            if ((player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: -1) >= 0) {
+            if ((player.getEffect(MobEffects.SPEED)?.amplifier ?: -1) >= 0) {
                 speed = 0.295
             }
 
-            if (player.age % 20 == 0 || moveTicks <= 7) {
+            if (player.tickCount % 20 == 0 || moveTicks <= 7) {
                 speed = 0.09800000190734863
             }
 
-            player.velocity = player.velocity.withStrafe(speed = speed)
+            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
         } else {
-            player.velocity.withStrafe(speed = speed.toDouble())
+            player.deltaMovement.withStrafe(speed = speed.toDouble())
         }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,13 +20,13 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.b
 
 import net.ccbluex.liquidbounce.config.types.nesting.NoneChoice
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.NoSlowUseActionHandler
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowNoBlockInteract
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2364MC18
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2371
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedInvalidHand
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.minecraft.item.consume.UseAction
+import net.minecraft.world.item.ItemUseAnimation
 
 internal object NoSlowBow : NoSlowUseActionHandler("Bow") {
 
@@ -47,16 +47,16 @@ internal object NoSlowBow : NoSlowUseActionHandler("Bow") {
             }
 
             // Check if we are using a block item
-            return player.isUsingItem && player.activeItem.useAction in arrayOf(
-                UseAction.BOW,
-                UseAction.CROSSBOW,
-                UseAction.SPEAR
+            return player.isUsingItem && player.useItem.useAnimation in arrayOf(
+                ItemUseAnimation.BOW,
+                ItemUseAnimation.CROSSBOW,
+                ItemUseAnimation.SPEAR
             )
         }
 
     @Suppress("unused")
     private val noBlockInteract = tree(NoSlowNoBlockInteract(this) { action ->
-        action == UseAction.BOW || action == UseAction.CROSSBOW || action == UseAction.SPEAR
+        action == ItemUseAnimation.BOW || action == ItemUseAnimation.CROSSBOW || action == ItemUseAnimation.SPEAR
     })
 
 }

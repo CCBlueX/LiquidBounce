@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,15 +23,15 @@ import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.PerspectiveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.input.InputBind
-import net.minecraft.client.option.Perspective
-import net.minecraft.client.option.Perspective.THIRD_PERSON_BACK
-import net.minecraft.client.option.Perspective.THIRD_PERSON_FRONT
+import net.minecraft.client.CameraType
+import net.minecraft.client.CameraType.THIRD_PERSON_BACK
+import net.minecraft.client.CameraType.THIRD_PERSON_FRONT
 
 object ModuleFreeLook : ClientModule(
-    "FreeLook", Category.RENDER, disableOnQuit = true, bindAction = InputBind.BindAction.HOLD
+    "FreeLook", ModuleCategories.RENDER, disableOnQuit = true, bindAction = InputBind.BindAction.HOLD
 ) {
 
     private val perspective by enumChoice("Perspective", PerspectiveChoice.BACK)
@@ -45,8 +45,8 @@ object ModuleFreeLook : ClientModule(
     val invertedView get() = perspective.perspective == THIRD_PERSON_FRONT
 
     override fun onEnabled() {
-        cameraYaw = player.yaw
-        cameraPitch = player.pitch
+        cameraYaw = player.yRot
+        cameraPitch = player.xRot
     }
 
     @Suppress("unused")
@@ -69,7 +69,7 @@ object ModuleFreeLook : ClientModule(
     @Suppress("unused")
     private enum class PerspectiveChoice(
         override val choiceName: String,
-        val perspective: Perspective
+        val perspective: CameraType
     ) : NamedChoice {
         FRONT("Front", THIRD_PERSON_FRONT),
         BACK("Back", THIRD_PERSON_BACK)

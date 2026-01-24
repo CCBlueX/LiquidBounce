@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
@@ -34,10 +32,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.m
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.handlePacket
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.block.Blocks
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.shape.VoxelShapes
+import net.ccbluex.liquidbounce.utils.math.copy
+import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket
+import net.minecraft.world.phys.shapes.Shapes
 
 /**
  * @anticheat Vulcan
@@ -50,7 +48,7 @@ internal object FlyVulcan286 : Choice("Vulcan286-113") {
     override val parent: ChoiceConfigurable<*>
         get() = modes
 
-    var packet: PlayerPositionLookS2CPacket? = null
+    var packet: ClientboundPlayerPositionPacket? = null
     var flags = 0
     var wait = false
 
@@ -61,10 +59,10 @@ internal object FlyVulcan286 : Choice("Vulcan286-113") {
         chat(regular(message("vulcanGhostNewMessage")))
 
         // Send Packet to desync
-        network.sendPacket(
-            PlayerMoveC2SPacket.Full(
+        network.send(
+            ServerboundMovePlayerPacket.PosRot(
                 player.x, player.y - 0.1, player.z,
-                player.yaw, player.pitch, player.isOnGround, player.horizontalCollision
+                player.yRot, player.xRot, player.onGround(), player.horizontalCollision
             )
         )
     }
@@ -76,7 +74,7 @@ internal object FlyVulcan286 : Choice("Vulcan286-113") {
     }
 
     val tickHandler = handler<PlayerTickEvent> {
-        if (mc.options.useKey.isPressed) {
+        if (mc.options.keyUse.isDown) {
             packet?.let {
                 handlePacket(it)
             }
@@ -86,14 +84,13 @@ internal object FlyVulcan286 : Choice("Vulcan286-113") {
     }
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
-        if (world.getBlockState(player.blockPos.down()).block != Blocks.AIR && wait) {
-            event.movement.x = 0.0
-            event.movement.z = 0.0
+        if (!world.getBlockState(player.blockPosition().below()).isAir && wait) {
+            event.movement = event.movement.copy(x = 0.0, z = 0.0)
         }
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlayerPositionLookS2CPacket) {
+        if (event.packet is ClientboundPlayerPositionPacket) {
             flags++
             if (flags == 1) {
                 packet = event.packet
@@ -106,10 +103,10 @@ internal object FlyVulcan286 : Choice("Vulcan286-113") {
 
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.pos == player.blockPos.down() && !player.isSneaking) {
-            event.shape = VoxelShapes.fullCube()
+        if (event.pos == player.blockPosition().below() && !player.isShiftKeyDown) {
+            event.shape = Shapes.block()
         } else if (!wait) {
-            event.shape = VoxelShapes.empty()
+            event.shape = Shapes.empty()
         }
     }
 

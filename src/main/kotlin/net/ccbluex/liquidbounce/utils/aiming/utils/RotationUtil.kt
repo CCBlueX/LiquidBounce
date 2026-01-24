@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,29 +23,29 @@ import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil.angleDifference
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.entity.Entity
-import net.minecraft.util.math.MathHelper
+import net.minecraft.client.player.LocalPlayer
+import net.minecraft.util.Mth
+import net.minecraft.world.entity.Entity
 
-fun ClientPlayerEntity.setRotation(rotation: Rotation) {
+fun LocalPlayer.setRotation(rotation: Rotation) {
     rotation.normalize().let { normalizedRotation ->
-        prevPitch = pitch
-        prevYaw = yaw
-        renderYaw = yaw
-        lastRenderYaw = yaw
+        xRotO = xRot
+        yRotO = yRot
+        yBob = yRot
+        yBobO = yRot
 
-        yaw = normalizedRotation.yaw
-        pitch = normalizedRotation.pitch
+        setYRot(normalizedRotation.yaw)
+        setXRot(normalizedRotation.pitch)
     }
 }
 
-fun ClientPlayerEntity.withFixedYaw(rotation: Rotation) = rotation.yaw + angleDifference(yaw, rotation.yaw)
+fun LocalPlayer.withFixedYaw(rotation: Rotation) = rotation.yaw + angleDifference(yRot, rotation.yaw)
 
 object RotationUtil {
 
     val gcd: Double
         get() {
-            val f = mc.options.mouseSensitivity.value * 0.6F.toDouble() + 0.2F.toDouble()
+            val f = mc.options.sensitivity().get() * 0.6F.toDouble() + 0.2F.toDouble()
             return f * f * f * 8.0 * 0.15F
         }
 
@@ -56,7 +56,7 @@ object RotationUtil {
      */
     fun crosshairAngleToEntity(entity: Entity): Float {
         val player = mc.player ?: return 0.0F
-        val eyes = player.eyePos
+        val eyes = player.eyePosition
 
         val rotationToEntity = Rotation.lookingAt(point = entity.box.center, from = eyes)
 
@@ -66,5 +66,5 @@ object RotationUtil {
     /**
      * Calculate difference between two angle points
      */
-    fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
+    fun angleDifference(a: Float, b: Float) = Mth.wrapDegrees(a - b)
 }

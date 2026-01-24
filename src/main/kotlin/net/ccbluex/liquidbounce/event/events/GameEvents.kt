@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,28 +15,27 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.event.events
 
+import com.mojang.blaze3d.platform.InputConstants
+import net.ccbluex.liquidbounce.annotations.Nameable
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
-import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
-import net.minecraft.client.network.CookieStorage
-import net.minecraft.client.network.ServerAddress
-import net.minecraft.client.network.ServerInfo
-import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.option.Perspective
-import net.minecraft.client.session.Session
-import net.minecraft.client.util.InputUtil
-import net.minecraft.item.ItemStack
-import net.minecraft.text.Text
+import net.minecraft.client.CameraType
+import net.minecraft.client.KeyMapping
+import net.minecraft.client.User
+import net.minecraft.client.gui.screens.ConnectScreen
+import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.multiplayer.ServerData
+import net.minecraft.client.multiplayer.TransferState
+import net.minecraft.client.multiplayer.resolver.ServerAddress
+import net.minecraft.network.chat.Component
+import net.minecraft.world.item.ItemStack
 
 @Nameable("gameTick")
 object GameTickEvent : Event()
@@ -54,7 +53,7 @@ object TickPacketProcessEvent : Event()
 
 @Nameable("key")
 class KeyEvent(
-    val key: InputUtil.Key,
+    val key: InputConstants.Key,
     val action: Int,
 ) : Event(), WebSocketEvent
 
@@ -82,12 +81,6 @@ class SprintEvent(
     }
 }
 
-@Nameable("sneakNetwork")
-class SneakNetworkEvent(
-    val directionalInput: DirectionalInput,
-    var sneak: Boolean,
-) : Event()
-
 @Nameable("mouseRotation")
 class MouseRotationEvent(
     var cursorDeltaX: Double,
@@ -99,7 +92,7 @@ object KeybindChangeEvent : Event(), WebSocketEvent
 
 @Nameable("keybindIsPressed")
 class KeybindIsPressedEvent(
-    val keyBinding: KeyBinding,
+    val keyBinding: KeyMapping,
     var isPressed: Boolean,
 ) : Event()
 
@@ -111,9 +104,9 @@ class UseCooldownEvent(
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 
-@Nameable("autoJump")
-class MinecraftAutoJumpEvent(
-    var autoJump: Boolean,
+@Nameable("allowAutoJump")
+class AllowAutoJumpEvent(
+    var isAllowed: Boolean,
 ) : Event()
 
 /**
@@ -122,7 +115,7 @@ class MinecraftAutoJumpEvent(
 
 @Nameable("session")
 class SessionEvent(
-    val session: Session,
+    val session: User,
 ) : Event(), WebSocketEvent
 
 @Nameable("screen")
@@ -138,9 +131,9 @@ class ChatSendEvent(
 @Nameable("chatReceive")
 class ChatReceiveEvent(
     val message: String,
-    val textData: Text,
+    val textData: Component,
     val type: ChatType,
-    val applyChatDecoration: (Text) -> Text,
+    val applyChatDecoration: (Component) -> Component,
 ) : CancellableEvent(), WebSocketEvent {
     enum class ChatType(override val choiceName: String) : NamedChoice {
         CHAT_MESSAGE("ChatMessage"),
@@ -153,8 +146,8 @@ class ChatReceiveEvent(
 class ServerConnectEvent(
     val connectScreen: ConnectScreen,
     val address: ServerAddress,
-    val serverInfo: ServerInfo,
-    val cookieStorage: CookieStorage?,
+    val serverInfo: ServerData,
+    val cookieStorage: TransferState?,
 ) : CancellableEvent()
 
 @Nameable("disconnect")
@@ -162,17 +155,17 @@ object DisconnectEvent : Event(), WebSocketEvent
 
 @Nameable("overlayMessage")
 class OverlayMessageEvent(
-    val text: Text,
+    val text: Component,
     val tinted: Boolean,
 ) : Event(), WebSocketEvent
 
 @Nameable("perspective")
 class PerspectiveEvent(
-    var perspective: Perspective,
+    var perspective: CameraType,
 ) : Event()
 
 @Nameable("itemLoreQuery")
 class ItemLoreQueryEvent(
     val itemStack: ItemStack,
-    val lore: ArrayList<Text>,
+    val lore: ArrayList<Component>,
 ) : Event()

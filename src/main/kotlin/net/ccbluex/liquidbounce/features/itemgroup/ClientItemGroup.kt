@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.itemgroup
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
-import net.minecraft.item.ItemGroup
-import net.minecraft.item.ItemStack
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.util.Identifier
+import net.minecraft.core.Registry
+import net.minecraft.core.registries.BuiltInRegistries
+import net.minecraft.world.item.CreativeModeTab
+import net.minecraft.world.item.ItemStack
 import java.util.function.Consumer
 import java.util.function.Supplier
 
@@ -35,16 +35,16 @@ import java.util.function.Supplier
 open class ClientItemGroup(
     val plainName: String,
     val icon: Supplier<ItemStack>,
-    val items: Consumer<ItemGroup.Entries>,
+    val items: Consumer<CreativeModeTab.Output>,
 ) {
 
     // Create item group and assign to minecraft groups
-    fun setup(): ItemGroup {
+    fun setup(): CreativeModeTab {
         // Expand array
         val itemGroup = FabricItemGroup.builder()
-            .displayName(plainName.asPlainText())
+            .title(plainName.asPlainText())
             .icon(icon)
-            .entries { displayContext, entries ->
+            .displayItems { displayContext, entries ->
                 runCatching {
                     items.accept(entries)
                 }.onFailure {
@@ -54,7 +54,11 @@ open class ClientItemGroup(
             .build()
 
         // Add tab to creative inventory
-        Registry.register(Registries.ITEM_GROUP, Identifier.of("liquidbounce", plainName.lowercase()), itemGroup)
+        Registry.register(
+            BuiltInRegistries.CREATIVE_MODE_TAB,
+            LiquidBounce.identifier(plainName.lowercase()),
+            itemGroup
+        )
 
         return itemGroup
     }

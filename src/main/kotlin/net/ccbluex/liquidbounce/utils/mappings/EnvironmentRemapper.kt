@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 package net.ccbluex.liquidbounce.utils.mappings
@@ -24,6 +23,9 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.resource
 import net.fabricmc.mappings.model.V2MappingsProvider
 
+@Deprecated(
+    "Since Minecraft 26.1 the source of game will no longer be obfuscated. This remapper is no longer needed."
+)
 object EnvironmentRemapper {
 
     private val mappings = runCatching {
@@ -44,7 +46,7 @@ object EnvironmentRemapper {
         val mappings = mappings ?: return null
 
         val minecraftClassEntry = mappings.classEntries?.find { entry ->
-            entry?.get("named") == "net/minecraft/client/MinecraftClient"
+            entry?.get("named") == "net/minecraft/client/Minecraft"
         }
 
         if (minecraftClassEntry == null) {

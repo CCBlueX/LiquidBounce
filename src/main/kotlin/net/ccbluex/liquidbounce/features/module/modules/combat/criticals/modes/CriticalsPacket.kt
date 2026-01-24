@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleC
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.canDoCriticalHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals.modes
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.minecraft.entity.LivingEntity
+import net.minecraft.world.entity.LivingEntity
 
 /**
  * Packet criticals mode
@@ -86,7 +86,7 @@ object CriticalsPacket : Choice("Packet") {
             }
 
             Mode.GRIM -> {
-                if (!player.isOnGround) {
+                if (!player.onGround()) {
                     // If player is in air, go down a little bit.
                     // Vanilla still crits and movement is too small
                     // for simulation checks.
@@ -99,7 +99,7 @@ object CriticalsPacket : Choice("Packet") {
             }
 
             Mode.BLOCKSMC -> {
-                if (player.age % 4 == 0) {
+                if (player.tickCount % 4 == 0) {
                     p(0.0011, true)
                     p(0.0)
                     showCriticals(event.entity)
@@ -109,7 +109,7 @@ object CriticalsPacket : Choice("Packet") {
     }
 
     private fun p(mod: Double, onGround: Boolean = false) {
-        network.sendPacket(packetType.generatePacket().apply {
+        network.send(packetType.generatePacket().apply {
             this.y += mod
             this.onGround = onGround
         })

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,33 +21,33 @@ package net.ccbluex.liquidbounce.features.module.modules.world.autobuild
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.block.getBlockingEntities
 import net.ccbluex.liquidbounce.utils.block.isBlockedByEntities
-import net.minecraft.block.Blocks
-import net.minecraft.entity.decoration.EndCrystalEntity
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Direction
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal
+import net.minecraft.world.level.block.Blocks
 
 class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direction, rotated: Direction)
     : MinecraftShortcuts {
 
     val frameBlocks = arrayOf(
-        origin.up(4), origin.offset(rotated).up(4),
+        origin.above(4), origin.relative(rotated).above(4),
 
-        origin.offset(rotated.opposite).up(3), origin.offset(rotated).offset(rotated).up(3),
-        origin.offset(rotated.opposite).up(2), origin.offset(rotated).offset(rotated).up(2),
-        origin.offset(rotated.opposite).up(), origin.offset(rotated).offset(rotated).up(),
+        origin.relative(rotated.opposite).above(3), origin.relative(rotated).relative(rotated).above(3),
+        origin.relative(rotated.opposite).above(2), origin.relative(rotated).relative(rotated).above(2),
+        origin.relative(rotated.opposite).above(), origin.relative(rotated).relative(rotated).above(),
 
-        origin, origin.offset(rotated)
+        origin, origin.relative(rotated)
     )
     val enclosedBlocks = arrayOf(
-        origin.up(3), origin.offset(rotated).up(3),
-        origin.up(2), origin.offset(rotated).up(2),
-        origin.up(), origin.offset(rotated).up()
+        origin.above(3), origin.relative(rotated).above(3),
+        origin.above(2), origin.relative(rotated).above(2),
+        origin.above(), origin.relative(rotated).above()
     )
     private val edgeBlocks = arrayOf(
-        origin.offset(rotated.opposite).up(4), origin.offset(rotated).offset(rotated).up(4),
-        origin.offset(rotated.opposite), origin.offset(rotated).offset(rotated)
+        origin.relative(rotated.opposite).above(4), origin.relative(rotated).relative(rotated).above(4),
+        origin.relative(rotated.opposite), origin.relative(rotated).relative(rotated)
     )
-    val ignitePos: BlockPos = origin.up()
+    val ignitePos: BlockPos = origin.above()
     var score = 0
 
     /**
@@ -55,7 +55,7 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
      */
     fun calculateScore() {
         // there can't be blocks inside the portal
-        if (enclosedBlocks.any { !world.isAir(it) }) {
+        if (enclosedBlocks.any { !world.isEmptyBlock(it) }) {
             score = -1
             return
         }
@@ -67,7 +67,7 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
             when {
                 blockState.block == Blocks.OBSIDIAN -> score += 3
 
-                !blockState.isReplaceable || !canDestroyCrystals && it.isBlockedByEntities() -> {
+                !blockState.canBeReplaced() || !canDestroyCrystals && it.isBlockedByEntities() -> {
                     // a block that is not obsidian and not replaceable, making the portal invalid
                     score = -1
                     return
@@ -75,7 +75,7 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
 
                 canDestroyCrystals -> {
                     val blockingEntities = it.getBlockingEntities()
-                    if (blockingEntities.any { entity -> entity !is EndCrystalEntity }) {
+                    if (blockingEntities.any { entity -> entity !is EndCrystal }) {
                         score = -1
                         return
                     } else if (blockingEntities.isNotEmpty()) {
@@ -87,7 +87,7 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
 
         // might not need support blocks
         edgeBlocks.forEach {
-           if (!world.isAir(it)) {
+           if (!world.isEmptyBlock(it)) {
                 score += 4
            } else if (it.isBlockedByEntities()) {
                score -= 1
@@ -100,7 +100,7 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
         }
 
         // in the best case, we already look directly at the portal
-        if (player.movementDirection == direction) {
+        if (player.motionDirection == direction) {
             score += 10
         }
 
@@ -113,7 +113,7 @@ class NetherPortal(val origin: BlockPos, val down: Boolean, val direction: Direc
     fun confirmPlacements(): List<BlockPos> {
         return frameBlocks.filter {
             val blockState = world.getBlockState(it)
-            blockState.block != Blocks.OBSIDIAN && blockState.isReplaceable
+            blockState.block != Blocks.OBSIDIAN && blockState.canBeReplaced()
         }
     }
 

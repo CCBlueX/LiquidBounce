@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,79 +24,63 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet
 import net.ccbluex.fastutil.fastIterator
 import net.ccbluex.fastutil.mapToArray
+import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.config.types.NamedChoice
-import net.ccbluex.liquidbounce.config.types.nesting.Choice
-import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.computedOn
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemAndComponents
 import net.ccbluex.liquidbounce.render.ItemStackListRenderer.Companion.drawItemStackList
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.collection.Filter
+import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
+import net.ccbluex.liquidbounce.utils.entity.cameraDistance
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.item.PreferStackSize
-import net.ccbluex.liquidbounce.utils.kotlin.proportionOfValue
 import net.ccbluex.liquidbounce.utils.kotlin.toTypedArray
-import net.ccbluex.liquidbounce.utils.kotlin.valueAtProportion
-import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.math.average
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.component.ComponentChanges
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.entity.Entity
-import net.minecraft.entity.ItemEntity
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.component.DataComponentPatch
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.item.ItemEntity
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.phys.Vec3
+import org.joml.Vector2f
 
 /**
  * ItemTags module
  *
  * Show the names and quantities of items in several boxes.
  */
-object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
+object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
 
     private val filter by enumChoice("Filter", Filter.BLACKLIST)
-    private val items by items("Items", ReferenceOpenHashSet())
+    private val items by items("Items", itemSortedSetOf())
 
-    private val backgroundColor by color("BackgroundColor", Color4b(Int.MIN_VALUE, hasAlpha = true))
-    private val scale by float("Scale", 1.5F, 0.25F..4F)
-    private val renderOffset by vec3d("RenderOffset", Vec3d.ZERO)
+    private val backgroundColor by color("BackgroundColor", Color4b.DEFAULT_BG_COLOR)
+    private val scale = curve(
+        "Scale",
+        mutableListOf(Vector2f(0f, 1f), Vector2f(128f, 1f)),
+        xAxis = "Distance" axis 0f..128f,
+        yAxis = "Scale" axis 0.25f..4f,
+    )
+    private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
     private val rowLength by int("RowLength", 100, 1..100)
-
-    private val clusterSizeMode = choices("ClusterSizeMode", ClusterSizeMode.Static,
-        arrayOf(ClusterSizeMode.Static, ClusterSizeMode.Distance))
-    private val maximumDistance by float("MaximumDistance", 128F, 1F..256F)
-
-    private sealed class ClusterSizeMode(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
-            get() = clusterSizeMode
-
-        abstract fun size(entity: ItemEntity): Float
-
-        object Static : ClusterSizeMode("Static") {
-            private val size = float("Size", 1F, 0.1F..32F)
-            override fun size(entity: ItemEntity): Float = size.get()
-        }
-
-        object Distance : ClusterSizeMode("Distance") {
-            private val size by floatRange("Size", 1F..16F, 0.1F..32F)
-            private val range by floatRange("Range", 32F..64F, 1F..256F)
-            private val curve by easing("Curve", Easing.LINEAR)
-
-            override fun size(entity: ItemEntity): Float {
-                val playerDistance = player.distanceTo(entity)
-                return size.valueAtProportion(curve.transform(range.proportionOfValue(playerDistance)))
-            }
-        }
-    }
+    private val preventOverlap by boolean("PreventOverlap", true)
+    private val clusterEntities = curve(
+        "ClusterEntities",
+        mutableListOf(Vector2f(0f, 2f), Vector2f(64f, 16f), Vector2f(128f, 16f)),
+        xAxis = "Distance" axis 0f..128f,
+        yAxis = "Size" axis 0.1F..32F,
+    )
 
     private val mergeMode by enumChoice("MergeMode", MergeMode.BY_COMPONENTS)
 
@@ -110,7 +94,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
     }
 
     private val itemStackComparator: Comparator<ItemStack> =
-        PreferStackSize.LESS.thenComparing { it.item.translationKey }
+        PreferStackSize.PREFER_MORE.thenComparing { it.item.descriptionId }
 
     @Suppress("unused")
     private enum class MergeMode(
@@ -146,7 +130,7 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }),
 
         /**
-         * [ItemStack]s with same [Item] and same [ComponentChanges] will be merged.
+         * [ItemStack]s with same [Item] and same [DataComponentPatch] will be merged.
          */
         BY_COMPONENTS("ByComponents", { stacks ->
             val map = Object2IntOpenHashMap<ItemAndComponents>()
@@ -165,20 +149,39 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
         }),
     }
 
-    private val itemEntities by computedOn<GameTickEvent, ObjectArrayList<ClusteredEntities>>(
+    private val itemEntities by computedOn<GameTickEvent, ObjectArrayList<ClusteredEntitiesRenderState>>(
         initialValue = ObjectArrayList()
-    ) { _, clusteredEntities ->
-        val cameraPos = (mc.cameraEntity ?: player).pos
-        val maxDistSquared = maximumDistance.sq()
-
+    ) { _, groups ->
         @Suppress("UNCHECKED_CAST")
-        val entities = world.entities.filter {
-            it is ItemEntity && it.squaredDistanceTo(cameraPos) < maxDistSquared && filter(it.stack.item, items)
+        val entities = world.entitiesForRendering().filter {
+            it is ItemEntity && filter(it.item.item, items)
         } as List<ItemEntity>
 
-        computeEntityClusters(entities, clusteredEntities)
+        groups.clear()
+        val visited = ReferenceOpenHashSet<ItemEntity>()
+        for (entity in entities) {
+            if (entity in visited) continue
 
-        clusteredEntities
+            val distance = entity.position().cameraDistance().toFloat()
+            val scale = scale.transform(distance)
+            if (scale < 0.01f) continue
+
+            val radiusSquared = clusterEntities.transform(distance).sq()
+
+            // `entity` will also be added
+            val group = entities.filter { other ->
+                other !in visited && entity.distanceToSqr(other) < radiusSquared
+            }
+
+            visited.addAll(group)
+            groups += ClusteredEntitiesRenderState(
+                group,
+                mergeMode.merge(group.mapToArray { it.item }).asList(),
+                scale,
+            )
+        }
+
+        groups
     }
 
     override fun onDisabled() {
@@ -196,65 +199,44 @@ object ModuleItemTags : ClientModule("ItemTags", Category.RENDER) {
             val worldPos = result.interpolateCurrentCenterPosition(event.tickDelta)
             val renderPos = WorldToScreen.calculateScreenPos(worldPos.add(renderOffset)) ?: continue
 
-            event.context.drawItemStackList(result.stacks.asList())
-                .center(renderPos)
-                .rectBackground(color = backgroundColor.toARGB())
-                .scale(scale)
+            event.context.drawItemStackList(result.stacks)
+                .centerX(renderPos.x)
+                .centerY(renderPos.y)
+                .rectBackground(backgroundColor)
+                .scale(result.scale)
                 .rowLength(rowLength)
-                .draw()
+                .draw(preventOverlap)
 
             if (Shulker.enabled) {
                 result.stacks.forEach { stack ->
-                    val containerComponent = stack[DataComponentTypes.CONTAINER] ?: return@forEach
-                    val stacks = containerComponent.streamNonEmpty().toTypedArray()
+                    val containerComponent = stack[DataComponents.CONTAINER] ?: return@forEach
+                    val stacks = containerComponent.nonEmptyStream().toTypedArray()
                     if (stacks.isEmpty()) {
                         return@forEach
                     }
 
                     event.context.drawItemStackList(if (Shulker.mergeStacks) mergeMode.merge(stacks) else stacks)
-                        .title(stack.name.takeIf { Shulker.showTitle })
-                        .center(renderPos)
-                        .rectBackground(color = backgroundColor.toARGB())
-                        .scale(scale)
+                        .title(stack.hoverName.takeIf { Shulker.showTitle })
+                        .centerX(renderPos.x)
+                        .centerY(renderPos.y)
+                        .rectBackground(backgroundColor)
+                        .scale(result.scale)
                         .rowLength(rowLength)
-                        .draw()
+                        .draw(preventOverlap)
                 }
             }
         }
     }
 
-    private class ClusteredEntities(@JvmField val entities: List<Entity>, @JvmField val stacks: Array<ItemStack>) {
-        fun interpolateCurrentCenterPosition(tickDelta: Float): Vec3d {
+    private class ClusteredEntitiesRenderState(
+        @JvmField val entities: List<Entity>,
+        @JvmField val stacks: List<ItemStack>,
+        @JvmField val scale: Float,
+    ) {
+        fun interpolateCurrentCenterPosition(tickDelta: Float): Vec3 {
             return entities.map { entity ->
                 entity.interpolateCurrentPosition(tickDelta)
             }.average()
-        }
-    }
-
-    @JvmStatic
-    private fun computeEntityClusters(entities: List<ItemEntity>, output: ObjectArrayList<ClusteredEntities>) {
-        val groups = ObjectArrayList<List<ItemEntity>>()
-        val visited = ReferenceOpenHashSet<ItemEntity>()
-
-        for (entity in entities) {
-            if (entity in visited) continue
-
-            val radiusSquared = clusterSizeMode.activeChoice.size(entity).sq()
-
-            // `entity` will also be added
-            val group = entities.filter { other ->
-                other !in visited && entity.squaredDistanceTo(other) < radiusSquared
-            }
-
-            visited.addAll(group)
-            groups.add(group)
-        }
-
-        // Output
-        output.clear()
-        output.ensureCapacity(groups.size)
-        groups.mapTo(output) { entities ->
-            ClusteredEntities(entities, mergeMode.merge(entities.mapToArray { it.stack }))
         }
     }
 

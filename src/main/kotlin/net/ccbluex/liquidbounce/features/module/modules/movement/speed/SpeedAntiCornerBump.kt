@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2025 CCBlueX
+ * Copyright (c) 2015 - 2026 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.set
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.block.BlockState
-import net.minecraft.entity.EntityPose
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.BlockPos
+import net.minecraft.world.entity.Pose
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 
 /**
  * Prevents you from bumping into corners when chasing.
@@ -109,19 +109,19 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
      * @param lastGroundPos the last position where the player was on ground
      */
     fun canJumpOnBlock(
-        collidingPos: Vec3d,
-        lastGroundPos: Vec3d,
+        collidingPos: Vec3,
+        lastGroundPos: Vec3,
     ): Boolean {
-        val playerDims = player.getDimensions(EntityPose.STANDING)
-        val box: Box = playerDims.getBoxAt(collidingPos)
-        val blockPos = BlockPos.ofFloored(box.minX - 1.0E-7, collidingPos.y, box.minZ - 1.0E-7)
-        val blockPos2 = BlockPos.ofFloored(box.maxX + 1.0E-7, collidingPos.y, box.maxZ + 1.0E-7)
+        val playerDims = player.getDimensions(Pose.STANDING)
+        val box: AABB = playerDims.makeBoundingBox(collidingPos)
+        val blockPos = BlockPos.containing(box.minX - 1.0E-7, collidingPos.y, box.minZ - 1.0E-7)
+        val blockPos2 = BlockPos.containing(box.maxX + 1.0E-7, collidingPos.y, box.maxZ + 1.0E-7)
 
-        if (!world.isRegionLoaded(blockPos, blockPos2)) {
+        if (!world.hasChunksAt(blockPos, blockPos2)) {
             return false
         }
 
-        val jumpOnPos = BlockPos.Mutable(0, blockPos.y, 0)
+        val jumpOnPos = BlockPos.MutableBlockPos(0, blockPos.y, 0)
         for (x in blockPos.x..blockPos2.x) {
             for (z in blockPos.z..blockPos2.z) {
                 jumpOnPos.x = x
@@ -136,12 +136,12 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
                 if (!shouldJumpOnBlock(jumpOnPos, jumpOnState, box)) {
                     continue
                 }
-                val posOneAboveJumpOnBlock = jumpOnPos.up(1)
-                val posTwoAboveJumpOnBlock = jumpOnPos.up(2)
+                val posOneAboveJumpOnBlock = jumpOnPos.above(1)
+                val posTwoAboveJumpOnBlock = jumpOnPos.above(2)
 
                 // The player box if we had hit that jump perfectly.
                 val currentlyConsideredPlayerBox =
-                    playerDims.getBoxAt(collidingPos.x, jumpOnPos.y + 1.0, collidingPos.z)
+                    playerDims.makeBoundingBox(collidingPos.x, jumpOnPos.y + 1.0, collidingPos.z)
 
                 val canEnterBlockAbove =
                     canPlayerEnterBlockPos(
@@ -178,18 +178,18 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
     fun shouldJumpOnBlock(
         pos: BlockPos,
         blockState: BlockState,
-        playerBox: Box,
+        playerBox: AABB,
     ): Boolean {
-        val collisionShape = blockState.getCollisionShape(mc.world!!, pos)
+        val collisionShape = blockState.getCollisionShape(mc.level!!, pos)
 
         // The player is currently colliding with the wall, but not inside of it. So we need to expand the
         // player box a bit so that we can check if we collide with that box.
-        val extendedPlayerBox = playerBox.expand(0.01, 0.01, 0.01)
+        val extendedPlayerBox = playerBox.inflate(0.01, 0.01, 0.01)
 
-        collisionShape.boundingBoxes.forEach {
+        collisionShape.toAabbs().forEach {
             // Does the player collide with that box? If he collides, and we cannot step the block,
             // we would collide with that block, so we should jump on it.
-            if (it.offset(pos).intersects(extendedPlayerBox) && it.maxY > 0.5) {
+            if (it.move(pos).intersects(extendedPlayerBox) && it.maxY > 0.5) {
                 return true
             }
         }
@@ -210,21 +210,21 @@ object SpeedAntiCornerBump : MinecraftShortcuts {
     fun canPlayerEnterBlockPos(
         pos: BlockPos,
         blockState: BlockState,
-        playerBox: Box,
+        playerBox: AABB,
         tolerateLowBoundingBoxes: Boolean,
     ): Boolean {
-        val collisionShape = blockState.getCollisionShape(mc.world!!, pos)
+        val collisionShape = blockState.getCollisionShape(mc.level!!, pos)
 
         // The player is currently colliding with the wall, but not inside of it. So we need to expand the
         // player box a bit so that we can check if we collide with that box.
-        val extendedPlayerBox = playerBox.expand(0.01, 0.01, 0.01)
+        val extendedPlayerBox = playerBox.inflate(0.01, 0.01, 0.01)
 
-        collisionShape.boundingBoxes.forEach {
+        collisionShape.toAabbs().forEach {
             if (tolerateLowBoundingBoxes && it.maxY <= 0.2) {
                 return@forEach
             }
             // The player collides with that part of the bounding box. Thus, he would just slide down the block.
-            if (it.offset(pos).intersects(extendedPlayerBox)) {
+            if (it.move(pos).intersects(extendedPlayerBox)) {
                 return false
             }
         }
