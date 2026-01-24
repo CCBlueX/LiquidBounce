@@ -38,10 +38,11 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
  * It is equals to "delay velocity".
  */
 internal object VelocityLag : VelocityMode("Lag") {
+
     private val lagTime by intRange("LagTime", 5..5, 1..20, "ticks")
     private val jumpReset by boolean("JumpReset", false)
 
-    private var isLagging = false
+    private var shouldLag = false
     private var lagTicks = 0
     private var shouldJump = false
 
@@ -50,30 +51,31 @@ internal object VelocityLag : VelocityMode("Lag") {
         val packet = event.packet
 
         if (packet is ClientboundSetEntityMotionPacket && packet.id == player.id) {
-            isLagging = true
+            shouldLag = true
             lagTicks = lagTime.random()
         }
     }
 
     @Suppress("unused")
     private val queuePacketHandler = handler<QueuePacketEvent> { event ->
-        if (!isLagging || event.origin != TransferOrigin.INCOMING || event.packet is ClientboundKeepAlivePacket) {
+        if (!shouldLag || event.origin != TransferOrigin.INCOMING || event.packet is ClientboundKeepAlivePacket) {
             return@handler
         }
+
         event.action = Action.QUEUE
     }
 
     @Suppress("unused")
     private val tickHandler = handler<GameTickEvent> {
-        if (isLagging) {
+        if (shouldLag) {
             lagTicks--
         }
     }
 
     @Suppress("unused")
     private val tickPacketProcessHandler = sequenceHandler<TickPacketProcessEvent> {
-        if (isLagging && lagTicks == 0) {
-            isLagging = false
+        if (shouldLag && lagTicks == 0) {
+            shouldLag = false
             lagTicks = 0
             PacketQueueManager.flush(TransferOrigin.INCOMING)
             shouldJump = true
@@ -92,8 +94,8 @@ internal object VelocityLag : VelocityMode("Lag") {
     }
 
     override fun disable() {
-        isLagging = false
+        shouldLag = false
         lagTicks = 0
-        PacketQueueManager.flush(TransferOrigin.INCOMING)
     }
+
 }
