@@ -41,6 +41,12 @@ import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.world.phys.Vec2
 import org.joml.Matrix3x2f
 import org.joml.Matrix3x2fStack
+import org.joml.Vector2f
+
+private val LEFT_TOP = Vector2f()
+private val RIGHT_TOP = Vector2f()
+private val LEFT_BOTTOM = Vector2f()
+private val RIGHT_BOTTOM = Vector2f()
 
 /**
  * Primitive version of [ScreenRectangle.transformMaxBounds]
@@ -53,19 +59,15 @@ private fun Matrix3x2f.transformEachVertex(
     val top = otherAxis
     val bottom = otherAxis + height
 
-    val vector2f = transformPosition(left.toFloat(), top.toFloat(), Pools.Vec2f.borrow())
-    val vector2f2 = transformPosition(right.toFloat(), top.toFloat(), Pools.Vec2f.borrow())
-    val vector2f3 = transformPosition(left.toFloat(), bottom.toFloat(), Pools.Vec2f.borrow())
-    val vector2f4 = transformPosition(right.toFloat(), bottom.toFloat(), Pools.Vec2f.borrow())
-    val f = minOf(vector2f.x, vector2f3.x, vector2f2.x, vector2f4.x)
-    val g = maxOf(vector2f.x, vector2f3.x, vector2f2.x, vector2f4.x)
-    val h = minOf(vector2f.y, vector2f3.y, vector2f2.y, vector2f4.y)
-    val i = maxOf(vector2f.y, vector2f3.y, vector2f2.y, vector2f4.y)
-    Pools.Vec2f.recycle(vector2f)
-    Pools.Vec2f.recycle(vector2f2)
-    Pools.Vec2f.recycle(vector2f3)
-    Pools.Vec2f.recycle(vector2f4)
-    return ScreenRectangle(f.floorToInt(), h.floorToInt(), (g - f).ceilToInt(), (i - h).ceilToInt())
+    val v1 = transformPosition(left.toFloat(), top.toFloat(), LEFT_TOP)
+    val v2 = transformPosition(right.toFloat(), top.toFloat(), RIGHT_TOP)
+    val v3 = transformPosition(left.toFloat(), bottom.toFloat(), LEFT_BOTTOM)
+    val v4 = transformPosition(right.toFloat(), bottom.toFloat(), RIGHT_BOTTOM)
+    val minX = minOf(v1.x, minOf(v3.x, v2.x, v4.x))
+    val maxX = maxOf(v1.x, maxOf(v3.x, v2.x, v4.x))
+    val minY = minOf(v1.y, minOf(v3.y, v2.y, v4.y))
+    val maxY = maxOf(v1.y, maxOf(v3.y, v2.y, v4.y))
+    return ScreenRectangle(minX.floorToInt(), minY.floorToInt(), (maxX - minX).ceilToInt(), (maxY - minY).ceilToInt())
 }
 
 /**

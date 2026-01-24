@@ -7,7 +7,7 @@ jdk = "21"
 # Check these on https://fabricmc.net/versions.html
 # https://mods.upcraft.dev/dev/versions
 minecraft = "1.21.11"
-fabric-loom = "1.14-SNAPSHOT"
+fabric-loom = "1.15-SNAPSHOT"
 fabric-loader = "0.18.4"
 fabric-loaderMin = "0.16.14"
 fabric-api = "0.140.0+1.21.11"
@@ -17,7 +17,7 @@ mcef = "3.1.6-1.21.11"
 # mc-authlib
 mc_authlib = "1.6.0"
 # Polyglot
-polyglot = "25.0.1"
+polyglot = "25.0.2"
 # djl
 djl = "0.36.0"
 # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
@@ -32,10 +32,10 @@ fastutil4k = "0.2.5"
 # Recommended mods
 modmenu = "17.0.0-beta.1"
 exploit_preventer_api = "0.0.1"
-exploit_preventer_mod = "0.1.9"
+exploit_preventer_mod = "0.1.10"
 sodium = "mc1.21.11-0.8.2-fabric"
 lithium = "mc1.21.11-0.21.2-fabric"
-viafabricplus = "4.4.2"
+viafabricplus = "4.4.4"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.14.1+1.21.11-fabric"
 iris = "1.10.3+1.21.11-fabric"

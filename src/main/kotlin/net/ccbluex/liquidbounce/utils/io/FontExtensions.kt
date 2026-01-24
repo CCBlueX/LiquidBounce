@@ -17,24 +17,22 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.kotlin
+package net.ccbluex.liquidbounce.utils.io
 
-/**
- * Used for mixin interfaces (i.e. [net.ccbluex.liquidbounce.additions.MappableRingBufferAddition])
- */
-inline fun <reified B> mixinInterfaceCast(a: Any): B {
-    check(a is B) { "${a.javaClass.name} does not implement the mixin interface ${B::class.java}?!" }
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.awt.Font
+import java.io.File
+import java.io.InputStream
 
-    return a
-}
-
-/**
- * See [mixinInterfaceCast]
- */
-inline fun <reified B> mixinInterfaceCastNullable(a: Any?): B? {
-    if (a == null) {
-        return null
+suspend fun File.createFont(fontFormat: Int = Font.TRUETYPE_FONT): Font =
+    withContext(Dispatchers.IO) {
+        Font.createFont(fontFormat, this@createFont)
     }
 
-    return mixinInterfaceCast(a)
-}
+suspend fun InputStream.createFont(fontFormat: Int = Font.TRUETYPE_FONT): Font =
+    withContext(Dispatchers.IO) {
+        this@createFont.use {
+            Font.createFont(fontFormat, it)
+        }
+    }

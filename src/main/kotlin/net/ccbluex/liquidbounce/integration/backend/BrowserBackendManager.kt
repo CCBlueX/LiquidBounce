@@ -36,8 +36,10 @@ object BrowserBackendManager : EventListener {
 
     val browserBackend: BrowserBackend = CefBrowserBackend()
 
-    val isSkippingBrowser = System.getenv("LB_SKIP_BROWSER") == "true"
-        || System.getProperty("net.ccbluex.liquidbounce.skip.browser") == "true"
+    val isSkipping = System.getenv("LB_BROWSER_SKIP") == "true"
+        || System.getProperty("net.ccbluex.liquidbounce.browser.skip") == "true"
+    val disableAcceleration = System.getenv("LB_BROWSER_DISABLE_ACCELERATION") == "true"
+        || System.getProperty("net.ccbluex.liquidbounce.browser.disableAcceleration") == "true"
 
     fun init() {
         PersistentLocalStorage
@@ -48,8 +50,8 @@ object BrowserBackendManager : EventListener {
      * when the dependencies are available.
      */
     fun makeDependenciesAvailable(taskManager: TaskManager) {
-        if (isSkippingBrowser) {
-            logger.warn("Environment variable 'LB_SKIP_BROWSER' is set to 'true'.")
+        if (isSkipping) {
+            logger.warn("Environment variable 'LB_BROWSER_SKIP' is set to 'true'.")
             return
         }
         browserBackend.makeDependenciesAvailable(taskManager, ::start)
@@ -67,6 +69,9 @@ object BrowserBackendManager : EventListener {
 
         browserBackend.start()
 
+        if (disableAcceleration) {
+            logger.warn("Environment variable 'LB_BROWSER_DISABLE_ACCELERATION' is set to 'true'.")
+        }
         GlobalBrowserSettings
         EventManager.callEvent(BrowserReadyEvent)
         logger.info("Successfully initialized browser.")
