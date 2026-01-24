@@ -17,16 +17,17 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.render;
+package net.ccbluex.liquidbounce.features.module.modules.render.crosshair
 
-import net.minecraft.client.gui.render.state.GuiElementRenderState;
-import org.joml.Matrix3x2f;
+import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.modes.CrosshairCircle
 
-public sealed interface LiquidBounceGuiElementRenderState
-    extends GuiElementRenderState
-    permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState, CircleGuiElementRenderState {
-    /**
-     * Recyclable pose matrix.
-     */
-    Matrix3x2f pose();
+object ModuleCrosshair : ClientModule("Crosshair", ModuleCategories.RENDER) {
+    val modes =
+        choices("Mode", 0) {
+            arrayOf(
+                CrosshairCircle,
+            )
+        }.apply { tagBy(this) }
 }

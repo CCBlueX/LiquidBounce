@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponent;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentManager;
 import net.ccbluex.liquidbounce.integration.theme.component.HudComponentTweak;
@@ -117,7 +118,7 @@ public abstract class MixinGui {
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
     private void hookFreeCamRenderCrosshairInThirdPerson(GuiGraphics context, DeltaTracker tickCounter, CallbackInfo ci) {
         if ((ModuleFreeCam.INSTANCE.getRunning() && ModuleFreeCam.INSTANCE.shouldDisableCameraInteract())
-                || HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_CROSSHAIR)) {
+                || HudComponentManager.isTweakEnabled(HudComponentTweak.DISABLE_CROSSHAIR) || ModuleCrosshair.INSTANCE.getEnabled()) {
             ci.cancel();
         }
     }
