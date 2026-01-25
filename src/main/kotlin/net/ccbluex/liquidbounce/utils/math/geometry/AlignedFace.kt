@@ -136,7 +136,7 @@ class AlignedFace(from: Vec3, to: Vec3) {
             return null
         }
 
-        return LineSegment(p1, p2, 0.0..1.0)
+        return LineSegment(p1, direction, 0.0..1.0)
     }
 
     fun toPlane(): NormalizedPlane {
