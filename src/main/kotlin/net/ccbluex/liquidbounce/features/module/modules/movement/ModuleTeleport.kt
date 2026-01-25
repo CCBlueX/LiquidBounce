@@ -175,7 +175,7 @@ object ModuleTeleport : ClientModule("Teleport", ModuleCategories.EXPLOIT, alias
         entity.absSnapTo(x, y, z)
 
         if (resetMotion) {
-            entity.setDeltaMovement(entity.deltaMovement.multiply(0.0, 0.0, 0.0))
+            entity.deltaMovement = entity.deltaMovement.multiply(0.0, 0.0, 0.0)
         }
 
         chat(regular(

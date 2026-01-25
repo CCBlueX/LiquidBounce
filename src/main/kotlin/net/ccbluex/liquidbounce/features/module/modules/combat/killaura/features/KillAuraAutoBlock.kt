@@ -255,15 +255,14 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
 
         currentTickOff = tickOffRange.random()
 
-        return when {
-            unblockMode == UnblockMode.STOP_USING_ITEM -> {
+        return when (unblockMode) {
+            UnblockMode.STOP_USING_ITEM -> {
                 interaction.releaseUsingItem(player)
 
                 blockingStateEnforced = false
                 true
             }
-
-            unblockMode == UnblockMode.CHANGE_SLOT -> {
+            UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 8
                 network.send(ServerboundSetCarriedItemPacket(nextSlot))
@@ -271,8 +270,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
                 blockingStateEnforced = false
                 true
             }
-
-            unblockMode == UnblockMode.NONE && !pauses -> {
+            UnblockMode.NONE if !pauses -> {
                 interaction.releaseUsingItem(player)
 
                 blockingStateEnforced = false

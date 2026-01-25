@@ -86,7 +86,7 @@ internal object FlyVerusB3896Damage : Choice("VerusB3896Damage") {
             return@tickHandler
         }
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 9.95))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = 9.95)
         player.deltaMovement.y = 0.0
         Timer.requestTimerSpeed(0.1f, Priority.IMPORTANT_FOR_USAGE_2, ModuleFly)
     }

@@ -92,7 +92,7 @@ object ModuleAutoDodge : ClientModule("AutoDodge", ModuleCategories.COMBAT) {
         event.directionalInput = dodgePlan.directionalInput
 
         dodgePlan.yawChange?.let { yawChange ->
-            player.setYRot(yawChange)
+            player.yRot = yawChange
         }
 
         if (dodgePlan.shouldJump && AllowRotationChange.allowJump && player.onGround()) {

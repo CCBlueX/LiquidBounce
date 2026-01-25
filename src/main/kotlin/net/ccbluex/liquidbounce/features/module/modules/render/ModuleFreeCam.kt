@@ -163,8 +163,8 @@ object ModuleFreeCam : ClientModule("FreeCam", ModuleCategories.RENDER, disableO
 
         // Reset player rotation
         val rotation = RotationManager.currentRotation ?: RotationManager.serverRotation
-        player.setYRot(rotation.yaw)
-        player.setXRot(rotation.pitch)
+        player.yRot = rotation.yaw
+        player.xRot = rotation.pitch
         super.onDisabled()
     }
 

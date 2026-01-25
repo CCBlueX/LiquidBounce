@@ -111,13 +111,13 @@ object FlyNcpClip : Choice("NcpClip") {
 
             // Proceed to jump (just like speeding up) and boost strafe entry
             player.jumpFromGround()
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = (speed + additionalEntrySpeed).toDouble()))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = (speed + additionalEntrySpeed).toDouble())
 
             // Wait until the player is not on ground
             tickUntil { !player.onGround() }
 
             // Proceed to strafe with the normal speed
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
         } else if (collidesBottomVertical()) {
             shouldLag = false
 
@@ -141,7 +141,7 @@ object FlyNcpClip : Choice("NcpClip") {
 
         // Strafe the player to improve control
         if (strafe) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe())
+            player.deltaMovement = player.deltaMovement.withStrafe()
         }
 
         // Set timer speed

@@ -42,12 +42,10 @@ object ScaffoldStrafeFeature : ToggleableConfigurable(ModuleScaffold, "Strafe", 
         if (!hypixel) {
             return
         }
-        player.setDeltaMovement(
-            player.deltaMovement.multiply(
-                0.5,
-                1.0,
-                0.5
-            )
+        player.deltaMovement = player.deltaMovement.multiply(
+            0.5,
+            1.0,
+            0.5
         )
         super.onDisabled()
     }
@@ -78,7 +76,7 @@ object ScaffoldStrafeFeature : ToggleableConfigurable(ModuleScaffold, "Strafe", 
                 speed = 0.09800000190734863
             }
 
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed)
         } else {
             player.deltaMovement.withStrafe(speed = speed.toDouble())
         }

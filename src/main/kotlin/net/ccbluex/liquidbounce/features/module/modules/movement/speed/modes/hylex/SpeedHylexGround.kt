@@ -60,22 +60,18 @@ class SpeedHylexGround(override val parent: ChoiceConfigurable<*>) : Choice("Hyl
         }
 
         if (!(mc.options.keyLeft.isDown || mc.options.keyRight.isDown)) {
-            player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    1.2174,
-                    1.0,
-                    1.2174
-                )
+            player.deltaMovement = player.deltaMovement.multiply(
+                1.2174,
+                1.0,
+                1.2174
             )
             return@tickHandler
         }
 
-        player.setDeltaMovement(
-            player.deltaMovement.multiply(
-                1.214,
-                1.0,
-                1.214
-            )
+        player.deltaMovement = player.deltaMovement.multiply(
+            1.214,
+            1.0,
+            1.214
         )
     }
 }

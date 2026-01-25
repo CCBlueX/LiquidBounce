@@ -654,7 +654,7 @@ class SimulatedPlayer(
         return movement
     }
 
-    protected fun shouldClipAtLedge(): Boolean {
+    private fun shouldClipAtLedge(): Boolean {
         return !this.input.ignoreClippingAtLedge && (this.input.keyPresses.shift || this.input.forceSafeWalk)
     }
 
@@ -747,7 +747,7 @@ class SimulatedPlayer(
         val d: Double = this.getEyeY() - 0.1111111119389534
         val entity = this.player.vehicle
         if (entity is Boat) {
-            if (!entity.isUnderWater && entity.getBoundingBox().maxY >= d && entity.getBoundingBox().minY <= d) {
+            if (!entity.isUnderWater && entity.boundingBox.maxY >= d && entity.boundingBox.minY <= d) {
                 return
             }
         }

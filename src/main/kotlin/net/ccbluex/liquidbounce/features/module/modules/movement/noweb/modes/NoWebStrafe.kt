@@ -48,7 +48,7 @@ object NoWebStrafe : NoWebMode("Strafe") {
     override fun handleEntityCollision(pos: BlockPos): Boolean {
         if (player.moving) {
             if (player.onGround() || !onlyGround) {
-                player.setDeltaMovement(player.deltaMovement.withStrafe(strength.toDouble()))
+                player.deltaMovement = player.deltaMovement.withStrafe(strength.toDouble())
             }
 
             if (motionY.enabled) {

@@ -57,7 +57,7 @@ object ScaffoldJumpStrafe : ToggleableConfigurable(ModuleScaffold, "StrafeOnJump
         val isMovingStraight = movingYaw % 90 == 0f
 
         val speed = if (isMovingStraight) straightSpeed else diagonalSpeed
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.random().toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.random().toDouble())
         ModuleDebug.debugParameter(ModuleScaffold, "Telly-Speed", "%.2f".format(player.horizontalSpeed))
     }
 

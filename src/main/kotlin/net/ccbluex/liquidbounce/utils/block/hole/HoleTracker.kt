@@ -55,7 +55,7 @@ object HoleTracker : ChunkScanner.BlockChangeSubscriber, MinecraftShortcuts {
     private val mutable by ThreadLocal.withInitial(BlockPos::MutableBlockPos)
     private val BLAST_RESISTANT_BLOCKS: Set<Block> by lazy {
         BuiltInRegistries.BLOCK.filterTo(referenceHashSetOf()) {
-            it.explosionResistance >= 600 && it.explosionResistance < 3_600_000
+            it.explosionResistance in 600.0..<3600000.0
         }
     }
 

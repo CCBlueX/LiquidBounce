@@ -36,13 +36,13 @@ class SpeedSpeedYPort(override val parent: ChoiceConfigurable<*>) : SpeedBHopBas
     @Suppress("unused")
     private val tickHandler = tickHandler {
         if (!player.onGround() && player.moving) {
-            player.setDeltaMovement(player.deltaMovement.copy(y = -1.0))
+            player.deltaMovement = player.deltaMovement.copy(y = -1.0)
         }
     }
 
     @Suppress("unused")
     private val afterJumpHandler = handler<PlayerAfterJumpEvent> {
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
     }
 
 }

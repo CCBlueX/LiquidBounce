@@ -70,7 +70,7 @@ internal object NoFallForceJump : NoFallMode("ForceJump") {
         player.jumpFromGround()
 
         val velocity = player.deltaMovement
-        player.setDeltaMovement(Vec3(velocity.x, jumpHeight.toDouble(), velocity.z))
+        player.deltaMovement = Vec3(velocity.x, jumpHeight.toDouble(), velocity.z)
         jumpTriggered = true
     }
 }

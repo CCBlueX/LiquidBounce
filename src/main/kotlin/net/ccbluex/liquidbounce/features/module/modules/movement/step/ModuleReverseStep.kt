@@ -133,7 +133,7 @@ object ModuleReverseStep : ClientModule("ReverseStep", ModuleCategories.MOVEMENT
                     return@tickHandler
                 }
 
-                player.setDeltaMovement(player.deltaMovement.multiply(0.0, factor.toDouble(), 0.0))
+                player.deltaMovement = player.deltaMovement.multiply(0.0, factor.toDouble(), 0.0)
             }
         }
 

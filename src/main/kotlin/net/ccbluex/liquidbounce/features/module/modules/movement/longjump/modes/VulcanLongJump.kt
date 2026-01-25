@@ -71,7 +71,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
             if (recievedLagback) {
                 player.deltaMovement.y = 1.0
                 player.setPos(player.position().x, player.position().y + 8, player.position().z)
-                player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 1.0, speed = 4.2))
+                player.deltaMovement = player.deltaMovement.withStrafe(strength = 1.0, speed = 4.2)
                 recievedLagback = false
             }
 
@@ -81,7 +81,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
                 }
                 5 -> {
                     player.setPos(player.position().x, player.position().y + 8, player.position().z)
-                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 1.0, speed = 0.3))
+                    player.deltaMovement = player.deltaMovement.withStrafe(strength = 1.0, speed = 0.3)
                     started = false
                     ModuleLongJump.jumped = true
                     ModuleLongJump.boosted = true
@@ -89,12 +89,10 @@ internal object VulcanLongJump : Choice("Vulcan289") {
             }
         }
 
-        player.setDeltaMovement(
-            Vec3(
-                player.deltaMovement.x,
-                if (player.tickCount % 2 == 0) -0.0971 else -0.148,
-                player.deltaMovement.z
-            )
+        player.deltaMovement = Vec3(
+            player.deltaMovement.x,
+            if (player.tickCount % 2 == 0) -0.0971 else -0.148,
+            player.deltaMovement.z
         )
 
         val didLongJump = ModuleLongJump.autoDisable && ModuleLongJump.jumped

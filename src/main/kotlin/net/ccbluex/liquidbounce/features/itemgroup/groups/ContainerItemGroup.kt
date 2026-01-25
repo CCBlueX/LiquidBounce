@@ -32,7 +32,7 @@ class ContainerItemGroup : ClientItemGroup(
     items = {
         val stack = ItemStack(Blocks.CHEST)
 
-        stack.set<Component>(DataComponents.CUSTOM_NAME, "Empty Chest".asPlainText())
+        stack.set(DataComponents.CUSTOM_NAME, "Empty Chest".asPlainText())
 
         it.accept(stack)
 

@@ -153,7 +153,7 @@ object ModuleTimer : ClientModule("Timer", ModuleCategories.WORLD, disableOnQuit
                 Timer.requestTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
 
                 val addition = if (accountTimerValue) (1 / slowSpeed).toInt() else 1
-                boostCapable = (boostCapable + addition).toInt().coerceAtMost(timeBoostTicks)
+                boostCapable = (boostCapable + addition).coerceAtMost(timeBoostTicks)
             } else {
                 val speedUp = boostCapable > 0 ||
                         (allowNegative && (CombatManager.isInCombat || ModuleScaffold.running))

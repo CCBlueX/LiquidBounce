@@ -77,7 +77,7 @@ internal object FlyVanilla : Choice("Vanilla") {
         val vSpeed =
             if (useSprintSpeed) SprintSpeed.verticalSpeed else BaseSpeed.verticalSpeed
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = hSpeed.toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = hSpeed.toDouble())
         player.deltaMovement.y = when {
             mc.options.keyJump.isDown -> vSpeed.toDouble()
             mc.options.keyShift.isDown -> (-vSpeed).toDouble()
@@ -210,7 +210,7 @@ internal object FlyExplosion : Choice("Explosion") {
     val repeatable = tickHandler {
         if (strafeSince > 0) {
             if (!player.onGround()) {
-                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = strafeSince.toDouble()))
+                player.deltaMovement = player.deltaMovement.withStrafe(speed = strafeSince.toDouble())
                 strafeSince -= strafeDecrease
             } else {
                 strafeSince = 0f

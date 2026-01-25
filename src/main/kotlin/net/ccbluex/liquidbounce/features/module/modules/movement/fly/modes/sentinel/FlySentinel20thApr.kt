@@ -94,7 +94,7 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
     val moveHandler = handler<PlayerMoveEvent> { event ->
         if (player.hurtTime > 0  && !hasBeenHurt) {
             hasBeenHurt = true
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = horizontalSpeed.toDouble()))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = horizontalSpeed.toDouble())
             notification(
                 "Fly",
                 translation("liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage"),
