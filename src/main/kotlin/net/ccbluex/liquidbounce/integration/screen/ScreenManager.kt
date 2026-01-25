@@ -154,7 +154,10 @@ object ScreenManager : EventListener {
 
     fun restart() {
         try {
-            this.mainBrowser?.close()
+            // [mainBrowser] may be null if the browser backend is not initialized.
+            // That means we are likely still in the process of starting up.
+            val mainBrowser = this.mainBrowser ?: return
+            mainBrowser.close()
             this.mainBrowser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
         } catch (e: Exception) {
             logger.error("Failed to restart browser backend for screen integration.", e)
