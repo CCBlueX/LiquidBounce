@@ -24,10 +24,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.math.copy
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
-import net.minecraft.world.phys.Vec3
 
 object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "StabilizeMovement",
     true) {
@@ -47,7 +47,7 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalT
         val nearestPointOnLine = optimalLine.getNearestPointTo(player.position())
 
         val vecToLine = nearestPointOnLine.subtract(player.position())
-        val horizontalVelocity = Vec3(player.deltaMovement.x, 0.0, player.deltaMovement.z)
+        val horizontalVelocity = player.deltaMovement.copy(y = 0.0)
         val isRunningTowardsLine = vecToLine.dot(horizontalVelocity) > 0.0
 
         val maxDeviation =
