@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.sounds.SoundEvent
@@ -76,11 +75,17 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
     private val particles by multiEnumChoice("Particle", Particle.FIRE)
     private val particleAmount by int("ParticleAmount", 1, 1..20)
 
-    private val otherSound by multiEnumChoice("OtherSound",
+    private val otherSoundSet by multiEnumChoice("OtherSound",
         Sound.POP
     )
 
-    private val selfSound by multiEnumChoice("SelfSound",
+    val otherSound
+        get() = otherSoundSet.randomOrNull()?.sounds?.randomOrNull()
+
+    val selfSound
+        get() = selfSoundSet.randomOrNull()?.sounds?.randomOrNull()
+
+    private val selfSoundSet by multiEnumChoice("SelfSound",
         Sound.BOYKISSER
     )
 
@@ -115,17 +120,32 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
                 return@handler
             }
 
-            val otherSound = otherSound.randomOrNull()
-            if (otherSound != null && playSound(otherSound.sounds)) {
-                event.cancelEvent()
+            val lastTarget = lastTarget ?: return@handler
+            if (!lastTarget.isAlive) {
+                this.lastTarget = null
+                return@handler
             }
 
-            // In some cases, we might have this play at the wrong player.
-            val lastTarget = lastTarget ?: return@handler
-            if (lastTarget.isAlive) {
-                playEffect(lastTarget)
+            val distanceToSq = lastTarget.distanceToSqr(packet.x, packet.y, packet.z)
+            if (distanceToSq > 8.0) {
+                return@handler
             }
-            this.lastTarget = null
+
+            playEffect(lastTarget)
+            otherSound?.let { sound ->
+                world.playSeededSound(
+                    player,
+                    packet.x,
+                    packet.y,
+                    packet.z,
+                    sound,
+                    packet.source,
+                    packet.volume,
+                    packet.pitch,
+                    packet.seed
+                )
+                event.cancelEvent()
+            }
         }
     }
 
@@ -140,15 +160,6 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
 
             this.lastTarget = target
         }
-    }
-
-    fun getSelfSound() = selfSound.randomOrNull()?.sounds?.randomOrNull().takeIf { running }
-
-    private fun playSound(sounds: Array<SoundEvent>): Boolean {
-        val sound = sounds.randomOrNull() ?: return false
-
-        mc.soundManager.play(SimpleSoundInstance.forUI(sound, 1f))
-        return true
     }
 
     private fun playEffect(target: LivingEntity) = repeat(particleAmount) {
