@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.features.chat
 
 import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelInboundHandler
+import io.netty.channel.ChannelPipeline
 import io.netty.channel.ChannelPromise
 import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.http.FullHttpResponse

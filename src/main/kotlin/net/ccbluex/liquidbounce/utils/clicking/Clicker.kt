@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.hasCooldown
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.KeyMapping
+import net.minecraft.client.Minecraft
 import java.util.Arrays
 import java.util.Random
 
@@ -50,7 +51,7 @@ import java.util.Random
  * while (this.options.keyAttack.wasPressed()) {
  *     this.doAttack();
  * }
- * @see [MinecraftClient.handleInputEvents]
+ * @see [Minecraft.handleKeybinds]
  *
  * We are simulating this behaviour by calculating how many times we could have been clicked in the meantime of a tick.
  * This allows us to predict future actions and behave accordingly.

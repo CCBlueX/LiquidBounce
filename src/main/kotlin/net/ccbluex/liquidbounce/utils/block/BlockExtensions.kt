@@ -101,6 +101,7 @@ import net.minecraft.world.level.block.StonecutterBlock
 import net.minecraft.world.level.block.SupportType
 import net.minecraft.world.level.block.SweetBerryBushBlock
 import net.minecraft.world.level.block.TrapDoorBlock
+import net.minecraft.world.level.block.state.BlockBehaviour
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.levelgen.structure.BoundingBox
 import net.minecraft.world.level.material.Fluids
@@ -719,7 +720,7 @@ fun BedBlock.getPotentialSecondBedBlock(state: BlockState, pos: BlockPos): Block
  *
  * Note: The player is required to NOT be `null`.
  *
- * This data has been collected by looking at the implementations of [AbstractBlock.onUse].
+ * This data has been collected by looking at the implementations of [BlockBehaviour.useWithoutItem].
  */
 fun Block?.isInteractable(blockState: BlockState?): Boolean {
     if (this == null) {

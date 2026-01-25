@@ -54,7 +54,7 @@ object ModulePotionSpoof : ClientModule("PotionSpoof", ModuleCategories.PLAYER) 
     }
 
     private val statusEffectValues = run {
-        /** @see Language.create */
+        /** @see Language.loadDefault */
         val language = Language::class.java.getResourceAsStream("/assets/minecraft/lang/en_us.json").let { stream ->
             val map = HashMap<String, String>(8192)
             Language.loadFromJson(stream, map::put)

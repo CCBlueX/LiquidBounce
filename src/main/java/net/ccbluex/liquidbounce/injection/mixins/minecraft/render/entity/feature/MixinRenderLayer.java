@@ -64,7 +64,7 @@ public abstract class MixinRenderLayer {
             var trueSightModule = ModuleTrueSight.INSTANCE;
             var trueSight = trueSightModule.getRunning() && trueSightModule.getEntities();
             if (ModuleTrueSight.canRenderEntities(rs)) {
-                tintedColor = trueSight ? trueSightModule.getEntityFeatureLayerColor().toARGB() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
+                tintedColor = trueSight ? trueSightModule.getEntityFeatureLayerColor().argb() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
             }
             if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(rs)) {
                 tintedColor = ESP_TRUE_SIGHT_REQUIREMENT_COLOR;

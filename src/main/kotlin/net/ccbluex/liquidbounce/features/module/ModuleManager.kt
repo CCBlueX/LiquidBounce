@@ -349,7 +349,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
     }
 
     /**
-     * Handles disconnect and if [Module.disableOnQuit] is true disables module
+     * Handles disconnect and if [ClientModule.disableOnQuit] is true disables module
      */
     @Suppress("unused")
     private val handleDisconnect = handler<DisconnectEvent> {

@@ -22,9 +22,10 @@ import it.unimi.dsi.fastutil.floats.FloatFloatPair
 import net.ccbluex.fastutil.pair
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2371
+import net.minecraft.world.item.component.UseEffects
 
 /**
- * @see net.minecraft.component.type.UseEffectsComponent
+ * @see UseEffects
  */
 abstract class NoSlowUseActionHandler(name: String) : ToggleableConfigurable(ModuleNoSlow, name, true) {
 

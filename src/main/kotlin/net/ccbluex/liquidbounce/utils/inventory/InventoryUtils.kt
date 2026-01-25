@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.network.OpenInventorySilentlyPacket
 import net.ccbluex.liquidbounce.utils.network.sendPacket
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.network.protocol.game.ServerboundContainerClosePacket
@@ -299,7 +300,7 @@ fun getArmorColor() = Slots.Armor.firstNotNullOfOrNull { slot ->
 /**
  * Get the color of the armor on the item stack
  *
- * @see [net.minecraft.client.render.entity.feature.ArmorFeatureRenderer.renderArmor]
+ * @see [HumanoidArmorLayer.renderArmorPiece]
  */
 fun ItemStack.getArmorColor(): Int? {
     return if (`is`(ItemTags.DYEABLE)) {

@@ -64,7 +64,7 @@ public abstract class MixinLightTexture {
     private void injectCustomClearColor(float tickProgress, CallbackInfo ci) {
         if (ModuleCustomAmbience.CustomLightmap.INSTANCE.getRunning()) {
             RenderSystem.getDevice().createCommandEncoder()
-                .clearColorTexture(this.texture, ModuleCustomAmbience.CustomLightmap.INSTANCE.getColor().toARGB());
+                .clearColorTexture(this.texture, ModuleCustomAmbience.CustomLightmap.INSTANCE.getColor().argb());
 
             ci.cancel();
         }

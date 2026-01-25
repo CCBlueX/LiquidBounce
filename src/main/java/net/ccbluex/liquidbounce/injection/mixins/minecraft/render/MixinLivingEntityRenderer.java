@@ -146,7 +146,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         var trueSightModule = ModuleTrueSight.INSTANCE;
         var trueSight = trueSightModule.getRunning() && trueSightModule.getEntities();
         if (ModuleTrueSight.canRenderEntities(livingEntityRenderState)) {
-            tintedColor = trueSight ? trueSightModule.getEntityColor().toARGB() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
+            tintedColor = trueSight ? trueSightModule.getEntityColor().argb() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
         }
         original.call(
             instance, model,
