@@ -79,7 +79,8 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
 
         if (threwPearl) return@tickHandler // Already threw pearl, nothing to do
 
-        val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler // If there isn't a pearl, return
+        // If there isn't a pearl, return
+        val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
 
         if (player.xRot <= 80) {
             RotationManager.setRotationTarget(

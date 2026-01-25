@@ -29,7 +29,8 @@ import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 
 /**
- * Manages things like [ModuleScaffold]'s silent mode. Not thread safe, please only use this on the main-thread of minecraft
+ * Manages things like [ModuleScaffold]'s silent mode.
+ * Not thread safe, please only use this on the main-thread of minecraft
  */
 object SilentHotbar : EventListener {
 
