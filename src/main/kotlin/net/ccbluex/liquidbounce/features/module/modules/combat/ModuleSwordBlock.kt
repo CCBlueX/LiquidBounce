@@ -40,6 +40,7 @@ object ModuleSwordBlock : ClientModule("SwordBlock", ModuleCategories.COMBAT, al
 
     val onlyVisual by boolean("OnlyVisual", false)
     val hideShieldSlot by boolean("HideShieldSlot", false).doNotIncludeAlways()
+    val applyToThirdPersonView by boolean("ApplyToThirdPersonView", true).doNotIncludeAlways()
     private val alwaysHideShield by boolean("AlwaysHideShield", false).doNotIncludeAlways()
 
     @JvmStatic

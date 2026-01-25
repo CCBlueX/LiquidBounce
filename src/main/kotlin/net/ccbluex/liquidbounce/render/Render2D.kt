@@ -22,11 +22,13 @@
 package net.ccbluex.liquidbounce.render
 
 import com.mojang.blaze3d.pipeline.RenderPipeline
+import it.unimi.dsi.fastutil.floats.Float2IntFunction
 import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.client.ceilToInt
 import net.ccbluex.liquidbounce.utils.client.floorToInt
 import net.ccbluex.liquidbounce.utils.collection.Pools
+import net.ccbluex.liquidbounce.utils.render.CircleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.LambdaSimpleGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.LineGuiElementRenderState
 import net.ccbluex.liquidbounce.utils.render.QuadGuiElementRenderState
@@ -352,6 +354,32 @@ inline fun GuiGraphics.drawBlitOnCurrentLayer(
             argb,
             this.scissorStack.peek(),
             createBounds(x0.toFloat(), y0.toFloat(), (x1 - x0).toFloat(), (y1 - y0).toFloat()),
+        )
+    )
+}
+
+fun GuiGraphics.drawCircle(
+    x: Float,
+    y: Float,
+    radius: Float,
+    innerRadius: Float = 0f,
+    segments: Int = 40,
+    colorGetter: Float2IntFunction = Float2IntFunction { Color4b.WHITE.argb },
+) {
+    val bounds = createBounds(x - radius, y - radius, radius * 2, radius * 2)
+
+    this.guiRenderState.submitGuiElement(
+        CircleGuiElementRenderState(
+            x,
+            y,
+            radius,
+            innerRadius,
+            segments,
+            colorGetter,
+            ClientRenderPipelines.GUI.triangles(true),
+            copyPose(),
+            this.scissorStack.peek(),
+            bounds
         )
     )
 }

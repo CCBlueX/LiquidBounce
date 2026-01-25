@@ -28,12 +28,12 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
-import net.ccbluex.liquidbounce.integration.IntegrationListener
-import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
+import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.GuiGraphics
@@ -53,27 +53,30 @@ object ThemeManager : Configurable("theme") {
     private var currentTheme by text("Theme", "liquidbounce").onChanged {
         // Update integration browser
         mc.execute {
-            IntegrationListener.update()
+            ScreenManager.update()
             ModuleHud.reopen()
             ModuleClickGui.reload(true)
         }
     }
 
-    internal lateinit var includedTheme: Theme
+    internal var includedTheme: Theme? = null
         private set
     /**
      * Used for development.
      */
     private var temporaryTheme: Theme? = null
 
-    var theme: Theme
+    var theme: Theme?
         get() = temporaryTheme
             ?: themes.find { theme -> theme.metadata.id.equals(currentTheme, true) }
             ?: includedTheme
         set(value) {
+            if (value == null) return
+
             // When external, set as a temporary theme.
             if (value.origin.external) {
                 temporaryTheme = value
+                val includedTheme = includedTheme ?: return
                 currentTheme = includedTheme.metadata.id
             } else {
                 temporaryTheme = null
@@ -81,14 +84,17 @@ object ThemeManager : Configurable("theme") {
             }
         }
 
+    val isThemeExternal: Boolean
+        get() = theme?.origin?.external == true
+
     private val takesInputHandler = InputAcceptor { mc.screen != null && mc.screen !is ChatScreen }
 
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->
             if (enabled) {
                 renderScope.launch {
-                    theme.compileShader()
-                    includedTheme.compileShader()
+                    theme?.compileShader()
+                    includedTheme?.compileShader()
                 }
             }
 
@@ -147,81 +153,88 @@ object ThemeManager : Configurable("theme") {
             }
         }
 
-        themes.add(includedTheme)
+        includedTheme?.let { theme -> themes += theme }
 
         ModuleHud.updateThemes()
         if (LiquidBounce.isInitialized) {
-            IntegrationListener.update()
+            ScreenManager.update()
             ModuleHud.reopen()
             ModuleClickGui.reload(true)
         }
     }
 
     /**
-     * Open [Browser] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
-     * This tab will be locked to 60 FPS since it is not input aware.
+     * Open [Browser] with the given [CustomScreenType] and mark as static if [markAsStatic] is true.
+     * This tab will be locked to 60 FPS since it is not input-aware.
      */
     fun openImmediate(
-        virtualScreenType: VirtualScreenType? = null,
+        customScreenType: CustomScreenType? = null,
         markAsStatic: Boolean = false,
         settings: BrowserSettings
-    ): Browser =
-        BrowserBackendManager.browserBackend.createBrowser(
-            getScreenLocation(virtualScreenType, markAsStatic).url,
+    ): Browser {
+        val backend = BrowserBackendManager.backend ?: error("Browser backend is not initialized.")
+
+        return backend.createBrowser(
+            getScreenLocation(customScreenType, markAsStatic).url,
             settings = settings
         )
+    }
 
     /**
-     * Open [Browser] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
-     * This tab will be locked to the highest refresh rate since it is input aware.
+     * Open [Browser] with the given [CustomScreenType] and mark as static if [markAsStatic] is true.
+     * This tab will be locked to the highest refresh rate since it is input-aware.
      */
     fun openInputAwareImmediate(
-        virtualScreenType: VirtualScreenType? = null,
+        customScreenType: CustomScreenType? = null,
         markAsStatic: Boolean = false,
         settings: BrowserSettings,
         priority: Short = 10,
         inputAcceptor: InputAcceptor = takesInputHandler
-    ): Browser = BrowserBackendManager.browserBackend.createBrowser(
-        getScreenLocation(virtualScreenType, markAsStatic).url,
-        settings = settings,
-        priority = priority,
-        inputAcceptor = inputAcceptor
-    )
+    ): Browser {
+        val backend = BrowserBackendManager.backend ?: error("Browser backend is not initialized.")
+
+        return backend.createBrowser(
+            getScreenLocation(customScreenType, markAsStatic).url,
+            settings = settings,
+            priority = priority,
+            inputAcceptor = inputAcceptor
+        )
+    }
 
     fun updateImmediate(
         browser: Browser?,
-        virtualScreenType: VirtualScreenType? = null,
+        customScreenType: CustomScreenType? = null,
         markAsStatic: Boolean = false
     ) {
-        browser?.url = getScreenLocation(virtualScreenType, markAsStatic).url
+        browser?.url = getScreenLocation(customScreenType, markAsStatic).url
     }
 
-    fun getScreenLocation(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ScreenLocation {
+    fun getScreenLocation(customScreenType: CustomScreenType? = null, markAsStatic: Boolean = false): ScreenLocation {
         val theme = theme.takeIf { theme ->
-            virtualScreenType == null || theme.isSupported(virtualScreenType.routeName)
+            customScreenType == null || theme?.isSupported(customScreenType.routeName) == true
         } ?: includedTheme.takeIf { theme ->
-            virtualScreenType == null || theme.isSupported(virtualScreenType.routeName)
-        } ?: error("No theme supports the route ${virtualScreenType?.routeName}")
+            customScreenType == null || theme?.isSupported(customScreenType.routeName) == true
+        } ?: error("No theme supports the route ${customScreenType?.routeName}")
 
         return ScreenLocation(
             theme,
-            theme.getUrl(virtualScreenType?.routeName, markAsStatic)
+            theme.getUrl(customScreenType?.routeName, markAsStatic)
         )
     }
 
     fun loadBackgroundAsync(): CompletableFuture<Unit> = renderScope.future {
-        theme.loadBackgroundImage()
+        theme?.loadBackgroundImage()
         if (shaderEnabled) {
-            theme.compileShader()
+            theme?.compileShader()
         }
     }
 
     @Suppress("LongParameterList")
     fun drawBackground(context: GuiGraphics, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
         val background = if (shaderEnabled) {
-            theme.backgroundShader
+            theme?.backgroundShader
         } else {
-            theme.backgroundImage
+            theme?.backgroundImage
         } ?: return false
 
         background.draw(context, width, height, mouseX, mouseY, delta)

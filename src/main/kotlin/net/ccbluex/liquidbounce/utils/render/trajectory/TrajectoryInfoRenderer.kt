@@ -70,6 +70,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
     velocity: Vec3,
     pos: Vec3,
     val trajectoryInfo: TrajectoryInfo,
+    val trajectoryType: TrajectoryType,
     /**
      * Only used for rendering. No effect on simulation.
      */
@@ -100,6 +101,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         fun getHypotheticalTrajectory(
             owner: Entity,
             trajectoryInfo: TrajectoryInfo,
+            trajectoryType: TrajectoryType,
             rotation: Rotation,
             icon: ItemStack = ItemStack.EMPTY,
             partialTicks: Float = mc.deltaTracker.getGameTimeDeltaPartialTick(true),
@@ -136,6 +138,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
                 velocity = velocity,
                 pos = pos,
                 trajectoryInfo = trajectoryInfo,
+                trajectoryType = trajectoryType,
                 type = Type.HYPOTHETICAL,
                 renderOffset = interpolatedOffset.add(-cos(yawRadians) * 0.16, 0.0, -sin(yawRadians) * 0.16)
             )
@@ -164,13 +167,16 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
         }
 
         val positions = mutableListOf<Vec3>()
+        val requiresInitialTickCorrection = this.trajectoryType.requiresInitialTickCorrection
 
         // Apply first-tick physics to velocity only, mimicking server spawn reset
-        tickVelocity()
+        if (requiresInitialTickCorrection) {
+            tickVelocity()
+        }
 
         // Now start normal simulation, starting from currTicks = 1
         val prevPos = pos.copy()
-        var currTicks = 1
+        var currTicks = if (requiresInitialTickCorrection) 1 else 0
 
         while (currTicks < maxTicks) {
             if (pos.y < world.minY) {

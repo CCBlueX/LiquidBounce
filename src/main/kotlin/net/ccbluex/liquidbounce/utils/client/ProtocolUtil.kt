@@ -128,6 +128,18 @@ val isNewerThanOrEquals1_21_6: Boolean
         logger.error("Failed to check if the server is using 1.21.6+", it)
     }.getOrDefault(false)
 
+/**
+ * Since 1.21.9 the byte format of [net.minecraft.world.phys.Vec3] have been rewritten
+ * with [net.minecraft.network.LpVec3].
+ */
+val isNewerThanOrEquals1_21_9: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        usesViaFabricPlus && VfpCompatibility.INSTANCE.isNewerThanOrEqual1_21_9
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.21.9+", it)
+    }.getOrDefault(false)
+
 val isOlderThanOrEqual1_11_1: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions

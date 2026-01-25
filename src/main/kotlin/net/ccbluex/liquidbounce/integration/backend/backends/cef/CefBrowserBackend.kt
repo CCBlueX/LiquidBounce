@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.api.core.HttpClient
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
+import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.task.MCEFProgressForwarder
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.mcef.MCEF
+import net.ccbluex.liquidbounce.mcef.MCEFAccelerationSupport
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.QuickFix
 import net.ccbluex.liquidbounce.utils.client.error.errors.JcefIsntCompatible
@@ -37,9 +38,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
 import net.ccbluex.liquidbounce.utils.validation.HashValidator
-import net.minecraft.util.Util
-import org.lwjgl.opengl.GL
-import org.lwjgl.opengl.GL11
 
 /**
  * The time threshold for cleaning up old cache directories.
@@ -66,7 +64,7 @@ class CefBrowserBackend : BrowserBackend, EventListener {
     override val isInitialized: Boolean
         get() = MCEF.INSTANCE.isInitialized
     override var browsers = mutableListOf<CefBrowser>()
-    override var isAccelerationSupported: Boolean = false
+    override var accelerationFlags = BrowserAccelerationFlags.UNSUPPORTED
 
     @Suppress("ThrowingExceptionsWithoutMessageOrCause")
     override fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit) {
@@ -153,14 +151,11 @@ class CefBrowserBackend : BrowserBackend, EventListener {
             MCEF.INSTANCE.initialize()
         }
 
-        // Check if acceleration is supported
-        val system = Util.getPlatform()
-        isAccelerationSupported = when (system) {
-            Util.OS.WINDOWS -> {
-                // Check if required OpenGL extensions for D3D11 shared texture interop are supported
-                checkAccelerationSupport()
-            }
-            else -> false
+        val support = MCEFAccelerationSupport.getAccelerationSupport()
+        accelerationFlags = if (support.isSupported) {
+            BrowserAccelerationFlags(isSupported = true, isBeta = support.isBeta)
+        } else {
+            BrowserAccelerationFlags.UNSUPPORTED
         }
     }
 
@@ -196,62 +191,4 @@ class CefBrowserBackend : BrowserBackend, EventListener {
         browsers.remove(browser)
     }
 
-    /**
-     * Checks if the GPU supports the required OpenGL extensions for accelerated CEF rendering.
-     * Currently only NVIDIA GPUs are known to work reliably with D3D11 shared texture interoperability.
-     *
-     * @return true if all required extensions are supported, false otherwise
-     */
-    private fun checkAccelerationSupport(): Boolean {
-        return try {
-            RenderSystem.assertOnRenderThread()
-
-            val capabilities = GL.getCapabilities()
-            val vendor = GL11.glGetString(GL11.GL_VENDOR) ?: ""
-            val renderer = GL11.glGetString(GL11.GL_RENDERER) ?: ""
-
-            logger.info("GPU Vendor: $vendor")
-            logger.info("GPU Renderer: $renderer")
-
-            // Check if the GPU is NVIDIA or AMD as
-            // we could not get this feature to work reliably on Intel GPUs.
-            // On Intel GPU (Intel ARC), it does not work as well and is reported:
-            // https://github.com/IGCIT/Intel-GPU-Community-Issue-Tracker-IGCIT/issues/1143
-
-            val isSupportedGpu =
-                vendor.contains("nvidia", true) ||
-                    renderer.contains("geforce", true) ||
-                    renderer.contains("quadro", true) ||
-                    vendor.contains("amd", true) ||
-                    renderer.contains("radeon", true)
-            if (!isSupportedGpu) {
-                logger.warn("GPU acceleration only supported on NVIDIA and AMD GPUs")
-                logger.info("Falling back to software rendering for browser")
-                return false
-            }
-
-            // Required OpenGL extensions for D3D11 shared texture interoperability
-            // See https://registry.khronos.org/OpenGL/extensions/EXT/EXT_external_objects_win32.txt
-            val extensions = arrayOf(
-                capabilities.GL_EXT_memory_object,
-                capabilities.GL_EXT_memory_object_win32
-            )
-
-            logger.info("Checking OpenGL extensions for GPU acceleration" +
-                " support: ${extensions.joinToString(", ")}")
-            for (extension in extensions) {
-                if (!extension) {
-                    logger.warn("Required OpenGL extension for GPU acceleration not supported")
-                    logger.info("Falling back to software rendering for browser")
-                    return false
-                }
-            }
-
-            true
-        } catch (e: Exception) {
-            logger.warn("Failed to check GPU acceleration support: ${e.message}")
-            logger.info("Falling back to software rendering for browser")
-            false
-        }
-    }
 }

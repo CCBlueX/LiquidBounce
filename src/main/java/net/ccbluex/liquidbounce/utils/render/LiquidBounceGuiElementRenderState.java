@@ -24,7 +24,7 @@ import org.joml.Matrix3x2f;
 
 public sealed interface LiquidBounceGuiElementRenderState
     extends GuiElementRenderState
-    permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState {
+    permits LambdaSimpleGuiElementRenderState, LineGuiElementRenderState, QuadGuiElementRenderState, TexQuadGuiElementRenderState, TriangleGuiElementRenderState, CircleGuiElementRenderState {
     /**
      * Recyclable pose matrix.
      */

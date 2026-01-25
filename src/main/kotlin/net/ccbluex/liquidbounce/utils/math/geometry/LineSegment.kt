@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
-import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.minecraft.world.phys.Vec3
 
 class LineSegment(position: Vec3, direction: Vec3, val phiRange: ClosedFloatingPointRange<Double>) :
@@ -28,12 +27,6 @@ class LineSegment(position: Vec3, direction: Vec3, val phiRange: ClosedFloatingP
 
     val endPoints: Pair<Vec3, Vec3>
         get() = Pair(getPosition(phiRange.start), getPosition(phiRange.endInclusive))
-
-    init {
-        require(!direction.isLikelyZero) {
-            "Direction must not be zero"
-        }
-    }
 
     override fun getNearestPointTo(point: Vec3): Vec3 {
         val plane = NormalizedPlane(point, direction)
@@ -58,7 +51,7 @@ class LineSegment(position: Vec3, direction: Vec3, val phiRange: ClosedFloatingP
         return super.getPosition(phi)
     }
 
-    override fun getPositionChcked(phi: Double): Vec3? {
+    override fun getPositionChecked(phi: Double): Vec3? {
         if (phi !in phiRange) {
             return null
         }

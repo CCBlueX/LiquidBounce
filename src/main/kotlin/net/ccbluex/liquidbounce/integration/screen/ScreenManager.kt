@@ -16,7 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.integration
+
+package net.ccbluex.liquidbounce.integration.screen
 
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -29,6 +30,8 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.suspendHandler
+import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
@@ -36,37 +39,39 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.IntegrationBrowserSettings
+import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.error.QuickFix
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
 import org.lwjgl.glfw.GLFW
 import kotlin.math.min
+import kotlin.time.Duration.Companion.seconds
 
-object IntegrationListener : EventListener {
+object ScreenManager : EventListener {
 
     /**
-     * This tab is always open and initialized. We keep this tab open to make it possible to draw on the screen,
-     * even when no specific tab is open.
-     * It also reduces the time required to open a new tab and allows for smooth transitions between tabs.
+     * The main browser will constantly be updated to display the current screen.
      *
-     * The client tab will be initialized when the browser is ready.
+     * May be null if the browser backend is not initialized. This can happen when
+     * [BrowserBackendManager.isSkipping] is true.
      */
-    lateinit var browser: Browser
+    var mainBrowser: Browser? = null
         private set
-    lateinit var browserSettings: IntegrationBrowserSettings
-        private set
-
-    var momentaryVirtualScreen: VirtualScreen? = null
-        private set
+    val browserSettings = IntegrationBrowserSettings(0, ::restart)
 
     var theme: Theme? = null
+        private set
+    var screen: CustomScreen? = null
         private set
 
     /**
@@ -76,79 +81,69 @@ object IntegrationListener : EventListener {
      *
      * If the acknowledgement is not confirmed after 500ms, the integration browser will be reloaded.
      */
-    val acknowledgement = Acknowledgement()
+    val screenAcknowledgement = ScreenAcknowledgement()
 
     private val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
-
-    data class VirtualScreen(val type: VirtualScreenType, val openSince: Chronometer = Chronometer())
-
-    class Acknowledgement(
-        val since: Chronometer = Chronometer(),
-        var confirmed: Boolean = false
-    ) {
-
-        @Suppress("unused")
-        val isDesynced
-            get() = !confirmed && since.hasElapsed(1000)
-
-        fun confirm() {
-            confirmed = true
-        }
-
-        fun reset() {
-            since.reset()
-            confirmed = false
-        }
-
-    }
 
     internal val parent: Screen
         get() = mc.screen ?: TitleScreen()
 
-    private var browserIsReady = false
-
     @Suppress("unused")
-    val handleBrowserReady = handler<BrowserReadyEvent>(priority = FIRST_PRIORITY) {
-        logger.info("Browser is ready.")
+    private val handleBrowserReady = suspendHandler<BrowserReadyEvent>(
+        priority = EventPriorityConvention.FIRST_PRIORITY
+    ) {
+        runCatching {
+            logger.info("Browser backend is ready. Initializing browser...")
+            val browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
 
-        // Fires up the client tab
-        browserSettings = IntegrationBrowserSettings(0, ::restart)
-        browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
-        browserIsReady = true
+            logger.info("Waiting for browser to be initialized...")
+            // We currently proceed to go to the Minecraft Title Screen
+            //   until this times out. [ErrorHandler.fatal] will kill the game anyway.
+            waitMatchesWithTimeout<GameTickEvent>(timeout = 30.seconds) { browser.isInitialized }
+            this@ScreenManager.mainBrowser = browser
+
+            logger.info("Integration Browser $browser is ready.")
+        }.onFailure {
+            ErrorHandler.fatal(it, QuickFix.BROWSER_IS_NOT_RESPONDING)
+        }
     }
 
     @Suppress("unused")
-    fun virtualOpen(name: String) {
-        val type = VirtualScreenType.byName(name) ?: return
-        virtualOpen(type = type)
+    fun openScreen(name: String) {
+        openScreen(type = CustomScreenType.byName(name) ?: return)
     }
 
-    fun virtualOpen(theme: Theme = ThemeManager.theme, type: VirtualScreenType) {
+    fun openScreen(theme: Theme? = ThemeManager.theme, type: CustomScreenType) {
+        if (theme == null) {
+            logger.warn("Theme is null, can't open virtual screen.")
+            return
+        }
+
         // Check if the virtual screen is already open
-        if (momentaryVirtualScreen?.type == type) {
+        if (screen?.type == type) {
             return
         }
 
         if (this.theme != theme) {
             this.theme = theme
-            ThemeManager.updateImmediate(browser, type)
+            ThemeManager.updateImmediate(mainBrowser, type)
         }
 
-        val virtualScreen = VirtualScreen(type).apply { momentaryVirtualScreen = this }
-        acknowledgement.reset()
+        val customScreen = CustomScreen(type).apply { screen = this }
+        screenAcknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
-                virtualScreen.type,
+                customScreen.type,
                 action = VirtualScreenEvent.Action.OPEN
             )
         )
     }
 
-    fun virtualClose() {
-        val virtualScreen = momentaryVirtualScreen ?: return
+    fun closeScreen() {
+        val virtualScreen = screen ?: return
 
-        momentaryVirtualScreen = null
-        acknowledgement.reset()
+        screen = null
+        screenAcknowledgement.reset()
         EventManager.callEvent(
             VirtualScreenEvent(
                 virtualScreen.type,
@@ -158,13 +153,12 @@ object IntegrationListener : EventListener {
     }
 
     fun restart() {
-        if (!browserIsReady || !BrowserBackendManager.browserBackend.isInitialized) {
-            return
-        }
-
         try {
-            browser.close()
-            browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
+            // [mainBrowser] may be null if the browser backend is not initialized.
+            // That means we are likely still in the process of starting up.
+            val mainBrowser = this.mainBrowser ?: return
+            mainBrowser.close()
+            this.mainBrowser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
         } catch (e: Exception) {
             logger.error("Failed to restart browser backend for screen integration.", e)
         }
@@ -183,20 +177,17 @@ object IntegrationListener : EventListener {
     }
 
     fun update() {
-        if (!browserIsReady || !BrowserBackendManager.browserBackend.isInitialized) {
-            return
-        }
-
+        val browser = mainBrowser ?: return
         logger.info(
             "Reloading integration browser ${browser.javaClass.simpleName} " +
                 "to ${ThemeManager.getScreenLocation()}"
         )
-        ThemeManager.updateImmediate(browser, momentaryVirtualScreen?.type)
+        ThemeManager.updateImmediate(browser, screen?.type)
     }
 
     fun restoreOriginalScreen() {
-        if (mc.screen is VirtualDisplayScreen) {
-            mc.setScreen((mc.screen as VirtualDisplayScreen).originalScreen)
+        if (mc.screen is CustomMinecraftScreen) {
+            mc.setScreen((mc.screen as CustomMinecraftScreen).originalScreen)
         }
     }
 
@@ -214,10 +205,8 @@ object IntegrationListener : EventListener {
     }
 
     @Suppress("unused")
-    private val screenRefresher = handler<GameTickEvent> {
-        if (browserIsReady && mc.screen !is TaskProgressScreen) {
-            handleCurrentScreen(mc.screen)
-        }
+    private val screenUpdater = handler<GameTickEvent> {
+        handleCurrentScreen(mc.screen)
     }
 
     @Suppress("unused")
@@ -239,7 +228,7 @@ object IntegrationListener : EventListener {
 
     @Suppress("unused")
     private val fpsLimitHandler = handler<FpsLimitEvent> { event ->
-        if (!browserIsReady || !browserSettings.syncGameFps || !isClientScreen(mc.screen)) {
+        if (this.mainBrowser == null || !browserSettings.syncGameFps || !isClientScreen(mc.screen)) {
             return@handler
         }
 
@@ -257,7 +246,8 @@ object IntegrationListener : EventListener {
 
         // F12 to toggle GPU acceleration
         if (event.action == GLFW.GLFW_PRESS && keyCode == GLFW.GLFW_KEY_F12) {
-            if (!BrowserBackendManager.browserBackend.isAccelerationSupported) {
+            val backend = BrowserBackendManager.backend ?: return@handler
+            if (!backend.accelerationFlags.isSupported) {
                 logger.warn("GPU acceleration is not supported by the current browser backend.")
                 return@handler
             }
@@ -269,64 +259,75 @@ object IntegrationListener : EventListener {
     }
 
     private fun handleCurrentScreen(screen: Screen?): Boolean {
-        return when {
-            screen !is VirtualDisplayScreen && HideAppearance.isHidingNow -> {
-                virtualClose()
+        // We check against mc.screen, not screen, because somehow this works.
+        if (mc.screen is TaskProgressScreen) {
+            return false
+        }
 
-                false
-            }
-            !browserIsReady || screen is VirtualDisplayScreen -> false
-            else -> {
-                // Are we currently playing the game?
-                if (mc.level != null && screen == null) {
-                    virtualClose()
-
+        if (HideAppearance.isHidingNow || ClientInteropServer.isSkipping) {
+            return if (screen is CustomMinecraftScreen) {
+                val original = screen.originalScreen
+                if (original is CustomMinecraftScreen) {
                     return false
                 }
 
-                handleCurrentMinecraftScreen(screen ?: TitleScreen())
+                mc.setScreen(original)
+                true
+            } else {
+                closeScreen()
+                false
             }
         }
+
+        if (screen is CustomMinecraftScreen) {
+            return false
+        }
+
+        // Are we currently playing the game?
+        if (mc.level != null && screen == null) {
+            closeScreen()
+            return false
+        }
+
+        return handleCurrentMinecraftScreen(screen ?: TitleScreen())
     }
 
     /**
      * @return should cancel the minecraft screen
      */
-    private fun handleCurrentMinecraftScreen(virtScreen: Screen): Boolean {
-        val virtualScreenType = VirtualScreenType.recognize(virtScreen)
-
-        if (virtualScreenType == null) {
-            virtualClose()
-
+    private fun handleCurrentMinecraftScreen(minecraftScreen: Screen): Boolean {
+        val customScreenType = CustomScreenType.recognize(minecraftScreen)
+        if (customScreenType == null) {
+            closeScreen()
             return false
         }
 
-        val name = virtualScreenType.routeName
+        val name = customScreenType.routeName
         val route = runCatching {
-            ThemeManager.getScreenLocation(virtualScreenType, false)
+            ThemeManager.getScreenLocation(customScreenType, false)
         }.getOrNull()
 
         if (route == null) {
-            virtualClose()
+            closeScreen()
             return false
         }
 
         val theme = route.theme
 
         return when {
+            // When we want to fully replace a screen.
             theme.isScreenSupported(name) -> {
-                mc.setScreen(VirtualDisplayScreen(virtualScreenType, theme, originalScreen = virtScreen))
-
+                mc.setScreen(CustomMinecraftScreen(customScreenType, theme, originalScreen = minecraftScreen))
                 true
             }
+            // When we just want to overlay it.
             theme.isOverlaySupported(name) -> {
-                virtualOpen(theme, virtualScreenType)
-
+                openScreen(theme, customScreenType)
                 false
             }
+            // When there is nothing to show.
             else -> {
-                virtualClose()
-
+                closeScreen()
                 false
             }
         }
@@ -336,7 +337,7 @@ object IntegrationListener : EventListener {
      * Checks if the given screen is an active client screen.
      */
     @JvmStatic
-    fun isClientScreen(screen: Screen?) = screen is VirtualDisplayScreen || screen is ModuleClickGui.ClickScreen ||
-        screen is BrowserScreen
+    fun isClientScreen(screen: Screen?) = screen is CustomMinecraftScreen || screen is ModuleClickGui.ClickScreen ||
+        screen is InternetExplorerScreen
 
 }

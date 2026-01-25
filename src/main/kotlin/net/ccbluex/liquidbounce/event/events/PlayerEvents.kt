@@ -79,7 +79,7 @@ class PlayerSneakMultiplier(var multiplier: Double) : Event()
  * Warning: UseHotbarSlotOrOffHand won't stimulate this event
  */
 @Nameable("playerInteractItem")
-class PlayerInteractItemEvent : CancellableEvent()
+class PlayerInteractItemEvent(val player: Player, val hand: InteractionHand) : CancellableEvent()
 
 @Nameable("playerInteractedItem")
 class PlayerInteractedItemEvent(

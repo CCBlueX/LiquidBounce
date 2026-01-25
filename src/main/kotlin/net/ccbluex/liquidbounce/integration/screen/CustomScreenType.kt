@@ -17,10 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.integration
+package net.ccbluex.liquidbounce.integration.screen
 
 import com.google.common.base.Predicates
 import com.mojang.realmsclient.RealmsMainScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
 import net.minecraft.client.gui.screens.DisconnectedScreen
@@ -45,12 +47,12 @@ import java.util.function.Predicate
 private val Screen.isLunar
     get() = javaClass.name.startsWith("com.moonsworth.lunar.") && mc.level == null
 
-enum class VirtualScreenType(
+enum class CustomScreenType(
     val routeName: String,
     private val recognizer: Predicate<Screen> = Predicates.alwaysFalse(),
     val isInGame: Boolean = false,
     private val open: Runnable = Runnable {
-        mc.setScreen(VirtualDisplayScreen(byName(routeName)!!))
+        mc.setScreen(CustomMinecraftScreen(byName(routeName)!!))
     }
 ) {
 
@@ -68,20 +70,20 @@ enum class VirtualScreenType(
     MULTIPLAYER(
         "multiplayer",
         recognizer = { it is JoinMultiplayerScreen || it is SafetyScreen },
-        open = { mc.setScreen(JoinMultiplayerScreen(IntegrationListener.parent)) }
+        open = { mc.setScreen(JoinMultiplayerScreen(ScreenManager.parent)) }
     ),
 
     MULTIPLAYER_REALMS(
         "multiplayer_realms",
         recognizer = { it is RealmsMainScreen },
-        open = { mc.setScreen(RealmsMainScreen(IntegrationListener.parent)) }
+        open = { mc.setScreen(RealmsMainScreen(ScreenManager.parent)) }
     ),
 
     SINGLEPLAYER(
         "singleplayer",
         recognizer = { it is SelectWorldScreen },
         open = {
-            mc.setScreen(SelectWorldScreen(IntegrationListener.parent))
+            mc.setScreen(SelectWorldScreen(ScreenManager.parent))
         }
     ),
 
@@ -91,7 +93,7 @@ enum class VirtualScreenType(
         open = {
             // Store parent before opening CreateWorldScreen, since IntegrationListener.parent
             // will change to CreateWorldScreen once it's opened
-            val parentScreen = IntegrationListener.parent
+            val parentScreen = ScreenManager.parent
             CreateWorldScreen.openFresh(mc) {
                 // Return to SelectWorldScreen instead of the stored parent,
                 // as this is the expected navigation flow from Create World
@@ -104,7 +106,7 @@ enum class VirtualScreenType(
         "options",
         recognizer = { it is OptionsScreen },
         open = {
-            mc.setScreen(OptionsScreen(IntegrationListener.parent, mc.options))
+            mc.setScreen(OptionsScreen(ScreenManager.parent, mc.options))
         }
     ),
 
@@ -133,7 +135,7 @@ enum class VirtualScreenType(
     ),
 
     BROWSER("browser",
-        recognizer = { it is BrowserScreen }
+        recognizer = { it is InternetExplorerScreen }
     );
 
     fun open() = mc.execute(open)

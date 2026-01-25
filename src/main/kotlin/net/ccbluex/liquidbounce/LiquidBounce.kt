@@ -58,10 +58,10 @@ import net.ccbluex.liquidbounce.features.misc.proxy.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.misc.soundfx.Sounds
 import net.ccbluex.liquidbounce.features.spoofer.SpooferManager
-import net.ccbluex.liquidbounce.integration.IntegrationListener
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.ActiveServerList
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
@@ -353,6 +353,11 @@ object LiquidBounce : EventListener {
                 IpInfoApi.original
             }
             launch {
+                ConfigSystem.load(ClientAccountManager)
+                if (ClientAccount.ENV_ACCOUNT != null) {
+                    ClientAccountManager.clientAccount = ClientAccount.ENV_ACCOUNT
+                }
+
                 if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT) {
                     runCatching {
                         ClientAccountManager.clientAccount.renew()
@@ -361,8 +366,9 @@ object LiquidBounce : EventListener {
                         ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
-                        ConfigSystem.store(ClientAccountManager)
                     }
+
+                    ConfigSystem.store(ClientAccountManager)
                 }
             }
         }
@@ -382,14 +388,16 @@ object LiquidBounce : EventListener {
 
         BrowserBackendManager.init()
         ClientInteropServer.start()
-        ThemeManager.init()
-        // Preload marketplace items
-        ConfigSystem.load(MarketplaceManager)
-        ConfigSystem.load(ThemeManager)
-        ThemeManager.load()
+        if (!ClientInteropServer.isSkipping) {
+            ThemeManager.init()
+            // Preload marketplace items
+            ConfigSystem.load(MarketplaceManager)
+            ConfigSystem.load(ThemeManager)
+            ThemeManager.load()
+        }
 
         BlurEffectRenderer
-        IntegrationListener
+        ScreenManager
 
         taskManager = TaskManager(ioScope).apply {
             // Either immediately starts browser or spawns a task to request browser dependencies,

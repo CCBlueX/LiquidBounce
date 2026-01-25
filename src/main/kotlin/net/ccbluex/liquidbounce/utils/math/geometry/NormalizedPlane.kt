@@ -42,7 +42,7 @@ class NormalizedPlane(val pos: Vec3, normalVec: Vec3) {
     }
 
     fun intersection(line: Line): Vec3? {
-        return intersectionPhi(line)?.let(line::getPositionChcked)
+        return intersectionPhi(line)?.let(line::getPositionChecked)
     }
 
     fun intersection(other: NormalizedPlane): Line? {

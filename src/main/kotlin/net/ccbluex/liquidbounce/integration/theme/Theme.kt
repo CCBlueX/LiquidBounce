@@ -58,7 +58,7 @@ class Theme private constructor(val origin: Origin, url: String) :
         defaultHeaders = Headers.Builder()
             .add(
                 HttpHeaderNames.COOKIE.toString(),
-                "${AuthMiddleware.AUTH_COOKIE_NAME}=${AuthMiddleware.AUTH_CODE}"
+                "${AuthMiddleware.AUTH_COOKIE_NAME}=${ClientInteropServer.AUTH_CODE}"
             )
             .build()
     ), Closeable, ResourceManagerReloadListener {
@@ -211,9 +211,9 @@ class Theme private constructor(val origin: Origin, url: String) :
      */
     fun getUrl(name: String? = null, markAsStatic: Boolean = false): String {
         val baseUrlWithFragment = "$baseUrl/?${AuthMiddleware.AUTH_CODE_PARAM}=" +
-            "${AuthMiddleware.AUTH_CODE}#/${name.orEmpty()}"
+            "${ClientInteropServer.AUTH_CODE}#/${name.orEmpty()}"
         val params = buildList {
-            if (origin.external) add("port=${ClientInteropServer.port}")
+            if (origin.external) add("port=${ClientInteropServer.PORT}")
             if (markAsStatic) add("static")
         }.joinToString("&")
 

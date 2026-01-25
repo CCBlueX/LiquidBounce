@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -32,17 +31,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(Camera.class)
 public abstract class MixinCamera {
 
-    @Shadow
-    private Vec3 position;
     @Shadow
     private boolean detached;
     @Shadow
@@ -104,7 +99,6 @@ public abstract class MixinCamera {
             ci.cancel();
             return;
         }
-
         var screen = ModuleDroneControl.INSTANCE.getScreen();
 
         if (screen != null) {
@@ -146,33 +140,29 @@ public abstract class MixinCamera {
         return ModuleCameraClip.INSTANCE.getRunning() ? getMaxZoom(ModuleCameraClip.INSTANCE.getDistance()) : original;
     }
 
-    @Inject(method = "setup", at = @At("TAIL"))
-    private void onUpdate(Level area, Entity focusedEntity, boolean thirdPerson, boolean inverseView,
-        float tickProgress, CallbackInfo ci) {
-        ModuleSmoothCamera.cameraUpdate(yRot, xRot, position);
+    @Redirect(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;add(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 modifyPositionVehicle(Vec3 instance, Vec3 vec) {
+        if (ModuleFreeLook.INSTANCE.getRunning()) {
+            return vec;
+        }
+
+        return ModuleSmoothCamera.shouldApplyChanges() ? vec.add(0, 1, 0) : vec;
     }
 
-    @ModifyReturnValue(method = "position", at = @At("RETURN"))
-    private Vec3 modifyGetPos(Vec3 original) {
+    @ModifyArgs(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V"))
+    private void modifyPosition(Args args) {
         if (ModuleFreeLook.INSTANCE.getRunning()) {
-            return original;
+            return;
         }
-        return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothPos() : original;
-    }
 
-    @ModifyReturnValue(method = "yRot", at = @At("RETURN"))
-    private float modifyGetYaw(float original) {
-        if (ModuleFreeLook.INSTANCE.getRunning()) {
-            return original;
+        Vec3 original = new Vec3(args.get(0), args.get(1), args.get(2));
+        ModuleSmoothCamera.cameraUpdate(original);
+        if (ModuleSmoothCamera.shouldApplyChanges()) {
+            Vec3 smoothPos = ModuleSmoothCamera.INSTANCE.getSmoothPos();
+            args.set(0, smoothPos.x);
+            args.set(1, smoothPos.y);
+            args.set(2, smoothPos.z);
         }
-        return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothYaw() : original;
-    }
-
-    @ModifyReturnValue(method = "xRot", at = @At("RETURN"))
-    private float modifyGetPitch(float original) {
-        if (ModuleFreeLook.INSTANCE.getRunning()) {
-            return original;
-        }
-        return ModuleSmoothCamera.shouldApplyChanges() ? ModuleSmoothCamera.INSTANCE.getSmoothPitch() : original;
     }
 }
+

@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.client
 
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.integration.IntegrationListener
-import net.ccbluex.liquidbounce.integration.VirtualScreenType
+import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.MessageMetadata
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -45,7 +45,7 @@ object CommandClientIntegrationSubcommand {
     private fun resetSubcommand() = CommandBuilder.begin("reset")
         .handler {
             chat(regular("Resetting client JCEF browser..."))
-            IntegrationListener.update()
+            ScreenManager.update()
         }.build()
 
     private fun menuSubcommand() = CommandBuilder.begin("menu")
@@ -73,7 +73,7 @@ object CommandClientIntegrationSubcommand {
 
             chat(metadata = MessageMetadata(prefix = false))
             chat(regular("Integration Menu:"))
-            for (screenType in VirtualScreenType.entries) {
+            for (screenType in CustomScreenType.entries) {
                 val url = runCatching {
                     ThemeManager.getScreenLocation(screenType, true)
                 }.getOrNull()?.url ?: continue

@@ -319,6 +319,8 @@ object ModuleXRay : ClientModule("XRay", ModuleCategories.RENDER) {
 
     @Suppress("UNUSED_PARAMETER")
     fun valueChangedReload(it: Any) {
+        if (!running) return
+
         mc.execute {
             // Reload world renderer on block list change
             mc.levelRenderer.allChanged()

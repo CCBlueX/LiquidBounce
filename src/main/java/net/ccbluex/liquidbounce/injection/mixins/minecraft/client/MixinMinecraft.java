@@ -35,9 +35,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoBreak;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoBlockInteract;
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureSilentScreen;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
-import net.ccbluex.liquidbounce.integration.IntegrationListener;
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager;
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings;
+import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
 import net.minecraft.SharedConstants;
@@ -56,7 +56,6 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.server.IntegratedServer;
-import net.minecraft.util.Util;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -213,18 +212,15 @@ public abstract class MixinMinecraft {
         }
 
         // For debugging purposes, will be removed until we have a stable release
-        if (Util.getPlatform() == Util.OS.WINDOWS) {
-            if (BrowserBackendManager.INSTANCE.getBrowserBackend().isInitialized() &&
-                    BrowserBackendManager.INSTANCE.getBrowserBackend().isAccelerationSupported()) {
-                var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
+        var backend = BrowserBackendManager.INSTANCE.getBackend();
+        if (backend != null && backend.isInitialized() && backend.getAccelerationFlags().isSupported()) {
+            var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
 
-                if (accelerated != null && accelerated.get()) {
-                    titleBuilder.append(" | (UI Renderer Acceleration is ON");
-                    // Hotkey only works when not in-game
-                    if (this.level == null && this.player == null) {
-                        titleBuilder.append(" - Toggle with F12");
-                    }
-                    titleBuilder.append(")");
+            if (accelerated != null && accelerated.get()) {
+                titleBuilder.append(" | Accelerated Paint is ON");
+                // Hotkey only works when not in-game
+                if (this.level == null && this.player == null) {
+                    titleBuilder.append(" [Hotkey: F12]");
                 }
             }
         }
@@ -411,7 +407,7 @@ public abstract class MixinMinecraft {
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", ordinal = 4, shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILSOFT)
     private void passthroughInputHandler(CallbackInfo ci, @Local ProfilerFiller profiler) {
         if (this.overlay == null && this.player != null && this.level
-            != null && IntegrationListener.isClientScreen(this.screen)) {
+            != null && ScreenManager.isClientScreen(this.screen)) {
             profiler.popPush("Keybindings");
 
             if (ModuleAutoBreak.INSTANCE.getEnabled()) {
@@ -442,7 +438,7 @@ public abstract class MixinMinecraft {
     private boolean injectFixAttackCooldownOnVirtualBrowserScreen(Minecraft instance, int value) {
         // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
         // unintended modification to the attack cooldown, which is not intended.
-        return !IntegrationListener.isClientScreen(this.screen);
+        return !ScreenManager.isClientScreen(this.screen);
     }
 
     @Inject(method = "clearDownloadedResourcePacks", at = @At("HEAD"))
