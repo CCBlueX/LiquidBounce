@@ -368,9 +368,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @ModifyExpressionValue(method = "handleDamageEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getHurtSound(Lnet/minecraft/world/damagesource/DamageSource;)Lnet/minecraft/sounds/SoundEvent;"))
     private SoundEvent hookHitFxSound(SoundEvent original) {
-        if ((Object) this == Minecraft.getInstance().player) {
+        if ((Object) this == Minecraft.getInstance().player && ModuleHitFX.INSTANCE.getRunning()) {
             var hitFxSound = ModuleHitFX.INSTANCE.getSelfSound();
-            System.out.println(hitFxSound);
             if (hitFxSound != null) {
                 return hitFxSound;
             }
