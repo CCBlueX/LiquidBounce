@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX.Particle
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.sounds.SoundEvent
@@ -76,9 +77,7 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
     )
 
     private val sound by multiEnumChoice("Sound",
-        Sound.UWU,
-        Sound.BONK,
-        Sound.BOY_KISSER
+        Sound.POP
     )
 
     private val amount by int("ParticleAmount", 1, 1..20)
