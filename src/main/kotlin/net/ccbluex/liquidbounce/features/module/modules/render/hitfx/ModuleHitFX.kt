@@ -20,13 +20,16 @@ package net.ccbluex.liquidbounce.features.module.modules.render.hitfx
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.network.protocol.game.ClientboundSoundPacket
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.block.Blocks
 
@@ -70,19 +73,64 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         UWU("UWU", HitFXRegistry.UWU),
     }
 
-    private val particle by multiEnumChoice(
-        "Particle",
-        Particle.FIRE
-    )
+    private val particles by multiEnumChoice("Particle", Particle.FIRE)
+    private val particleAmount by int("ParticleAmount", 1, 1..20)
 
-    private val sound by multiEnumChoice("Sound",
+    private val otherSound by multiEnumChoice("OtherSound",
         Sound.POP
     )
 
-    private val amount by int("ParticleAmount", 1, 1..20)
+    private val selfSound by multiEnumChoice("SelfSound",
+        Sound.BOYKISSER
+    )
+
+    private var lastTarget: LivingEntity? = null
+
+    private val vanillaHitSounds = setOf(
+        SoundEvents.ARROW_HIT_PLAYER,
+        SoundEvents.PLAYER_ATTACK_NODAMAGE,
+        SoundEvents.PLAYER_ATTACK_KNOCKBACK,
+        SoundEvents.PLAYER_ATTACK_CRIT,
+        SoundEvents.PLAYER_ATTACK_STRONG,
+        SoundEvents.PLAYER_ATTACK_SWEEP,
+        SoundEvents.PLAYER_ATTACK_WEAK,
+        SoundEvents.SPEAR_HIT,
+        SoundEvents.PLAYER_HURT
+    )
 
     @Suppress("unused")
-    val onAttack = handler<AttackEntityEvent> { event ->
+    private val effectHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
+
+        if (packet is ClientboundSoundPacket) {
+            val source = packet.source
+            val sound = packet.sound.value()
+
+            // Cannot be from any living entity.
+            if (source != SoundSource.PLAYERS && source != SoundSource.NEUTRAL && source != SoundSource.HOSTILE) {
+                return@handler
+            }
+
+            if (sound !in vanillaHitSounds) {
+                return@handler
+            }
+
+            val otherSound = otherSound.randomOrNull()
+            if (otherSound != null && playSound(otherSound.sounds)) {
+                event.cancelEvent()
+            }
+
+            // In some cases, we might have this play at the wrong player.
+            val lastTarget = lastTarget ?: return@handler
+            if (lastTarget.isAlive) {
+                playEffect(lastTarget)
+            }
+            this.lastTarget = null
+        }
+    }
+
+    @Suppress("unused")
+    private val attackHandler = handler<AttackEntityEvent> { event ->
         val target = event.entity
 
         if (target is LivingEntity) {
@@ -90,23 +138,21 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
                 return@handler
             }
 
-            repeat(amount) {
-                doEffect(target)
-            }
-
-            doSound()
+            this.lastTarget = target
         }
     }
 
-    private fun doSound() {
-        val sounds = (sound.randomOrNull() ?: return).sounds
-        val sound = sounds.randomOrNull() ?: return
+    fun getSelfSound() = selfSound.randomOrNull()?.sounds?.randomOrNull().takeIf { running }
+
+    private fun playSound(sounds: Array<SoundEvent>): Boolean {
+        val sound = sounds.randomOrNull() ?: return false
 
         mc.soundManager.play(SimpleSoundInstance.forUI(sound, 1f))
+        return true
     }
 
-    private fun doEffect(target: LivingEntity) {
-        when (particle.randomOrNull()) {
+    private fun playEffect(target: LivingEntity) = repeat(particleAmount) {
+        when (particles.randomOrNull()) {
             Particle.BLOOD -> world.addDestroyBlockEffect(
                 target.blockPosition().above(1),
                 Blocks.REDSTONE_BLOCK.defaultBlockState()
