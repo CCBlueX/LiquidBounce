@@ -45,6 +45,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
@@ -53,6 +54,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
@@ -95,6 +97,18 @@ public abstract class MixinGameRenderer {
         newMatStack.mulPose(matrix4f2);
         EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.mainCamera, tickCounter.getGameTimeDeltaPartialTick(false)));
         Pools.MatStack.recycle(newMatStack);
+    }
+
+    @ModifyArg(
+        method = "renderLevel",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/fog/FogRenderer;getBuffer(Lnet/minecraft/client/renderer/fog/FogRenderer$FogMode;)Lcom/mojang/blaze3d/buffers/GpuBufferSlice;")
+    )
+    private FogRenderer.FogMode disableFog(FogRenderer.FogMode fogMode) {
+        var fogConfigurable = ModuleCustomAmbience.FogConfigurable.INSTANCE;
+        if (fogConfigurable.getRunning() && ModuleCustomAmbience.FogConfigurable.INSTANCE.getDisableWorldFog()) {
+            return FogRenderer.FogMode.NONE;
+        }
+        return fogMode;
     }
 
     @WrapOperation(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/player/LocalPlayer;I)V"))

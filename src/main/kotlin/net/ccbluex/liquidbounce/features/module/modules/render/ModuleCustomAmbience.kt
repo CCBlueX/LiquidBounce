@@ -45,11 +45,16 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
      */
     object FogConfigurable : ToggleableConfigurable(this, "Fog", true) {
 
-        val color by color("Color", Color4b(47, 128, 255, 201))
+        val disableWorldFog by boolean("DisableWorldFog", false)
+
+        object FogColorOverride : ToggleableConfigurable(this, "FogColorOverride", false) {
+            val color by color("Color", Color4b(47, 128, 255, 201))
+        }
+
         private val backgroundColor by color("BackgroundColor", Color4b(47, 128, 255, 201))
 
-        private val environmental by floatRange("Environmental", 0f..0f, 0f..100f)
-        private val renderDistance by floatRange("RenderDistance", 0f..0f, 0f..100f)
+        private val environmental by floatRange("Environmental", 0f..0f, -128f..128f)
+        private val renderDistance by floatRange("RenderDistance", 0f..0f, 0f..1280f)
         private val skyEnd by float("SkyEnd", 0f, 0f..100f)
         private val cloudEnd by float("CloudEnd", 0f, 0f..100f)
 
@@ -76,7 +81,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
                 return original
             }
 
-            return backgroundColor.toARGB()
+            return backgroundColor.argb
         }
     }
 
