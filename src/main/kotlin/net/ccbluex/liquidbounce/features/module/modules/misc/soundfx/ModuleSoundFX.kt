@@ -27,20 +27,19 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.soundfx.modes.HitFX
 import net.ccbluex.liquidbounce.features.module.modules.misc.soundfx.modes.HitFX.hitSound
 
 object ModuleSoundFX : ClientModule("SoundFX", ModuleCategories.MISC) {
+
     private val volume by float("volume", 1f, 0.1f..1f)
 
     init {
         tree(HitFX)
     }
 
-    // --- Play sound ---
     @Suppress("unused")
-    private val hitHandler =
-        handler<AttackEntityEvent> { event ->
-            val player = mc.player ?: return@handler
-            val sound = hitSound() ?: return@handler
-            if (event.entity.isAlive) {
-                player.playSound(sound, volume, 1f)
-            }
+    private val hitHandler = handler<AttackEntityEvent> { event ->
+        val sound = hitSound ?: return@handler
+
+        if (event.entity.isAlive) {
+            player.playSound(sound, volume, 1f)
         }
+    }
 }

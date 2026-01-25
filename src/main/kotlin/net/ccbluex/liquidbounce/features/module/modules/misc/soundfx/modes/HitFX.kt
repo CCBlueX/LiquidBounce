@@ -27,9 +27,9 @@ import net.minecraft.sounds.SoundEvent
 
 object HitFX : ToggleableConfigurable(ModuleSoundFX, "HitFX", true) {
 
-        private val hitSFX by enumChoice("Sound", Hitsfx.Soft)
+    private val hitSFX by enumChoice("Sound", HitSound.Soft)
 
-    private enum class Hitsfx(
+    private enum class HitSound(
         override val choiceName: String,
         val soundKey: Sounds.SoundKey,
     ) : NamedChoice {
@@ -49,11 +49,7 @@ object HitFX : ToggleableConfigurable(ModuleSoundFX, "HitFX", true) {
         Uwu("UWU", Sounds.SoundKey.UWU),
     }
 
-    private val hitSound: SoundEvent
-        get() = Sounds.get(hitSFX.soundKey)
+    val hitSound: SoundEvent?
+        get() = Sounds.get(hitSFX.soundKey).takeIf { running }
 
-    fun hitSound(): SoundEvent? {
-        if (!enabled) return null
-        return hitSound
-    }
 }
