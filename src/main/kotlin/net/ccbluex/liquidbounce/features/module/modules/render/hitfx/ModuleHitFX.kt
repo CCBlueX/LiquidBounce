@@ -76,7 +76,9 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
     )
 
     private val sound by multiEnumChoice("Sound",
-        Sound.ORB
+        Sound.UWU,
+        Sound.BONK,
+        Sound.BOY_KISSER
     )
 
     private val amount by int("ParticleAmount", 1, 1..20)
