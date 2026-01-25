@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.DoRender;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerNone;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -40,6 +41,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -362,6 +364,19 @@ public abstract class MixinLivingEntity extends MixinEntity {
     private int hookSwingSpeed(int duration) {
         var animations = ModuleAnimations.INSTANCE;
         return animations.getRunning() ? animations.getSwingDuration() : duration;
+    }
+
+    @ModifyExpressionValue(method = "handleDamageEvent", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;getHurtSound(Lnet/minecraft/world/damagesource/DamageSource;)Lnet/minecraft/sounds/SoundEvent;"))
+    private SoundEvent hookHitFxSound(SoundEvent original) {
+        if ((Object) this == Minecraft.getInstance().player) {
+            var hitFxSound = ModuleHitFX.INSTANCE.getSelfSound();
+            System.out.println(hitFxSound);
+            if (hitFxSound != null) {
+                return hitFxSound;
+            }
+        }
+
+        return original;
     }
 
 }
