@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.formatAsCapacity
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
+import net.ccbluex.liquidbounce.utils.validation.HashValidator
 
 /**
  * The time threshold for cleaning up old cache directories.
@@ -87,7 +88,7 @@ class CefBrowserBackend : BrowserBackend, EventListener {
                 throw JcefIsntCompatible
             }
 
-            // HashValidator.validateFolder(resourceManager.commitDirectory)
+            HashValidator.validateFolder(resourceManager.commitDirectory)
 
             if (resourceManager.requiresDownload()) {
                 taskManager.launch("MCEF") { task ->
