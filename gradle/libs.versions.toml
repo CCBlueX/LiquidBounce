@@ -13,7 +13,7 @@ fabric-loaderMin = "0.16.14"
 fabric-api = "0.140.0+1.21.11"
 
 # mcef
-mcef = "3.1.7-1.21.11"
+mcef = "3.2.0-1.21.11"
 # mc-authlib
 mc_authlib = "1.7.0"
 # Polyglot
@@ -39,6 +39,7 @@ viafabricplus = "4.4.4"
 # Mods for compatibility test (runtime only)
 immediatelyFast = "1.14.1+1.21.11-fabric"
 iris = "1.10.3+1.21.11-fabric"
+waygl = "xN3H7oME"
 
 # Kotlin
 # https://kotlinlang.org/releases.html
@@ -51,6 +52,9 @@ fabric-kotlin = "1.13.5+kotlin.2.2.10"
 # Netty, should be sync with game version
 # https://mvnrepository.com/artifact/io.netty/netty-all
 netty = "4.2.7.Final"
+
+# LWJGL
+lwjgl = "3.3.3"
 
 # Other plugins
 detekt = "2.0.0-alpha.1"
@@ -67,6 +71,7 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 fabric-loader-junit = { group = "net.fabricmc", name = "fabric-loader-junit", version.ref = "fabric-loader" }
 
 netty-handler-proxy = { group = "io.netty", name = "netty-handler-proxy", version.ref = "netty" }
+lwjgl-egl = { group = "org.lwjgl", name = "lwjgl-egl", version.ref = "lwjgl" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-coroutines = { group = "com.squareup.okhttp3", name = "okhttp-coroutines", version.ref = "okhttp" }
 mcAuthlib = { group = "net.ccbluex", name = "mc-authlib", version.ref = "mc_authlib" }
@@ -97,6 +102,8 @@ exploitPreventer-api = { group = "com.nikoverflow", name = "ExploitPreventer-API
 exploitPreventer = { group = "maven.modrinth", name = "exploitpreventer", version.ref = "exploit_preventer_mod" }
 immediatelyFast = { group = "maven.modrinth", name = "ImmediatelyFast", version.ref = "immediatelyFast" }
 iris = { group = "maven.modrinth", name = "iris", version.ref = "iris" }
+waygl = { group = "maven.modrinth", name = "waygl", version.ref = "waygl" }
+cloth-config = { group = "maven.modrinth", name = "cloth-config", version = "21.11.153+fabric" }
 
 [plugins]
 fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
