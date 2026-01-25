@@ -66,14 +66,14 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalT
         val newDirectionalInput = getDirectionalInputForDegrees(DirectionalInput.NONE, dgs, deadAngle = 0.0F)
 
         val frontalAxisBlocked = currentInput.forwards || currentInput.backwards
-        val sagitalAxisBlocked = currentInput.right || currentInput.left
+        val sagittalAxisBlocked = currentInput.right || currentInput.left
 
         event.directionalInput =
             DirectionalInput(
                 if (frontalAxisBlocked) currentInput.forwards else newDirectionalInput.forwards,
                 if (frontalAxisBlocked) currentInput.backwards else newDirectionalInput.backwards,
-                if (sagitalAxisBlocked) currentInput.left else newDirectionalInput.left,
-                if (sagitalAxisBlocked) currentInput.right else newDirectionalInput.right,
+                if (sagittalAxisBlocked) currentInput.left else newDirectionalInput.left,
+                if (sagittalAxisBlocked) currentInput.right else newDirectionalInput.right,
             )
     }
 }

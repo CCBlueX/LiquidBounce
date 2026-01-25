@@ -123,7 +123,7 @@ import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.events.ServerPingedEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
-import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
+import net.ccbluex.liquidbounce.event.events.SpaceSeparatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.events.SprintEvent
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
@@ -247,7 +247,7 @@ internal val ALL_EVENT_CLASSES: Array<Class<out Event>> = arrayOf(
     OverlayMessageEvent::class.java,
     ScheduleInventoryActionEvent::class.java,
     SelectHotbarSlotSilentlyEvent::class.java,
-    SpaceSeperatedNamesChangeEvent::class.java,
+    SpaceSeparatedNamesChangeEvent::class.java,
     ClickGuiScaleChangeEvent::class.java,
     BrowserUrlChangeEvent::class.java,
     TagEntityEvent::class.java,

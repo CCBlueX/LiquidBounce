@@ -43,7 +43,7 @@ class AccelerationAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Acce
 
     private val yawAcceleration by floatRange("YawAcceleration", 20f..25f, 1f..180f)
     private val pitchAcceleration by floatRange(
-        "PitchAcceleration", 20f..25f, 1f..180f, aliases = listOf("PitchAccelelation")
+        "PitchAcceleration", 20f..25f, 1f..180f, aliases = listOf("PitchAcceleration")
     )
 
     private inner class DynamicAccel : ToggleableConfigurable(this, "DynamicAccel", false) {

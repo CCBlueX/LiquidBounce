@@ -34,7 +34,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /**
- * A staticly allocated glyph page.
+ * A statically allocated glyph page.
  */
 class StaticGlyphPage(
     override val texture: DynamicTexture,

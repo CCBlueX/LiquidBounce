@@ -50,7 +50,7 @@ open class Line(val position: Vec3, val direction: Vec3) {
         return this.getNearestPointTo(point).distanceToSqr(point)
     }
 
-    open fun getPositionChcked(phi: Double): Vec3? {
+    open fun getPositionChecked(phi: Double): Vec3? {
         return this.position + direction.scale(phi)
     }
 

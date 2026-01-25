@@ -82,7 +82,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
 
     // FIXME(1.21.11)
     object Copy : ToggleableConfigurable(this, "Copy", true) {
-        private val notification by boolean("Notificate", true)
+        private val notify by boolean("Notify", true)
         val highlight by boolean("Highlight", true)
 
         @JvmStatic
@@ -105,7 +105,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
             ) {
                 mc.keyboardHandler.clipboard = content
 
-                if (notification) {
+                if (notify) {
                     notification(
                         "ChatCopy",
                         "The line is copied",

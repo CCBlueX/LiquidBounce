@@ -53,8 +53,8 @@ class ClickGuiScaleChangeEvent(val value: Float) : Event(), WebSocketEvent
 @Nameable("clickGuiValueChange")
 class ClickGuiValueChangeEvent(val configurable: Configurable) : Event(), WebSocketEvent
 
-@Nameable("spaceSeperatedNamesChange")
-class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
+@Nameable("spaceSeparatedNamesChange")
+class SpaceSeparatedNamesChangeEvent(val value: Boolean) : Event(), WebSocketEvent
 
 @Nameable("clientStart")
 object ClientStartEvent : Event()
