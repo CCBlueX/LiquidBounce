@@ -26,48 +26,31 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.soundfx.Sounds
 import net.minecraft.sounds.SoundEvent
 
 object HitFX : ToggleableConfigurable(ModuleSoundFX, "HitFX", true) {
-    private val hitSFX by enumChoice("Sound", Hitsfx.Bonk)
+
+        private val hitSFX by enumChoice("Sound", Hitsfx.Soft)
 
     private enum class Hitsfx(
         override val choiceName: String,
+        val soundKey: Sounds.SoundKey,
     ) : NamedChoice {
-        Bonk("Bonk"),
-        Boykisser("Boykisser"),
-        Bring("Bring"),
-        Glass("Glass"),
-        Click("Click"),
-        Meow("Meow"),
-        Moan("Moan"),
-        MagicSquash("MagicSquash"),
-        Nya("NYA"),
-        Pop("Pop"),
-        Soft("Soft"),
-        Squash("Squash"),
-        Tung("Tung"),
-        Uwu("UWU"),
+        Bonk("Bonk", Sounds.SoundKey.BONK),
+        Boykisser("Boykisser", Sounds.SoundKey.BOYKISSER),
+        Bring("Bring", Sounds.SoundKey.BRING),
+        Glass("Glass", Sounds.SoundKey.GLASS),
+        Click("Click", Sounds.SoundKey.CLICK),
+        Meow("Meow", Sounds.SoundKey.MEOW),
+        Moan("Moan", Sounds.SoundKey.MOAN),
+        MagicSquash("MagicSquash", Sounds.SoundKey.MAGICSQUASH),
+        Nya("NYA", Sounds.SoundKey.NYA),
+        Pop("Pop", Sounds.SoundKey.POP),
+        Soft("Soft", Sounds.SoundKey.SOFT),
+        Squash("Squash", Sounds.SoundKey.SQUASH),
+        Tung("Tung", Sounds.SoundKey.TUNG),
+        Uwu("UWU", Sounds.SoundKey.UWU),
     }
 
     private val hitSound: SoundEvent
-        get() =
-            when (hitSFX) {
-                // --- without variants ---
-                Hitsfx.Bonk -> Sounds.get(Sounds.SoundKey.BONK)
-                Hitsfx.Bring -> Sounds.get(Sounds.SoundKey.BRING)
-                Hitsfx.Meow -> Sounds.get(Sounds.SoundKey.MEOW)
-                Hitsfx.MagicSquash -> Sounds.get(Sounds.SoundKey.MAGICSQUASH)
-                Hitsfx.Nya -> Sounds.get(Sounds.SoundKey.NYA)
-                Hitsfx.Pop -> Sounds.get(Sounds.SoundKey.POP)
-                Hitsfx.Soft -> Sounds.get(Sounds.SoundKey.SOFT)
-                Hitsfx.Squash -> Sounds.get(Sounds.SoundKey.SQUASH)
-                Hitsfx.Tung -> Sounds.get(Sounds.SoundKey.TUNG)
-                Hitsfx.Uwu -> Sounds.get(Sounds.SoundKey.UWU)
-
-                // --- with variants ---
-                Hitsfx.Boykisser -> Sounds.get(Sounds.SoundKey.BOYKISSER)
-                Hitsfx.Click -> Sounds.get(Sounds.SoundKey.CLICK)
-                Hitsfx.Glass -> Sounds.get(Sounds.SoundKey.GLASS)
-                Hitsfx.Moan -> Sounds.get(Sounds.SoundKey.MOAN)
-            }
+        get() = Sounds.get(hitSFX.soundKey)
 
     fun hitSound(): SoundEvent? {
         if (!enabled) return null
