@@ -304,7 +304,6 @@
     "liquidbounce.module.antiStaff.messages.staffsFailed": "Laden van de stafflijst voor %s mislukt: code %s.",
     "liquidbounce.module.antiStaff.messages.staffsLoaded": "%s staffleden geladen voor %s.",
     "liquidbounce.module.antiStaff.messages.vanishClear": "Er zijn geen vanished spelers gevonden.",
-    "liquidbounce.module.attackEffects.description": "Toont een effect wanneer je een entiteit aanvalt.",
     "liquidbounce.module.particles.description": "Toont deeltjes bij het aanvallen van een entiteit.",
     "liquidbounce.module.autoAccount.description": "Logt automatisch in op een cracked server.",
     "liquidbounce.module.autoArmor.description": "Trekt automatisch de beste armor uit je inventaris aan.",

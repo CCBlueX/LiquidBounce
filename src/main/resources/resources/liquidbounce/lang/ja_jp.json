@@ -267,7 +267,6 @@
 	"liquidbounce.module.antiVanish.messages.allClear": "消失したプレイヤーは見つかりませんでした。",
 	"liquidbounce.module.antiVanish.messages.staffDetected": "消失したスタッフ メンバーを検出しました。",
 	"liquidbounce.module.antiVoid.description": "奈落に落ちることを防ぎます。",
-	"liquidbounce.module.attackEffects.description": "エンティティへの攻撃時にエフェクトを表示します。",
 	"liquidbounce.module.autoAccount.description": "クラックされたサーバーで自動的に認証されます。",
 	"liquidbounce.module.autoArmor.description": "自動的に最高の防具を装備します。",
 	"liquidbounce.module.autoArmor.value.delay.description": "複数のアイテムを装備するまでの待ち時間。",

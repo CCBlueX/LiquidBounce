@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.features.module.modules.render.hitfx
 
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
@@ -31,7 +31,11 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.block.Blocks
 
 @Suppress("MagicNumber")
-object ModuleAttackEffects : ClientModule("AttackEffects", ModuleCategories.RENDER) {
+object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
+
+    init {
+        HitFXRegistry
+    }
 
     enum class Particle(override val choiceName: String) : NamedChoice {
         BLOOD("Blood"),
@@ -46,10 +50,24 @@ object ModuleAttackEffects : ClientModule("AttackEffects", ModuleCategories.REND
     @Suppress("unused")
     enum class Sound(
         override val choiceName: String,
-        val soundEvent: SoundEvent
+        val sounds: Array<SoundEvent>
     ) : NamedChoice {
-        HIT("Hit", SoundEvents.ARROW_HIT),
-        ORB("Orb", SoundEvents.EXPERIENCE_ORB_PICKUP)
+        HIT("Hit", arrayOf(SoundEvents.ARROW_HIT)),
+        ORB("Orb", arrayOf(SoundEvents.EXPERIENCE_ORB_PICKUP)),
+        BONK("Bonk", HitFXRegistry.BONK),
+        BOYKISSER("Boykisser", HitFXRegistry.BOYKISSER),
+        BRING("Bring", HitFXRegistry.BRING),
+        GLASS("Glass", HitFXRegistry.GLASS),
+        CLICK("Click", HitFXRegistry.CLICK),
+        MEOW("Meow", HitFXRegistry.MEOW),
+        MOAN("Moan", HitFXRegistry.MOAN),
+        MAGICSQUASH("MagicSquash", HitFXRegistry.MAGICSQUASH),
+        NYA("NYA", HitFXRegistry.NYA),
+        POP("Pop", HitFXRegistry.POP),
+        SOFT("Soft", HitFXRegistry.SOFT),
+        SQUASH("Squash", HitFXRegistry.SQUASH),
+        TUNG("Tung", HitFXRegistry.TUNG),
+        UWU("UWU", HitFXRegistry.UWU),
     }
 
     private val particle by multiEnumChoice(
@@ -58,7 +76,7 @@ object ModuleAttackEffects : ClientModule("AttackEffects", ModuleCategories.REND
     )
 
     private val sound by multiEnumChoice("Sound",
-        Sound.ORB
+        Sound.POP
     )
 
     private val amount by int("ParticleAmount", 1, 1..20)
@@ -68,6 +86,10 @@ object ModuleAttackEffects : ClientModule("AttackEffects", ModuleCategories.REND
         val target = event.entity
 
         if (target is LivingEntity) {
+            if (!target.isAlive) {
+                return@handler
+            }
+
             repeat(amount) {
                 doEffect(target)
             }
@@ -77,11 +99,10 @@ object ModuleAttackEffects : ClientModule("AttackEffects", ModuleCategories.REND
     }
 
     private fun doSound() {
-        mc.soundManager.play(
-            SimpleSoundInstance.forUI(
-                (sound.randomOrNull() ?: return).soundEvent, 1f
-            )
-        )
+        val sounds = (sound.randomOrNull() ?: return).sounds
+        val sound = sounds.randomOrNull() ?: return
+
+        mc.soundManager.play(SimpleSoundInstance.forUI(sound, 1f))
     }
 
     private fun doEffect(target: LivingEntity) {
