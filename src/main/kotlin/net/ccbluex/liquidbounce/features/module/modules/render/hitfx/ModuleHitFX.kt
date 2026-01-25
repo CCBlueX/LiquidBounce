@@ -89,7 +89,7 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         Sound.BOYKISSER
     )
 
-    private var lastTarget: LivingEntity? = null
+    private var lastTargetId: Int? = null
 
     private val vanillaHitSounds = setOf(
         SoundEvents.ARROW_HIT_PLAYER,
@@ -120,9 +120,8 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
                 return@handler
             }
 
-            val lastTarget = lastTarget ?: return@handler
+            val lastTarget = lastTargetId?.let { world.getEntity(it) as? LivingEntity } ?: return@handler
             if (!lastTarget.isAlive) {
-                this.lastTarget = null
                 return@handler
             }
 
@@ -146,6 +145,7 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
                 )
                 event.cancelEvent()
             }
+            this.lastTargetId = null
         }
     }
 
@@ -158,7 +158,7 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
                 return@handler
             }
 
-            this.lastTarget = target
+            this.lastTargetId = target.id
         }
     }
 
