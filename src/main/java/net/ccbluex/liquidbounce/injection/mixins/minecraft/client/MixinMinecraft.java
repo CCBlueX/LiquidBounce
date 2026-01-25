@@ -212,18 +212,16 @@ public abstract class MixinMinecraft {
         }
 
         // For debugging purposes, will be removed until we have a stable release
-        if (BrowserBackendManager.INSTANCE.getBackend() != null &&
-            BrowserBackendManager.INSTANCE.getBackend().isInitialized() &&
-            BrowserBackendManager.INSTANCE.getBackend().getAccelerationFlags().isSupported()) {
+        var backend = BrowserBackendManager.INSTANCE.getBackend();
+        if (backend != null && backend.isInitialized() && backend.getAccelerationFlags().isSupported()) {
             var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
 
             if (accelerated != null && accelerated.get()) {
-                titleBuilder.append(" | (UI Renderer Acceleration is ON");
+                titleBuilder.append(" | Accelerated Paint is ON");
                 // Hotkey only works when not in-game
                 if (this.level == null && this.player == null) {
-                    titleBuilder.append(" - Toggle with F12");
+                    titleBuilder.append(" [Hotkey: F12]");
                 }
-                titleBuilder.append(")");
             }
         }
 
