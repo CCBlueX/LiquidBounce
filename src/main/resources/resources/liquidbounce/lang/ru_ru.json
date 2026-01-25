@@ -345,7 +345,6 @@
   "liquidbounce.module.antiStaff.messages.vanishClear": "Невидимые игроки не найденны.",
   "liquidbounce.module.antiVoid.description": "Защищает от падения в пустоту.",
   "liquidbounce.module.aspect.description": "Позволяет растягивать или сужать игру по горизонтали.",
-  "liquidbounce.module.attackEffects.description": "Отображает эффект при атаке на сущность.",
   "liquidbounce.module.autoAccount.description": "Автоматическая аутентификация на неофициальных серверах.",
   "liquidbounce.module.autoArmor.description": "Автоматически одевает лучшую броню.",
   "liquidbounce.module.autoArmor.value.delay.description": "Время для задержки между надеванием нескольких предметов.",

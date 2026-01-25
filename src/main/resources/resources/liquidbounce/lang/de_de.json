@@ -276,7 +276,6 @@
   "liquidbounce.module.antiStaff.messages.noStaffs": "Das Laden der Staff Liste für %s ist mit dem Code %s fehlgeschlagen.",
   "liquidbounce.module.antiStaff.messages.staffsFailed": "Das Laden der Staff Liste für %s ist mit dem Code %s fehlgeschlagen.",
   "liquidbounce.module.antiStaff.messages.staffsLoaded": "%s Moderatoren für %s geladen.",
-  "liquidbounce.module.attackEffects.description": "Zeigt einen Effekt an, wenn ein Entity angegriffen wird.",
   "liquidbounce.module.autoAccount.description": "Authentifiziert dich automatisch auf cracked Servern.",
   "liquidbounce.module.autoArmor.description": "Rüstet automatisch die beste Rüstung in deinem Inventar aus.",
   "liquidbounce.module.autoArmor.value.delay.description": "Wartezeit zwischen dem Ausrüsten mehrerer Items.",
