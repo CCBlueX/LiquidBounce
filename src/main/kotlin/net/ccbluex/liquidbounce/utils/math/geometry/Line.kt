@@ -18,7 +18,11 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import it.unimi.dsi.fastutil.doubles.DoubleDoublePair
+import net.ccbluex.fastutil.component1
+import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.utils.math.getCoordinate
+import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.preferOver
@@ -31,6 +35,12 @@ import kotlin.math.abs
 
 @Suppress("TooManyFunctions")
 open class Line(val position: Vec3, val direction: Vec3) {
+
+    init {
+        require(!direction.isLikelyZero) {
+            "Direction should be not zero, actual: $direction"
+        }
+    }
 
     companion object {
         @JvmStatic
@@ -50,8 +60,8 @@ open class Line(val position: Vec3, val direction: Vec3) {
         return this.getNearestPointTo(point).distanceToSqr(point)
     }
 
-    open fun getPositionChcked(phi: Double): Vec3? {
-        return this.position + direction.scale(phi)
+    open fun getPositionChecked(phi: Double): Vec3? {
+        return this.getPosition(phi)
     }
 
     open fun getPosition(phi: Double): Vec3 {
@@ -83,11 +93,11 @@ open class Line(val position: Vec3, val direction: Vec3) {
         return Pair(this.getPosition(phi1), other.getPosition(phi2))
     }
 
-    private fun getNearestPhisTo(other: Line): DoubleArray? {
+    private fun getNearestPhisTo(other: Line): DoubleDoublePair? {
         val phi1 = this.calculateNearestPhiTo(other) ?: return null
         val phi2 = other.calculateNearestPhiTo(this) ?: return null
 
-        return doubleArrayOf(phi1, phi2)
+        return DoubleDoublePair.of(phi1, phi2)
     }
 
     /**

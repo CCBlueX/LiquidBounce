@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.math.geometry
 
+import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.util.Mth
 import net.minecraft.world.phys.AABB
@@ -112,7 +113,7 @@ class AlignedFace(from: Vec3, to: Vec3) {
         )
     }
 
-    fun coerceInFace(line: Line): LineSegment {
+    fun coerceInFace(line: Line): LineSegment? {
         val edges = getEdges()
 
         val nearestPointsToEdges = edges.mapNotNull {
@@ -121,7 +122,21 @@ class AlignedFace(from: Vec3, to: Vec3) {
             nearestPointOnFace.distanceToSqr(nearestPointOnLine) to nearestPointOnFace
         }.sortedBy { it.first }
 
-        return LineSegment.fromPoints(nearestPointsToEdges[0].second, nearestPointsToEdges[1].second)
+        // If less than 2 points found, we can't form a valid segment
+        if (nearestPointsToEdges.size < 2) {
+            return null
+        }
+
+        val p1 = nearestPointsToEdges[0].second
+        val p2 = nearestPointsToEdges[1].second
+        val direction = p2.subtract(p1)
+
+        // If points are too close, it's a zero-length segment which is invalid
+        if (direction.isLikelyZero) {
+            return null
+        }
+
+        return LineSegment(p1, direction, 0.0..1.0)
     }
 
     fun toPlane(): NormalizedPlane {
@@ -165,7 +180,8 @@ class AlignedFace(from: Vec3, to: Vec3) {
             }
 
             // Is the intersection in the face?
-            if (isIntersectionInFace) {
+            // If edges are empty (tiny face), we assume intersection on plane IS in face if it exists
+            if (edges.isEmpty() || isIntersectionInFace) {
                 return intersection
             }
         }
@@ -173,22 +189,24 @@ class AlignedFace(from: Vec3, to: Vec3) {
         val minDistanceToBorder = edges.mapNotNull {
             val (p1, p2) = it.getNearestPointsTo(otherLine) ?: return@mapNotNull null
 
-            p1 to p1.distanceToSqr(p2)
-        }.minBy { it.second }
+            p1.distanceToSqr(p2) to p1
+        }.minByOrNull { it.first }
 
-        return minDistanceToBorder.first
+        return minDistanceToBorder?.second ?: intersection ?: center
     }
 
-    private fun getEdges(): List<LineSegment> {
+    private fun getEdges(): List<LineSegment> = buildList(4) {
         val (d1, d2) = getDirectionVectors()
         val phiRange = 0.0..1.0
 
-        return listOf(
-            LineSegment(from, d1, phiRange),
-            LineSegment(from, d2, phiRange),
-            LineSegment(to, d1.reverse(), phiRange),
-            LineSegment(to, d2.reverse(), phiRange)
-        )
+        if (!d1.isLikelyZero) {
+            this += LineSegment(from, d1, phiRange)
+            this += LineSegment(to, d1.reverse(), phiRange)
+        }
+        if (!d2.isLikelyZero) {
+            this += LineSegment(from, d2, phiRange)
+            this += LineSegment(to, d2.reverse(), phiRange)
+        }
     }
 
     private fun getDirectionVectors(): Pair<Vec3, Vec3> {
@@ -209,7 +227,7 @@ class AlignedFace(from: Vec3, to: Vec3) {
                 Vec3(0.0, dims.y, 0.0) to Vec3(dims.x, 0.0, 0.0)
             }
 
-            else -> error("Face must be axis aligned for this function to work.")
+            else -> error("Face must be axis aligned for this function to work. dimensions=$dimensions")
         }
     }
 
