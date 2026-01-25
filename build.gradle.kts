@@ -127,6 +127,13 @@ dependencies {
     // Minecraft Authlib
     jij(libs.mcAuthlib)
 
+    // LWJGL EGL and WayGL mod for Linux accelerated paint
+    jij(libs.lwjgl.egl)
+    modApi(libs.waygl)
+    include(libs.waygl)
+    modRuntimeOnly(libs.cloth.config)
+    include(libs.cloth.config)
+
     // JCEF Support
     modApi(libs.mcef)
     include(libs.mcef)
@@ -167,7 +174,6 @@ dependencies {
 //    testImplementation(libs.fabric.loader.junit)
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
-
 addResolvedDependencies(jij, "compileOnly", "include", "api")
 
 tasks.processResources {
