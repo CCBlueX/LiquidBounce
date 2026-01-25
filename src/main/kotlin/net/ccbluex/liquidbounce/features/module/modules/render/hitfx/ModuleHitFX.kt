@@ -88,6 +88,10 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         val target = event.entity
 
         if (target is LivingEntity) {
+            if (!target.isAlive) {
+                return@handler
+            }
+
             repeat(amount) {
                 doEffect(target)
             }
