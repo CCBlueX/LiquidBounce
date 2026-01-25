@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX.Particle
 import net.minecraft.client.resources.sounds.SimpleSoundInstance
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.sounds.SoundEvent
@@ -56,13 +55,13 @@ object ModuleHitFX : ClientModule("HitFX", ModuleCategories.RENDER) {
         HIT("Hit", arrayOf(SoundEvents.ARROW_HIT)),
         ORB("Orb", arrayOf(SoundEvents.EXPERIENCE_ORB_PICKUP)),
         BONK("Bonk", HitFXRegistry.BONK),
-        BOY_KISSER("Boykisser", HitFXRegistry.BOYKISSER),
+        BOYKISSER("Boykisser", HitFXRegistry.BOYKISSER),
         BRING("Bring", HitFXRegistry.BRING),
         GLASS("Glass", HitFXRegistry.GLASS),
         CLICK("Click", HitFXRegistry.CLICK),
         MEOW("Meow", HitFXRegistry.MEOW),
         MOAN("Moan", HitFXRegistry.MOAN),
-        MAGIC_SQUASH("MagicSquash", HitFXRegistry.MAGICSQUASH),
+        MAGICSQUASH("MagicSquash", HitFXRegistry.MAGICSQUASH),
         NYA("NYA", HitFXRegistry.NYA),
         POP("Pop", HitFXRegistry.POP),
         SOFT("Soft", HitFXRegistry.SOFT),
