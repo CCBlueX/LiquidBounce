@@ -184,7 +184,7 @@ open class ClientModule(
     }
 
     /**
-     * If we want a module to have the requires bypass option, we specifically call it
+     * If we want a module to have the "requires bypass" option, we specifically call it
      * on init. This will add the option and enable the feature.
      */
     fun enableLock() {

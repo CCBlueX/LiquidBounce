@@ -124,7 +124,7 @@ internal object FlyCreative : Choice("Creative") {
         if (!bypassVanillaCheck) return false
         if (player.tickCount % 40 != 0) return false
 
-        // check if the player is above a block or in mid-air
+        // check if the player is above a block or in midair
         // if the player is right above a block, we don't need to fly down
         if (world.getBlockStates(player.boundingBox.move(0.0, -0.55, 0.0)).anyMatch { !it.isAir }) return false
 

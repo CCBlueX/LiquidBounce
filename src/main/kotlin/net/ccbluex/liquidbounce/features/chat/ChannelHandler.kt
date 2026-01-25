@@ -40,7 +40,7 @@ class ChannelHandler(private val chatClient: ChatClient,
     lateinit var handshakeFuture: ChannelPromise
 
     /**
-     * Do nothing by default, sub-classes may override this method.
+     * Do nothing by default, subclasses may override this method.
      */
     override fun handlerAdded(ctx: ChannelHandlerContext) {
         handshakeFuture = ctx.newPromise()
@@ -50,7 +50,7 @@ class ChannelHandler(private val chatClient: ChatClient,
      * Calls [ChannelHandlerContext.fireChannelActive] to forward
      * to the next [ChannelInboundHandler] in the [ChannelPipeline].
      *
-     * Sub-classes may override this method to change behavior.
+     * Subclasses may override this method to change behavior.
      */
     override fun channelActive(ctx: ChannelHandlerContext) {
         handshaker.handshake(ctx.channel())
@@ -60,7 +60,7 @@ class ChannelHandler(private val chatClient: ChatClient,
      * Calls [ChannelHandlerContext.fireChannelInactive] to forward
      * to the next [ChannelInboundHandler] in the [ChannelPipeline].
      *
-     * Sub-classes may override this method to change behavior.
+     * Subclasses may override this method to change behavior.
      */
     override fun channelInactive(ctx: ChannelHandlerContext) {
         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.DISCONNECTED))
@@ -70,7 +70,7 @@ class ChannelHandler(private val chatClient: ChatClient,
      * Calls [ChannelHandlerContext.fireExceptionCaught] to forward
      * to the next [ChannelHandler] in the [ChannelPipeline].
      *
-     * Sub-classes may override this method to change behavior.
+     * Subclasses may override this method to change behavior.
      */
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
         logger.error("LiquidChat error", cause)

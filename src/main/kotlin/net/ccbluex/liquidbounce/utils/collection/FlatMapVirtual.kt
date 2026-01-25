@@ -37,7 +37,7 @@ inline fun <T, R> List<T>.flatMapVirtual(transform: (T) -> List<R>): List<R> {
 
     return object : AbstractList<R>() {
         private fun findOuterForIndex(index: Int): Int {
-            // index is assumed to be in 0..totalSize-1 when called from get()
+            // index is assumed to be in 0...totalSize-1 when called from get()
             var pos = prefixSums.binarySearch(index)
             if (pos >= 0) {
                 // move to the rightmost equal so we map to the last prefix <= index

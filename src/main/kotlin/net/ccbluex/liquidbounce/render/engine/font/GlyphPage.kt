@@ -178,7 +178,7 @@ abstract class GlyphPage {
             // Allocate the atlas texture
             val atlasGraphics = atlas.createGraphics()
 
-            // Enable font anti aliasing
+            // Enable font antialiasing
             atlasGraphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
 
             val glyphsByFont = glyphsToRender.groupBy { it.fontGlyph.font }

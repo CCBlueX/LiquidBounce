@@ -64,23 +64,30 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
 
     val tickHandler = handler<PlayerTickEvent> {
         if (flags > 1) {
+            // 1.8 vulcan allows timer while desynced, 1.9 doesn't.
             Timer.requestTimerSpeed(timer, Priority.NORMAL, ModuleFly, 1)
-            /**
-             * 1.8 vulcan allows timer while desynced, 1.9 doesn't.
-             */
         }
     }
 
 
     /**
-     * When you flag (any PlayerPositionLookS2CPacket packet works),
-     * vanilla desyncs you. While desynced, you can timer
-     * and flagging ghost block check sets you back to
-     * the new position while in desync...
+     * When you flag (any ClientBoundPlayerPositionPacket works),
+     * vanilla server stops you. If for some reason your client doesn't
+     * receive the packet, the players serverside position will
+     * not change when moving. This will provide a "desynced state"
      *
-     * 1.8 servers spam the flag, so when you flag for
-     * ghostblock fix, it switches the spammed flag to
+     * While desynced, you can use timer freely, and
+     * flagging the ghost block check sets you back to
+     * the position you are in while desynced.
+     *
+     * 1.8 servers spam ClientBoundPlayerPositionPackets
+     * so when you flag for ghost block check,
+     * it switches the spammed packet to
      * the new position.
+     *
+     * NOTE: ghost block check works by checking if you
+     * are walking on air after walking off of a ledge.
+     * This check can be triggered while desynced...
      */
 
     val packetHandler = handler<PacketEvent> {
@@ -93,11 +100,8 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
                     flagPos = pos
                 } else if (flags > 2 && flagPos != pos) {
                     ModuleFly.enabled = false
+                    // Return here so we accept this packet
                     return@handler
-                    /**
-                     * If we didn't return, we would have to wait 1 tick
-                     * for a new PlayerPositionLook
-                     */
                 }
             }
             it.cancelEvent()

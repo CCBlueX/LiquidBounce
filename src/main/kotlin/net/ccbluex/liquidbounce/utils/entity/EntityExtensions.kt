@@ -678,11 +678,11 @@ fun Entity.wouldFallIntoVoid(pos: Vec3, voidLevel: Double = -64.0, safetyExpand:
         return true
     }
 
-    // If there is no collision to void threshold, we do not want to teleport down.
+    // If there is no collision to void threshold, we don't want to teleport down.
     val boundingBox = offsetBb
         // Set the minimum Y to the void threshold to check for collisions below the player
         .setMinY(voidLevel)
-        // Expand the bounding box to check if there might blocks to safely land on
+        // Expand the bounding box to check if there might be blocks to safely land on
         .inflate(safetyExpand, 0.0, safetyExpand)
     return world.getBlockCollisions(this, boundingBox)
         .all(Shapes.empty()::equals)

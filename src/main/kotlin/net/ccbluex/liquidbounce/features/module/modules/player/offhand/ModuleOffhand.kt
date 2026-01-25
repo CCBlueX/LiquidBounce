@@ -384,7 +384,7 @@ object ModuleOffhand : ClientModule("Offhand", ModuleCategories.PLAYER, aliases 
     @Suppress("unused")
     private enum class SwitchMode(override val choiceName: String) : NamedChoice {
         /**
-         * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to possible send fewer packets.
+         * Pickup, but it performs a SWAP_ITEM_WITH_OFFHAND action whenever possible to send fewer packets.
          * Works on all versions.
          *
          * It's not the default because some servers kick you when you perform a SWAP_ITEM_WITH_OFFHAND action

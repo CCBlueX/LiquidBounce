@@ -189,7 +189,7 @@ object ModuleSurround : ClientModule("Surround", ModuleCategories.WORLD, disable
                 placer.crystalDestroyer.currentTarget = crystal
 
                 // we could target the blocking crystal, now we have to wait a tick before it has been destroyed
-                // anyways, so we can return here
+                // anyway, so we can return here
                 if (placer.crystalDestroyer.currentTarget == crystal) {
                     return@handler
                 }

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
 /**
  * Ping Command
  *
- * Allow verify the latency of the current player.
+ * Verifies the latency of the current player.
  */
 object CommandPing : Command.Factory {
 
