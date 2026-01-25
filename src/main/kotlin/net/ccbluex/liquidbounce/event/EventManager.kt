@@ -352,7 +352,12 @@ object EventManager {
                     additionalMessage = "Event (${eventType.simpleName}) handler of ${eventHook.handlerClass}"
                 )
             } catch (e: Throwable) {
-                logger.error("Exception while executing event handler", e)
+                logger.error(
+                    "Exception while executing event handler of {}, event={}",
+                    eventHook.handlerClass.javaClass.simpleName,
+                    event,
+                    e,
+                )
             }
         }
         event.isCompleted = true
