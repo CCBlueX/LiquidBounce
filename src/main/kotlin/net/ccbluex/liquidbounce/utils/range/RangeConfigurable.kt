@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.AttackRange
 import net.minecraft.world.phys.Vec3
@@ -31,15 +32,15 @@ import kotlin.math.min
 /**
  * Allows adjusting your attack range and scan range.
  */
-open class RangeConfigurable : Configurable("Range"), MinecraftShortcuts {
+open class RangeConfigurable(name: String) : Configurable(name), MinecraftShortcuts {
 
-    internal val maxAttackRange
-        get() = getAttackRange().effectiveMaxRange(player)
+    /**
+     * @see net.minecraft.world.entity.player.Player.entityInteractionRange
+     */
+    internal val interactionRange: Float
+        get() = (player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE) + maxRangeIncrease).toFloat()
 
-    internal val minAttackRange
-        get() = getAttackRange().effectiveMinRange(player)
-
-    internal val attackThroughWallsRange
+    internal val interactionThroughWallsRange
         get() = throughWallsRange
 
     /**
@@ -59,7 +60,7 @@ open class RangeConfigurable : Configurable("Range"), MinecraftShortcuts {
     private val throughWallsRange by float(
         "ThroughWallsRange", 3f, 0f..8f, "blocks"
     ).onChange {
-        min(adjustAttackRange().effectiveMaxRange(player), it)
+        min(interactionRange, it)
     }
 
     fun adjustAttackRange(attackRange: AttackRange = AttackRange.defaultFor(player)) =

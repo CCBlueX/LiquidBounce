@@ -25,10 +25,10 @@ import net.ccbluex.liquidbounce.utils.range.RangeConfigurable
 /**
  * Allows adjusting your attack range and scan range.
  */
-object KillAuraRange : RangeConfigurable(), MinecraftShortcuts {
+object KillAuraRange : RangeConfigurable("Range"), MinecraftShortcuts {
 
     internal val scanRange
-        get() = maxOf(maxAttackRange, attackThroughWallsRange) + currentScanRangeAddition
+        get() = maxOf(interactionRange, interactionThroughWallsRange) + currentScanRangeAddition
 
     private val scanRangeModifier by floatRange(
         "ScanRangeIncrease",

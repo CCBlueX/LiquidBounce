@@ -296,7 +296,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
         // Raycast using the current rotation and find a block or entity that should be interacted with
         val rotationToTheServer = RotationManager.serverRotation
 
-        val entityHitResult = findEntityInCrosshair(range.maxAttackRange.toDouble(), rotationToTheServer, filter = {
+        val entityHitResult = findEntityInCrosshair(range.interactionRange.toDouble(), rotationToTheServer, filter = {
             when (raycast) {
                 TRACE_NONE -> false
                 TRACE_ONLYENEMY -> it.shouldBeAttacked()
@@ -340,8 +340,8 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
             fromEntity = target,
             toEntity = player,
             rotation = target.rotation,
-            range = range.maxAttackRange.toDouble(),
-            throughWallsRange = range.attackThroughWallsRange.toDouble()
+            range = range.interactionRange.toDouble(),
+            throughWallsRange = range.interactionThroughWallsRange.toDouble()
         ) != null
     }
 

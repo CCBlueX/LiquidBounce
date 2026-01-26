@@ -111,7 +111,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
 
         val combatTarget = targetTracker.target?.let { entity ->
             val distance = playerPosition.distanceTo(entity.position())
-            val range = min(ModuleKillAura.range.maxAttackRange, distance.toFloat())
+            val range = min(ModuleKillAura.range.interactionRange, distance.toFloat())
             val outOfDistance = distance > opponentRange
 
             val targetRotation = entity.rotation.copy(pitch = 0.0f)
