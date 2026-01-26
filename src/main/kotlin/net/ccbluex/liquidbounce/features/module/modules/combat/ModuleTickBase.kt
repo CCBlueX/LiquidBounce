@@ -229,7 +229,7 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
 
         renderEnvironmentForWorld(event.matrixStack) {
             drawLineStrip(
-                argb = lineColor.toARGB(),
+                argb = lineColor.argb,
                 positions = tickBuffer.mapToArray { tick ->
                     relativeToCamera(tick.position).toVec3f()
                 }

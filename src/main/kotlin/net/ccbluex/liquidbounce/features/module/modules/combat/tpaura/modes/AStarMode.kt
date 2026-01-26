@@ -130,7 +130,7 @@ object AStarMode : TpAuraChoice("AStar"), AStarPathBuilder {
 
         renderEnvironmentForWorld(matrixStack) {
             drawLineStrip(
-                argb = Color4b.WHITE.toARGB(),
+                argb = Color4b.WHITE.argb,
                 positions = path.mapToArray {
                     relativeToCamera(it.toVec3d(0.5, 0.5, 0.5)).toVec3f()
                 }

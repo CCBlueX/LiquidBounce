@@ -136,7 +136,7 @@ object ModuleFreeze : ClientModule("Freeze", ModuleCategories.MOVEMENT, disableO
 
         renderEnvironmentForWorld(event.matrixStack) {
             drawLineStrip(
-                argb = Color4b(0x00, 0x80, 0xFF, 0xFF).toARGB(),
+                argb = Color4b(0x00, 0x80, 0xFF, 0xFF).argb,
                 positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3f() },
             )
         }

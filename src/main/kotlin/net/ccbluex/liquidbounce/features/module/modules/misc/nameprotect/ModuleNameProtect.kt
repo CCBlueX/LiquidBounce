@@ -228,7 +228,7 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
                 mappedCharacters.ensureCapacity(mappedCharacters.size + replacement.second.newName.length)
                 replacement.second.newName.mapTo(mappedCharacters) { ch ->
                     MappedCharacter(
-                        originalCharacters[currentIndex].style.withColor(color.toARGB()),
+                        originalCharacters[currentIndex].style.withColor(color.argb),
                         false,
                         ch.code
                     )

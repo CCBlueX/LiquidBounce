@@ -84,7 +84,7 @@ data class Head(val name: String, val uuid: UUID, val value: String) {
         private val UUID_STYLE = Style.EMPTY.applyFormat(ChatFormatting.GRAY)
 
         @JvmStatic
-        private val CLIENT_LINK_STYLE = Style.EMPTY.withColor(Color4b.LIQUID_BOUNCE.toARGB())
+        private val CLIENT_LINK_STYLE = Style.EMPTY.withColor(Color4b.LIQUID_BOUNCE.argb)
     }
 }
 
