@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.integration.screen
 
 import com.google.common.base.Predicates
 import com.mojang.realmsclient.RealmsMainScreen
-import net.ccbluex.liquidbounce.integration.screen.impl.CustomMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
@@ -52,7 +52,7 @@ enum class CustomScreenType(
     private val recognizer: Predicate<Screen> = Predicates.alwaysFalse(),
     val isInGame: Boolean = false,
     private val open: Runnable = Runnable {
-        mc.setScreen(CustomMinecraftScreen(byName(routeName)!!))
+        mc.setScreen(CustomSharedMinecraftScreen(byName(routeName)!!))
     }
 ) {
 

@@ -55,7 +55,7 @@ object ThemeManager : Configurable("theme") {
         mc.execute {
             ScreenManager.update()
             ModuleHud.reopen()
-            ModuleClickGui.reload(true)
+            ModuleClickGui.sync()
         }
     }
 
@@ -159,7 +159,7 @@ object ThemeManager : Configurable("theme") {
         if (LiquidBounce.isInitialized) {
             ScreenManager.update()
             ModuleHud.reopen()
-            ModuleClickGui.reload(true)
+            ModuleClickGui.sync()
         }
     }
 

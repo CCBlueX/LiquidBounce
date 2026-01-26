@@ -77,7 +77,7 @@ object CommandValue : Command.Factory {
 
             try {
                 value.setByString(valueString)
-                ModuleClickGui.reload()
+                ModuleClickGui.sync()
             } catch (e: Exception) {
                 throw CommandException(command.result("valueError", valueName, e.message ?: ""))
             }
@@ -111,7 +111,7 @@ object CommandValue : Command.Factory {
                 ?: throw CommandException(command.result("valueNotFound", valueName))
 
             value.restore()
-            ModuleClickGui.reload()
+            ModuleClickGui.sync()
             chat(
                 regular(command.result("resetSuccess", variable(valueName), variable(module.name))),
                 metadata = MessageMetadata(id = "CValue#reset${module.name}")
@@ -132,7 +132,7 @@ object CommandValue : Command.Factory {
             module.getContainedValuesRecursively()
                 .filter { !it.name.equals("Bind", true) }
                 .forEach { it.restore() }
-            ModuleClickGui.reload()
+            ModuleClickGui.sync()
             chat(
                 regular(command.result("resetAllSuccess", variable(module.name))),
                 metadata = MessageMetadata(id = "CValue#resetAll${module.name}")

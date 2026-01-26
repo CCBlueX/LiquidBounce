@@ -40,7 +40,8 @@ import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.IntegrationBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
-import net.ccbluex.liquidbounce.integration.screen.impl.CustomMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
@@ -166,7 +167,7 @@ object ScreenManager : EventListener {
         }
 
         try {
-            ModuleClickGui.reload(true)
+            ModuleClickGui.sync()
         } catch (e: Exception) {
             logger.error("Failed to restart ClickGUI browser integration.", e)
         }
@@ -188,8 +189,8 @@ object ScreenManager : EventListener {
     }
 
     fun restoreOriginalScreen() {
-        if (mc.screen is CustomMinecraftScreen) {
-            mc.setScreen((mc.screen as CustomMinecraftScreen).originalScreen)
+        if (mc.screen is CustomSharedMinecraftScreen) {
+            mc.setScreen((mc.screen as CustomSharedMinecraftScreen).originalScreen)
         }
     }
 
@@ -267,9 +268,9 @@ object ScreenManager : EventListener {
         }
 
         if (HideAppearance.isHidingNow || ClientInteropServer.isSkipping) {
-            return if (screen is CustomMinecraftScreen) {
+            return if (screen is CustomSharedMinecraftScreen) {
                 val original = screen.originalScreen
-                if (original is CustomMinecraftScreen) {
+                if (original is CustomSharedMinecraftScreen) {
                     return false
                 }
 
@@ -281,7 +282,7 @@ object ScreenManager : EventListener {
             }
         }
 
-        if (screen is CustomMinecraftScreen) {
+        if (screen is CustomSharedMinecraftScreen) {
             return false
         }
 
@@ -319,7 +320,7 @@ object ScreenManager : EventListener {
         return when {
             // When we want to fully replace a screen.
             theme.isScreenSupported(name) -> {
-                mc.setScreen(CustomMinecraftScreen(customScreenType, theme, originalScreen = minecraftScreen))
+                mc.setScreen(CustomSharedMinecraftScreen(customScreenType, theme, originalScreen = minecraftScreen))
                 true
             }
             // When we just want to overlay it.
@@ -339,7 +340,8 @@ object ScreenManager : EventListener {
      * Checks if the given screen is an active client screen.
      */
     @JvmStatic
-    fun isClientScreen(screen: Screen?) = screen is CustomMinecraftScreen || screen is ModuleClickGui.ClickScreen ||
-        screen is InternetExplorerScreen
+    fun isClientScreen(screen: Screen?) = screen is CustomSharedMinecraftScreen
+        || screen is CustomStandaloneMinecraftScreen
+        || screen is InternetExplorerScreen
 
 }

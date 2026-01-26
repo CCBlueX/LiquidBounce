@@ -77,7 +77,7 @@ object CommandTargets : Command.Factory {
                 metadata = MessageMetadata(id = "CTargets#info")
             )
 
-            ModuleClickGui.reload()
+            ModuleClickGui.sync()
         }
 
         return this

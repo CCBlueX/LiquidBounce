@@ -78,7 +78,7 @@ object CommandBind : Command.Factory {
 
             if (keyName.equals("none", true)) {
                 module.bindValue.unbind()
-                ModuleClickGui.reload()
+                ModuleClickGui.sync()
                 chat(
                     regular(command.result("moduleUnbound", variable(module.name))),
                     metadata = MessageMetadata(id = "Bind#${module.name}")
@@ -88,7 +88,7 @@ object CommandBind : Command.Factory {
 
             runCatching {
                 module.bindValue.bind(inputByName(keyName), action, modifiers)
-                ModuleClickGui.reload()
+                ModuleClickGui.sync()
             }.onSuccess {
                 chat(
                     regular(command.result("moduleBound", variable(module.name), module.bind.renderText())),
