@@ -59,15 +59,13 @@ object FlyHypixel : Choice("Hypixel") {
 
         player.deltaMovement.y = 0.8
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 1.9))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = 1.9)
         player.deltaMovement.y = 1.0
         waitTicks(1)
-        player.setDeltaMovement(
-            player.deltaMovement.multiply(
-                1.05,
-                1.0,
-                1.05
-            )
+        player.deltaMovement = player.deltaMovement.multiply(
+            1.05,
+            1.0,
+            1.05
         )
         waitTicks(19)
         player.deltaMovement.y += 0.42

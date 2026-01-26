@@ -57,7 +57,7 @@ internal object FlySentinel27thJan : Choice("Sentinel27thJan") {
             player.input.keyPresses.jump -> 0.42
             else -> 0.2
         }
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = horizontalSpeed.random().toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = horizontalSpeed.random().toDouble())
 
         waitTicks(6)
     }

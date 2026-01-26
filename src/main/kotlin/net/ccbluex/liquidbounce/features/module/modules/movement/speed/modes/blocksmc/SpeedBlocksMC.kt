@@ -54,7 +54,7 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
     }
 
     override fun disable() {
-        player.setDeltaMovement(player.deltaMovement.copy(x = 0.0, z = 0.0))
+        player.deltaMovement = player.deltaMovement.copy(x = 0.0, z = 0.0)
     }
 
     @Suppress("unused")
@@ -110,7 +110,7 @@ class SpeedBlocksMC(override val parent: ChoiceConfigurable<*>) : Choice("Blocks
         }
 
         if (!player.onGround() && state != 0) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed, yaw = yaw))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed, yaw = yaw)
         }
     }
 

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.waitMatchesWithTimeout
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiCheatDetect
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
 import net.minecraft.ChatFormatting
@@ -144,8 +145,8 @@ object ServerObserver : EventListener {
      * Plugins will add themselves to the command suggestions list with a prefix like `/pluginname:command`.
      * This can be used to get a list of plugins on the server.
      *
-     * @see [net.minecraft.network.packet.s2c.play.CommandSuggestionsS2CPacket]
-     * @see [net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePlugins]
+     * @see [ServerboundCommandSuggestionPacket]
+     * @see [ModulePlugins]
      */
     suspend fun captureCommandSuggestions(timeout: Duration): Boolean {
         this.plugins = null

@@ -87,7 +87,7 @@ object HttpClient {
         "${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${System.getProperty("os.name")})"
 
     /**
-     * Unfortunately, Lunar Client uses OkHttp 4.12.0 which does not have Headers.EMPTY
+     * Unfortunately, Lunar Client uses OkHttp 4.12.0 which does not have [Headers.EMPTY]
      */
     @Deprecated("Use Headers.EMPTY instead when Lunar Client updates OkHttp to 5.10 or newer.")
     @JvmField

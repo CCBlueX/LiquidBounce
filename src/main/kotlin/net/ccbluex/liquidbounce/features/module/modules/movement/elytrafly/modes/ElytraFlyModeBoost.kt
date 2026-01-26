@@ -127,10 +127,8 @@ internal object ElytraFlyModeBoost : ElytraFlyMode("Boost") {
         handleAcceleration(shouldBoost)
 
         if (player.moving) {
-            player.setDeltaMovement(
-                player.deltaMovement.withStrafe(
-                    speed = calculateEffectiveSpeed(isNearGround)
-                )
+            player.deltaMovement = player.deltaMovement.withStrafe(
+                speed = calculateEffectiveSpeed(isNearGround)
             )
         }
     }

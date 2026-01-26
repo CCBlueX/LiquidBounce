@@ -126,7 +126,7 @@ class WebTrapPlanner(parent: EventListener) : TrapPlanner<WebTrapPlanner.WebInte
         return plan.slot.itemStack.item in trapItems
     }
 
-    override fun onIntentFullfilled(intent: BlockChangeIntent<WebIntentData>) {
+    override fun onIntentFulfilled(intent: BlockChangeIntent<WebIntentData>) {
         targetTracker.target = intent.planningInfo.target
     }
 

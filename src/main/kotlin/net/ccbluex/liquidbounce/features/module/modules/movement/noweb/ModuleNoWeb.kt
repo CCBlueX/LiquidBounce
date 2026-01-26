@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoW
 import net.ccbluex.liquidbounce.features.module.modules.movement.noweb.modes.NoWebStrafe
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.core.BlockPos
+import net.minecraft.world.level.block.WebBlock
 
 /**
  * NoWeb module
@@ -67,7 +68,7 @@ object ModuleNoWeb : ClientModule("NoWeb", ModuleCategories.MOVEMENT) {
     /**
      * Handle cobweb collision
      *
-     * @see net.minecraft.block.CobwebBlock.onEntityCollision
+     * @see WebBlock.entityInside
      * @return if we should cancel the slowdown effect
      */
     fun handleEntityCollision(pos: BlockPos): Boolean {

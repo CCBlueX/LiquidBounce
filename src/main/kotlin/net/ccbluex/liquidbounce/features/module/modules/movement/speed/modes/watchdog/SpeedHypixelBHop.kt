@@ -70,7 +70,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
     val repeatable = tickHandler {
         if (player.onGround()) {
             // Strafe when on ground
-            player.setDeltaMovement(player.deltaMovement.withStrafe())
+            player.deltaMovement = player.deltaMovement.withStrafe()
             return@tickHandler
         } else {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
@@ -88,7 +88,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
                 0.0
             }
 
-            player.setDeltaMovement(player.deltaMovement.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod))
+            player.deltaMovement = player.deltaMovement.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod)
         }
     }
 
@@ -99,7 +99,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
             0.0
         }
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(atLeast)))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = player.horizontalSpeed.coerceAtLeast(atLeast))
     }
 
     /**
@@ -124,7 +124,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
             } else {
                 player.horizontalSpeed
             }
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed)
         } else if (packet is ClientboundPlayerPositionPacket) {
             wasFlagged = true
         }

@@ -61,11 +61,9 @@ internal object Matrix7145FlagLongJump : Choice("Matrix-7.14.5-Flag") {
         val yaw = player.yRot
         // Repeat the jump until we get at least 2 flags and have not floated for too long
         while (flagTicks < 2 && player.airTicks < ACCEPTED_AIR_TIME) {
-            player.setDeltaMovement(
-                player.deltaMovement
-                    .withStrafe(speed = boostSpeed.toDouble(), yaw = yaw, input = null)
-                    .copy(y = motionY.toDouble())
-            )
+            player.deltaMovement = player.deltaMovement
+                .withStrafe(speed = boostSpeed.toDouble(), yaw = yaw, input = null)
+                .copy(y = motionY.toDouble())
 
             // On the first flag, we wait for the player to be on ground
             if (flagTicks == 1) {

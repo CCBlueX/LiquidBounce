@@ -34,7 +34,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 /**
- * A staticly allocated glyph page.
+ * A statically allocated glyph page.
  */
 class StaticGlyphPage(
     override val texture: DynamicTexture,
@@ -192,7 +192,7 @@ class StaticGlyphPage(
                 currentX += allocationSize.width
             }
 
-            // Return the dimension and match it's requirement of being at least (1, 1)
+            // Return the dimension and match its requirement of being at least (1, 1)
             return Dimension(max(1, maxWidth), max(1, currentY + currentLineMaxHeight))
         }
     }

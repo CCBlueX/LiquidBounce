@@ -61,7 +61,7 @@ object ModuleNoClip : ClientModule("NoClip", ModuleCategories.MOVEMENT) {
             it.noPhysics = true
 
             if (!ModuleVehicleControl.running) {
-                it.setDeltaMovement(it.deltaMovement.withStrafe(speed = speed))
+                it.deltaMovement = it.deltaMovement.withStrafe(speed = speed)
                 it.deltaMovement.y = when {
                     mc.options.keyJump.isDown -> speed
                     mc.options.keyShift.isDown -> -speed
@@ -69,7 +69,7 @@ object ModuleNoClip : ClientModule("NoClip", ModuleCategories.MOVEMENT) {
                 }
             }
         } ?: run {
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed)
 
             player.deltaMovement.y = when {
                 mc.options.keyJump.isDown -> speed

@@ -25,13 +25,14 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.roundToDecimalPlaces
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket
 
 /**
  * TPS (ticks per second) Command
  *
  * Allows you to see the current TPS.
  *
- * This will not work on all servers as some servers modify the [WorldTimeUpdateS2CPacket] behavior.
+ * This will not work on all servers as some servers modify the [ClientboundSetTimePacket] behavior.
  *
  * @author ccetl
  */

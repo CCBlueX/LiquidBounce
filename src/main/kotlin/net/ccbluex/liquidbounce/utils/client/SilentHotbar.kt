@@ -24,11 +24,13 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.SelectHotbarSlotSilentlyEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.OffHandSlot
 
 /**
- * Manages things like [Scaffold]'s silent mode. Not thread safe, please only use this on the main-thread of minecraft
+ * Manages things like [ModuleScaffold]'s silent mode.
+ * Not thread safe, please only use this on the main-thread of minecraft
  */
 object SilentHotbar : EventListener {
 

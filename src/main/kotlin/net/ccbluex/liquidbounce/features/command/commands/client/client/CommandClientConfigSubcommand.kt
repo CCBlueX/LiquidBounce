@@ -38,7 +38,7 @@ import java.time.LocalDateTime
 /**
  * Configurable Management Command
  *
- * Allows you to backup, restore, reset, and browse configurations.
+ * Allows you to back up, restore, reset, and browse configurations.
  */
 object CommandClientConfigSubcommand {
 

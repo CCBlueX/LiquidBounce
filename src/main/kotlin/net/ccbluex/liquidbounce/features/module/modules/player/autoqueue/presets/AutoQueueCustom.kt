@@ -47,7 +47,7 @@ object AutoQueueCustom : Choice("Custom") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleAutoQueue.presets
 
-    internal val triggers = choices<AutoQueueTrigger>("Trigger", 0) {
+    internal val triggers = choices("Trigger", 0) {
         arrayOf(
             AutoQueueTriggerTitle,
             AutoQueueTriggerSubtitle,
@@ -58,7 +58,7 @@ object AutoQueueCustom : Choice("Custom") {
         )
     }
 
-    internal val actions = choices<AutoQueueAction>("Action", 0) {
+    internal val actions = choices("Action", 0) {
         arrayOf(
             AutoQueueActionChat,
             AutoQueueActionUseItem

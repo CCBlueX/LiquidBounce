@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.elytratarget
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.world.entity.LivingEntity

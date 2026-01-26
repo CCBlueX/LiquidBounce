@@ -53,7 +53,7 @@ internal object FlySentinel10thMar : Choice("Sentinel10thMar") {
 
     val repeatable = tickHandler {
         player.deltaMovement.y = jumpHeight.toDouble()
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = jumpSpeed.toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = jumpSpeed.toDouble())
         spoofOnGround = true
         waitTicks(ticks)
     }

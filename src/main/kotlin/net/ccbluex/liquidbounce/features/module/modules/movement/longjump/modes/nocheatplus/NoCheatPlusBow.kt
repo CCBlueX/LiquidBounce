@@ -101,7 +101,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
             shotArrows = 0f
             waitTicks(5)
             player.jumpFromGround()
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
             waitTicks(5)
             arrowBoost = 0f
         }

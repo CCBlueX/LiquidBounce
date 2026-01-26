@@ -46,7 +46,7 @@ import net.minecraft.world.phys.BlockHitResult
 /**
  * AirPlace module
  *
- *  Allows you to place blocks in mid-air.
+ * Allows you to place blocks in midair.
  */
 object ModuleAirPlace : ClientModule("AirPlace", ModuleCategories.WORLD) {
 

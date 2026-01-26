@@ -149,7 +149,7 @@ fun MultiPlayerGameMode.interactItem(
         val playerInteractItemC2SPacket = ServerboundUseItemPacket(hand, sequence, yaw, pitch)
         val itemStack = player.getItemInHand(hand)
         if (player.cooldowns.isOnCooldown(itemStack)) {
-            mutableObject.setValue(InteractionResult.PASS)
+            mutableObject.value = InteractionResult.PASS
             return@startPrediction playerInteractItemC2SPacket
         }
 
@@ -166,7 +166,7 @@ fun MultiPlayerGameMode.interactItem(
             player.setItemInHand(hand, itemStack2)
         }
 
-        mutableObject.setValue(typedActionResult)
+        mutableObject.value = typedActionResult
         return@startPrediction playerInteractItemC2SPacket
     }
 

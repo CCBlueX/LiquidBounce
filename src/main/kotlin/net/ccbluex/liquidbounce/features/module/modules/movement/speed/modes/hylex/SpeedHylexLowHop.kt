@@ -42,12 +42,10 @@ class SpeedHylexLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
             airTicks = 0
             if (player.moving && player.horizontalSpeed < 0.32) {
 
-                player.setDeltaMovement(
-                    player.deltaMovement.multiply(
-                        1.1,
-                        1.0,
-                        1.1
-                    )
+                player.deltaMovement = player.deltaMovement.multiply(
+                    1.1,
+                    1.0,
+                    1.1
                 )
             }
             return@tickHandler
@@ -55,32 +53,26 @@ class SpeedHylexLowHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBa
         airTicks++
 
         if (airTicks == 9 && player.horizontalSpeed < 0.29) {
-            player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    1.007,
-                    1.0,
-                    1.007
-                )
+            player.deltaMovement = player.deltaMovement.multiply(
+                1.007,
+                1.0,
+                1.007
             )
         }
 
         if (airTicks == 1 && player.horizontalSpeed < 0.20) {
-            player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    1.01,
-                    1.0,
-                    1.01
-                )
+            player.deltaMovement = player.deltaMovement.multiply(
+                1.01,
+                1.0,
+                1.01
             )
         }
 
         if (player.deltaMovement.y > 0 && airTicks <= 2 && player.horizontalSpeed < 0.2) {
-            player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    1.02,
-                    1.0,
-                    1.02
-                )
+            player.deltaMovement = player.deltaMovement.multiply(
+                1.02,
+                1.0,
+                1.02
             )
         }
 

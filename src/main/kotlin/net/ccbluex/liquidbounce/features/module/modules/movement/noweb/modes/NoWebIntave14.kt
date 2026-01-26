@@ -33,10 +33,10 @@ object NoWebIntave14 : NoWebMode("Intave14") {
         if (player.moving) {
             if (player.onGround()) {
                 if (player.tickCount % 3 == 0) {
-                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 0.734))
+                    player.deltaMovement = player.deltaMovement.withStrafe(strength = 0.734)
                 } else {
                     player.jumpFromGround()
-                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 0.346))
+                    player.deltaMovement = player.deltaMovement.withStrafe(strength = 0.346)
                 }
             }
         }

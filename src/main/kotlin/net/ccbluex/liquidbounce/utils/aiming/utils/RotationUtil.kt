@@ -34,8 +34,8 @@ fun LocalPlayer.setRotation(rotation: Rotation) {
         yBob = yRot
         yBobO = yRot
 
-        setYRot(normalizedRotation.yaw)
-        setXRot(normalizedRotation.pitch)
+        yRot = normalizedRotation.yaw
+        xRot = normalizedRotation.pitch
     }
 }
 

@@ -60,9 +60,9 @@ object FlyHypixelFlat : Choice("HypixelFlat") {
     private val speedHandler = tickHandler {
         tickUntil { isFlying }
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.8))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = 0.8)
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = flySpeed.toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = flySpeed.toDouble())
 
         tickUntil { player.onGround() }
         ModuleFly.enabled = false
@@ -81,7 +81,7 @@ object FlyHypixelFlat : Choice("HypixelFlat") {
 
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
         player.deltaMovement.y = 0.0314 + (Math.random() / 1000f)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = player.horizontalSpeed)
     }
 
     @Suppress("unused")

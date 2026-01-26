@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.item
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.features.command.commands.client.CommandContainers
 import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.text.PlainText
@@ -31,9 +32,9 @@ import net.minecraft.world.item.component.ItemContainerContents
 import net.minecraft.world.item.component.ItemLore
 
 /**
- * Generates a list of [ComponentChanges]s from a [SimpleInventory]
+ * Generates a list of [DataComponentPatch]s from a [SimpleContainer]
  *
- * These [ComponentChanges]s can be used to recreate the inventory
+ * These [DataComponentPatch]s can be used to recreate the inventory
  * using Minecraft Chests
  * by placing them together
  *
@@ -42,12 +43,12 @@ import net.minecraft.world.item.component.ItemLore
  *
  * This will give you a chest with the name "Hello!" and an acacia boat in the first slot
  * However, this will only work for the first 27 slots and not for the rest. This is why we split the
- *  inventory into multiple [ComponentChanges]s
+ *  inventory into multiple [DataComponentPatch]s
  *
- * There should also be [net.ccbluex.liquidbounce.features.command.commands.client.CommandContainers]
+ * There should also be [CommandContainers]
  * `.containers add <nbt>` which will give you the chest with the given nbt
  *
- * @return A list of [ComponentChanges]s representing the inventory
+ * @return A list of [DataComponentPatch]s representing the inventory
  */
 fun SimpleContainer.inventoryAsComponents(title: Component): List<DataComponentPatch> {
     val stacks = items

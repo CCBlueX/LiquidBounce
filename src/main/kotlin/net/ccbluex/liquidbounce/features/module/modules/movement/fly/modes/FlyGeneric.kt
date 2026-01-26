@@ -77,7 +77,7 @@ internal object FlyVanilla : Choice("Vanilla") {
         val vSpeed =
             if (useSprintSpeed) SprintSpeed.verticalSpeed else BaseSpeed.verticalSpeed
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = hSpeed.toDouble()))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = hSpeed.toDouble())
         player.deltaMovement.y = when {
             mc.options.keyJump.isDown -> vSpeed.toDouble()
             mc.options.keyShift.isDown -> (-vSpeed).toDouble()
@@ -124,7 +124,7 @@ internal object FlyCreative : Choice("Creative") {
         if (!bypassVanillaCheck) return false
         if (player.tickCount % 40 != 0) return false
 
-        // check if the player is above a block or in mid-air
+        // check if the player is above a block or in midair
         // if the player is right above a block, we don't need to fly down
         if (world.getBlockStates(player.boundingBox.move(0.0, -0.55, 0.0)).anyMatch { !it.isAir }) return false
 
@@ -210,7 +210,7 @@ internal object FlyExplosion : Choice("Explosion") {
     val repeatable = tickHandler {
         if (strafeSince > 0) {
             if (!player.onGround()) {
-                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = strafeSince.toDouble()))
+                player.deltaMovement = player.deltaMovement.withStrafe(speed = strafeSince.toDouble())
                 strafeSince -= strafeDecrease
             } else {
                 strafeSince = 0f

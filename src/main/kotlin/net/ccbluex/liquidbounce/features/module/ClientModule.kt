@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
 import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
@@ -183,7 +184,7 @@ open class ClientModule(
     }
 
     /**
-     * If we want a module to have the requires bypass option, we specifically call it
+     * If we want a module to have the "requires bypass" option, we specifically call it
      * on init. This will add the option and enable the feature.
      */
     fun enableLock() {

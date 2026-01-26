@@ -40,7 +40,7 @@ import net.minecraft.world.item.ItemStack
 
 object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
 
-    private val DEFAULT = Array<ItemStack>(27) { ItemStack.EMPTY }.asList()
+    private val DEFAULT = Array(27) { ItemStack.EMPTY }.asList()
 
     private val flow = MutableStateFlow(DEFAULT)
     @Volatile
@@ -72,7 +72,7 @@ object EnderChestInventoryTracker : MinecraftShortcuts, EventListener {
     }
 
     @Suppress("unused")
-    private val packetHandler = handler<PacketEvent>() { event ->
+    private val packetHandler = handler<PacketEvent> { event ->
         if (ModuleInventoryMove.isContainerPacket(event.packet)) {
             track()
         }

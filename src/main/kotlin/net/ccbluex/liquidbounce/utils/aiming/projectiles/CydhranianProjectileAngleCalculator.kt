@@ -83,22 +83,22 @@ object CydhranianProjectileAngleCalculator: ProjectileAngleCalculator() {
     }
 
     private fun getVelocityOnImpact(trajectoryInfo: TrajectoryInfo, ticksPassed: Double, initialDir: Vec3): Vec3 {
-        val d_x = initialDir.x
-        val d_y = initialDir.y
-        val d_z = initialDir.z
+        val dX = initialDir.x
+        val dY = initialDir.y
+        val dZ = initialDir.z
 
-        val r_proj = trajectoryInfo.drag
-        val v_proj = trajectoryInfo.initialVelocity
+        val rProj = trajectoryInfo.drag
+        val vProj = trajectoryInfo.initialVelocity
         val g = trajectoryInfo.gravity
         val t = ticksPassed
 
-        val fResistance = r_proj - 1
+        val fResistance = rProj - 1
 
         return Vec3(
-            (d_x * r_proj.pow(t) * ln(r_proj) * v_proj) / fResistance,
-            (d_y * fResistance * r_proj.pow(t) * ln(r_proj) * v_proj - g * (r_proj.pow(t) * ln(r_proj) - r_proj + 1))
+            (dX * rProj.pow(t) * ln(rProj) * vProj) / fResistance,
+            (dY * fResistance * rProj.pow(t) * ln(rProj) * vProj - g * (rProj.pow(t) * ln(rProj) - rProj + 1))
                 / fResistance.pow(2),
-            (d_z * r_proj.pow(t) * ln(r_proj) * v_proj) / fResistance
+            (dZ * rProj.pow(t) * ln(rProj) * vProj) / fResistance
         )
     }
 

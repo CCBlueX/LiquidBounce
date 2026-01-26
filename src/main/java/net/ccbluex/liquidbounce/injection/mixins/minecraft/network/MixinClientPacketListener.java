@@ -48,6 +48,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
@@ -229,7 +230,8 @@ public abstract class MixinClientPacketListener extends ClientCommonPacketListen
         }
     }
 
-    private ThreadLocal<Rotation> rotationThreadLocal = ThreadLocal.withInitial(() -> null);
+    @Unique
+    private final ThreadLocal<Rotation> rotationThreadLocal = ThreadLocal.withInitial(() -> null);
 
     @Inject(method = "handleMovePlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;setValuesFromPositionPacket(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;Lnet/minecraft/world/entity/Entity;Z)Z"))
     private void injectPlayerPositionLook(

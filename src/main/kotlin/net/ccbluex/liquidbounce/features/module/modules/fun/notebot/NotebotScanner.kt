@@ -64,7 +64,7 @@ object NotebotScanner : MinecraftShortcuts {
     // since a song tick != a game tick thus this is technically incorrect but works well enough
     // it has the advantage that we don't get super huge requirements for very fast songs -
     // and well playing the same sound multiple times a tick due to minecraft's limitations
-    // would sound weird anyways
+    // would sound weird anyway
     private fun calculateRequirements(songData: SongData): Object2IntMap<InstrumentNote> {
         val maxConcurrentCounts = Object2IntOpenHashMap<InstrumentNote>()
         val countsInTick = Object2IntOpenHashMap<InstrumentNote>()

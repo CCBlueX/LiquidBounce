@@ -96,7 +96,7 @@ private fun getBlockBreakingSpeed(state: BlockState, stack: ItemStack): Float {
     val enchantmentLevel = stack.getEnchantment(Enchantments.EFFICIENCY)
     if (speed > 1f && enchantmentLevel != 0) {
         /**
-         * See: [EntityAttributes.MINING_EFFICIENCY]
+         * See: [Attributes.MINING_EFFICIENCY]
          */
         val enchantmentAddition = enchantmentLevel.sq() + 1f
         speed += enchantmentAddition.coerceIn(0f..1024f)

@@ -72,9 +72,9 @@ public abstract class MixinConnectScreen extends MixinScreen {
          *
          * Looks like this: Client <> Proxy <> Server
          *
-         * For client it should show the actual client IP
-         * For Proxy it should show the proxy IP
-         * For Server it should show the server IP
+         * For Client, it should show the actual client IP
+         * For Proxy, it should show the proxy IP
+         * For Server, it should show the server IP
          */
 
         var clientConnection = this.connection;

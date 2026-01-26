@@ -54,8 +54,7 @@ private data class Navigate(val url: String)
 // POST /api/v1/client/browser/close
 @Suppress("UNUSED_PARAMETER")
 fun postBrowserClose(requestObject: RequestObject) = with(requestObject) {
-    mc.screen as? InternetExplorerScreen
-        ?: return@with httpBadRequest("No browser screen")
+    if (mc.screen !is InternetExplorerScreen) return@with httpBadRequest("No browser screen")
     mc.setScreen(null)
     httpNoContent()
 }

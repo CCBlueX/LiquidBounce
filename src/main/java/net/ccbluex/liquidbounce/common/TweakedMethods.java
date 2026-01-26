@@ -33,7 +33,7 @@ public class TweakedMethods {
 
     public static BlockHitResult tweakedRaycast(BlockGetter blockView, ClipContext context) {
         if (ModuleGhostHand.INSTANCE.getRunning()) {
-            var returned = (BlockHitResult) BlockGetter.traverseBlocks(context.getFrom(), context.getTo(), context, (contextx, pos) -> {
+            var returned = BlockGetter.traverseBlocks(context.getFrom(), context.getTo(), context, (contextx, pos) -> {
                 BlockState blockState = blockView.getBlockState(pos);
 
                 if (!ModuleGhostHand.INSTANCE.getTargetedBlocks().contains(blockState.getBlock()))

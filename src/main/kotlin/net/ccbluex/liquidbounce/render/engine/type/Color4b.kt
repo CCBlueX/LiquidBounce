@@ -208,7 +208,7 @@ data class Color4b(val argb: Int) {
     )
 
     /**
-     * Converts this Color4b to a Java AWT Color
+     * Converts this [Color4b] to a Java AWT Color
      *
      * @return The Color object representation
      */

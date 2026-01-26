@@ -85,7 +85,7 @@ class CefBrowserBackend : BrowserBackend, EventListener {
 
             // Check if system is compatible with MCEF (JCEF)
             if (!resourceManager.isSystemCompatible) {
-                throw JcefIsntCompatible
+                throw JcefIsntCompatible()
             }
 
             HashValidator.validateFolder(resourceManager.commitDirectory)

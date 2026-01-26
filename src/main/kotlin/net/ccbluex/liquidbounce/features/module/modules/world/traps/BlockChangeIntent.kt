@@ -39,14 +39,14 @@ class BlockChangeIntent<T>(
         return provider.validate(this, raycast)
     }
 
-    fun onIntentFullfilled() {
-        return provider.onIntentFullfilled(this)
+    fun onIntentFulfilled() {
+        return provider.onIntentFulfilled(this)
     }
 }
 
 interface BlockIntentProvider<T> {
     fun validate(plan: BlockChangeIntent<T>, raycast: BlockHitResult): Boolean
-    fun onIntentFullfilled(intent: BlockChangeIntent<T>)
+    fun onIntentFulfilled(intent: BlockChangeIntent<T>)
 }
 
 sealed class BlockChangeInfo {

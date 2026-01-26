@@ -60,7 +60,7 @@ object ModuleItemScroller : ClientModule("ItemScroller", ModuleCategories.MISC) 
                         || InputConstants.isKeyDown(window, GLFW.GLFW_KEY_RIGHT_SHIFT))
                 && this.running
                 && GLFW.glfwGetMouseButton(window.handle(), GLFW.GLFW_MOUSE_BUTTON_1) == GLFW.GLFW_PRESS
-                && chronometer.hasAtLeastElapsed(delay.random() * 50L);
+                && chronometer.hasAtLeastElapsed(delay.random() * 50L)
     }
 }
 

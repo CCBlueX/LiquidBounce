@@ -323,7 +323,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     }
 
     inline fun DebuggedOwner.debugGeometry(name: String, lazyGeometry: () -> DebuggedGeometry) {
-        if (!ModuleDebug.running) {
+        if (!running) {
             return
         }
 
@@ -339,7 +339,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
     }
 
     inline fun DebuggedOwner.debugParameter(name: String, lazyValue: () -> Any?) {
-        if (!ModuleDebug.running) {
+        if (!running) {
             return
         }
 

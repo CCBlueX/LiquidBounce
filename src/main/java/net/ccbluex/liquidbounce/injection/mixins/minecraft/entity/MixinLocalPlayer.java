@@ -188,7 +188,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
     }
 
     /**
-     * Hook push out function tick at HEAD and call out push out event, which is able to stop the cancel the execution.
+     * Hook moveTowardsClosestSpace at HEAD and call PlayerPushoutEvent
      */
     @Inject(method = "moveTowardsClosestSpace", at = @At("HEAD"), cancellable = true)
     private void hookPushOut(double x, double z, CallbackInfo ci) {

@@ -24,7 +24,7 @@ interface Toggleable {
     var enabled: Boolean
 
     /**
-     * The listener that will be called when the state is toggled. By default it will
+     * The listener that will be called when the state is toggled. By default, it will
      * simply call [onEnabled] or [onDisabled] depending on the state.
      */
     fun onToggled(state: Boolean): Boolean {

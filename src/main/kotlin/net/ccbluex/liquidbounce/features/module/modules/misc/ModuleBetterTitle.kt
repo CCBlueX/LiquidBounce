@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.minecraft.ChatFormatting
+import net.minecraft.client.gui.Gui
 import net.minecraft.network.chat.Component
 
 object ModuleBetterTitle : ClientModule(
@@ -98,7 +99,7 @@ private enum class ShowIn(
 private enum class TitleType(
     override val choiceName: String,
     /**
-     * Doesn't use [InGameHud.setTitle] and [InGameHud.setSubtitle] because
+     * Doesn't use [Gui.setTitle] and [Gui.setSubtitle] because
      * this will cause reset of the stayIn timer
      */
     val setText: (Component) -> Unit

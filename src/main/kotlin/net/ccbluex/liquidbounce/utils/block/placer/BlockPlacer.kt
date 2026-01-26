@@ -403,7 +403,7 @@ class BlockPlacer(
     /**
      * Adds a block to be placed.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      * @param update Whether the renderer should update the culling.
      */
     fun addToQueue(pos: BlockPos, update: Boolean = true, isSupport: Boolean = false) {
@@ -416,7 +416,7 @@ class BlockPlacer(
     /**
      * Removes a block from the queue.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      */
     fun removeFromQueue(pos: BlockPos) {
         blocks.remove(pos.asLong())

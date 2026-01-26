@@ -43,17 +43,17 @@ class SpeedVulcan288(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase
     private val afterJumpHandler = sequenceHandler<PlayerAfterJumpEvent> {
         val hasSpeed = (player.getEffect(MobEffects.SPEED)?.amplifier ?: 0) != 0
 
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.771 else 0.5))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.771 else 0.5)
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.605 else 0.31))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.605 else 0.31)
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.57 else 0.29))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.57 else 0.29)
         // does max possible motion down without introducing other issues
-        player.setDeltaMovement(player.deltaMovement.copy(y = if (hasSpeed) -0.5 else -0.37))
+        player.deltaMovement = player.deltaMovement.copy(y = if (hasSpeed) -0.5 else -0.37)
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.595 else 0.27))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.595 else 0.27)
         waitTicks(1)
-        player.setDeltaMovement(player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.595 else 0.28))
+        player.deltaMovement = player.deltaMovement.withStrafe(speed = if (hasSpeed) 0.595 else 0.28)
     }
 
     @Suppress("unused")

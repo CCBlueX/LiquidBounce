@@ -51,57 +51,59 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     val speed by float("Speed", 1f, 0.5f..2f)
 
     var threwPearl = false
-    var canFly = false
+    var shouldFly = false
 
     val rotations = tree(RotationsConfigurable(this))
 
     override fun enable() {
         threwPearl = false
-        canFly = false
+        shouldFly = false
     }
 
     val repeatable = tickHandler {
-        val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL)
-
         if (player.isDeadOrDying || player.isSpectator || player.abilities.instabuild) {
             return@tickHandler
         }
 
-        if (!threwPearl && !canFly) {
-            if (slot != null) {
-                if (player.xRot <= 80) {
-                    RotationManager.setRotationTarget(
-                        Rotation(player.yRot, (80f..90f).random()),
-                        configurable = rotations,
-                        provider = ModuleFastUse,
-                        priority = Priority.IMPORTANT_FOR_USAGE_2
-                    )
-                }
+        if (shouldFly) { // Fly after setback/pearl land
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
 
-                waitTicks(2)
-                SilentHotbar.selectSlotSilently(this, slot, 1)
-                interaction.startPrediction(world) { sequence ->
-                    ServerboundUseItemPacket(slot.useHand, sequence, player.yRot, player.xRot)
-                }
-
-                threwPearl = true
-            }
-        } else if (!threwPearl && canFly) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
             player.deltaMovement.y = when {
                 mc.options.keyJump.isDown -> speed.toDouble()
                 mc.options.keyShift.isDown -> -speed.toDouble()
                 else -> 0.0
             }
+
             return@tickHandler
         }
+
+        if (threwPearl) return@tickHandler // Already threw pearl, nothing to do
+
+        // If there isn't a pearl, return
+        val slot = Slots.OffhandWithHotbar.findSlot(Items.ENDER_PEARL) ?: return@tickHandler
+
+        if (player.xRot <= 80) {
+            RotationManager.setRotationTarget(
+                Rotation(player.yRot, (80f..90f).random()),
+                configurable = rotations,
+                provider = ModuleFastUse,
+                priority = Priority.IMPORTANT_FOR_USAGE_2
+            )
+        }
+
+        waitTicks(2)
+        SilentHotbar.selectSlotSilently(this, slot, 1)
+        interaction.startPrediction(world) { sequence ->
+            ServerboundUseItemPacket(slot.useHand, sequence, player.yRot, player.xRot)
+        }
+
+        threwPearl = true
     }
 
     val packetHandler = handler<PacketEvent> { event ->
         if (event.origin == TransferOrigin.OUTGOING && event.packet is ServerboundAcceptTeleportationPacket
-            && isABitAboveGround() && threwPearl) {
-            threwPearl = false
-            canFly = true
+            && isABitAboveGround() && threwPearl) { // Pearl landed, accepting teleport -> should fly
+            shouldFly = true
         }
     }
 
@@ -110,7 +112,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
             val boundingBox = player.box
             val detectionBox = boundingBox.setMinY(boundingBox.minY - y)
 
-            return detectionBox.isBlockAtPosition { it is Block }
+            if (detectionBox.isBlockAtPosition { it is Block }) return true
         }
         return false
     }

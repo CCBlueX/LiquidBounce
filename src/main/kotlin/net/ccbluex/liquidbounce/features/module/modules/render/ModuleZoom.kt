@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.MouseScrollInHotbarEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.injection.mixins.minecraft.client.MixinMouseHandler
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import net.ccbluex.liquidbounce.utils.math.Easing
@@ -35,7 +36,7 @@ import kotlin.math.round
  *
  * Allows you to zoom.
  *
- * The mouse is slowed down with the help of mixins in [MixinMouse].
+ * The mouse is slowed down with the help of mixins in [MixinMouseHandler].
  */
 object ModuleZoom : ClientModule("Zoom", ModuleCategories.RENDER, bindAction = InputBind.BindAction.HOLD) {
 

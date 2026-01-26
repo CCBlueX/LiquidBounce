@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.player.RemotePlayer
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.level.entity.EntityLookup
 import java.util.UUID
 
 /**
@@ -72,7 +73,7 @@ object ModuleBlink : ClientModule("Blink", ModuleCategories.PLAYER) {
             clone.copyPosition(player)
             /**
              * A different UUID has to be set, to avoid [dummyPlayer] from being invisible to [player]
-             * @see net.minecraft.world.entity.EntityIndex.add
+             * @see EntityLookup.add
              */
             clone.setUUID(UUID.randomUUID())
             world.addEntity(clone)

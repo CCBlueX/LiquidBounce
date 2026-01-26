@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.collection.Pools
 import net.ccbluex.liquidbounce.utils.render.clearColorAndDepth
 import net.ccbluex.liquidbounce.utils.render.toBufferedImage
 import net.ccbluex.liquidbounce.utils.render.withOutputTextureOverride
+import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer
 import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.Rect2i
@@ -202,7 +203,7 @@ private class ItemTextureRenderer(
     }
 
     /**
-     * @see net.minecraft.client.gui.render.GuiRenderer.prepareItemInitially
+     * @see GuiRenderer.renderItemToAtlas
      */
     private fun prepareItemInitially(
         state: TrackingItemStackRenderState,

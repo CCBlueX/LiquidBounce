@@ -101,7 +101,7 @@ class ChoiceConfigurable<T : Choice>(
 }
 
 /**
- * A mode is sub-module to separate different bypasses into extra classes
+ * A mode is submodule to separate different bypasses into extra classes
  */
 abstract class Choice(
     name: String,

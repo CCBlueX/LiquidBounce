@@ -47,12 +47,10 @@ object ModuleVehicleBoost : ClientModule("VehicleBoost", ModuleCategories.MOVEME
             val angle = Math.toRadians(player.yRot.toDouble())
 
             // Boost player
-            player.setDeltaMovement(
-                Vec3(
-                    -sin(angle) * horizontalSpeed.toDouble(),
-                    verticalSpeed.toDouble(),
-                    cos(angle) * horizontalSpeed.toDouble()
-                )
+            player.deltaMovement = Vec3(
+                -sin(angle) * horizontalSpeed.toDouble(),
+                verticalSpeed.toDouble(),
+                cos(angle) * horizontalSpeed.toDouble()
             )
         }
 

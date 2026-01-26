@@ -59,7 +59,7 @@ object CommandRemoteView : Command.Factory, MinecraftShortcuts {
             val name = args[0] as String
             for (entity in mc.level!!.entitiesForRendering()) {
                 if (name.equals(entity.scoreboardName, true)) {
-                    if (mc.getCameraEntity() == entity) {
+                    if (mc.cameraEntity == entity) {
                         chat(
                             regular(command.result("alreadyViewing", variable(entity.scoreboardName))),
                             metadata = MessageMetadata(id = "CRemoteView#info")
@@ -67,7 +67,7 @@ object CommandRemoteView : Command.Factory, MinecraftShortcuts {
                         return@handler
                     }
 
-                    mc.setCameraEntity(entity)
+                    mc.cameraEntity = entity
                     pName = entity.scoreboardName
                     chat(
                         regular(command.result("viewPlayer", variable(entity.scoreboardName))),
@@ -87,8 +87,8 @@ object CommandRemoteView : Command.Factory, MinecraftShortcuts {
     private fun offSubcommand() = CommandBuilder
         .begin("off")
         .handler {
-            if (mc.getCameraEntity() != player) {
-                mc.setCameraEntity(player)
+            if (mc.cameraEntity != player) {
+                mc.cameraEntity = player
                 chat(
                     regular(command.result("off", variable(pName.toString()))),
                     metadata = MessageMetadata(id = "CRemoteView#info")

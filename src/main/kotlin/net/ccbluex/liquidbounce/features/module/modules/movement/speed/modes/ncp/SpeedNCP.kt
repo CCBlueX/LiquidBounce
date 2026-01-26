@@ -57,7 +57,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
             } else {
                 ticksInAir++
                 if (ticksInAir == onTick) {
-                    player.setDeltaMovement(player.deltaMovement.withStrafe())
+                    player.deltaMovement = player.deltaMovement.withStrafe()
                     player.deltaMovement.y -= (0.1523351824467155 * motionMultiplier)
                 }
             }

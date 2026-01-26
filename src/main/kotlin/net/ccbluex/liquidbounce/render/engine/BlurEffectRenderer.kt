@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
+import com.mojang.blaze3d.pipeline.RenderTarget
 import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
@@ -115,7 +116,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
      * Draws a blit using a custom JCEF-compatible blending pipeline.
      * Replaces the call to `overlayFramebuffer.drawBlit(mc.framebuffer.colorAttachment)`.
      *
-     * @see net.minecraft.client.gl.Framebuffer.drawBlit
+     * @see RenderTarget.blitAndBlendToTexture
      */
     private fun drawOverlayBlit() {
         mc.mainRenderTarget.colorTextureView!!.createRenderPass(

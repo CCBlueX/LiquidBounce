@@ -90,7 +90,7 @@ object ClientShaders : ShaderSource {
         return k
     }
 
-    override fun get(identifier: Identifier, type: ShaderType): String? {
+    override fun get(identifier: Identifier, type: ShaderType): String {
         return shaders[identifier] ?: error("Unknown identifier: $identifier")
     }
 

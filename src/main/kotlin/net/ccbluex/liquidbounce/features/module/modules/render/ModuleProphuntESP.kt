@@ -69,11 +69,12 @@ object ModuleProphuntESP : ClientModule("ProphuntESP", ModuleCategories.RENDER,
     @Suppress("unused")
     private val networkHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        when {
-            packet is ClientboundBlockUpdatePacket && Tracking.BLOCK_UPDATES in tracking -> mc.execute {
+        when (packet) {
+            is ClientboundBlockUpdatePacket if Tracking.BLOCK_UPDATES in tracking -> mc.execute {
                 renderer.addBlock(packet.pos, update = false)
             }
-            packet is ClientboundSectionBlocksUpdatePacket && Tracking.CHUNK_DELTA_UPDATES in tracking -> mc.execute {
+
+            is ClientboundSectionBlocksUpdatePacket if Tracking.CHUNK_DELTA_UPDATES in tracking -> mc.execute {
                 packet.runUpdates { pos, _ -> renderer.addBlock(pos, update = false) }
             }
         }

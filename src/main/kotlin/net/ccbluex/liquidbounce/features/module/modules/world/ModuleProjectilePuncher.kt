@@ -140,7 +140,7 @@ object ModuleProjectilePuncher : ClientModule(
 
         val fireballVelocity = entity.position() - entity.lastPos
 
-        // If the fireball is not moving the player can obviously not be hit. Additionally the code below only works if
+        // If the fireball is not moving the player can obviously not be hit. Additionally, the code below only works if
         // the fireball is moving.
         if (fireballVelocity.isLikelyZero) {
             return false

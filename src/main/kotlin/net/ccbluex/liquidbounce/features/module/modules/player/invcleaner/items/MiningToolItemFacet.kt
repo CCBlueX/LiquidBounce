@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.utils.item.isShovel
 import net.ccbluex.liquidbounce.utils.item.toolComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.ToolMaterial
+import net.minecraft.world.item.component.Tool
 import net.minecraft.world.item.enchantment.Enchantments
 
 class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
@@ -47,8 +49,8 @@ class MiningToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
         private val COMPARATOR =
             /**
-             * @see net.minecraft.item.ToolMaterial.applyToolSettings
-             * @see net.minecraft.component.type.ToolComponent.Rule.ofAlwaysDropping
+             * @see ToolMaterial.applyToolProperties
+             * @see Tool.Rule.minesAndDrops
              */
             ComparatorChain<MiningToolItemFacet>(
                 compareBy {

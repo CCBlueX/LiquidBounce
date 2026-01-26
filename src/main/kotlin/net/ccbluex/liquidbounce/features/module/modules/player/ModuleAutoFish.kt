@@ -51,7 +51,7 @@ object ModuleAutoFish : ClientModule("AutoFish", ModuleCategories.PLAYER) {
     }
 
     /**
-     * Usually we only require [SoundEvents.ENTITY_FISHING_BOBBER_SPLASH]
+     * Usually we only require [SoundEvents.FISHING_BOBBER_SPLASH]
      * to trigger the pull, but if a server has a custom sound,
      * we might want to add it here.
      */

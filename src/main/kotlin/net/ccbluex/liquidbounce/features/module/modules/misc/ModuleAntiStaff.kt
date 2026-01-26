@@ -116,7 +116,7 @@ object ModuleAntiStaff : ClientModule("AntiStaff", ModuleCategories.MISC) {
     }
 
     fun shouldShowAsStaffOnTab(username: String): Boolean {
-        if (!showInTabList || !ModuleAntiStaff.running || !enabled) {
+        if (!showInTabList || !running || !enabled) {
             return false
         }
 

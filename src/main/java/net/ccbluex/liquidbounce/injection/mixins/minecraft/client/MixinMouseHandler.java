@@ -112,11 +112,11 @@ public abstract class MixinMouseHandler implements MouseHandlerAddition {
     private boolean modifyMouseRotationInput(LocalPlayer instance, double cursorDeltaX, double cursorDeltaY) {
         final MouseRotationEvent event = new MouseRotationEvent(cursorDeltaX, cursorDeltaY);
         EventManager.INSTANCE.callEvent(event);
-        if (event.isCancelled()) {
-            return false;
+
+        if (!event.isCancelled()) {
+            instance.turn(event.getCursorDeltaX(), event.getCursorDeltaY());
         }
 
-        instance.turn(event.getCursorDeltaX(), event.getCursorDeltaY());
         return false;
     }
 

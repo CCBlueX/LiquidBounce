@@ -115,7 +115,7 @@ inline fun projectPointsOnBox(
     val playerToBoxLine = Line(position = virtualEye, direction = targetBox.center - virtualEye)
 
     // Find a point between the virtual eye and the target box such that every edge point of the box is behind it
-    // (from the perspective of the virtual eye). This position is used to craft a the targeting frame
+    // (from the perspective of the virtual eye). This position is used to craft the targeting frame
     val targetFrameOrigin = targetBox.edgePoints
         .mapToArray { playerToBoxLine.getNearestPointTo(it) }
         .minBy { it.distanceToSqr(virtualEye) }

@@ -145,14 +145,12 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
             }
 
             when {
-                customSpeed -> player.setDeltaMovement(
-                    player.deltaMovement.withStrafe(
-                        speed = speed.toDouble(),
-                        strength = strength.toDouble()
-                    )
+                customSpeed -> player.deltaMovement = player.deltaMovement.withStrafe(
+                    speed = speed.toDouble(),
+                    strength = strength.toDouble()
                 )
                 else ->
-                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = strength.toDouble()))
+                    player.deltaMovement = player.deltaMovement.withStrafe(strength = strength.toDouble())
             }
         }
 
@@ -175,7 +173,7 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("C
                     } else {
                         player.horizontalSpeed
                     }
-                    player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed))
+                    player.deltaMovement = player.deltaMovement.withStrafe(speed = speed)
                 }
             }
         }

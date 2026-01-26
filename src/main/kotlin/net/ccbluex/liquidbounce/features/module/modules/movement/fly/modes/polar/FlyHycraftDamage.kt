@@ -76,22 +76,22 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
             return@handler
         }
 
-        event.action = when {
-            packet is ClientboundDamageEventPacket && packet.entityId == player.id && ticks <= 0 -> {
+        event.action = when (packet) {
+            is ClientboundDamageEventPacket if packet.entityId == player.id && ticks <= 0 -> {
                 damageTaken = true
                 ticks = 40
                 handlePacket(packet)
                 PacketQueueManager.Action.QUEUE
             }
 
-            packet is ClientboundSetEntityMotionPacket && packet.id == player.id && damageTaken -> {
+            is ClientboundSetEntityMotionPacket if packet.id == player.id && damageTaken -> {
                 damageTaken = false
                 release = true
                 handlePacket(packet)
                 PacketQueueManager.Action.QUEUE
             }
 
-            packet is ClientboundPingPacket -> {
+            is ClientboundPingPacket -> {
                 if (ticks <= 0) {
                     if (release) {
                         ModuleFly.enabled = false

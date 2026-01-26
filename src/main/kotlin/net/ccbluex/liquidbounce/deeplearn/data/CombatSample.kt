@@ -90,7 +90,7 @@ data class CombatSample(
             targetDiff.horizontalDistance().toFloat() + playerDiff.horizontalDistance().toFloat(),
 
             // Distance
-            distance.toFloat()
+            distance
         )
 
     val asOutput

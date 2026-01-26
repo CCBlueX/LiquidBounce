@@ -47,7 +47,7 @@ abstract class TextProcessor<T : ProcessedText> {
          * Contains the chars for the `§k` formatting
          */
         @JvmField
-        val RANDOM_CHARS = "1234567890abcdefghijklmnopqrstuvwxyz~!@#\$%^&*()-=_+{}[]".toCharArray()
+        val RANDOM_CHARS = "1234567890abcdefghijklmnopqrstuvwxyz~!@#$%^&*()-=_+{}[]".toCharArray()
 
         @JvmStatic
         val hexColors: Array<Color4b> = Array(16) { i ->

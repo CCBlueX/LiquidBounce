@@ -26,7 +26,7 @@ import java.awt.Point
 class DynamicAtlasAllocator(
     val dimension: Dimension,
     /**
-     * In order to reduce the fragmentaion the allocator will cut the texture into slices.
+     * In order to reduce the fragmentation the allocator will cut the texture into slices.
      */
     val verticalCutSize: Int,
     /**
