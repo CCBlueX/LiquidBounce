@@ -46,7 +46,8 @@ class TaskProgressScreen(
     private val percentFormat = DecimalFormat("0.0")
 
     override fun render(context: GuiGraphics, mouseX: Int, mouseY: Int, partialTick: Float) {
-        renderBackground(context, mouseX, mouseY, partialTick)
+        renderMenuBackground(context)
+
         val cx = width / 2.0
         val cy = height / 2.0
 
