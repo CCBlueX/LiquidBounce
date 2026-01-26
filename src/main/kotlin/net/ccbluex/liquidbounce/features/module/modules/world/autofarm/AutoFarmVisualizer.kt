@@ -48,7 +48,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                     drawLine(
                         relativeToCamera(player.interpolateCurrentPosition(event.partialTicks)).toVec3f(),
                         relativeToCamera(target).toVec3f(),
-                        color.toARGB(),
+                        color.argb,
                     )
                 }
             }

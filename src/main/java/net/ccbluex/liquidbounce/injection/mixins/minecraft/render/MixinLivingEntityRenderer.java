@@ -63,7 +63,7 @@ import static org.lwjgl.opengl.GL11C.*;
 public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extends LivingEntityRenderState, M extends EntityModel<? super S>> {
 
     @Unique
-    private static final int ESP_TRUE_SIGHT_REQUIREMENT_COLOR = new Color4b(255, 255, 255, 100).toARGB();
+    private static final int ESP_TRUE_SIGHT_REQUIREMENT_COLOR = new Color4b(255, 255, 255, 100).argb();
 
     @Shadow
     public abstract Identifier getTextureLocation(S state);
@@ -146,7 +146,7 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, S extend
         var trueSightModule = ModuleTrueSight.INSTANCE;
         var trueSight = trueSightModule.getRunning() && trueSightModule.getEntities();
         if (ModuleTrueSight.canRenderEntities(livingEntityRenderState)) {
-            tintedColor = trueSight ? trueSightModule.getEntityColor().toARGB() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
+            tintedColor = trueSight ? trueSightModule.getEntityColor().argb() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
         }
         original.call(
             instance, model,

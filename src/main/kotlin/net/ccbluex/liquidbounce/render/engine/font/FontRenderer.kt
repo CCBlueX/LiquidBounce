@@ -288,7 +288,7 @@ class FontRenderer(
             val y1 = y + (renderInfo.glyphBounds.yMin + renderInfo.atlasLocation.atlasHeight) * scale
             val uv1 = renderInfo.atlasLocation.uvCoordinatesOnTexture.min
             val uv2 = renderInfo.atlasLocation.uvCoordinatesOnTexture.max
-            val argb = color.toARGB()
+            val argb = color.argb
 
             if (z.isNaN()) {
                 (ctx as GuiGraphics).drawGlyphOnCurrentLayer(

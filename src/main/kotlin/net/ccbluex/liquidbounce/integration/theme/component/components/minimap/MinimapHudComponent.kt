@@ -214,7 +214,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                 boundingBox.xMax, boundingBox.yMax,
             )
 
-            drawLines(lines, Color4b.WHITE.toARGB(), bounds)
+            drawLines(lines, Color4b.WHITE.argb, bounds)
         }
     }
 
@@ -226,8 +226,8 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
         offset: Float = 3.0F,
         width: Float = 3.0F,
     ) {
-        val from = from.toARGB()
-        val to = to.toARGB()
+        val from = from.argb
+        val to = to.argb
 
         drawCustomElement(
             pipeline = RenderPipelines.GUI,
@@ -290,7 +290,7 @@ object MinimapHudComponent : NativeHudComponent("Minimap", false, Alignment(
                     val fromY = z.toFloat()
                     val toX = fromX + 1F
                     val toY = fromY + 1F
-                    val color = TextureConfigurable.vertexColor.toARGB()
+                    val color = TextureConfigurable.vertexColor.argb
 
                     addVertexWith2DPose(pose, fromX, fromY).setUv(texPosition.xMin, texPosition.yMin)
                         .setColor(color)

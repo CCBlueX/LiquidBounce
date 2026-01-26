@@ -289,7 +289,7 @@ class TrajectoryInfoRenderer @Suppress("LongParameterList") constructor(
     ) {
         renderEnvironmentForWorld(matrixStack) {
             drawLineStrip(
-                color.toARGB(),
+                color.argb,
                 positions = positions.mapToArray { relativeToCamera(it + renderOffset).toVec3f() })
         }
     }

@@ -100,7 +100,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
 
             renderEnvironmentForWorld(event.matrixStack) {
                 drawLineStrip(
-                    Color4b.BLUE.toARGB(),
+                    Color4b.BLUE.argb,
                     positions = cachedPositions.mapToArray { relativeToCamera(it.pos).toVec3f() },
                 )
             }
@@ -371,7 +371,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
             env.drawLine(
                 env.relativeToCamera(from).toVec3f(),
                 env.relativeToCamera(to).toVec3f(),
-                color.toARGB(),
+                color.argb,
             )
         }
     }
@@ -387,7 +387,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
                 p1 = env.relativeToCamera(p1).toVec3f(),
                 p2 = env.relativeToCamera(p2).toVec3f(),
                 p3 = env.relativeToCamera(p2).toVec3f(),
-                argb = color.toARGB(),
+                argb = color.argb,
             )
         }
     }
@@ -397,7 +397,7 @@ object ModuleDebug : ClientModule("Debug", ModuleCategories.RENDER) {
             env.drawLine(
                 env.relativeToCamera(from).toVec3f(),
                 env.relativeToCamera(to).toVec3f(),
-                color.toARGB(),
+                color.argb,
             )
         }
     }

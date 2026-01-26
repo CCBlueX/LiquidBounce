@@ -43,7 +43,7 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class MixinRenderLayer {
 
     @Unique
-    private static final int ESP_TRUE_SIGHT_REQUIREMENT_COLOR = new Color4b(255, 255, 255, 120).toARGB();
+    private static final int ESP_TRUE_SIGHT_REQUIREMENT_COLOR = new Color4b(255, 255, 255, 120).argb();
 
     @WrapOperation(method = "renderColoredCutoutModel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/OrderedSubmitNodeCollector;submitModel(Lnet/minecraft/client/model/Model;Ljava/lang/Object;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/rendertype/RenderType;IIILnet/minecraft/client/renderer/texture/TextureAtlasSprite;ILnet/minecraft/client/renderer/feature/ModelFeatureRenderer$CrumblingOverlay;)V"))
     private static <S> void injectTrueSight(
@@ -64,7 +64,7 @@ public abstract class MixinRenderLayer {
             var trueSightModule = ModuleTrueSight.INSTANCE;
             var trueSight = trueSightModule.getRunning() && trueSightModule.getEntities();
             if (ModuleTrueSight.canRenderEntities(rs)) {
-                tintedColor = trueSight ? trueSightModule.getEntityFeatureLayerColor().toARGB() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
+                tintedColor = trueSight ? trueSightModule.getEntityFeatureLayerColor().argb() : ESP_TRUE_SIGHT_REQUIREMENT_COLOR;
             }
             if (ModuleLogoffSpot.INSTANCE.isLogoffEntity(rs)) {
                 tintedColor = ESP_TRUE_SIGHT_REQUIREMENT_COLOR;

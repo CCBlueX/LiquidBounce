@@ -75,7 +75,7 @@ class MinimapTextureAtlasManager {
     init {
         for (x in 0..15) {
             for (y in 0..15) {
-                val color = if ((x and 1) xor (y and 1) == 0) Color4b.BLACK.toARGB() else Color4b.WHITE.toARGB()
+                val color = if ((x and 1) xor (y and 1) == 0) Color4b.BLACK.argb else Color4b.WHITE.argb
 
                 this.texture.pixels!!.setPixel(x, y, color)
             }

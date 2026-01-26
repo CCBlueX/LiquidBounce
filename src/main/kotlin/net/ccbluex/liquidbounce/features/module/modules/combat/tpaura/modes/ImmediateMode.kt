@@ -70,7 +70,7 @@ object ImmediateMode : TpAuraChoice("Immediate") {
                 drawLine(
                     relativeToCamera(player.position().add(0.0, 1.0, 0.0)).toVec3f(),
                     relativeToCamera(playerPosition.add(0.0, 1.0, 0.0)).toVec3f(),
-                    Color4b.WHITE.toARGB(),
+                    Color4b.WHITE.argb,
                 )
             }
         }

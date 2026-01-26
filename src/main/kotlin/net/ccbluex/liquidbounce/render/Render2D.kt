@@ -164,7 +164,7 @@ fun GuiGraphics.drawQuad(
                 y11,
                 x21,
                 y21,
-                fillColor.toARGB(),
+                fillColor.argb,
                 copyPose(),
                 this.scissorStack.peek(),
                 bounds,
@@ -172,7 +172,7 @@ fun GuiGraphics.drawQuad(
         )
     }
     if (outlineColor != null && !outlineColor.isTransparent) {
-        val argb = outlineColor.toARGB()
+        val argb = outlineColor.argb
 
         drawLines(
             floatArrayOf(
@@ -222,7 +222,7 @@ fun GuiGraphics.drawTriangle(
         this.guiRenderState.submitGuiElement(
             TriangleGuiElementRenderState(
                 x0, y0, x1, y1, x2, y2,
-                fillColor.toARGB(),
+                fillColor.argb,
                 ClientRenderPipelines.GUI.triangles(cull),
                 copyPose(),
                 this.scissorStack.peek(),
@@ -241,7 +241,7 @@ fun GuiGraphics.drawTriangle(
                 x2, y2,
                 x0, y0,
             ),
-            outlineColor.toARGB(),
+            outlineColor.argb,
             bounds,
         )
     }

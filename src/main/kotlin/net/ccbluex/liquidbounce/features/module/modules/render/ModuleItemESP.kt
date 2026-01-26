@@ -119,7 +119,7 @@ object ModuleItemESP : ClientModule("ItemESP", ModuleCategories.RENDER) {
                     val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
 
                     drawLine(
-                        argb = color.toARGB(),
+                        argb = color.argb,
                         p1 = eyeVector,
                         p2 = pos,
                     )

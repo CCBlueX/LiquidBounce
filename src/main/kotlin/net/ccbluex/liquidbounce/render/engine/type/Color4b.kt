@@ -158,6 +158,7 @@ data class Color4b(val argb: Int) {
     @Deprecated(
         message = "Replaced with Color4b.argb",
         replaceWith = ReplaceWith("this.argb"),
+        level = DeprecationLevel.ERROR, // For script compatibility only
     )
     fun toARGB() = this.argb
 

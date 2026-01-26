@@ -174,7 +174,7 @@ object ModuleDamageParticles : ClientModule("DamageParticles", ModuleCategories.
                     particle.text,
                     0,
                     0,
-                    particle.color.toARGB(),
+                    particle.color.argb,
                 )
                 pose().popMatrix()
             }

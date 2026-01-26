@@ -110,7 +110,7 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
             0, text,
             true, Font.DisplayMode.NORMAL,
             light, -1,
-            Color4b.BLACK.toARGB(), -1
+            Color4b.BLACK.argb(), -1
         );
         matrices.popPose();
     }
@@ -154,15 +154,15 @@ public abstract class MixinEntityRenderer<T extends Entity, S extends EntityRend
     @WrapOperation(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getTeamColor()I"))
     private int injectTeamColor(Entity entity, Operation<Integer> operation) {
         if (entity instanceof LivingEntity livingEntity && EspGlowMode.INSTANCE.getRunning() && EspGlowMode.INSTANCE.shouldRender(livingEntity)) {
-            return ModuleESP.INSTANCE.getColor(livingEntity).toARGB();
+            return ModuleESP.INSTANCE.getColor(livingEntity).argb();
         } else if (ModuleItemESP.GlowMode.INSTANCE.getRunning() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
-            return ModuleItemESP.INSTANCE.getColor().toARGB();
+            return ModuleItemESP.INSTANCE.getColor().argb();
         } else if (entity instanceof PrimedTnt tntEntity && ModuleTNTTimer.INSTANCE.getRunning() && ModuleTNTTimer.INSTANCE.getEsp()) {
-            return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).toARGB();
+            return ModuleTNTTimer.INSTANCE.getTntColor(tntEntity.getFuse()).argb();
         } else if (ModuleStorageESP.GlowMode.INSTANCE.getRunning()) {
             var category = ModuleStorageESP.categorize(entity);
             if (category != null && category.shouldRender(entity)) {
-                return category.getColor().toARGB();
+                return category.getColor().argb();
             }
         }
 
