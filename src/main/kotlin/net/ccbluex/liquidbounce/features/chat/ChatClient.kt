@@ -249,7 +249,7 @@ class ChatClient {
      * Send packet to server
      */
     internal fun sendPacket(packet: AxochatPacket.C2S) {
-        channel?.writeAndFlush(TextWebSocketFrame(serializerGson.toJson(packet, AxochatPacket::class.java)))
+        channel?.writeAndFlush(TextWebSocketFrame(serializerGson.toJson(packet, AxochatPacket.C2S::class.java)))
     }
 
     private fun handleFunctionalPacket(packet: AxochatPacket.S2C) {
