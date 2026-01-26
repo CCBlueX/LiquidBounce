@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.clientVersion
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.core.retrying
 import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn
-import net.ccbluex.liquidbounce.config.gson.util.json
+import net.ccbluex.liquidbounce.config.gson.util.jsonObject
 import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
@@ -68,6 +68,18 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
     private val largeImageText by text("LargeImage", "Online with %protocol%")
     private val smallImageText by text("SmallImage", "%clientBranch% (%clientCommit%)")
 
+    private val buttons = jsonArrayOf(
+        jsonObject {
+            "label"("Download")
+            "url"("https://liquidbounce.net/")
+        },
+
+        jsonObject {
+            "label"("GitHub")
+            "url"("https://github.com/CCBlueX/LiquidBounce")
+        },
+    )
+
     // IPC Client
     private var ipcClient: IPCClient? = null
 
@@ -94,20 +106,20 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
         runCatching {
             ipcClient = IPCClient(ipcConfiguration.appID).also { it.connect() }
         }.onFailure {
-            logger.info("Failed to connect to Discord RPC.", it)
-
             if (it is NoDiscordClientException) {
                 notification(
                     title = "Discord RPC",
                     message = "Please make sure you have Discord running.",
                     severity = NotificationEvent.Severity.ERROR
                 )
+                logger.warn("No Discord client for RichPresence.")
             } else {
                 notification(
                     title = "Discord RPC",
                     message = "Failed to initialize Discord RPC.",
                     severity = NotificationEvent.Severity.ERROR
                 )
+                logger.error("Failed to connect to Discord RPC.", it)
             }
 
             doNotTryToConnect = true
@@ -155,30 +167,18 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
             setStartTimestamp(timestamp)
 
             // Check assets contains logo and set logo
-            if ("logo" in ipcConfiguration.assets) {
-                setLargeImage(ipcConfiguration.assets["logo"], formatText(largeImageText))
+            ipcConfiguration.assets["logo"]?.let { value ->
+                setLargeImage(value, formatText(largeImageText))
             }
 
-            if ("smallLogo" in ipcConfiguration.assets) {
-                setSmallImage(ipcConfiguration.assets["smallLogo"], formatText(smallImageText))
+            ipcConfiguration.assets["smallLogo"]?.let { value ->
+                setSmallImage(value, formatText(smallImageText))
             }
 
             setDetails(formatText(detailsText))
             setState(formatText(stateText))
 
-            setButtons(
-                jsonArrayOf(
-                    json {
-                        "label" to "Download"
-                        "url" to "https://liquidbounce.net/"
-                    },
-
-                    json {
-                        "label" to "GitHub"
-                        "url" to "https://github.com/CCBlueX/LiquidBounce"
-                    },
-                )
-            )
+            setButtons(buttons)
         }
     }
 
