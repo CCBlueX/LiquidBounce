@@ -40,7 +40,7 @@ data class ClientMojangInfoPacket(
     @SerializedName("session_hash")
     val sessionHash: String
 
-) : Packet
+) : AxochatPacket.S2C
 
 /**
  * After the client sent the server a RequestJWT packet, the server will provide the client with json web token.
@@ -53,7 +53,7 @@ data class ClientNewJWTPacket(
     @SerializedName("token")
     val token: String
 
-) : Packet
+) : AxochatPacket.S2C
 
 /**
  * This packet will be sent to every authenticated client
@@ -69,12 +69,12 @@ data class ClientMessagePacket(
     val id: String,
 
     @SerializedName("author_info")
-    val user: User,
+    val user: AxoUser,
 
     @SerializedName("content")
     val content: String
 
-) : Packet
+) : AxochatPacket.S2C
 
 /**
  * This packet will be sent to an authenticated client with allow_messages turned on,
@@ -90,12 +90,12 @@ data class ClientPrivateMessagePacket(
     val id: String,
 
     @SerializedName("author_info")
-    val user: User,
+    val user: AxoUser,
 
     @SerializedName("content")
     val content: String
 
-) : Packet
+) : AxochatPacket.S2C
 
 /**
  * This packet is sent after either LoginMojang, LoginJWT, BanUser or UnbanUser were processed successfully.
@@ -107,7 +107,7 @@ data class ClientSuccessPacket(
     @SerializedName("reason")
     val reason: String
 
-) : Packet
+) : AxochatPacket.S2C
 
 /**
  * This packet may be sent at any time, but is usually a response to a failed action of the client.
@@ -119,4 +119,4 @@ data class ClientErrorPacket(
     @SerializedName("message")
     val message: String
 
-) : Packet
+) : AxochatPacket.S2C

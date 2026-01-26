@@ -34,7 +34,7 @@ import java.util.UUID
  * The server will then send a MojangInfo to the client.
  * This packet does not have a body.
  */
-class ServerRequestMojangInfoPacket : Packet
+class ServerRequestMojangInfoPacket : AxochatPacket.C2S
 
 /**
  * After the client received a MojangInfo packet and authenticating itself with mojang,
@@ -56,7 +56,7 @@ data class ServerLoginMojangPacket(
     @SerializedName("allow_messages")
     val allowMessages: Boolean
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * To log in using a json web token, the client has to send a LoginJWT packet.
@@ -73,7 +73,7 @@ data class ServerLoginJWTPacket(
     @SerializedName("allow_messages")
     val allowMessages: Boolean
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * The content of this packet will be sent to every client as Message if it fits the validation scheme.
@@ -85,7 +85,7 @@ data class ServerMessagePacket(
     @SerializedName("content")
     val content: String
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * The content of this packet will be sent to the specified client as PrivateMessage if it fits the validation scheme.
@@ -101,7 +101,7 @@ data class ServerPrivateMessagePacket(
     @SerializedName("content")
     val content: String
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * A client can send this packet to ban other users from using this chat.
@@ -113,7 +113,7 @@ data class ServerBanUserPacket(
     @SerializedName("user")
     val user: String
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * A client can send this packet to unban other users.
@@ -125,7 +125,7 @@ data class ServerUnbanUserPacket(
     @SerializedName("user")
     val user: String
 
-) : Packet
+) : AxochatPacket.C2S
 
 /**
  * To log in using LoginJWT, a client needs to own a json web token.
@@ -134,4 +134,4 @@ data class ServerUnbanUserPacket(
  *
  * This packet does not have a body.
  */
-class ServerRequestJWTPacket : Packet
+class ServerRequestJWTPacket : AxochatPacket.C2S

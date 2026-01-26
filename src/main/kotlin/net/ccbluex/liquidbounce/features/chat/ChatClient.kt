@@ -50,7 +50,7 @@ import net.ccbluex.liquidbounce.features.chat.packet.ClientMojangInfoPacket
 import net.ccbluex.liquidbounce.features.chat.packet.ClientNewJWTPacket
 import net.ccbluex.liquidbounce.features.chat.packet.ClientPrivateMessagePacket
 import net.ccbluex.liquidbounce.features.chat.packet.ClientSuccessPacket
-import net.ccbluex.liquidbounce.features.chat.packet.Packet
+import net.ccbluex.liquidbounce.features.chat.packet.AxochatPacket
 import net.ccbluex.liquidbounce.features.chat.packet.PacketDeserializer
 import net.ccbluex.liquidbounce.features.chat.packet.PacketSerializer
 import net.ccbluex.liquidbounce.features.chat.packet.ServerBanUserPacket
@@ -100,13 +100,13 @@ class ChatClient {
 
     private val serializerGson by lazy {
         GsonBuilder()
-            .registerTypeAdapter(Packet::class.java, serializer)
+            .registerTypeAdapter(AxochatPacket.C2S::class.java, serializer)
             .create()
     }
 
     private val deserializerGson by lazy {
         GsonBuilder()
-            .registerTypeAdapter(Packet::class.java, deserializer)
+            .registerTypeAdapter(AxochatPacket.S2C::class.java, deserializer)
             .create()
     }
 
@@ -248,11 +248,11 @@ class ChatClient {
     /**
      * Send packet to server
      */
-    internal fun sendPacket(packet: Packet) {
-        channel?.writeAndFlush(TextWebSocketFrame(serializerGson.toJson(packet, Packet::class.java)))
+    internal fun sendPacket(packet: AxochatPacket.C2S) {
+        channel?.writeAndFlush(TextWebSocketFrame(serializerGson.toJson(packet, AxochatPacket::class.java)))
     }
 
-    private fun handleFunctionalPacket(packet: Packet) {
+    private fun handleFunctionalPacket(packet: AxochatPacket.S2C) {
         when (packet) {
             is ClientMojangInfoPacket -> {
                 EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGING_IN))
@@ -337,7 +337,7 @@ class ChatClient {
      * Handle incoming message of websocket
      */
     internal fun handlePlainMessage(message: String) {
-        val packet = deserializerGson.fromJson(message, Packet::class.java)
+        val packet = deserializerGson.fromJson(message, AxochatPacket.S2C::class.java)
         handleFunctionalPacket(packet)
     }
 
