@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.features.chat.packet.User
+import net.ccbluex.liquidbounce.features.chat.packet.AxoUser
 import net.ccbluex.liquidbounce.features.misc.proxy.Proxy
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.PlayerData
@@ -120,7 +120,11 @@ class ClientChatStateChange(val state: State) : Event(), WebSocketEvent {
 }
 
 @Nameable("clientChatMessage")
-class ClientChatMessageEvent(val user: User, val message: String, val chatGroup: ChatGroup) : Event(), WebSocketEvent {
+class ClientChatMessageEvent(
+    val user: AxoUser,
+    val message: String,
+    val chatGroup: ChatGroup,
+) : Event(), WebSocketEvent {
     enum class ChatGroup(override val choiceName: String) : NamedChoice {
         @SerializedName("public")
         PUBLIC_CHAT("PublicChat"),

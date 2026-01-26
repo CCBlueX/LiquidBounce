@@ -26,15 +26,22 @@ import com.mojang.authlib.exceptions.InvalidCredentialsException
 import io.netty.bootstrap.Bootstrap
 import io.netty.channel.Channel
 import io.netty.channel.ChannelFutureListener
+import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelInboundHandler
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.ChannelPipeline
+import io.netty.channel.ChannelPromise
+import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.channel.socket.SocketChannel
 import io.netty.handler.codec.http.DefaultHttpHeaders
+import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpClientCodec
 import io.netty.handler.codec.http.HttpObjectAggregator
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
+import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory
+import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
 import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.handler.ssl.SslContextBuilder
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
@@ -44,69 +51,71 @@ import net.ccbluex.liquidbounce.event.events.ClientChatErrorEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatJwtTokenEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatMessageEvent
 import net.ccbluex.liquidbounce.event.events.ClientChatStateChange
-import net.ccbluex.liquidbounce.features.chat.packet.ClientErrorPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ClientMessagePacket
-import net.ccbluex.liquidbounce.features.chat.packet.ClientMojangInfoPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ClientNewJWTPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ClientPrivateMessagePacket
-import net.ccbluex.liquidbounce.features.chat.packet.ClientSuccessPacket
-import net.ccbluex.liquidbounce.features.chat.packet.Packet
+import net.ccbluex.liquidbounce.features.chat.packet.S2CErrorPacket
+import net.ccbluex.liquidbounce.features.chat.packet.S2CMessagePacket
+import net.ccbluex.liquidbounce.features.chat.packet.S2CMojangInfoPacket
+import net.ccbluex.liquidbounce.features.chat.packet.S2CNewJWTPacket
+import net.ccbluex.liquidbounce.features.chat.packet.S2CPrivateMessagePacket
+import net.ccbluex.liquidbounce.features.chat.packet.S2CSuccessPacket
+import net.ccbluex.liquidbounce.features.chat.packet.AxochatPacket
 import net.ccbluex.liquidbounce.features.chat.packet.PacketDeserializer
 import net.ccbluex.liquidbounce.features.chat.packet.PacketSerializer
-import net.ccbluex.liquidbounce.features.chat.packet.ServerBanUserPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ServerLoginJWTPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ServerLoginMojangPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ServerMessagePacket
-import net.ccbluex.liquidbounce.features.chat.packet.ServerPrivateMessagePacket
-import net.ccbluex.liquidbounce.features.chat.packet.ServerRequestJWTPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ServerRequestMojangInfoPacket
-import net.ccbluex.liquidbounce.features.chat.packet.ServerUnbanUserPacket
+import net.ccbluex.liquidbounce.features.chat.packet.C2SBanUserPacket
+import net.ccbluex.liquidbounce.features.chat.packet.C2SLoginJWTPacket
+import net.ccbluex.liquidbounce.features.chat.packet.C2SLoginMojangPacket
+import net.ccbluex.liquidbounce.features.chat.packet.C2SMessagePacket
+import net.ccbluex.liquidbounce.features.chat.packet.C2SPrivateMessagePacket
+import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestJWTPacket
+import net.ccbluex.liquidbounce.features.chat.packet.C2SRequestMojangInfoPacket
+import net.ccbluex.liquidbounce.features.chat.packet.C2SUnbanUserPacket
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.clientChannelAndGroup
 import net.ccbluex.netty.http.coroutines.syncSuspend
 import java.net.URI
 import java.util.UUID
 
-class ChatClient {
+class AxochatClient {
 
     private var channel: Channel? = null
 
     private val serializer = PacketSerializer().apply {
-        register<ServerRequestMojangInfoPacket>("RequestMojangInfo")
-        register<ServerLoginMojangPacket>("LoginMojang")
-        register<ServerMessagePacket>("Message")
-        register<ServerPrivateMessagePacket>("PrivateMessage")
-        register<ServerBanUserPacket>("BanUser")
-        register<ServerUnbanUserPacket>("UnbanUser")
-        register<ServerRequestJWTPacket>("RequestJWT")
-        register<ServerLoginJWTPacket>("LoginJWT")
+        register<C2SRequestMojangInfoPacket>("RequestMojangInfo")
+        register<C2SLoginMojangPacket>("LoginMojang")
+        register<C2SMessagePacket>("Message")
+        register<C2SPrivateMessagePacket>("PrivateMessage")
+        register<C2SBanUserPacket>("BanUser")
+        register<C2SUnbanUserPacket>("UnbanUser")
+        register<C2SRequestJWTPacket>("RequestJWT")
+        register<C2SLoginJWTPacket>("LoginJWT")
     }
 
     private val deserializer = PacketDeserializer().apply {
-        register<ClientMojangInfoPacket>("MojangInfo")
-        register<ClientNewJWTPacket>("NewJWT")
-        register<ClientMessagePacket>("Message")
-        register<ClientPrivateMessagePacket>("PrivateMessage")
-        register<ClientErrorPacket>("Error")
-        register<ClientSuccessPacket>("Success")
+        register<S2CMojangInfoPacket>("MojangInfo")
+        register<S2CNewJWTPacket>("NewJWT")
+        register<S2CMessagePacket>("Message")
+        register<S2CPrivateMessagePacket>("PrivateMessage")
+        register<S2CErrorPacket>("Error")
+        register<S2CSuccessPacket>("Success")
     }
 
-    val connected: Boolean
+    val isConnected: Boolean
         get() = channel != null && channel!!.isOpen
 
     private var isConnecting = false
-    var loggedIn = false
+    var isLoggedIn = false
+        private set
 
     private val serializerGson by lazy {
         GsonBuilder()
-            .registerTypeAdapter(Packet::class.java, serializer)
+            .registerTypeAdapter(AxochatPacket.C2S::class.java, serializer)
             .create()
     }
 
     private val deserializerGson by lazy {
         GsonBuilder()
-            .registerTypeAdapter(Packet::class.java, deserializer)
+            .registerTypeAdapter(AxochatPacket.S2C::class.java, deserializer)
             .create()
     }
 
@@ -116,13 +125,13 @@ class ChatClient {
      * Be aware SSL takes insecure certificates.
      */
     suspend fun connect() = runCatching {
-        if (isConnecting || connected) {
+        if (isConnecting || isConnected) {
             return@runCatching
         }
 
         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.CONNECTING))
         isConnecting = true
-        loggedIn = false
+        isLoggedIn = false
 
         val uri = URI("wss://chat.liquidbounce.net:7886/ws")
 
@@ -134,13 +143,13 @@ class ChatClient {
         }
 
         val handler = ChannelHandler(
-            this,
             WebSocketClientHandshakerFactory.newHandshaker(
                 uri,
                 WebSocketVersion.V13,
                 null,
                 true,
-                DefaultHttpHeaders()
+                DefaultHttpHeaders(),
+                65536,
             )
         )
 
@@ -163,7 +172,7 @@ class ChatClient {
                         pipeline.addLast(sslContext.newHandler(ch.alloc()))
                     }
 
-                    pipeline.addLast(HttpClientCodec(), HttpObjectAggregator(8192), handler)
+                    pipeline.addLast(HttpClientCodec(), HttpObjectAggregator(65536), handler)
                 }
 
             })
@@ -175,7 +184,7 @@ class ChatClient {
 
         isConnecting = false
     }.onSuccess {
-        if (connected) {
+        if (isConnected) {
             EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.CONNECTED))
         }
 
@@ -188,7 +197,7 @@ class ChatClient {
 
         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.DISCONNECTED))
         isConnecting = false
-        loggedIn = false
+        isLoggedIn = false
     }
 
     suspend fun reconnect() {
@@ -200,28 +209,28 @@ class ChatClient {
     /**
      * Request Mojang authentication details for login
      */
-    fun requestMojangLogin() = sendPacket(ServerRequestMojangInfoPacket())
+    fun requestMojangLogin() = sendPacket(C2SRequestMojangInfoPacket())
 
     /**
      * Send chat message to server
      */
-    fun sendMessage(message: String) = sendPacket(ServerMessagePacket(message))
+    fun sendMessage(message: String) = sendPacket(C2SMessagePacket(message))
 
     /**
      * Send private chat message to server
      */
-    fun sendPrivateMessage(username: String, message: String) =
-        sendPacket(ServerPrivateMessagePacket(username, message))
+    fun sendPrivateMessage(receiver: String, message: String) =
+        sendPacket(C2SPrivateMessagePacket(receiver, message))
 
     /**
      * Ban user from server
      */
-    fun banUser(target: String) = sendPacket(ServerBanUserPacket(toUUID(target)))
+    fun banUser(target: String) = sendPacket(C2SBanUserPacket(toUUID(target)))
 
     /**
      * Unban user from server
      */
-    fun unbanUser(target: String) = sendPacket(ServerUnbanUserPacket(toUUID(target)))
+    fun unbanUser(target: String) = sendPacket(C2SUnbanUserPacket(toUUID(target)))
 
     /**
      * Convert username or uuid to UUID
@@ -232,7 +241,7 @@ class ChatClient {
 
             target
         } catch (_: IllegalArgumentException) {
-            val incomingUUID = GameProfileRepository().fetchUuidByUsername(target)
+            val incomingUUID = GameProfileRepository.Default.fetchUuidByUsername(target)
             incomingUUID.toString()
         }
     }
@@ -242,19 +251,19 @@ class ChatClient {
      */
     fun loginViaJwt(token: String) {
         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGING_IN))
-        sendPacket(ServerLoginJWTPacket(token, allowMessages = true))
+        sendPacket(C2SLoginJWTPacket(token, allowMessages = true))
     }
 
     /**
      * Send packet to server
      */
-    internal fun sendPacket(packet: Packet) {
-        channel?.writeAndFlush(TextWebSocketFrame(serializerGson.toJson(packet, Packet::class.java)))
+    internal fun sendPacket(packet: AxochatPacket.C2S) {
+        channel?.writeAndFlush(TextWebSocketFrame(serializerGson.toJson(packet, AxochatPacket.C2S::class.java)))
     }
 
-    private fun handleFunctionalPacket(packet: Packet) {
+    private fun handleFunctionalPacket(packet: AxochatPacket.S2C) {
         when (packet) {
-            is ClientMojangInfoPacket -> {
+            is S2CMojangInfoPacket -> {
                 EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGING_IN))
 
                 runCatching {
@@ -266,7 +275,7 @@ class ChatClient {
                         sessionHash
                     )
                     sendPacket(
-                        ServerLoginMojangPacket(
+                        C2SLoginMojangPacket(
                             mc.user.name,
                             mc.user.profileId,
                             allowMessages = true
@@ -284,19 +293,19 @@ class ChatClient {
                 return
             }
 
-            is ClientMessagePacket -> EventManager.callEvent(ClientChatMessageEvent(packet.user, packet.content,
+            is S2CMessagePacket -> EventManager.callEvent(ClientChatMessageEvent(packet.user, packet.content,
                 ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT))
-            is ClientPrivateMessagePacket -> EventManager.callEvent(ClientChatMessageEvent(packet.user, packet.content,
+            is S2CPrivateMessagePacket -> EventManager.callEvent(ClientChatMessageEvent(packet.user, packet.content,
                 ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT))
-            is ClientErrorPacket -> {
+            is S2CErrorPacket -> {
                 // TODO: Replace with translation
                 EventManager.callEvent(ClientChatErrorEvent(translateErrorMessage(packet)))
             }
-            is ClientSuccessPacket -> {
+            is S2CSuccessPacket -> {
                 when (packet.reason) {
                     "Login" -> {
                         EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.LOGGED_IN))
-                        loggedIn = true
+                        isLoggedIn = true
                     }
 
                     // TODO: Replace with translation
@@ -305,11 +314,11 @@ class ChatClient {
                 }
             }
 
-            is ClientNewJWTPacket -> EventManager.callEvent(ClientChatJwtTokenEvent(packet.token))
+            is S2CNewJWTPacket -> EventManager.callEvent(ClientChatJwtTokenEvent(packet.token))
         }
     }
 
-    private fun translateErrorMessage(packet: ClientErrorPacket): String {
+    private fun translateErrorMessage(packet: S2CErrorPacket): String {
         val message = when (packet.message) {
             "NotSupported" -> "This method is not supported!"
             "LoginFailed" -> "Login Failed!"
@@ -337,8 +346,90 @@ class ChatClient {
      * Handle incoming message of websocket
      */
     internal fun handlePlainMessage(message: String) {
-        val packet = deserializerGson.fromJson(message, Packet::class.java)
+        val packet = deserializerGson.fromJson(message, AxochatPacket.S2C::class.java)
         handleFunctionalPacket(packet)
+    }
+
+    private inner class ChannelHandler(
+        private val handshaker: WebSocketClientHandshaker,
+    ) : SimpleChannelInboundHandler<Any>() {
+
+        lateinit var handshakeFuture: ChannelPromise
+
+        /**
+         * Do nothing by default, subclasses may override this method.
+         */
+        override fun handlerAdded(ctx: ChannelHandlerContext) {
+            handshakeFuture = ctx.newPromise()
+        }
+
+        /**
+         * Calls [ChannelHandlerContext.fireChannelActive] to forward
+         * to the next [ChannelInboundHandler] in the [ChannelPipeline].
+         *
+         * Subclasses may override this method to change behavior.
+         */
+        override fun channelActive(ctx: ChannelHandlerContext) {
+            handshaker.handshake(ctx.channel())
+        }
+
+        /**
+         * Calls [ChannelHandlerContext.fireChannelInactive] to forward
+         * to the next [ChannelInboundHandler] in the [ChannelPipeline].
+         *
+         * Subclasses may override this method to change behavior.
+         */
+        override fun channelInactive(ctx: ChannelHandlerContext) {
+            EventManager.callEvent(ClientChatStateChange(ClientChatStateChange.State.DISCONNECTED))
+        }
+
+        /**
+         * Calls [ChannelHandlerContext.fireExceptionCaught] to forward
+         * to the next [ChannelHandler] in the [ChannelPipeline].
+         *
+         * Subclasses may override this method to change behavior.
+         */
+        override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+            logger.error("LiquidChat error", cause)
+            EventManager.callEvent(ClientChatErrorEvent(
+                cause.localizedMessage ?: cause.message ?: cause.javaClass.name
+            ))
+
+            if (!handshakeFuture.isDone) {
+                handshakeFuture.setFailure(cause)
+            }
+            ctx.close()
+        }
+
+        /**
+         * **Please keep in mind that this method will be renamed to
+         * `messageReceived(ChannelHandlerContext, I)` in 5.0.**
+         *
+         * Is called for each message of type [I].
+         *
+         * @param ctx           the [ChannelHandlerContext] which this [SimpleChannelInboundHandler] belongs to
+         * @param msg           the message to handle
+         * @throws Exception    is thrown if an error occurred
+         */
+        override fun channelRead0(ctx: ChannelHandlerContext, msg: Any) {
+            val channel = ctx.channel()
+
+            if (!handshaker.isHandshakeComplete) {
+                try {
+                    handshaker.finishHandshake(channel, msg as FullHttpResponse)
+                    handshakeFuture.setSuccess()
+
+                } catch (exception: WebSocketHandshakeException) {
+                    handshakeFuture.setFailure(exception)
+                }
+                return
+            }
+
+            when (msg) {
+                is TextWebSocketFrame -> handlePlainMessage(msg.text())
+                is CloseWebSocketFrame -> channel.close()
+            }
+        }
     }
 
 }

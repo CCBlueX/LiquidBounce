@@ -21,21 +21,12 @@ package net.ccbluex.liquidbounce.features.chat.packet
 import com.google.gson.annotations.SerializedName
 import java.util.UUID
 
-interface Packet
+sealed interface AxochatPacket {
+    sealed interface C2S : AxochatPacket
+    sealed interface S2C : AxochatPacket
 
-/**
- * Serialized packet
- *
- * @param packetName name of the packet
- * @param packetContent content of the packet
- */
-data class SerializedPacket(
-    @SerializedName("m")
-    val packetName: String,
-
-    @SerializedName("c")
-    val packetContent: Packet?
-)
+    annotation class Metadata(val name: String)
+}
 
 /**
  * A axochat user
@@ -43,9 +34,10 @@ data class SerializedPacket(
  * @param name of user
  * @param uuid of user
  */
-data class User(
+@JvmRecord
+data class AxoUser(
     @SerializedName("name")
     val name: String,
     @SerializedName("uuid")
-    val uuid: UUID
+    val uuid: UUID,
 )
