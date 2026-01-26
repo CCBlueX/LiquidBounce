@@ -188,7 +188,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         val crosshairTarget = when {
             raycast != TRACE_NONE -> {
-                findEntityInCrosshair(range.interactionRange.toDouble(), rotation, filter = {
+                findEntityInCrosshair(range.interactionRange.toDouble(), rotation, predicate = {
                     when (raycast) {
                         TRACE_ONLYENEMY -> it.shouldBeAttacked()
                         TRACE_ALL -> true

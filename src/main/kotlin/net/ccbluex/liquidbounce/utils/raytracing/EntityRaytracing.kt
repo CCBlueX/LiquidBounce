@@ -22,13 +22,15 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntitySelector
 import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.phys.EntityHitResult
+import java.util.function.Predicate
 
 fun Entity.findEntityInCrosshair(
     range: Double,
     rotation: Rotation,
-    filter: (Entity) -> Boolean,
+    predicate: Predicate<Entity>? = null,
 ): EntityHitResult? {
     val cameraVec = eyePosition
     val rotationVec = rotation.directionVector
@@ -41,7 +43,7 @@ fun Entity.findEntityInCrosshair(
         cameraVec,
         vec3d3,
         box,
-        { !it.isSpectator && it.isPickable && filter(it) },
+        if (predicate != null) EntitySelector.CAN_BE_PICKED.or(predicate) else EntitySelector.CAN_BE_PICKED,
         range.sq()
     )
 
@@ -51,8 +53,8 @@ fun Entity.findEntityInCrosshair(
 fun findEntityInCrosshair(
     range: Double,
     rotation: Rotation,
-    filter: (Entity) -> Boolean,
-): EntityHitResult? = mc.cameraEntity?.findEntityInCrosshair(range, rotation, filter)
+    predicate: Predicate<Entity>? = null,
+): EntityHitResult? = mc.cameraEntity?.findEntityInCrosshair(range, rotation, predicate)
 
 /**
  * Allows you to check if your enemy is behind a wall
@@ -74,7 +76,7 @@ fun isLookingAtEntity(
 ): EntityHitResult? {
     val cameraVec = fromEntity.eyePosition
     val entityHitResult = fromEntity.findEntityInCrosshair(range, rotation) { entity ->
-        !entity.isSpectator && entity.isPickable && entity == toEntity
+        entity == toEntity
     } ?: return null
 
     val distance = cameraVec.distanceToSqr(entityHitResult.location)
