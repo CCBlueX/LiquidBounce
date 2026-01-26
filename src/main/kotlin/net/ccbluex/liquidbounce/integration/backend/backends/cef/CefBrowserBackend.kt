@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.sortedInsert
 import net.ccbluex.liquidbounce.utils.validation.HashValidator
+import org.cef.handler.CefLifeSpanHandlerAdapter
 
 /**
  * The time threshold for cleaning up old cache directories.
@@ -149,6 +150,25 @@ class CefBrowserBackend : BrowserBackend, EventListener {
     override fun start() {
         if (!MCEF.INSTANCE.isInitialized) {
             MCEF.INSTANCE.initialize()
+
+            MCEF.INSTANCE.client.handle.addLifeSpanHandler(object : CefLifeSpanHandlerAdapter() {
+                override fun onAfterCreated(createdBrowserApi: org.cef.browser.CefBrowser) {
+                    try {
+                        val browser = browsers.find { cefBrowser -> cefBrowser.browserApi == createdBrowserApi }
+                        if (browser != null) {
+                            if (!browser.isInitialized) {
+                                browser.isInitialized = true
+                            }
+                        } else {
+                            logger.warn("Browser ${createdBrowserApi.identifier} created but not found in backend")
+                        }
+                    } catch (e: Exception) {
+                        logger.error("Failed to mark browser as initialized", e)
+                    }
+
+                    super.onAfterCreated(createdBrowserApi)
+                }
+            })
         }
 
         val support = MCEFAccelerationSupport.getAccelerationSupport()
