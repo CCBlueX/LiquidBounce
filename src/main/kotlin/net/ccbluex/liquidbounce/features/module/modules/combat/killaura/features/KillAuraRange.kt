@@ -18,46 +18,30 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
-import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import kotlin.math.max
+import net.ccbluex.liquidbounce.utils.range.RangeConfigurable
 
 /**
  * Allows adjusting your attack range and scan range.
  */
-object KillAuraRange : Configurable("Range"), MinecraftShortcuts {
-
-    internal val maxAttackRange
-        get() = player.entityAttackRange().effectiveMaxRange(player) + rangeModifier.endInclusive
-
-    internal val minAttackRange
-        get() = max(0f, player.entityAttackRange().effectiveMinRange(player) + rangeModifier.start)
-
-    internal val attackThroughWallsRange
-        get() = wallRange
+object KillAuraRange : RangeConfigurable(), MinecraftShortcuts {
 
     internal val scanRange
-        get() = maxOf(maxAttackRange, wallRange) + currentScanRangeAddition
+        get() = maxOf(maxAttackRange, attackThroughWallsRange) + currentScanRangeAddition
 
-    /**
-     * This will be added to the normal entity interaction range.
-     */
-    private val rangeModifier by floatRange("RangeModifier", -2.0f..1.0f, -2.0f..8f, "blocks")
-
-    /**
-     * This will use only this value for non-visible entities. Originally, we could never attack through walls,
-     * so this makes sense to keep starting from 0.0
-     */
-    private val wallRange by float("WallRange", 3f, 0f..8f, "blocks")
-
-    private val scanRangeAddition by floatRange("ScanRangeAddition", 2.0f..3.0f, 0.0f..7.0f, "blocks").onChanged { range ->
+    private val scanRangeModifier by floatRange(
+        "ScanRangeModifier",
+        2.0f..3.0f,
+        0.0f..7.0f,
+        "blocks"
+    ).onChanged { range ->
         currentScanRangeAddition = range.random()
     }
-    private var currentScanRangeAddition: Float = scanRangeAddition.random()
+    private var currentScanRangeAddition: Float = scanRangeModifier.random()
 
     fun update() {
-        currentScanRangeAddition = scanRangeAddition.random()
+        currentScanRangeAddition = scanRangeModifier.random()
     }
 
 }
