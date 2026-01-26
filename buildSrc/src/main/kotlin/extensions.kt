@@ -172,6 +172,7 @@ fun Configuration.excludeProvidedLibs() = apply {
     exclude(group = "org.apache.logging.log4j", module = "log4j-slf4j-impl")
     exclude(group = "org.slf4j", module = "slf4j-api")
     exclude(group = "com.mojang", module = "authlib")
+    exclude(group = "org.lwjgl", module = "lwjgl")
 
     exclude(group = "io.netty", module = "netty-buffer")
     exclude(group = "io.netty", module = "netty-codec")

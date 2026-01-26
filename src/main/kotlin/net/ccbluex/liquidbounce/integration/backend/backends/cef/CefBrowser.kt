@@ -109,6 +109,8 @@ class CefBrowser(
                 comparePaintWithViewpoint(it.width, it.height)
             }
         }
+
+        logger.info("Created CefBrowser(url='$url', visible=$visible, priority=$priority)")
     }
 
     override var url: String

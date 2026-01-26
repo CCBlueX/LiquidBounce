@@ -57,7 +57,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
                 val color by color("Color", Color4b.GREEN)
 
                 override fun drawHighlightSlot(context: GuiGraphics, slot: Slot) {
-                    context.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.toARGB())
+                    context.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.argb)
                 }
             }
 
@@ -136,7 +136,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
                     if (seconds > 1) "${seconds.toInt()}s" else "${seconds.toFixed(1)}s"
                 }
             }
-            this.drawCenteredString(mc.font, text, x + 16 / 2, y, TextCooldownProgress.color.toARGB())
+            this.drawCenteredString(mc.font, text, x + 16 / 2, y, TextCooldownProgress.color.argb)
             this.pose().popMatrix()
         }
     }

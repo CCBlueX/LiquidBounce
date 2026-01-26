@@ -181,7 +181,7 @@ class TargetRenderer(
                         val alpha = Mth.clamp(color.a - (i * alphaFactor), 0, color.a)
                         val renderColor = color.alpha(alpha)
 
-                        drawSquareTexture(ghostModeTexture, size, renderColor.toARGB())
+                        drawSquareTexture(ghostModeTexture, size, renderColor.argb)
 
                         with(matrixStack) {
                             translate(-size / 2.0, -size / 2.0, 0.0)
@@ -360,7 +360,7 @@ class TargetRenderer(
                         y0 = screenPos.y - scaledHeight * 0.5f,
                         x1 = screenPos.x + scaledWidth * 0.5f,
                         y1 = screenPos.y + scaledHeight * 0.5f,
-                        argb = color.toARGB(),
+                        argb = color.argb,
                     )
                 }
             }

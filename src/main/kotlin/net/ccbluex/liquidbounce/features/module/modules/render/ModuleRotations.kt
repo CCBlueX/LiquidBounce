@@ -122,7 +122,7 @@ object ModuleRotations : ClientModule("Rotations", ModuleCategories.RENDER) {
             if (drawVectorLine) {
                 renderEnvironmentForWorld(matrixStack) {
                     drawLineStrip(
-                        vectorLine.toARGB(),
+                        vectorLine.argb,
                         eyeVector, eyeVector + Vec3f(interpolatedRotationVec * 100.0)
                     )
                 }

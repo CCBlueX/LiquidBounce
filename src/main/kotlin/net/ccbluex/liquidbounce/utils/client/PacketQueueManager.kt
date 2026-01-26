@@ -174,7 +174,7 @@ object PacketQueueManager : EventListener {
         renderEnvironmentForWorld(matrixStack) {
             // Use LiquidBounce accent color
             drawLineStrip(
-                argb = Color4b.LIQUID_BOUNCE.toARGB(),
+                argb = Color4b.LIQUID_BOUNCE.argb,
                 positions = positions.mapToArray { vec3d -> Vec3f(relativeToCamera(vec3d)) },
             )
         }

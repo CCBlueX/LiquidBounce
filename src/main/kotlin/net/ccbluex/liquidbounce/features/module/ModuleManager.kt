@@ -184,7 +184,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOff
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAspect
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAttackEffects
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAutoF5
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBedPlates
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBetterInventory
@@ -233,6 +232,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom
 import net.ccbluex.liquidbounce.features.module.modules.render.crosshair.ModuleCrosshair
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.ModuleESP
 import net.ccbluex.liquidbounce.features.module.modules.render.hats.ModuleHats
+import net.ccbluex.liquidbounce.features.module.modules.render.hitfx.ModuleHitFX
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
@@ -552,7 +552,7 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleJumpEffect,
             ModuleMobOwners,
             ModuleMurderMystery,
-            ModuleAttackEffects,
+            ModuleHitFX,
             ModuleNametags,
             ModuleCombineMobs,
             ModuleAspect,

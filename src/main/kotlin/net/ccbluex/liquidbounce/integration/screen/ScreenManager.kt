@@ -154,7 +154,10 @@ object ScreenManager : EventListener {
 
     fun restart() {
         try {
-            this.mainBrowser?.close()
+            // [mainBrowser] may be null if the browser backend is not initialized.
+            // That means we are likely still in the process of starting up.
+            val mainBrowser = this.mainBrowser ?: return
+            mainBrowser.close()
             this.mainBrowser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
         } catch (e: Exception) {
             logger.error("Failed to restart browser backend for screen integration.", e)
@@ -203,9 +206,7 @@ object ScreenManager : EventListener {
 
     @Suppress("unused")
     private val screenUpdater = handler<GameTickEvent> {
-        if (mc.screen !is TaskProgressScreen) {
-            handleCurrentScreen(mc.screen)
-        }
+        handleCurrentScreen(mc.screen)
     }
 
     @Suppress("unused")
@@ -258,6 +259,11 @@ object ScreenManager : EventListener {
     }
 
     private fun handleCurrentScreen(screen: Screen?): Boolean {
+        // We check against mc.screen, not screen, because somehow this works.
+        if (mc.screen is TaskProgressScreen) {
+            return false
+        }
+
         if (HideAppearance.isHidingNow || ClientInteropServer.isSkipping) {
             return if (screen is CustomMinecraftScreen) {
                 val original = screen.originalScreen

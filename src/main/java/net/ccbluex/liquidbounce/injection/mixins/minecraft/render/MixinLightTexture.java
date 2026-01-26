@@ -27,6 +27,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffects;
+import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -36,6 +37,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+@NullMarked
 @Mixin(LightTexture.class)
 public abstract class MixinLightTexture {
 
@@ -83,7 +85,7 @@ public abstract class MixinLightTexture {
             return ModuleFullBright.FullBrightGamma.INSTANCE.getGamma();
         }
 
-        // Xray fullbright
+        // Xray fullBright
         final ModuleXRay module = ModuleXRay.INSTANCE;
         if (!module.getRunning() || !module.getFullBright()) {
             return original;

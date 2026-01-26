@@ -463,7 +463,7 @@
   "liquidbounce.module.antiStaff.messages.noStaffs": "There is no staff list available for %s.",
   "liquidbounce.module.antiStaff.messages.staffsFailed": "Failed to load staff list for %s with code %s.",
   "liquidbounce.module.antiStaff.messages.staffsLoaded": "%s staff member loaded for %s.",
-  "liquidbounce.module.attackEffects.description": "Displays an effect when attacking an entity.",
+  "liquidbounce.module.hitFX.description": "Hitting a target triggers a special effect.",
   "liquidbounce.module.particles.description": "Displays particles when attacking an entity.",
   "liquidbounce.module.autoAccount.description": "Automatically authenticates you on cracked servers.",
   "liquidbounce.module.autoArmor.description": "Automatically equips the best armor in your inventory.",

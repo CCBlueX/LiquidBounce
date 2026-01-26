@@ -56,7 +56,6 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.server.IntegratedServer;
-import net.minecraft.util.Util;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -213,19 +212,15 @@ public abstract class MixinMinecraft {
         }
 
         // For debugging purposes, will be removed until we have a stable release
-        if (Util.getPlatform() == Util.OS.WINDOWS) {
-            if (BrowserBackendManager.INSTANCE.getBackend() != null &&
-                BrowserBackendManager.INSTANCE.getBackend().isInitialized() &&
-                    BrowserBackendManager.INSTANCE.getBackend().getAccelerationFlags().isSupported()) {
-                var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
+        var backend = BrowserBackendManager.INSTANCE.getBackend();
+        if (backend != null && backend.isInitialized() && backend.getAccelerationFlags().isSupported()) {
+            var accelerated = GlobalBrowserSettings.INSTANCE.getAccelerated();
 
-                if (accelerated != null && accelerated.get()) {
-                    titleBuilder.append(" | (UI Renderer Acceleration is ON");
-                    // Hotkey only works when not in-game
-                    if (this.level == null && this.player == null) {
-                        titleBuilder.append(" - Toggle with F12");
-                    }
-                    titleBuilder.append(")");
+            if (accelerated != null && accelerated.get()) {
+                titleBuilder.append(" | Accelerated Paint is ON");
+                // Hotkey only works when not in-game
+                if (this.level == null && this.player == null) {
+                    titleBuilder.append(" [Hotkey: F12]");
                 }
             }
         }
