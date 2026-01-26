@@ -61,7 +61,8 @@ class CefBrowser(
 
             logger.info("[CefBrowser-${hashCode()}] Initialized Browser API")
         }
-        get() = browserApi.identifier != -1 && browserApi.url.isNotEmpty()
+
+    override var isWorking: Boolean = false
 
     override var viewport: BrowserViewport = viewport
         set(value) {
@@ -120,9 +121,11 @@ class CefBrowser(
             logger.info("[CefBrowser-${this@CefBrowser.hashCode()}] Initializing Browser API with url='$url'")
 
             addOnPaintListener {
+                isWorking = true
                 comparePaintWithViewpoint(it.width, it.height)
             }
             addOnAcceleratedPaintListener {
+                isWorking = true
                 comparePaintWithViewpoint(it.width, it.height)
             }
         }
@@ -133,6 +136,7 @@ class CefBrowser(
         set(value) {
             if (!isInitialized) {
                 logger.warn("Cannot set URL of uninitialized browser $this.")
+                // We continue anyway, because the browser API might accept it anyway.
             }
 
             browserApi.loadURL(value)

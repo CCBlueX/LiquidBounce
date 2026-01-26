@@ -99,7 +99,9 @@ object ScreenManager : EventListener {
             logger.info("Waiting for browser to be initialized...")
             // We currently proceed to go to the Minecraft Title Screen
             //   until this times out. [ErrorHandler.fatal] will kill the game anyway.
-            waitMatchesWithTimeout<GameTickEvent>(timeout = 30.seconds) { browser.isInitialized }
+            waitMatchesWithTimeout<GameTickEvent>(timeout = 30.seconds) {
+                browser.isInitialized && browser.isWorking
+            }
             this@ScreenManager.mainBrowser = browser
 
             logger.info("Integration Browser $browser is ready.")
