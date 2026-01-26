@@ -36,9 +36,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
@@ -47,6 +44,9 @@ import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
+import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.ItemInHandRenderer
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
@@ -296,7 +296,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
         // Raycast using the current rotation and find a block or entity that should be interacted with
         val rotationToTheServer = RotationManager.serverRotation
 
-        val entityHitResult = raytraceEntity(range.maxAttackRange.toDouble(), rotationToTheServer, filter = {
+        val entityHitResult = findEntityInCrosshair(range.maxAttackRange.toDouble(), rotationToTheServer, filter = {
             when (raycast) {
                 TRACE_NONE -> false
                 TRACE_ONLYENEMY -> it.shouldBeAttacked()
@@ -316,7 +316,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
             return
         }
 
-        val hitResult = raycast(rotationToTheServer) ?: return
+        val hitResult = traceFromPlayer(rotationToTheServer) ?: return
 
         if (hitResult.type != HitResult.Type.BLOCK) {
             return
@@ -336,13 +336,13 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
      * Check if the player is in danger.
      */
     private fun isInDanger() = targetTracker.targets().any { target ->
-        facingEnemy(
+        isLookingAtEntity(
             fromEntity = target,
             toEntity = player,
             rotation = target.rotation,
             range = range.maxAttackRange.toDouble(),
-            wallsRange = range.attackThroughWallsRange.toDouble()
-        )
+            throughWallsRange = range.attackThroughWallsRange.toDouble()
+        ) != null
     }
 
     enum class BlockMode(override val choiceName: String) : NamedChoice {

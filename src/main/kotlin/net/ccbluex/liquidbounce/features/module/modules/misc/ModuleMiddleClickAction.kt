@@ -27,13 +27,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Items
 
@@ -119,17 +119,17 @@ object ModuleMiddleClickAction : ClientModule(
         val repeatable = handler<GameTickEvent> {
             val rotation = player.rotation
 
-            val entity = (raytraceEntity(pickUpRange.toDouble(), rotation) { it is Player }
+            val entity = (findEntityInCrosshair(pickUpRange.toDouble(), rotation) { it is Player }
                 ?: return@handler).entity as Player
 
-            val facesEnemy = facingEnemy(
+            val entityHitResult = isLookingAtEntity(
                 toEntity = entity, rotation = rotation, range = pickUpRange.toDouble(),
-                wallsRange = 0.0
+                throughWallsRange = 0.0
             )
 
             val pickup = mc.options.keyPickItem.isDown
 
-            if (facesEnemy && pickup && !clicked) {
+            if (entityHitResult != null && pickup && !clicked) {
                 val name = entity.scoreboardName
 
                 if (FriendManager.isFriend(name)) {

@@ -20,7 +20,11 @@ package net.ccbluex.liquidbounce.utils.range
 
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
-import kotlin.math.abs
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.component.AttackRange
+import net.minecraft.world.phys.Vec3
 import kotlin.math.max
 
 /**
@@ -29,28 +33,44 @@ import kotlin.math.max
 open class RangeConfigurable : Configurable("Range"), MinecraftShortcuts {
 
     internal val maxAttackRange
-        get() = player.entityAttackRange().effectiveMaxRange(player) + abs(maxRangeModifier)
+        get() = getAttackRange().effectiveMaxRange(player)
 
     internal val minAttackRange
-        get() = max(0f, player.entityAttackRange().effectiveMinRange(player) - abs(maxRangeModifier))
+        get() = getAttackRange().effectiveMinRange(player)
 
     internal val attackThroughWallsRange
         get() = wallRange
 
     /**
-     * This will be added to the attack max-range.
+     * Increases the attack max-range.
      */
-    private val maxRangeModifier by float("MaxRangeModifier", 0f, 0.0f..5f, "blocks")
+    private val maxRangeIncrease by float("MaxRangeIncrease", 0f, 0.0f..5f, "blocks")
 
     /**
-     * This will be subtracted from the attack min-range.
+     * Decreases the attack min-range.
      */
-    private val minRangeModifier by float("MinRangeModifier", -0.0f, -2.0f..0f, "blocks")
+    private val minRangeModifier by float("MinRangeDecrease", 0f, 0f..2f, "blocks")
 
     /**
      * This will use only this value for non-visible entities. Originally, we could never attack through walls,
      * so this makes sense to keep starting from 0.0
      */
     private val wallRange by float("WallRange", 3f, 0f..8f, "blocks")
+
+    fun getAttackRange(itemStack: ItemStack = player.getItemInHand(InteractionHand.MAIN_HAND)): AttackRange {
+        val attackRange = itemStack.get(DataComponents.ATTACK_RANGE) ?: AttackRange.defaultFor(player)
+
+        return AttackRange(
+            max(0f, attackRange.minRange - minRangeModifier),
+            attackRange.maxRange + maxRangeIncrease,
+            max(0f, attackRange.minCreativeRange - minRangeModifier),
+            attackRange.maxCreativeRange + maxRangeIncrease,
+            attackRange.hitboxMargin,
+            attackRange.mobFactor
+        )
+    }
+
+    fun isInRange(itemStack: ItemStack = player.getItemInHand(InteractionHand.MAIN_HAND), pos: Vec3) =
+        getAttackRange(itemStack).isInRange(player, pos)
 
 }

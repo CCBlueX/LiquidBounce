@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.horizontalSpeed
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.withStrafe
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.network.protocol.game.ClientboundExplodePacket
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
@@ -60,13 +60,11 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
         if (!OnlyFacing.enabled) return@handler
         val target = world.findEnemy(0f..OnlyFacing.range) ?: return@handler
 
-        val isFacingEnemy = facingEnemy(
+        shouldStrafe = isLookingAtEntity(
             target,
             OnlyFacing.range.toDouble(),
             RotationManager.currentRotation ?: player.rotation
-        )
-
-        shouldStrafe = isFacingEnemy
+        ) != null
     }
 
     @Suppress("unused")

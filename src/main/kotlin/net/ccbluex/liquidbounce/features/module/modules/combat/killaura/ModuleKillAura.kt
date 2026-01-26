@@ -56,9 +56,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
-import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -68,6 +66,8 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.isInventoryOpen
 import net.ccbluex.liquidbounce.utils.inventory.isInContainerScreen
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.sq
+import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
 import net.minecraft.world.entity.Entity
@@ -141,7 +141,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             return@handler
         }
 
-        // Update current target tracker to make sure you attack the best enemy
+        // Update the current target tracker to make sure you attack the best enemy
         updateTarget()
 
         // Update Auto Weapon
@@ -188,7 +188,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         val crosshairTarget = when {
             raycast != TRACE_NONE -> {
-                raytraceEntity(range.maxAttackRange.toDouble(), rotation, filter = {
+                findEntityInCrosshair(range.maxAttackRange.toDouble(), rotation, filter = {
                     when (raycast) {
                         TRACE_ONLYENEMY -> it.shouldBeAttacked()
                         TRACE_ALL -> true
@@ -223,20 +223,24 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
         // Make it seem like we are blocking
         KillAuraAutoBlock.makeSeemBlock()
 
-        // Are we actually facing the [chosenEntity]
-        val isFacingEnemy = facingEnemy(
-            toEntity = target,
-            rotation = rotation,
-            range = range.maxAttackRange.toDouble(),
-            wallsRange = range.attackThroughWallsRange.toDouble()
-        ) || ModuleElytraTarget.canIgnoreKillAuraRotations
-
-        debugParameter("Is Facing Enemy") { isFacingEnemy }
         debugParameter("Rotation") { rotation }
         debugParameter("Target") { target.scoreboardName }
 
+        val attackHitResult = isLookingAtEntity(
+            toEntity = target,
+            rotation = rotation,
+            range = range.maxAttackRange.toDouble(),
+            throughWallsRange = range.attackThroughWallsRange.toDouble()
+        )
+
+        debugParameter("Target Hit Result") { attackHitResult?.location }
+
+        val isInRange = ModuleElytraTarget.canIgnoreKillAuraRotations ||
+            attackHitResult != null && range.isInRange(pos = attackHitResult.location)
+        debugParameter("Is In Range") { isInRange }
+
         // Check if our target is in range, otherwise deal with auto block
-        if (!isFacingEnemy) {
+        if (!isInRange) {
             if (KillAuraAutoBlock.enabled && KillAuraAutoBlock.onScanRange &&
                 player.squaredBoxedDistanceTo(target) <= range.scanRange.sq()
             ) {
@@ -258,7 +262,7 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             return
         }
 
-        debugParameter("Valid Rotation") { ModuleKillAura }
+        debugParameter("Valid Rotation") { rotation }
 
         // Attack enemy, according to the attack scheduler
         if (clicker.isClickTick && validateAttack(target)) {
@@ -364,7 +368,6 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
             priority = Priority.IMPORTANT_FOR_USAGE_2,
             provider = this@ModuleKillAura
         )
-
         return true
     }
 

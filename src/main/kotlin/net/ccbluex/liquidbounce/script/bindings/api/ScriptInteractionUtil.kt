@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
@@ -29,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacement
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
@@ -81,7 +81,7 @@ object ScriptInteractionUtil {
             ?: return false
 
         // Check if block is reachable to the player
-        val rayTraceResult = raycast(bestPlacement.rotation)
+        val rayTraceResult = traceFromPlayer(bestPlacement.rotation)
 
         // If the type we are aiming at is not a block, we can't place it
         if (rayTraceResult.type != HitResult.Type.BLOCK) {

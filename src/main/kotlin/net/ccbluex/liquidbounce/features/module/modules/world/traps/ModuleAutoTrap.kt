@@ -29,12 +29,12 @@ import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.TrapPl
 import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.WebTrapPlanner
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 
 /**
  * Ignite & AutoWeb module
@@ -90,7 +90,7 @@ object ModuleAutoTrap : ClientModule("AutoTrap", ModuleCategories.WORLD, aliases
     private val placementHandler = tickHandler {
         val plan = currentPlan ?: return@tickHandler
 
-        val raycast = raycast()
+        val raycast = traceFromPlayer()
         if (!plan.validate(raycast)) {
             return@tickHandler
         }

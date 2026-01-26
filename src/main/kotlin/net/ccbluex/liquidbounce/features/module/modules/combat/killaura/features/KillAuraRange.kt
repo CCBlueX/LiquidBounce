@@ -31,7 +31,7 @@ object KillAuraRange : RangeConfigurable(), MinecraftShortcuts {
         get() = maxOf(maxAttackRange, attackThroughWallsRange) + currentScanRangeAddition
 
     private val scanRangeModifier by floatRange(
-        "ScanRangeModifier",
+        "ScanRangeIncrease",
         2.0f..3.0f,
         0.0f..7.0f,
         "blocks"

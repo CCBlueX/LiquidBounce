@@ -42,8 +42,8 @@ import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
-import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingKt;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
+import net.ccbluex.liquidbounce.utils.raytracing.RaytracingKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -267,7 +267,7 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
             rotation = cameraRotation;
         }
 
-        return RaytracingKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange), ClipContext.Block.OUTLINE,
+        return RaytracingKt.traceFromPlayer(rotation, Math.max(blockInteractionRange, entityInteractionRange), ClipContext.Block.OUTLINE,
             ModuleLiquidPlace.INSTANCE.getRunning(), tickDelta);
     }
 
