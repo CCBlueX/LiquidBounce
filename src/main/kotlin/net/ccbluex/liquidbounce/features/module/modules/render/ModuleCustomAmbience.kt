@@ -86,7 +86,7 @@ object ModuleCustomAmbience : ClientModule("CustomAmbience", ModuleCategories.RE
     }
 
     /**
-     * @see MixinLightmap
+     * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinLightmap
      *
      * FIXME: redesign
      */
