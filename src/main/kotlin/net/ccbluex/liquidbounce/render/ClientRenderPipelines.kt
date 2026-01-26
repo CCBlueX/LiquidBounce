@@ -310,7 +310,8 @@ object ClientRenderPipelines {
         withSampler("overlay")
         withUniform("BlurData", UniformType.UNIFORM_BUFFER)
         withoutBlend()
-        withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+        withDepthTestFunction(DepthTestFunction.LEQUAL_DEPTH_TEST)
+        withDepthWrite(false)
     }
 
     @JvmField
