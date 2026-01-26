@@ -35,6 +35,7 @@ class ExternalSystemBrowser(
 ) : Browser, MinecraftShortcuts {
 
     override val isInitialized = true
+    override var isWorking = true
     override var viewport: BrowserViewport = viewport
     override var visible = true
 
