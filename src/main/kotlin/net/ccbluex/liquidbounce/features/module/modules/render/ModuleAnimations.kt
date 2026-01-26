@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock
 import net.minecraft.util.Mth
 import net.minecraft.world.entity.HumanoidArm
 

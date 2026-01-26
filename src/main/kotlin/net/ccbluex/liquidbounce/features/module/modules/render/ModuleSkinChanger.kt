@@ -58,6 +58,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.multiplayer.PlayerInfo
+import net.minecraft.client.player.AbstractClientPlayer
 import net.minecraft.core.ClientAsset
 import net.minecraft.world.entity.player.PlayerModelType
 import net.minecraft.world.entity.player.PlayerSkin
@@ -69,7 +70,7 @@ object ModuleSkinChanger : ClientModule("SkinChanger", ModuleCategories.RENDER) 
 
     /**
      * Changes the player model by forcefully modifying
-     * [net.minecraft.client.network.AbstractClientPlayerEntity.getSkin],
+     * [AbstractClientPlayer.getSkin],
      * as PlayerListEntry is unreliable on some servers.
      */
     private val allowMixinAbstractClientPlayerEntity by boolean("ForceOverride", false)

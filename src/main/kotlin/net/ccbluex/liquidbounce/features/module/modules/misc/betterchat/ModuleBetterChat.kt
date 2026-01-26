@@ -56,7 +56,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
     val antiClear get() = Features.ANTI_CLEAR in features
 
     /**
-     * Allows you to transform your message text to unicode.
+     * Allows you to transform your message text to Unicode.
      */
     private val forceUnicodeChat get() = Features.FORCE_UNICODE_CHAT in features
 
@@ -82,7 +82,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
 
     // FIXME(1.21.11)
     object Copy : ToggleableConfigurable(this, "Copy", true) {
-        private val notification by boolean("Notificate", true)
+        private val notify by boolean("Notify", true)
         val highlight by boolean("Highlight", true)
 
         @JvmStatic
@@ -105,7 +105,7 @@ object ModuleBetterChat : ClientModule("BetterChat", ModuleCategories.RENDER, al
             ) {
                 mc.keyboardHandler.clipboard = content
 
-                if (notification) {
+                if (notify) {
                     notification(
                         "ChatCopy",
                         "The line is copied",

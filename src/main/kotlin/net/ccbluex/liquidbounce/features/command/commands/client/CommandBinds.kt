@@ -126,7 +126,7 @@ object CommandBinds : Command.Factory {
             )
         }
 
-        ModuleClickGui.reload()
+        ModuleClickGui.sync()
     }
 
     private val removeSubcommand = CommandBuilder
@@ -178,7 +178,7 @@ object CommandBinds : Command.Factory {
             }
 
             module.bindValue.bind(bindKey, action, modifiers)
-            ModuleClickGui.reload()
+            ModuleClickGui.sync()
             chat(
                 regular(
                     command.result("moduleBound", variable(module.name), module.bind.renderText())

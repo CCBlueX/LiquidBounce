@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 
 /**
- * A anti levitation module
+ * An anti levitation module
  *
  * Stops the levitation and slow falling effect.
  */

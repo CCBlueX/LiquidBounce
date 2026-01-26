@@ -198,7 +198,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
                 waitTicks(2)
                 if (stepCounter % 2 == 0) {
                     player.deltaMovement.y = 0.24680001947880004
-                    player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.2))
+                    player.deltaMovement = player.deltaMovement.withStrafe(speed = 0.2)
                 }
                 waitTicks(1)
                 if (stepCounter % 2 == 0) {
@@ -248,7 +248,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
                 waitTicks(1)
                 player.deltaMovement.y = 0.25
                 waitTicks(2)
-                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.281))
+                player.deltaMovement = player.deltaMovement.withStrafe(speed = 0.281)
                 player.deltaMovement.y -= player.y % 1.0
                 Timer.requestTimerSpeed(recoveryTimer, Priority.IMPORTANT_FOR_USAGE_1, ModuleStep, 2)
                 stepping = false
@@ -318,7 +318,7 @@ object ModuleStep : ClientModule("Step", ModuleCategories.MOVEMENT) {
                     }
                 }
                 stepping = false
-                player.setDeltaMovement(player.deltaMovement.withStrafe(speed = 0.1838601407459074))
+                player.deltaMovement = player.deltaMovement.withStrafe(speed = 0.1838601407459074)
             }
         }
 

@@ -98,6 +98,6 @@ internal object ElytraFlyModePitch40Infinite : ElytraFlyMode("Pitch40Infinite") 
             MAX_PITCH
         )
 
-        player.setXRot(infinitePitch)
+        player.xRot = infinitePitch
     }
 }

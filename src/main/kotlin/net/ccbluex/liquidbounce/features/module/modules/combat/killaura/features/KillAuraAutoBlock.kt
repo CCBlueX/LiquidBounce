@@ -47,6 +47,8 @@ import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.input.InputTracker.isPressedOnAny
 import net.ccbluex.liquidbounce.utils.input.shouldSwingHand
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.ItemInHandRenderer
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket
 import net.minecraft.network.protocol.game.ServerboundUseItemPacket
 import net.minecraft.world.InteractionHand
@@ -82,7 +84,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
      * Enforces the blocking state on the Input
      *
      * todo: fix open screen affecting this
-     * @see net.minecraft.client.MinecraftClient handleInputEvents
+     * @see Minecraft.handleKeybinds
      */
     var blockingStateEnforced = false
         set(value) {
@@ -101,7 +103,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
      * Visual blocking shows a blocking state, while not actually blocking.
      * This is useful to make the blocking animation become much smoother.
      *
-     * @see net.minecraft.client.render.item.HeldItemRenderer renderFirstPersonItem
+     * @see ItemInHandRenderer.renderArmWithItem
      */
     var blockVisual = false
         get() = field && super.running && (isOlderThanOrEqual1_8 || ModuleSwordBlock.running)
@@ -252,15 +254,14 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
 
         currentTickOff = tickOffRange.random()
 
-        return when {
-            unblockMode == UnblockMode.STOP_USING_ITEM -> {
+        return when (unblockMode) {
+            UnblockMode.STOP_USING_ITEM -> {
                 interaction.releaseUsingItem(player)
 
                 blockingStateEnforced = false
                 true
             }
-
-            unblockMode == UnblockMode.CHANGE_SLOT -> {
+            UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 8
                 network.send(ServerboundSetCarriedItemPacket(nextSlot))
@@ -268,8 +269,7 @@ object KillAuraAutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking"
                 blockingStateEnforced = false
                 true
             }
-
-            unblockMode == UnblockMode.NONE && !pauses -> {
+            UnblockMode.NONE if !pauses -> {
                 interaction.releaseUsingItem(player)
 
                 blockingStateEnforced = false

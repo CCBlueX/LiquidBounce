@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.engine.type.Vec3f
 import net.ccbluex.liquidbounce.render.utils.DistanceFadeUniformConfigurable
 import net.ccbluex.liquidbounce.render.utils.UnitCircle
+import net.ccbluex.liquidbounce.utils.client.gpuDevice
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.renderer.texture.AbstractTexture
 import net.minecraft.core.Direction
@@ -64,8 +65,8 @@ import kotlin.contracts.contract
  * But as of now, 01.02.2025, they haven't.
  */
 @JvmField
-val HAS_AMD_VEGA_APU = GL11C.glGetString(GL11C.GL_RENDERER)?.startsWith("AMD Radeon(TM) RX Vega") ?: false &&
-    GL11C.glGetString(GL11C.GL_VENDOR) == "ATI Technologies Inc."
+val HAS_AMD_VEGA_APU = (gpuDevice.renderer?.startsWith("AMD Radeon(TM) RX Vega") ?: false) &&
+    gpuDevice.vendor == "ATI Technologies Inc."
 
 @JvmField
 val FULL_BOX = AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
@@ -354,7 +355,7 @@ inline fun VertexConsumer.addVertex(pose: Matrix4fc, pos: Vector3fc): VertexCons
     addVertex(pose, pos.x(), pos.y(), pos.z())
 
 @Suppress("NOTHING_TO_INLINE")
-inline fun VertexConsumer.color(color: Color4b): VertexConsumer = setColor(color.toARGB())
+inline fun VertexConsumer.color(color: Color4b): VertexConsumer = setColor(color.argb)
 
 /**
  * Function to draw a colored [box].
@@ -421,7 +422,7 @@ fun WorldRenderEnvironment.drawPlane(
     outlineColor: Color4b? = Color4b.TRANSPARENT
 ) {
     if (fillColor != null && !fillColor.isTransparent) {
-        val argb = fillColor.toARGB()
+        val argb = fillColor.argb
         drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
             addVertex(matrix, 0f, 0f, 0f).setColor(argb)
             addVertex(matrix, 0f, 0f, sizeZ).setColor(argb)
@@ -431,7 +432,7 @@ fun WorldRenderEnvironment.drawPlane(
     }
 
     if (outlineColor != null && !outlineColor.isTransparent) {
-        val argb = outlineColor.toARGB()
+        val argb = outlineColor.argb
         drawCustomMesh(ClientRenderPipelines.Lines) { matrix ->
             addVertex(matrix, 0f, 0f, 0f).setColor(argb)
             addVertex(matrix, 0f, 0f, sizeZ).setColor(argb)
@@ -460,7 +461,7 @@ private fun WorldRenderEnvironment.drawGradientQuad(vertices: Array<Vec3f>, colo
     drawCustomMesh(ClientRenderPipelines.Quads) { matrix ->
         vertices.forEachIndexed { index, (x, y, z) ->
             val color4b = colors[index]
-            addVertex(matrix, x, y, z).setColor(color4b.toARGB())
+            addVertex(matrix, x, y, z).setColor(color4b.argb)
         }
     }
 }
@@ -488,9 +489,9 @@ fun WorldRenderEnvironment.drawGradientCircle(
             innerP.set(cosine * innerRadius, 0f, sine * innerRadius).add(innerOffset)
 
             addVertex(matrix, outerP.x, outerP.y, outerP.z)
-                .setColor(outerColor.toARGB())
+                .setColor(outerColor.argb)
             addVertex(matrix, innerP.x, innerP.y, innerP.z)
-                .setColor(innerColor.toARGB())
+                .setColor(innerColor.argb)
         }
     }
 }
@@ -504,7 +505,7 @@ fun WorldRenderEnvironment.drawGradientCircle(
 fun WorldRenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) =
     drawCustomMesh(ClientRenderPipelines.LineStrip) { matrix ->
         UnitCircle.forEach(radius) { x, z ->
-            addVertex(matrix, x, 0f, z).setColor(color4b.toARGB())
+            addVertex(matrix, x, 0f, z).setColor(color4b.argb)
         }
     }
 

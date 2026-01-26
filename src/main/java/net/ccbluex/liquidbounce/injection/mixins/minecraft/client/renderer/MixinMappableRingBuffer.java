@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client.renderer;
 
 import com.mojang.blaze3d.buffers.GpuFence;
 import net.ccbluex.liquidbounce.additions.MappableRingBufferAddition;
+import net.minecraft.client.input.InputQuirks;
 import net.minecraft.client.renderer.MappableRingBuffer;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -28,6 +29,8 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 @NullMarked
 @Mixin(MappableRingBuffer.class)
@@ -42,6 +45,20 @@ public abstract class MixinMappableRingBuffer implements MappableRingBufferAddit
 
     @Shadow
     private int current;
+
+    /**
+     * <a href="https://github.com/CCBlueX/LiquidBounce/issues/7721">GitHub Issue</a>
+     */
+    @ModifyArg(
+        method = "currentBuffer",
+        at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/buffers/GpuFence;awaitCompletion(J)Z")
+    )
+    private long changeAwaitTimeout(long original) {
+        if (InputQuirks.REPLACE_CTRL_KEY_WITH_CMD_KEY) {
+            return 50L;
+        }
+        return original;
+    }
 
     @Unique
     @Override

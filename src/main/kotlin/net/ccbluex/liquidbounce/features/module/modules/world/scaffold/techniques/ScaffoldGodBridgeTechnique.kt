@@ -93,19 +93,19 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
                 return LedgeAction.NO_LEDGE
             }
 
-            val targetFullfillsRequirements = target.doesCrosshairTargetMatchRequirements(currentCrosshairTarget)
+            val targetFulfillsRequirements = target.doesCrosshairTargetMatchRequirements(currentCrosshairTarget)
             val isValidCrosshairTarget = ModuleScaffold.isValidCrosshairTarget(currentCrosshairTarget)
 
-            ModuleDebug.debugParameter(this, "targetFullfillsRequirements", targetFullfillsRequirements.toString())
+            ModuleDebug.debugParameter(this, "targetFulfillsRequirements", targetFulfillsRequirements.toString())
             ModuleDebug.debugParameter(this, "isValidCrosshairTarget", isValidCrosshairTarget.toString())
 
             // Does the crosshair target meet the requirements?
-            if (targetFullfillsRequirements && isValidCrosshairTarget) {
+            if (targetFulfillsRequirements && isValidCrosshairTarget) {
                 return LedgeAction.NO_LEDGE
             }
 
             // If the crosshair target does not meet the requirements,
-            // we need to prevent the player from falling off the ledge e.g by jumping or sneaking.
+            // we need to prevent the player from falling off the ledge e.g. by jumping or sneaking.
             when {
                 ModuleScaffold.blockCount < forceSneakBelowCount -> {
                     LedgeAction(sneakTime = sneakTime.random())

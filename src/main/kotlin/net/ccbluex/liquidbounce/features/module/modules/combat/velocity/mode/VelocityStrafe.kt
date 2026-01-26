@@ -85,7 +85,7 @@ internal object VelocityStrafe : VelocityMode("Strafe") {
             waitTicks(delay)
 
             // Apply strafe
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = player.horizontalSpeed * strength))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = player.horizontalSpeed * strength)
 
             if (untilGround) {
                 applyStrafe = true

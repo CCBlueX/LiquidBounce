@@ -218,7 +218,7 @@ public abstract class MixinGui {
 
         var offHandStack = playerEntity.getOffhandItem();
         if (!hookOffhandItem(offHandStack.isEmpty())) {
-            this.renderSlot(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, l++);
+            this.renderSlot(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, l);
         }
     }
 

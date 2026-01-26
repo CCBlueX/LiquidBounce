@@ -174,7 +174,7 @@ object RotationManager : EventListener {
                     || activeRotationTarget.processors.isEmpty()
                     || diff <= activeRotationTarget.resetThreshold)) {
                 currentRotation?.let { currentRotation ->
-                    player.setYRot(player.withFixedYaw(currentRotation))
+                    player.yRot = player.withFixedYaw(currentRotation)
                     player.yBob = player.yRot
                     player.yBobO = player.yRot
                 }

@@ -55,7 +55,7 @@ object ModuleReplenish : ClientModule("Replenish", ModuleCategories.PLAYER, alia
     private val insideOf by multiEnumChoice<InsideOf>("InsideOf")
 
     // 0..9 -> hotbar 10 -> offHand
-    private val trackedHotbarItems = Array<Item>(10) { Items.AIR }
+    private val trackedHotbarItems = Array(10) { Items.AIR }
     private val chronometer = Chronometer()
 
     private fun clear() {

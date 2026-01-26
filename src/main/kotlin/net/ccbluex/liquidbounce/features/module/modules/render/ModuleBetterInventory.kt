@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.getCooldown
 import net.ccbluex.liquidbounce.utils.math.toFixed
+import net.minecraft.client.gui.Gui
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.component.DataComponents
@@ -56,13 +57,13 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
                 val color by color("Color", Color4b.GREEN)
 
                 override fun drawHighlightSlot(context: GuiGraphics, slot: Slot) {
-                    context.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.toARGB())
+                    context.drawBorder(slot.x, slot.y, STACK_SIZE, STACK_SIZE, color.argb)
                 }
             }
 
             object Texture : Mode("Texture") {
                 /**
-                 * @see net.minecraft.client.gui.hud.InGameHud.renderHotbar
+                 * @see Gui.renderItemHotbar
                  */
                 override fun drawHighlightSlot(context: GuiGraphics, slot: Slot) {
                     context.blitSprite(
@@ -135,7 +136,7 @@ object ModuleBetterInventory : ClientModule("BetterInventory", ModuleCategories.
                     if (seconds > 1) "${seconds.toInt()}s" else "${seconds.toFixed(1)}s"
                 }
             }
-            this.drawCenteredString(mc.font, text, x + 16 / 2, y, TextCooldownProgress.color.toARGB())
+            this.drawCenteredString(mc.font, text, x + 16 / 2, y, TextCooldownProgress.color.argb)
             this.pose().popMatrix()
         }
     }

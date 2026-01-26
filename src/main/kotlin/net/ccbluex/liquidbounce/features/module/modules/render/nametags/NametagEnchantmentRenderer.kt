@@ -188,10 +188,9 @@ internal object NametagEnchantmentRenderer : ToggleableConfigurable(ModuleNameta
         }
     }
 
+    private const val OCCLUSION_THRESHOLD = 2f
     // Check if a position would be occluded by another enchantment panel
     private fun isPositionOccluded(x: Float, y: Float): Boolean {
-        val OCCLUSION_THRESHOLD = 2f
-
         return ModuleNametags.drawnEnchantmentAreas.any { (existingX, existingY) ->
             hypot(existingX - x, existingY - y) < OCCLUSION_THRESHOLD
         }

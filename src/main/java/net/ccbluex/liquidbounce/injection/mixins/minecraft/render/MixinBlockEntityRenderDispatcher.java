@@ -53,7 +53,7 @@ public abstract class MixinBlockEntityRenderDispatcher {
                 if (!color.isTransparent()) {
                     var outlineVertexConsumerProvider = client.renderBuffers()
                         .outlineBufferSource();
-                    outlineVertexConsumerProvider.setColor(color.toARGB());
+                    outlineVertexConsumerProvider.setColor(color.argb());
                     OutlineFlag.drawOutline = true;
                     return state;
                 }

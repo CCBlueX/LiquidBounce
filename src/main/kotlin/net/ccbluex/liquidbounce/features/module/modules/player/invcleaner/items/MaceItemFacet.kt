@@ -69,7 +69,7 @@ class MaceItemFacet(itemSlot: ItemSlot) : WeaponItemFacet(itemSlot) {
                 STABILIZE_COMPARISON,
             )
 
-        /** Copied (and partially refactored) from [MaceItem.getBonusAttackDamage] **/
+        /** Copied (and partially refactored) from [MaceItem.getAttackDamageBonus] **/
         private fun getBonusAttackDamage(fallDistance: Double): Float {
             val dmg = if (fallDistance <= 3.0) {
                 4.0 * fallDistance

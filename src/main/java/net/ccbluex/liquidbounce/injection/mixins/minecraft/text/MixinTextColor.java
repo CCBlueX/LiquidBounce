@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * Why not Style? Because it is immutable and we would have to edit each and every new instance creation.
+ * Why not Style? Because it is immutable so we would have to create a new instance every edit.
  */
 @Mixin(TextColor.class)
 public abstract class MixinTextColor implements TextColorAddition {

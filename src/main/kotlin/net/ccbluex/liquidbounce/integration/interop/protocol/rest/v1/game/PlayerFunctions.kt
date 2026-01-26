@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.inventory.EnderChestInventoryTracker
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpNoContent
 import net.ccbluex.netty.http.util.httpOk
+import net.minecraft.client.gui.Gui
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.numbers.NumberFormat
@@ -165,11 +166,11 @@ data class ScoreboardData(val header: Component, val entries: List<SidebarEntry?
     companion object {
 
         /**
-         * Creates a [ScoreboardData] from the [player]'s scoreboard
+         * Creates a [ScoreboardData] from the players's scoreboard
          *
          * Taken from the Minecraft source code
          *
-         * @see net.minecraft.client.gui.hud.InGameHud.renderScoreboardSidebar
+         * @see Gui.renderScoreboardSidebar
          */
         @JvmStatic
         fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {

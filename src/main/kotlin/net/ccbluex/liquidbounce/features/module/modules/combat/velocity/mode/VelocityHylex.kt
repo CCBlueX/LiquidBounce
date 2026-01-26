@@ -39,36 +39,28 @@ object VelocityHylex : VelocityMode("Hylex") {
 
         when (player.hurtTime) {
             9 -> {
-                player.setDeltaMovement(
-                    player.deltaMovement.multiply(
-                        0.8,
-                        1.0,
-                        0.8
-                    )
+                player.deltaMovement = player.deltaMovement.multiply(
+                    0.8,
+                    1.0,
+                    0.8
                 )
             }
             8 -> {
-                player.setDeltaMovement(
-                    player.deltaMovement.multiply(
-                        0.11,
-                        1.0,
-                        0.11
-                    )
+                player.deltaMovement = player.deltaMovement.multiply(
+                    0.11,
+                    1.0,
+                    0.11
                 )
             }
-            7 -> player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    0.4,
-                    1.0,
-                    0.4
-                )
+            7 -> player.deltaMovement = player.deltaMovement.multiply(
+                0.4,
+                1.0,
+                0.4
             )
-            4 -> player.setDeltaMovement(
-                player.deltaMovement.multiply(
-                    0.37,
-                    1.0,
-                    0.37
-                )
+            4 -> player.deltaMovement = player.deltaMovement.multiply(
+                0.37,
+                1.0,
+                0.37
             )
         }
     }

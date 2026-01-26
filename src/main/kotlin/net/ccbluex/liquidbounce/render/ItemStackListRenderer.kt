@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
 import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphics
+import net.minecraft.client.gui.screens.achievement.StatsScreen
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
@@ -49,7 +50,7 @@ private const val SLOT_SIZE = 18
 private const val ITEM_SIZE = 16
 
 /**
- * @see net.minecraft.client.gui.screen.StatsScreen.SLOT_TEXTURE
+ * @see StatsScreen.SLOT_SPRITE
  */
 private val ID_SINGLE_SLOT = Identifier.withDefaultNamespace("container/slot")
 

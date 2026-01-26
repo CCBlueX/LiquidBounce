@@ -165,7 +165,7 @@ object ScriptManager {
 
         if (scripts.isNotEmpty()) {
             // Reload the ClickGUI to update the module list.
-            mc.execute(ModuleClickGui::reload)
+            mc.execute(ModuleClickGui::sync)
         }
     }
 

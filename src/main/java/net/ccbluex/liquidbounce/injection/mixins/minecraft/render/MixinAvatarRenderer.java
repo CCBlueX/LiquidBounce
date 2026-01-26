@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
@@ -34,19 +35,29 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.NullMarked;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+@NullMarked
 @Mixin(AvatarRenderer.class)
 public abstract class MixinAvatarRenderer {
 
     @Inject(method = "getArmPose(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/client/model/HumanoidModel$ArmPose;", at = @At("HEAD"), cancellable = true)
     private static void injectArmPose(
         Avatar player, ItemStack stack, InteractionHand hand, CallbackInfoReturnable<HumanoidModel.ArmPose> cir) {
-        if (hand == InteractionHand.OFF_HAND && player == Minecraft.getInstance().player && ModuleSwordBlock.INSTANCE.shouldHideOffhand()) {
-            cir.setReturnValue(HumanoidModel.ArmPose.EMPTY);
+        LocalPlayer localPlayer = Minecraft.getInstance().player;
+        if (player == localPlayer
+            && ModuleSwordBlock.INSTANCE.getApplyToThirdPersonView()
+            && ModuleSwordBlock.INSTANCE.shouldHideOffhand()
+        ) {
+            if (hand == InteractionHand.OFF_HAND) {
+                cir.setReturnValue(HumanoidModel.ArmPose.EMPTY);
+            } else if (localPlayer.usingItemHand != null) {
+                cir.setReturnValue(HumanoidModel.ArmPose.BLOCK);
+            }
         }
     }
 

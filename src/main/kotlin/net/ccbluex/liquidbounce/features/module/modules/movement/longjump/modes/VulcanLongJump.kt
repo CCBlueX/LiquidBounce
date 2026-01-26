@@ -40,7 +40,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleLongJump.mode
 
-    private var recievedLagback = false
+    private var receivedSetback = false
     private var started = false
 
     private val jumpingSequence = listOf(
@@ -59,7 +59,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
     )
 
     override fun enable() {
-        recievedLagback = false
+        receivedSetback = false
         started = false
         ModuleLongJump.jumped = false
         ModuleLongJump.boosted = false
@@ -68,11 +68,11 @@ internal object VulcanLongJump : Choice("Vulcan289") {
     @Suppress("unused")
     private val repeatable = tickHandler {
         if (started) {
-            if (recievedLagback) {
+            if (receivedSetback) {
                 player.deltaMovement.y = 1.0
                 player.setPos(player.position().x, player.position().y + 8, player.position().z)
-                player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 1.0, speed = 4.2))
-                recievedLagback = false
+                player.deltaMovement = player.deltaMovement.withStrafe(strength = 1.0, speed = 4.2)
+                receivedSetback = false
             }
 
             when (player.hurtTime) {
@@ -81,7 +81,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
                 }
                 5 -> {
                     player.setPos(player.position().x, player.position().y + 8, player.position().z)
-                    player.setDeltaMovement(player.deltaMovement.withStrafe(strength = 1.0, speed = 0.3))
+                    player.deltaMovement = player.deltaMovement.withStrafe(strength = 1.0, speed = 0.3)
                     started = false
                     ModuleLongJump.jumped = true
                     ModuleLongJump.boosted = true
@@ -89,17 +89,15 @@ internal object VulcanLongJump : Choice("Vulcan289") {
             }
         }
 
-        player.setDeltaMovement(
-            Vec3(
-                player.deltaMovement.x,
-                if (player.tickCount % 2 == 0) -0.0971 else -0.148,
-                player.deltaMovement.z
-            )
+        player.deltaMovement = Vec3(
+            player.deltaMovement.x,
+            if (player.tickCount % 2 == 0) -0.0971 else -0.148,
+            player.deltaMovement.z
         )
 
         val didLongJump = ModuleLongJump.autoDisable && ModuleLongJump.jumped
 
-        if (player.onGround() && !recievedLagback && player.hurtTime == 0 && !didLongJump) {
+        if (player.onGround() && !receivedSetback && player.hurtTime == 0 && !didLongJump) {
             repeat(3) {
                 for (position in jumpingSequence) {
                     network.send(
@@ -123,7 +121,7 @@ internal object VulcanLongJump : Choice("Vulcan289") {
         val packet = event.packet
 
         if (packet is ClientboundPlayerPositionPacket) {
-            recievedLagback = true
+            receivedSetback = true
         }
     }
 }

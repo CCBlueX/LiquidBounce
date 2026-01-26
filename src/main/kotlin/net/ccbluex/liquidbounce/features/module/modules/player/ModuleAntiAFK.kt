@@ -122,7 +122,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", ModuleCategories.PLAYER) {
                 player.yRot += (-180f..180f).random()
             }),
             PITCH("Pitch", {
-                player.setXRot(((-5f..5f).random() + player.xRot).coerceIn(-90f, 90f))
+                player.xRot = ((-5f..5f).random() + player.xRot).coerceIn(-90f, 90f)
             }),
             RANDOM_DIRECTION("RandomDirection", {
                 randomDirection = DirectionalInput(
@@ -172,7 +172,7 @@ object ModuleAntiAFK : ClientModule("AntiAFK", ModuleCategories.PLAYER) {
         @Suppress("unused")
         val repeatable = tickHandler {
             if (move) {
-                mc.options.keyUp.setDown(true)
+                mc.options.keyUp.isDown = true
             }
 
             if (jump && player.onGround()) {

@@ -86,7 +86,7 @@ object SubmoduleCrystalPlacer : ToggleableConfigurable(ModuleCrystalAura, "Place
     private val chronometer = Chronometer()
     private var blockHitResult: BlockHitResult? = null
 
-    // this is shit, but i can't think of a better way right now
+    // this is shit, but I can't think of a better way right now.
     // the problem with only one rotation is
     // that when the ca switches between two players very fast and one place is invalid it would fail
     private var previousRotations = ArrayDeque<Pair<Rotation, Rotation>>(2)

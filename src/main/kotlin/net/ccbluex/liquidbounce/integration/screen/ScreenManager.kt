@@ -40,7 +40,8 @@ import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.IntegrationBrowserSettings
 import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
-import net.ccbluex.liquidbounce.integration.screen.impl.CustomMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
 import net.ccbluex.liquidbounce.integration.screen.impl.InternetExplorerScreen
 import net.ccbluex.liquidbounce.integration.task.TaskProgressScreen
 import net.ccbluex.liquidbounce.integration.theme.Theme
@@ -99,7 +100,9 @@ object ScreenManager : EventListener {
             logger.info("Waiting for browser to be initialized...")
             // We currently proceed to go to the Minecraft Title Screen
             //   until this times out. [ErrorHandler.fatal] will kill the game anyway.
-            waitMatchesWithTimeout<GameTickEvent>(timeout = 30.seconds) { browser.isInitialized }
+            waitMatchesWithTimeout<GameTickEvent>(timeout = 30.seconds) {
+                browser.isInitialized && browser.isWorking
+            }
             this@ScreenManager.mainBrowser = browser
 
             logger.info("Integration Browser $browser is ready.")
@@ -154,14 +157,17 @@ object ScreenManager : EventListener {
 
     fun restart() {
         try {
-            this.mainBrowser?.close()
+            // [mainBrowser] may be null if the browser backend is not initialized.
+            // That means we are likely still in the process of starting up.
+            val mainBrowser = this.mainBrowser ?: return
+            mainBrowser.close()
             this.mainBrowser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
         } catch (e: Exception) {
             logger.error("Failed to restart browser backend for screen integration.", e)
         }
 
         try {
-            ModuleClickGui.reload(true)
+            ModuleClickGui.sync()
         } catch (e: Exception) {
             logger.error("Failed to restart ClickGUI browser integration.", e)
         }
@@ -183,8 +189,8 @@ object ScreenManager : EventListener {
     }
 
     fun restoreOriginalScreen() {
-        if (mc.screen is CustomMinecraftScreen) {
-            mc.setScreen((mc.screen as CustomMinecraftScreen).originalScreen)
+        if (mc.screen is CustomSharedMinecraftScreen) {
+            mc.setScreen((mc.screen as CustomSharedMinecraftScreen).originalScreen)
         }
     }
 
@@ -203,9 +209,7 @@ object ScreenManager : EventListener {
 
     @Suppress("unused")
     private val screenUpdater = handler<GameTickEvent> {
-        if (mc.screen !is TaskProgressScreen) {
-            handleCurrentScreen(mc.screen)
-        }
+        handleCurrentScreen(mc.screen)
     }
 
     @Suppress("unused")
@@ -258,23 +262,37 @@ object ScreenManager : EventListener {
     }
 
     private fun handleCurrentScreen(screen: Screen?): Boolean {
-        return when (screen) {
-            !is CustomMinecraftScreen if (HideAppearance.isHidingNow || ClientInteropServer.isSkipping) -> {
-                closeScreen()
-                false
-            }
-            is CustomMinecraftScreen -> false
-            else -> {
-                // Are we currently playing the game?
-                if (mc.level != null && screen == null) {
-                    closeScreen()
+        // We check against mc.screen, not screen, because somehow this works.
+        if (mc.screen is TaskProgressScreen) {
+            return false
+        }
 
+        if (HideAppearance.isHidingNow || ClientInteropServer.isSkipping) {
+            return if (screen is CustomSharedMinecraftScreen) {
+                val original = screen.originalScreen
+                if (original is CustomSharedMinecraftScreen) {
                     return false
                 }
 
-                handleCurrentMinecraftScreen(screen ?: TitleScreen())
+                mc.setScreen(original)
+                true
+            } else {
+                closeScreen()
+                false
             }
         }
+
+        if (screen is CustomSharedMinecraftScreen) {
+            return false
+        }
+
+        // Are we currently playing the game?
+        if (mc.level != null && screen == null) {
+            closeScreen()
+            return false
+        }
+
+        return handleCurrentMinecraftScreen(screen ?: TitleScreen())
     }
 
     /**
@@ -302,7 +320,7 @@ object ScreenManager : EventListener {
         return when {
             // When we want to fully replace a screen.
             theme.isScreenSupported(name) -> {
-                mc.setScreen(CustomMinecraftScreen(customScreenType, theme, originalScreen = minecraftScreen))
+                mc.setScreen(CustomSharedMinecraftScreen(customScreenType, theme, originalScreen = minecraftScreen))
                 true
             }
             // When we just want to overlay it.
@@ -322,7 +340,8 @@ object ScreenManager : EventListener {
      * Checks if the given screen is an active client screen.
      */
     @JvmStatic
-    fun isClientScreen(screen: Screen?) = screen is CustomMinecraftScreen || screen is ModuleClickGui.ClickScreen ||
-        screen is InternetExplorerScreen
+    fun isClientScreen(screen: Screen?) = screen is CustomSharedMinecraftScreen
+        || screen is CustomStandaloneMinecraftScreen
+        || screen is InternetExplorerScreen
 
 }

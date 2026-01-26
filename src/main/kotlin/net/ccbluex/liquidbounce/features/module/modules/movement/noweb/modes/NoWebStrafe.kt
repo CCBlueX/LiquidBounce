@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.utils.entity.withStrafe
 import net.minecraft.core.BlockPos
 
 /**
- * Bypassing Vulcan't Anti Cheat's All Version(6/27/2025)
- * Bypassing Grim Anti Cheat (7/28/2025)
+ * Bypassing Vulcan anticheat (6/27/2025)
+ * Bypassing Grim anticheat (7/28/2025)
  *
  * @author XeContrast
  */
@@ -45,10 +45,11 @@ object NoWebStrafe : NoWebMode("Strafe") {
         val motionStrength by float("MotionYStrength", 0.6f, -2.00f..2.00f)
     }
 
+    // TODO: make motionY more flexible based on player input
     override fun handleEntityCollision(pos: BlockPos): Boolean {
         if (player.moving) {
             if (player.onGround() || !onlyGround) {
-                player.setDeltaMovement(player.deltaMovement.withStrafe(strength.toDouble()))
+                player.deltaMovement = player.deltaMovement.withStrafe(strength.toDouble())
             }
 
             if (motionY.enabled) {

@@ -243,7 +243,7 @@ object ModuleParticles : ClientModule("Particles", category = ModuleCategories.R
                     )
                 )
 
-                drawSquareTexture(particleImage.texture, size, renderColor.toARGB())
+                drawSquareTexture(particleImage.texture, size, renderColor.argb)
             }
         }
     }

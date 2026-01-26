@@ -283,7 +283,6 @@
   "liquidbounce.module.antiStaff.messages.staffsFailed": "%s için görevli listesi %s koduyla yüklenemedi.",
   "liquidbounce.module.antiStaff.messages.staffsLoaded": "%s için %s görevli yüklendi.",
   "liquidbounce.module.antiStaff.messages.vanishClear": "Görünmez oyuncu bulunamadı.",
-  "liquidbounce.module.attackEffects.description": "Bir varlığa saldırdığınızda efekt gösterir.",
   "liquidbounce.module.particles.description": "Bir varlığa saldırdığınızda parçacıklar gösterir.",
   "liquidbounce.module.autoAccount.description": "Çatlamış sunucularda otomatik olarak kimliğinizi doğrular.",
   "liquidbounce.module.autoArmor.description": "Envanterinizdeki en iyi zırhı otomatik olarak giyer.",

@@ -51,7 +51,7 @@ class SpeedVulcanGround286(override val parent: ChoiceConfigurable<*>) : SpeedBH
                 else -> 0.42
             }
 
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = strafe))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = strafe)
             player.deltaMovement.y = 0.005
         }
     }

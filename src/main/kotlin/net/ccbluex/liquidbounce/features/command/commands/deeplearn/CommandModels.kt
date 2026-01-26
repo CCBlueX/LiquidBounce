@@ -189,7 +189,7 @@ object CommandModels : Command.Factory {
             model.save()
 
             models.setByString(model.name)
-            ModuleClickGui.reload()
+            ModuleClickGui.sync()
         }
 
         chat(command.result("trainingEnd", name, trainingTime.toString(DurationUnit.MINUTES, decimals = 2)))

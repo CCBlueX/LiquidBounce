@@ -55,11 +55,10 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
 
     private val colorMode = choices<GenericColorMode<Unit>>(
         "ColorMode",
-        0,
-        {
-            arrayOf(GenericStaticColorMode(it, Color4b(255, 179, 72, 50)), GenericRainbowColorMode(it))
-        }
-    )
+        0
+    ) {
+        arrayOf(GenericStaticColorMode(it, Color4b(255, 179, 72, 50)), GenericRainbowColorMode(it))
+    }
 
     private object ReplaceFriendNames : ToggleableConfigurable(this, "ObfuscateFriends", true) {
         val colorMode = choices<GenericColorMode<Unit>>(
@@ -228,7 +227,7 @@ object ModuleNameProtect : ClientModule("NameProtect", ModuleCategories.MISC) {
                 mappedCharacters.ensureCapacity(mappedCharacters.size + replacement.second.newName.length)
                 replacement.second.newName.mapTo(mappedCharacters) { ch ->
                     MappedCharacter(
-                        originalCharacters[currentIndex].style.withColor(color.toARGB()),
+                        originalCharacters[currentIndex].style.withColor(color.argb),
                         false,
                         ch.code
                     )

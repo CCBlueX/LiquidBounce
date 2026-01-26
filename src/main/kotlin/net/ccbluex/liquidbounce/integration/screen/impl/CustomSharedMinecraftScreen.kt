@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.utils.client.asPlainText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screens.Screen
 
-class CustomMinecraftScreen(
-    private val screenType: CustomScreenType,
+class CustomSharedMinecraftScreen(
+    val screenType: CustomScreenType,
     private val theme: Theme = ThemeManager.getScreenLocation(screenType).theme,
     val originalScreen: Screen? = null,
     val parentScreen: Screen? = mc.screen
@@ -39,7 +39,7 @@ class CustomMinecraftScreen(
     }
 
     override fun onClose() {
-        if (parentScreen is CustomMinecraftScreen) {
+        if (parentScreen is CustomSharedMinecraftScreen) {
             mc.setScreen(parentScreen)
         } else {
             ScreenManager.closeScreen()
@@ -48,9 +48,6 @@ class CustomMinecraftScreen(
         }
     }
 
-    override fun isPauseScreen(): Boolean {
-        // preventing game pause
-        return false
-    }
+    override fun isPauseScreen() = false
 
 }

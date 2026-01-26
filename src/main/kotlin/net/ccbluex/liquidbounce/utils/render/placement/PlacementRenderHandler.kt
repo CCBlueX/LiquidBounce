@@ -203,7 +203,7 @@ class PlacementRenderHandler(private val placementRenderer: PlacementRenderer, v
     /**
      * Removes a block from the rendering, it will get an out animation tho.
      *
-     * @param pos The position, can be [BlockPos.Mutable].
+     * @param pos The position, can be [BlockPos.MutableBlockPos].
      */
     fun removeBlock(pos: BlockPos) {
         val longValue = pos.asLong()

@@ -76,7 +76,7 @@ object FlyNcpClip : Choice("NcpClip") {
     val tickHandler = tickHandler {
         val startPos = startPosition
 
-        // If fall damage is required, wait for damage to be true
+        // If fall damage is required, wait for damage
         if (fallDamage) {
             tickUntil { damage }
         }
@@ -111,22 +111,22 @@ object FlyNcpClip : Choice("NcpClip") {
 
             // Proceed to jump (just like speeding up) and boost strafe entry
             player.jumpFromGround()
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = (speed + additionalEntrySpeed).toDouble()))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = (speed + additionalEntrySpeed).toDouble())
 
-            // Wait until the player is not on ground
+            // Wait until the player is in air
             tickUntil { !player.onGround() }
 
             // Proceed to strafe with the normal speed
-            player.setDeltaMovement(player.deltaMovement.withStrafe(speed = speed.toDouble()))
+            player.deltaMovement = player.deltaMovement.withStrafe(speed = speed.toDouble())
         } else if (collidesBottomVertical()) {
             shouldLag = false
 
-            // Disable the module if the player is on ground again
+            // Disable the module when the player touches ground
             ModuleFly.enabled = false
             return@tickHandler
         } else if (startPos.distanceTo(player.position()) > maximumDistance) {
             if (shouldLag) {
-                // If we are lagging, we might abuse this to get us back to safety
+                // If we are lagging, we can abuse this to get us back to safety
                 PacketQueueManager.cancel()
                 shouldLag = false
             }
@@ -141,7 +141,7 @@ object FlyNcpClip : Choice("NcpClip") {
 
         // Strafe the player to improve control
         if (strafe) {
-            player.setDeltaMovement(player.deltaMovement.withStrafe())
+            player.deltaMovement = player.deltaMovement.withStrafe()
         }
 
         // Set timer speed
@@ -151,15 +151,12 @@ object FlyNcpClip : Choice("NcpClip") {
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> {
         val packet = it.packet
-        // 3.5 is the minimum, 5 doesn't flag for nofall
-        // Should be a float setting but no easy way to
-        // make settings hidden with booleans
-        //
+        // 3.5 is technically the minimum, 5 is consistent and doesn't flag for nofall
         // Falling from 5 blocks deals 3hp damage.
         if (packet is ServerboundMovePlayerPacket && player.fallDistance > 5) {
             if (!damage && fallDamage) {
                 /**
-                 * Alright, we are able to take fall damge.
+                 * Alright, we are able to take fall damage.
                  * NCP calculates fall damage differently,
                  * this seems as the only proper way to
                  * take damage out of nowhere.
@@ -167,11 +164,11 @@ object FlyNcpClip : Choice("NcpClip") {
                  * It's called ncp setbacks!
                  */
 
-                // Adding 1 to y because it's consistent and easy.
+                // Adding 1 to y because it flags consistently
                 packet.y += 1
 
-                // Requires falldistance = 0 otherwise
-                // we would try to float..
+                // Reset fallDistance so this same logic
+                // doesn't get called multiple times
                 player.fallDistance = 0.0
             }
 

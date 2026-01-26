@@ -129,7 +129,7 @@ object ModuleTracers : ClientModule("Tracers", ModuleCategories.RENDER) {
                     val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3f()
 
                     drawLines(
-                        argb = color.toARGB(),
+                        argb = color.argb,
                         eyeVector, pos,
                         pos, pos.add(0f, entity.bbHeight, 0f)
                     )
