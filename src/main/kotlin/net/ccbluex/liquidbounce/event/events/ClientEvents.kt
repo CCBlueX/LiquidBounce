@@ -120,7 +120,11 @@ class ClientChatStateChange(val state: State) : Event(), WebSocketEvent {
 }
 
 @Nameable("clientChatMessage")
-class ClientChatMessageEvent(val user: AxoUser, val message: String, val chatGroup: ChatGroup) : Event(), WebSocketEvent {
+class ClientChatMessageEvent(
+    val user: AxoUser,
+    val message: String,
+    val chatGroup: ChatGroup,
+) : Event(), WebSocketEvent {
     enum class ChatGroup(override val choiceName: String) : NamedChoice {
         @SerializedName("public")
         PUBLIC_CHAT("PublicChat"),

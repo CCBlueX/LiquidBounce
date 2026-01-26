@@ -22,8 +22,10 @@ import com.google.gson.annotations.SerializedName
 import java.util.UUID
 
 sealed interface AxochatPacket {
-    interface C2S : AxochatPacket
-    interface S2C : AxochatPacket
+    sealed interface C2S : AxochatPacket
+    sealed interface S2C : AxochatPacket
+
+    annotation class Metadata(val name: String)
 }
 
 /**

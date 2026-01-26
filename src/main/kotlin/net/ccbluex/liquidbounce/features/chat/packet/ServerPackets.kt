@@ -34,7 +34,7 @@ import java.util.UUID
  * The server will then send a MojangInfo to the client.
  * This packet does not have a body.
  */
-class ServerRequestMojangInfoPacket : AxochatPacket.C2S
+class C2SRequestMojangInfoPacket : AxochatPacket.C2S
 
 /**
  * After the client received a MojangInfo packet and authenticating itself with mojang,
@@ -45,7 +45,7 @@ class ServerRequestMojangInfoPacket : AxochatPacket.C2S
  * @param uuid uuid is not guaranteed to be hyphenated.
  * @param allowMessages If allow_messages is true, other clients may send private messages to this client.
  */
-data class ServerLoginMojangPacket(
+data class C2SLoginMojangPacket(
 
     @SerializedName("name")
     val name: String,
@@ -65,7 +65,7 @@ data class ServerLoginMojangPacket(
  * @param token can be retrieved by sending RequestJWT on an already authenticated connection.
  * @param allowMessages If allow_messages is true, other clients may send private messages to this client.
  */
-data class ServerLoginJWTPacket(
+data class C2SLoginJWTPacket(
 
     @SerializedName("token")
     val token: String,
@@ -80,7 +80,7 @@ data class ServerLoginJWTPacket(
  *
  * @param content content of the message.
  */
-data class ServerMessagePacket(
+data class C2SMessagePacket(
 
     @SerializedName("content")
     val content: String
@@ -93,7 +93,7 @@ data class ServerMessagePacket(
  * @param receiver receiver is an ID.
  * @param content content of the message.
  */
-data class ServerPrivateMessagePacket(
+data class C2SPrivateMessagePacket(
 
     @SerializedName("receiver")
     val receiver: String,
@@ -108,7 +108,7 @@ data class ServerPrivateMessagePacket(
  *
  * @param user user is an ID.
  */
-data class ServerBanUserPacket(
+data class C2SBanUserPacket(
 
     @SerializedName("user")
     val user: String
@@ -120,7 +120,7 @@ data class ServerBanUserPacket(
  *
  * @param user user is an ID.
  */
-data class ServerUnbanUserPacket(
+data class C2SUnbanUserPacket(
 
     @SerializedName("user")
     val user: String
@@ -134,4 +134,4 @@ data class ServerUnbanUserPacket(
  *
  * This packet does not have a body.
  */
-class ServerRequestJWTPacket : AxochatPacket.C2S
+class C2SRequestJWTPacket : AxochatPacket.C2S
