@@ -18,32 +18,28 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.additions.screenInitialized
-import net.ccbluex.liquidbounce.additions.setPosition
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClickGuiValueChangeEvent
 import net.ccbluex.liquidbounce.event.events.ClientLanguageChangedEvent
-import net.ccbluex.liquidbounce.event.events.GameRenderEvent
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitSeconds
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.game.isTyping
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
-import net.ccbluex.liquidbounce.integration.screen.impl.CustomMinecraftScreen
-import net.ccbluex.liquidbounce.integration.theme.ThemeManager
-import net.ccbluex.liquidbounce.utils.client.asPlainText
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.READ_FINAL_STATE
-import net.minecraft.client.gui.screens.Screen
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -63,36 +59,25 @@ object ModuleClickGui :
         EventManager.callEvent(ClickGuiValueChangeEvent(this))
     }
 
-    @Suppress("UnusedPrivateProperty")
-    private val cache by boolean("Cache", true).onChanged { cache ->
-        mc.execute {
-            mouseX = Double.NaN
-            mouseY = Double.NaN
-            if (cache) {
-                open()
-            } else {
-                close()
-            }
-
-            if (mc.screen is CustomMinecraftScreen || mc.screen is ClickScreen) {
-                onEnabled()
-            }
-        }
-    }
-
-    private val trackMousePosition by boolean("TrackMousePosition", false)
-
-    @Suppress("UnusedPrivateProperty")
+    @Suppress("UnusedPrivateProperty", "unused")
     private val searchBarAutoFocus by boolean("SearchBarAutoFocus", true).onChanged {
         EventManager.callEvent(ClickGuiValueChangeEvent(this))
     }
 
     val isInSearchBar: Boolean
-        get() = (mc.screen is CustomMinecraftScreen || mc.screen is ClickScreen) && isTyping
+        get() {
+            if (!isTyping) {
+                return false
+            }
+
+            val screen = mc.screen ?: return false
+            return screen is CustomSharedMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI ||
+                screen is CustomStandaloneMinecraftScreen && screen.screenType == CustomScreenType.CLICK_GUI
+        }
 
     object Snapping : ToggleableConfigurable(this, "Snapping", true) {
 
-        @Suppress("UnusedPrivateProperty")
+        @Suppress("UnusedPrivateProperty", "unused")
         private val gridSize by int("GridSize", 10, 1..100, "px").onChanged {
             EventManager.callEvent(ClickGuiValueChangeEvent(ModuleClickGui))
         }
@@ -104,119 +89,81 @@ object ModuleClickGui :
         }
     }
 
-    private var clickGuiBrowser: Browser? = null
-    private const val WORLD_CHANGE_SECONDS_UNTIL_RELOAD = 5
-
     init {
         tree(Snapping)
     }
 
-    override fun onEnabled() {
-        // Pretty sure we are not in a game, so we can't open the clickgui
-        if (!inGame) {
-            return
-        }
-
-        mc.setScreen(
-            if (clickGuiBrowser == null) {
-                CustomMinecraftScreen(CustomScreenType.CLICK_GUI)
-            } else {
-                ClickScreen()
-            }
-        )
-        super.onEnabled()
+    @Suppress("UnusedPrivateProperty")
+    private val useStandaloneScreen by boolean("Cache", true).onChanged {
+        mc.execute(::onEnabled)
     }
 
-    private fun open() {
-        if (clickGuiBrowser != null) {
-            return
-        }
-
-        clickGuiBrowser = ThemeManager.openInputAwareImmediate(
-            CustomScreenType.CLICK_GUI,
-            true,
-            priority = 20,
-            settings = ScreenManager.browserSettings
-        ) {
-            mc.screen is ClickScreen
-        }
-    }
-
-    private fun close() {
-        clickGuiBrowser?.let {
-            it.close()
-            clickGuiBrowser = null
-        }
-    }
-
-    fun reload(restart: Boolean = false) {
-        if (restart) {
-            close()
-            open()
-            return
-        }
-
-        clickGuiBrowser?.reload()
-    }
-
-    @Suppress("unused")
-    private val gameRenderHandler = handler<GameRenderEvent>(priority = OBJECTION_AGAINST_EVERYTHING) {
-        clickGuiBrowser?.visible = mc.screen is ClickScreen
-    }
+    // Standalone screen instance for caching
+    private var standaloneScreen: CustomStandaloneMinecraftScreen? = null
 
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent>(priority = READ_FINAL_STATE) {
         tree(ScreenManager.browserSettings)
-        open()
+    }
+
+    override fun onEnabled() {
+        if (!LiquidBounce.isInitialized || !inGame) {
+            return
+        }
+
+        updateStandaloneScreen()
+        mc.setScreen(standaloneScreen ?: CustomSharedMinecraftScreen(CustomScreenType.CLICK_GUI))
+        super.onEnabled()
     }
 
     @Suppress("unused")
     private val worldChangeHandler = sequenceHandler<WorldChangeEvent>(
         priority = OBJECTION_AGAINST_EVERYTHING
     ) { event ->
-        if (event.world == null) {
+        if (event.world == null || !useStandaloneScreen) {
             return@sequenceHandler
         }
 
-        waitSeconds(WORLD_CHANGE_SECONDS_UNTIL_RELOAD)
-        if (mc.screen !is ClickScreen) {
-            reload()
+        waitSeconds(1)
+        if (updateStandaloneScreen()) {
+            standaloneScreen?.sync()
         }
     }
 
     @Suppress("unused")
-    private val clientLanguageChangedHandler = handler<ClientLanguageChangedEvent> {
-        if (mc.screen !is ClickScreen) {
-            reload()
-        }
+    private val disconnectHandler = handler<DisconnectEvent> {
+        standaloneScreen?.close()
+        standaloneScreen = null
     }
 
-    private var mouseX = Double.NaN
-    private var mouseY = Double.NaN
+    @Suppress("unused")
+    private val clientLanguageChangedHandler = handler<ClientLanguageChangedEvent> {
+        standaloneScreen?.sync()
+    }
 
-    /**
-     * An empty screen that acts as a hint when to draw the clickgui
-     */
-    class ClickScreen : Screen("ClickGUI".asPlainText()) {
-
-        override fun init() {
-            if (trackMousePosition && !screenInitialized && !mouseX.isNaN() && !mouseY.isNaN()) {
-                mc.mouseHandler.setPosition(mouseX, mouseY)
+    fun updateStandaloneScreen(): Boolean {
+        // Standalone Screen Cache
+        if (useStandaloneScreen) {
+            if (standaloneScreen == null) {
+                standaloneScreen = CustomStandaloneMinecraftScreen(CustomScreenType.CLICK_GUI)
+            } else {
+                // Used in [worldChangeHandler] to determine if we need to sync.
+                return true
             }
-            super.init()
+        } else if (standaloneScreen != null) {
+            standaloneScreen?.close()
+            standaloneScreen = null
         }
 
-        override fun onClose() {
-            mouseX = mc.mouseHandler.xpos()
-            mouseY = mc.mouseHandler.ypos()
-            mc.mouseHandler.grabMouse()
-            super.onClose()
+        return false
+    }
+
+    fun sync() {
+        if (!LiquidBounce.isInitialized) {
+            return
         }
 
-        override fun isPauseScreen(): Boolean {
-            // preventing game pause
-            return false
-        }
+        standaloneScreen?.sync()
     }
 
 }

@@ -66,7 +66,7 @@ object AutoConfig {
 
             // After completion of loading, sync ClickGUI
             if (!value) {
-                ModuleClickGui.reload()
+                ModuleClickGui.sync()
             }
         }
 

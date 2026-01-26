@@ -86,7 +86,7 @@ object ModelManager : EventListener, Configurable("AI") {
 
         models.choices = choices.toMutableList()
         models.setByString(models.activeChoice.name)
-        ModuleClickGui.reload()
+        ModuleClickGui.sync()
     }
 
     /**

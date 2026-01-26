@@ -23,7 +23,7 @@ import com.google.gson.JsonObject
 import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
-import net.ccbluex.liquidbounce.integration.screen.impl.CustomMinecraftScreen
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomSharedMinecraftScreen
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.netty.http.model.RequestObject
@@ -91,7 +91,7 @@ fun putScreen(requestObject: RequestObject): FullHttpResponse {
 fun deleteScreen(requestObject: RequestObject): FullHttpResponse {
     val screen = mc.screen ?: return httpForbidden("No screen")
 
-    if (screen is CustomMinecraftScreen && screen.parentScreen != null) {
+    if (screen is CustomSharedMinecraftScreen && screen.parentScreen != null) {
         mc.execute {
             mc.setScreen(screen.parentScreen)
         }
