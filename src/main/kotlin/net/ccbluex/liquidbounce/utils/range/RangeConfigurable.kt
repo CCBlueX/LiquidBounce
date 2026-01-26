@@ -26,6 +26,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.AttackRange
 import net.minecraft.world.phys.Vec3
 import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Allows adjusting your attack range and scan range.
@@ -39,7 +40,7 @@ open class RangeConfigurable : Configurable("Range"), MinecraftShortcuts {
         get() = getAttackRange().effectiveMinRange(player)
 
     internal val attackThroughWallsRange
-        get() = wallRange
+        get() = throughWallsRange
 
     /**
      * Increases the attack max-range.
@@ -53,14 +54,16 @@ open class RangeConfigurable : Configurable("Range"), MinecraftShortcuts {
 
     /**
      * This will use only this value for non-visible entities. Originally, we could never attack through walls,
-     * so this makes sense to keep starting from 0.0
+     * so this makes sense to keep starting from 0.0.
      */
-    private val wallRange by float("WallRange", 3f, 0f..8f, "blocks")
+    private val throughWallsRange by float(
+        "ThroughWallsRange", 3f, 0f..8f, "blocks"
+    ).onChange {
+        min(adjustAttackRange().effectiveMaxRange(player), it)
+    }
 
-    fun getAttackRange(itemStack: ItemStack = player.getItemInHand(InteractionHand.MAIN_HAND)): AttackRange {
-        val attackRange = itemStack.get(DataComponents.ATTACK_RANGE) ?: AttackRange.defaultFor(player)
-
-        return AttackRange(
+    fun adjustAttackRange(attackRange: AttackRange = AttackRange.defaultFor(player)) =
+        AttackRange(
             max(0f, attackRange.minRange - minRangeModifier),
             attackRange.maxRange + maxRangeIncrease,
             max(0f, attackRange.minCreativeRange - minRangeModifier),
@@ -68,7 +71,10 @@ open class RangeConfigurable : Configurable("Range"), MinecraftShortcuts {
             attackRange.hitboxMargin,
             attackRange.mobFactor
         )
-    }
+
+    fun getAttackRange(itemStack: ItemStack = player.getItemInHand(InteractionHand.MAIN_HAND)) = adjustAttackRange(
+        itemStack.get(DataComponents.ATTACK_RANGE) ?: AttackRange.defaultFor(player)
+    )
 
     fun isInRange(itemStack: ItemStack = player.getItemInHand(InteractionHand.MAIN_HAND), pos: Vec3) =
         getAttackRange(itemStack).isInRange(player, pos)
