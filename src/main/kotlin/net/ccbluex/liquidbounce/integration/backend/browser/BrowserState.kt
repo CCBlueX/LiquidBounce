@@ -16,21 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
-import net.ccbluex.liquidbounce.utils.range.RangeConfigurable
+package net.ccbluex.liquidbounce.integration.backend.browser
 
-/**
- * Reach module
- *
- * Increases your reach.
- *
- * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinPlayer
- * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.item.MixinAttackRange
- */
-object ModuleReach : ClientModule("Reach", ModuleCategories.PLAYER) {
-    val entity = tree(RangeConfigurable("Entity", 1f, 0f))
-    val blockRangeIncrease by float("BlockRangeIncrease", 0.5f, 0f..64f)
+sealed class BrowserState private constructor(val isCompleted: Boolean) {
+    data object Idle : BrowserState(false)
+    data object Stateless : BrowserState(true)
+    data object Loading : BrowserState(false)
+    data class Success(val httpStatusCode: Int) : BrowserState(true)
+    data class Failure(
+        val errorCode: Int,
+        val errorText: String,
+        val failedUrl: String
+    ) : BrowserState(true)
 }

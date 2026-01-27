@@ -28,7 +28,7 @@ import net.minecraft.network.chat.Style
 import net.minecraft.util.FormattedCharSequence
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.TamableAnimal
-import net.minecraft.world.entity.animal.equine.Horse
+import net.minecraft.world.entity.animal.equine.AbstractHorse
 import net.minecraft.world.entity.projectile.Projectile
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -52,7 +52,7 @@ object ModuleMobOwners : ClientModule("MobOwners", ModuleCategories.RENDER) {
 
         val ownerId = when (entity) {
             is TamableAnimal -> entity.ownerReference?.uuid
-            is Horse -> entity.ownerReference?.uuid
+            is AbstractHorse -> entity.ownerReference?.uuid
             is Projectile if projectiles -> entity.owner?.uuid
             else -> null
         } ?: return null

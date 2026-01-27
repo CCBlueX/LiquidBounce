@@ -137,7 +137,7 @@ internal object ModuleTickBase : ClientModule("TickBase", ModuleCategories.COMBA
 
         // We do not want to tickbase if killaura is not ready to attack
         fun breakRequirement() = requiresKillAura && !(ModuleKillAura.running &&
-                ModuleKillAura.clickScheduler.willClickAt(bestTick))
+                ModuleKillAura.clicker.willClickAt(bestTick))
 
         if (breakRequirement()) {
             return@tickHandler

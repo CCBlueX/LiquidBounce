@@ -27,12 +27,13 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.getExplosionDamageFromEntity
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 
@@ -42,7 +43,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
     private val range by float("Range", 4.5f, 1f..6f)
     private val wallRange by float("WallRange", 4.5f, 0f..6f)
     private val delay by int("Delay", 0, 0..1000, "ms")
-    private val swing by boolean("Swing", true)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
     private val rotationMode = choices(this, "RotationMode") {
         arrayOf(NormalRotationMode(it, module, Priority.IMPORTANT_FOR_USAGE_3), NoRotationMode(it, module))
@@ -86,25 +87,25 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
             ) ?: return@tickHandler
 
         rotationMode.activeChoice.rotate(rotation, isFinished = {
-            facingEnemy(
+            isLookingAtEntity(
                 toEntity = target,
                 rotation = RotationManager.serverRotation,
                 range = range.toDouble(),
-                wallsRange = wallRange.toDouble()
-            )
+                throughWallsRange = wallRange.toDouble()
+            ) != null
         }, onFinished = {
             if (!chronometer.hasElapsed(delay.toLong())) {
                 return@rotate
             }
 
-            val target1 = currentTarget ?: return@rotate
+            val target = currentTarget ?: return@rotate
 
-            if (wouldKill(target1)) {
+            if (wouldKill(target)) {
                 currentTarget = null
                 return@rotate
             }
 
-            target1.attack(swing)
+            attackEntity(target, swingMode)
             chronometer.reset()
             currentTarget = null
         })

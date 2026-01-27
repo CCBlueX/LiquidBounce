@@ -89,9 +89,8 @@ object KillAuraClicker : Clicker<ModuleKillAura>(
             val isExitingRange = !canSeeBox(
                 eyes = ownEyePos,
                 box = targetBox,
-                // Do not care about scan range
-                range = ModuleKillAura.range.toDouble(),
-                wallsRange = ModuleKillAura.wallRange.toDouble()
+                range = ModuleKillAura.range.interactionRange.toDouble(),
+                wallsRange = ModuleKillAura.range.interactionThroughWallsRange.toDouble()
             )
             debugParameter("Is Exiting Range On ${round(ticks)}") { isExitingRange }
             if (isExitingRange) {

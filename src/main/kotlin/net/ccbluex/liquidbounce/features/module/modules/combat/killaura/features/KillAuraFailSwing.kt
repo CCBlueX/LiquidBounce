@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraClicker.attack
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.validateAttack
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.canAttackNow
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraFailSwing.additionalRange
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Box
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.KillAuraNotifyWhenFail.Sound
@@ -64,11 +64,11 @@ internal object KillAuraFailSwing : ToggleableConfigurable(ModuleKillAura, "Fail
     }
 
     suspend fun dealWithFakeSwing(target: Entity?) {
-        if (!enabled || !validateAttack()) {
+        if (!enabled || !canAttackNow()) {
             return
         }
 
-        val range = ModuleKillAura.range + currentAdditionalRange
+        val range = ModuleKillAura.range.interactionRange + currentAdditionalRange
         val entity = target ?: world.findEnemy(0f..range) ?: return
         val raycastType = mc.hitResult?.type
 

@@ -66,8 +66,8 @@ object ModuleBedPlates : ClientModule("BedPlates", ModuleCategories.RENDER), Bed
     private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
     private val scale = curve(
         "Scale",
-        mutableListOf(Vector2f(0f, 1f), Vector2f(128f, 1f)),
-        xAxis = "Distance" axis 0f..128f,
+        mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),
+        xAxis = "Distance" axis 0f..200f,
         yAxis = "Scale" axis 0.25f..4f,
     )
     private val maxCount by int("MaxCount", 8, 1..64)

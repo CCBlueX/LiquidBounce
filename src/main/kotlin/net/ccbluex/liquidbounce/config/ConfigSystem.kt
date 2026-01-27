@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.DynamicConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.createZipArchive
@@ -258,6 +259,11 @@ object ConfigSystem {
 
             // On an ordinary configurable, we simply deserialize the values that are present
             else -> {
+                // Migration Code for KillAura's Range Values
+                if (configurable is ModuleKillAura) {
+                    configurable.range.migrateFromValues(values)
+                }
+
                 for (value in configurable.inner) {
                     val currentElement = values[value.name]
                         // Alias support
@@ -273,7 +279,7 @@ object ConfigSystem {
     /**
      * Deserialize a value from a json object
      */
-    private fun deserializeValue(value: Value<*>, jsonObject: JsonObject) {
+    fun deserializeValue(value: Value<*>, jsonObject: JsonObject) {
         // In the case of a configurable, we need to go deeper and deserialize the configurable itself
         if (value is Configurable) {
             runCatching {

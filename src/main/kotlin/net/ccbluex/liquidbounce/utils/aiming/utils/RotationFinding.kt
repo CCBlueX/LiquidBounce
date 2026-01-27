@@ -44,6 +44,9 @@ import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.sq
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.ccbluex.liquidbounce.utils.raytracing.facingBlock
+import net.ccbluex.liquidbounce.utils.raytracing.hasLineOfSight
+import net.ccbluex.liquidbounce.utils.raytracing.raytraceBlock
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.block.state.BlockState
@@ -215,7 +218,7 @@ object BoxVisibilityPredicate : VisibilityPredicate, DebuggedOwner {
     ): Boolean {
 //        debugGeometry("TargetSpot") { ModuleDebug.DebuggedPoint(targetSpot, color = Color4b.LIQUID_BOUNCE) }
 
-        return canSeePointFrom(eyesPos, targetSpot)
+        return hasLineOfSight(eyesPos, targetSpot)
     }
 }
 
@@ -418,7 +421,7 @@ fun canSeeBox(eyes: Vec3, box: AABB, range: Double, wallsRange: Double, expected
             if (expectedTarget != null) {
                 facingBlock(eyes, posInBox, expectedTarget)
             } else {
-                canSeePointFrom(eyes, posInBox)
+                hasLineOfSight(eyes, posInBox)
             }
 
         // skip because not visible in range
@@ -617,7 +620,7 @@ private fun checkCurrentRotation(
     val distance = eyes.distanceToSqr(pos)
 
     val visibleThroughWalls = distance <= wallsRange.sq() ||
-        facingBlock(eyes, pos, expectedTarget, currentHit.direction)
+            facingBlock(eyes, pos, expectedTarget, currentHit.direction)
 
     if (intersects && distance <= range.sq() && visibleThroughWalls) {
         val rotation = Rotation.lookingAt(point = pos, from = eyes)
