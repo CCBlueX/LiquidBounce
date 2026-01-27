@@ -49,9 +49,12 @@ open class RangeConfigurable(
 
     /**
      * Increases the attack max-range.
+     *
+     * When min-range is introduced, rename from "RangeIncrease" to "MaxRangeIncrease"
+     * and add "RangeIncrease" as an alias.
      */
-    private val maxRangeIncrease by float(
-        "MaxRangeIncrease",
+    private var maxRangeIncrease by float(
+        "RangeIncrease",
         maxRangeIncrease,
         0.0f..5f,
         "blocks"
