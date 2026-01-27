@@ -198,7 +198,7 @@ public abstract class MixinPlayer extends MixinLivingEntity {
     @ModifyReturnValue(method = "blockInteractionRange", at = @At("RETURN"))
     private double hookBlockInteractionRange(double original) {
         if ((Object) this == Minecraft.getInstance().player && ModuleReach.INSTANCE.getRunning()) {
-            return ModuleReach.INSTANCE.getBlock() + original;
+            return ModuleReach.INSTANCE.getBlockRangeIncrease() + original;
         }
 
         return original;

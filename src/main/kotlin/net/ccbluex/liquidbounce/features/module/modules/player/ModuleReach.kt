@@ -32,5 +32,5 @@ import net.ccbluex.liquidbounce.utils.range.RangeConfigurable
  */
 object ModuleReach : ClientModule("Reach", ModuleCategories.PLAYER) {
     val entity = tree(RangeConfigurable("Entity"))
-    val block by float("Block", 0.5f, 0f..64f)
+    val blockRangeIncrease by float("BlockRangeIncrease", 0.5f, 0f..64f)
 }
