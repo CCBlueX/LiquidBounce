@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.NoRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.getExplosionDamageFromEntity
@@ -42,7 +43,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
     private val range by float("Range", 4.5f, 1f..6f)
     private val wallRange by float("WallRange", 4.5f, 0f..6f)
     private val delay by int("Delay", 0, 0..1000, "ms")
-    private val swing by boolean("Swing", true)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
 
     private val rotationMode = choices(this, "RotationMode") {
         arrayOf(NormalRotationMode(it, module, Priority.IMPORTANT_FOR_USAGE_3), NoRotationMode(it, module))
@@ -97,14 +98,14 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
                 return@rotate
             }
 
-            val target1 = currentTarget ?: return@rotate
+            val target = currentTarget ?: return@rotate
 
-            if (wouldKill(target1)) {
+            if (wouldKill(target)) {
                 currentTarget = null
                 return@rotate
             }
 
-            attackEntity(target1, swing)
+            attackEntity(target, swingMode)
             chronometer.reset()
             currentTarget = null
         })

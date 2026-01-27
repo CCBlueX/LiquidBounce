@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes.ASta
 import net.ccbluex.liquidbounce.features.module.modules.combat.tpaura.modes.ImmediateMode
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
@@ -59,7 +60,7 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
                 it.squaredBoxedDistanceTo(position) <= attackRange * attackRange
             } ?: return@click false
 
-            attackEntity(target, true, keepSprint = true)
+            attackEntity(target, SwingMode.DO_NOT_HIDE, keepSprint = true)
             true
         }
     }

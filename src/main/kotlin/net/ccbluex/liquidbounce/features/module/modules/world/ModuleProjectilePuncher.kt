@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -54,8 +55,8 @@ object ModuleProjectilePuncher : ClientModule(
 
     private val clicker = tree(Clicker(ModuleProjectilePuncher, mc.options.keyAttack, null))
 
-    private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
+    private val swingMode by enumChoice("SwingMode", SwingMode.DO_NOT_HIDE)
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Target
@@ -90,7 +91,7 @@ object ModuleProjectilePuncher : ClientModule(
         }
 
         clicker.click {
-            attackEntity(target, swing)
+            attackEntity(target, swingMode)
             true
         }
     }
