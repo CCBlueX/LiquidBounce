@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module
 
 import com.mojang.blaze3d.platform.InputConstants
 import kotlinx.coroutines.launch
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
@@ -38,10 +39,11 @@ import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -60,8 +62,10 @@ open class ClientModule(
     aliases: List<String> = emptyList() // additional names under which the module is known
 ) : ToggleableConfigurable(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
 
+    protected val logger: Logger = LogManager.getLogger("$CLIENT_NAME/$name")
+
     /**
-     * If a module is running or not is seperated from the enabled state. A module can be paused even when
+     * If a module is running or not is separated from the enabled state. A module can be paused even when
      * it is enabled, or it can be running when it is not enabled.
      *
      * Note: This overwrites [ToggleableConfigurable] declaration of [running].

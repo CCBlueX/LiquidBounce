@@ -32,8 +32,9 @@ import net.ccbluex.liquidbounce.LiquidBounce.clientVersion
 import net.ccbluex.liquidbounce.api.core.ioScope
 import net.ccbluex.liquidbounce.api.core.retrying
 import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn
-import net.ccbluex.liquidbounce.config.gson.util.jsonObject
 import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
+import net.ccbluex.liquidbounce.config.gson.util.jsonObject
+import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -43,7 +44,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import kotlin.time.Duration.Companion.seconds
@@ -145,7 +145,7 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
     }
 
     @Suppress("unused")
-    val updateCycle = tickHandler(Dispatchers.IO) {
+    private val updateCycle = tickHandler(Dispatchers.IO) {
         waitTicks(20)
 
         if (enabled) {
@@ -185,6 +185,11 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
     @Suppress("unused")
     private val serverConnectHandler = handler<ServerConnectEvent> {
         timestamp = System.currentTimeMillis()
+    }
+
+    @Suppress("unused")
+    private val shutdownHandler = handler<ClientShutdownEvent> {
+        shutdownIpc()
     }
 
     private fun formatText(text: String) = text.replace("%clientVersion%", clientVersion)
