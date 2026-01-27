@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserRenderer
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
+import net.ccbluex.liquidbounce.integration.backend.browser.BrowserState
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
 import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
@@ -59,10 +60,26 @@ class CefBrowser(
             browserApi.zoomLevel = viewport.getZoomLevel(quality)
             field = true
 
-            logger.info("[CefBrowser-${hashCode()}] Initialized Browser API")
+            logger.info("[CefBrowser-${browserApi.hashCode()}] Initialized Browser API")
         }
 
-    override var isWorking: Boolean = false
+    override var state: BrowserState = BrowserState.Idle
+        internal set(value) {
+            field = value
+
+            when (value) {
+                is BrowserState.Loading ->
+                    logger.info("[CefBrowser-${browserApi.hashCode()}] Started loading" +
+                        " (url='${url}')")
+                is BrowserState.Success ->
+                    logger.info("[CefBrowser-${browserApi.hashCode()}] Finished loading" +
+                        " (url='${url}', httpStatusCode=${value.httpStatusCode})")
+                is BrowserState.Failure ->
+                    logger.warn("[CefBrowser-${browserApi.hashCode()}] Failed to load" +
+                        " (url='${value.failedUrl}', errorCode=${value.errorCode}, errorText=${value.errorText})")
+
+            }
+        }
 
     override var viewport: BrowserViewport = viewport
         set(value) {
@@ -118,17 +135,15 @@ class CefBrowser(
                 GlobalBrowserSettings.accelerated?.get() == true
             )
         ).apply {
-            logger.info("[CefBrowser-${this@CefBrowser.hashCode()}] Initializing Browser API with url='$url'")
-
             addOnPaintListener {
-                isWorking = true
                 comparePaintWithViewpoint(it.width, it.height)
             }
             addOnAcceleratedPaintListener {
-                isWorking = true
                 comparePaintWithViewpoint(it.width, it.height)
             }
         }
+
+        logger.info("[CefBrowser-${browserApi.hashCode()}] Initializing Browser API (url='$url')")
     }
 
     override var url: String
@@ -192,6 +207,7 @@ class CefBrowser(
     }
 
     override fun toString() = "CefBrowser(" +
+        "hash='${browserApi.hashCode()}', " +
         "id='${browserApi.identifier}', " +
         "url='$url', " +
         "visible=$visible, " +

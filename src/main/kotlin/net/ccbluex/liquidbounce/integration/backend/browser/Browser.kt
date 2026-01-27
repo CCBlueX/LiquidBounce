@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 interface Browser : AutoCloseable {
 
     val isInitialized: Boolean
-    val isWorking: Boolean
+    val state: BrowserState
     var viewport: BrowserViewport
     var visible: Boolean
     var priority: Short
