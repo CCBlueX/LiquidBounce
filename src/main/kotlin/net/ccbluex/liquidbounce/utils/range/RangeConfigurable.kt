@@ -42,7 +42,7 @@ open class RangeConfigurable(
      * @see net.minecraft.world.entity.player.Player.entityInteractionRange
      */
     internal val interactionRange: Float
-        get() = (player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE) + this@RangeConfigurable.maxRangeIncrease).toFloat()
+        get() = (player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE) + maxRangeIncrease).toFloat()
 
     internal val interactionThroughWallsRange
         get() = throughWallsRange
@@ -53,7 +53,7 @@ open class RangeConfigurable(
      * When min-range is introduced, rename from "RangeIncrease" to "MaxRangeIncrease"
      * and add "RangeIncrease" as an alias.
      */
-    private var maxRangeIncrease by float(
+    protected var maxRangeIncrease by float(
         "RangeIncrease",
         maxRangeIncrease,
         0.0f..5f,
@@ -76,7 +76,7 @@ open class RangeConfigurable(
      * This will use only this value for non-visible entities. Originally, we could never attack through walls,
      * so this makes sense to keep starting from 0.0.
      */
-    private val throughWallsRange by float(
+    protected var throughWallsRange by float(
         "ThroughWallsRange",
         throughWallsRange,
         0f..8f,
