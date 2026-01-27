@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacem
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
@@ -44,7 +43,7 @@ object ScriptInteractionUtil {
             return
         }
 
-        entity.attack(swing, keepSprint)
+        attackEntity(entity, swing, keepSprint)
     }
 
     @JvmName("interactEntity")
