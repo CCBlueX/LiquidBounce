@@ -74,12 +74,14 @@ class CefBrowserBackend : BrowserBackend, EventListener {
 
         if (!MCEF.INSTANCE.isInitialized) {
             MCEF.INSTANCE.settings.apply {
-                // Uses a natural user agent to prevent websites from blocking the browser
                 userAgent = HttpClient.DEFAULT_AGENT
                 cacheDirectory = cacheFolder.resolve(System.currentTimeMillis().toString(16)).apply {
                     deleteOnExit()
                 }
                 librariesDirectory = librariesFolder
+
+                // CEF Switches
+                appendCefSwitches("--no-proxy-server")
             }
 
             val resourceManager = MCEF.INSTANCE.newResourceManager()
