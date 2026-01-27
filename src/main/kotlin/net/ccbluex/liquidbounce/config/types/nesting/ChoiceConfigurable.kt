@@ -81,7 +81,9 @@ class ChoiceConfigurable<T : Choice>(
     }
 
     override fun setByString(name: String) {
-        val newChoice = choices.firstOrNull { it.choiceName == name }
+        val newChoice = choices.firstOrNull { choice ->
+            choice.choiceName == name || name in choice.aliases
+        }
 
         if (newChoice == null) {
             throw IllegalArgumentException("ChoiceConfigurable `${this.name}` has no option named $name" +
