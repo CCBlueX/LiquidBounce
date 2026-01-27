@@ -49,7 +49,7 @@ import net.minecraft.client.gui.screens.LevelLoadingScreen
  * The client in-game dashboard.
  */
 
-object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hide = true) {
+object ModuleHud : ClientModule("HUD", ModuleCategories.RENDER, state = true, hideInList = true) {
 
     override val running
         get() = this.enabled && !isDestructed

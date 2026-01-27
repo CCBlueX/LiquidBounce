@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
+import net.ccbluex.liquidbounce.features.module.metadata.ModuleTagGroups
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.kotlin.Minecraft
 import net.ccbluex.netty.http.model.RequestObject
@@ -47,7 +48,8 @@ private fun ClientModule.toJsonObject() = JsonObject().apply {
     addProperty("enabled", enabled)
     addProperty("description", description.get())
     addProperty("tag", tag)
-    addProperty("hidden", hidden)
+    add("tags", interopGson.toJsonTree(metadata.tags.map { it.name }))
+    addProperty("hidden", metadata.hideInList)
     add("aliases", interopGson.toJsonTree(aliases))
 }
 
@@ -59,6 +61,26 @@ fun getModules(requestObject: RequestObject): FullHttpResponse {
         mods.add(module.toJsonObject())
     }
     return httpOk(mods)
+}
+
+// GET /api/v1/client/modules/tags
+@Suppress("UNUSED_PARAMETER")
+fun getModuleTagGroups(requestObject: RequestObject): FullHttpResponse {
+    val groups = JsonArray()
+    for (group in ModuleTagGroups.entries) {
+        val tagArray = JsonArray()
+        for (tag in group.tags) {
+            tagArray.add(tag.name)
+        }
+        val groupObject = JsonObject().apply {
+            addProperty("name", group.name)
+            addProperty("required", group.required)
+            add("tags", tagArray)
+        }
+        groups.add(groupObject)
+    }
+
+    return httpOk(groups)
 }
 
 // GET /api/v1/client/module/:name

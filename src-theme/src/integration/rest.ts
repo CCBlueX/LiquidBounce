@@ -5,16 +5,17 @@ import type {
     ClientInfo,
     ClientUpdate,
     ClientUser,
-    HudComponent,
     ConfigurableSetting,
     FileSelectDialog,
     FileSelectResult,
     GameWindow,
     GeneratorResult,
     HitResult,
+    HudComponent,
     Metadata,
     MinecraftKeybind,
     Module,
+    ModuleTagGroups,
     PersistentStorageItem,
     PlayerData,
     PrintableKey,
@@ -44,6 +45,11 @@ export async function getModules(): Promise<Module[]> {
     const data: [Module] = await response.json();
 
     return data;
+}
+
+export async function getModuleTagGroups(): Promise<ModuleTagGroups> {
+    const response = await fetch(`${API_BASE}/client/modules/tags`);
+    return await response.json();
 }
 
 export async function getModule(name: string): Promise<Module> {

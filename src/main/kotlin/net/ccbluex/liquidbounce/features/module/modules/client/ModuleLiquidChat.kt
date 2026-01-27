@@ -54,7 +54,7 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import kotlin.time.Duration.Companion.seconds
 
-object ModuleLiquidChat : ClientModule("LiquidChat", ModuleCategories.CLIENT, hide = true, state = true,
+object ModuleLiquidChat : ClientModule("LiquidChat", ModuleCategories.CLIENT, hideInList = true, state = true,
     aliases = listOf("GlobalChat", "IRC")
 ) {
 

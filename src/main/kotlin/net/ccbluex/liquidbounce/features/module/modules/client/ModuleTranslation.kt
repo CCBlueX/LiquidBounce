@@ -30,7 +30,7 @@ object ModuleTranslation : ClientModule(
     name = "Translation",
     category = ModuleCategories.CLIENT,
     notActivatable = true,
-    hide = true
+    hideInList = true
 ), TranslatorApi {
     private val providers = choices("Provider", 0) {
         arrayOf(

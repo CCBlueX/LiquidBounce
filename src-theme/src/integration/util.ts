@@ -1,4 +1,4 @@
-import type {GroupedModules, Module} from "./types"
+import type {GroupedModules, Module, ModuleTagGroups} from "./types"
 
 export const delay = (millis: number) => new Promise(resolve => setTimeout(resolve, millis));
 
@@ -11,6 +11,49 @@ export function groupByCategory(modules: Module[]): GroupedModules {
         acc[category].push(current);
         return acc;
     }, {});
+}
+
+export function filterModulesByTags(
+    modules: Module[],
+    selectedTags: string[],
+    tagGroups?: ModuleTagGroups
+): Module[] {
+    if (!tagGroups || tagGroups.length === 0) {
+        return modules;
+    }
+
+    const selected = new Set(selectedTags);
+    const groupEntries = tagGroups;
+
+    return modules.filter((module) => {
+        if (!module.tags || module.tags.length === 0) {
+            return true;
+        }
+
+        const moduleTagSet = new Set(module.tags);
+
+        for (const group of groupEntries) {
+            const {name: groupName, tags: groupTags} = group;
+            const selectedInGroup = groupTags.filter((tag) => selected.has(tag));
+            const moduleHasGroupTag = groupTags.some((tag) => moduleTagSet.has(tag));
+
+            if (selectedInGroup.length === 0) {
+                if (group.required) {
+                    return false;
+                }
+                if (moduleHasGroupTag) {
+                    return false;
+                }
+                continue;
+            }
+
+            if (!selectedInGroup.some((tag) => moduleTagSet.has(tag))) {
+                return false;
+            }
+        }
+
+        return true;
+    });
 }
 
 export function rgbaToInt(rgba: number[]): number {

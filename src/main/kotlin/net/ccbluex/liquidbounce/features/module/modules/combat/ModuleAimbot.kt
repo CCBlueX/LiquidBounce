@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.RotationUpdateEvent
@@ -25,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.metadata.ModuleTag
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.KillAuraRequirements
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug.debugGeometry
@@ -54,7 +56,12 @@ import net.minecraft.world.entity.Entity
  *
  * Automatically faces selected entities around you.
  */
-object ModuleAimbot : ClientModule("Aimbot", ModuleCategories.COMBAT, aliases = listOf("AimAssist", "AutoAim")) {
+object ModuleAimbot : ClientModule(
+    "Aimbot",
+    ModuleCategories.COMBAT,
+    aliases = listOf("AimAssist", "AutoAim"),
+    tags = enumSetOf(ModuleTag.LEGIT, ModuleTag.PVP, ModuleTag.SMP)
+) {
 
     private val range = float("Range", 4.2f, 1f..8f)
 

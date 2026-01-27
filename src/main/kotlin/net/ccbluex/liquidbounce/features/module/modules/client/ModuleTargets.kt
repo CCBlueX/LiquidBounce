@@ -29,7 +29,7 @@ object ModuleTargets : ClientModule(
     name = "Targets",
     category = ModuleCategories.CLIENT,
     notActivatable = true,
-    hide = true,
+    hideInList = true,
     aliases = listOf("Enemies")
 ) {
     val combatConfigurable = multiEnumChoice("Combat",

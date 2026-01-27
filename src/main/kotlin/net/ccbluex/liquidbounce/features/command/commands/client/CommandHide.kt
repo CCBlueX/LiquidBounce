@@ -58,7 +58,7 @@ object CommandHide : Command.Factory {
     private fun clearSubcommand() = CommandBuilder
         .begin("clear")
         .handler {
-            ModuleManager.forEach { it.hidden = false }
+            ModuleManager.forEach { it.metadata.hideInList = false }
             chat(
                 regular(command.result("modulesUnhidden")),
                 metadata = MessageMetadata(id = "CHide#info")
@@ -74,7 +74,7 @@ object CommandHide : Command.Factory {
                 result("hidden").withColor(ChatFormatting.RED).bold(true)
             },
             items = {
-                ModuleManager.filter { it.hidden }
+                ModuleManager.filter { it.metadata.hideInList }
             },
             eachRow = { _, module ->
                 "\u2B25 ".asText()
@@ -89,13 +89,13 @@ object CommandHide : Command.Factory {
     private fun unhideSubcommand() = CommandBuilder
         .begin("unhide")
         .parameter(
-            ParameterBuilder.modules { it.hidden }
+            ParameterBuilder.modules { it.metadata.hideInList }
                 .required()
                 .build()
         )
         .handler {
             val modules = args[0] as Set<ClientModule>
-            modules.forEach { it.hidden = false }
+            modules.forEach { it.metadata.hideInList = false }
 
             chat(
                 command.result(
@@ -110,13 +110,13 @@ object CommandHide : Command.Factory {
     private fun hideSubcommand() = CommandBuilder
         .begin("hide")
         .parameter(
-            ParameterBuilder.modules { !it.hidden }
+            ParameterBuilder.modules { !it.metadata.hideInList }
                 .required()
                 .build()
         )
         .handler {
             val modules = args[0] as Set<ClientModule>
-            modules.forEach { it.hidden = true }
+            modules.forEach { it.metadata.hideInList = true }
 
             chat(
                 command.result(

@@ -23,11 +23,20 @@ export interface Module {
     hidden: boolean;
     aliases: string[];
     tag: string | null;
+    tags: string[];
 }
 
 export interface GroupedModules {
     [category: string]: Module[]
 }
+
+export interface ModuleTagGroup {
+    name: string;
+    required: boolean;
+    tags: string[];
+}
+
+export type ModuleTagGroups = ModuleTagGroup[];
 
 export type ModuleSetting =
     BlocksSetting

@@ -34,6 +34,8 @@ import net.ccbluex.liquidbounce.event.events.ModuleActivationEvent
 import net.ccbluex.liquidbounce.event.events.ModuleToggleEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.RefreshArrayListEvent
+import net.ccbluex.liquidbounce.features.module.metadata.ModuleMetadata
+import net.ccbluex.liquidbounce.features.module.metadata.ModuleTag
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
@@ -44,6 +46,7 @@ import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.input.InputBind
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import java.util.EnumSet
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -57,9 +60,10 @@ open class ClientModule(
     state: Boolean = false, // default state
     @Exclude val notActivatable: Boolean = false, // disable settings that are not needed if the module can't be enabled
     @Exclude val disableActivation: Boolean = notActivatable, // disable activation
-    hide: Boolean = false, // default hide
+    hideInList: Boolean = false, // default hide
     @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
-    aliases: List<String> = emptyList() // additional names under which the module is known
+    aliases: List<String> = emptyList(), // additional names under which the module is known
+    tags: EnumSet<ModuleTag> = EnumSet.noneOf(ModuleTag::class.java)
 ) : ToggleableConfigurable(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
 
     protected val logger: Logger = LogManager.getLogger("$CLIENT_NAME/$name")
@@ -80,19 +84,10 @@ open class ClientModule(
                 notAnOption()
             }
         }
-    val bind get() = bindValue.get()
 
-    var hidden by boolean("Hidden", hide)
-        .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeHidden }
-        .independentDescription()
-        .onChange {
-            EventManager.callEvent(RefreshArrayListEvent)
-            it
-        }.apply {
-            if (notActivatable) {
-                notAnOption()
-            }
-        }
+    val metadata = tree(ModuleMetadata(this, tags, hideInList))
+
+    val bind get() = bindValue.get()
 
     /**
      * If this value is on true, we cannot enable the module, as it likely does not bypass.
@@ -183,7 +178,7 @@ open class ClientModule(
             notification(title, this.name, severity)
         }
 
-        EventManager.callEvent(ModuleToggleEvent(name, hidden, state))
+        EventManager.callEvent(ModuleToggleEvent(name, metadata.hideInList, state))
         return state
     }
 
