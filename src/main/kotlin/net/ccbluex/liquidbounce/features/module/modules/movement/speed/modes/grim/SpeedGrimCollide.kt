@@ -51,7 +51,7 @@ class SpeedGrimCollide(override val parent: ChoiceConfigurable<*>) : Choice("Gri
         }
 
         var collisions = 0
-        val box = player.boundingBox.inflate(1.0)
+        val box = player.boundingBox.inflate(shrinkBox.toDouble())
 
         for (entity in world.entitiesForRendering()) {
             val entityBox = entity.boundingBox
