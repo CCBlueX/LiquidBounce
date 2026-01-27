@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.inventory.Slots
+import net.ccbluex.liquidbounce.utils.math.sq
 import net.minecraft.world.item.Items
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura as KillAura
 
@@ -57,10 +58,10 @@ internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoF
         if (!KillAura.running
             || !syncCooldownWithKillAura
             || (
-                KillAura.clickScheduler.isClickTick
+                KillAura.clicker.isClickTick
                 && KillAura.targetTracker.target
                     ?.squaredBoxedDistanceTo(player)
-                    ?.takeIf { it >= KillAura.range * KillAura.range } != null
+                    ?.takeIf { it >= KillAura.range.interactionRange.sq() } != null
                 )
         ) {
             return true
@@ -71,7 +72,7 @@ internal object AutoFirework : ToggleableConfigurable(ModuleElytraTarget, "AutoF
          * We can use the firework on the next tick.
          * After killaura performed the click
          */
-        return if (KillAura.clickScheduler.isClickTick) {
+        return if (KillAura.clicker.isClickTick) {
             waitTicks(1)
             true
         } else {

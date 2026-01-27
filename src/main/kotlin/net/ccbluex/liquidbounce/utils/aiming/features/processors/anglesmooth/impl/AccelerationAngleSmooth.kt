@@ -29,10 +29,10 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.data.RotationDelta
 import net.ccbluex.liquidbounce.utils.aiming.features.processors.anglesmooth.AngleSmooth
 import net.ccbluex.liquidbounce.utils.aiming.utils.RotationUtil
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.util.Mth
 import kotlin.math.abs
 import kotlin.math.exp
@@ -128,7 +128,9 @@ class AccelerationAngleSmooth(parent: ChoiceConfigurable<*>) : AngleSmooth("Acce
 
         val entity = rotationTarget.entity
         val distance = entity?.let { entity -> player.boxedDistanceTo(entity) } ?: 0.0
-        val crosshair = entity?.let { facingEnemy(entity, max(3.0, distance), currentRotation) } == true
+        val crosshair = entity?.let {
+            isLookingAtEntity(entity, max(3.0, distance), currentRotation) != null
+        } == true
 
         val (newYawDiff, newPitchDiff) = computeTurnSpeed(
             prevDiff,

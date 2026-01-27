@@ -82,7 +82,7 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
     }
 
     private fun renderIndicator(env: WorldRenderEnvironment, partialTicks: Float, target: LivingEntity?) {
-        val range = ModuleKillAura.range
+        val range = ModuleKillAura.range.interactionRange
         val pos = player.interpolateCurrentPosition(partialTicks.coerceIn(0f, 1f))
         val pulseOffset = calculatePulse(range)
         val distance = target?.let { sqrt(player.squaredBoxedDistanceTo(it)).toFloat() }
@@ -113,13 +113,13 @@ object KillAuraRangeIndicator : ToggleableConfigurable(ModuleKillAura, "RangeInd
     ) {
         drawRangeCircle(range + pulseOffset, getColor(distance, range))
 
-        if (wallRangeColor.a > 0 && ModuleKillAura.wallRange < range) {
+        if (wallRangeColor.a > 0 && ModuleKillAura.range.interactionThroughWallsRange < range) {
             val color = if (hasTarget) {
                 wallRangeColor.fade(1.5f)
             } else {
                 wallRangeColor
             }
-            drawRangeCircle(ModuleKillAura.wallRange + pulseOffset * 0.5f, color, 80)
+            drawRangeCircle(ModuleKillAura.range.interactionThroughWallsRange.toFloat() + pulseOffset * 0.5f, color, 80)
         }
 
         if (scanRangeColor.a > 0) {

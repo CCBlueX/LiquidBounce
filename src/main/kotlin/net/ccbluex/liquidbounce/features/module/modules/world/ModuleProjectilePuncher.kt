@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.combat.attack
@@ -37,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.math.isLikelyZero
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.projectile.ShulkerBullet
 import net.minecraft.world.entity.projectile.hurtingprojectile.LargeFireball
@@ -80,12 +80,12 @@ object ModuleProjectilePuncher : ClientModule(
         val target = target ?: return@tickHandler
 
         if (target.squaredBoxedDistanceTo(player) > range * range ||
-            !facingEnemy(
+            isLookingAtEntity(
                 toEntity = target,
                 rotation = RotationManager.serverRotation,
                 range = range.toDouble(),
-                wallsRange = 0.0
-            )) {
+                throughWallsRange = 0.0
+            ) != null) {
             return@tickHandler
         }
 

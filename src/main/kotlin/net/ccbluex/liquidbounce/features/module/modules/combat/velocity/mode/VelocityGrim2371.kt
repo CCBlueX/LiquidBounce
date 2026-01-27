@@ -27,8 +27,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.waitTicks
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.client.PacketQueueManager
+import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.common.ServerboundPongPacket
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket
@@ -134,7 +134,7 @@ internal object VelocityGrim2371 : VelocityMode("Grim2371") {
     @Suppress("unused")
     private val playerTickHandler = handler<PlayerTickEvent> { event ->
         if (needClick && !shouldSkip && !player.isUsingItem) {
-            hitResult = raycast(
+            hitResult = traceFromPlayer(
                 rotation = RotationManager.serverRotation.copy(pitch = 90F)
             ).takeIf {
                 it.blockPos.relative(it.direction) == player.blockPosition()

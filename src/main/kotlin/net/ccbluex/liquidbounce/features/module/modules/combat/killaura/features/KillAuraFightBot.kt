@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.clickScheduler
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.clicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
@@ -111,7 +111,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
 
         val combatTarget = targetTracker.target?.let { entity ->
             val distance = playerPosition.distanceTo(entity.position())
-            val range = min(ModuleKillAura.range, distance.toFloat())
+            val range = min(ModuleKillAura.range.interactionRange, distance.toFloat())
             val outOfDistance = distance > opponentRange
 
             val targetRotation = entity.rotation.copy(pitch = 0.0f)
@@ -143,7 +143,7 @@ object KillAuraFightBot : NavigationBaseConfigurable<CombatContext>(ModuleKillAu
 
         // Otherwise handle combat movement
         val combatTarget = context.combatTarget ?: return null
-        return if (runawayOnCooldown && !clickScheduler.willClickAt()) {
+        return if (runawayOnCooldown && !clicker.willClickAt()) {
             calculateRunawayPosition(context, combatTarget)
         } else {
             calculateAttackPosition(context, combatTarget)

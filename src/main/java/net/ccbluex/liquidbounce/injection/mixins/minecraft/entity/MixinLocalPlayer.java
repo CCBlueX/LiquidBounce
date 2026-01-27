@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoPushBy;
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoEntityInteract;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
@@ -42,8 +43,9 @@ import net.ccbluex.liquidbounce.integration.screen.ScreenManager;
 import net.ccbluex.liquidbounce.interfaces.LocalPlayerAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation;
-import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingKt;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
+import net.ccbluex.liquidbounce.utils.raytracing.EntityRaytracingKt;
+import net.ccbluex.liquidbounce.utils.raytracing.RaytracingKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -267,8 +269,27 @@ public abstract class MixinLocalPlayer extends MixinPlayer implements LocalPlaye
             rotation = cameraRotation;
         }
 
-        return RaytracingKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange), ClipContext.Block.OUTLINE,
-            ModuleLiquidPlace.INSTANCE.getRunning(), tickDelta);
+        // Through Walls Reach
+        if (ModuleReach.INSTANCE.getRunning()) {
+            var throughWallsRange = ModuleReach.INSTANCE.getEntity().getInteractionThroughWallsRange$liquidbounce();
+
+            if (throughWallsRange > 0.0) {
+                var hitEntityResult = EntityRaytracingKt.findEntityInCrosshair(throughWallsRange, rotation, null);
+
+                if (hitEntityResult != null && hitEntityResult.getType() == HitResult.Type.ENTITY) {
+                    return hitEntityResult;
+                }
+            }
+        }
+
+
+        return RaytracingKt.traceFromPlayer(
+            rotation,
+            Math.max(blockInteractionRange, entityInteractionRange),
+            ClipContext.Block.OUTLINE,
+            ModuleLiquidPlace.INSTANCE.getRunning(),
+            tickDelta
+        );
     }
 
     @ModifyExpressionValue(method = "pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;getViewVector(F)Lnet/minecraft/world/phys/Vec3;"))

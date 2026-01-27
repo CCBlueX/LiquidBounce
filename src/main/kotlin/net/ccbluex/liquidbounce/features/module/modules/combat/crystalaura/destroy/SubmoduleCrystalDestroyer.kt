@@ -27,12 +27,12 @@ import net.ccbluex.liquidbounce.render.FULL_BOX
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
+import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
@@ -95,12 +95,12 @@ object SubmoduleCrystalDestroyer : ToggleableConfigurable(ModuleCrystalAura, "De
         // create the action chain to execute
         val action = {
             ModuleCrystalAura.rotationMode.activeChoice.rotate(rotation, isFinished = {
-                facingEnemy(
+                isLookingAtEntity(
                     toEntity = target,
                     rotation = RotationManager.serverRotation,
                     range = range.toDouble(),
-                    wallsRange = wallsRange.toDouble()
-                )
+                    throughWallsRange = wallsRange.toDouble()
+                ) != null
             }, onFinished = {
                 if (!chronometer.hasAtLeastElapsed(delay.toLong())) {
                     return@rotate
