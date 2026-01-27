@@ -32,18 +32,15 @@ import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSetting
  */
 object GlobalManager : Configurable("Global"), EventListener {
 
-    init {
-        tree(ModuleTargets)
-        tree(CommandManager.Settings)
-        tree(ModuleTranslation)
-        tree(ModuleAutoConfig)
-        tree(ModuleLiquidChat)
-        tree(ModuleRichPresence)
-    }
-
     @Suppress("unused")
     private val browserReadyHandler = handler<BrowserReadyEvent> { event ->
+        tree(CommandManager.GlobalSettings)
+        tree(GlobalSettingsTarget)
+        tree(GlobalSettingsAutoTranslate)
         tree(GlobalBrowserSettings)
+        tree(GlobalSettingsAutoConfig)
+        tree(GlobalSettingsClientChat)
+        tree(GlobalSettingsRichPresence)
     }
 
 

@@ -97,7 +97,7 @@ private val commandSet = ObjectRBTreeSet<Command>(Comparator.comparing({ it.name
  */
 object CommandManager : Collection<Command> by commandSet {
 
-    object Settings : Configurable("Commands") {
+    object GlobalSettings : Configurable("Commands") {
 
         /**
          * The prefix of the commands.
@@ -109,7 +109,7 @@ object CommandManager : Collection<Command> by commandSet {
          * prefix (.)
          * ```
          */
-        var prefix by text("prefix", ".")
+        var prefix by text("Prefix", ".")
 
         /**
          * How many hints should we give for unknown commands?
@@ -252,7 +252,7 @@ object CommandManager : Collection<Command> by commandSet {
                 "liquidbounce.commandManager.unknownCommand",
                 args[0]
             ),
-            usageInfo = if (rootCommandMap.isEmpty() || Settings.hintCount == 0) {
+            usageInfo = if (rootCommandMap.isEmpty() || GlobalSettings.hintCount == 0) {
                 emptyList()
             } else {
                 commandSet.sortedBy { command ->
@@ -264,7 +264,7 @@ object CommandManager : Collection<Command> by commandSet {
                         )
                     }
                     distance
-                }.take(Settings.hintCount).map { command ->
+                }.take(GlobalSettings.hintCount).map { command ->
                     if (command.aliases.isEmpty()) {
                         command.nameAsText()
                     } else {
@@ -457,12 +457,12 @@ object CommandManager : Collection<Command> by commandSet {
             return Suggestions.empty()
         }
 
-        if (start < Settings.prefix.length) {
+        if (start < GlobalSettings.prefix.length) {
             return Suggestions.empty()
         }
 
         try {
-            val cmd = origCmd.substring(Settings.prefix.length, start)
+            val cmd = origCmd.substring(GlobalSettings.prefix.length, start)
             val tokenized = tokenizeCommand(cmd)
             var args = tokenized.first
 
@@ -481,7 +481,7 @@ object CommandManager : Collection<Command> by commandSet {
                 currentArgStart = cmd.length
             }
 
-            val builder = SuggestionsBuilder(origCmd, currentArgStart + Settings.prefix.length)
+            val builder = SuggestionsBuilder(origCmd, currentArgStart + GlobalSettings.prefix.length)
 
             // getSubcommands will only return null if it returns on the first index.
             // since the first index must contain a valid command, it is reported as

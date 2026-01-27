@@ -56,8 +56,8 @@ import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import kotlin.time.Duration.Companion.seconds
 
-object ModuleLiquidChat : ToggleableConfigurable(
-    name = "LiquidChat",
+object GlobalSettingsClientChat : ToggleableConfigurable(
+    name = "ClientChat",
     enabled = true,
     aliases = listOf("GlobalChat", "IRC")
 ) {
@@ -180,7 +180,7 @@ object ModuleLiquidChat : ToggleableConfigurable(
             return@suspendHandler
         }
 
-        val result = ModuleTranslation.translate(text = event.message)
+        val result = GlobalSettingsAutoTranslate.translate(text = event.message)
         if (result.isValid) {
             writeChat(prefix().append(result.toResultText()))
         }

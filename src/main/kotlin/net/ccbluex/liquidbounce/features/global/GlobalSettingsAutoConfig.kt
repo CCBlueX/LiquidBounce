@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.rootDomain
 import net.minecraft.client.gui.screens.ConnectScreen
 
-object ModuleAutoConfig : ToggleableConfigurable(
+object GlobalSettingsAutoConfig : ToggleableConfigurable(
     name = "AutoConfig",
     enabled = true,
     aliases = listOf("AutoSettings")

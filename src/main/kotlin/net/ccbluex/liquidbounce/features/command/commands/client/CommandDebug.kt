@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.config.gson.serializer.minecraft.accountType
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.global.ModuleTargets
+import net.ccbluex.liquidbounce.features.global.GlobalSettingsTarget
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.script.ScriptManager
@@ -166,7 +166,7 @@ object CommandDebug : Command.Factory {
             }
         })
 
-        add("enemies", publicGson.toJsonTree(ModuleTargets.combat, EnumSet::class.javaObjectType))
+        add("enemies", publicGson.toJsonTree(GlobalSettingsTarget.combat, EnumSet::class.javaObjectType))
     }
 
     /**

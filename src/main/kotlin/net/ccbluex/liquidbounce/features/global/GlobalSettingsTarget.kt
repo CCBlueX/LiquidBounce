@@ -20,18 +20,14 @@
 package net.ccbluex.liquidbounce.features.global
 
 import net.ccbluex.fastutil.enumSetOf
-import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.types.nesting.Configurable
 import net.ccbluex.liquidbounce.utils.combat.Targets
 import java.util.EnumSet
 
-object ModuleTargets : ToggleableConfigurable(
+object GlobalSettingsTarget : Configurable(
     name = "Targets",
-    enabled = true,
     aliases = listOf("Enemies")
 ) {
-    init {
-        enabledValue.notAnOption()
-    }
 
     val combatConfigurable = multiEnumChoice("Combat",
         default = enumSetOf(

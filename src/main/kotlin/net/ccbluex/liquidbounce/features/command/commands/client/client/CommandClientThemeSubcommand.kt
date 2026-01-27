@@ -126,7 +126,7 @@ object CommandClientThemeSubcommand {
                     .append(variable(theme.origin.choiceName))
                 ).onClick(
                     ClickEvent.SuggestCommand(
-                        "${CommandManager.Settings.prefix}client theme set ${theme.metadata.id}"
+                        "${CommandManager.GlobalSettings.prefix}client theme set ${theme.metadata.id}"
                     )
                 ).onHover(
                     HoverEvent.ShowText(
