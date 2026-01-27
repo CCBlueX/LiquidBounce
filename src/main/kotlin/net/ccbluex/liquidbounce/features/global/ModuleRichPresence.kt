@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.client
+package net.ccbluex.liquidbounce.features.global
 
 import com.jagrosh.discordipc.IPCClient
 import com.jagrosh.discordipc.entities.ActivityType
@@ -36,20 +36,22 @@ import net.ccbluex.liquidbounce.api.core.retrying
 import net.ccbluex.liquidbounce.api.services.cdn.ClientCdn
 import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
 import net.ccbluex.liquidbounce.config.gson.util.jsonObject
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import kotlin.time.Duration.Companion.seconds
 
-object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT, state = true, hide = true,
+object ModuleRichPresence : ToggleableConfigurable(
+    name = "RichPresence",
+    enabled = true,
     aliases = listOf("DiscordPresence")
 ) {
 
@@ -143,7 +145,6 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
         }.onSuccess {
             logger.info("Successfully closed Discord RPC.")
         }
-        super.onDisabled()
     }
 
     @Suppress("unused")

@@ -31,11 +31,6 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.event.tickUntil
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoLeave
@@ -608,13 +603,6 @@ object ModuleManager : EventListener, Collection<ClientModule> by modules {
             ModuleSurround,
             ModulePacketMine,
             ModuleHoleFiller,
-
-            // Client
-            ModuleAutoConfig,
-            ModuleRichPresence,
-            ModuleTargets,
-            ModuleTranslation,
-            ModuleLiquidChat
         )
 
         builtin.forEach { module ->

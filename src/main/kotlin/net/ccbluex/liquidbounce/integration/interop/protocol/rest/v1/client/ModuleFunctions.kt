@@ -101,7 +101,7 @@ suspend fun postPanic(requestObject: RequestObject): FullHttpResponse = withCont
     AutoConfig.withLoading {
         runCatching {
             for (module in ModuleManager) {
-                if (module.category == ModuleCategories.RENDER || module.category == ModuleCategories.CLIENT) {
+                if (module.category == ModuleCategories.RENDER) {
                     continue
                 }
 

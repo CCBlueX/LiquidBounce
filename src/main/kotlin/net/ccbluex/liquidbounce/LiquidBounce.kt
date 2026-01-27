@@ -50,6 +50,7 @@ import net.ccbluex.liquidbounce.features.account.AccountManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.ClientAccountManager
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
+import net.ccbluex.liquidbounce.features.global.GlobalManager
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
 import net.ccbluex.liquidbounce.features.marketplace.MarketplaceManager
@@ -284,6 +285,7 @@ object LiquidBounce : EventListener {
         ConfigSystem.root(LanguageManager)
         ConfigSystem.root(ClientAccountManager)
         ConfigSystem.root(SpooferManager)
+        ConfigSystem.root(GlobalManager)
         ConfigSystem.root(MarketplaceManager)
         PostRotationExecutor
         ServerObserver

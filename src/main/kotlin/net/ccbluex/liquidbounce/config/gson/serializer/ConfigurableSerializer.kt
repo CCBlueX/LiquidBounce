@@ -123,8 +123,7 @@ class ConfigurableSerializer(
             /**
              * Do not include modules that are heavily user-personalised
              */
-            if (value.category == ModuleCategories.RENDER || value.category == ModuleCategories.CLIENT ||
-                value.category == ModuleCategories.FUN) {
+            if (value.category == ModuleCategories.RENDER || value.category == ModuleCategories.FUN) {
                 return false
             }
         }

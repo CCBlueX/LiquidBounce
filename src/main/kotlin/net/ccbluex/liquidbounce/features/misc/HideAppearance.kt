@@ -133,7 +133,7 @@ object HideAppearance : EventListener {
         isDestructed = true
 
         mc.gui.chat.recentChat.removeIf {
-            it.startsWith(CommandManager.Options.prefix)
+            it.startsWith(CommandManager.Settings.prefix)
         }
 
         // Cancel all async tasks

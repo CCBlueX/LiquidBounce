@@ -26,7 +26,7 @@ import net.ccbluex.fastutil.component2
 import net.ccbluex.liquidbounce.config.types.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEntityEvent
-import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
+import net.ccbluex.liquidbounce.features.global.ModuleTargets
 import net.ccbluex.liquidbounce.features.module.modules.combat.criticals.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeLook

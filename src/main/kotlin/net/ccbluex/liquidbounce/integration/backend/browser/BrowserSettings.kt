@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
 import kotlin.math.max
 
-object GlobalBrowserSettings : Configurable("GlobalRenderer") {
+object GlobalBrowserSettings : Configurable("Renderer") {
 
     /**
      * Quality setting that controls the rendering resolution.

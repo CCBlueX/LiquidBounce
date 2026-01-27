@@ -17,29 +17,29 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.client
+package net.ccbluex.liquidbounce.features.global
 
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.configs
+import net.ccbluex.liquidbounce.config.types.nesting.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.eventListenerScope
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
-import net.ccbluex.liquidbounce.features.module.ClientModule
-import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.dropPort
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.rootDomain
 import net.minecraft.client.gui.screens.ConnectScreen
 
-object ModuleAutoConfig : ClientModule(
-    "AutoConfig",
-    ModuleCategories.CLIENT,
-    state = true,
+object ModuleAutoConfig : ToggleableConfigurable(
+    name = "AutoConfig",
+    enabled = true,
     aliases = listOf("AutoSettings")
 ) {
 
@@ -56,18 +56,20 @@ object ModuleAutoConfig : ClientModule(
         doNotIncludeAlways()
     }
 
-    override suspend fun enabledEffect() {
-        val currentServerEntry = mc.currentServer
+    override fun onEnabled() {
+        eventListenerScope.launch {
+            val currentServerEntry = mc.currentServer
 
-        if (currentServerEntry == null) {
-            notification(
-                "AutoConfig", "You are not connected to a server.",
-                NotificationEvent.Severity.ERROR
-            )
-            return
+            if (currentServerEntry == null) {
+                notification(
+                    "AutoConfig", "You are not connected to a server.",
+                    NotificationEvent.Severity.ERROR
+                )
+                return@launch
+            }
+
+            loadServerConfig(currentServerEntry.ip.dropPort().rootDomain(), null)
         }
-
-        loadServerConfig(currentServerEntry.ip.dropPort().rootDomain(), null)
     }
 
     @Suppress("unused")
@@ -145,5 +147,8 @@ object ModuleAutoConfig : ClientModule(
      */
     override val running
         get() = !isDestructed && enabled
+
+    fun message(key: String, vararg args: Any) =
+        translation("liquidbounce.module.autoConfig.messages.$key", args = args)
 
 }

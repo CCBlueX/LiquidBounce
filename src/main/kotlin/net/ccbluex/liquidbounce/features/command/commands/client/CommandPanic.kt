@@ -55,7 +55,7 @@ object CommandPanic : Command.Factory {
                     "all" -> msg = command.result("disabledAllModules")
                     "nonrender" -> {
                         modules = modules.filter {
-                            it.category != ModuleCategories.RENDER && it.category != ModuleCategories.CLIENT
+                            it.category != ModuleCategories.RENDER
                         }
                         msg = command.result("disabledAllCategoryModules", command.result("nonRender"))
                     }
