@@ -18,19 +18,25 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
+import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.LiquidBounce.logger
+import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.types.Value
+import net.ccbluex.liquidbounce.config.types.ValueType
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.range.RangeConfigurable
+import kotlin.math.max
 
 /**
  * Allows adjusting your attack range and scan range.
  */
-object KillAuraRange : RangeConfigurable("Range", 0f, 3f), MinecraftShortcuts {
+object KillAuraRange : RangeConfigurable("Range", 1f, 3f), MinecraftShortcuts {
 
     internal val scanRange
         get() = maxOf(interactionRange, interactionThroughWallsRange) + currentScanRangeAddition
 
-    private val scanRangeModifier by floatRange(
+    private var scanRangeIncrease by floatRange(
         "ScanRangeIncrease",
         2.0f..3.0f,
         0.0f..7.0f,
@@ -38,10 +44,33 @@ object KillAuraRange : RangeConfigurable("Range", 0f, 3f), MinecraftShortcuts {
     ).onChanged { range ->
         currentScanRangeAddition = range.random()
     }
-    private var currentScanRangeAddition: Float = scanRangeModifier.random()
+    private var currentScanRangeAddition: Float = scanRangeIncrease.random()
 
     fun update() {
-        currentScanRangeAddition = scanRangeModifier.random()
+        currentScanRangeAddition = scanRangeIncrease.random()
+    }
+
+    /**
+     * Migrates the old values from the config.
+     *
+     * todo: remove this when no one uses the format anymore
+     */
+    fun migrateFromValues(map: Map<String, JsonObject>) {
+        if (!map.containsKey("WallRange") || !map.containsKey("ScanExtraRange")) {
+            // This cannot be an old format.
+            return
+        }
+
+        this.maxRangeIncrease = max(0f, withDummy("Range", map["Range"]!!, 4.2f) - 3f)
+        this.throughWallsRange = withDummy("WallRange", map["WallRange"]!!, 3f)
+        this.scanRangeIncrease = withDummy("ScanExtraRange", map["ScanExtraRange"]!!, 2f..3f)
+        logger.info("KillAura Range Config migrated from old format.")
+    }
+
+    private fun <T : Any> withDummy(name: String, jsonObject: JsonObject, value: T): T {
+        val dummy = Value(name, defaultValue = value, valueType = ValueType.INVALID)
+        ConfigSystem.deserializeValue(dummy, jsonObject)
+        return dummy.get()
     }
 
 }
