@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.integration.backend
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
@@ -30,11 +31,14 @@ import net.ccbluex.liquidbounce.integration.backend.browser.GlobalBrowserSetting
 import net.ccbluex.liquidbounce.integration.interop.persistant.PersistentLocalStorage
 import net.ccbluex.liquidbounce.integration.task.TaskManager
 import net.ccbluex.liquidbounce.utils.client.env
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention.FIRST_PRIORITY
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 
 object BrowserBackendManager : EventListener {
+
+    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/BrowserBackendManager")
 
     val isInitialized: Boolean
         get() = backend?.isInitialized ?: false

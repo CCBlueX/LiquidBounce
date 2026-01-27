@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.marketplace
 
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItem
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -28,16 +29,19 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import java.io.File
 
 /**
  * Marketplace manager for subscribing and updating items.
  */
 object MarketplaceManager : Configurable("marketplace"), EventListener {
+
+    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/MarketplaceManager")
 
     val subscribedItems by list("subscribed", mutableListOf<SubscribedItem>(), ValueType.SUBSCRIBED_ITEM)
 

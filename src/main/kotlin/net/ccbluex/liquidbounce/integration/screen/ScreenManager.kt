@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.screen
 
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventListener
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
@@ -50,16 +51,19 @@ import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.error.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.error.QuickFix
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.TitleScreen
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import org.lwjgl.glfw.GLFW
 import kotlin.math.min
 import kotlin.time.Duration.Companion.seconds
 
 object ScreenManager : EventListener {
+
+    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/ScreenManager")
 
     /**
      * The main browser will constantly be updated to display the current screen.
@@ -125,7 +129,7 @@ object ScreenManager : EventListener {
             // Try ONCE MORE.
             is BrowserState.Failure if (allowTryOnceMore) -> {
                 logger.warn("Failed to initialize integration browser. " +
-                    "(code='${state.errorCode}', text='${state.errorText}', state='${state.failedUrl}')")
+                    "(code='${state.errorCode}', text='${state.errorText}', url='${state.failedUrl}')")
                 browser.url = state.failedUrl
                 waitUntilInitialized(browser)
                 validateBrowserState(browser, false)
@@ -133,7 +137,7 @@ object ScreenManager : EventListener {
             is BrowserState.Failure -> ErrorHandler.fatal(
                 error = IllegalStateException(
                     "Failed to initialize integration browser. " +
-                        "(code='${state.errorCode}', text='${state.errorText}', state='${state.failedUrl}')"
+                        "(code='${state.errorCode}', text='${state.errorText}', url='${state.failedUrl}')"
                 ),
                 quickFix = QuickFix.BROWSER_FAILED_TO_LOAD_UI
             )

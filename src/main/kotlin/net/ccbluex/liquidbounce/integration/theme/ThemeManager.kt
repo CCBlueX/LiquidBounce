@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.integration.theme
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.renderScope
 import net.ccbluex.liquidbounce.api.models.marketplace.MarketplaceItemType
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -34,15 +35,18 @@ import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.input.InputAcceptor
 import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.GuiGraphics
 import net.minecraft.client.gui.screens.ChatScreen
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import java.io.File
 import java.util.concurrent.CompletableFuture
 
 object ThemeManager : Configurable("theme") {
+
+    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/ThemeManager")
 
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
 
