@@ -93,6 +93,7 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
     }
 
     override fun onEnabled() {
+        timestamp = System.currentTimeMillis()
         doNotTryToConnect = false
     }
 
