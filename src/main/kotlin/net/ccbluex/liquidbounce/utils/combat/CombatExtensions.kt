@@ -249,7 +249,7 @@ fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) 
         }
 
         interaction.ensureHasSentCarriedItem()
-        network.send(ServerboundAttackPacket(this@attack.id))
+        network.send(ServerboundAttackPacket(entity.id))
 
         if (keepSprint) {
             var genericAttackDamage =

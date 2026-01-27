@@ -97,7 +97,7 @@ import kotlin.jvm.optionals.getOrNull
  */
 fun createItem(stack: String, amount: Int = 1): ItemStack =
     ItemParser(mc.level!!.registryAccess()).parse(StringReader(stack)).let {
-        ItemInput(it.item, it.components).createItemStack(amount, false)
+        ItemInput(it.item, it.components).createItemStack(amount)
     }
 
 fun createSplashPotion(name: String, vararg effects: MobEffectInstance): ItemStack {
