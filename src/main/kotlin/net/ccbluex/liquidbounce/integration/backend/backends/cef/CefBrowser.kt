@@ -100,7 +100,8 @@ class CefBrowser(
                 is BrowserState.Success ->
                     logger.info("Finished loading (url='${url}', httpStatusCode=${value.httpStatusCode})")
                 is BrowserState.Failure ->
-                    logger.warn("Failed to load (url='${value.failedUrl}', errorCode=${value.errorCode}, errorText=${value.errorText})")
+                    logger.warn("Failed to load " +
+                        "(url='${value.failedUrl}', errorCode=${value.errorCode}, errorText=${value.errorText})")
                 else -> error("Unexpected state: $value")
             }
         }
