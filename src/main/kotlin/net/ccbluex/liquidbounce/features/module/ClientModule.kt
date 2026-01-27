@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module
 
 import com.mojang.blaze3d.platform.InputConstants
 import kotlinx.coroutines.launch
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.gson.stategies.Exclude
@@ -61,7 +62,7 @@ open class ClientModule(
     aliases: List<String> = emptyList() // additional names under which the module is known
 ) : ToggleableConfigurable(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
 
-    protected val logger: Logger = LogManager.getLogger(this.name)
+    protected val logger: Logger = LogManager.getLogger("$CLIENT_NAME/$name")
 
     /**
      * If a module is running or not is separated from the enabled state. A module can be paused even when
