@@ -168,11 +168,11 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
 
             // Check assets contains logo and set logo
             ipcConfiguration.assets["logo"]?.let { value ->
-                setLargeImage(value, formatText(largeImageText))
+                setLargeImageWithTooltip(value, formatText(largeImageText))
             }
 
             ipcConfiguration.assets["smallLogo"]?.let { value ->
-                setSmallImage(value, formatText(smallImageText))
+                setLargeImageWithTooltip(value, formatText(smallImageText))
             }
 
             setDetails(formatText(detailsText))
