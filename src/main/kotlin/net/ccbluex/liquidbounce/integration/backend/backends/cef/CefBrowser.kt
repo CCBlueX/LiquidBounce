@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.integration.backend.backends.cef
 
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.integration.backend.BrowserTexture
 import net.ccbluex.liquidbounce.integration.backend.browser.Browser
@@ -32,7 +33,8 @@ import net.ccbluex.liquidbounce.integration.backend.input.InputListener
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowser
 import net.ccbluex.liquidbounce.mcef.cef.MCEFBrowserSettings
-import net.ccbluex.liquidbounce.utils.client.logger
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 
 @Suppress("TooManyFunctions")
 class CefBrowser(
@@ -44,8 +46,33 @@ class CefBrowser(
     inputAcceptor: InputAcceptor? = null
 ) : Browser, InputHandler, MinecraftShortcuts {
 
+    internal val browserApi: MCEFBrowser
+    private val logger: Logger
+
     init {
         require(url.isNotEmpty()) { "URL cannot be empty." }
+        val quality = GlobalBrowserSettings.quality
+        val (width, height) = viewport.getScaledDimensions(quality)
+        browserApi = MCEF.INSTANCE.createBrowser(
+            url,
+            true,
+            width,
+            height,
+            MCEFBrowserSettings(
+                settings.currentFps,
+                GlobalBrowserSettings.accelerated?.get() == true
+            )
+        ).apply {
+            addOnPaintListener {
+                comparePaintWithViewpoint(it.width, it.height)
+            }
+            addOnAcceleratedPaintListener {
+                comparePaintWithViewpoint(it.width, it.height)
+            }
+        }
+
+        logger = LogManager.getLogger("$CLIENT_NAME/CefBrowser/${browserApi.hashCode()}")
+        logger.info("Initializing Browser API (url='$url')")
     }
 
     override var isInitialized: Boolean = false
@@ -60,7 +87,7 @@ class CefBrowser(
             browserApi.zoomLevel = viewport.getZoomLevel(quality)
             field = true
 
-            logger.info("[CefBrowser-${browserApi.hashCode()}] Initialized Browser API")
+            logger.info("Initialized Browser API")
         }
 
     override var state: BrowserState = BrowserState.Idle
@@ -69,14 +96,12 @@ class CefBrowser(
 
             when (value) {
                 is BrowserState.Loading ->
-                    logger.info("[CefBrowser-${browserApi.hashCode()}] Started loading" +
-                        " (url='${url}')")
+                    logger.info("Started loading (url='${url}')")
                 is BrowserState.Success ->
-                    logger.info("[CefBrowser-${browserApi.hashCode()}] Finished loading" +
-                        " (url='${url}', httpStatusCode=${value.httpStatusCode})")
+                    logger.info("Finished loading (url='${url}', httpStatusCode=${value.httpStatusCode})")
                 is BrowserState.Failure ->
-                    logger.warn("[CefBrowser-${browserApi.hashCode()}] Failed to load" +
-                        " (url='${value.failedUrl}', errorCode=${value.errorCode}, errorText=${value.errorText})")
+                    logger.warn("Failed to load " +
+                        "(url='${value.failedUrl}', errorCode=${value.errorCode}, errorText=${value.errorText})")
                 else -> error("Unexpected state: $value")
             }
         }
@@ -115,35 +140,10 @@ class CefBrowser(
             )
         }
     override var visible = true
-    internal val browserApi: MCEFBrowser
 
     private val renderer = BrowserRenderer(this)
     private val inputListener: InputListener? = inputAcceptor?.let { _ ->
         InputListener(this, this, inputAcceptor)
-    }
-
-    init {
-        val quality = GlobalBrowserSettings.quality
-        val (width, height) = viewport.getScaledDimensions(quality)
-        browserApi = MCEF.INSTANCE.createBrowser(
-            url,
-            true,
-            width,
-            height,
-            MCEFBrowserSettings(
-                settings.currentFps,
-                GlobalBrowserSettings.accelerated?.get() == true
-            )
-        ).apply {
-            addOnPaintListener {
-                comparePaintWithViewpoint(it.width, it.height)
-            }
-            addOnAcceleratedPaintListener {
-                comparePaintWithViewpoint(it.width, it.height)
-            }
-        }
-
-        logger.info("[CefBrowser-${browserApi.hashCode()}] Initializing Browser API (url='$url')")
     }
 
     override var url: String

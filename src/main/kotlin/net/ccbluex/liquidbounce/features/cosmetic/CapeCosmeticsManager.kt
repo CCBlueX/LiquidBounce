@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.cosmetic
 import com.mojang.authlib.GameProfile
 import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.api.core.withScope
 import net.ccbluex.liquidbounce.api.models.cosmetics.Cosmetic
 import net.ccbluex.liquidbounce.api.models.cosmetics.CosmeticCategory
@@ -31,12 +32,16 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.registerTexture
 import net.minecraft.resources.Identifier
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import java.util.function.Consumer
 
 /**
  * A cape cosmetic manager
  */
 object CapeCosmeticsManager : EventListener {
+
+    private val logger: Logger = LogManager.getLogger("$CLIENT_NAME/CapeCosmeticsManager")
 
     /**
      * Cached capes
@@ -66,7 +71,7 @@ object CapeCosmeticsManager : EventListener {
                     // Check if the cape is cached
                     val cachedCapeId = cachedCapes[name]
                     if (cachedCapeId != null) {
-                        LiquidBounce.logger.info("Successfully loaded cached cape for ${player.name}")
+                        logger.info("Successfully loaded cached cape for ${player.name}")
                         callback.accept(cachedCapeId)
                         return@fetchCosmetic
                     }
@@ -78,7 +83,7 @@ object CapeCosmeticsManager : EventListener {
                         }
                     }.getOrNull() ?: return@fetchCosmetic
 
-                    LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
+                    logger.info("Successfully loaded cape for ${player.name}")
 
                     val id = LiquidBounce.identifier("cape-$name")
 
