@@ -97,31 +97,45 @@ object ScreenManager : EventListener {
         logger.info("Browser backend is ready. Initializing browser...")
         val browser = ThemeManager.openInputAwareImmediate(settings = browserSettings)
 
+        waitUntilInitialized(browser)
+        validateBrowserState(browser, true)
+    }
+
+    private suspend fun waitUntilInitialized(browser: Browser) {
         logger.info("Waiting for browser to be initialized...")
         // We currently proceed to go to the Minecraft Title Screen
         //   until this times out. [ErrorHandler.fatal] will kill the game anyway.
         if (waitMatchesWithTimeout<GameTickEvent>(timeout = 30.seconds) {
-            browser.isInitialized && browser.state.isCompleted
-        } == null) {
+                browser.isInitialized && browser.state.isCompleted
+            } == null) {
             ErrorHandler.fatal(
                 error = IllegalStateException("Timed out waiting for integration browser to initialize."),
                 quickFix = QuickFix.BROWSER_IS_NOT_RESPONDING
             )
         }
+    }
 
+    private suspend fun validateBrowserState(browser: Browser, allowTryOnceMore: Boolean) {
         // Validate browser state past wait.
         when (val state = browser.state) {
             is BrowserState.Success -> {
-                this@ScreenManager.mainBrowser = browser
+                this.mainBrowser = browser
                 logger.info("Integration Browser $browser is ready.")
+            }
+            // Try ONCE MORE.
+            is BrowserState.Failure if (allowTryOnceMore) -> {
+                logger.warn("Failed to initialize integration browser. " +
+                    "(code='${state.errorCode}', text='${state.errorText}', state='${state.failedUrl}')")
+                browser.url = state.failedUrl
+                waitUntilInitialized(browser)
+                validateBrowserState(browser, false)
             }
             is BrowserState.Failure -> ErrorHandler.fatal(
                 error = IllegalStateException(
                     "Failed to initialize integration browser. " +
-                        "Error code: ${state.errorCode}, " +
-                        "Error text: ${state.errorText}, " +
-                        "Failed URL: ${state.failedUrl}"
+                        "(code='${state.errorCode}', text='${state.errorText}', state='${state.failedUrl}')"
                 ),
+                quickFix = QuickFix.BROWSER_FAILED_TO_LOAD_UI
             )
             else -> ErrorHandler.fatal(
                 error = IllegalStateException("Invalid browser state past wait"),
