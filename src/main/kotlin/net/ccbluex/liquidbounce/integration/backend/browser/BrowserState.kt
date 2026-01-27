@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.integration.backend.browser
 
-open class BrowserState private constructor(val isCompleted: Boolean) {
+sealed class BrowserState private constructor(val isCompleted: Boolean) {
     data object Idle : BrowserState(false)
     data object Stateless : BrowserState(true)
     data object Loading : BrowserState(false)
