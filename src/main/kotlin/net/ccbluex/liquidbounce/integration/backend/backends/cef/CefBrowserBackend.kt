@@ -166,10 +166,13 @@ class CefBrowserBackend : BrowserBackend, EventListener {
                                 browser.isInitialized = true
                             }
                         } else {
-                            logger.warn("[CEF] Browser ${createdBrowserApi.identifier} created but not found in backend")
+                            logger.warn("[CefBrowser-${createdBrowserApi.hashCode()}] Browser Instance not present in BrowserManager")
                         }
                     } catch (e: Exception) {
-                        logger.error("[CEF] Failed to mark browser as initialized", e)
+                        logger.error(
+                            "[CefBrowser-${createdBrowserApi.hashCode()}] Failed to mark browser as initialized",
+                            e
+                        )
                     }
 
                     super.onAfterCreated(createdBrowserApi)
@@ -178,21 +181,27 @@ class CefBrowserBackend : BrowserBackend, EventListener {
 
             MCEF.INSTANCE.client.addLoadHandler(object : CefLoadHandlerAdapter() {
 
-                override fun onLoadStart(browser: org.cef.browser.CefBrowser, frame: CefFrame?,
-                                         transitionType: CefRequest.TransitionType?) {
-                    logger.info("[CEF-${browser.hashCode()}] Started loading (url='${browser.url}')")
+                override fun onLoadStart(
+                    browser: org.cef.browser.CefBrowser, frame: CefFrame?,
+                    transitionType: CefRequest.TransitionType?
+                ) {
+                    logger.info("[CefBrowser-${browser.hashCode()}] Started loading (url='${browser.url}')")
                     super.onLoadStart(browser, frame, transitionType)
                 }
 
                 override fun onLoadEnd(browser: org.cef.browser.CefBrowser, frame: CefFrame?, httpStatusCode: Int) {
-                    logger.info("[CEF-${browser.hashCode()}] Finished loading (status=$httpStatusCode)")
+                    logger.info("[CefBrowser-${browser.hashCode()}] Finished loading (status=$httpStatusCode)")
                     super.onLoadEnd(browser, frame, httpStatusCode)
                 }
 
-                override fun onLoadError(browser: org.cef.browser.CefBrowser, frame: CefFrame?,
-                                         errorCode: CefLoadHandler.ErrorCode?, errorText: String?, failedUrl: String?) {
-                    logger.error("[CEF-${browser.hashCode()}] Failed to load " +
-                        "(url='$failedUrl', error='$errorText', code='$errorCode')")
+                override fun onLoadError(
+                    browser: org.cef.browser.CefBrowser, frame: CefFrame?,
+                    errorCode: CefLoadHandler.ErrorCode?, errorText: String?, failedUrl: String?
+                ) {
+                    logger.error(
+                        "[CefBrowser-${browser.hashCode()}] Failed to load " +
+                            "(url='$failedUrl', error='$errorText', code='$errorCode')"
+                    )
                     super.onLoadError(browser, frame, errorCode, errorText, failedUrl)
                 }
 
