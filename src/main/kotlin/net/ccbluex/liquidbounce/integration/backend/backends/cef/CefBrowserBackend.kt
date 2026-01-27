@@ -138,16 +138,16 @@ class CefBrowserBackend : BrowserBackend, EventListener {
                             file.deleteRecursively()
                             fileSize
                         } catch (e: Exception) {
-                            logger.error("[CEF] Failed to clean up old cache directory", e)
+                            logger.error("Failed to clean up old cache directory", e)
                             0
                         }
                     } ?: 0
             }.onFailure {
                 // Not a big deal, not fatal.
-                logger.error("[CEF] Failed to clean up old JCEF cache directories", it)
+                logger.error("Failed to clean up old JCEF cache directories", it)
             }.onSuccess { size ->
                 if (size > 0) {
-                    logger.info("[CEF] Cleaned up ${size.formatAsCapacity()} JCEF cache directories")
+                    logger.info("Cleaned up ${size.formatAsCapacity()} JCEF cache directories")
                 }
             }
         }
@@ -226,7 +226,7 @@ class CefBrowserBackend : BrowserBackend, EventListener {
             try {
                 MCEF.INSTANCE.app.handle.N_DoMessageLoopWork()
             } catch (e: Exception) {
-                logger.error("[CEF] Failed to draw browser globally", e)
+                logger.error("Failed to draw browser globally", e)
             }
         }
     }
