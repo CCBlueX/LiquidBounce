@@ -50,8 +50,15 @@ open class RangeConfigurable(name: String) : Configurable(name), MinecraftShortc
 
     /**
      * Decreases the attack min-range.
+     *
+     * This is a placeholder until required.
+     * There is no vanilla item that is making use of this for now.
+     *
+     * The spear is executed on the server-side and only uses min range as a visual indicator.
+     * @see net.minecraft.client.Minecraft.startAttack
+     * @see net.minecraft.client.multiplayer.MultiPlayerGameMode.piercingAttack
      */
-    private val minRangeModifier by float("MinRangeDecrease", 0f, 0f..2f, "blocks")
+    // private val minRangeDecrease by float("MinRangeDecrease", 0f, 0f..2f, "blocks")
 
     /**
      * This will use only this value for non-visible entities. Originally, we could never attack through walls,
@@ -65,9 +72,9 @@ open class RangeConfigurable(name: String) : Configurable(name), MinecraftShortc
 
     fun adjustAttackRange(attackRange: AttackRange = AttackRange.defaultFor(player)) =
         AttackRange(
-            max(0f, attackRange.minRange - minRangeModifier),
+            max(0f, attackRange.minRange/* - minRangeDecrease*/),
             attackRange.maxRange + maxRangeIncrease,
-            max(0f, attackRange.minCreativeRange - minRangeModifier),
+            max(0f, attackRange.minCreativeRange/* - minRangeDecrease*/),
             attackRange.maxCreativeRange + maxRangeIncrease,
             attackRange.hitboxMargin,
             attackRange.mobFactor
