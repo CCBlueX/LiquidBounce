@@ -23,6 +23,7 @@ import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import com.mojang.blaze3d.platform.InputConstants
+import it.unimi.dsi.fastutil.objects.ObjectArrayList
 import net.ccbluex.fastutil.enumSetOf
 import net.ccbluex.fastutil.toEnumSet
 import net.ccbluex.liquidbounce.config.types.BindValue
@@ -405,6 +406,12 @@ open class Configurable(
         tension: Float = CurveValue.DEFAULT_TENSION,
     ) = CurveValue(name, default, xAxis, yAxis, tension).apply {
         this@Configurable.inner.add(this)
+    }
+
+    inline fun curve(name: String, block: CurveValue.Builder.() -> Unit): CurveValue {
+        val builder = CurveValue.Builder()
+        builder.name = name
+        return builder.apply(block).build().also(::value)
     }
 
     fun file(

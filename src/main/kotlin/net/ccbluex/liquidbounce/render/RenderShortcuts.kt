@@ -125,16 +125,11 @@ inline fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3i, draw:
  * Disables [GL11C.GL_LINE_SMOOTH] if [HAS_AMD_VEGA_APU].
  */
 inline fun WorldRenderEnvironment.longLines(draw: RenderEnvironment.() -> Unit) {
-    if (!HAS_AMD_VEGA_APU) {
-        draw()
-        return
-    }
-
-    GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
+    if (HAS_AMD_VEGA_APU) GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
     try {
         draw()
     } finally {
-        GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
+        if (HAS_AMD_VEGA_APU) GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
     }
 }
 
