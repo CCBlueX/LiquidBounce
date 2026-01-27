@@ -204,8 +204,8 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
         sendRichPresence(RichPresence.Builder().apply(builderAction).build())
 
     /**
-     * Always running
+     * Always running after initialized
      */
-    override val running = true
+    override val running get() = LiquidBounce.isInitialized
 
 }
