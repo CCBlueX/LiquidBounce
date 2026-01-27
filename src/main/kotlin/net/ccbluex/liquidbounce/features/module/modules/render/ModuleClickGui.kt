@@ -112,7 +112,9 @@ object ModuleClickGui :
         }
 
         updateStandaloneScreen()
-        mc.setScreen(standaloneScreen ?: CustomSharedMinecraftScreen(CustomScreenType.CLICK_GUI))
+        mc.execute {
+            mc.setScreen(standaloneScreen ?: CustomSharedMinecraftScreen(CustomScreenType.CLICK_GUI))
+        }
         super.onEnabled()
     }
 
