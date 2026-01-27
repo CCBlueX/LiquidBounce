@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.client
 import com.jagrosh.discordipc.IPCClient
 import com.jagrosh.discordipc.entities.ActivityType
 import com.jagrosh.discordipc.entities.RichPresence
+import com.jagrosh.discordipc.entities.StatusDisplayType
 import com.jagrosh.discordipc.entities.pipe.PipeStatus
 import com.jagrosh.discordipc.exceptions.NoDiscordClientException
 import kotlinx.coroutines.Dispatchers
@@ -165,6 +166,7 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
 
         ipcClient.sendRichPresence {
             setActivityType(ActivityType.Playing)
+            setStatusDisplayType(StatusDisplayType.Name)
             setStartTimestamp(timestamp)
 
             // Check assets contains logo and set logo
