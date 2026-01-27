@@ -60,10 +60,6 @@ import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket
 
 object ModuleFly : ClientModule("Fly", ModuleCategories.MOVEMENT, aliases = listOf("Glide", "Jetpack")) {
 
-    init {
-        enableLock()
-    }
-
     internal val modes = choices(
         "Mode", FlyVanilla, arrayOf(
             // Generic fly modes

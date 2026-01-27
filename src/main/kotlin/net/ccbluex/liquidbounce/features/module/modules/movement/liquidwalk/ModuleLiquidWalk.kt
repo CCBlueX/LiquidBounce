@@ -40,10 +40,6 @@ object ModuleLiquidWalk : ClientModule(
     aliases = listOf("Jesus", "WaterWalk")
 ) {
 
-    init {
-        enableLock()
-    }
-
     internal val modes = choices("Mode", LiquidWalkVanilla, arrayOf(
         LiquidWalkVanilla,
         LiquidWalkNoCheatPlus,

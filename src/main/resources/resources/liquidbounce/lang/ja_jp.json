@@ -231,7 +231,6 @@
 	"liquidbounce.generic.error": "エラー",
 	"liquidbounce.generic.forum": "フォーラム",
 	"liquidbounce.generic.guilded": "Guilded",
-	"liquidbounce.generic.locked": "そのモジュールはロックされていて有効化できません。バイパスしていない可能性があります。",
 	"liquidbounce.generic.notifyDeveloper": "ゲームログを確認し、通知してください。",
 	"liquidbounce.liquidchat.authenticationFailed": "認証に失敗しました！ LiquidChatはMinecraftの公式アカウントが必要です。",
 	"liquidbounce.liquidchat.jwtTokenReceived": " JWT トークンを受け取りました! 再接続しています... ",

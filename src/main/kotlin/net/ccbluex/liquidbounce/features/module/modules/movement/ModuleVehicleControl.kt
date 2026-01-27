@@ -44,10 +44,6 @@ import net.minecraft.world.InteractionHand
  */
 object ModuleVehicleControl : ClientModule("VehicleControl", ModuleCategories.MOVEMENT, aliases = listOf("BoatFly")) {
 
-    init {
-        enableLock()
-    }
-
     object BaseSpeed : Configurable("BaseSpeed") {
         val horizontalSpeed by float("Horizontal", 0.5f, 0.1f..10f)
         val verticalSpeed by float("Vertical", 0.35f, 0.1f..10f)

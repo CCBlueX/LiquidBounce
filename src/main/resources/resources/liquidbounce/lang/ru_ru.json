@@ -5,7 +5,6 @@
   "liquidbounce.generic.error": "Ошибка",
   "liquidbounce.generic.forum": "Форум",
   "liquidbounce.generic.guilded": "Guilded",
-  "liquidbounce.generic.locked": "Модуль заблокирован и не может быть включен. Скорее всего, он не обходит.",
   "liquidbounce.generic.notifyDeveloper": "Проверьте свои логи и оповестите нас.",
   "liquidbounce.command.autodisable.subcommand.add.result.moduleAdded": "Модуль \"%s\" добавлен.",
   "liquidbounce.command.autodisable.subcommand.add.result.moduleIsPresent": "Модуль \"%s\" уже присутствует.",

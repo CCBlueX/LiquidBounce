@@ -52,10 +52,6 @@ import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket
 
 object ModuleVelocity : ClientModule("Velocity", ModuleCategories.COMBAT, aliases = listOf("AntiKnockBack")) {
 
-    init {
-        enableLock()
-    }
-
     val modes = choices(
         "Mode", VelocityModify, arrayOf(
             // Generic modes

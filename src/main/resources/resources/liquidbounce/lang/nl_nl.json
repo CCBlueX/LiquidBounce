@@ -270,7 +270,6 @@
     "liquidbounce.generic.forum": "Forum",
     "liquidbounce.generic.guilded": "Guilded",
     "liquidbounce.generic.notifyDeveloper": "Bekijk je gamelog en meld dit aan ons.",
-    "liquidbounce.generic.locked": "Deze module is vergrendeld en kan niet worden ingeschakeld. Waarschijnlijk werkt de bypass niet.",
     "liquidbounce.liquidchat.authenticationFailed": "Authenticatie mislukt! LiquidChat vereist een premium Minecraft-account.",
     "liquidbounce.liquidchat.jwtTokenReceived": "JWT-token ontvangen! Opnieuw inloggen...",
     "liquidbounce.liquidchat.notConnected": "Niet verbonden met de chatserver! Schakel de LiquidChat-module in!",
