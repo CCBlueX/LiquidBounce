@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getM
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getMarketplaceItemRevisions
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getMarketplaceItems
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getModule
+import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getModuleTagGroups
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getModules
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getProxies
 import net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.getProxyInfo
@@ -170,6 +171,7 @@ internal fun Node.registerInteropFunctions() = withPath("/api/v1/client") {
 
     // Module Functions
     get("/modules", ::getModules).apply {
+        get("/tags", ::getModuleTagGroups)
         put("/toggle", ::toggleModule)
         delete("/toggle", ::toggleModule)
         post("/toggle", ::toggleModule)

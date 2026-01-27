@@ -1,18 +1,34 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import {getClientInfo, getGameWindow, getModules, getModuleSettings, setTyping} from "../../integration/rest";
-    import {groupByCategory} from "../../integration/util";
-    import type {ConfigurableSetting, GroupedModules, Module, TogglableSetting} from "../../integration/types";
+    import {
+        getClientInfo,
+        getGameWindow,
+        getModules,
+        getModuleSettings,
+        getModuleTagGroups,
+        setTyping
+    } from "../../integration/rest";
+    import {filterModulesByTags, groupByCategory} from "../../integration/util";
+    import type {
+        ConfigurableSetting,
+        GroupedModules,
+        Module,
+        ModuleTagGroups,
+        TogglableSetting
+    } from "../../integration/types";
     import Panel from "./Panel.svelte";
     import Search from "./Search.svelte";
     import Description from "./Description.svelte";
+    import TagFilter from "./TagFilter.svelte";
     import {fade} from "svelte/transition";
     import {listen} from "../../integration/ws";
     import type {ClickGuiValueChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
-    import {gridSize, os, scaleFactor, showGrid, snappingEnabled} from "./clickgui_store";
+    import {gridSize, os, scaleFactor, selectedModuleTags, showGrid, snappingEnabled} from "./clickgui_store";
 
     let categories: GroupedModules = {};
     let modules: Module[] = [];
+    let tagGroups: ModuleTagGroups = [];
+    let tagDefaultsApplied = false;
     let minecraftScaleFactor = 2;
     let clickGuiScaleFactor = 1;
     $: {
@@ -35,7 +51,7 @@
         minecraftScaleFactor = gameWindow.scaleFactor;
 
         modules = await getModules();
-        categories = groupByCategory(modules);
+        tagGroups = await getModuleTagGroups();
 
         const clickGuiSettings = await getModuleSettings("ClickGUI");
         applyValues(clickGuiSettings);
@@ -50,6 +66,16 @@
     listen("clickGuiValueChange", (e: ClickGuiValueChangeEvent) => {
         applyValues(e.configurable);
     });
+
+    $: categories = groupByCategory(filterModulesByTags(modules, $selectedModuleTags, tagGroups));
+    $: if (!tagDefaultsApplied && tagGroups.length > 0) {
+        const requiredTags = tagGroups
+            .filter((group) => group.required)
+            .flatMap((group) => group.tags);
+        const defaultTags = requiredTags.length > 0 ? requiredTags : tagGroups.flatMap((group) => group.tags);
+        selectedModuleTags.set(defaultTags);
+        tagDefaultsApplied = true;
+    }
 </script>
 
 <div class="clickgui" class:grid={$showGrid} transition:fade|global={{duration: 200}}
@@ -57,6 +83,7 @@
      background-size: {$gridSize}px {$gridSize}px;">
     <Description/>
     <Search modules={structuredClone(modules)}/>
+    <TagFilter groups={tagGroups}/>
 
     {#each Object.entries(categories) as [category, modules], panelIndex}
         <Panel {category} {modules} {panelIndex}/>

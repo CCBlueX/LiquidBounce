@@ -49,7 +49,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import kotlin.time.Duration.Companion.seconds
 
-object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT, state = true, hide = true,
+object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT, state = true, hideInList = true,
     aliases = listOf("DiscordPresence")
 ) {
 
