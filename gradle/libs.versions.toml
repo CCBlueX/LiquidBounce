@@ -6,11 +6,11 @@ jdk = "25"
 # Fabric Properties
 # Check these on https://fabricmc.net/versions.html
 # https://mods.upcraft.dev/dev/versions
-minecraft = "26.1-snapshot-4"
+minecraft = "26.1-snapshot-5"
 fabric-loom = "1.15-SNAPSHOT"
 fabric-loader = "0.18.4"
 fabric-loaderMin = "0.16.14"
-fabric-api = "0.142.1+26.1"
+fabric-api = "0.142.3+26.1"
 
 # mcef
 mcef = "dev~26.1-SNAPSHOT"
