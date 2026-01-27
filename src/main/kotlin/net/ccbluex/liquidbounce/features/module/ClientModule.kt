@@ -57,9 +57,9 @@ open class ClientModule(
     state: Boolean = false, // default state
     @Exclude val notActivatable: Boolean = false, // disable settings that are not needed if the module can't be enabled
     @Exclude val disableActivation: Boolean = notActivatable, // disable activation
-    hide: Boolean = false, // default hide
     @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
-    aliases: List<String> = emptyList() // additional names under which the module is known
+    aliases: List<String> = emptyList(), // additional names under which the module is known
+    hide: Boolean = false // default hide
 ) : ToggleableConfigurable(null, name, state, aliases = aliases), EventListener, MinecraftShortcuts {
 
     protected val logger: Logger = LogManager.getLogger("$CLIENT_NAME/$name")
@@ -93,11 +93,6 @@ open class ClientModule(
                 notAnOption()
             }
         }
-
-    /**
-     * If this value is on true, we cannot enable the module, as it likely does not bypass.
-     */
-    private var locked: Value<Boolean>? = null
 
     override val baseKey: String = "liquidbounce.module.${name.toLowerCamelCase()}"
 
@@ -147,19 +142,6 @@ open class ClientModule(
     open suspend fun enabledEffect() {}
 
     final override fun onToggled(state: Boolean): Boolean {
-        // Check if the module is locked and cannot be enabled
-        locked?.let { locked ->
-            if (locked.get()) {
-                notification(
-                    this.name,
-                    translation("liquidbounce.generic.locked"),
-                    NotificationEvent.Severity.ERROR
-                )
-
-                return false
-            }
-        }
-
         if (!inGame) {
             return state
         }
@@ -185,14 +167,6 @@ open class ClientModule(
 
         EventManager.callEvent(ModuleToggleEvent(name, hidden, state))
         return state
-    }
-
-    /**
-     * If we want a module to have the "requires bypass" option, we specifically call it
-     * on init. This will add the option and enable the feature.
-     */
-    fun enableLock() {
-        this.locked = boolean("Locked", false)
     }
 
     fun tagBy(setting: Value<*>) {

@@ -248,7 +248,6 @@
   "liquidbounce.generic.error": "Fehler",
   "liquidbounce.generic.forum": "Forum",
   "liquidbounce.generic.notifyDeveloper": "Überprüfe dein Spielprotokoll und benachrichtige uns.",
-  "liquidbounce.generic.locked": "Das Modul ist gesperrt und kann nicht aktiviert werden. Es bypassed wahrscheinlich nicht.",
   "liquidbounce.liquidchat.authenticationFailed": "Authentifizierung fehlgeschlagen! Für LiquidChat ist ein Minecraft-Premium-Konto erforderlich.",
   "liquidbounce.liquidchat.jwtTokenReceived": "JWT-Token erhalten! Erneut anmelden...",
   "liquidbounce.liquidchat.notConnected": "Keine Verbindung zum Chatserver! Schalte das LiquidChat-Modul ein!",

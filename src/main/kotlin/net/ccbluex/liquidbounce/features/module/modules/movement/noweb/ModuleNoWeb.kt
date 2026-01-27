@@ -39,10 +39,6 @@ import net.minecraft.world.level.block.WebBlock
  */
 object ModuleNoWeb : ClientModule("NoWeb", ModuleCategories.MOVEMENT) {
 
-    init {
-        enableLock()
-    }
-
     val modes = choices(
         "Mode", NoWebAir, arrayOf(
             NoWebAir,

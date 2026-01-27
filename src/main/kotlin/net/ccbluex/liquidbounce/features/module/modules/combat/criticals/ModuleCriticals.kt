@@ -53,10 +53,6 @@ import net.minecraft.world.level.block.WebBlock
  */
 object ModuleCriticals : ClientModule("Criticals", ModuleCategories.COMBAT) {
 
-    init {
-        enableLock()
-    }
-
     val modes = choices("Mode", 1) {
         arrayOf(
             NoneChoice(it),

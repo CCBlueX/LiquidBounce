@@ -62,10 +62,6 @@ import java.util.function.BooleanSupplier
  */
 object ModuleSpeed : ClientModule("Speed", ModuleCategories.MOVEMENT) {
 
-    init {
-        enableLock()
-    }
-
     /**
      * Initialize speeds choices independently
      *

@@ -35,10 +35,6 @@ import net.minecraft.world.item.Items
  */
 object ModuleElytraRecast : ClientModule("ElytraRecast", ModuleCategories.MOVEMENT) {
 
-    init {
-        enableLock()
-    }
-
     private val shouldRecast: Boolean
         get() {
             val itemStack = player.getItemBySlot(EquipmentSlot.CHEST)
