@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.minecraft.client.CameraType
 import net.minecraft.client.multiplayer.ClientLevel
+import net.minecraft.core.component.DataComponents
 import net.minecraft.network.protocol.game.ServerboundInteractPacket
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.InteractionHand
@@ -204,13 +205,24 @@ inline fun ClientLevel.getEntitiesBoxInRange(
     return getEntitiesInCuboid(midPos, range) { predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared }
 }
 
-fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
-    attack(if (swing) SwingMode.DO_NOT_HIDE else SwingMode.HIDE_BOTH, keepSprint)
+fun attackEntity(entity: Entity, swing: Boolean, keepSprint: Boolean = false) {
+    attackEntity(entity, if (swing) SwingMode.DO_NOT_HIDE else SwingMode.HIDE_BOTH, keepSprint)
 }
 
 @Suppress("CognitiveComplexMethod", "NestedBlockDepth", "MagicNumber")
-fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
-    EventManager.callEvent(AttackEntityEvent(this))
+fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) {
+    val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
+    val piercingWeapon = itemStack.get(DataComponents.PIERCING_WEAPON)
+
+    // Minecraft introduced piercing weapons that have their own attack method.
+    // You HAVE to look at the entity before attacking it.
+    if (piercingWeapon != null && !interaction.isSpectator) {
+        interaction.piercingAttack(piercingWeapon)
+        swing.swing(InteractionHand.MAIN_HAND)
+        return
+    }
+
+    EventManager.callEvent(AttackEntityEvent(entity))
 
     with(player) {
         // Swing before attacking (on 1.8)
@@ -219,7 +231,7 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
         }
 
         interaction.ensureHasSentCarriedItem()
-        network.send(ServerboundInteractPacket.createAttackPacket(this@attack, isShiftKeyDown))
+        network.send(ServerboundInteractPacket.createAttackPacket(entity, isShiftKeyDown))
 
         if (keepSprint) {
             var genericAttackDamage =
@@ -229,7 +241,7 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
                     getAttributeValue(Attributes.ATTACK_DAMAGE).toFloat()
                 }
             val damageSource = this.damageSources().playerAttack(this)
-            var enchantAttackDamage = this.getEnchantedDamage(this@attack, genericAttackDamage,
+            var enchantAttackDamage = this.getEnchantedDamage(entity, genericAttackDamage,
                 damageSource) - genericAttackDamage
 
             val attackCooldown = this.getAttackStrengthScale(0.5f)
@@ -238,7 +250,7 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
 
             if (genericAttackDamage > 0.0f || enchantAttackDamage > 0.0f) {
                 if (enchantAttackDamage > 0.0f) {
-                    this.magicCrit(this@attack)
+                    this.magicCrit(entity)
                 }
 
                 if (ModuleCriticals.wouldDoCriticalHit(true)) {
@@ -246,12 +258,12 @@ fun Entity.attack(swing: SwingMode, keepSprint: Boolean = false) {
                         null, x, y, z, SoundEvents.PLAYER_ATTACK_CRIT,
                         soundSource, 1.0f, 1.0f
                     )
-                    crit(this@attack)
+                    crit(entity)
                 }
             }
         } else {
             if (interaction.playerMode != GameType.SPECTATOR) {
-                attack(this@attack)
+                attack(entity)
             }
         }
 

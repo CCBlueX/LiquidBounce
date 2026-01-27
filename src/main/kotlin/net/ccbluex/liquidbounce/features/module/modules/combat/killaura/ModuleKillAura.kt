@@ -57,8 +57,9 @@ import net.ccbluex.liquidbounce.utils.aiming.data.RotationWithVector
 import net.ccbluex.liquidbounce.utils.aiming.point.PointTracker
 import net.ccbluex.liquidbounce.utils.aiming.preference.LeastDifferencePreference
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
@@ -70,8 +71,10 @@ import net.ccbluex.liquidbounce.utils.raytracing.findEntityInCrosshair
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.ccbluex.liquidbounce.utils.render.TargetRenderer
 import net.minecraft.client.gui.screens.inventory.ContainerScreen
+import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.item.ItemStack
 
 /**
  * KillAura module
@@ -264,16 +267,18 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
 
         debugParameter("Valid Rotation") { rotation }
 
+        val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
+
         // Attack enemy, according to the attack scheduler
-        if (clicker.isClickTick && validateAttack(target)) {
+        if (clicker.isClickTick && canAttackNow(target, itemStack)) {
             clicker.attack(rotation) {
                 // On each click, we check if we are still ready to attack
-                if (!validateAttack(target)) {
+                if (!canAttackNow(target, itemStack)) {
                     return@attack false
                 }
 
                 // Attack enemy
-                target.attack(true, keepSprint && !shouldBlockSprinting)
+                attackEntity(target, SwingMode.DO_NOT_HIDE, keepSprint && !shouldBlockSprinting)
                 range.update()
                 KillAuraNotifyWhenFail.failedHitsIncrement = 0
 
@@ -416,11 +421,26 @@ object ModuleKillAura : ClientModule("KillAura", ModuleCategories.COMBAT) {
     /**
      * Check if we can attack the target at the current moment
      */
-    internal fun validateAttack(target: Entity? = null): Boolean {
-        val criticalHit = target == null || player.isFallFlying || criticalsSelectionMode.isCriticalHit(target)
-        val isInInventoryScreen = isInventoryOpen || isInContainerScreen
+    internal fun canAttackNow(
+        target: Entity? = null,
+        itemStack: ItemStack = player.getItemInHand(InteractionHand.MAIN_HAND)
+    ): Boolean {
+        if (!itemStack.isItemEnabled(world.enabledFeatures())) {
+            return false
+        }
 
-        return criticalHit && !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
+        if (player.cannotAttackWithItem(itemStack, 0)) {
+            return false
+        }
+
+        val criticalHitAllowed = target == null || player.isFallFlying || criticalsSelectionMode.isCriticalHit(target)
+        if (!criticalHitAllowed) {
+            return false
+        }
+
+        val isInventoryBlockingAttack = (isInventoryOpen || isInContainerScreen) &&
+            !ignoreOpenInventory && !simulateInventoryClosing
+        return !isInventoryBlockingAttack
     }
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.math.isHitByLine
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal
@@ -108,7 +108,7 @@ object SubmoduleCrystalDestroyer : ToggleableConfigurable(ModuleCrystalAura, "De
 
                 val target1 = CrystalAuraDestroyTargetFactory.currentTarget ?: return@rotate
 
-                target1.attack(swingMode)
+                attackEntity(target1, swingMode)
                 postAttackHandlers.forEach { it.attacked(target1.id) }
                 chronometer.reset()
             })

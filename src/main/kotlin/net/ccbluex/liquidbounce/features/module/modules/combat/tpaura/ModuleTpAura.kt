@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.clicking.Clicker
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.TargetPriority
 import net.ccbluex.liquidbounce.utils.combat.TargetSelector
-import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.render.WireframePlayer
@@ -55,11 +55,11 @@ object ModuleTpAura : ClientModule("TpAura", ModuleCategories.COMBAT, disableOnQ
         val position = desyncPlayerPosition ?: player.position()
 
         clicker.click {
-            val enemy = targetSelector.targets().firstOrNull {
+            val target = targetSelector.targets().firstOrNull {
                 it.squaredBoxedDistanceTo(position) <= attackRange * attackRange
             } ?: return@click false
 
-            enemy.attack(true, keepSprint = true)
+            attackEntity(target, true, keepSprint = true)
             true
         }
     }

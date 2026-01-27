@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.NormalRotationMode
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.combat.attack
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.entity.getExplosionDamageFromEntity
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.raytracing.isLookingAtEntity
@@ -104,7 +104,7 @@ class CrystalDestroyFeature(eventListener: EventListener, private val module: Cl
                 return@rotate
             }
 
-            target1.attack(swing)
+            attackEntity(target1, swing)
             chronometer.reset()
             currentTarget = null
         })
