@@ -19,7 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.client
 
 import com.jagrosh.discordipc.IPCClient
+import com.jagrosh.discordipc.entities.ActivityType
 import com.jagrosh.discordipc.entities.RichPresence
+import com.jagrosh.discordipc.entities.StatusDisplayType
 import com.jagrosh.discordipc.entities.pipe.PipeStatus
 import com.jagrosh.discordipc.exceptions.NoDiscordClientException
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +38,6 @@ import net.ccbluex.liquidbounce.config.gson.util.jsonArrayOf
 import net.ccbluex.liquidbounce.config.gson.util.jsonObject
 import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.events.ServerConnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
@@ -93,6 +94,7 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
     }
 
     override fun onEnabled() {
+        timestamp = System.currentTimeMillis()
         doNotTryToConnect = false
     }
 
@@ -163,16 +165,17 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
         val ipcConfiguration = ipcConfiguration.getNow() ?: return@tickHandler
 
         ipcClient.sendRichPresence {
-            // Set playing time
+            setActivityType(ActivityType.Playing)
+            setStatusDisplayType(StatusDisplayType.Name)
             setStartTimestamp(timestamp)
 
             // Check assets contains logo and set logo
             ipcConfiguration.assets["logo"]?.let { value ->
-                setLargeImage(value, formatText(largeImageText))
+                setLargeImageWithTooltip(value, formatText(largeImageText))
             }
 
             ipcConfiguration.assets["smallLogo"]?.let { value ->
-                setSmallImage(value, formatText(smallImageText))
+                setLargeImageWithTooltip(value, formatText(smallImageText))
             }
 
             setDetails(formatText(detailsText))
@@ -180,11 +183,6 @@ object ModuleRichPresence : ClientModule("RichPresence", ModuleCategories.CLIENT
 
             setButtons(buttons)
         }
-    }
-
-    @Suppress("unused")
-    private val serverConnectHandler = handler<ServerConnectEvent> {
-        timestamp = System.currentTimeMillis()
     }
 
     @Suppress("unused")
