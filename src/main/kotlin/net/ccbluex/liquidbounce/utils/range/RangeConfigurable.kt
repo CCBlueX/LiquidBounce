@@ -32,13 +32,17 @@ import kotlin.math.min
 /**
  * Allows adjusting your attack range and scan range.
  */
-open class RangeConfigurable(name: String) : Configurable(name), MinecraftShortcuts {
+open class RangeConfigurable(
+    name: String,
+    maxRangeIncrease: Float,
+    throughWallsRange: Float
+) : Configurable(name), MinecraftShortcuts {
 
     /**
      * @see net.minecraft.world.entity.player.Player.entityInteractionRange
      */
     internal val interactionRange: Float
-        get() = (player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE) + maxRangeIncrease).toFloat()
+        get() = (player.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE) + this@RangeConfigurable.maxRangeIncrease).toFloat()
 
     internal val interactionThroughWallsRange
         get() = throughWallsRange
@@ -46,7 +50,12 @@ open class RangeConfigurable(name: String) : Configurable(name), MinecraftShortc
     /**
      * Increases the attack max-range.
      */
-    private val maxRangeIncrease by float("MaxRangeIncrease", 0f, 0.0f..5f, "blocks")
+    private val maxRangeIncrease by float(
+        "MaxRangeIncrease",
+        maxRangeIncrease,
+        0.0f..5f,
+        "blocks"
+    )
 
     /**
      * Decreases the attack min-range.
@@ -65,7 +74,10 @@ open class RangeConfigurable(name: String) : Configurable(name), MinecraftShortc
      * so this makes sense to keep starting from 0.0.
      */
     private val throughWallsRange by float(
-        "ThroughWallsRange", 3f, 0f..8f, "blocks"
+        "ThroughWallsRange",
+        throughWallsRange,
+        0f..8f,
+        "blocks"
     ).onChange {
         min(interactionRange, it)
     }
@@ -73,9 +85,9 @@ open class RangeConfigurable(name: String) : Configurable(name), MinecraftShortc
     fun adjustAttackRange(attackRange: AttackRange = AttackRange.defaultFor(player)) =
         AttackRange(
             max(0f, attackRange.minRange/* - minRangeDecrease*/),
-            attackRange.maxRange + maxRangeIncrease,
+            attackRange.maxRange + this@RangeConfigurable.maxRangeIncrease,
             max(0f, attackRange.minCreativeRange/* - minRangeDecrease*/),
-            attackRange.maxCreativeRange + maxRangeIncrease,
+            attackRange.maxCreativeRange + this@RangeConfigurable.maxRangeIncrease,
             attackRange.hitboxMargin,
             attackRange.mobFactor
         )

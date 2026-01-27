@@ -31,6 +31,6 @@ import net.ccbluex.liquidbounce.utils.range.RangeConfigurable
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.item.MixinAttackRange
  */
 object ModuleReach : ClientModule("Reach", ModuleCategories.PLAYER) {
-    val entity = tree(RangeConfigurable("Entity"))
+    val entity = tree(RangeConfigurable("Entity", 1f, 0f))
     val blockRangeIncrease by float("BlockRangeIncrease", 0.5f, 0f..64f)
 }
