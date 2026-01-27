@@ -118,7 +118,7 @@ class GenericDistanceHSBColorMode<T : Any>(
         @JvmOverloads
         fun entity(parent: ChoiceConfigurable<*>, fixedAlpha: Float? = null) =
             GenericDistanceHSBColorMode<Entity>(parent, fixedAlpha) {
-                val camera = mc.entityRenderDispatcher.camera ?: return@GenericDistanceHSBColorMode Float.MAX_VALUE
+                val camera = mc.gameRenderer.mainCamera
                 camera.position().distanceTo(it.position()).toFloat()
             }
     }
