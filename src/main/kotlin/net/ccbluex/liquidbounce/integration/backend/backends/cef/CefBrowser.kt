@@ -77,7 +77,7 @@ class CefBrowser(
                 is BrowserState.Failure ->
                     logger.warn("[CefBrowser-${browserApi.hashCode()}] Failed to load" +
                         " (url='${value.failedUrl}', errorCode=${value.errorCode}, errorText=${value.errorText})")
-
+                else -> error("Unexpected state: $value")
             }
         }
 
