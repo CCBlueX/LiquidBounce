@@ -205,10 +205,6 @@ inline fun ClientLevel.getEntitiesBoxInRange(
     return getEntitiesInCuboid(midPos, range) { predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared }
 }
 
-fun attackEntity(entity: Entity, swing: Boolean, keepSprint: Boolean = false) {
-    attackEntity(entity, if (swing) SwingMode.DO_NOT_HIDE else SwingMode.HIDE_BOTH, keepSprint)
-}
-
 @Suppress("CognitiveComplexMethod", "NestedBlockDepth", "MagicNumber")
 fun attackEntity(entity: Entity, swing: SwingMode, keepSprint: Boolean = false) {
     val itemStack = player.getItemInHand(InteractionHand.MAIN_HAND)

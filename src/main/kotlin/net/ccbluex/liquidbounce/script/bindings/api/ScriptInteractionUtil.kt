@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
+import net.ccbluex.liquidbounce.utils.block.SwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockOffsetOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.PlayerLocationOnPlacem
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.combat.attackEntity
 import net.ccbluex.liquidbounce.utils.raytracing.traceFromPlayer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.InteractionHand
@@ -37,13 +39,13 @@ import net.minecraft.world.phys.HitResult
 object ScriptInteractionUtil {
 
     @JvmName("attackEntity")
-    fun attackEntity(entity: Entity, swing: Boolean, keepSprint: Boolean) {
+    fun attackEntityJs(entity: Entity, swing: Boolean, keepSprint: Boolean) {
         // Safety check
         if (entity == mc.player) {
             return
         }
 
-        attackEntity(entity, swing, keepSprint)
+        attackEntity(entity, if (swing) SwingMode.DO_NOT_HIDE else SwingMode.HIDE_BOTH, keepSprint)
     }
 
     @JvmName("interactEntity")
