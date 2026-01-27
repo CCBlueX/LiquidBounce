@@ -36,8 +36,8 @@ class SpeedGrimCollide(override val parent: ChoiceConfigurable<*>) : Choice("Gri
     /**
      * 0.5f shrink box can bypass newest versions of GrimAC (e.g., 2.3.73)
      * 1f shrink box can bypass older GrimAC versions
-    * */
-    
+     */
+
     private val speed by float("BoostSpeed", 0.08F, 0.01F..0.08F, "b/t")
     private val shrinkBox by float("ShrinkBox", 0.5f, 0.1f..2f)
 
