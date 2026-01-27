@@ -68,8 +68,8 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
     private val backgroundColor by color("BackgroundColor", Color4b.DEFAULT_BG_COLOR)
     private val scale = curve(
         "Scale",
-        mutableListOf(Vector2f(0f, 1f), Vector2f(128f, 1f)),
-        xAxis = "Distance" axis 0f..128f,
+        mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),
+        xAxis = "Distance" axis 0f..200f,
         yAxis = "Scale" axis 0.25f..4f,
     )
     private val renderOffset by vec3d("RenderOffset", useLocateButton = false)
@@ -77,8 +77,8 @@ object ModuleItemTags : ClientModule("ItemTags", ModuleCategories.RENDER) {
     private val preventOverlap by boolean("PreventOverlap", true)
     private val clusterEntities = curve(
         "ClusterEntities",
-        mutableListOf(Vector2f(0f, 2f), Vector2f(64f, 16f), Vector2f(128f, 16f)),
-        xAxis = "Distance" axis 0f..128f,
+        mutableListOf(Vector2f(0f, 2f), Vector2f(64f, 16f), Vector2f(128f, 16f), Vector2f(200f, 24f)),
+        xAxis = "Distance" axis 0f..200f,
         yAxis = "Size" axis 0.1F..32F,
     )
 

@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategories
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.Esp2DMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspBoxMode
 import net.ccbluex.liquidbounce.features.module.modules.render.esp.modes.EspGlowMode
+import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
@@ -53,6 +54,7 @@ object ModuleESP : ClientModule("ESP", ModuleCategories.RENDER) {
 
     private val colorModes = choices("ColorMode", 0) {
         arrayOf(
+            GenericDistanceHSBColorMode.entity(it),
             GenericEntityHealthColorMode(it),
             GenericStaticColorMode(it, Color4b.WHITE.with(a = 100)),
             GenericRainbowColorMode(it)

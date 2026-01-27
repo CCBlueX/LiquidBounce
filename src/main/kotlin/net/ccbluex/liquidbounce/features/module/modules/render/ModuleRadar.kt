@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.render.GenericDistanceHSBColorMode
 import net.ccbluex.liquidbounce.render.GenericEntityHealthColorMode
 import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
 import net.ccbluex.liquidbounce.render.GenericStaticColorMode
@@ -145,6 +146,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
 
     private val colorModes = choices("ColorMode", 0) {
         arrayOf(
+            GenericDistanceHSBColorMode.entity(it, fixedAlpha = 1F),
             GenericEntityHealthColorMode(it),
             GenericStaticColorMode(it, Color4b.WHITE.with(a = 100)),
             GenericRainbowColorMode(it)
@@ -153,8 +155,8 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
 
     private val alpha = curve(
         "Alpha",
-        mutableListOf(Vector2f(0f, 1f), Vector2f(128f, 1f)),
-        xAxis = "Distance" axis 0f..128f,
+        mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),
+        xAxis = "Distance" axis 0f..200f,
         yAxis = "Alpha" axis 0f..1f,
     )
 
@@ -191,7 +193,7 @@ object ModuleRadar : ClientModule("Radar", ModuleCategories.RENDER, aliases = li
                     val entityPos = entity.interpolateCurrentPosition(it.tickDelta)
 
                     val cameraDistance = entityPos.cameraDistance().toFloat()
-                    val alpha = (alpha.transform(cameraDistance)* 255).floorToInt()
+                    val alpha = (alpha.transform(cameraDistance) * 255).floorToInt()
                     if (alpha == 0) continue
 
                     val color = colorModes.activeChoice.getColor(entity).alpha(alpha)

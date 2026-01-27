@@ -49,8 +49,8 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
     internal val border by boolean("Border", true)
     internal val scale = curve(
         "Scale",
-        mutableListOf(Vector2f(0f, 1f), Vector2f(128f, 1f)),
-        xAxis = "Distance" axis 0f..128f,
+        mutableListOf(Vector2f(0f, 1f), Vector2f(200f, 1f)),
+        xAxis = "Distance" axis 0f..200f,
         yAxis = "Scale" axis 0.25f..4f,
     )
     internal val drawnEnchantmentAreas = mutableListOf<Vector2fc>()

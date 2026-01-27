@@ -23,10 +23,14 @@ import net.ccbluex.liquidbounce.config.types.nesting.Choice
 import net.ccbluex.liquidbounce.config.types.nesting.ChoiceConfigurable
 import net.ccbluex.liquidbounce.render.engine.type.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.minecraft.core.BlockPos
+import net.minecraft.util.ToFloatFunction
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.block.state.BlockState
+import org.joml.Vector2f
 
 abstract class GenericColorMode<in T>(name: String): Choice(name) {
     /**
@@ -67,7 +71,6 @@ class MapColorMode(
     }
 }
 
-
 class GenericEntityHealthColorMode(
     override val parent: ChoiceConfigurable<*>
 ) : GenericColorMode<LivingEntity>("Health") {
@@ -83,5 +86,40 @@ class GenericEntityHealthColorMode(
         val green = (255 * healthPercentage).toInt().coerceIn(0..255)
 
         return Color4b(red, green, 0, alpha)
+    }
+}
+
+class GenericDistanceHSBColorMode<T : Any>(
+    override val parent: ChoiceConfigurable<*>,
+    private val fixedAlpha: Float?,
+    private val distanceGetter: ToFloatFunction<T>,
+) : GenericColorMode<T>("Distance") {
+    private val saturation by float("Saturation", 1F, 0F..1F)
+    private val brightness by float("Brightness", 1F, 0F..1F)
+    private val hue = curve("Hue") {
+        "Distance" x 0f..200f
+        "Hue" y 0f..360f
+        points(Vector2f(0f, 0f), Vector2f(100f, 120f), Vector2f(200f, 120f))
+    }
+    private val alphaValue = if (fixedAlpha == null) float("Alpha", 1F, 0F..1F) else null
+
+    override fun getColor(param: T): Color4b {
+        val distance = distanceGetter.applyAsFloat(param)
+        return Color4b.ofHSB(
+            hue = hue.transform(distance) / 360f,
+            saturation = saturation,
+            brightness = brightness,
+            alpha = fixedAlpha ?: alphaValue!!.get(),
+        )
+    }
+
+    companion object {
+        @JvmStatic
+        @JvmOverloads
+        fun entity(parent: ChoiceConfigurable<*>, fixedAlpha: Float? = null) =
+            GenericDistanceHSBColorMode<Entity>(parent, fixedAlpha) {
+                val camera = mc.gameRenderer.mainCamera
+                camera.position().distanceTo(it.position()).toFloat()
+            }
     }
 }
